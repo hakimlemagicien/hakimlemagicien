@@ -5,6 +5,7 @@ import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
 import CustomProgram from "@/components/CustomProgram";
 import HowItWorks from "@/components/HowItWorks";
+import WhatYouGet from "@/components/WhatYouGet";
 
 export const Route = createFileRoute("/")({
   head: () => ({
