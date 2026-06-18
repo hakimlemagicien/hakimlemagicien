@@ -8,6 +8,7 @@ import HowItWorks from "@/components/HowItWorks";
 import WhatYouGet from "@/components/WhatYouGet";
 import ChooseTraining from "@/components/ChooseTraining";
 import SuccessStories from "@/components/SuccessStories";
+import FAQ from "@/components/FAQ";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +42,7 @@ function Index() {
         <WhatYouGet />
         <ChooseTraining />
         <SuccessStories />
+        <FAQ />
       </main>
     </div>
   );
