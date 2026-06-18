@@ -4,6 +4,7 @@ import { Hero } from "@/components/Hero";
 import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
 import CustomProgram from "@/components/CustomProgram";
+import HowItWorks from "@/components/HowItWorks";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,6 +33,7 @@ function Index() {
         <Hero />
         <ProblemSection />
         <CustomProgram />
+        <HowItWorks />
         <Results90 />
       </main>
     </div>
