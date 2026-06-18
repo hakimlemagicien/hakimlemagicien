@@ -6,6 +6,7 @@ import { Results90 } from "@/components/Results90";
 import CustomProgram from "@/components/CustomProgram";
 import HowItWorks from "@/components/HowItWorks";
 import WhatYouGet from "@/components/WhatYouGet";
+import ChooseTraining from "@/components/ChooseTraining";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,6 +38,7 @@ function Index() {
         <HowItWorks />
         <Results90 />
         <WhatYouGet />
+        <ChooseTraining />
       </main>
     </div>
   );
