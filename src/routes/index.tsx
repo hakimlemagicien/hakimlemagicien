@@ -30,6 +30,7 @@ function Index() {
       <main>
         <Hero />
         <HowItWorks />
+        <Results90 />
       </main>
     </div>
   );
