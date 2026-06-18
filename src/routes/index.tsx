@@ -34,6 +34,7 @@ function Index() {
         <HowItWorks />
         <ProblemSection />
         <Results90 />
+        <CustomProgram />
       </main>
     </div>
   );
