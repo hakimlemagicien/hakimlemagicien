@@ -30,7 +30,6 @@ function Index() {
       <Header />
       <main>
         <Hero />
-        <HowItWorks />
         <ProblemSection />
         <Results90 />
         <CustomProgram />
