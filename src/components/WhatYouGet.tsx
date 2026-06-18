@@ -196,7 +196,7 @@ export default function WhatYouGet() {
               </div>
 
               {/* CENTER: Headline */}
-              <div className="flex-1 text-center order-2 lg:order-2 lg:border-l lg:border-orange-200/60 lg:pl-10">
+              <div className="flex-1 text-center order-2 lg:order-2 lg:border-r lg:border-orange-200/60 lg:pr-10">
                 <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-neutral-900 leading-snug">
                   نحن لا نقدم لك ملف PDF فقط...
                 </h3>
