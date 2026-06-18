@@ -31,8 +31,8 @@ function Index() {
       <main>
         <Hero />
         <ProblemSection />
-        <Results90 />
         <CustomProgram />
+        <Results90 />
       </main>
     </div>
   );
