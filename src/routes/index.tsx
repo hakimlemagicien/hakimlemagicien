@@ -9,6 +9,7 @@ import WhatYouGet from "@/components/WhatYouGet";
 import ChooseTraining from "@/components/ChooseTraining";
 import SuccessStories from "@/components/SuccessStories";
 import FAQ from "@/components/FAQ";
+import FinalCTA from "@/components/FinalCTA";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -43,6 +44,7 @@ function Index() {
         <ChooseTraining />
         <SuccessStories />
         <FAQ />
+        <FinalCTA />
       </main>
     </div>
   );
