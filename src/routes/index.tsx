@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
-import { CustomProgram } from "@/components/CustomProgram";
+import CustomProgram from "@/components/CustomProgram";
 
 export const Route = createFileRoute("/")({
   head: () => ({
