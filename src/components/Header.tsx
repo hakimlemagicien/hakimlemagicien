@@ -61,16 +61,7 @@ export function Header() {
           </a>
         </div>
 
-        <div className="flex lg:hidden items-center gap-2">
-          <a
-            href={whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="WhatsApp"
-            className="grid h-11 w-11 place-items-center rounded-xl border-2 border-primary text-primary"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </a>
+        <div className="flex lg:hidden items-center">
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"

@@ -139,3 +139,15 @@
 @utility animate-trust-glow { animation: trust-glow 3s ease-in-out infinite; }
 @utility animate-pulse-soft { animation: pulse-soft 2.8s ease-in-out infinite; }
 @utility animate-glow-soft { animation: glow-soft 3.5s ease-in-out infinite; }
+
+@keyframes whatsapp-pulse {
+  0%, 100% { box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.18); }
+  50% { box-shadow: 0 8px 28px -2px rgba(37, 211, 102, 0.35), 0 0 0 6px rgba(37, 211, 102, 0.1); }
+}
+@keyframes whatsapp-enter {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-whatsapp-pulse { animation: whatsapp-pulse 4s ease-in-out infinite; }
+@utility animate-whatsapp-enter { animation: whatsapp-enter 0.5s ease-out both; }
