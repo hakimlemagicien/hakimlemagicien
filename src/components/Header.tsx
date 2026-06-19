@@ -61,24 +61,25 @@ export function Header() {
           </a>
         </div>
 
-        <div className="flex lg:hidden items-center gap-2">
+        <div className="flex lg:hidden items-center gap-3">
           <a
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"
-            className="grid h-11 w-11 place-items-center rounded-xl border-2 border-primary text-primary"
+            className="grid h-11 w-11 place-items-center rounded-full border-2 border-primary text-primary"
           >
             <MessageCircle className="h-5 w-5" />
           </a>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
-            className="grid h-11 w-11 place-items-center rounded-xl border border-border text-foreground"
+            className="grid h-11 w-11 place-items-center rounded-full border border-border text-foreground bg-background"
           >
             <Menu className="h-5 w-5" />
           </button>
         </div>
+
       </div>
 
       {open && (
