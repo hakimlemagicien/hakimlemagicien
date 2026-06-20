@@ -12,11 +12,11 @@ const navItems = [
 function Logo() {
   return (
     <a href="#" className="flex items-center gap-2 shrink-0">
-      <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground font-black text-2xl">
+      <span className="grid h-11 w-11 max-lg:h-10 max-lg:w-10 place-items-center rounded-xl max-lg:rounded-full bg-primary text-primary-foreground font-black text-2xl max-lg:text-xl">
         H
       </span>
       <span className="flex flex-col leading-tight">
-        <span className="text-lg font-black tracking-tight text-foreground">HAKIM</span>
+        <span className="text-lg max-lg:text-base font-black tracking-tight text-foreground">HAKIM</span>
         <span className="text-[10px] font-bold tracking-[0.25em] text-primary">COACHING</span>
       </span>
     </a>
@@ -28,8 +28,8 @@ export function Header() {
   const whatsapp = "https://wa.me/00000000000";
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 lg:h-24 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 lg:h-24 flex items-center justify-between gap-3 max-lg:[direction:ltr] lg:gap-4">
         <Logo />
 
         <nav className="hidden lg:flex items-center gap-8">
@@ -61,13 +61,22 @@ export function Header() {
           </a>
         </div>
 
-        <div className="flex lg:hidden items-center">
+        <div className="flex lg:hidden items-center gap-2">
+          <a
+            href={whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border/50 text-[#25D366]"
+          >
+            <MessageCircle className="h-5 w-5" strokeWidth={1.75} />
+          </a>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
-            className="grid h-11 w-11 place-items-center rounded-xl border border-border text-foreground"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border/50 text-foreground"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" strokeWidth={2} />
           </button>
         </div>
       </div>
