@@ -67,22 +67,14 @@ export function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"
-<<<<<<< HEAD
             className="grid h-11 w-11 place-items-center rounded-full border-2 border-primary text-primary"
-=======
-            className="grid h-10 w-10 place-items-center rounded-full border border-border/50 text-[#25D366]"
->>>>>>> cursor/floating-whatsapp-button
           >
             <MessageCircle className="h-5 w-5" strokeWidth={1.75} />
           </a>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
-<<<<<<< HEAD
             className="grid h-11 w-11 place-items-center rounded-full border border-border text-foreground bg-background"
-=======
-            className="grid h-10 w-10 place-items-center rounded-full border border-border/50 text-foreground"
->>>>>>> cursor/floating-whatsapp-button
           >
             <Menu className="h-5 w-5" strokeWidth={2} />
           </button>
