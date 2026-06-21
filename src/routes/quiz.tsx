@@ -35,10 +35,11 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
+  const [gender, setGender] = useState<"male" | "female" | null>(null);
 
   return (
     <div
@@ -52,15 +53,17 @@ function QuizPage() {
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
-      {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
+      {step === "gender" && <GenderScreen onSelect={(g) => { setGender(g); setStep(g === "male" ? "goals" : "femaleGoals"); }} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
       {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={() => setStep("activity")} />}
-      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} />}
+      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep("challenge")} />}
+      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => {}} />}
     </div>
   );
 }
+
 
 function LoadingScreen({ onDone }: { onDone: () => void }) {
   const steps = ["تحليل الأهداف", "تخصيص الأسئلة", "إعداد الخطة المناسبة"];
@@ -963,7 +966,7 @@ const ACTIVITIES = [
   },
 ];
 
-function ActivityScreen({ onBack }: { onBack: () => void }) {
+function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
@@ -1054,6 +1057,7 @@ function ActivityScreen({ onBack }: { onBack: () => void }) {
 
         {/* CTA */}
         <button
+          onClick={onNext}
           disabled={!selected}
           className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
           style={{
@@ -1080,5 +1084,256 @@ function ActivityScreen({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
+
+/* ===================== MEN'S CHALLENGE SCREEN (STEP 7) ===================== */
+
+function MaleAbsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="absG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFBCA8" />
+          <stop offset="100%" stopColor="#FF9E7D" />
+        </linearGradient>
+      </defs>
+      <path d="M15 8 C15 6 19 4 24 4 C29 4 33 6 33 8 L35 18 L33 38 L15 38 L13 18 Z" fill="url(#absG)" />
+      <path d="M18 14 L30 14 M18 20 L30 20 M18 26 L30 26 M24 14 L24 32" stroke="#C45E3A" strokeWidth="1.2" opacity="0.5" />
+      <path d="M20 10 C22 9 26 9 28 10" stroke="#C45E3A" strokeWidth="1" opacity="0.4" />
+    </svg>
+  );
+}
+
+function BicepIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="bicepG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FF9E7D" />
+          <stop offset="100%" stopColor="#FF6B00" />
+        </linearGradient>
+      </defs>
+      <path d="M12 32 C12 24 18 18 24 16 C30 18 36 24 36 32 C36 36 30 38 24 38 C18 38 12 36 12 32Z" fill="url(#bicepG)" />
+      <path d="M18 24 C20 22 22 21 24 21 C26 21 28 22 30 24" stroke="#CC5500" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+      <path d="M14 28 C16 26 18 25 20 25" stroke="#CC5500" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+    </svg>
+  );
+}
+
+function LowBatteryIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <rect x="8" y="14" width="28" height="16" rx="4" stroke="#FF6B00" strokeWidth="2.5" />
+      <rect x="36" y="18" width="4" height="8" rx="1.5" fill="#FF6B00" />
+      <rect x="12" y="18" width="10" height="8" rx="2" fill="#FF6B00" opacity="0.9" />
+      <rect x="24" y="18" width="8" height="8" rx="2" fill="#FF6B00" opacity="0.2" />
+    </svg>
+  );
+}
+
+function BullseyeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <circle cx="24" cy="24" r="14" stroke="#FF6B00" strokeWidth="2.5" opacity="0.25" />
+      <circle cx="24" cy="24" r="9" stroke="#FF6B00" strokeWidth="2.5" opacity="0.5" />
+      <circle cx="24" cy="24" r="4" fill="#FF6B00" opacity="0.9" />
+      <path d="M34 14 L38 10 M38 10 L38 16 M38 10 L32 10" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M24 24 L36 12" stroke="#FF6B00" strokeWidth="1.5" strokeDasharray="2 2" opacity="0.4" />
+    </svg>
+  );
+}
+
+function BrainIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="brainG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#FFAB99" />
+          <stop offset="100%" stopColor="#FF8A70" />
+        </linearGradient>
+      </defs>
+      <path d="M12 24 C12 16 18 10 24 10 C30 10 36 16 36 24 C36 30 32 36 24 38 C16 36 12 30 12 24Z" fill="url(#brainG)" />
+      <path d="M18 18 C20 16 22 16 24 16 C26 16 28 16 30 18" stroke="#D46040" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      <path d="M16 24 C18 22 20 22 22 22 M26 22 C28 22 30 22 32 24" stroke="#D46040" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+      <path d="M18 30 C20 28 22 28 24 28 C26 28 28 28 30 30" stroke="#D46040" strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+    </svg>
+  );
+}
+
+function SadFaceIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="sadG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFB547" />
+          <stop offset="100%" stopColor="#FF8534" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="16" fill="url(#sadG)" />
+      <circle cx="18" cy="20" r="2.5" fill="#8B4513" opacity="0.7" />
+      <circle cx="30" cy="20" r="2.5" fill="#8B4513" opacity="0.7" />
+      <path d="M17 32 C20 28 28 28 31 32" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      <path d="M12 16 C14 12 18 10 24 10 C30 10 34 12 36 16" stroke="#FF6B00" strokeWidth="1" opacity="0.2" fill="none" />
+    </svg>
+  );
+}
+
+const CHALLENGES = [
+  {
+    id: "belly",
+    label: "دهون البطن",
+    desc: "تراكم الدهون في منطقة البطن والكرش.",
+    icon: <MaleAbsIcon className="h-8 w-8" />,
+  },
+  {
+    id: "muscle",
+    label: "صعوبة بناء العضلات",
+    desc: "أجد صعوبة في زيادة الكتلة العضلية.",
+    icon: <BicepIcon className="h-8 w-8" />,
+  },
+  {
+    id: "energy",
+    label: "قلة الطاقة والحيوية",
+    desc: "أشعر بالتعب والخمول معظم الوقت.",
+    icon: <LowBatteryIcon className="h-8 w-8" />,
+  },
+  {
+    id: "goal",
+    label: "عدم وضوح الهدف",
+    desc: "ليس لدي هدف محدد أو خطة واضحة.",
+    icon: <BullseyeIcon className="h-8 w-8" />,
+  },
+  {
+    id: "commitment",
+    label: "الالتزام والاستمرارية",
+    desc: "أبدأ ثم أترك بسهولة ولا أستمر.",
+    icon: <BrainIcon className="h-8 w-8" />,
+  },
+  {
+    id: "confidence",
+    label: "الثقة بالنفس والمظهر",
+    desc: "غير راضٍ عن مظهري وأريد تغييراً حقيقياً.",
+    icon: <SadFaceIcon className="h-8 w-8" />,
+  },
+];
+
+function ChallengeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={7} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-3 text-center">
+          <p className="text-xl font-black" style={{ color: "#FF6B00" }}>
+            ممتاز <span className="inline-block align-middle">✨</span>
+          </p>
+          <h1 className="mt-1 text-[24px] font-black text-neutral-900 leading-tight">
+            ما هي أكبر مشكلة تواجهك حالياً؟
+          </h1>
+          <p className="mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2">
+            اختر التحدي الذي يؤثر عليك أكثر لنساعدك على التغلب عليه.
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
+          {CHALLENGES.map((c, i) => {
+            const active = selected === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setSelected(c.id)}
+                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
+                style={{
+                  boxShadow: active
+                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                  transform: active ? "scale(1.03)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
+                }}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
+                    style={{ background: "#FF6B00" }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+                  </span>
+                )}
+                <span
+                  className="grid place-items-center rounded-full"
+                  style={{
+                    height: 56,
+                    width: 56,
+                    background: "rgba(255,107,0,0.10)",
+                  }}
+                >
+                  {c.icon}
+                </span>
+                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight px-1">
+                  {c.label}
+                </span>
+                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
+                  {c.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom info card */}
+        <div
+          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
+          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
+        >
+          <span
+            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
+            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
+          >
+            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+          </span>
+          <div className="flex-1 text-right">
+            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
+              معلومة مهمة
+            </p>
+            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
+              معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onNext}
+          disabled={!selected}
+          className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: selected
+              ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+              : "none",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
+
 
 
