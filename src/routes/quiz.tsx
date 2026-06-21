@@ -790,7 +790,7 @@ function HorizontalWheel({
   );
 }
 
-function MeasureScreen({ onBack }: { onBack: () => void }) {
+function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [height, setHeight] = useState(164);
   const [weight, setWeight] = useState(63);
 
@@ -848,6 +848,7 @@ function MeasureScreen({ onBack }: { onBack: () => void }) {
 
         {/* CTA */}
         <button
+          onClick={onNext}
           className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           style={{
             background: "linear-gradient(180deg,#FF8534,#FF6B00)",
