@@ -23,6 +23,7 @@ import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
 import femaleImg from "@/assets/quiz-female.jpg";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
+import coachImg from "@/assets/coach.png";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -63,8 +64,9 @@ function QuizPage() {
       {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} />}
       {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep("investment")} />}
       {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
-      {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => {}} />}
-      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => {}} />}
+      {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
+      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
+      {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => {}} />}
     </div>
   );
 }
@@ -2574,5 +2576,213 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
         </div>
       </div>
     </div>
+  );
+}
+
+function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+  const [pct, setPct] = useState(0);
+  const DURATION = 10000;
+
+  useEffect(() => {
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const p = Math.min(100, Math.round((elapsed / DURATION) * 100));
+      setPct(p);
+      if (elapsed < DURATION) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setTimeout(() => onDone(), 1000);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [onDone]);
+
+  const thresholds = [25, 50, 75, 90, 100];
+  const stepStatus = (i: number): "done" | "loading" | "pending" => {
+    if (pct >= thresholds[i]) return "done";
+    const prev = i === 0 ? 0 : thresholds[i - 1];
+    if (pct >= prev) return "loading";
+    return "pending";
+  };
+
+  const items = [
+    { title: "فهم هدفك الحالي", sub: "أحلل هدفك وأولوياتك تحقيقه", icon: <Target size={22} className="text-[#FF6B00]" /> },
+    { title: "مقارنة حالتك بنتائج متدربين مشابهين", sub: "أقارن وضعك الحالي بنتائج حقيقية لمتدربين لديهم هدف مشابه", icon: <BarsIcon /> },
+    { title: "اختيار أفضل استراتيجية لك", sub: "أختار الاستراتيجية الأكثر فعالية لتحقيق هدفك", icon: <BrainIcon2 /> },
+    { title: "تحديد الخطة المناسبة لجسمك", sub: "أختار الخطة التي تناسب جسمك وهدفك ونمط حياتك", icon: <ClipboardIcon /> },
+    { title: "تجهيز برنامجك الخاص", sub: "أجهز برنامجك خطوة بخطوة مع جميع التفاصيل", icon: <ClipboardStarIcon /> },
+  ];
+
+  const R = 70;
+  const C = 2 * Math.PI * R;
+  const dash = (pct / 100) * C;
+
+  return (
+    <div className="absolute inset-0 flex flex-col" style={{ backgroundColor: "#FAF8F5", fontFamily: FONT }}>
+      {/* Header */}
+      <div className="px-4 pt-3 pb-2 shrink-0">
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} aria-label="رجوع" className="w-9 h-9 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-center justify-center">
+            <ChevronLeft size={20} className="text-gray-700 rotate-180" />
+          </button>
+          <div className="text-[15px] font-bold text-gray-800">
+            <span className="text-[#FF6B00]">10</span> من 11
+          </div>
+          <div className="w-9" />
+        </div>
+        <div className="mt-2 flex gap-1">
+          {Array.from({ length: 11 }).map((_, i) => (
+            <div key={i} className="h-[3px] flex-1 rounded-full" style={{ backgroundColor: i < 10 ? "#FF6B00" : "#F0E6DC" }} />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden px-4 flex flex-col">
+        {/* Title */}
+        <div className="text-center mt-1.5">
+          <h1 className="text-[19px] font-bold text-gray-900 leading-tight">
+            لحظة... جاري تجهيز برنامجك الخاص <span className="inline-block">✨</span>
+          </h1>
+          <p className="text-[12px] text-gray-600 mt-1 leading-snug px-4">
+            أراجع هدفك وحالتك الحالية لاختيار الخطة الأنسب <span className="text-[#FF6B00] font-bold">لجسمك وهدفك</span>.
+          </p>
+        </div>
+
+        {/* Progress ring */}
+        <div className="relative flex items-center justify-center my-1.5">
+          {/* sparkles */}
+          <Sparkles size={12} className="absolute text-[#FFB37A]/70 top-2 left-6 animate-pulse" />
+          <Sparkles size={10} className="absolute text-[#FFB37A]/60 bottom-3 right-7 animate-pulse" style={{ animationDelay: "0.4s" }} />
+          <Sparkles size={14} className="absolute text-[#FFB37A]/50 top-8 right-2 animate-pulse" style={{ animationDelay: "0.8s" }} />
+          <Sparkles size={9} className="absolute text-[#FFB37A]/60 bottom-6 left-2 animate-pulse" style={{ animationDelay: "1.2s" }} />
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#FF8A3D" />
+                <stop offset="100%" stopColor="#FF5A00" />
+              </linearGradient>
+            </defs>
+            <circle cx="85" cy="85" r={R} fill="none" stroke="#FCE6D4" strokeWidth="12" />
+            <circle
+              cx="85" cy="85" r={R} fill="none"
+              stroke="url(#ringGrad)" strokeWidth="12" strokeLinecap="round"
+              strokeDasharray={`${dash} ${C - dash}`}
+              transform="rotate(-90 85 85)"
+              style={{ transition: "stroke-dasharray 80ms linear" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="flex items-baseline">
+              <span className="text-[36px] font-black text-gray-900 leading-none tabular-nums">{pct}</span>
+              <span className="text-[16px] font-bold text-gray-700 mr-0.5">%</span>
+            </div>
+            <span className="text-[11px] text-gray-500 mt-0.5">...جاري التحضير</span>
+          </div>
+        </div>
+
+        {/* Checklist */}
+        <div className="relative flex-1 min-h-0 mt-1">
+          <div className="absolute right-[10px] top-3 bottom-3 w-px bg-gray-200" />
+          <div className="flex flex-col gap-1.5">
+            {items.map((it, i) => {
+              const status = stepStatus(i);
+              return (
+                <div key={i} className="flex items-center gap-2">
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 z-10 ${status === "pending" ? "bg-gray-300" : "bg-[#FF6B00]"}`} />
+                  <div className="flex-1 bg-white rounded-xl px-2.5 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.04)] flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-[#FFF1E5] flex items-center justify-center shrink-0">
+                      {it.icon}
+                    </div>
+                    <div className="flex-1 min-w-0 text-right">
+                      <div className="text-[12.5px] font-bold text-gray-900 leading-tight">{it.title}</div>
+                      <div className="text-[10.5px] text-gray-500 leading-snug line-clamp-2">{it.sub}</div>
+                    </div>
+                    <div className="w-6 h-6 shrink-0 flex items-center justify-center">
+                      {status === "done" && (
+                        <div className="w-6 h-6 rounded-full border-2 border-[#FF6B00] flex items-center justify-center">
+                          <Check size={14} className="text-[#FF6B00]" strokeWidth={3} />
+                        </div>
+                      )}
+                      {status === "loading" && (
+                        <div className="w-5 h-5 rounded-full border-2 border-[#FF6B00] border-t-transparent animate-spin" />
+                      )}
+                      {status === "pending" && (
+                        <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Coach card */}
+        <div className="relative mt-1.5 rounded-2xl bg-gradient-to-l from-[#FFF1E5] to-[#FFF7EF] p-2 flex items-center gap-2 overflow-hidden shrink-0">
+          <Lock size={56} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#FF6B00]/10" />
+          <div className="relative w-12 h-12 rounded-full bg-white overflow-hidden shrink-0 shadow">
+            <img src={coachImg} alt="Coach Hakim" className="w-full h-full object-cover" />
+            <div className="absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-[#FF6B00] border-2 border-white flex items-center justify-center">
+              <Check size={8} className="text-white" strokeWidth={4} />
+            </div>
+          </div>
+          <div className="flex-1 text-right">
+            <div className="text-[12px] font-bold text-gray-900 flex items-center justify-end gap-1">
+              <span>خصوصيتك 100% آمنة</span>
+              <Lock size={11} className="text-[#FF6B00]" />
+            </div>
+            <p className="text-[10.5px] text-gray-600 leading-snug">جميع بياناتك محمية ولن يتم مشاركتها مع أي جهة خارجية نهائياً.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom strip */}
+      <div className="shrink-0 mt-1.5 mx-4 mb-2 rounded-xl bg-[#FFF1E5] px-3 py-2 flex items-center justify-center gap-1.5">
+        <Lightbulb size={14} className="text-[#FF6B00]" />
+        <p className="text-[11.5px] text-gray-700 text-center">
+          أنت في <span className="text-[#FF6B00] font-bold">الخطوة الأخيرة!</span> بعد التحضير ستستلم برنامجك مباشرة.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function BarsIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="6" y1="18" x2="6" y2="14" />
+      <line x1="12" y1="18" x2="12" y2="10" />
+      <line x1="18" y1="18" x2="18" y2="6" />
+    </svg>
+  );
+}
+function BrainIcon2() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 3 3h1V4H9z" />
+      <path d="M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5v1a3 3 0 0 1-3 3h-1V4h1z" />
+    </svg>
+  );
+}
+function ClipboardIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="4" width="12" height="17" rx="2" />
+      <path d="M9 3h6v3H9z" />
+      <line x1="9" y1="11" x2="15" y2="11" />
+      <line x1="9" y1="15" x2="13" y2="15" />
+    </svg>
+  );
+}
+function ClipboardStarIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="4" width="12" height="17" rx="2" />
+      <path d="M9 3h6v3H9z" />
+      <path d="M12 10l1.2 2.4 2.6.4-1.9 1.8.4 2.6L12 16l-2.3 1.2.4-2.6-1.9-1.8 2.6-.4z" fill="#FF6B00" stroke="none" />
+    </svg>
   );
 }
