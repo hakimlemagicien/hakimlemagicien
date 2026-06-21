@@ -44,8 +44,9 @@ function QuizPage() {
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
-      {step === "gender" && <GenderScreen onNext={() => setStep("goals")} />}
+      {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} />}
+      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} />}
     </div>
   );
 }
