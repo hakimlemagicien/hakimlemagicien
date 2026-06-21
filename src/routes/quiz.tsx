@@ -32,7 +32,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -52,7 +52,11 @@ function QuizPage() {
       {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
-      {step === "age" && <AgeScreen onBack={() => setStep("gender")} />}
+      {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
+      {step === "measure" && <MeasureScreen onBack={() => setStep("age")} />}
+    </div>
+  );
+}
     </div>
   );
 }
