@@ -11,7 +11,12 @@ import {
   Zap,
   TrendingUp,
   Target,
+  Calendar,
+  Heart,
+  ArrowLeft,
+  Sparkles,
 } from "lucide-react";
+import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
 import femaleImg from "@/assets/quiz-female.jpg";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
@@ -27,7 +32,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -45,8 +50,9 @@ function QuizPage() {
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
       {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
-      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} />}
-      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} />}
+      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
+      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
+      {step === "age" && <AgeScreen onBack={() => setStep("gender")} />}
     </div>
   );
 }
@@ -295,8 +301,16 @@ const GOALS: Goal[] = [
   { id: "shape", label: "تغيير شكل الجسم", Icon: Target },
 ];
 
-function GoalsScreen({ onBack }: { onBack: () => void }) {
+function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string>("muscle");
+  const [touched, setTouched] = useState(false);
+  useEffect(() => {
+    if (!touched) return;
+    const t = setTimeout(onNext, 350);
+    return () => clearTimeout(t);
+  }, [touched, selected, onNext]);
+
+
 
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
@@ -325,7 +339,7 @@ function GoalsScreen({ onBack }: { onBack: () => void }) {
             return (
               <button
                 key={g.id}
-                onClick={() => setSelected(g.id)}
+                onClick={() => { setSelected(g.id); setTouched(true); }}
                 className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-3 py-3 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -448,8 +462,15 @@ const FEMALE_GOALS = [
   { id: "tone", label: "شد الجسم ونحته", icon: <TorsoIcon className="h-7 w-7" /> },
 ];
 
-function FemaleGoalsScreen({ onBack }: { onBack: () => void }) {
+function FemaleGoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selected) return;
+    const t = setTimeout(onNext, 350);
+    return () => clearTimeout(t);
+  }, [selected, onNext]);
+
+
 
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
@@ -528,3 +549,155 @@ function FemaleGoalsScreen({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
+
+/* ===================== AGE SCREEN ===================== */
+
+const AGES = Array.from({ length: 80 - 14 + 1 }, (_, i) => 14 + i);
+const ITEM_H = 56;
+
+function AgeScreen({ onBack }: { onBack: () => void }) {
+  const [age, setAge] = useState(24);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const snapTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTop = (24 - 14) * ITEM_H;
+  }, []);
+
+  const onScroll = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollTop / ITEM_H);
+    const next = AGES[Math.max(0, Math.min(AGES.length - 1, idx))];
+    if (next !== age) setAge(next);
+    if (snapTimer.current) window.clearTimeout(snapTimer.current);
+    snapTimer.current = window.setTimeout(() => {
+      el.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
+    }, 90);
+  };
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={4} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-3 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Sparkles className="h-5 w-5" style={{ color: "#FFB547", fill: "#FFB547" }} />
+            <p className="text-2xl font-black" style={{ color: "#FF6B00" }}>رائع</p>
+          </div>
+          <h1 className="mt-2 text-[24px] font-black text-neutral-900 leading-tight">
+            ما هو عمرك الحالي؟
+          </h1>
+          <p className="mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-6">
+            اختر عمرك للحصول على خطة مناسبة لمرحلتك.
+          </p>
+        </div>
+
+        {/* Picker card */}
+        <div className="relative mt-5 mx-1 flex-1 min-h-0 flex flex-col">
+          <div
+            className="relative rounded-[28px] bg-white/85 backdrop-blur-sm ring-1 ring-black/5 flex-1 min-h-0"
+            style={{ boxShadow: "0 20px 50px -25px rgba(255,107,0,0.25), 0 10px 30px -15px rgba(0,0,0,0.08)" }}
+          >
+            {/* floating calendar badge */}
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 grid h-12 w-12 place-items-center rounded-full bg-white ring-1 ring-black/5"
+              style={{ boxShadow: "0 8px 20px -8px rgba(255,107,0,0.4)" }}>
+              <Calendar className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+            </div>
+
+            {/* Wheel */}
+            <div className="relative h-full overflow-hidden rounded-[28px] pt-4">
+              {/* Selected band lines */}
+              <div className="pointer-events-none absolute left-4 right-4 top-1/2 -translate-y-1/2 z-10" style={{ height: ITEM_H }}>
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
+                <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
+                {/* سنة label */}
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-base font-medium text-neutral-400">سنة</div>
+              </div>
+
+              {/* Top/bottom fade overlays */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1/3 z-20"
+                style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }} />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 z-20"
+                style={{ background: "linear-gradient(0deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }} />
+
+              <div
+                ref={scrollerRef}
+                onScroll={onScroll}
+                className="h-full overflow-y-scroll scrollbar-none"
+                style={{ scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch", paddingTop: "calc(50% - 28px)", paddingBottom: "calc(50% - 28px)" }}
+              >
+                {AGES.map((n) => {
+                  const dist = Math.abs(n - age);
+                  const active = n === age;
+                  const opacity = active ? 1 : Math.max(0.15, 1 - dist * 0.28);
+                  const scale = active ? 1 : Math.max(0.75, 1 - dist * 0.08);
+                  return (
+                    <div
+                      key={n}
+                      style={{
+                        height: ITEM_H,
+                        scrollSnapAlign: "center",
+                        opacity,
+                        transform: `scale(${scale})`,
+                        transition: "opacity .2s, transform .2s, color .2s",
+                        color: active ? "#0A0A0A" : "#9CA3AF",
+                        fontWeight: active ? 900 : 600,
+                        fontSize: active ? 32 : 24,
+                      }}
+                      className="flex items-center justify-center leading-none"
+                    >
+                      {n}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info card */}
+        <div className="mt-4 rounded-3xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
+          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.08)" }}>
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-white shrink-0"
+            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}>
+            <Heart className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+          </span>
+          <div className="flex-1 text-right">
+            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>العمر مجرد رقم...</p>
+            <p className="text-[12px] text-neutral-700 font-medium mt-0.5">الالتزام هو ما يصنع الفارق الحقيقي 💪</p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .scrollbar-none::-webkit-scrollbar{display:none}
+        .scrollbar-none{scrollbar-width:none;-ms-overflow-style:none}
+      `}</style>
+    </div>
+  );
+}
+
