@@ -35,7 +35,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
