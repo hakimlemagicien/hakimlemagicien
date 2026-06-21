@@ -1620,5 +1620,302 @@ function FemaleChallengeScreen({ onBack, onNext }: { onBack: () => void; onNext:
 }
 
 
+function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: "dubai" | "remote") => void }) {
+  const [selected, setSelected] = useState<"dubai" | "remote" | null>(null);
+  const ORANGE = "#FF6B00";
+
+  const Check2 = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" stroke={ORANGE} strokeWidth="1.8" />
+      <path d="M8 12.5l2.8 2.8L16.5 9.5" />
+    </svg>
+  );
+
+  const PinIcon = ({ size = 22, color = ORANGE }: { size?: number; color?: string }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z" />
+      <circle cx="12" cy="9" r="2.6" />
+    </svg>
+  );
+
+  const DubaiArt = () => (
+    <svg viewBox="0 0 130 150" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="sky1" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#FFE7D1" />
+          <stop offset="1" stopColor="#FFD0A8" />
+        </linearGradient>
+        <linearGradient id="burj" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#C9613B" />
+          <stop offset="1" stopColor="#7A3318" />
+        </linearGradient>
+      </defs>
+      <rect width="130" height="150" fill="url(#sky1)" />
+      <circle cx="95" cy="42" r="14" fill="#FFB07A" opacity="0.55" />
+      {/* Burj Khalifa */}
+      <polygon points="62,20 66,140 58,140" fill="url(#burj)" />
+      <polygon points="62,20 60,55 64,55" fill="#3A1608" opacity="0.4" />
+      {/* side towers */}
+      <rect x="40" y="70" width="10" height="70" fill="#A04A28" />
+      <polygon points="40,70 50,70 45,58" fill="#A04A28" />
+      <rect x="75" y="80" width="9" height="60" fill="#8E3E22" />
+      <polygon points="75,80 84,80 79.5,68" fill="#8E3E22" />
+      <rect x="88" y="90" width="14" height="50" fill="#B65733" />
+      <rect x="22" y="95" width="12" height="45" fill="#9E4628" />
+      {/* palms */}
+      <g stroke="#5C2810" strokeWidth="1.6">
+        <line x1="20" y1="140" x2="22" y2="120" />
+        <line x1="106" y1="140" x2="108" y2="118" />
+      </g>
+      <g fill="#7A3D1C">
+        <ellipse cx="22" cy="118" rx="9" ry="3" />
+        <ellipse cx="108" cy="116" rx="10" ry="3" />
+      </g>
+      {/* water */}
+      <rect y="138" width="130" height="12" fill="#E89870" opacity="0.55" />
+    </svg>
+  );
+
+  const GlobeArt = () => (
+    <svg viewBox="0 0 130 130" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="g1" cx="0.35" cy="0.35" r="0.8">
+          <stop offset="0" stopColor="#FFD9B8" />
+          <stop offset="1" stopColor="#E58348" />
+        </radialGradient>
+      </defs>
+      <circle cx="65" cy="68" r="42" fill="url(#g1)" />
+      <g fill="#A0451E" opacity="0.85">
+        <path d="M40 55 q8 -6 18 -3 q6 2 4 9 q-2 6 -10 6 q-8 0 -12 -12z" />
+        <path d="M68 78 q10 -2 16 4 q4 5 -2 9 q-8 4 -14 -3z" />
+        <path d="M50 82 q6 1 8 6 q1 4 -4 5 q-7 1 -6 -8z" />
+      </g>
+      <g fill="none" stroke="#7A3318" strokeWidth="1" opacity="0.5">
+        <ellipse cx="65" cy="68" rx="42" ry="14" />
+        <ellipse cx="65" cy="68" rx="42" ry="28" />
+        <line x1="65" y1="26" x2="65" y2="110" />
+      </g>
+      {/* flight path */}
+      <path d="M18 60 Q 65 0 112 60" fill="none" stroke="#5C2810" strokeWidth="1.4" strokeDasharray="3 3" />
+      <path d="M18 60 Q 65 120 112 60" fill="none" stroke="#5C2810" strokeWidth="1.2" strokeDasharray="2 3" opacity="0.6" />
+      {/* plane */}
+      <g transform="translate(100 36) rotate(35)" fill="#3A1608">
+        <path d="M0 0 L14 4 L18 2 L20 6 L18 10 L14 8 L0 12 L4 6 Z" />
+      </g>
+    </svg>
+  );
+
+  const Card = ({
+    id,
+    title,
+    subtitle,
+    benefits,
+    art,
+    watermark,
+  }: {
+    id: "dubai" | "remote";
+    title: string;
+    subtitle: string;
+    benefits: string[];
+    art: React.ReactNode;
+    watermark: React.ReactNode;
+  }) => {
+    const active = selected === id;
+    return (
+      <button
+        onClick={() => setSelected(id)}
+        className="relative w-full rounded-[26px] bg-white text-right overflow-hidden transition-all duration-250"
+        style={{
+          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+          boxShadow: active
+            ? "0 18px 40px -16px rgba(255,107,0,0.45), 0 6px 16px -8px rgba(0,0,0,0.08)"
+            : "0 10px 26px -16px rgba(0,0,0,0.18), 0 2px 6px -2px rgba(0,0,0,0.06)",
+          transform: active ? "scale(1.02)" : "scale(1)",
+        }}
+      >
+        {/* selection indicator */}
+        <div className="absolute top-3 left-3 z-10">
+          {active ? (
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: ORANGE, boxShadow: "0 4px 12px rgba(255,107,0,0.45)" }}
+            >
+              <Check size={16} color="#fff" strokeWidth={3} />
+            </div>
+          ) : (
+            <div className="w-7 h-7 rounded-full border-2 border-gray-300 bg-white" />
+          )}
+        </div>
+
+        {/* watermark right */}
+        <div className="absolute right-2 bottom-2 w-16 h-16 opacity-15 pointer-events-none">
+          {watermark}
+        </div>
+
+        <div className="flex flex-row-reverse items-stretch min-h-[150px]">
+          {/* art left */}
+          <div className="w-[130px] shrink-0 self-stretch overflow-hidden rounded-l-[24px]">
+            {art}
+          </div>
+          {/* text */}
+          <div className="flex-1 px-4 py-3 flex flex-col justify-center gap-1.5">
+            <h3 className="text-[19px] font-extrabold text-[#2A2A2A] leading-tight">{title}</h3>
+            <p className="text-[13px] font-bold" style={{ color: ORANGE }}>{subtitle}</p>
+            <ul className="mt-1 space-y-1.5">
+              {benefits.map((b, i) => (
+                <li key={i} className="flex flex-row-reverse items-center gap-1.5 text-[11.5px] text-[#4A4A4A] font-medium">
+                  <Check2 />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        backgroundColor: "#FAF8F5",
+        backgroundImage: `url(${gymBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        animation: "fadeIn .35s ease-out",
+      }}
+    >
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)" }} />
+
+      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md"
+            aria-label="رجوع"
+          >
+            <ChevronLeft size={20} className="text-gray-700" />
+          </button>
+          <div className="text-[15px] font-bold text-gray-700">
+            <span style={{ color: ORANGE }}>8</span> من 10
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* Progress */}
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: i < 7 ? "100%" : i === 7 ? "55%" : "0%",
+                  background: ORANGE,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
+          <div className="inline-flex items-center justify-center gap-2">
+            <PinIcon size={22} />
+            <span className="text-[22px] font-extrabold" style={{ color: ORANGE }}>ممتاز</span>
+          </div>
+          <h1 className="mt-1 text-[26px] font-extrabold text-[#1F1F1F] leading-tight">أين تتواجد حالياً؟</h1>
+          <p className="mt-1.5 text-[13px] text-gray-500 font-medium leading-relaxed px-6">
+            ساعدنا في تحديد أفضل خطة تدريب تناسب موقعك.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="mt-4 flex flex-col gap-3">
+          <div style={{ animation: "fadeUp .5s ease-out .1s both" }}>
+            <Card
+              id="dubai"
+              title="أعيش في دبي"
+              subtitle="تدريب شخصي مباشر"
+              benefits={["جلسات تدريبية في أفضل الأندية", "متابعة مباشرة مع مدربك"]}
+              art={<DubaiArt />}
+              watermark={
+                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.5">
+                  <path d="M12 2 L8 8 L10 8 L8 14 L11 14 L9 22 L15 22 L13 14 L16 14 L14 8 L16 8 Z" />
+                </svg>
+              }
+            />
+          </div>
+          <div style={{ animation: "fadeUp .5s ease-out .2s both" }}>
+            <Card
+              id="remote"
+              title="خارج دبي"
+              subtitle="تدريب أونلاين مخصص لك"
+              benefits={["خطة تدريب وغذائية مخصصة", "متابعة أونلاين أينما كنت"]}
+              art={<GlobeArt />}
+              watermark={
+                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.4">
+                  <circle cx="12" cy="12" r="10" />
+                  <ellipse cx="12" cy="12" rx="10" ry="4" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <line x1="12" y1="2" x2="12" y2="22" />
+                </svg>
+              }
+            />
+          </div>
+        </div>
+
+        {/* Info card */}
+        <div
+          className="mt-3 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3"
+          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)" }}
+        >
+          <div
+            className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"
+            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
+          >
+            <PinIcon size={22} />
+          </div>
+          <div className="flex-1 text-right">
+            <div className="text-[13px] font-extrabold" style={{ color: ORANGE }}>معلومة مهمة</div>
+            <div className="text-[12.5px] text-[#3D3D3D] font-medium leading-snug">
+              ✨ نقدم أفضل تجربة سواء كنت في دبي أو خارجها.
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-auto pt-3">
+          <button
+            disabled={!selected}
+            onClick={() => selected && onNext(selected)}
+            className="w-full h-[58px] rounded-[20px] flex items-center justify-center gap-3 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
+            style={{
+              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+              opacity: selected ? 1 : 0.7,
+            }}
+          >
+            <span>متابعة</span>
+            <ArrowLeft size={20} />
+          </button>
+          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
+            <Lock size={12} />
+            <span>معلوماتك تبقى خاصة وآمنة</span>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
+
+
+
 
 
