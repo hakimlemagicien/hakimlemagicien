@@ -556,7 +556,7 @@ function FemaleGoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () 
 const AGES = Array.from({ length: 80 - 14 + 1 }, (_, i) => 14 + i);
 const ITEM_H = 56;
 
-function AgeScreen({ onBack }: { onBack: () => void }) {
+function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [age, setAge] = useState(24);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const snapTimer = useRef<number | null>(null);
