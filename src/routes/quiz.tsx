@@ -23,6 +23,7 @@ import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
 import femaleImg from "@/assets/quiz-female.jpg";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
+import coachImg from "@/assets/coach.png";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
