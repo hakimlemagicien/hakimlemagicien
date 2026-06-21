@@ -1916,7 +1916,349 @@ function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: 
   );
 }
 
+/* ===================== INVESTMENT SCREEN ===================== */
 
+function TrophyIcon({ size = 48 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size}>
+      <defs>
+        <linearGradient id="trophyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FFD700" />
+          <stop offset="50%" stopColor="#FFC107" />
+          <stop offset="100%" stopColor="#B8860B" />
+        </linearGradient>
+        <linearGradient id="trophyBase" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#8B6914" />
+          <stop offset="100%" stopColor="#5C4008" />
+        </linearGradient>
+      </defs>
+      {/* Base */}
+      <rect x="22" y="50" width="20" height="6" rx="2" fill="url(#trophyBase)" />
+      <rect x="18" y="54" width="28" height="5" rx="2" fill="url(#trophyBase)" opacity="0.8" />
+      {/* Cup body */}
+      <path d="M16 16 Q16 42 32 46 Q48 42 48 16 Z" fill="url(#trophyGrad)" />
+      {/* Star */}
+      <path d="M32 22 L34 28 L40 28 L35 32 L37 38 L32 34 L27 38 L29 32 L24 28 L30 28 Z" fill="#FFF8DC" opacity="0.9" />
+      {/* Handles */}
+      <path d="M16 18 Q8 18 8 28 Q8 38 18 38" fill="none" stroke="url(#trophyGrad)" strokeWidth="4" strokeLinecap="round" />
+      <path d="M48 18 Q56 18 56 28 Q56 38 46 38" fill="none" stroke="url(#trophyGrad)" strokeWidth="4" strokeLinecap="round" />
+      {/* Rim */}
+      <ellipse cx="32" cy="16" rx="16" ry="3" fill="#FFD700" />
+    </svg>
+  );
+}
 
+function CoinIcon({ size = 48 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size}>
+      <defs>
+        <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFD700" />
+          <stop offset="40%" stopColor="#FFC107" />
+          <stop offset="100%" stopColor="#B8860B" />
+        </linearGradient>
+        <linearGradient id="coinEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#D4AF37" />
+          <stop offset="100%" stopColor="#8B6914" />
+        </linearGradient>
+      </defs>
+      {/* Outer ring */}
+      <circle cx="32" cy="32" r="28" fill="url(#coinGrad)" stroke="url(#coinEdge)" strokeWidth="2" />
+      {/* Inner ring */}
+      <circle cx="32" cy="32" r="20" fill="none" stroke="#B8860B" strokeWidth="1.5" opacity="0.5" />
+      {/* Dollar sign */}
+      <text x="32" y="40" textAnchor="middle" fontSize="28" fontWeight="bold" fill="#5C4008" fontFamily="Arial">$</text>
+      {/* Shine */}
+      <ellipse cx="24" cy="22" rx="8" ry="5" fill="white" opacity="0.25" transform="rotate(-30 24 22)" />
+    </svg>
+  );
+}
+
+function PiggyBankIcon({ size = 48 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size}>
+      <defs>
+        <linearGradient id="piggyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#FFB6C1" />
+          <stop offset="50%" stopColor="#FF91A4" />
+          <stop offset="100%" stopColor="#F06279" />
+        </linearGradient>
+        <linearGradient id="coinSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFD700" />
+          <stop offset="100%" stopColor="#D4AF37" />
+        </linearGradient>
+      </defs>
+      {/* Body */}
+      <ellipse cx="32" cy="38" rx="22" ry="16" fill="url(#piggyGrad)" />
+      {/* Head */}
+      <circle cx="48" cy="30" r="10" fill="url(#piggyGrad)" />
+      {/* Snout */}
+      <ellipse cx="56" cy="30" rx="4" ry="5" fill="#FF91A4" />
+      <circle cx="55" cy="28" r="1.5" fill="#D4506B" />
+      <circle cx="57" cy="28" r="1.5" fill="#D4506B" />
+      {/* Eye */}
+      <circle cx="50" cy="26" r="2" fill="#333" />
+      <circle cx="50.5" cy="25.5" r="0.7" fill="white" />
+      {/* Ear */}
+      <ellipse cx="42" cy="20" rx="5" ry="7" fill="#FF91A4" transform="rotate(-20 42 20)" />
+      {/* Legs */}
+      <rect x="18" y="50" width="6" height="8" rx="3" fill="#F06279" />
+      <rect x="40" y="50" width="6" height="8" rx="3" fill="#F06279" />
+      {/* Tail */}
+      <path d="M12 38 Q8 36 10 32 Q12 30 10 28" fill="none" stroke="#FF91A4" strokeWidth="2" strokeLinecap="round" />
+      {/* Coin slot */}
+      <rect x="26" y="22" width="12" height="3" rx="1.5" fill="#D4506B" />
+      {/* Coin on top */}
+      <circle cx="32" cy="14" r="6" fill="url(#coinSmall)" stroke="#D4AF37" strokeWidth="1" />
+      <text x="32" y="17" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#8B6914">$</text>
+    </svg>
+  );
+}
+
+function MagnifyingGlassIcon({ size = 48 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size}>
+      <defs>
+        <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E8E8E8" />
+          <stop offset="50%" stopColor="#F5F5F5" />
+          <stop offset="100%" stopColor="#D0D0D0" />
+        </linearGradient>
+        <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#888" />
+          <stop offset="100%" stopColor="#555" />
+        </linearGradient>
+      </defs>
+      {/* Handle */}
+      <rect x="42" y="42" width="8" height="20" rx="4" fill="url(#handleGrad)" transform="rotate(45 46 52)" />
+      {/* Rim */}
+      <circle cx="28" cy="28" r="18" fill="none" stroke="url(#handleGrad)" strokeWidth="4" />
+      {/* Glass */}
+      <circle cx="28" cy="28" r="15" fill="url(#glassGrad)" />
+      {/* Reflection */}
+      <ellipse cx="22" cy="20" rx="6" ry="4" fill="white" opacity="0.5" transform="rotate(-45 22 20)" />
+      <ellipse cx="24" cy="22" rx="3" ry="2" fill="white" opacity="0.7" transform="rotate(-45 24 22)" />
+    </svg>
+  );
+}
+
+function TargetIconSmall({ size = 22 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#FF6B00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+      <line x1="12" y1="2" x2="12" y2="6" />
+      <line x1="12" y1="18" x2="12" y2="22" />
+      <line x1="2" y1="12" x2="6" y2="12" />
+      <line x1="18" y1="12" x2="22" y2="12" />
+    </svg>
+  );
+}
+
+const INVESTMENT_OPTIONS = [
+  {
+    id: "premium" as const,
+    title: "مستعد لفعل كل ما يلزم",
+    highlight: "أريد أسرع وأفضل نتيجة ممكنة.",
+    description: "أنا جاد وأؤمن أن الاستثمار في نفسي هو أفضل قرار سأتخذه.",
+    Icon: TrophyIcon,
+    iconBg: "#FFF8E7",
+  },
+  {
+    id: "standard" as const,
+    title: "مستعد لكن بميزانية متوسطة",
+    highlight: "أبحث عن خطة مناسبة أستطيع الالتزام بها.",
+    description: "أريد نتائج قوية مع خطة تناسب ميزانيتي الحالية.",
+    Icon: CoinIcon,
+    iconBg: "#FFF8E7",
+  },
+  {
+    id: "budget" as const,
+    title: "أبحث عن أرخص خيار",
+    highlight: "أريد البدء بأقل تكلفة ممكنة.",
+    description: "ميزانيتي محدودة حالياً وأبحث عن خيار اقتصادي.",
+    Icon: PiggyBankIcon,
+    iconBg: "#FFF0F3",
+  },
+  {
+    id: "price_only" as const,
+    title: "أريد فقط معرفة السعر",
+    highlight: "لست متأكداً بعد.",
+    description: "أحتاج معلومات أكثر قبل أن أقرر إذا كنت سأبدأ أم لا.",
+    Icon: MagnifyingGlassIcon,
+    iconBg: "#F0F0F0",
+  },
+];
+
+function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const ORANGE = "#FF6B00";
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        backgroundColor: "#FAF8F5",
+        backgroundImage: `url(${gymBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        animation: "fadeIn .35s ease-out",
+      }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)",
+        }}
+      />
+
+      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
+            aria-label="رجوع"
+          >
+            <ChevronLeft size={20} className="text-neutral-700" />
+          </button>
+          <div className="text-[15px] font-bold text-neutral-800">
+            <span style={{ color: ORANGE }}>9</span> من 10
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* Progress */}
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: i < 8 ? "100%" : i === 8 ? "55%" : "0%",
+                  background: ORANGE,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
+          <div className="inline-flex items-center justify-center gap-2">
+            <TargetIconSmall size={22} />
+            <span className="text-[20px] font-extrabold" style={{ color: ORANGE }}>كن صريحاً معي</span>
+            <span className="text-[20px]">👇</span>
+          </div>
+          <h1 className="mt-2 text-[24px] font-extrabold text-[#1F1F1F] leading-tight">
+            كم أنت مستعد للاستثمار في تغيير جسمك؟
+          </h1>
+          <p className="mt-2 text-[13px] text-gray-500 font-medium leading-relaxed px-4">
+            النتائج الحقيقية تحتاج التزاماً واستثماراً حقيقياً.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="mt-4 flex flex-col gap-2.5 flex-1 min-h-0 overflow-hidden">
+          {INVESTMENT_OPTIONS.map((opt, i) => {
+            const active = selected === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setSelected(opt.id)}
+                className="relative w-full rounded-[22px] bg-white text-right overflow-hidden transition-all duration-250 active:scale-[0.98]"
+                style={{
+                  border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+                  boxShadow: active
+                    ? "0 14px 36px -14px rgba(255,107,0,0.4), 0 6px 16px -8px rgba(0,0,0,0.08)"
+                    : "0 8px 22px -14px rgba(0,0,0,0.14), 0 2px 6px -2px rgba(0,0,0,0.05)",
+                  transform: active ? "scale(1.02)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 70}ms both`,
+                }}
+              >
+                {/* Selection indicator - left side in RTL */}
+                <div className="absolute top-3 left-3 z-10">
+                  {active ? (
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{ background: ORANGE, boxShadow: "0 4px 12px rgba(255,107,0,0.45)" }}
+                    >
+                      <Check size={16} color="#fff" strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-7 h-7 rounded-full border-2 border-gray-300 bg-white" />
+                  )}
+                </div>
+
+                <div className="flex flex-row-reverse items-stretch">
+                  {/* Icon - right side in RTL */}
+                  <div
+                    className="w-[72px] shrink-0 self-stretch flex items-center justify-center"
+                    style={{ background: opt.iconBg }}
+                  >
+                    <opt.Icon size={48} />
+                  </div>
+                  {/* Text */}
+                  <div className="flex-1 px-4 py-3 flex flex-col justify-center gap-0.5 text-right">
+                    <h3 className="text-[15px] font-extrabold text-[#2A2A2A] leading-tight">{opt.title}</h3>
+                    <p className="text-[12.5px] font-bold" style={{ color: ORANGE }}>{opt.highlight}</p>
+                    <p className="text-[11.5px] text-[#4A4A4A] font-medium leading-snug">{opt.description}</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Info card */}
+        <div
+          className="mt-2.5 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3"
+          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)", animation: "fadeUp .5s ease-out .35s both" }}
+        >
+          <div
+            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
+            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
+          >
+            <Lightbulb size={20} style={{ color: ORANGE }} />
+          </div>
+          <div className="flex-1 text-right">
+            <div className="text-[13px] font-extrabold" style={{ color: ORANGE }}>معلومة مهمة</div>
+            <div className="text-[11.5px] text-[#3D3D3D] font-medium leading-snug">
+              كلما كان استثمارك أعلى، كانت نتائجك أسرع وأفضل. أنا هنا لمساعدتك على تحقيق أفضل نسخة منك.
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-auto pt-2.5">
+          <button
+            disabled={!selected}
+            onClick={() => selected && onNext()}
+            className="w-full h-[56px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
+            style={{
+              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+              opacity: selected ? 1 : 0.7,
+            }}
+          >
+            <span>متابعة</span>
+            <ArrowLeft size={20} />
+          </button>
+          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
+            <Lock size={12} />
+            <span>معلوماتك تبقى خاصة وآمنة</span>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
 
 
