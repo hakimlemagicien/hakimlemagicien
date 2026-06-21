@@ -35,10 +35,11 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
+  const [gender, setGender] = useState<"male" | "female" | null>(null);
 
   return (
     <div
@@ -52,15 +53,17 @@ function QuizPage() {
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
-      {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
+      {step === "gender" && <GenderScreen onSelect={(g) => { setGender(g); setStep(g === "male" ? "goals" : "femaleGoals"); }} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
       {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={() => setStep("activity")} />}
-      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} />}
+      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep("challenge")} />}
+      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => {}} />}
     </div>
   );
 }
+
 
 function LoadingScreen({ onDone }: { onDone: () => void }) {
   const steps = ["تحليل الأهداف", "تخصيص الأسئلة", "إعداد الخطة المناسبة"];
@@ -963,7 +966,7 @@ const ACTIVITIES = [
   },
 ];
 
-function ActivityScreen({ onBack }: { onBack: () => void }) {
+function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
@@ -1054,6 +1057,7 @@ function ActivityScreen({ onBack }: { onBack: () => void }) {
 
         {/* CTA */}
         <button
+          onClick={onNext}
           disabled={!selected}
           className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
           style={{
