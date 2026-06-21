@@ -35,7 +35,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -62,8 +62,9 @@ function QuizPage() {
       {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} />}
       {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} />}
       {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep("investment")} />}
-      {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "male" ? "bodyType" : "bodyType")} />}
+      {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => {}} />}
+      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => {}} />}
     </div>
   );
 }
@@ -2389,6 +2390,162 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => 
             <div className="text-[12.5px] font-extrabold" style={{ color: ORANGE }}>لماذا نسأل هذا؟</div>
             <div className="text-[11px] text-[#3D3D3D] font-medium leading-snug">
               اختبارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك.
+            </div>
+          </div>
+          <Sparkles size={14} className="absolute left-2 top-2 opacity-50" style={{ color: ORANGE }} />
+          <Sparkles size={10} className="absolute left-3 bottom-2 opacity-40" style={{ color: ORANGE }} />
+        </div>
+
+        {/* CTA */}
+        <div className="mt-2.5">
+          <button
+            disabled={!selected}
+            onClick={() => selected && onNext()}
+            className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
+            style={{
+              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+              opacity: selected ? 1 : 0.7,
+            }}
+          >
+            <span>متابعة</span>
+            <ArrowLeft size={20} />
+          </button>
+          <div className="mt-1.5 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
+            <Lock size={12} />
+            <span>معلوماتك تبقى خاصة وآمنة</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+import fbodySlim from "@/assets/fbody-slim.jpg";
+import fbodyBellyLight from "@/assets/fbody-belly-light.jpg";
+import fbodyToning from "@/assets/fbody-toning.jpg";
+import fbodyShaping from "@/assets/fbody-shaping.jpg";
+import fbodyAthletic from "@/assets/fbody-athletic.jpg";
+import fbodyOverweight from "@/assets/fbody-overweight.jpg";
+
+const FEMALE_BODY_TYPES = [
+  { id: "needs_toning", title: "جسم يحتاج شد", sub: "ترهلات خفيفة في البطن أو الذراعين والجسم", img: fbodyToning },
+  { id: "belly_fat_light", title: "كرش خفيفة", sub: "دهون بسيطة في منطقة البطن فقط", img: fbodyBellyLight },
+  { id: "slim", title: "نحيفة", sub: "وزن أقل من الطبيعي ودهون قليلة جداً", img: fbodySlim },
+  { id: "overweight", title: "جسم ممتلئ بدهون", sub: "زيادة واضحة في الوزن وتراكم الدهون", img: fbodyOverweight },
+  { id: "athletic", title: "جسم رياضي", sub: "جسم مشدود وعضلات بارزة وقوام رياضي", img: fbodyAthletic },
+  { id: "body_shaping", title: "عدم تناسق الأرداف", sub: "أرغب بجسم أكثر تناسقاً وخصراً أنحف", img: fbodyShaping },
+];
+
+function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const ORANGE = "#FF6B00";
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
+    >
+      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={onBack}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
+            aria-label="رجوع"
+          >
+            <ChevronLeft size={20} className="text-neutral-700" />
+          </button>
+          <div className="text-[15px] font-bold text-neutral-800">
+            <span style={{ color: ORANGE }}>10</span> من 10
+          </div>
+          <div className="w-10" />
+        </div>
+
+        {/* Progress - all 10 filled */}
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
+              <div className="h-full rounded-full" style={{ width: "100%", background: ORANGE }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
+          <h1 className="text-[22px] font-extrabold text-[#1F1F1F] leading-tight">
+            أي شكل أقرب لجسمك الحالي؟
+          </h1>
+          <p className="mt-1.5 text-[12.5px] text-gray-500 font-medium">
+            اختري الشكل الأقرب لك حتى أخصص لك الخطة المثالية.
+          </p>
+          <div className="mx-auto mt-1.5 h-[3px] w-10 rounded-full" style={{ background: ORANGE }} />
+        </div>
+
+        {/* Grid */}
+        <div className="mt-3 grid grid-cols-3 gap-2 flex-1 min-h-0">
+          {FEMALE_BODY_TYPES.map((b, i) => {
+            const active = selected === b.id;
+            return (
+              <button
+                key={b.id}
+                onClick={() => setSelected(b.id)}
+                className="relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250"
+                style={{
+                  border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+                  boxShadow: active
+                    ? "0 12px 28px -12px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)"
+                    : "0 6px 16px -10px rgba(0,0,0,0.14), 0 2px 4px -2px rgba(0,0,0,0.05)",
+                  transform: active ? "scale(1.03)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 50}ms both`,
+                }}
+              >
+                <div className="w-full rounded-[12px] overflow-hidden bg-[#F2EDE6] aspect-[3/4]">
+                  <img
+                    src={b.img}
+                    alt={b.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="mt-1 text-[11px] font-extrabold text-[#1F1F1F] text-center leading-tight px-0.5 line-clamp-2">
+                  {b.title}
+                </div>
+                <div className="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2 mt-0.5">
+                  {b.sub}
+                </div>
+                <div className="mt-1 mb-0.5">
+                  {active ? (
+                    <div
+                      className="w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: ORANGE, boxShadow: "0 3px 8px rgba(255,107,0,0.45)" }}
+                    >
+                      <Check size={12} color="#fff" strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Info card */}
+        <div
+          className="mt-2.5 rounded-[18px] bg-white/85 backdrop-blur px-3 py-2.5 flex flex-row-reverse items-center gap-3 relative overflow-hidden"
+          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)", animation: "fadeUp .5s ease-out .35s both" }}
+        >
+          <div
+            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
+            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
+          >
+            <Target size={22} style={{ color: ORANGE }} />
+          </div>
+          <div className="flex-1 text-right">
+            <div className="text-[12.5px] font-extrabold" style={{ color: ORANGE }}>لماذا نسألك هذا؟</div>
+            <div className="text-[11px] text-[#3D3D3D] font-medium leading-snug">
+              اختيارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك.
             </div>
           </div>
           <Sparkles size={14} className="absolute left-2 top-2 opacity-50" style={{ color: ORANGE }} />
