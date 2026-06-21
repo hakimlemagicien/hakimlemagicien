@@ -339,7 +339,7 @@ function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => voi
             return (
               <button
                 key={g.id}
-                onClick={() => setSelected(g.id)}
+                onClick={() => { setSelected(g.id); setTouched(true); }}
                 className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-3 py-3 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
