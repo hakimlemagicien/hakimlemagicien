@@ -201,7 +201,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
             tintFrom="#EFF6FF"
             tintTo="#FFFFFF"
             symbol="♂"
-            onClick={onNext}
+            onClick={() => onSelect("male")}
             features={[
               { Icon: Dumbbell, text: "بناء عضلات" },
               { Icon: Flame, text: "خسارة الدهون" },
@@ -215,7 +215,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
             tintFrom="#FDF2F8"
             tintTo="#FFFFFF"
             symbol="♀"
-            onClick={onNext}
+            onClick={() => onSelect("female")}
             features={[
               { Icon: Dumbbell, text: "شد الجسم" },
               { Icon: Flame, text: "خصر أنحف" },
