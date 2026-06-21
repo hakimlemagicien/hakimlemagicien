@@ -2611,7 +2611,7 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
   const items = [
     { title: "فهم هدفك الحالي", sub: "أحلل هدفك وأولوياتك تحقيقه", icon: <Target size={22} className="text-[#FF6B00]" /> },
     { title: "مقارنة حالتك بنتائج متدربين مشابهين", sub: "أقارن وضعك الحالي بنتائج حقيقية لمتدربين لديهم هدف مشابه", icon: <BarsIcon /> },
-    { title: "اختيار أفضل استراتيجية لك", sub: "أختار الاستراتيجية الأكثر فعالية لتحقيق هدفك", icon: <BrainIcon /> },
+    { title: "اختيار أفضل استراتيجية لك", sub: "أختار الاستراتيجية الأكثر فعالية لتحقيق هدفك", icon: <BrainIcon2 /> },
     { title: "تحديد الخطة المناسبة لجسمك", sub: "أختار الخطة التي تناسب جسمك وهدفك ونمط حياتك", icon: <ClipboardIcon /> },
     { title: "تجهيز برنامجك الخاص", sub: "أجهز برنامجك خطوة بخطوة مع جميع التفاصيل", icon: <ClipboardStarIcon /> },
   ];
@@ -2759,7 +2759,7 @@ function BarsIcon() {
     </svg>
   );
 }
-function BrainIcon() {
+function BrainIcon2() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 3 3h1V4H9z" />
