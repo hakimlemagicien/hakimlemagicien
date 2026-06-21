@@ -1336,5 +1336,288 @@ function ChallengeScreen({ onBack, onNext }: { onBack: () => void; onNext: () =>
   );
 }
 
+/* ===================== WOMEN'S CHALLENGE SCREEN (STEP 7) ===================== */
+
+function FemaleWaistIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="fwG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFBCA8" />
+          <stop offset="100%" stopColor="#FF9E7D" />
+        </linearGradient>
+      </defs>
+      {/* Female torso */}
+      <path d="M18 6 C18 4 21 3 24 3 C27 3 30 4 30 6 L32 16 L30 34 L18 34 L16 16 Z" fill="url(#fwG)" />
+      {/* Waist indentation */}
+      <path d="M16 16 Q24 20 32 16" stroke="#E07050" strokeWidth="1.2" fill="none" opacity="0.5" />
+      {/* Left arrow */}
+      <path d="M6 22 L14 22 M10 18 L14 22 L10 26" stroke="#FF6B00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Right arrow */}
+      <path d="M34 22 L42 22 M38 18 L34 22 L38 26" stroke="#FF6B00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Dots on belly */}
+      <circle cx="24" cy="24" r="1.5" fill="#E07050" opacity="0.4" />
+      <circle cx="22" cy="26" r="1" fill="#E07050" opacity="0.3" />
+      <circle cx="26" cy="26" r="1" fill="#E07050" opacity="0.3" />
+    </svg>
+  );
+}
+
+function FemaleToneIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="ftG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFAB99" />
+          <stop offset="100%" stopColor="#FF8A70" />
+        </linearGradient>
+      </defs>
+      {/* Female body silhouette */}
+      <path d="M24 6 C26 6 28 8 28 10 C28 12 27 13 26 14 L29 34 L19 34 L22 14 C21 13 20 12 20 10 C20 8 22 6 24 6Z" fill="url(#ftG)" />
+      {/* Sparkles */}
+      <path d="M10 14 L11 17 L14 18 L11 19 L10 22 L9 19 L6 18 L9 17 Z" fill="#FFB547" />
+      <path d="M36 10 L37 13 L40 14 L37 15 L36 18 L35 15 L32 14 L35 13 Z" fill="#FFB547" />
+      <path d="M38 26 L39 28 L41 29 L39 30 L38 32 L37 30 L35 29 L37 28 Z" fill="#FFB547" opacity="0.7" />
+    </svg>
+  );
+}
+
+function PinkScaleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="psG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFBCA8" />
+          <stop offset="100%" stopColor="#FF9E7D" />
+        </linearGradient>
+      </defs>
+      {/* Scale base */}
+      <rect x="10" y="32" width="28" height="6" rx="3" fill="url(#psG)" />
+      {/* Scale platform */}
+      <rect x="12" y="28" width="24" height="5" rx="2" fill="#FFAB99" />
+      {/* Scale pillar */}
+      <rect x="22" y="16" width="4" height="13" rx="1.5" fill="#FFAB99" />
+      {/* Scale dial */}
+      <circle cx="24" cy="14" r="8" fill="white" stroke="#FF9E7D" strokeWidth="2" />
+      {/* Dial tick marks */}
+      <path d="M24 8 L24 10 M24 18 L24 20 M18 14 L20 14 M28 14 L30 14" stroke="#FF9E7D" strokeWidth="1.2" strokeLinecap="round" />
+      {/* Needle */}
+      <path d="M24 14 L26 11" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="24" cy="14" r="1.5" fill="#FF6B00" />
+    </svg>
+  );
+}
+
+function PinkSadFaceIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <radialGradient id="psfG" cx="35%" cy="30%">
+          <stop offset="0%" stopColor="#FFD1C4" />
+          <stop offset="100%" stopColor="#FFAB99" />
+        </radialGradient>
+      </defs>
+      <circle cx="24" cy="24" r="16" fill="url(#psfG)" />
+      {/* Left eye */}
+      <circle cx="18" cy="20" r="2.5" fill="#C45E3A" opacity="0.7" />
+      {/* Right eye */}
+      <circle cx="30" cy="20" r="2.5" fill="#C45E3A" opacity="0.7" />
+      {/* Frowning mouth */}
+      <path d="M17 32 C20 28 28 28 31 32" stroke="#C45E3A" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      {/* Eyebrows (sad) */}
+      <path d="M15 16 C17 15 19 16 20 17" stroke="#C45E3A" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+      <path d="M28 17 C29 16 31 15 33 16" stroke="#C45E3A" strokeWidth="1.2" strokeLinecap="round" opacity="0.4" />
+      {/* Cheek blush */}
+      <circle cx="14" cy="26" r="3" fill="#FF6B00" opacity="0.08" />
+      <circle cx="34" cy="26" r="3" fill="#FF6B00" opacity="0.08" />
+    </svg>
+  );
+}
+
+function CupcakeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <linearGradient id="ccG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFBCA8" />
+          <stop offset="100%" stopColor="#FF9E7D" />
+        </linearGradient>
+      </defs>
+      {/* Cupcake wrapper */}
+      <path d="M12 28 L14 40 L34 40 L36 28 Z" fill="url(#ccG)" />
+      {/* Wrapper lines */}
+      <path d="M16 28 L17 40 M20 28 L21 40 M24 28 L24 40 M28 28 L27 40 M32 28 L31 40" stroke="#E07050" strokeWidth="0.8" opacity="0.4" />
+      {/* Frosting */}
+      <path d="M10 28 C10 22 14 18 18 20 C20 16 24 14 28 18 C32 14 38 18 38 28 Z" fill="#FFD1C4" />
+      {/* Frosting swirl lines */}
+      <path d="M14 24 C16 22 18 22 20 24 C22 22 24 22 26 24" stroke="#FFAB99" strokeWidth="1" strokeLinecap="round" opacity="0.5" fill="none" />
+      {/* Cherry on top */}
+      <circle cx="24" cy="16" r="3.5" fill="#FF6B00" />
+      <path d="M24 12.5 C24 10 26 8 28 7" stroke="#7CB342" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      {/* Cherry highlight */}
+      <circle cx="22.5" cy="14.8" r="1" fill="white" opacity="0.5" />
+    </svg>
+  );
+}
+
+const FEMALE_CHALLENGES = [
+  {
+    id: "belly",
+    label: "الكرش والدهون البطن",
+    desc: "تراكم الدهون في منطقة البطن وصعوبة التخلص منها.",
+    icon: <FemaleWaistIcon className="h-8 w-8" />,
+  },
+  {
+    id: "glutes",
+    label: "شكل المؤخرة",
+    desc: "أريد تكبير المؤخرة وشدها وتحسين شكلها.",
+    icon: <PeachIcon className="h-8 w-8" />,
+  },
+  {
+    id: "sagging",
+    label: "ترهلات الجسم",
+    desc: "ترهل الجلد وفقدان الشد بعد خسارة الوزن.",
+    icon: <FemaleToneIcon className="h-8 w-8" />,
+  },
+  {
+    id: "weight",
+    label: "عدم نزول الوزن",
+    desc: "أبذل مجهوداً لكن وزني لا ينخفض.",
+    icon: <PinkScaleIcon className="h-8 w-8" />,
+  },
+  {
+    id: "confidence",
+    label: "الثقة بالنفس",
+    desc: "أشعر بعدم الرضا عن مظهري وأريد أن أكون واثقة أكثر.",
+    icon: <PinkSadFaceIcon className="h-8 w-8" />,
+  },
+  {
+    id: "cravings",
+    label: "الرغبة الشديدة في الأكل",
+    desc: "أجد صعوبة في التحكم في شهيتي وخاصة الحلويات.",
+    icon: <CupcakeIcon className="h-8 w-8" />,
+  },
+];
+
+function FemaleChallengeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <FeminineBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={7} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-3 text-center">
+          <p className="text-xl font-black" style={{ color: "#FF6B00" }}>
+            ممتاز <span className="inline-block align-middle">✨</span>
+          </p>
+          <h1 className="mt-1 text-[24px] font-black text-neutral-900 leading-tight">
+            ما هي أكبر مشكلة تواجهك حالياً؟
+          </h1>
+          <p className="mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2">
+            اختاري التحدي الذي يؤثر عليك أكثر لنساعدك على التغلب عليه.
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
+          {FEMALE_CHALLENGES.map((c, i) => {
+            const active = selected === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setSelected(c.id)}
+                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
+                style={{
+                  boxShadow: active
+                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                  transform: active ? "scale(1.03)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
+                }}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
+                    style={{ background: "#FF6B00" }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+                  </span>
+                )}
+                <span
+                  className="grid place-items-center rounded-full"
+                  style={{
+                    height: 56,
+                    width: 56,
+                    background: "rgba(255,107,0,0.10)",
+                  }}
+                >
+                  {c.icon}
+                </span>
+                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight px-1">
+                  {c.label}
+                </span>
+                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
+                  {c.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom info card */}
+        <div
+          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
+          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
+        >
+          <span
+            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
+            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
+          >
+            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+          </span>
+          <div className="flex-1 text-right">
+            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
+              معلومة مهمة
+            </p>
+            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
+              معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onNext}
+          disabled={!selected}
+          className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: selected
+              ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+              : "none",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
+
+
 
 
