@@ -15,6 +15,9 @@ import {
   Heart,
   ArrowLeft,
   Sparkles,
+  Ruler,
+  Scale,
+  Lightbulb,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
