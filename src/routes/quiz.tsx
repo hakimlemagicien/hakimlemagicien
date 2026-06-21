@@ -301,7 +301,7 @@ const GOALS: Goal[] = [
   { id: "shape", label: "تغيير شكل الجسم", Icon: Target },
 ];
 
-function GoalsScreen({ onBack }: { onBack: () => void }) {
+function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string>("muscle");
 
   return (
