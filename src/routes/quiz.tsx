@@ -50,8 +50,9 @@ function QuizPage() {
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
       {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
-      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} />}
-      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} />}
+      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
+      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
+      {step === "age" && <AgeScreen onBack={() => setStep("gender")} />}
     </div>
   );
 }
