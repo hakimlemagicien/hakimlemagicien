@@ -27,7 +27,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals";
+type Step = "loading" | "gender" | "goals" | "femaleGoals";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
