@@ -890,4 +890,195 @@ function MeasureCard({ icon, label, children }: { icon: React.ReactNode; label: 
   );
 }
 
+/* ===================== ACTIVITY SCREEN ===================== */
+
+function SofaIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <rect x="4" y="20" width="40" height="16" rx="6" fill="#FF6B00" opacity="0.15" />
+      <path d="M8 24 L8 32 M8 24 C8 20 12 18 16 18 L32 18 C36 18 40 20 40 24 L40 32" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M8 28 L40 28" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+      <path d="M14 32 L14 36 M34 32 L34 36" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function WalkingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <circle cx="24" cy="10" r="5" fill="#FF6B00" opacity="0.9" />
+      <path d="M24 16 L24 26 M24 26 L18 34 M24 26 L30 34 M20 20 L28 20" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18 34 L16 42 M30 34 L32 42" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SneakerIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <path d="M8 32 C8 28 14 26 20 26 L32 26 C38 26 42 28 42 32 L42 36 L8 36 Z" fill="#FF6B00" opacity="0.15" />
+      <path d="M8 36 L42 36" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M10 36 L14 26 C16 22 22 22 26 24 L34 28 L40 30" stroke="#FF6B00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <path d="M18 30 L30 30" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+    </svg>
+  );
+}
+
+const ACTIVITIES = [
+  {
+    id: "sedentary",
+    label: "خامل تماماً",
+    desc: "لا أمارس أي نشاط بدني وأقضي معظم وقتي جالساً.",
+    icon: <SofaIcon className="h-8 w-8" />,
+  },
+  {
+    id: "light",
+    label: "نشاط خفيف",
+    desc: "أتحرك قليلاً في يومي (مثل المشي الخفيف).",
+    icon: <WalkingIcon className="h-8 w-8" />,
+  },
+  {
+    id: "moderate",
+    label: "نشاط متوسط",
+    desc: "أمارس التمارين 1 - 3 مرات في الأسبوع.",
+    icon: <SneakerIcon className="h-8 w-8" />,
+  },
+  {
+    id: "high",
+    label: "نشاط عالي",
+    desc: "أمارس التمارين 3 - 5 مرات في الأسبوع.",
+    icon: <Dumbbell className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
+  {
+    id: "veryhigh",
+    label: "نشاط عالي جداً",
+    desc: "أمارس التمارين 6 - 7 مرات في الأسبوع.",
+    icon: <Flame className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
+  {
+    id: "athlete",
+    label: "رياضي محترف",
+    desc: "أتمرن يومياً أو لدي نشاط رياضي مكثف جداً.",
+    icon: <Trophy className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
+];
+
+function ActivityScreen({ onBack }: { onBack: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={6} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-3 text-center">
+          <p className="text-xl font-black" style={{ color: "#FF6B00" }}>
+            ممتاز <span className="inline-block align-middle">🏃</span>
+          </p>
+          <h1 className="mt-1 text-[24px] font-black text-neutral-900 leading-tight">
+            ما هو مستوى نشاطك الحالي؟
+          </h1>
+          <p className="mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2">
+            اختر المستوى الأقرب لحالتك اليومية لنصمم لك خطة مناسبة لواقعك.
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
+          {ACTIVITIES.map((a, i) => {
+            const active = selected === a.id;
+            return (
+              <button
+                key={a.id}
+                onClick={() => setSelected(a.id)}
+                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-2.5 transition-all active:scale-[0.97]"
+                style={{
+                  boxShadow: active
+                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                  transform: active ? "scale(1.03)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
+                }}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
+                    style={{ background: "#FF6B00" }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+                  </span>
+                )}
+                <span
+                  className="grid place-items-center rounded-full"
+                  style={{
+                    height: 56,
+                    width: 56,
+                    background: "rgba(255,107,0,0.10)",
+                  }}
+                >
+                  {a.icon}
+                </span>
+                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight">
+                  {a.label}
+                </span>
+                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
+                  {a.desc}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom info card */}
+        <div
+          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
+          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
+        >
+          <span
+            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
+            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
+          >
+            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+          </span>
+          <div className="flex-1 text-right">
+            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
+              معلومة مهمة
+            </p>
+            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
+              اختيارك الصحيح يساعدنا في تصميم خطة فعالة وآمنة لك.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          disabled={!selected}
+          className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: selected
+              ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+              : "none",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
+
 
