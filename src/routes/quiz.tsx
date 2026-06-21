@@ -15,6 +15,9 @@ import {
   Heart,
   ArrowLeft,
   Sparkles,
+  Ruler,
+  Scale,
+  Lightbulb,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
@@ -32,7 +35,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -52,7 +55,8 @@ function QuizPage() {
       {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
       {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
-      {step === "age" && <AgeScreen onBack={() => setStep("gender")} />}
+      {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
+      {step === "measure" && <MeasureScreen onBack={() => setStep("age")} />}
     </div>
   );
 }
@@ -555,7 +559,7 @@ function FemaleGoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () 
 const AGES = Array.from({ length: 80 - 14 + 1 }, (_, i) => 14 + i);
 const ITEM_H = 56;
 
-function AgeScreen({ onBack }: { onBack: () => void }) {
+function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [age, setAge] = useState(24);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const snapTimer = useRef<number | null>(null);
@@ -676,6 +680,7 @@ function AgeScreen({ onBack }: { onBack: () => void }) {
 
         {/* CTA */}
         <button
+          onClick={onNext}
           className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           style={{
             background: "linear-gradient(180deg,#FF8534,#FF6B00)",
@@ -700,4 +705,187 @@ function AgeScreen({ onBack }: { onBack: () => void }) {
     </div>
   );
 }
+
+/* ===================== MEASURE SCREEN ===================== */
+
+const ITEM_W = 88;
+
+function HorizontalWheel({
+  min, max, value, unit, onChange,
+}: { min: number; max: number; value: number; unit: string; onChange: (v: number) => void }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const snap = useRef<number | null>(null);
+  const values = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollLeft = (value - min) * ITEM_W;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handle = () => {
+    const el = ref.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollLeft / ITEM_W);
+    const v = values[Math.max(0, Math.min(values.length - 1, idx))];
+    if (v !== value) onChange(v);
+    if (snap.current) window.clearTimeout(snap.current);
+    snap.current = window.setTimeout(() => {
+      el.scrollTo({ left: idx * ITEM_W, behavior: "smooth" });
+    }, 90);
+  };
+
+  return (
+    <div className="relative h-[88px]" dir="ltr">
+      {/* center underline accents */}
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-2 z-10 flex flex-col items-center gap-1" style={{ width: ITEM_W }}>
+        <div className="h-[2px] w-12 rounded-full" style={{ background: "#FF6B00" }} />
+      </div>
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 z-10" style={{ width: ITEM_W }}>
+        <div className="h-[2px] w-full rounded-full" style={{ background: "rgba(255,107,0,0.6)" }} />
+      </div>
+      {/* fades */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-16 z-20" style={{ background: "linear-gradient(90deg,#fff,rgba(255,255,255,0))" }} />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-20" style={{ background: "linear-gradient(270deg,#fff,rgba(255,255,255,0))" }} />
+
+      <div
+        ref={ref}
+        onScroll={handle}
+        className="h-full overflow-x-scroll scrollbar-none flex items-center"
+        style={{ scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", paddingLeft: `calc(50% - ${ITEM_W / 2}px)`, paddingRight: `calc(50% - ${ITEM_W / 2}px)` }}
+      >
+        {values.map((n) => {
+          const dist = Math.abs(n - value);
+          const active = n === value;
+          const opacity = active ? 1 : Math.max(0.2, 1 - dist * 0.25);
+          const scale = active ? 1 : Math.max(0.7, 1 - dist * 0.1);
+          return (
+            <div
+              key={n}
+              style={{
+                width: ITEM_W,
+                scrollSnapAlign: "center",
+                opacity,
+                transform: `scale(${scale})`,
+                transition: "opacity .2s, transform .2s",
+              }}
+              className="shrink-0 flex flex-col items-center justify-center"
+            >
+              <span style={{
+                color: active ? "#FF6B00" : "#9CA3AF",
+                fontWeight: active ? 900 : 600,
+                fontSize: active ? 34 : 22,
+                lineHeight: 1,
+              }}>{n}</span>
+              {active && (
+                <span className="mt-1 text-[12px] font-bold" style={{ color: "#FF6B00" }}>{unit}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MeasureScreen({ onBack }: { onBack: () => void }) {
+  const [height, setHeight] = useState(164);
+  const [weight, setWeight] = useState(63);
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={5} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-2 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-xl">📏</span>
+            <p className="text-xl font-black" style={{ color: "#FF6B00" }}>ممتاز</p>
+          </div>
+          <h1 className="mt-1 text-[22px] font-black text-neutral-900 leading-tight">
+            ما هو طوله و وزنك الحالي؟
+          </h1>
+          <p className="mt-1.5 text-[12px] text-neutral-500 leading-relaxed px-6">
+            أدخلي معلوماتك بدقة لتحصلي على خطة مخصصة لك.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="flex-1 min-h-0 flex flex-col justify-center gap-5 mt-6">
+          <MeasureCard
+            icon={<Ruler className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />}
+            label="الطول (سم)"
+          >
+            <HorizontalWheel min={130} max={230} value={height} unit="سم" onChange={setHeight} />
+          </MeasureCard>
+
+          <MeasureCard
+            icon={<Scale className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />}
+            label="الوزن (كجم)"
+          >
+            <HorizontalWheel min={35} max={250} value={weight} unit="كجم" onChange={setWeight} />
+          </MeasureCard>
+        </div>
+
+        {/* Tip */}
+        <div className="mt-4 rounded-3xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
+          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.08)" }}>
+          <span className="grid h-11 w-11 place-items-center rounded-full bg-white shrink-0"
+            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}>
+            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
+          </span>
+          <div className="flex-1 text-right">
+            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>نصيحة مهمة</p>
+            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
+              كلما كانت المعلومات دقيقة، كانت خطتك أكثر فعالية ونتائجك أسرع.
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .scrollbar-none::-webkit-scrollbar{display:none}
+        .scrollbar-none{scrollbar-width:none;-ms-overflow-style:none}
+      `}</style>
+    </div>
+  );
+}
+
+function MeasureCard({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-10 grid h-11 w-11 place-items-center rounded-full bg-white ring-1 ring-black/5"
+        style={{ boxShadow: "0 6px 16px -6px rgba(255,107,0,0.4)" }}>
+        {icon}
+      </div>
+      <div className="rounded-[28px] bg-white/90 backdrop-blur-sm ring-1 ring-black/5 pt-7 pb-3 px-2"
+        style={{ boxShadow: "0 18px 40px -25px rgba(255,107,0,0.25), 0 8px 24px -15px rgba(0,0,0,0.08)" }}>
+        <p className="text-center text-[13px] font-bold text-neutral-700">{label}</p>
+        <div className="mt-2">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 
