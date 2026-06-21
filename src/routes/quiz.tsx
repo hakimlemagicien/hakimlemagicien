@@ -57,9 +57,6 @@ function QuizPage() {
     </div>
   );
 }
-    </div>
-  );
-}
 
 function LoadingScreen({ onDone }: { onDone: () => void }) {
   const steps = ["تحليل الأهداف", "تخصيص الأسئلة", "إعداد الخطة المناسبة"];
