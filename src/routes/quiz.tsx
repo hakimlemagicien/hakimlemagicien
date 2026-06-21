@@ -303,11 +303,13 @@ const GOALS: Goal[] = [
 
 function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string>("muscle");
+  const [touched, setTouched] = useState(false);
   useEffect(() => {
-    if (!selected) return;
+    if (!touched) return;
     const t = setTimeout(onNext, 350);
     return () => clearTimeout(t);
-  }, [selected, onNext]);
+  }, [touched, selected, onNext]);
+
 
 
   return (
