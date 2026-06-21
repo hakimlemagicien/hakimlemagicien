@@ -454,7 +454,7 @@ const FEMALE_GOALS = [
   { id: "tone", label: "شد الجسم ونحته", icon: <TorsoIcon className="h-7 w-7" /> },
 ];
 
-function FemaleGoalsScreen({ onBack }: { onBack: () => void }) {
+function FemaleGoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
