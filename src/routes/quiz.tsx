@@ -303,6 +303,12 @@ const GOALS: Goal[] = [
 
 function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   const [selected, setSelected] = useState<string>("muscle");
+  useEffect(() => {
+    if (!selected) return;
+    const t = setTimeout(onNext, 350);
+    return () => clearTimeout(t);
+  }, [selected, onNext]);
+
 
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
