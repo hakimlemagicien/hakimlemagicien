@@ -11,7 +11,12 @@ import {
   Zap,
   TrendingUp,
   Target,
+  Calendar,
+  Heart,
+  ArrowLeft,
+  Sparkles,
 } from "lucide-react";
+import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
 import femaleImg from "@/assets/quiz-female.jpg";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
