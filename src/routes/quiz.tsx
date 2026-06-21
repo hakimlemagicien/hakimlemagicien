@@ -178,7 +178,7 @@ function GymBackdrop() {
   );
 }
 
-function GenderScreen({ onNext }: { onNext: () => void }) {
+function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => void }) {
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
