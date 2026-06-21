@@ -27,7 +27,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals";
+type Step = "loading" | "gender" | "goals" | "femaleGoals";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -44,8 +44,9 @@ function QuizPage() {
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
-      {step === "gender" && <GenderScreen onNext={() => setStep("goals")} />}
+      {step === "gender" && <GenderScreen onSelect={(g) => setStep(g === "male" ? "goals" : "femaleGoals")} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} />}
+      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} />}
     </div>
   );
 }
@@ -177,7 +178,7 @@ function GymBackdrop() {
   );
 }
 
-function GenderScreen({ onNext }: { onNext: () => void }) {
+function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => void }) {
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
@@ -200,7 +201,7 @@ function GenderScreen({ onNext }: { onNext: () => void }) {
             tintFrom="#EFF6FF"
             tintTo="#FFFFFF"
             symbol="♂"
-            onClick={onNext}
+            onClick={() => onSelect("male")}
             features={[
               { Icon: Dumbbell, text: "بناء عضلات" },
               { Icon: Flame, text: "خسارة الدهون" },
@@ -214,7 +215,7 @@ function GenderScreen({ onNext }: { onNext: () => void }) {
             tintFrom="#FDF2F8"
             tintTo="#FFFFFF"
             symbol="♀"
-            onClick={onNext}
+            onClick={() => onSelect("female")}
             features={[
               { Icon: Dumbbell, text: "شد الجسم" },
               { Icon: Flame, text: "خصر أنحف" },
@@ -363,6 +364,160 @@ function GoalsScreen({ onBack }: { onBack: () => void }) {
         <div className="mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
           <span className="text-base">🎯</span>
           <p className="text-[13px] font-bold text-neutral-800">كل هدف يحتاج خطة مختلفة</p>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
+    </div>
+  );
+}
+
+/* ===================== FEMALE GOALS SCREEN ===================== */
+
+function FeminineBackdrop() {
+  return (
+    <>
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #FFF8F5 0%, #FFF0EC 50%, #FDF0EB 100%)" }} />
+      <div className="absolute -left-16 top-1/4 w-60 h-72 rounded-full blur-3xl opacity-40" style={{ background: "#FFB5A7" }} />
+      <div className="absolute -right-20 top-1/3 w-56 h-64 rounded-full blur-3xl opacity-30" style={{ background: "#FFD4C4" }} />
+      <div className="absolute left-1/4 bottom-0 w-48 h-48 rounded-full blur-3xl opacity-25" style={{ background: "#FFC4B0" }} />
+      <div className="absolute top-2 right-2 grid grid-cols-8 gap-1.5 opacity-20" style={{ direction: "ltr" }}>
+        {Array.from({ length: 40 }).map((_, i) => (
+          <span key={i} className="h-1 w-1 rounded-full" style={{ background: "#FF6B00" }} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function PeachIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <defs>
+        <radialGradient id="peachGrad" cx="30%" cy="30%">
+          <stop offset="0%" stopColor="#FFBCA8" />
+          <stop offset="100%" stopColor="#FF9E7D" />
+        </radialGradient>
+      </defs>
+      <circle cx="24" cy="27" r="14" fill="url(#peachGrad)" />
+      <path d="M24 13 Q24 27 24 41" stroke="#E07050" strokeWidth="1.5" />
+      <path d="M24 13 Q20 7 15 9" stroke="#7CB342" strokeWidth="2" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+function WaistIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <path d="M17 10 L31 10 L27 24 L31 38 L17 38 L21 24 Z" fill="#FFAB99" />
+      <path d="M8 24 L18 24 M14 20 L18 24 L14 28" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M30 24 L40 24 M34 20 L30 24 L34 28" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FemaleBodyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <path d="M24 8 C27 8 29 11 29 13 C29 15 27 17 26 18 L30 38 L18 38 L22 18 C21 17 19 15 19 13 C19 11 21 8 24 8Z" fill="#FFAB99" />
+      <path d="M12 14 L13 17 L16 18 L13 19 L12 22 L11 19 L8 18 L11 17 Z" fill="#FFB74D" />
+      <path d="M36 12 L37 15 L40 16 L37 17 L36 20 L35 17 L32 16 L35 15 Z" fill="#FFB74D" />
+    </svg>
+  );
+}
+
+function TorsoIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className}>
+      <path d="M18 10 L30 10 L28 20 L30 36 L18 36 L20 20 Z" fill="#FFAB99" />
+      <path d="M10 32 L10 22 M8 26 L10 22 L12 26" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M38 32 L38 22 M36 26 L38 22 L40 26" stroke="#FF6B00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const FEMALE_GOALS = [
+  { id: "fat", label: "خسارة الدهون", icon: <Flame className="h-7 w-7" style={{ color: "#FF6B00" }} strokeWidth={2.4} /> },
+  { id: "glutes", label: "تكبير المؤخرة", icon: <PeachIcon className="h-7 w-7" /> },
+  { id: "waist", label: "خصر أنحف ومشدود", icon: <WaistIcon className="h-7 w-7" /> },
+  { id: "body", label: "جسم متناسق وأنثوي", icon: <FemaleBodyIcon className="h-7 w-7" /> },
+  { id: "fit", label: "جسم صحي ورياضي", icon: <Dumbbell className="h-7 w-7" style={{ color: "#F472B6" }} strokeWidth={2.4} /> },
+  { id: "tone", label: "شد الجسم ونحته", icon: <TorsoIcon className="h-7 w-7" /> },
+];
+
+function FemaleGoalsScreen({ onBack }: { onBack: () => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <FeminineBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader current={3} onBack={onBack} />
+
+        {/* Hero */}
+        <div className="mt-3 text-center">
+          <p className="text-lg font-black" style={{ color: "#FF6B00" }}>
+            ممتاز <span className="inline-block align-middle">✨</span>
+          </p>
+          <h1 className="mt-1 text-[24px] font-black text-neutral-900 leading-tight">
+            ما هو هدفك الأساسي؟
+          </h1>
+          <p className="mt-2 text-[12px] text-neutral-500 leading-relaxed px-4">
+            اختاري الهدف الأقرب لك وسأخصص خطتك بناء عليه.
+          </p>
+        </div>
+
+        {/* Grid */}
+        <div className="mt-3 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch">
+          {FEMALE_GOALS.map((g, i) => {
+            const active = selected === g.id;
+            return (
+              <button
+                key={g.id}
+                onClick={() => setSelected(g.id)}
+                className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-2 py-4 transition-all active:scale-[0.97]"
+                style={{
+                  boxShadow: active
+                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                  animation: `fadeUp .5s ease-out ${i * 70}ms both`,
+                }}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
+                    style={{ background: "#FF6B00" }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+                  </span>
+                )}
+                <span
+                  className="grid place-items-center rounded-full"
+                  style={{
+                    height: 56,
+                    width: 56,
+                    background: "rgba(255,107,0,0.08)",
+                  }}
+                >
+                  {g.icon}
+                </span>
+                <span className="mt-2 text-[13px] font-bold text-neutral-900 text-center leading-tight px-1">
+                  {g.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bottom badge */}
+        <div className="mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
+          <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "#FF6B00" }}>
+            <Lock className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+          </span>
+          <p className="text-[12px] font-bold text-neutral-800">كل هدف يحتاج خطة مختلفة</p>
         </div>
       </div>
 
