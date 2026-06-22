@@ -3165,143 +3165,287 @@ function ShieldIcon() {
 // ============================================================
 function ProgramRevealScreen({ name, gender }: { name: string; gender: "male" | "female" | null }) {
   const ORANGE = "#FF6B00";
+  const GREEN = "#22C55E";
+  const TEXT = "#0F172A";
+
   const programTitle = gender === "female"
     ? "برنامج شد القوام وإبراز الأنوثة"
-    : "برنامج خسارة الدهون وإبراز العضلات";
+    : "برنامج خسارة الدهون وشد البطن";
 
-  const [stage, setStage] = useState(0); // 0 greeting,1 duration,2 features,3 success,4 progress done
-  const [featureIdx, setFeatureIdx] = useState(0);
+  // Reveal stages
+  const [showProgram, setShowProgram] = useState(false);
+  const [showDuration, setShowDuration] = useState(false);
+  const [showFeaturesTitle, setShowFeaturesTitle] = useState(false);
+  const [featureIdx, setFeatureIdx] = useState(0); // count visible
+  const [showSuccess, setShowSuccess] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  // Timeline (ms): 0 greeting, 2000 program, 4500 duration, 6500 features title,
+  // 7000/7500/8000/8500 features, 9500 success, 11000 reach 100%, then auto-nav
   useEffect(() => {
     const timers: number[] = [];
-    timers.push(window.setTimeout(() => setStage(1), 2000));
-    timers.push(window.setTimeout(() => setStage(2), 4500));
+    timers.push(window.setTimeout(() => setShowProgram(true), 2000));
+    timers.push(window.setTimeout(() => setShowDuration(true), 4500));
+    timers.push(window.setTimeout(() => setShowFeaturesTitle(true), 6500));
     [0, 1, 2, 3].forEach((i) => {
-      timers.push(window.setTimeout(() => setFeatureIdx(i + 1), 4500 + i * 600));
+      timers.push(window.setTimeout(() => setFeatureIdx(i + 1), 7000 + i * 500));
     });
-    timers.push(window.setTimeout(() => setStage(3), 7000));
+    timers.push(window.setTimeout(() => setShowSuccess(true), 9500));
+
+    const DURATION = 11000;
     const start = Date.now();
     const tick = window.setInterval(() => {
-      const p = Math.min(100, ((Date.now() - start) / 12000) * 100);
+      const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
       setProgress(p);
-      if (p >= 100) {
-        window.clearInterval(tick);
-        setStage(4);
-      }
-    }, 60);
-    return () => { timers.forEach(clearTimeout); clearInterval(tick); };
-  }, []);
+      if (p >= 100) window.clearInterval(tick);
+    }, 50);
+
+    // Auto-navigate 1s after 100%
+    const navTimer = window.setTimeout(() => {
+      const whatsappHref = "https://wa.me/971500000000?text=" + encodeURIComponent(
+        `السلام عليكم، أنا ${name || "عميل جديد"}، جاهز لاستلام برنامجي`
+      );
+      window.location.href = whatsappHref;
+    }, DURATION + 1000);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(tick);
+      clearTimeout(navTimer);
+    };
+  }, [name]);
 
   const features = [
-    { icon: "🏋️", title: "خطة تدريب", desc: "مخصصة لأدواتك" },
-    { icon: "🥗", title: "خطة غذائية", desc: "مرنة ولذيذة" },
-    { icon: "📊", title: "متابعة دورية", desc: "لقياس التقدم" },
-    { icon: "💬", title: "دعم مباشر", desc: "تواصل لا محدود" },
+    { Icon: Dumbbell, title: "خطة تدريب مخصصة", desc: "تم تصميم خطة تدريب تناسب مستواك وهدفك.", color: "#FF6B00", bg: "#FFF2E5" },
+    { Icon: Salad, title: "خطة غذائية مناسبة", desc: "خطة غذائية متوازنة تناسب هدفك ونمط حياتك.", color: "#22C55E", bg: "#E8FAEE" },
+    { Icon: BarChart3, title: "متابعة دورية", desc: "متابعة تقدمك بشكل دوري وتعديلات حسب تطورك.", color: "#3B82F6", bg: "#E6F0FF" },
+    { Icon: MessageCircle, title: "دعم مباشر عبر واتساب", desc: "تواصل مباشر مع مدربك لدعمك والإجابة على استفساراتك.", color: "#25D366", bg: "#E2F8EA" },
   ];
 
-  const whatsappHref = "https://wa.me/971500000000?text=" + encodeURIComponent(`السلام عليكم، أنا ${name}، جاهز لاستلام برنامجي`);
+  // Confetti particles
+  const confetti = Array.from({ length: 24 }, (_, i) => i);
 
   return (
-    <div className="h-full w-full overflow-y-auto" style={{ background: "#FAF8F5" }}>
+    <div className="h-full w-full overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
       <style>{`
-        @keyframes reveal-fade-scale { from { opacity:0; transform: scale(.9) translateY(8px);} to {opacity:1; transform: scale(1) translateY(0);} }
-        @keyframes reveal-slide-up { from { opacity:0; transform: translateY(28px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes reveal-bounce-in { 0% { opacity:0; transform: scale(.6);} 60% { transform: scale(1.08);} 100% { opacity:1; transform: scale(1);} }
-        @keyframes reveal-glow { 0%,100% { box-shadow: 0 10px 40px -10px rgba(255,107,0,.35);} 50% { box-shadow: 0 14px 60px -8px rgba(255,107,0,.6);} }
-        .anim-fade-scale { animation: reveal-fade-scale .8s ease-out both; }
-        .anim-slide-up { animation: reveal-slide-up .7s ease-out both; }
-        .anim-bounce { animation: reveal-bounce-in .55s cubic-bezier(.34,1.56,.64,1) both; }
-        .anim-glow { animation: reveal-glow 2.6s ease-in-out infinite; }
+        @keyframes rv-fade { from { opacity: 0; transform: translateY(12px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes rv-pop  { 0% { opacity:0; transform: scale(.6);} 60% { transform: scale(1.06);} 100% { opacity:1; transform: scale(1);} }
+        @keyframes rv-slide-up { from {opacity:0; transform: translateY(28px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes rv-slide-right { from {opacity:0; transform: translateX(28px);} to {opacity:1; transform: translateX(0);} }
+        @keyframes rv-bubble { 0%{opacity:0; transform: scale(.4) translateY(10px);} 60%{transform: scale(1.08) translateY(-2px);} 100%{opacity:1; transform: scale(1) translateY(0);} }
+        @keyframes rv-glow { 0%,100% { box-shadow: 0 10px 30px -8px rgba(34,197,94,.35);} 50% { box-shadow: 0 18px 50px -6px rgba(34,197,94,.55);} }
+        @keyframes rv-tick { 0%{stroke-dashoffset: 24;} 100%{stroke-dashoffset: 0;} }
+        @keyframes rv-num-pop { 0%{opacity:0; transform: scale(.4) rotate(-8deg);} 60%{transform: scale(1.15) rotate(2deg);} 100%{opacity:1; transform: scale(1) rotate(0);} }
+        @keyframes rv-confetti { 0% { transform: translate(0,-20px) rotate(0); opacity:1;} 100% { transform: translate(var(--cx,0px), 100vh) rotate(720deg); opacity:0;} }
+        @keyframes rv-shine { 0%{ background-position: -200% 0;} 100%{ background-position: 200% 0;} }
+        .rv-fade { animation: rv-fade .7s ease-out both; }
+        .rv-pop { animation: rv-pop .55s cubic-bezier(.34,1.56,.64,1) both; }
+        .rv-slide-up { animation: rv-slide-up .65s cubic-bezier(.2,.8,.2,1) both; }
+        .rv-slide-right { animation: rv-slide-right .55s cubic-bezier(.2,.8,.2,1) both; }
+        .rv-bubble { animation: rv-bubble .6s cubic-bezier(.34,1.56,.64,1) both; }
+        .rv-glow { animation: rv-glow 2.4s ease-in-out infinite; }
+        .rv-num { animation: rv-num-pop .7s cubic-bezier(.34,1.56,.64,1) both; display:inline-block; }
+        .rv-tick path { stroke-dasharray: 24; animation: rv-tick .45s ease-out .15s both; }
+        .rv-confetti-piece { position: absolute; top: -20px; width: 8px; height: 14px; border-radius: 2px; animation: rv-confetti 2.6s ease-in forwards; }
+        .rv-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); background-size: 200% 100%; animation: rv-shine 1.6s linear infinite; }
       `}</style>
 
-      <div className="px-5 pt-8 pb-12 max-w-md mx-auto">
-        {/* Stage 1: greeting */}
-        <div className="anim-fade-scale text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: ORANGE }}>
-            <Sparkles className="h-3.5 w-3.5" /> برنامجك جاهز
+      {/* Confetti overlay */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-50">
+        {confetti.map((i) => {
+          const colors = ["#FF6B00", "#22C55E", "#3B82F6", "#FFC107", "#E91E63", "#9C27B0"];
+          const left = (i * 4.3) % 100;
+          const cx = (Math.sin(i) * 60).toFixed(0);
+          const delay = (i % 8) * 0.15;
+          const color = colors[i % colors.length];
+          return (
+            <span
+              key={i}
+              className="rv-confetti-piece"
+              style={{
+                left: `${left}%`,
+                background: color,
+                animationDelay: `${delay}s`,
+                ["--cx" as string]: `${cx}px`,
+              } as React.CSSProperties}
+            />
+          );
+        })}
+      </div>
+
+      {/* Top progress chip */}
+      <div className="px-5 pt-5 max-w-md mx-auto">
+        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">12 من 12</div>
+        <div className="flex gap-1.5">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: ORANGE }} />
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 pt-6 pb-32 max-w-md mx-auto">
+        {/* STEP 1: Greeting */}
+        <div className="rv-fade text-center">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-full mb-3" style={{ background: "#FFF2E5" }}>
+            <PartyPopper className="h-9 w-9" style={{ color: ORANGE }} strokeWidth={2.2} />
           </div>
-          <h1 className="mt-4 text-[26px] font-black leading-tight text-neutral-900">
-            🎉 تهانينا{name ? ` يا ${name}` : ""}
+          <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT }}>
+            تهانينا{name ? <> يا <span style={{ color: ORANGE }}>{name}</span></> : null}!
           </h1>
-          <p className="mt-2 text-[14px] text-neutral-600">تم تجهيز برنامجك المخصص بناءً على إجاباتك</p>
-          <div className="mt-5 rounded-2xl p-5 border-2" style={{ borderColor: ORANGE, background: "linear-gradient(180deg, #FFF6EE 0%, #FFFFFF 100%)" }}>
-            <div className="text-[11px] font-bold tracking-wide uppercase" style={{ color: ORANGE }}>اسم البرنامج</div>
-            <div className="mt-1 text-[18px] font-black text-neutral-900">{programTitle}</div>
-          </div>
+          <p className="mt-2 text-[14px] text-neutral-600 leading-relaxed px-2">
+            تم تجهيز برنامجك الخاص بناءً على إجاباتك وتحليل حالتك الحالية.
+          </p>
         </div>
 
-        {/* Stage 2: 90 days */}
-        {stage >= 1 && (
-          <div className="anim-slide-up mt-6 rounded-2xl p-5 text-white" style={{ background: "linear-gradient(135deg,#1F1F1F 0%,#2A2A2A 100%)" }}>
-            <div className="flex items-center gap-4">
-              <div className="shrink-0 h-20 w-20 rounded-2xl flex flex-col items-center justify-center" style={{ background: ORANGE }}>
-                <div className="text-[28px] font-black leading-none">90</div>
-                <div className="text-[10px] font-bold mt-0.5">يوم</div>
+        {/* STEP 2: Program card */}
+        {showProgram && (
+          <div
+            className="rv-pop mt-6 rounded-3xl p-5 flex items-center gap-4 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #FFF6EE 0%, #FFFFFF 100%)",
+              border: `1.5px solid ${ORANGE}33`,
+              boxShadow: "0 10px 30px -12px rgba(255,107,0,.25)",
+            }}
+          >
+            <div
+              className="shrink-0 h-14 w-14 rounded-2xl flex items-center justify-center"
+              style={{ background: ORANGE, boxShadow: "0 8px 18px -6px rgba(255,107,0,.55)" }}
+            >
+              <Target className="h-7 w-7 text-white" strokeWidth={2.4} />
+            </div>
+            <div className="flex-1 text-right">
+              <div className="text-[10px] font-bold tracking-wide" style={{ color: ORANGE }}>برنامجك المخصص</div>
+              <div className="mt-0.5 text-[16px] font-black leading-snug" style={{ color: TEXT }}>{programTitle}</div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: Duration card */}
+        {showDuration && (
+          <div
+            className="rv-slide-up mt-4 rounded-3xl p-5 flex items-center gap-4 bg-white"
+            style={{
+              border: "1px solid #E8E5DF",
+              boxShadow: "0 8px 24px -16px rgba(0,0,0,.12)",
+            }}
+          >
+            <div
+              className="shrink-0 h-16 w-16 rounded-2xl flex items-center justify-center"
+              style={{ background: "#E8FAEE" }}
+            >
+              <Calendar className="h-8 w-8" style={{ color: GREEN }} strokeWidth={2.2} />
+            </div>
+            <div className="flex-1 text-right">
+              <div className="text-[12px] font-bold text-neutral-500">مدة البرنامج</div>
+              <div className="mt-0.5 flex items-baseline gap-1.5 justify-end">
+                <span className="text-[13px] font-bold text-neutral-500">يوم</span>
+                <span className="rv-num text-[34px] font-black leading-none" style={{ color: GREEN }}>90</span>
               </div>
-              <div className="flex-1">
-                <div className="text-[15px] font-black">مدة التحول الكامل</div>
-                <p className="text-[12.5px] text-white/75 mt-1 leading-relaxed">
-                  3 أشهر هي المسافة الفاصلة بين حالتك الآن وبين هدفك المنشود.
+              <p className="mt-1 text-[11.5px] text-neutral-500 leading-relaxed">
+                تم تصميم هذه المدة لتحقيق أفضل نتيجة ممكنة بناءً على وضعك الحالي.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: Features */}
+        {showFeaturesTitle && (
+          <div className="rv-fade mt-7">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="h-4 w-4" style={{ color: ORANGE }} />
+              <h2 className="text-[15px] font-black" style={{ color: TEXT }}>ماذا يشمل برنامجك؟</h2>
+              <Sparkles className="h-4 w-4" style={{ color: ORANGE }} />
+            </div>
+
+            <div className="space-y-3">
+              {features.map((f, i) => {
+                if (featureIdx <= i) return null;
+                const animClass = i === 3 ? "rv-bubble" : i === 2 ? "rv-slide-right" : "rv-pop";
+                return (
+                  <div
+                    key={i}
+                    className={`${animClass} rounded-2xl p-4 bg-white flex items-center gap-3.5`}
+                    style={{
+                      border: "1px solid #ECE8E1",
+                      boxShadow: "0 6px 20px -14px rgba(0,0,0,.15)",
+                    }}
+                  >
+                    <div
+                      className="shrink-0 h-12 w-12 rounded-2xl flex items-center justify-center"
+                      style={{ background: f.bg }}
+                    >
+                      <f.Icon className="h-6 w-6" style={{ color: f.color }} strokeWidth={2.2} />
+                    </div>
+                    <div className="flex-1 text-right min-w-0">
+                      <div className="text-[14px] font-black" style={{ color: TEXT }}>{f.title}</div>
+                      <div className="text-[11.5px] text-neutral-500 mt-0.5 leading-relaxed">{f.desc}</div>
+                    </div>
+                    <div
+                      className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center"
+                      style={{ background: GREEN }}
+                    >
+                      <svg className="rv-tick" width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12.5l4.5 4.5L19 7.5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: Success card */}
+        {showSuccess && (
+          <div
+            className="rv-pop rv-glow mt-6 rounded-3xl p-5"
+            style={{
+              background: "linear-gradient(135deg, #E8FAEE 0%, #FFFFFF 100%)",
+              border: `1.5px solid ${GREEN}55`,
+            }}
+          >
+            <div className="flex items-start gap-3.5">
+              <div
+                className="shrink-0 h-12 w-12 rounded-2xl flex items-center justify-center"
+                style={{ background: GREEN }}
+              >
+                <ShieldCheck className="h-7 w-7 text-white" strokeWidth={2.2} />
+              </div>
+              <div className="flex-1 text-right">
+                <div className="text-[15px] font-black" style={{ color: TEXT }}>هدفك واضح والخطة جاهزة</div>
+                <p className="mt-1 text-[12.5px] text-neutral-600 leading-relaxed">
+                  كل ما عليك الآن هو الالتزام بالخطة والاستمتاع بالرحلة نحو أفضل نسخة منك.
                 </p>
               </div>
             </div>
           </div>
         )}
+      </div>
 
-        {/* Stage 3: features */}
-        {stage >= 2 && (
-          <div className="mt-6">
-            <div className="text-[13px] font-bold text-neutral-700 mb-3">ماذا يشمل برنامجك؟</div>
-            <div className="grid grid-cols-2 gap-3">
-              {features.map((f, i) => (
-                featureIdx > i && (
-                  <div key={i} className="anim-bounce rounded-2xl p-4 bg-white border border-neutral-200 shadow-sm text-center">
-                    <div className="text-[28px] leading-none">{f.icon}</div>
-                    <div className="mt-2 text-[13.5px] font-black text-neutral-900">{f.title}</div>
-                    <div className="text-[11.5px] text-neutral-500 mt-0.5">{f.desc}</div>
-                  </div>
-                )
-              ))}
+      {/* Bottom auto-progress */}
+      <div
+        className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 pointer-events-none"
+        style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 40%)" }}
+      >
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-2 text-[11.5px] font-bold">
+            <span className="text-neutral-500">جاري تجهيز برنامجك...</span>
+            <span style={{ color: ORANGE }}>{Math.round(progress)}%</span>
+          </div>
+          <div className="h-2 w-full rounded-full overflow-hidden relative" style={{ background: "#ECE8E1" }}>
+            <div
+              className="h-full rounded-full transition-[width] duration-100 relative overflow-hidden"
+              style={{
+                width: `${progress}%`,
+                background: `linear-gradient(90deg, ${ORANGE} 0%, #FF8A33 100%)`,
+              }}
+            >
+              <span className="absolute inset-0 rv-shimmer" />
             </div>
           </div>
-        )}
-
-        {/* Stage 4: success */}
-        {stage >= 3 && (
-          <div className="anim-fade-scale mt-6 rounded-2xl p-5 anim-glow text-center" style={{ background: "linear-gradient(135deg,#FF6B00 0%,#E85F00 100%)" }}>
-            <div className="text-[17px] font-black text-white">هدفك واضح والخطة جاهزة</div>
-            <p className="mt-1.5 text-[13px] text-white/90 leading-relaxed">
-              كل ما عليك الآن هو الالتزام بالخطة والاستمتاع بالرحلة نحو أفضل نسخة منك 💪
-            </p>
-          </div>
-        )}
-
-        {/* Progress / CTA */}
-        <div className="mt-7">
-          {stage < 4 ? (
-            <>
-              <div className="h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
-                <div className="h-full rounded-full transition-[width] duration-150" style={{ width: `${progress}%`, background: ORANGE }} />
-              </div>
-              <div className="mt-2 text-center text-[12px] text-neutral-500">
-                جاري تجهيز صفحة النتائج النهائية... {Math.round(progress)}%
-              </div>
-            </>
-          ) : (
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="anim-fade-scale w-full h-14 rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 shadow-[0_10px_24px_-8px_rgba(37,211,102,.55)]"
-              style={{ background: "linear-gradient(180deg,#25D366 0%,#1FB755 100%)" }}
-            >
-              <span>تواصل مع المدرب على واتساب</span>
-              <span>💬</span>
-            </a>
-          )}
         </div>
       </div>
     </div>
   );
 }
+
