@@ -494,13 +494,14 @@ const FEMALE_GOALS = [
   { id: "tone", label: "شد الجسم ونحته", icon: <TorsoIcon className="h-7 w-7" /> },
 ];
 
-function FemaleGoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     if (!selected) return;
+    onSelect?.(selected);
     const t = setTimeout(onNext, 350);
     return () => clearTimeout(t);
-  }, [selected, onNext]);
+  }, [selected, onNext, onSelect]);
 
 
 
