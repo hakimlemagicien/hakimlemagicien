@@ -3292,7 +3292,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
   const [showBenefits, setShowBenefits] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showProgressBar, setShowProgressBar] = useState(false);
+  const [showCTA, setShowCTA] = useState(false);
   const [progress, setProgress] = useState(0);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
