@@ -3550,30 +3550,33 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
         )}
       </div>
 
-      {/* Bottom auto-progress (only after all stages) */}
-      {showProgressBar && (
+      {/* CTA — shown only after all stages have appeared */}
+      {showCTA && (
         <div
-          className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 pointer-events-none pr-fade"
-          style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 40%)" }}
+          className="fixed bottom-0 left-0 right-0 px-5 pt-4 pb-6"
+          style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 35%)" }}
         >
-          <div className="max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-2 text-[12px] font-extrabold">
-              <span style={{ color: ORANGE }}>{Math.round(progress)}%</span>
-              <span style={{ color: TEXT }}>جاري الانتقال إلى الخطوة التالية...</span>
-            </div>
-            <div className="h-2 w-full rounded-full overflow-hidden relative" style={{ background: "#ECE8E1" }}>
-              <div
-                className="h-full rounded-full transition-[width] duration-100 relative overflow-hidden"
-                style={{
-                  width: `${progress}%`,
-                  background: `linear-gradient(90deg, ${ORANGE} 0%, #FF8A33 100%)`,
-                }}
-              >
-                <span className="absolute inset-0 pr-shimmer" />
-              </div>
-            </div>
-            <div className="text-center text-[11px] text-neutral-500 mt-1.5">يرجى الانتظار لحظة</div>
+          <div className="max-w-md mx-auto" style={{ animation: "pr-cta-in .6s cubic-bezier(.34,1.56,.64,1) both" }}>
+            <button
+              onClick={onNext}
+              className="w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              style={{
+                height: 60,
+                borderRadius: 18,
+                background: ORANGE,
+                color: "#fff",
+                fontFamily: HEADING_FONT,
+                fontWeight: 900,
+                fontSize: 16,
+                boxShadow: "0 10px 24px -10px rgba(255,107,0,.55)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              <span>ممتاز 💪 أريد رؤية الخطة المناسبة لي</span>
+              <ArrowLeft className="h-5 w-5" strokeWidth={2.8} />
+            </button>
           </div>
+          <style>{`@keyframes pr-cta-in { 0% { opacity:0; transform: translateY(20px) scale(.92);} 100% { opacity:1; transform: translateY(0) scale(1);} }`}</style>
         </div>
       )}
     </div>
