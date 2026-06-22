@@ -53,6 +53,8 @@ function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [goalId, setGoalId] = useState<string>("");
+  const [challengeId, setChallengeId] = useState<string>("");
 
   return (
     <div
@@ -63,24 +65,24 @@ function QuizPage() {
     >
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@700;800;900&display=swap"
       />
       {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
       {step === "gender" && <GenderScreen onSelect={(g) => { setGender(g); setStep(g === "male" ? "goals" : "femaleGoals"); }} />}
-      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
-      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} />}
+      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
+      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
       {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
       {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={() => setStep("activity")} />}
       {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} />}
-      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} />}
-      {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} />}
+      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
+      {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
       {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep("investment")} />}
       {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
       {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name) => { setUserName(name); setStep("reveal"); }} />}
-      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} />}
+      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} />}
     </div>
   );
 }
