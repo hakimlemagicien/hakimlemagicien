@@ -74,7 +74,8 @@ function QuizPage() {
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
+      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name) => { setUserName(name); setStep("reveal"); }} />}
+      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} />}
     </div>
   );
 }
