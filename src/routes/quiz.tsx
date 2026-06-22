@@ -24,6 +24,10 @@ import maleImg from "@/assets/quiz-male.jpg";
 import femaleImg from "@/assets/quiz-female.jpg";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
 import coachImg from "@/assets/coach.png";
+import avatar1 from "@/assets/avatar1.jpg";
+import avatar2 from "@/assets/avatar2.jpg";
+import avatar3 from "@/assets/avatar3.jpg";
+import avatar4 from "@/assets/avatar4.jpg";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -36,7 +40,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -66,7 +70,8 @@ function QuizPage() {
       {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
-      {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => {}} />}
+      {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
+      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
     </div>
   );
 }
@@ -2783,6 +2788,248 @@ function ClipboardStarIcon() {
       <rect x="6" y="4" width="12" height="17" rx="2" />
       <path d="M9 3h6v3H9z" />
       <path d="M12 10l1.2 2.4 2.6.4-1.9 1.8.4 2.6L12 16l-2.3 1.2.4-2.6-1.9-1.8 2.6-.4z" fill="#FF6B00" stroke="none" />
+    </svg>
+  );
+}
+
+function ContactScreen({ onBack }: { onBack: () => void }) {
+  const ORANGE = "#FF6B00";
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [fadingOverlay, setFadingOverlay] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", country: "ae", city: "" });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setFadingOverlay(true), 2500);
+    const t2 = setTimeout(() => setShowOverlay(false), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  const canSubmit = form.name.trim() && form.email.trim() && form.phone.trim() && form.city.trim();
+
+  return (
+    <div className="relative h-full w-full overflow-y-auto" style={{ backgroundColor: "#FAF8F5" }}>
+      {showOverlay && (
+        <div
+          className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
+          style={{ background: "linear-gradient(180deg, #FFF8F1 0%, #FAF8F5 100%)" }}
+        >
+          <div className="grid h-20 w-20 place-items-center rounded-full mb-6 animate-scale-in" style={{ background: "rgba(255,107,0,0.12)" }}>
+            <Check className="h-10 w-10" style={{ color: ORANGE }} strokeWidth={3} />
+          </div>
+          <h1 className="text-2xl font-black text-neutral-900 leading-snug animate-fade-in">تهانينا! 🎉 تم تحليل بياناتك بنجاح</h1>
+          <p className="mt-4 max-w-sm text-[14px] leading-7 text-neutral-600 animate-fade-in">
+            لقد وجدت الخطة المثالية التي تضمن لك الوصول لنتائجك المرغوبة خلال 90 يوماً بدقة. خطوتك الأخيرة هي تزويدي بمعلومات التواصل الأساسية لتأكيد استلام برنامجك الخاص.
+          </p>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="px-5 pt-5">
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-neutral-700">
+            <ChevronLeft className="h-5 w-5" />
+            <span className="text-sm">رجوع</span>
+          </button>
+          <div className="text-sm font-bold">
+            <span style={{ color: ORANGE }}>10</span>
+            <span className="text-neutral-700"> من 12</span>
+          </div>
+          <div className="w-12" />
+        </div>
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: i < 10 ? ORANGE : "#E5E5E5" }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="relative px-5 pt-4 flex items-start justify-between gap-3">
+        <div className="flex-1 pt-4">
+          <h2 className="text-[26px] font-black leading-[1.25] text-neutral-900">
+            لقد وجدت<br />البرنامج المناسب <span style={{ color: ORANGE }}>لك</span>
+          </h2>
+          <p className="mt-3 text-[13px] leading-7 text-neutral-600 max-w-[200px]">
+            بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
+          </p>
+        </div>
+        <div className="relative shrink-0">
+          <div className="relative h-[180px] w-[150px] rounded-[80px] overflow-hidden" style={{ background: "rgba(255,107,0,0.10)" }}>
+            <img src={coachImg} alt="Coach Hakim" className="absolute inset-0 h-full w-full object-cover" />
+          </div>
+          <Sparkles className="absolute -top-1 -right-1 h-5 w-5" style={{ color: "#FFB547" }} fill="#FFB547" />
+          <Sparkles className="absolute top-8 -left-2 h-3 w-3" style={{ color: "#FFD580" }} fill="#FFD580" />
+          <Sparkles className="absolute bottom-4 -right-2 h-3 w-3" style={{ color: "#FFD580" }} fill="#FFD580" />
+        </div>
+      </div>
+
+      {/* Advantage cards */}
+      <div className="mx-5 mt-6 rounded-2xl bg-white p-4 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] ring-1 ring-black/5">
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { icon: "🍎", title: "تغذية مرنة", sub: "محسوبة السعرات بدون حرمان" },
+            { icon: "🏋️", title: "تدريب مخصص", sub: "يناسب وقتك ونمط حياتك" },
+            { icon: "📈", title: "متابعة ذكية", sub: "تعديلات مستمرة حسب تطورك" },
+          ].map((c, i) => (
+            <div key={i} className="flex flex-col items-center text-center px-1">
+              <div className="grid h-10 w-10 place-items-center rounded-full text-lg" style={{ background: "rgba(255,107,0,0.10)" }}>
+                {c.icon}
+              </div>
+              <div className="mt-2 text-[12.5px] font-bold text-neutral-900">{c.title}</div>
+              <div className="mt-1 text-[10.5px] leading-snug text-neutral-500">{c.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Last step prompt */}
+      <div className="px-5 mt-7 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <Target className="h-5 w-5" style={{ color: ORANGE }} />
+          <h3 className="text-[18px] font-black text-neutral-900">
+            بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
+          </h3>
+        </div>
+        <p className="mt-1.5 text-[13px] text-neutral-600">أدخل بياناتك لاستلام برنامجك الخاص.</p>
+      </div>
+
+      {/* Form */}
+      <div className="px-5 mt-4 space-y-3">
+        <FieldRow icon={<UserIcon />} label="الاسم الأول">
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="مثال: أحمد" dir="rtl"
+            className="w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
+        </FieldRow>
+
+        <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
+          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="example@email.com" dir="ltr"
+            className="w-full bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
+        </FieldRow>
+
+        <FieldRow icon={<WhatsAppIcon />} label="واتساب للتواصل السريع">
+          <div className="flex items-center gap-2 w-full" dir="ltr">
+            <div className="flex items-center gap-1 rounded-lg bg-neutral-50 px-2 py-1.5 ring-1 ring-black/5">
+              <UAEFlag />
+              <span className="text-[13px] font-semibold">+971</span>
+              <ChevronLeft className="h-3 w-3 -rotate-90 text-neutral-500" />
+            </div>
+            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })}
+              placeholder="5X XXX XXXX" dir="ltr"
+              className="flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
+          </div>
+        </FieldRow>
+
+        <FieldRow icon={<GlobeIcon />} label="الدولة">
+          <div className="flex items-center justify-between w-full">
+            <ChevronLeft className="h-4 w-4 -rotate-90 text-neutral-500" />
+            <div className="flex items-center gap-2">
+              <span className="text-[14px]">الإمارات العربية المتحدة</span>
+              <UAEFlag />
+            </div>
+          </div>
+        </FieldRow>
+
+        <FieldRow icon={<PinIcon />} label="المدينة">
+          <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
+            placeholder="مثال: دبي" dir="rtl"
+            className="w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
+        </FieldRow>
+      </div>
+
+      {/* Trust trio */}
+      <div className="mx-5 mt-5 rounded-2xl p-4" style={{ background: "rgba(255,107,0,0.06)" }}>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <TrustItem color="#22C55E" icon={<WhatsAppIcon small />} text="ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب" />
+          <TrustItem color="#3B82F6" icon={<MailIcon small />} text="سأرسل برنامجك وتفاصيله على البريد الإلكتروني" />
+          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة وآمنة 100%" />
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="px-5 mt-5">
+        <button
+          disabled={!canSubmit || submitting}
+          onClick={() => { setSubmitting(true); }}
+          className="w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60"
+          style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
+        >
+          <span>🚀</span>
+          <span>استلم برنامجي الآن</span>
+        </button>
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-neutral-500">
+          <Lock className="h-3 w-3" />
+          <span>لن تتم مشاركة بياناتك مع أي جهة خارجية</span>
+        </div>
+      </div>
+
+      {/* Social proof */}
+      <div className="px-5 mt-4 pb-8 flex items-center justify-center gap-3">
+        <div className="flex -space-x-2 rtl:space-x-reverse">
+          {[avatar1, avatar2, avatar3, avatar4].map((a, i) => (
+            <img key={i} src={a} alt="" className="h-7 w-7 rounded-full ring-2 ring-white object-cover" />
+          ))}
+        </div>
+        <p className="text-[12px] text-neutral-600">
+          أكثر من <span className="font-black" style={{ color: ORANGE }}>2500</span> شخص غيروا حياتهم مع البرنامج
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]">
+      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
+        <div className="grid h-7 w-7 place-items-center">{icon}</div>
+      </div>
+    </div>
+  );
+}
+
+function TrustItem({ icon, text, color }: { icon: React.ReactNode; text: string; color: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-black/5" style={{ color }}>
+        {icon}
+      </div>
+      <div className="text-[10.5px] leading-snug text-neutral-700">{text}</div>
+    </div>
+  );
+}
+
+function UserIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>;
+}
+function MailIcon({ small }: { small?: boolean } = {}) {
+  const s = small ? 16 : 18;
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: small ? "#3B82F6" : "#FF6B00" }}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>;
+}
+function WhatsAppIcon({ small }: { small?: boolean } = {}) {
+  const s = small ? 16 : 20;
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="#22C55E"><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.4A10 10 0 1012 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.2-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5.3.7 1 2.3 1 2.4.1.1.1.3 0 .5-.1.2-.2.3-.3.5l-.5.5c-.2.2-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.7.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>;
+}
+function GlobeIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>;
+}
+function PinIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>;
+}
+function ShieldIcon() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>;
+}
+function UAEFlag() {
+  return (
+    <svg width="18" height="13" viewBox="0 0 18 13" className="rounded-sm overflow-hidden">
+      <rect width="18" height="13" fill="#fff"/>
+      <rect width="4" height="13" fill="#EF3340"/>
+      <rect x="4" width="14" height="4.33" fill="#00843D"/>
+      <rect x="4" y="4.33" width="14" height="4.33" fill="#fff"/>
+      <rect x="4" y="8.66" width="14" height="4.33" fill="#000"/>
     </svg>
   );
 }
