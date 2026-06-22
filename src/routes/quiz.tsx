@@ -20,6 +20,11 @@ import {
   Ruler,
   Scale,
   Lightbulb,
+  Salad,
+  BarChart3,
+  MessageCircle,
+  ShieldCheck,
+  PartyPopper,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
