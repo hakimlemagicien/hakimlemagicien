@@ -2870,7 +2870,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
           <div className="mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,107,0,0.15)" }}>
             <div className="h-full rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${overlayProgress}%`, background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)` }} />
           </div>
-          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 20)} ثوانٍ...</div>
+          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 10)} ثوانٍ...</div>
         </div>
       )}
 
