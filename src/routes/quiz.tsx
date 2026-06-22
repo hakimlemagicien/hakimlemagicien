@@ -42,11 +42,12 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "reveal";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
+  const [userName, setUserName] = useState<string>("");
 
   return (
     <div
@@ -73,7 +74,8 @@ function QuizPage() {
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
+      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name) => { setUserName(name); setStep("reveal"); }} />}
+      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} />}
     </div>
   );
 }
@@ -2821,7 +2823,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ onBack }: { onBack: () => void }) {
+function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: string) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
@@ -3004,7 +3006,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
       <div className="px-5 mt-5">
         <button
           disabled={!canSubmit || submitting}
-          onClick={() => { setSubmitting(true); }}
+          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); setTimeout(() => onDone(form.name.trim()), 700); }}
           className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
           style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
         >
@@ -3151,4 +3153,150 @@ function PinIcon() {
 }
 function ShieldIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>;
+}
+
+// ============================================================
+// Program Reveal Screen — post-contact "reward" stage
+// ============================================================
+function ProgramRevealScreen({ name, gender }: { name: string; gender: "male" | "female" | null }) {
+  const ORANGE = "#FF6B00";
+  const programTitle = gender === "female"
+    ? "برنامج شد القوام وإبراز الأنوثة"
+    : "برنامج خسارة الدهون وإبراز العضلات";
+
+  const [stage, setStage] = useState(0); // 0 greeting,1 duration,2 features,3 success,4 progress done
+  const [featureIdx, setFeatureIdx] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const timers: number[] = [];
+    timers.push(window.setTimeout(() => setStage(1), 2000));
+    timers.push(window.setTimeout(() => setStage(2), 4500));
+    [0, 1, 2, 3].forEach((i) => {
+      timers.push(window.setTimeout(() => setFeatureIdx(i + 1), 4500 + i * 600));
+    });
+    timers.push(window.setTimeout(() => setStage(3), 7000));
+    const start = Date.now();
+    const tick = window.setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / 12000) * 100);
+      setProgress(p);
+      if (p >= 100) {
+        window.clearInterval(tick);
+        setStage(4);
+      }
+    }, 60);
+    return () => { timers.forEach(clearTimeout); clearInterval(tick); };
+  }, []);
+
+  const features = [
+    { icon: "🏋️", title: "خطة تدريب", desc: "مخصصة لأدواتك" },
+    { icon: "🥗", title: "خطة غذائية", desc: "مرنة ولذيذة" },
+    { icon: "📊", title: "متابعة دورية", desc: "لقياس التقدم" },
+    { icon: "💬", title: "دعم مباشر", desc: "تواصل لا محدود" },
+  ];
+
+  const whatsappHref = "https://wa.me/971500000000?text=" + encodeURIComponent(`السلام عليكم، أنا ${name}، جاهز لاستلام برنامجي`);
+
+  return (
+    <div className="h-full w-full overflow-y-auto" style={{ background: "#FAF8F5" }}>
+      <style>{`
+        @keyframes reveal-fade-scale { from { opacity:0; transform: scale(.9) translateY(8px);} to {opacity:1; transform: scale(1) translateY(0);} }
+        @keyframes reveal-slide-up { from { opacity:0; transform: translateY(28px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes reveal-bounce-in { 0% { opacity:0; transform: scale(.6);} 60% { transform: scale(1.08);} 100% { opacity:1; transform: scale(1);} }
+        @keyframes reveal-glow { 0%,100% { box-shadow: 0 10px 40px -10px rgba(255,107,0,.35);} 50% { box-shadow: 0 14px 60px -8px rgba(255,107,0,.6);} }
+        .anim-fade-scale { animation: reveal-fade-scale .8s ease-out both; }
+        .anim-slide-up { animation: reveal-slide-up .7s ease-out both; }
+        .anim-bounce { animation: reveal-bounce-in .55s cubic-bezier(.34,1.56,.64,1) both; }
+        .anim-glow { animation: reveal-glow 2.6s ease-in-out infinite; }
+      `}</style>
+
+      <div className="px-5 pt-8 pb-12 max-w-md mx-auto">
+        {/* Stage 1: greeting */}
+        <div className="anim-fade-scale text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-bold text-white" style={{ background: ORANGE }}>
+            <Sparkles className="h-3.5 w-3.5" /> برنامجك جاهز
+          </div>
+          <h1 className="mt-4 text-[26px] font-black leading-tight text-neutral-900">
+            🎉 تهانينا{name ? ` يا ${name}` : ""}
+          </h1>
+          <p className="mt-2 text-[14px] text-neutral-600">تم تجهيز برنامجك المخصص بناءً على إجاباتك</p>
+          <div className="mt-5 rounded-2xl p-5 border-2" style={{ borderColor: ORANGE, background: "linear-gradient(180deg, #FFF6EE 0%, #FFFFFF 100%)" }}>
+            <div className="text-[11px] font-bold tracking-wide uppercase" style={{ color: ORANGE }}>اسم البرنامج</div>
+            <div className="mt-1 text-[18px] font-black text-neutral-900">{programTitle}</div>
+          </div>
+        </div>
+
+        {/* Stage 2: 90 days */}
+        {stage >= 1 && (
+          <div className="anim-slide-up mt-6 rounded-2xl p-5 text-white" style={{ background: "linear-gradient(135deg,#1F1F1F 0%,#2A2A2A 100%)" }}>
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 h-20 w-20 rounded-2xl flex flex-col items-center justify-center" style={{ background: ORANGE }}>
+                <div className="text-[28px] font-black leading-none">90</div>
+                <div className="text-[10px] font-bold mt-0.5">يوم</div>
+              </div>
+              <div className="flex-1">
+                <div className="text-[15px] font-black">مدة التحول الكامل</div>
+                <p className="text-[12.5px] text-white/75 mt-1 leading-relaxed">
+                  3 أشهر هي المسافة الفاصلة بين حالتك الآن وبين هدفك المنشود.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stage 3: features */}
+        {stage >= 2 && (
+          <div className="mt-6">
+            <div className="text-[13px] font-bold text-neutral-700 mb-3">ماذا يشمل برنامجك؟</div>
+            <div className="grid grid-cols-2 gap-3">
+              {features.map((f, i) => (
+                featureIdx > i && (
+                  <div key={i} className="anim-bounce rounded-2xl p-4 bg-white border border-neutral-200 shadow-sm text-center">
+                    <div className="text-[28px] leading-none">{f.icon}</div>
+                    <div className="mt-2 text-[13.5px] font-black text-neutral-900">{f.title}</div>
+                    <div className="text-[11.5px] text-neutral-500 mt-0.5">{f.desc}</div>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Stage 4: success */}
+        {stage >= 3 && (
+          <div className="anim-fade-scale mt-6 rounded-2xl p-5 anim-glow text-center" style={{ background: "linear-gradient(135deg,#FF6B00 0%,#E85F00 100%)" }}>
+            <div className="text-[17px] font-black text-white">هدفك واضح والخطة جاهزة</div>
+            <p className="mt-1.5 text-[13px] text-white/90 leading-relaxed">
+              كل ما عليك الآن هو الالتزام بالخطة والاستمتاع بالرحلة نحو أفضل نسخة منك 💪
+            </p>
+          </div>
+        )}
+
+        {/* Progress / CTA */}
+        <div className="mt-7">
+          {stage < 4 ? (
+            <>
+              <div className="h-2 w-full rounded-full bg-neutral-200 overflow-hidden">
+                <div className="h-full rounded-full transition-[width] duration-150" style={{ width: `${progress}%`, background: ORANGE }} />
+              </div>
+              <div className="mt-2 text-center text-[12px] text-neutral-500">
+                جاري تجهيز صفحة النتائج النهائية... {Math.round(progress)}%
+              </div>
+            </>
+          ) : (
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="anim-fade-scale w-full h-14 rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 shadow-[0_10px_24px_-8px_rgba(37,211,102,.55)]"
+              style={{ background: "linear-gradient(180deg,#25D366 0%,#1FB755 100%)" }}
+            >
+              <span>تواصل مع المدرب على واتساب</span>
+              <span>💬</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
