@@ -3293,7 +3293,6 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
   const [showTimeline, setShowTimeline] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCTA, setShowCTA] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   // Stage timing
@@ -3304,7 +3303,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
     timers.push(window.setTimeout(() => setShowBenefits(true), 3500));
     timers.push(window.setTimeout(() => setShowTimeline(true), 5000));
     timers.push(window.setTimeout(() => setShowSuccess(true), 7000));
-    timers.push(window.setTimeout(() => setShowProgressBar(true), 8500));
+    timers.push(window.setTimeout(() => setShowCTA(true), 8500));
     return () => { timers.forEach(clearTimeout); };
   }, []);
 
@@ -3317,24 +3316,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
     return () => clearInterval(id);
   }, [showResults, cfg.metricNumbers.length]);
 
-  // Progress bar -> auto navigate
-  useEffect(() => {
-    if (!showProgressBar) return;
-    const DURATION = 3000;
-    const start = Date.now();
-    const tick = window.setInterval(() => {
-      const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
-      setProgress(p);
-      if (p >= 100) clearInterval(tick);
-    }, 50);
-    const navTimer = window.setTimeout(() => {
-      const whatsappHref = "https://wa.me/971500000000?text=" + encodeURIComponent(
-        `السلام عليكم، أنا ${name || "عميل جديد"}، جاهز لاستلام ${cfg.programTitle}`
-      );
-      window.location.href = whatsappHref;
-    }, DURATION + 300);
-    return () => { clearInterval(tick); clearTimeout(navTimer); };
-  }, [showProgressBar, name, cfg.programTitle]);
+
 
   const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
 
