@@ -3625,3 +3625,126 @@ function BeforeAfterTile({ label, tone, seed }: { label: string; tone: "muted" |
 
 const GREEN_BADGE_COLOR = "#22C55E";
 
+function CongratsScreen({ name, gender, onNext }: { name: string; gender: "male" | "female" | null; onNext: () => void }) {
+  const ORANGE = "#FF6B00";
+  const GREEN = "#22C55E";
+  const TEXT = "#0F172A";
+  const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
+  const programTitle = gender === "female" ? "برنامج شد القوام والتنحيف" : "برنامج بناء العضلات وحرق الدهون";
+
+  const [showBadge, setShowBadge] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
+  const [showCard, setShowCard] = useState(false);
+  const [showCta, setShowCta] = useState(false);
+
+  useEffect(() => {
+    const t1 = window.setTimeout(() => setShowBadge(true), 150);
+    const t2 = window.setTimeout(() => setShowTitle(true), 700);
+    const t3 = window.setTimeout(() => setShowCard(true), 1400);
+    const t4 = window.setTimeout(() => setShowCta(true), 2100);
+    return () => { [t1, t2, t3, t4].forEach(clearTimeout); };
+  }, []);
+
+  return (
+    <div className="h-full w-full overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
+      <style>{`
+        @keyframes cg-pop { 0%{opacity:0; transform: scale(.5);} 60%{transform: scale(1.08);} 100%{opacity:1; transform: scale(1);} }
+        @keyframes cg-fade { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
+        @keyframes cg-pulse-btn { 0%,100%{ box-shadow: 0 14px 32px -10px rgba(255,107,0,.55);} 50%{ box-shadow: 0 18px 44px -8px rgba(255,107,0,.85);} }
+        @keyframes cg-ring { 0%{ transform: scale(.9); opacity:.6;} 100%{ transform: scale(1.5); opacity:0;} }
+        @keyframes cg-spark { 0%,100%{opacity:.4; transform: scale(.9);} 50%{opacity:1; transform: scale(1.15);} }
+        .cg-pop { animation: cg-pop .7s cubic-bezier(.34,1.56,.64,1) both; }
+        .cg-fade { animation: cg-fade .6s ease-out both; }
+        .cg-pulse-btn { animation: cg-pulse-btn 2s ease-in-out infinite; }
+        .cg-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      `}</style>
+
+      <div className="min-h-full max-w-md mx-auto px-5 pt-8 pb-10 flex flex-col">
+        {/* Progress */}
+        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">11 من 12</div>
+        <div className="flex gap-1.5 mb-8">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 11 ? ORANGE : "#ECE8E1" }} />
+          ))}
+        </div>
+
+        {/* Success badge with rings */}
+        {showBadge && (
+          <div className="cg-pop relative mx-auto mt-2 mb-6">
+            <span className="absolute inset-0 rounded-full" style={{ background: `${GREEN}30`, animation: "cg-ring 1.8s ease-out infinite" }} />
+            <span className="absolute inset-0 rounded-full" style={{ background: `${GREEN}20`, animation: "cg-ring 1.8s ease-out infinite .6s" }} />
+            <div className="relative h-24 w-24 rounded-full grid place-items-center" style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)`, boxShadow: "0 18px 40px -10px rgba(34,197,94,.55)" }}>
+              <Check className="h-12 w-12 text-white" strokeWidth={3.5} />
+            </div>
+            <Sparkles className="absolute -top-1 -right-2 h-5 w-5" style={{ color: ORANGE, animation: "cg-spark 1.6s ease-in-out infinite" }} />
+            <Sparkles className="absolute -bottom-1 -left-2 h-4 w-4" style={{ color: "#FBBF24", animation: "cg-spark 1.6s ease-in-out infinite .4s" }} />
+          </div>
+        )}
+
+        {/* Title */}
+        {showTitle && (
+          <div className="cg-fade text-center">
+            <h1 className="cg-heading text-[26px] leading-tight" style={{ color: TEXT }}>
+              تهانينا{name ? <> <span style={{ color: ORANGE }}>{name}</span></> : ""} <span>🎉</span>
+            </h1>
+            <p className="cg-heading text-[18px] mt-2" style={{ color: TEXT }}>
+              لقد تم تجهيز برنامجك الخاص
+            </p>
+            <p className="mt-3 text-[13px] text-neutral-600 leading-relaxed px-2">
+              قمنا بتحليل جميع بياناتك وإعداد برنامج مخصص يناسب هدفك ومستواك الحالي.
+            </p>
+          </div>
+        )}
+
+        {/* Program card */}
+        {showCard && (
+          <div className="cg-fade mt-6 rounded-3xl p-5" style={{ background: "linear-gradient(135deg, #FFF7F0 0%, #FFFFFF 100%)", border: "1.5px solid #FFD9B8", boxShadow: "0 14px 36px -18px rgba(255,107,0,.35)" }}>
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`, boxShadow: "0 8px 18px -6px rgba(255,107,0,.55)" }}>
+                <Trophy className="h-6 w-6 text-white" strokeWidth={2.4} />
+              </div>
+              <div className="flex-1 text-right min-w-0">
+                <div className="text-[11px] font-extrabold" style={{ color: GREEN }}>برنامجك جاهز</div>
+                <div className="cg-heading text-[16px] mt-0.5" style={{ color: TEXT }}>{programTitle}</div>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                { Icon: Calendar, label: "90 يوم" },
+                { Icon: Target, label: "هدف مخصص" },
+                { Icon: ShieldCheck, label: "متابعة" },
+              ].map(({ Icon, label }, i) => (
+                <div key={i} className="rounded-2xl bg-white p-2.5 text-center" style={{ border: "1px solid #ECE8E1" }}>
+                  <Icon className="h-5 w-5 mx-auto" style={{ color: ORANGE }} strokeWidth={2.4} />
+                  <div className="text-[10.5px] font-bold mt-1" style={{ color: TEXT }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1" />
+
+        {/* CTA */}
+        {showCta && (
+          <div className="cg-fade mt-8">
+            <button
+              type="button"
+              onClick={onNext}
+              className="cg-pulse-btn w-full rounded-2xl py-4 px-5 text-white flex items-center justify-center gap-2 active:scale-[.98] transition-transform"
+              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`, fontFamily: HEADING_FONT, fontWeight: 900, fontSize: 16 }}
+            >
+              <span>اكتشف ما يمكنك تحقيقه خلال 90 يوم</span>
+              <ChevronLeft className="h-5 w-5" strokeWidth={3} />
+            </button>
+            <p className="text-center text-[11.5px] text-neutral-500 mt-3 leading-relaxed">
+              شاهد النتائج المتوقعة لبرنامجك قبل الاطلاع على الأسعار
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
