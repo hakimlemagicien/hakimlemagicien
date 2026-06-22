@@ -3169,115 +3169,177 @@ function ShieldIcon() {
 // ============================================================
 // Program Reveal Screen — post-contact "reward" stage
 // ============================================================
-function ProgramRevealScreen({ name, gender }: { name: string; gender: "male" | "female" | null }) {
+/* ===================== PERSONALIZED RESULTS REVEAL SCREEN ===================== */
+
+type RevealConfig = {
+  programTitle: string;
+  goalLabel: string;
+  problemLabel: string;
+  metricNumbers: string[]; // 5 metric values for carousel
+  metricUnit: string;
+  metricDesc: string;
+  benefits: { label: string; value: string; color: string; bg: string; Icon: typeof Flame }[];
+};
+
+function buildRevealConfig(gender: "male" | "female" | null, goalId: string, challengeId: string): RevealConfig {
+  const isFemale = gender === "female";
+
+  // Glutes track (female)
+  if (isFemale && (goalId === "glutes" || challengeId === "glutes")) {
+    return {
+      programTitle: "برنامج شد وتكبير المؤخرة",
+      goalLabel: "تكبير وشد المؤخرة",
+      problemLabel: "شكل المؤخرة غير متناسق",
+      metricNumbers: ["6.2", "5.7", "4.8", "5.1", "6.5"],
+      metricUnit: "سم",
+      metricDesc: "زيادة في محيط المؤخرة",
+      benefits: [
+        { label: "زيادة الثقة بالنفس", value: "+70%", color: "#FF6B00", bg: "#FFE9D9", Icon: Zap },
+        { label: "تقليل مقاسات الجسم", value: "4 - 10 سم", color: "#22C55E", bg: "#E8FAEE", Icon: Ruler },
+        { label: "حرق الدهون", value: "10-18 كجم", color: "#9333EA", bg: "#F3E8FF", Icon: Flame },
+        { label: "تحسين شكل الجسم", value: "+80%", color: "#3B82F6", bg: "#DBEAFE", Icon: PersonStanding },
+      ],
+    };
+  }
+
+  // Belly fat / fat-loss track
+  if (goalId === "fat" || challengeId === "belly") {
+    return {
+      programTitle: isFemale ? "برنامج خسارة دهون البطن" : "برنامج خسارة الدهون وشد البطن",
+      goalLabel: "خسارة الدهون",
+      problemLabel: isFemale ? "الكرش ودهون البطن" : "دهون البطن والكرش",
+      metricNumbers: ["8.5", "12.3", "10.1", "14.0", "9.7"],
+      metricUnit: "كجم",
+      metricDesc: "خسارة في الدهون",
+      benefits: [
+        { label: "حرق الدهون", value: "10-18 كجم", color: "#FF6B00", bg: "#FFE9D9", Icon: Flame },
+        { label: "تقليل محيط الخصر", value: "8 - 15 سم", color: "#22C55E", bg: "#E8FAEE", Icon: Ruler },
+        { label: "زيادة الطاقة والنشاط", value: "+85%", color: "#3B82F6", bg: "#DBEAFE", Icon: Zap },
+        { label: "تحسين شكل الجسم", value: "+80%", color: "#9333EA", bg: "#F3E8FF", Icon: PersonStanding },
+      ],
+    };
+  }
+
+  // Muscle building
+  if (goalId === "muscle" || challengeId === "muscle") {
+    return {
+      programTitle: "برنامج بناء العضلات والقوة",
+      goalLabel: "بناء العضلات",
+      problemLabel: "صعوبة بناء الكتلة العضلية",
+      metricNumbers: ["5.8", "6.4", "4.9", "5.5", "7.1"],
+      metricUnit: "كجم",
+      metricDesc: "زيادة في الكتلة العضلية",
+      benefits: [
+        { label: "زيادة الكتلة العضلية", value: "+5-8 كجم", color: "#FF6B00", bg: "#FFE9D9", Icon: Dumbbell },
+        { label: "زيادة القوة", value: "+90%", color: "#22C55E", bg: "#E8FAEE", Icon: Zap },
+        { label: "تحسين شكل الجسم", value: "+85%", color: "#3B82F6", bg: "#DBEAFE", Icon: PersonStanding },
+        { label: "زيادة الثقة بالنفس", value: "+75%", color: "#9333EA", bg: "#F3E8FF", Icon: Trophy },
+      ],
+    };
+  }
+
+  // Default / generic
+  return {
+    programTitle: isFemale ? "برنامج شد القوام المخصص لكِ" : "برنامج التحول الكامل المخصص لك",
+    goalLabel: isFemale ? "جسم متناسق ورشيق" : "جسم رياضي ومتناسق",
+    problemLabel: "عدم الرضا عن الشكل الحالي",
+    metricNumbers: ["6.0", "5.5", "5.0", "6.5", "5.8"],
+    metricUnit: "سم",
+    metricDesc: "تحسن في مقاسات الجسم",
+    benefits: [
+      { label: "تحسين شكل الجسم", value: "+85%", color: "#FF6B00", bg: "#FFE9D9", Icon: PersonStanding },
+      { label: "تقليل المقاسات", value: "5 - 12 سم", color: "#22C55E", bg: "#E8FAEE", Icon: Ruler },
+      { label: "زيادة الطاقة", value: "+80%", color: "#3B82F6", bg: "#DBEAFE", Icon: Zap },
+      { label: "زيادة الثقة بالنفس", value: "+75%", color: "#9333EA", bg: "#F3E8FF", Icon: Trophy },
+    ],
+  };
+}
+
+const TIMELINE_STAGES = [
+  { week: "الأسبوع 1-2", title: "بداية التغيير", desc: ["تحسن في الطاقة", "بداية حرق الدهون"], color: "#22C55E", bg: "#E8FAEE", Icon: Sparkles },
+  { week: "الأسبوع 3-6", title: "تغير ملحوظ", desc: ["نزول المقاسات", "تحسن في شكل الجسم"], color: "#FF6B00", bg: "#FFE9D9", Icon: Flame },
+  { week: "الأسبوع 7-12", title: "نتائج واضحة", desc: ["شد وتناسق أكبر", "زيادة في الكتلة العضلية"], color: "#9333EA", bg: "#F3E8FF", Icon: Dumbbell },
+  { week: "الأسبوع 13+", title: "الشكل المثالي", desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"], color: "#3B82F6", bg: "#DBEAFE", Icon: Trophy },
+];
+
+function ProgramRevealScreen({ name, gender, goalId, challengeId }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
 
-  const programTitle = gender === "female"
-    ? "برنامج شد القوام وإبراز الأنوثة"
-    : "برنامج خسارة الدهون وشد البطن";
+  const cfg = buildRevealConfig(gender, goalId, challengeId);
 
   // Reveal stages
-  const [showProgram, setShowProgram] = useState(false);
-  const [showDuration, setShowDuration] = useState(false);
-  const [showFeaturesTitle, setShowFeaturesTitle] = useState(false);
-  const [featureIdx, setFeatureIdx] = useState(0); // count visible
+  const [showGoal, setShowGoal] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [showBenefits, setShowBenefits] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showProgressBar, setShowProgressBar] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [carouselIdx, setCarouselIdx] = useState(0);
 
-  // Timeline (ms): 0 greeting, 2000 program, 4500 duration, 6500 features title,
-  // 7000/7500/8000/8500 features, 9500 success, 11000 reach 100%, then auto-nav
+  // Stage timing
   useEffect(() => {
     const timers: number[] = [];
-    timers.push(window.setTimeout(() => setShowProgram(true), 2000));
-    timers.push(window.setTimeout(() => setShowDuration(true), 4500));
-    timers.push(window.setTimeout(() => setShowFeaturesTitle(true), 6500));
-    [0, 1, 2, 3].forEach((i) => {
-      timers.push(window.setTimeout(() => setFeatureIdx(i + 1), 7000 + i * 500));
-    });
-    timers.push(window.setTimeout(() => setShowSuccess(true), 9500));
+    timers.push(window.setTimeout(() => setShowGoal(true), 1000));
+    timers.push(window.setTimeout(() => setShowResults(true), 2000));
+    timers.push(window.setTimeout(() => setShowBenefits(true), 3500));
+    timers.push(window.setTimeout(() => setShowTimeline(true), 5000));
+    timers.push(window.setTimeout(() => setShowSuccess(true), 7000));
+    timers.push(window.setTimeout(() => setShowProgressBar(true), 8500));
+    return () => { timers.forEach(clearTimeout); };
+  }, []);
 
-    const DURATION = 11000;
+  // Auto-scroll carousel
+  useEffect(() => {
+    if (!showResults) return;
+    const id = window.setInterval(() => {
+      setCarouselIdx((i) => (i + 1) % cfg.metricNumbers.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, [showResults, cfg.metricNumbers.length]);
+
+  // Progress bar -> auto navigate
+  useEffect(() => {
+    if (!showProgressBar) return;
+    const DURATION = 3000;
     const start = Date.now();
     const tick = window.setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
       setProgress(p);
-      if (p >= 100) window.clearInterval(tick);
+      if (p >= 100) clearInterval(tick);
     }, 50);
-
-    // Auto-navigate 1s after 100%
     const navTimer = window.setTimeout(() => {
       const whatsappHref = "https://wa.me/971500000000?text=" + encodeURIComponent(
-        `السلام عليكم، أنا ${name || "عميل جديد"}، جاهز لاستلام برنامجي`
+        `السلام عليكم، أنا ${name || "عميل جديد"}، جاهز لاستلام ${cfg.programTitle}`
       );
       window.location.href = whatsappHref;
-    }, DURATION + 1000);
+    }, DURATION + 300);
+    return () => { clearInterval(tick); clearTimeout(navTimer); };
+  }, [showProgressBar, name, cfg.programTitle]);
 
-    return () => {
-      timers.forEach(clearTimeout);
-      clearInterval(tick);
-      clearTimeout(navTimer);
-    };
-  }, [name]);
-
-  const features = [
-    { Icon: Dumbbell, title: "خطة تدريب مخصصة", desc: "تم تصميم خطة تدريب تناسب مستواك وهدفك.", color: "#FF6B00", bg: "#FFF2E5" },
-    { Icon: Salad, title: "خطة غذائية مناسبة", desc: "خطة غذائية متوازنة تناسب هدفك ونمط حياتك.", color: "#22C55E", bg: "#E8FAEE" },
-    { Icon: BarChart3, title: "متابعة دورية", desc: "متابعة تقدمك بشكل دوري وتعديلات حسب تطورك.", color: "#3B82F6", bg: "#E6F0FF" },
-    { Icon: MessageCircle, title: "دعم مباشر عبر واتساب", desc: "تواصل مباشر مع مدربك لدعمك والإجابة على استفساراتك.", color: "#25D366", bg: "#E2F8EA" },
-  ];
-
-  // Confetti particles
-  const confetti = Array.from({ length: 24 }, (_, i) => i);
+  const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
 
   return (
     <div className="h-full w-full overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
       <style>{`
-        @keyframes rv-fade { from { opacity: 0; transform: translateY(12px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes rv-pop  { 0% { opacity:0; transform: scale(.6);} 60% { transform: scale(1.06);} 100% { opacity:1; transform: scale(1);} }
-        @keyframes rv-slide-up { from {opacity:0; transform: translateY(28px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes rv-slide-right { from {opacity:0; transform: translateX(28px);} to {opacity:1; transform: translateX(0);} }
-        @keyframes rv-bubble { 0%{opacity:0; transform: scale(.4) translateY(10px);} 60%{transform: scale(1.08) translateY(-2px);} 100%{opacity:1; transform: scale(1) translateY(0);} }
-        @keyframes rv-glow { 0%,100% { box-shadow: 0 10px 30px -8px rgba(34,197,94,.35);} 50% { box-shadow: 0 18px 50px -6px rgba(34,197,94,.55);} }
-        @keyframes rv-tick { 0%{stroke-dashoffset: 24;} 100%{stroke-dashoffset: 0;} }
-        @keyframes rv-num-pop { 0%{opacity:0; transform: scale(.4) rotate(-8deg);} 60%{transform: scale(1.15) rotate(2deg);} 100%{opacity:1; transform: scale(1) rotate(0);} }
-        @keyframes rv-confetti { 0% { transform: translate(0,-20px) rotate(0); opacity:1;} 100% { transform: translate(var(--cx,0px), 100vh) rotate(720deg); opacity:0;} }
-        @keyframes rv-shine { 0%{ background-position: -200% 0;} 100%{ background-position: 200% 0;} }
-        .rv-fade { animation: rv-fade .7s ease-out both; }
-        .rv-pop { animation: rv-pop .55s cubic-bezier(.34,1.56,.64,1) both; }
-        .rv-slide-up { animation: rv-slide-up .65s cubic-bezier(.2,.8,.2,1) both; }
-        .rv-slide-right { animation: rv-slide-right .55s cubic-bezier(.2,.8,.2,1) both; }
-        .rv-bubble { animation: rv-bubble .6s cubic-bezier(.34,1.56,.64,1) both; }
-        .rv-glow { animation: rv-glow 2.4s ease-in-out infinite; }
-        .rv-num { animation: rv-num-pop .7s cubic-bezier(.34,1.56,.64,1) both; display:inline-block; }
-        .rv-tick path { stroke-dasharray: 24; animation: rv-tick .45s ease-out .15s both; }
-        .rv-confetti-piece { position: absolute; top: -20px; width: 8px; height: 14px; border-radius: 2px; animation: rv-confetti 2.6s ease-in forwards; }
-        .rv-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); background-size: 200% 100%; animation: rv-shine 1.6s linear infinite; }
+        @keyframes pr-fade { from { opacity: 0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pr-pop  { 0% { opacity:0; transform: scale(.7);} 60% { transform: scale(1.05);} 100% { opacity:1; transform: scale(1);} }
+        @keyframes pr-stagger { from {opacity:0; transform: translateY(18px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pr-glow-success { 0%,100% { box-shadow: 0 10px 30px -8px rgba(34,197,94,.35);} 50% { box-shadow: 0 22px 55px -6px rgba(34,197,94,.55);} }
+        @keyframes pr-draw { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+        @keyframes pr-shimmer-bg { 0%{ background-position: -200% 0;} 100%{ background-position: 200% 0;} }
+        @keyframes pr-dot-in { from { opacity:0; transform: scale(0);} to {opacity:1; transform: scale(1);} }
+        .pr-fade { animation: pr-fade .7s ease-out both; }
+        .pr-pop { animation: pr-pop .55s cubic-bezier(.34,1.56,.64,1) both; }
+        .pr-stagger { animation: pr-stagger .55s cubic-bezier(.2,.8,.2,1) both; }
+        .pr-glow { animation: pr-glow-success 2.4s ease-in-out infinite; }
+        .pr-line { stroke-dasharray: 400; animation: pr-draw 1.6s ease-out forwards; }
+        .pr-dot { animation: pr-dot-in .5s cubic-bezier(.34,1.56,.64,1) both; }
+        .pr-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); background-size: 200% 100%; animation: pr-shimmer-bg 1.6s linear infinite; }
+        .pr-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
       `}</style>
-
-      {/* Confetti overlay */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-50">
-        {confetti.map((i) => {
-          const colors = ["#FF6B00", "#22C55E", "#3B82F6", "#FFC107", "#E91E63", "#9C27B0"];
-          const left = (i * 4.3) % 100;
-          const cx = (Math.sin(i) * 60).toFixed(0);
-          const delay = (i % 8) * 0.15;
-          const color = colors[i % colors.length];
-          return (
-            <span
-              key={i}
-              className="rv-confetti-piece"
-              style={{
-                left: `${left}%`,
-                background: color,
-                animationDelay: `${delay}s`,
-                ["--cx" as string]: `${cx}px`,
-              } as React.CSSProperties}
-            />
-          );
-        })}
-      </div>
 
       {/* Top progress chip */}
       <div className="px-5 pt-5 max-w-md mx-auto">
@@ -3290,168 +3352,275 @@ function ProgramRevealScreen({ name, gender }: { name: string; gender: "male" | 
       </div>
 
       <div className="px-5 pt-6 pb-32 max-w-md mx-auto">
-        {/* STEP 1: Greeting */}
-        <div className="rv-fade text-center">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-full mb-3" style={{ background: "#FFF2E5" }}>
-            <PartyPopper className="h-9 w-9" style={{ color: ORANGE }} strokeWidth={2.2} />
+        {/* HEADER */}
+        <div className="pr-fade flex items-start gap-3">
+          <div className="flex-1 text-right">
+            <h1 className="pr-heading text-[24px] leading-tight" style={{ color: TEXT }}>
+              هذا ما يمكنك تحقيقه خلال
+            </h1>
+            <div className="pr-heading text-[34px] leading-none mt-1" style={{ color: ORANGE }}>
+              90 يوم
+            </div>
           </div>
-          <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT }}>
-            تهانينا{name ? <> يا <span style={{ color: ORANGE }}>{name}</span></> : null}!
-          </h1>
-          <p className="mt-2 text-[14px] text-neutral-600 leading-relaxed px-2">
-            تم تجهيز برنامجك الخاص بناءً على إجاباتك وتحليل حالتك الحالية.
-          </p>
+          <div className="shrink-0 h-14 w-14 rounded-2xl grid place-items-center" style={{ background: "#FFE9D9" }}>
+            <Target className="h-8 w-8" style={{ color: ORANGE }} strokeWidth={2.4} />
+          </div>
         </div>
 
-        {/* STEP 2: Program card */}
-        {showProgram && (
-          <div
-            className="rv-pop mt-6 rounded-3xl p-5 flex items-center gap-4 relative overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, #FFF6EE 0%, #FFFFFF 100%)",
-              border: `1.5px solid ${ORANGE}33`,
-              boxShadow: "0 10px 30px -12px rgba(255,107,0,.25)",
-            }}
-          >
-            <div
-              className="shrink-0 h-14 w-14 rounded-2xl flex items-center justify-center"
-              style={{ background: ORANGE, boxShadow: "0 8px 18px -6px rgba(255,107,0,.55)" }}
-            >
-              <Target className="h-7 w-7 text-white" strokeWidth={2.4} />
+        <p className="pr-fade mt-3 text-[13px] text-neutral-600 leading-relaxed text-center px-2" style={{ animationDelay: ".15s" }}>
+          {name ? <>بناءً على هدفك يا <span className="font-bold" style={{ color: ORANGE }}>{name}</span> وتحليل بياناتك، </> : "بناءً على هدفك الحالي وتحليل بياناتك، "}
+          هذه نتائج حقيقية لأشخاص يعانون من نفس المشكلة التي تعاني منها.
+        </p>
+
+        {/* STAGE 2: Goal + Problem cards */}
+        {showGoal && (
+          <div className="pr-pop mt-5 rounded-3xl bg-white p-1 grid grid-cols-2 gap-1" style={{ boxShadow: "0 10px 30px -16px rgba(0,0,0,.14)", border: "1px solid #ECE8E1" }}>
+            <div className="rounded-[20px] p-3 flex items-center gap-2.5" style={{ background: "#FFF7F0" }}>
+              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#FFE0CC" }}>
+                <Target className="h-5 w-5" style={{ color: ORANGE }} strokeWidth={2.4} />
+              </div>
+              <div className="text-right min-w-0">
+                <div className="text-[10px] font-extrabold" style={{ color: GREEN }}>هدفك</div>
+                <div className="text-[12px] font-black leading-tight mt-0.5" style={{ color: TEXT }}>{cfg.goalLabel}</div>
+              </div>
             </div>
-            <div className="flex-1 text-right">
-              <div className="text-[10px] font-bold tracking-wide" style={{ color: ORANGE }}>برنامجك المخصص</div>
-              <div className="mt-0.5 text-[16px] font-black leading-snug" style={{ color: TEXT }}>{programTitle}</div>
+            <div className="rounded-[20px] p-3 flex items-center gap-2.5" style={{ background: "#FFF1F1" }}>
+              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#FFD9D9" }}>
+                <span className="text-lg font-black" style={{ color: "#EF4444" }}>!</span>
+              </div>
+              <div className="text-right min-w-0">
+                <div className="text-[10px] font-extrabold" style={{ color: "#EF4444" }}>مشكلتك الحالية</div>
+                <div className="text-[12px] font-black leading-tight mt-0.5" style={{ color: TEXT }}>{cfg.problemLabel}</div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* STEP 3: Duration card */}
-        {showDuration && (
+        {/* STAGE 3: Real results carousel */}
+        {showResults && (
+          <div className="pr-stagger mt-6">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="h-6 w-6 rounded-full grid place-items-center" style={{ background: GREEN }}>
+                <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+              </div>
+              <h2 className="pr-heading text-[15px]" style={{ color: TEXT }}>نتائج حقيقية لعملاء حققوا نفس هدفك</h2>
+            </div>
+
+            <div className="relative overflow-hidden rounded-3xl">
+              <div
+                className="flex gap-3 transition-transform duration-700 ease-out"
+                style={{ transform: `translateX(${carouselIdx * 50}%)` }}
+              >
+                {cfg.metricNumbers.map((num, i) => (
+                  <div
+                    key={i}
+                    className="shrink-0 w-[48%] rounded-2xl bg-white overflow-hidden"
+                    style={{ border: "1px solid #ECE8E1", boxShadow: "0 8px 24px -16px rgba(0,0,0,.14)" }}
+                  >
+                    <div className="relative grid grid-cols-2 gap-0.5 p-1.5">
+                      <BeforeAfterTile label="قبل" tone="muted" seed={i} />
+                      <BeforeAfterTile label="بعد" tone="bright" seed={i} />
+                    </div>
+                    <div className="px-3 pb-3 pt-1 text-center">
+                      <div className="text-[10px] text-neutral-500 font-bold">بعد 90 يوم</div>
+                      <div className="pr-heading text-[22px] mt-0.5" style={{ color: ORANGE }}>
+                        {(cfg.metricDesc.startsWith("خسارة") ? "-" : "+")}{num} {cfg.metricUnit}
+                      </div>
+                      <div className="text-[10.5px] text-neutral-500 mt-0.5 leading-snug">{cfg.metricDesc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5 mt-3">
+              {cfg.metricNumbers.map((_, i) => (
+                <div
+                  key={i}
+                  className="h-1.5 rounded-full transition-all duration-300"
+                  style={{
+                    width: i === carouselIdx ? 18 : 6,
+                    background: i === carouselIdx ? ORANGE : "#E5E1DA",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 4: Benefits */}
+        {showBenefits && (
+          <div className="mt-6 grid grid-cols-2 gap-2.5">
+            {cfg.benefits.map((b, i) => (
+              <div
+                key={i}
+                className="pr-stagger rounded-2xl bg-white p-3"
+                style={{
+                  border: "1px solid #ECE8E1",
+                  boxShadow: "0 6px 20px -14px rgba(0,0,0,.12)",
+                  animationDelay: `${i * 120}ms`,
+                }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="shrink-0 h-9 w-9 rounded-full grid place-items-center" style={{ background: b.bg }}>
+                    <b.Icon className="h-4.5 w-4.5" style={{ color: b.color, width: 18, height: 18 }} strokeWidth={2.4} />
+                  </div>
+                  <div className="flex-1 text-right min-w-0">
+                    <div className="text-[10.5px] text-neutral-500 font-bold leading-tight">{b.label}</div>
+                    <div className="pr-heading text-[15px] mt-0.5" style={{ color: b.color }}>{b.value}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* STAGE 5: Timeline */}
+        {showTimeline && (
+          <div className="mt-7">
+            <h2 className="pr-heading text-center text-[16px] mb-4" style={{ color: TEXT }}>ماذا تتوقع خلال رحلتك؟</h2>
+
+            <div className="relative h-7 mb-2">
+              <svg viewBox="0 0 320 28" className="w-full h-full" preserveAspectRatio="none">
+                <line className="pr-line" x1="10" y1="14" x2="310" y2="14" stroke="#E5E1DA" strokeWidth="2" strokeDasharray="4 4" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-between px-2">
+                {TIMELINE_STAGES.map((s, i) => (
+                  <div
+                    key={i}
+                    className="pr-dot h-4 w-4 rounded-full ring-4 ring-[#FAF8F5]"
+                    style={{ background: s.color, animationDelay: `${600 + i * 250}ms` }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {TIMELINE_STAGES.map((s, i) => (
+                <div
+                  key={i}
+                  className="pr-stagger rounded-2xl bg-white p-3"
+                  style={{
+                    border: "1px solid #ECE8E1",
+                    boxShadow: "0 6px 20px -14px rgba(0,0,0,.12)",
+                    animationDelay: `${800 + i * 150}ms`,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-[10.5px] font-extrabold" style={{ color: s.color }}>{s.week}</div>
+                    <div className="h-8 w-8 rounded-xl grid place-items-center" style={{ background: s.bg }}>
+                      <s.Icon className="h-4 w-4" style={{ color: s.color }} strokeWidth={2.4} />
+                    </div>
+                  </div>
+                  <div className="pr-heading text-[13.5px] mt-2 text-right" style={{ color: TEXT }}>{s.title}</div>
+                  <ul className="mt-1.5 space-y-1">
+                    {s.desc.map((d, j) => (
+                      <li key={j} className="text-[11px] text-neutral-600 text-right leading-snug flex items-center justify-end gap-1.5">
+                        <span>{d}</span>
+                        <span className="h-1 w-1 rounded-full" style={{ background: s.color }} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* STAGE 6: Success card */}
+        {showSuccess && (
           <div
-            className="rv-slide-up mt-4 rounded-3xl p-5 flex items-center gap-4 bg-white"
+            className="pr-pop pr-glow mt-6 rounded-3xl p-4 flex items-start gap-3"
             style={{
-              border: "1px solid #E8E5DF",
-              boxShadow: "0 8px 24px -16px rgba(0,0,0,.12)",
+              background: "linear-gradient(135deg, #EAFBEF 0%, #FFFFFF 100%)",
+              border: `1.5px solid ${GREEN}55`,
             }}
           >
-            <div
-              className="shrink-0 h-16 w-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "#E8FAEE" }}
-            >
-              <Calendar className="h-8 w-8" style={{ color: GREEN }} strokeWidth={2.2} />
+            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center bg-white" style={{ boxShadow: "0 6px 16px -8px rgba(34,197,94,.5)" }}>
+              <ShieldCheck className="h-7 w-7" style={{ color: GREEN }} strokeWidth={2.2} />
             </div>
             <div className="flex-1 text-right">
-              <div className="text-[12px] font-bold text-neutral-500">مدة البرنامج</div>
-              <div className="mt-0.5 flex items-baseline gap-1.5 justify-end">
-                <span className="text-[13px] font-bold text-neutral-500">يوم</span>
-                <span className="rv-num text-[34px] font-black leading-none" style={{ color: GREEN }}>90</span>
+              <div className="pr-heading text-[15px]" style={{ color: TEXT }}>
+                أنت على بعد 90 يوم فقط من أفضل نسخة منك!
               </div>
-              <p className="mt-1 text-[11.5px] text-neutral-500 leading-relaxed">
-                تم تصميم هذه المدة لتحقيق أفضل نتيجة ممكنة بناءً على وضعك الحالي.
+              <p className="mt-1 text-[12px] text-neutral-600 leading-relaxed">
+                التزم بالخطة، ثق بالعملية، والنتيجة ستكون مذهلة <span>👍</span>
               </p>
             </div>
           </div>
         )}
-
-        {/* STEP 4: Features */}
-        {showFeaturesTitle && (
-          <div className="rv-fade mt-7">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Sparkles className="h-4 w-4" style={{ color: ORANGE }} />
-              <h2 className="text-[15px] font-black" style={{ color: TEXT }}>ماذا يشمل برنامجك؟</h2>
-              <Sparkles className="h-4 w-4" style={{ color: ORANGE }} />
-            </div>
-
-            <div className="space-y-3">
-              {features.map((f, i) => {
-                if (featureIdx <= i) return null;
-                const animClass = i === 3 ? "rv-bubble" : i === 2 ? "rv-slide-right" : "rv-pop";
-                return (
-                  <div
-                    key={i}
-                    className={`${animClass} rounded-2xl p-4 bg-white flex items-center gap-3.5`}
-                    style={{
-                      border: "1px solid #ECE8E1",
-                      boxShadow: "0 6px 20px -14px rgba(0,0,0,.15)",
-                    }}
-                  >
-                    <div
-                      className="shrink-0 h-12 w-12 rounded-2xl flex items-center justify-center"
-                      style={{ background: f.bg }}
-                    >
-                      <f.Icon className="h-6 w-6" style={{ color: f.color }} strokeWidth={2.2} />
-                    </div>
-                    <div className="flex-1 text-right min-w-0">
-                      <div className="text-[14px] font-black" style={{ color: TEXT }}>{f.title}</div>
-                      <div className="text-[11.5px] text-neutral-500 mt-0.5 leading-relaxed">{f.desc}</div>
-                    </div>
-                    <div
-                      className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center"
-                      style={{ background: GREEN }}
-                    >
-                      <svg className="rv-tick" width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 12.5l4.5 4.5L19 7.5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* STEP 5: Success card */}
-        {showSuccess && (
-          <div
-            className="rv-pop rv-glow mt-6 rounded-3xl p-5"
-            style={{
-              background: "linear-gradient(135deg, #E8FAEE 0%, #FFFFFF 100%)",
-              border: `1.5px solid ${GREEN}55`,
-            }}
-          >
-            <div className="flex items-start gap-3.5">
-              <div
-                className="shrink-0 h-12 w-12 rounded-2xl flex items-center justify-center"
-                style={{ background: GREEN }}
-              >
-                <ShieldCheck className="h-7 w-7 text-white" strokeWidth={2.2} />
-              </div>
-              <div className="flex-1 text-right">
-                <div className="text-[15px] font-black" style={{ color: TEXT }}>هدفك واضح والخطة جاهزة</div>
-                <p className="mt-1 text-[12.5px] text-neutral-600 leading-relaxed">
-                  كل ما عليك الآن هو الالتزام بالخطة والاستمتاع بالرحلة نحو أفضل نسخة منك.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Bottom auto-progress */}
-      <div
-        className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 pointer-events-none"
-        style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 40%)" }}
-      >
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-2 text-[11.5px] font-bold">
-            <span className="text-neutral-500">جاري تجهيز برنامجك...</span>
-            <span style={{ color: ORANGE }}>{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 w-full rounded-full overflow-hidden relative" style={{ background: "#ECE8E1" }}>
-            <div
-              className="h-full rounded-full transition-[width] duration-100 relative overflow-hidden"
-              style={{
-                width: `${progress}%`,
-                background: `linear-gradient(90deg, ${ORANGE} 0%, #FF8A33 100%)`,
-              }}
-            >
-              <span className="absolute inset-0 rv-shimmer" />
+      {/* Bottom auto-progress (only after all stages) */}
+      {showProgressBar && (
+        <div
+          className="fixed bottom-0 left-0 right-0 px-5 pt-3 pb-5 pointer-events-none pr-fade"
+          style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 40%)" }}
+        >
+          <div className="max-w-md mx-auto">
+            <div className="flex items-center justify-between mb-2 text-[12px] font-extrabold">
+              <span style={{ color: ORANGE }}>{Math.round(progress)}%</span>
+              <span style={{ color: TEXT }}>جاري الانتقال إلى الخطوة التالية...</span>
             </div>
+            <div className="h-2 w-full rounded-full overflow-hidden relative" style={{ background: "#ECE8E1" }}>
+              <div
+                className="h-full rounded-full transition-[width] duration-100 relative overflow-hidden"
+                style={{
+                  width: `${progress}%`,
+                  background: `linear-gradient(90deg, ${ORANGE} 0%, #FF8A33 100%)`,
+                }}
+              >
+                <span className="absolute inset-0 pr-shimmer" />
+              </div>
+            </div>
+            <div className="text-center text-[11px] text-neutral-500 mt-1.5">يرجى الانتظار لحظة</div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
+
+function BeforeAfterTile({ label, tone, seed }: { label: string; tone: "muted" | "bright"; seed: number }) {
+  const palettes = [
+    ["#6B7280", "#22C55E"],
+    ["#9CA3AF", "#FF6B00"],
+    ["#737373", "#3B82F6"],
+    ["#71717A", "#9333EA"],
+    ["#525B6B", "#22C55E"],
+  ];
+  const [muted, bright] = palettes[seed % palettes.length];
+  const accent = tone === "muted" ? muted : bright;
+  const bg = tone === "muted"
+    ? "linear-gradient(160deg,#E5E7EB 0%,#D1D5DB 100%)"
+    : `linear-gradient(160deg, ${accent}33 0%, ${accent}55 100%)`;
+  return (
+    <div className="relative aspect-[3/4] rounded-xl overflow-hidden" style={{ background: bg }}>
+      {/* Abstract silhouette */}
+      <svg viewBox="0 0 60 80" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id={`g-${tone}-${seed}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={tone === "muted" ? "#9CA3AF" : accent} stopOpacity="0.75" />
+            <stop offset="100%" stopColor={tone === "muted" ? "#6B7280" : accent} stopOpacity="0.95" />
+          </linearGradient>
+        </defs>
+        <path
+          d={tone === "muted"
+            ? "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 18 50 14 58 16 70 L 44 70 C 46 58 42 50 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
+            : "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 16 48 12 60 14 72 L 46 72 C 48 60 44 48 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
+          }
+          fill={`url(#g-${tone}-${seed})`}
+        />
+      </svg>
+      <span
+        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-2 py-0.5 text-[10px] font-extrabold text-white"
+        style={{ background: tone === "muted" ? "rgba(0,0,0,.55)" : GREEN_BADGE_COLOR }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+const GREEN_BADGE_COLOR = "#22C55E";
 
