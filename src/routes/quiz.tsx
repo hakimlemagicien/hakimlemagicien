@@ -58,7 +58,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "pricing" | "pricingDubai";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -66,6 +66,9 @@ function QuizPage() {
   const [userName, setUserName] = useState<string>("");
   const [goalId, setGoalId] = useState<string>("");
   const [challengeId, setChallengeId] = useState<string>("");
+  const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
+
+  const goToPricing = () => setStep(userLocation === "dubai" ? "pricingDubai" : "pricing");
 
   return (
     <div
@@ -87,14 +90,16 @@ function QuizPage() {
       {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} />}
       {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
       {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
-      {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep("investment")} />}
+      {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={(loc) => { setUserLocation(loc); setStep("investment"); }} />}
       {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
       {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name) => { setUserName(name); setStep("congrats"); }} />}
       {step === "congrats" && <CongratsScreen name={userName} gender={gender} onNext={() => setStep("reveal")} />}
-      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} />}
+      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} onNext={goToPricing} />}
+      {step === "pricing" && <PricingScreen name={userName} onBack={() => setStep("reveal")} />}
+      {step === "pricingDubai" && <PricingScreen name={userName} onBack={() => setStep("reveal")} dubai />}
     </div>
   );
 }
