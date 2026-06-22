@@ -2833,14 +2833,15 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
   const [countryQuery, setCountryQuery] = useState("");
 
   useEffect(() => {
+    const DURATION = 10000;
     const start = Date.now();
     const tick = setInterval(() => {
-      const p = Math.min(100, ((Date.now() - start) / 5000) * 100);
+      const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
       setOverlayProgress(p);
       if (p >= 100) clearInterval(tick);
     }, 50);
-    const tFade = setTimeout(() => setFadingOverlay(true), 4500);
-    const tHide = setTimeout(() => setShowOverlay(false), 5000);
+    const tFade = setTimeout(() => setFadingOverlay(true), DURATION - 500);
+    const tHide = setTimeout(() => setShowOverlay(false), DURATION);
     return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
 
