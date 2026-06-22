@@ -2589,6 +2589,7 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
 
 function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
   const [pct, setPct] = useState(0);
+  const [ready, setReady] = useState(false);
   const DURATION = 10000;
 
   useEffect(() => {
@@ -2601,12 +2602,12 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
       if (elapsed < DURATION) {
         raf = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => onDone(), 1000);
+        setReady(true);
       }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [onDone]);
+  }, []);
 
   const thresholds = [25, 50, 75, 90, 100];
   const stepStatus = (i: number): "done" | "loading" | "pending" => {
@@ -2747,13 +2748,30 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
         </div>
       </div>
 
-      {/* Bottom strip */}
-      <div className="shrink-0 mt-1.5 mx-4 mb-2 rounded-xl bg-[#FFF1E5] px-3 py-2 flex items-center justify-center gap-1.5">
-        <Lightbulb size={14} className="text-[#FF6B00]" />
-        <p className="text-[11.5px] text-gray-700 text-center">
-          أنت في <span className="text-[#FF6B00] font-bold">الخطوة الأخيرة!</span> بعد التحضير ستستلم برنامجك مباشرة.
-        </p>
+      {/* Bottom action */}
+      <div className="shrink-0 mt-1.5 mx-4 mb-2">
+        {ready ? (
+          <button
+            onClick={onDone}
+            className="analysis-cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98]"
+            style={{ background: `linear-gradient(180deg, #FF6B00 0%, #E85F00 100%)` }}
+          >
+            <span>🚀</span>
+            <span>استلم برنامجي الآن</span>
+          </button>
+        ) : (
+          <div className="rounded-xl bg-[#FFF1E5] px-3 py-2 flex items-center justify-center gap-1.5">
+            <Lightbulb size={14} className="text-[#FF6B00]" />
+            <p className="text-[11.5px] text-gray-700 text-center">
+              أنت في <span className="text-[#FF6B00] font-bold">الخطوة الأخيرة!</span> بعد التحضير ستستلم برنامجك مباشرة.
+            </p>
+          </div>
+        )}
       </div>
+      <style>{`
+        @keyframes analysis-cta-pulse-kf { 0%,100% { box-shadow: 0 8px 20px -6px rgba(255,107,0,0.5), 0 0 0 0 rgba(255,107,0,0.55); } 50% { box-shadow: 0 8px 24px -4px rgba(255,107,0,0.6), 0 0 0 10px rgba(255,107,0,0); } }
+        .analysis-cta-pulse { animation: analysis-cta-pulse-kf 2.2s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }
