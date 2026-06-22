@@ -3006,7 +3006,7 @@ function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: 
       <div className="px-5 mt-5">
         <button
           disabled={!canSubmit || submitting}
-          onClick={() => { setSubmitting(true); }}
+          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); setTimeout(() => onDone(form.name.trim()), 700); }}
           className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
           style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
         >
