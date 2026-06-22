@@ -3304,9 +3304,10 @@ function RevealScreen({ gender, onDone }: { gender: "male" | "female" | null; on
 
         {/* Final success card */}
         {stage >= 7 && (
-          <div style={{ animation: "rv-fadeUp .7s ease-out both" }}
+          <div
             className="mt-3 rounded-2xl p-5 text-right relative overflow-hidden"
             style={{
+              animation: "rv-fadeUp .7s ease-out both",
               background: "linear-gradient(135deg,#E8F7EE 0%,#D5EFE0 100%)",
               border: "1px solid #BFE6CF",
               boxShadow: "0 12px 30px -16px rgba(34,197,94,0.45)",
