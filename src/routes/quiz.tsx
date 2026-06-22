@@ -332,14 +332,15 @@ const GOALS: Goal[] = [
   { id: "shape", label: "تغيير شكل الجسم", Icon: Target },
 ];
 
-function GoalsScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string>("muscle");
   const [touched, setTouched] = useState(false);
   useEffect(() => {
     if (!touched) return;
+    onSelect?.(selected);
     const t = setTimeout(onNext, 350);
     return () => clearTimeout(t);
-  }, [touched, selected, onNext]);
+  }, [touched, selected, onNext, onSelect]);
 
 
 
