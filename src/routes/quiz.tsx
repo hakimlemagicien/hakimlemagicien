@@ -25,6 +25,17 @@ import {
   MessageCircle,
   ShieldCheck,
   PartyPopper,
+  Crown,
+  Star,
+  Gem,
+  Shield,
+  ShieldHalf,
+  Headphones,
+  ClipboardList,
+  Utensils,
+  RefreshCw,
+  Clock,
+  UserCheck,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/quiz-male.jpg";
