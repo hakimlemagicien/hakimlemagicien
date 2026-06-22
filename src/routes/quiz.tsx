@@ -2823,7 +2823,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ onBack }: { onBack: () => void }) {
+function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: string) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
