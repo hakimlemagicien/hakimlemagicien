@@ -2805,7 +2805,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "jo", name: "الأردن", dial: "+962", flag: "🇯🇴", cities: ["عمّان", "الزرقاء", "إربد", "العقبة", "السلط"] },
   { code: "lb", name: "لبنان", dial: "+961", flag: "🇱🇧", cities: ["بيروت", "طرابلس", "صيدا", "صور", "زحلة"] },
   { code: "iq", name: "العراق", dial: "+964", flag: "🇮🇶", cities: ["بغداد", "البصرة", "الموصل", "أربيل", "النجف", "كربلاء"] },
-  { code: "ma", name: "المغرب", dial: "+212", flag: "🇲🇦", cities: ["الدار البيضاء", "الرباط", "فاس", "مراكش", "طنجة", "أكادير"] },
+  { code: "ma", name: "المغرب", dial: "+212", flag: "🇲🇦", cities: ["الدار البيضاء", "الرباط", "سلا", "فاس", "مراكش", "طنجة", "أكادير", "وجدة", "القنيطرة", "مكناس", "تطوان", "الصويرة", "العيون", "الناظور", "الجديدة", "بني ملال", "خريبكة", "آسفي", "تازة", "الرشيدية", "ورزازات", "الحسيمة", "العرائش", "القصر الكبير", "تارودانت", "برشيد", "سطات", "إفران", "أزرو", "خنيفرة", "الداخلة", "تيزنيت", "كلميم", "بوجدور", "الفنيدق", "المحمدية", "تمارة", "بركان", "تاوريرت"] },
   { code: "dz", name: "الجزائر", dial: "+213", flag: "🇩🇿", cities: ["الجزائر", "وهران", "قسنطينة", "عنابة", "البليدة"] },
   { code: "tn", name: "تونس", dial: "+216", flag: "🇹🇳", cities: ["تونس", "صفاقس", "سوسة", "بنزرت", "القيروان"] },
   { code: "ly", name: "ليبيا", dial: "+218", flag: "🇱🇾", cities: ["طرابلس", "بنغازي", "مصراتة", "الزاوية", "البيضاء"] },
@@ -2833,14 +2833,15 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
   const [countryQuery, setCountryQuery] = useState("");
 
   useEffect(() => {
+    const DURATION = 10000;
     const start = Date.now();
     const tick = setInterval(() => {
-      const p = Math.min(100, ((Date.now() - start) / 5000) * 100);
+      const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
       setOverlayProgress(p);
       if (p >= 100) clearInterval(tick);
     }, 50);
-    const tFade = setTimeout(() => setFadingOverlay(true), 4500);
-    const tHide = setTimeout(() => setShowOverlay(false), 5000);
+    const tFade = setTimeout(() => setFadingOverlay(true), DURATION - 500);
+    const tHide = setTimeout(() => setShowOverlay(false), DURATION);
     return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
 
@@ -2869,7 +2870,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
           <div className="mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,107,0,0.15)" }}>
             <div className="h-full rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${overlayProgress}%`, background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)` }} />
           </div>
-          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 20)} ثوانٍ...</div>
+          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 10)} ثوانٍ...</div>
         </div>
       )}
 
@@ -3111,11 +3112,11 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
 function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-[#FF6B00]/40 focus-within:shadow-[0_4px_18px_-6px_rgba(255,107,0,0.35)] transition-all">
-      <div className="flex-1 min-w-0">{children}</div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
         <div className="grid h-7 w-7 place-items-center">{icon}</div>
+        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
       </div>
+      <div className="flex-1 min-w-0 text-left">{children}</div>
     </div>
   );
 }
