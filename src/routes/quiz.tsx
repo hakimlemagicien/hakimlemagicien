@@ -3749,3 +3749,299 @@ function CongratsScreen({ name, gender, onNext }: { name: string; gender: "male"
 }
 
 
+
+// ============================================================
+//  PRICING SCREEN — Online-only follow-up tiers
+// ============================================================
+type PricingTier = {
+  id: "transform" | "pro" | "vip";
+  name: string;
+  tagline: string;
+  pricePerDay: string;
+  totalPrice: string;
+  features: string[];
+  primary: string;
+  primarySoft: string;
+  primaryBg: string;
+  ring: string;
+  Icon: typeof Crown;
+  topBadge?: string;
+};
+
+const PRICING_TIERS: PricingTier[] = [
+  {
+    id: "transform",
+    name: "باقة التحول",
+    tagline: "كل ما تحتاجه لتحقيق أفضل نسخة منك في 90 يوم.",
+    pricePerDay: "3.3",
+    totalPrice: "299",
+    features: [
+      "خطة تدريب مخصصة",
+      "خطة تغذية مخصصة",
+      "مراجعة كل أسبوعين",
+      "دعم واتساب",
+      "تعديلات حسب التقدم",
+    ],
+    primary: "#FF6B00",
+    primarySoft: "#FFE6D2",
+    primaryBg: "#FFF6EE",
+    ring: "#FFB07A",
+    Icon: Crown,
+    topBadge: "الأكثر اختياراً",
+  },
+  {
+    id: "pro",
+    name: "باقة Pro",
+    tagline: "للأشخاص الذين يريدون متابعة أقرب ونتائج أسرع.",
+    pricePerDay: "5.5",
+    totalPrice: "499",
+    features: [
+      "كل مزايا باقة التحول",
+      "مراجعة أسبوعية",
+      "أولوية في الدعم",
+      "تعديلات أسرع",
+      "متابعة أدق للتقدم",
+    ],
+    primary: "#2563EB",
+    primarySoft: "#DBEAFE",
+    primaryBg: "#F2F7FF",
+    ring: "#93B8F2",
+    Icon: Star,
+  },
+  {
+    id: "vip",
+    name: "VIP",
+    tagline: "لمن يريد أعلى مستوى من المتابعة والدعم.",
+    pricePerDay: "11",
+    totalPrice: "999",
+    features: [
+      "جميع مزايا باقة Pro",
+      "متابعة شخصية",
+      "تواصل مباشر مع المدرب",
+      "مراجعة مستمرة",
+      "خطة مخصصة بالكامل",
+      "دعم فوري على مدار الساعة",
+    ],
+    primary: "#7C3AED",
+    primarySoft: "#EDE3FF",
+    primaryBg: "#F7F1FF",
+    ring: "#C4A7F2",
+    Icon: Gem,
+  },
+];
+
+function PricingScreen({ name, onBack, dubai = false }: { name: string; onBack: () => void; dubai?: boolean }) {
+  const ORANGE = "#FF6B00";
+  const TEXT = "#0F172A";
+  const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
+  const [selected, setSelected] = useState<PricingTier["id"] | null>("transform");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setMounted(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleChoose = (tier: PricingTier) => {
+    setSelected(tier.id);
+    const msg = `السلام عليكم، أنا ${name || "عميل جديد"}، أريد ${tier.name} (${tier.totalPrice}$ لمدة 90 يوم).`;
+    window.location.href = `https://wa.me/971500000000?text=${encodeURIComponent(msg)}`;
+  };
+
+  return (
+    <div className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
+      <style>{`
+        @keyframes pri-in { from {opacity:0; transform: translateY(16px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pri-ring { from { stroke-dashoffset: 360;} to { stroke-dashoffset: 0;} }
+        .pri-in { animation: pri-in .45s cubic-bezier(.2,.8,.2,1) both; }
+        .pri-ring circle.anim { stroke-dasharray: 360; animation: pri-ring 1.2s ease-out forwards; }
+        .pri-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      `}</style>
+
+      {/* Header */}
+      <div className="px-5 pt-5 pb-3 max-w-md mx-auto">
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95">
+            <ChevronRight className="h-4 w-4" />
+            رجوع
+          </button>
+          <div className="text-[12px] font-extrabold" style={{ color: ORANGE }}>17 من 15</div>
+          <div className="w-12" />
+        </div>
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 7 ? ORANGE : "#ECE8E1" }} />
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 pb-10 max-w-md mx-auto">
+        {/* Title */}
+        <div className={`pri-in flex items-start gap-3 mt-4`}>
+          <div className="flex-1 text-right">
+            <h1 className="pri-heading text-[24px] leading-snug" style={{ color: TEXT }}>
+              اختر مستوى <span style={{ color: ORANGE }}>المتابعة</span> المناسب لك
+            </h1>
+          </div>
+          <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE9D9" }}>
+            <Crown className="h-6 w-6" style={{ color: ORANGE }} strokeWidth={2.4} />
+          </div>
+        </div>
+        <p className="pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed" style={{ animationDelay: ".08s" }}>
+          {dubai
+            ? "باقات التدريب الحضوري + الأونلاين قادمة قريباً. في الوقت الحالي يمكنك اختيار باقات المتابعة عن بُعد."
+            : <>تم تصميم جميع الباقات لتحقيق هدفك خلال <span className="font-extrabold" style={{ color: ORANGE }}>90 يوماً</span>.</>}
+        </p>
+
+        {/* Tiers */}
+        <div className="mt-6 space-y-4">
+          {PRICING_TIERS.map((tier, idx) => {
+            const isSelected = selected === tier.id;
+            const isFeatured = tier.id === "transform";
+            return (
+              <div
+                key={tier.id}
+                className="relative pri-in"
+                style={{
+                  animationDelay: `${0.15 + idx * 0.12}s`,
+                  borderRadius: 28,
+                  background: tier.primaryBg,
+                  border: `2px solid ${isSelected ? tier.primary : "transparent"}`,
+                  boxShadow: isSelected
+                    ? `0 18px 40px -18px ${tier.primary}66`
+                    : "0 8px 22px -16px rgba(0,0,0,.12)",
+                  paddingTop: tier.topBadge ? 28 : 18,
+                  paddingBottom: 18,
+                  paddingLeft: 16,
+                  paddingRight: 16,
+                  transition: "box-shadow .25s, border-color .25s",
+                }}
+              >
+                {tier.topBadge && (
+                  <div
+                    className="absolute -top-3 right-5 flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-[11px] font-extrabold"
+                    style={{ background: tier.primary, boxShadow: `0 6px 14px -6px ${tier.primary}88` }}
+                  >
+                    <span>{tier.topBadge}</span>
+                    <Star className="h-3 w-3" fill="#fff" strokeWidth={0} />
+                  </div>
+                )}
+
+                {/* Top row: title block + price ring */}
+                <div className="flex items-start gap-3">
+                  {/* Left: title & tagline */}
+                  <div className="flex-1 text-right pt-1">
+                    <div className="flex items-center gap-2 justify-end">
+                      <h3 className="pri-heading text-[22px]" style={{ color: TEXT }}>
+                        {tier.id === "pro" ? <>باقة <span style={{ color: tier.primary }}>Pro</span></> : tier.name}
+                      </h3>
+                      <tier.Icon className="h-6 w-6" style={{ color: tier.primary }} strokeWidth={2.4} fill={tier.id === "vip" ? `${tier.primary}33` : "none"} />
+                    </div>
+                    {tier.id === "vip" && (
+                      <div className="mt-1 text-[11.5px] font-extrabold" style={{ color: tier.primary }}>عدد محدود جداً</div>
+                    )}
+                    <p className="mt-2 text-[12px] text-neutral-500 leading-relaxed">{tier.tagline}</p>
+                  </div>
+
+                  {/* Right: animated price ring */}
+                  <div className="shrink-0 relative h-[110px] w-[110px] grid place-items-center">
+                    <svg viewBox="0 0 120 120" className="absolute inset-0 pri-ring -rotate-90">
+                      <circle cx="60" cy="60" r="54" fill="white" stroke={`${tier.primary}22`} strokeWidth="3" />
+                      {mounted && (
+                        <circle
+                          className="anim"
+                          cx="60" cy="60" r="54" fill="none"
+                          stroke={tier.primary} strokeWidth="3" strokeLinecap="round"
+                          style={{ animationDelay: `${0.4 + idx * 0.12}s` }}
+                        />
+                      )}
+                    </svg>
+                    <div className="relative text-center">
+                      <div className="flex items-baseline justify-center gap-0.5">
+                        <span className="pri-heading text-[26px] leading-none" style={{ color: tier.primary }}>{tier.pricePerDay}</span>
+                        <span className="pri-heading text-[14px]" style={{ color: tier.primary }}>$</span>
+                      </div>
+                      <div className="text-[10px] text-neutral-500 font-bold mt-1">في اليوم فقط</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total price chip */}
+                <div className="mt-3 mx-auto w-fit px-4 py-1.5 rounded-full text-center" style={{ background: `${tier.primary}14` }}>
+                  <span className="text-[10.5px] text-neutral-500 font-bold">يعادل </span>
+                  <span className="pri-heading text-[13px]" style={{ color: tier.primary }}>{tier.totalPrice}$</span>
+                  <span className="text-[10.5px] text-neutral-500 font-bold"> لمدة 90 يوم</span>
+                </div>
+
+                {/* Features */}
+                <ul className="mt-4 space-y-2.5">
+                  {tier.features.map((f, i) => (
+                    <li key={i} className="flex items-center justify-end gap-2.5 text-[13px] text-right" style={{ color: TEXT }}>
+                      <span className="leading-tight">{f}</span>
+                      <span className="shrink-0 h-5 w-5 rounded-full grid place-items-center" style={{ background: tier.primary }}>
+                        <Check className="h-3 w-3 text-white" strokeWidth={3.5} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <button
+                  onClick={() => handleChoose(tier)}
+                  className="mt-5 w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                  style={{
+                    height: 56,
+                    borderRadius: 16,
+                    background: tier.primary,
+                    color: "#fff",
+                    fontFamily: HEADING_FONT,
+                    fontWeight: 900,
+                    fontSize: 15.5,
+                    boxShadow: `0 10px 22px -10px ${tier.primary}88`,
+                  }}
+                >
+                  <span className="h-7 w-7 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,.22)" }}>
+                    <ChevronRight className="h-4 w-4 text-white" strokeWidth={3} />
+                  </span>
+                  <span>أريد هذه الباقة</span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Trust row */}
+        <div className="mt-6 pri-in" style={{ animationDelay: ".7s" }}>
+          <div
+            className="rounded-3xl p-4 grid grid-cols-2 gap-3"
+            style={{ background: "#F8FBF9", border: "1px solid #E6F0EA" }}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
+                <ShieldCheck className="h-5 w-5" style={{ color: "#16A34A" }} strokeWidth={2.4} />
+              </div>
+              <div className="text-right min-w-0">
+                <div className="pri-heading text-[12.5px]" style={{ color: "#16A34A" }}>بياناتك محمية</div>
+                <div className="text-[10.5px] text-neutral-500 leading-snug mt-0.5">نحن لا نشارك بياناتك مع أي جهة</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
+                <Lock className="h-5 w-5" style={{ color: "#16A34A" }} strokeWidth={2.4} />
+              </div>
+              <div className="text-right min-w-0">
+                <div className="pri-heading text-[12.5px]" style={{ color: "#16A34A" }}>دفع آمن 100%</div>
+                <div className="text-[10.5px] text-neutral-500 leading-snug mt-0.5">جميع المدفوعات مشفرة وآمنة</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-neutral-500">
+            <Lock className="h-3 w-3" />
+            <span>كل خطط التدريب والتغذية خاصة بك وحدك</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
