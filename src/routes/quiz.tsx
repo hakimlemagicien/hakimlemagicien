@@ -3112,11 +3112,11 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
 function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-[#FF6B00]/40 focus-within:shadow-[0_4px_18px_-6px_rgba(255,107,0,0.35)] transition-all">
-      <div className="flex-1 min-w-0">{children}</div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
         <div className="grid h-7 w-7 place-items-center">{icon}</div>
+        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
       </div>
+      <div className="flex-1 min-w-0 text-left">{children}</div>
     </div>
   );
 }
