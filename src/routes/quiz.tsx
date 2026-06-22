@@ -2792,23 +2792,66 @@ function ClipboardStarIcon() {
   );
 }
 
+const COUNTRIES: { code: string; name: string; dial: string; flag: string; cities: string[] }[] = [
+  { code: "ae", name: "الإمارات العربية المتحدة", dial: "+971", flag: "🇦🇪", cities: ["دبي", "أبوظبي", "الشارقة", "عجمان", "رأس الخيمة", "الفجيرة", "أم القيوين", "العين"] },
+  { code: "sa", name: "المملكة العربية السعودية", dial: "+966", flag: "🇸🇦", cities: ["الرياض", "جدة", "مكة المكرمة", "المدينة المنورة", "الدمام", "الخبر", "الطائف", "تبوك", "أبها", "حائل"] },
+  { code: "kw", name: "الكويت", dial: "+965", flag: "🇰🇼", cities: ["مدينة الكويت", "حولي", "الفروانية", "الأحمدي", "الجهراء", "مبارك الكبير"] },
+  { code: "qa", name: "قطر", dial: "+974", flag: "🇶🇦", cities: ["الدوحة", "الريان", "الوكرة", "الخور", "أم صلال"] },
+  { code: "bh", name: "البحرين", dial: "+973", flag: "🇧🇭", cities: ["المنامة", "المحرق", "الرفاع", "مدينة عيسى", "مدينة حمد"] },
+  { code: "om", name: "عمان", dial: "+968", flag: "🇴🇲", cities: ["مسقط", "صلالة", "صحار", "نزوى", "صور"] },
+  { code: "eg", name: "مصر", dial: "+20", flag: "🇪🇬", cities: ["القاهرة", "الإسكندرية", "الجيزة", "شبرا الخيمة", "بورسعيد", "السويس", "المنصورة", "طنطا", "أسيوط"] },
+  { code: "jo", name: "الأردن", dial: "+962", flag: "🇯🇴", cities: ["عمّان", "الزرقاء", "إربد", "العقبة", "السلط"] },
+  { code: "lb", name: "لبنان", dial: "+961", flag: "🇱🇧", cities: ["بيروت", "طرابلس", "صيدا", "صور", "زحلة"] },
+  { code: "iq", name: "العراق", dial: "+964", flag: "🇮🇶", cities: ["بغداد", "البصرة", "الموصل", "أربيل", "النجف", "كربلاء"] },
+  { code: "ma", name: "المغرب", dial: "+212", flag: "🇲🇦", cities: ["الدار البيضاء", "الرباط", "فاس", "مراكش", "طنجة", "أكادير"] },
+  { code: "dz", name: "الجزائر", dial: "+213", flag: "🇩🇿", cities: ["الجزائر", "وهران", "قسنطينة", "عنابة", "البليدة"] },
+  { code: "tn", name: "تونس", dial: "+216", flag: "🇹🇳", cities: ["تونس", "صفاقس", "سوسة", "بنزرت", "القيروان"] },
+  { code: "ly", name: "ليبيا", dial: "+218", flag: "🇱🇾", cities: ["طرابلس", "بنغازي", "مصراتة", "الزاوية", "البيضاء"] },
+  { code: "ye", name: "اليمن", dial: "+967", flag: "🇾🇪", cities: ["صنعاء", "عدن", "تعز", "الحديدة", "إب"] },
+  { code: "sd", name: "السودان", dial: "+249", flag: "🇸🇩", cities: ["الخرطوم", "أم درمان", "بورتسودان", "كسلا"] },
+  { code: "sy", name: "سوريا", dial: "+963", flag: "🇸🇾", cities: ["دمشق", "حلب", "حمص", "اللاذقية", "حماة"] },
+  { code: "ps", name: "فلسطين", dial: "+970", flag: "🇵🇸", cities: ["القدس", "غزة", "رام الله", "الخليل", "نابلس"] },
+  { code: "tr", name: "تركيا", dial: "+90", flag: "🇹🇷", cities: ["إسطنبول", "أنقرة", "إزمير", "بورصة", "أنطاليا"] },
+  { code: "us", name: "الولايات المتحدة", dial: "+1", flag: "🇺🇸", cities: ["نيويورك", "لوس أنجلوس", "شيكاغو", "هيوستن", "ميامي"] },
+  { code: "gb", name: "المملكة المتحدة", dial: "+44", flag: "🇬🇧", cities: ["لندن", "مانشستر", "برمنغهام", "ليفربول", "غلاسكو"] },
+  { code: "ca", name: "كندا", dial: "+1", flag: "🇨🇦", cities: ["تورنتو", "مونتريال", "فانكوفر", "كالغاري", "أوتاوا"] },
+  { code: "de", name: "ألمانيا", dial: "+49", flag: "🇩🇪", cities: ["برلين", "هامبورغ", "ميونخ", "كولونيا", "فرانكفورت"] },
+  { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
+];
+
 function ContactScreen({ onBack }: { onBack: () => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
+  const [overlayProgress, setOverlayProgress] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", country: "ae", city: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFadingOverlay(true), 2500);
-    const t2 = setTimeout(() => setShowOverlay(false), 3000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const start = Date.now();
+    const tick = setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / 5000) * 100);
+      setOverlayProgress(p);
+      if (p >= 100) clearInterval(tick);
+    }, 50);
+    const tFade = setTimeout(() => setFadingOverlay(true), 4500);
+    const tHide = setTimeout(() => setShowOverlay(false), 5000);
+    return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
+
+  const country = COUNTRIES.find((c) => c.code === form.country) ?? COUNTRIES[0];
+  const filteredCountries = countryQuery
+    ? COUNTRIES.filter((c) => c.name.includes(countryQuery) || c.dial.includes(countryQuery))
+    : COUNTRIES;
+  const cities = country.cities;
 
   const canSubmit = form.name.trim() && form.email.trim() && form.phone.trim() && form.city.trim();
 
   return (
-    <div className="relative h-full w-full overflow-y-auto" style={{ backgroundColor: "#FAF8F5" }}>
+    <div dir="rtl" className="relative h-full w-full overflow-y-auto" style={{ backgroundColor: "#FAF8F5" }}>
       {showOverlay && (
         <div
           className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
@@ -2821,6 +2864,10 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
           <p className="mt-4 max-w-sm text-[14px] leading-7 text-neutral-600 animate-fade-in">
             لقد وجدت الخطة المثالية التي تضمن لك الوصول لنتائجك المرغوبة خلال 90 يوماً بدقة. خطوتك الأخيرة هي تزويدي بمعلومات التواصل الأساسية لتأكيد استلام برنامجك الخاص.
           </p>
+          <div className="mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,107,0,0.15)" }}>
+            <div className="h-full rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${overlayProgress}%`, background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)` }} />
+          </div>
+          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 20)} ثوانٍ...</div>
         </div>
       )}
 
@@ -2828,7 +2875,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
       <div className="px-5 pt-5">
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1 text-neutral-700">
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5" />
             <span className="text-sm">رجوع</span>
           </button>
           <div className="text-sm font-bold">
@@ -2864,7 +2911,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {/* Advantage cards */}
+      {/* 3 result tags */}
       <div className="mx-5 mt-6 rounded-2xl bg-white p-4 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] ring-1 ring-black/5">
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -2896,45 +2943,48 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
 
       {/* Form */}
       <div className="px-5 mt-4 space-y-3">
-        <FieldRow icon={<UserIcon />} label="الاسم الأول">
+        <FieldRow icon={<UserIcon />} label="الاسم">
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="مثال: أحمد" dir="rtl"
-            className="w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
+            className="quiz-input w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
         </FieldRow>
 
         <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
           <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
             placeholder="example@email.com" dir="ltr"
-            className="w-full bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
+            className="quiz-input w-full bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
         </FieldRow>
 
-        <FieldRow icon={<WhatsAppIcon />} label="واتساب للتواصل السريع">
+        <FieldRow icon={<WhatsAppIcon />} label="واتساب للتواصل">
           <div className="flex items-center gap-2 w-full" dir="ltr">
-            <div className="flex items-center gap-1 rounded-lg bg-neutral-50 px-2 py-1.5 ring-1 ring-black/5">
-              <UAEFlag />
-              <span className="text-[13px] font-semibold">+971</span>
-              <ChevronLeft className="h-3 w-3 -rotate-90 text-neutral-500" />
-            </div>
-            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 9) })}
-              placeholder="5X XXX XXXX" dir="ltr"
-              className="flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
+            <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center gap-1 rounded-lg bg-neutral-50 px-2 py-1.5 ring-1 ring-black/5">
+              <span className="text-base leading-none">{country.flag}</span>
+              <span className="text-[13px] font-semibold">{country.dial}</span>
+              <ChevronDown className="h-3 w-3 text-neutral-500" />
+            </button>
+            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+              placeholder="5X XXX XXXX" dir="ltr" inputMode="numeric"
+              className="quiz-input flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
           </div>
         </FieldRow>
 
         <FieldRow icon={<GlobeIcon />} label="الدولة">
-          <div className="flex items-center justify-between w-full">
-            <ChevronLeft className="h-4 w-4 -rotate-90 text-neutral-500" />
+          <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center justify-between w-full">
+            <ChevronDown className="h-4 w-4 text-neutral-500" />
             <div className="flex items-center gap-2">
-              <span className="text-[14px]">الإمارات العربية المتحدة</span>
-              <UAEFlag />
+              <span className="text-[14px]">{country.name}</span>
+              <span className="text-base leading-none">{country.flag}</span>
             </div>
-          </div>
+          </button>
         </FieldRow>
 
         <FieldRow icon={<PinIcon />} label="المدينة">
-          <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-            placeholder="مثال: دبي" dir="rtl"
-            className="w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
+          <button type="button" onClick={() => setCityOpen(true)} className="flex items-center justify-between w-full">
+            <ChevronDown className="h-4 w-4 text-neutral-500" />
+            <span className={`text-[14px] ${form.city ? "text-neutral-900" : "text-neutral-400"}`}>
+              {form.city || `اختر مدينة في ${country.name}`}
+            </span>
+          </button>
         </FieldRow>
       </div>
 
@@ -2952,7 +3002,7 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
         <button
           disabled={!canSubmit || submitting}
           onClick={() => { setSubmitting(true); }}
-          className="w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60"
+          className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
           style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
         >
           <span>🚀</span>
@@ -2975,13 +3025,90 @@ function ContactScreen({ onBack }: { onBack: () => void }) {
           أكثر من <span className="font-black" style={{ color: ORANGE }}>2500</span> شخص غيروا حياتهم مع البرنامج
         </p>
       </div>
+
+      {/* Country sheet */}
+      {countryOpen && (
+        <PickerSheet title="اختر الدولة" onClose={() => { setCountryOpen(false); setCountryQuery(""); }}>
+          <div className="px-4 pb-3">
+            <input
+              value={countryQuery}
+              onChange={(e) => setCountryQuery(e.target.value)}
+              placeholder="ابحث عن دولة..."
+              className="w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[#FF6B00]/40 text-right"
+              dir="rtl"
+            />
+          </div>
+          <div className="max-h-[55vh] overflow-y-auto px-2 pb-4">
+            {filteredCountries.map((c) => (
+              <button
+                key={c.code}
+                onClick={() => { setForm((f) => ({ ...f, country: c.code, city: "" })); setCountryOpen(false); setCountryQuery(""); }}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-right hover:bg-neutral-50 ${c.code === form.country ? "bg-orange-50" : ""}`}
+              >
+                <span className="text-[12px] text-neutral-500" dir="ltr">{c.dial}</span>
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  <span className="text-[14px] font-medium text-neutral-900">{c.name}</span>
+                  <span className="text-xl leading-none">{c.flag}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </PickerSheet>
+      )}
+
+      {/* City sheet */}
+      {cityOpen && (
+        <PickerSheet title={`مدن ${country.name}`} onClose={() => setCityOpen(false)}>
+          <div className="max-h-[55vh] overflow-y-auto px-2 pb-4">
+            {cities.map((city) => (
+              <button
+                key={city}
+                onClick={() => { setForm((f) => ({ ...f, city })); setCityOpen(false); }}
+                className={`w-full flex items-center justify-end gap-2 px-4 py-3 rounded-xl text-right hover:bg-neutral-50 ${city === form.city ? "bg-orange-50" : ""}`}
+              >
+                <span className="text-[14px] font-medium text-neutral-900">{city}</span>
+                <PinIcon />
+              </button>
+            ))}
+          </div>
+        </PickerSheet>
+      )}
+
+      <style>{`
+        .quiz-input { transition: box-shadow .2s ease; }
+        .quiz-input:focus { box-shadow: 0 0 0 3px rgba(255,107,0,0.18); border-radius: 8px; }
+        @keyframes cta-pulse-kf { 0%,100% { box-shadow: 0 8px 20px -6px rgba(255,107,0,0.5), 0 0 0 0 rgba(255,107,0,0.55); } 50% { box-shadow: 0 8px 24px -4px rgba(255,107,0,0.6), 0 0 0 10px rgba(255,107,0,0); } }
+        .cta-pulse { animation: cta-pulse-kf 2.2s ease-in-out infinite; }
+      `}</style>
+    </div>
+  );
+}
+
+function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 animate-fade-in" />
+      <div
+        dir="rtl"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl animate-slide-in-right"
+        style={{ animation: "slideUp .3s ease-out both" }}
+      >
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-neutral-100">
+          <button onClick={onClose} className="text-neutral-500 text-sm">إلغاء</button>
+          <h4 className="text-[15px] font-bold text-neutral-900">{title}</h4>
+          <div className="w-10" />
+        </div>
+        {children}
+        <style>{`@keyframes slideUp { from { transform: translateY(100%);} to { transform: translateY(0);} }`}</style>
+      </div>
     </div>
   );
 }
 
 function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]">
+    <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-[#FF6B00]/40 focus-within:shadow-[0_4px_18px_-6px_rgba(255,107,0,0.35)] transition-all">
       <div className="flex-1 min-w-0">{children}</div>
       <div className="flex items-center gap-2 shrink-0">
         <span className="text-[13px] font-bold text-neutral-800">{label}</span>
@@ -3021,15 +3148,4 @@ function PinIcon() {
 }
 function ShieldIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>;
-}
-function UAEFlag() {
-  return (
-    <svg width="18" height="13" viewBox="0 0 18 13" className="rounded-sm overflow-hidden">
-      <rect width="18" height="13" fill="#fff"/>
-      <rect width="4" height="13" fill="#EF3340"/>
-      <rect x="4" width="14" height="4.33" fill="#00843D"/>
-      <rect x="4" y="4.33" width="14" height="4.33" fill="#fff"/>
-      <rect x="4" y="8.66" width="14" height="4.33" fill="#000"/>
-    </svg>
-  );
 }
