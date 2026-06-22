@@ -1241,8 +1241,9 @@ const CHALLENGES = [
   },
 ];
 
-function ChallengeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => { if (selected) onSelect?.(selected); }, [selected, onSelect]);
 
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
