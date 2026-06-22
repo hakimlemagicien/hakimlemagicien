@@ -47,6 +47,7 @@ type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" |
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
+  const [userName, setUserName] = useState<string>("");
 
   return (
     <div
