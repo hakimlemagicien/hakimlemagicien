@@ -3279,7 +3279,7 @@ const TIMELINE_STAGES = [
   { week: "الأسبوع 13+", title: "الشكل المثالي", desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"], color: "#3B82F6", bg: "#DBEAFE", Icon: Trophy },
 ];
 
-function ProgramRevealScreen({ name, gender, goalId, challengeId }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string }) {
+function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
