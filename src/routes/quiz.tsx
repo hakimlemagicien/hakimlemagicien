@@ -102,9 +102,10 @@ function QuizPage() {
       {step === "congrats" && <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => setStep("reveal")} />}
       {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} total={totalSteps} onNext={afterReveal} />}
       {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "offlinePackages" : "pricing")} />}
-      {step === "pricing" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "trainingType" : "reveal")} />}
-      {step === "pricingDubai" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep("trainingType")} dubai />}
+      {step === "pricing" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "trainingType" : "reveal")} onSelectTier={(id) => { setSelectedTierId(id); setStep("payment"); }} />}
+      {step === "pricingDubai" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep("trainingType")} dubai onSelectTier={(id) => { setSelectedTierId(id); setStep("payment"); }} />}
       {step === "offlinePackages" && <OfflinePackagesScreen name={userName} phone={userPhone} city={userCity} goalId={goalId} challengeId={challengeId} total={totalSteps} onBack={() => setStep("trainingType")} />}
+      {step === "payment" && <PaymentScreen name={userName} tierId={selectedTierId} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "pricingDubai" : "pricing")} />}
     </div>
   );
 }
