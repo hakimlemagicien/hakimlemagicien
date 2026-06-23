@@ -58,7 +58,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "location" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "pricing" | "pricingDubai";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -68,7 +68,8 @@ function QuizPage() {
   const [challengeId, setChallengeId] = useState<string>("");
   const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
 
-  const goToPricing = () => setStep(userLocation === "dubai" ? "pricingDubai" : "pricing");
+  const totalSteps = userLocation === "dubai" ? 14 : 13;
+  const afterReveal = () => setStep(userLocation === "dubai" ? "trainingType" : "pricing");
 
   return (
     <div
@@ -88,18 +89,18 @@ function QuizPage() {
       {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
       {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={() => setStep("activity")} />}
       {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} />}
-      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
-      {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("location")} onSelect={setChallengeId} />}
-      {step === "location" && <LocationScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={(loc) => { setUserLocation(loc); setStep("investment"); }} />}
-      {step === "investment" && <InvestmentScreen onBack={() => setStep("location")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
+      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
+      {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
+      {step === "investment" && <InvestmentScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name) => { setUserName(name); setStep("congrats"); }} />}
-      {step === "congrats" && <CongratsScreen name={userName} gender={gender} onNext={() => setStep("reveal")} />}
-      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} onNext={goToPricing} />}
-      {step === "pricing" && <PricingScreen name={userName} onBack={() => setStep("reveal")} />}
-      {step === "pricingDubai" && <PricingScreen name={userName} onBack={() => setStep("reveal")} dubai />}
+      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai) => { setUserName(name); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
+      {step === "congrats" && <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => setStep("reveal")} />}
+      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} total={totalSteps} onNext={afterReveal} />}
+      {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "pricingDubai" : "pricing")} />}
+      {step === "pricing" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "trainingType" : "reveal")} />}
+      {step === "pricingDubai" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep("trainingType")} dubai />}
     </div>
   );
 }
@@ -175,7 +176,7 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
   );
 }
 
-function ProgressHeader({ current, onBack }: { current: number; onBack?: () => void }) {
+function ProgressHeader({ current, total = 13, onBack }: { current: number; total?: number; onBack?: () => void }) {
   return (
     <>
       <div className="flex items-center justify-between">
@@ -186,12 +187,12 @@ function ProgressHeader({ current, onBack }: { current: number; onBack?: () => v
           <ChevronLeft className="h-5 w-5 text-neutral-700" />
         </button>
         <div className="text-sm font-bold text-neutral-800">
-          <span style={{ color: "#FF6B00" }}>{current}</span> من 10
+          <span style={{ color: "#FF6B00" }}>{current}</span> من {total}
         </div>
         <div className="w-10" />
       </div>
       <div className="mt-3 flex gap-1.5">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
             className="flex-1 h-1.5 rounded-full"
@@ -237,7 +238,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={2} />
+        <ProgressHeader current={1} />
         <div className="mt-5 text-center">
           <p className="text-base font-bold text-neutral-800">لنخصص رحلتك 👇</p>
           <h1 className="mt-2 text-3xl font-black text-neutral-900 leading-tight">
@@ -366,7 +367,7 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
       <GymBackdrop />
 
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={3} onBack={onBack} />
+        <ProgressHeader current={2} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-4 text-center">
@@ -526,7 +527,7 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <FeminineBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={3} onBack={onBack} />
+        <ProgressHeader current={2} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -632,7 +633,7 @@ function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void 
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={4} onBack={onBack} />
+        <ProgressHeader current={3} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -843,7 +844,7 @@ function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: () => v
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={5} onBack={onBack} />
+        <ProgressHeader current={4} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-2 text-center">
@@ -1015,7 +1016,7 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: () => 
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={6} onBack={onBack} />
+        <ProgressHeader current={5} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1266,7 +1267,7 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={7} onBack={onBack} />
+        <ProgressHeader current={6} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1549,7 +1550,7 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <FeminineBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={7} onBack={onBack} />
+        <ProgressHeader current={6} onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -2166,19 +2167,19 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: () =
             <ChevronLeft size={20} className="text-neutral-700" />
           </button>
           <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>9</span> من 10
+            <span style={{ color: ORANGE }}>7</span> من 13
           </div>
           <div className="w-10" />
         </div>
 
         {/* Progress */}
         <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
               <div
                 className="h-full rounded-full"
                 style={{
-                  width: i < 8 ? "100%" : i === 8 ? "55%" : "0%",
+                  width: i < 6 ? "100%" : i === 6 ? "55%" : "0%",
                   background: ORANGE,
                 }}
               />
@@ -2340,16 +2341,16 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => 
             <ChevronLeft size={20} className="text-neutral-700" />
           </button>
           <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>10</span> من 10
+            <span style={{ color: ORANGE }}>8</span> من 13
           </div>
           <div className="w-10" />
         </div>
 
-        {/* Progress - all 10 filled */}
+        {/* Progress */}
         <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div className="h-full rounded-full" style={{ width: "100%", background: ORANGE }} />
+              <div className="h-full rounded-full" style={{ width: i < 8 ? "100%" : "0%", background: ORANGE }} />
             </div>
           ))}
         </div>
@@ -2496,16 +2497,16 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
             <ChevronLeft size={20} className="text-neutral-700" />
           </button>
           <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>10</span> من 10
+            <span style={{ color: ORANGE }}>8</span> من 13
           </div>
           <div className="w-10" />
         </div>
 
-        {/* Progress - all 10 filled */}
+        {/* Progress */}
         <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div className="h-full rounded-full" style={{ width: "100%", background: ORANGE }} />
+              <div className="h-full rounded-full" style={{ width: i < 8 ? "100%" : "0%", background: ORANGE }} />
             </div>
           ))}
         </div>
@@ -2666,13 +2667,13 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
             <ChevronLeft size={20} className="text-gray-700 rotate-180" />
           </button>
           <div className="text-[15px] font-bold text-gray-800">
-            <span className="text-[#FF6B00]">10</span> من 11
+            <span className="text-[#FF6B00]">9</span> من 13
           </div>
           <div className="w-9" />
         </div>
         <div className="mt-2 flex gap-1">
-          {Array.from({ length: 11 }).map((_, i) => (
-            <div key={i} className="h-[3px] flex-1 rounded-full" style={{ backgroundColor: i < 10 ? "#FF6B00" : "#F0E6DC" }} />
+          {Array.from({ length: 13 }).map((_, i) => (
+            <div key={i} className="h-[3px] flex-1 rounded-full" style={{ backgroundColor: i < 9 ? "#FF6B00" : "#F0E6DC" }} />
           ))}
         </div>
       </div>
@@ -2851,7 +2852,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: string) => void }) {
+function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: string, isDubai: boolean) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
@@ -2913,12 +2914,12 @@ function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: 
           </button>
           <div className="text-sm font-bold">
             <span style={{ color: ORANGE }}>10</span>
-            <span className="text-neutral-700"> من 12</span>
+            <span className="text-neutral-700"> من 13</span>
           </div>
           <div className="w-12" />
         </div>
         <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div key={i} className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: i < 10 ? ORANGE : "#E5E5E5" }} />
           ))}
         </div>
@@ -3034,7 +3035,7 @@ function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: 
       <div className="px-5 mt-5">
         <button
           disabled={!canSubmit || submitting}
-          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); setTimeout(() => onDone(form.name.trim()), 700); }}
+          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); const isDubai = form.country === "ae" && form.city === "دبي"; setTimeout(() => onDone(form.name.trim(), isDubai), 700); }}
           className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
           style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
         >
@@ -3279,7 +3280,7 @@ const TIMELINE_STAGES = [
   { week: "الأسبوع 13+", title: "الشكل المثالي", desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"], color: "#3B82F6", bg: "#DBEAFE", Icon: Trophy },
 ];
 
-function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; onNext: () => void }) {
+function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; total?: number; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
@@ -3342,10 +3343,10 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, onNext }: { na
 
       {/* Top progress chip */}
       <div className="px-5 pt-5 max-w-md mx-auto">
-        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">12 من 12</div>
+        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">12 من {total}</div>
         <div className="flex gap-1.5">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: ORANGE }} />
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 12 ? ORANGE : "#ECE8E1" }} />
           ))}
         </div>
       </div>
@@ -3626,7 +3627,7 @@ function BeforeAfterTile({ label, tone, seed }: { label: string; tone: "muted" |
 
 const GREEN_BADGE_COLOR = "#22C55E";
 
-function CongratsScreen({ name, gender, onNext }: { name: string; gender: "male" | "female" | null; onNext: () => void }) {
+function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; gender: "male" | "female" | null; total?: number; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
@@ -3662,9 +3663,9 @@ function CongratsScreen({ name, gender, onNext }: { name: string; gender: "male"
 
       <div className="min-h-full max-w-md mx-auto px-5 pt-8 pb-10 flex flex-col">
         {/* Progress */}
-        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">11 من 12</div>
+        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">11 من {total}</div>
         <div className="flex gap-1.5 mb-8">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: total }).map((_, i) => (
             <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 11 ? ORANGE : "#ECE8E1" }} />
           ))}
         </div>
@@ -3830,7 +3831,7 @@ const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
-function PricingScreen({ name, onBack, dubai = false }: { name: string; onBack: () => void; dubai?: boolean }) {
+function PricingScreen({ name, total = 13, onBack, dubai = false }: { name: string; total?: number; onBack: () => void; dubai?: boolean }) {
   const ORANGE = "#FF6B00";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
@@ -3865,12 +3866,12 @@ function PricingScreen({ name, onBack, dubai = false }: { name: string; onBack: 
             <ChevronRight className="h-4 w-4" />
             رجوع
           </button>
-          <div className="text-[12px] font-extrabold" style={{ color: ORANGE }}>17 من 15</div>
+          <div className="text-[12px] font-extrabold" style={{ color: ORANGE }}>{total} من {total}</div>
           <div className="w-12" />
         </div>
         <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 7 ? ORANGE : "#ECE8E1" }} />
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: ORANGE }} />
           ))}
         </div>
       </div>
@@ -4040,6 +4041,179 @@ function PricingScreen({ name, onBack, dubai = false }: { name: string; onBack: 
             <Lock className="h-3 w-3" />
             <span>كل خطط التدريب والتغذية خاصة بك وحدك</span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Training Type Screen — Dubai-only choice (Online vs In-Person)
+// ============================================================
+function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect: (type: "online" | "inperson") => void }) {
+  const ORANGE = "#FF6B00";
+  const TEXT = "#0F172A";
+  const [selected, setSelected] = useState<"online" | "inperson" | null>(null);
+  const TOTAL = 14;
+  const CURRENT = 13;
+
+  const pick = (id: "online" | "inperson") => {
+    if (selected) return;
+    setSelected(id);
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.13);
+    } catch {}
+    setTimeout(() => onSelect(id), 650);
+  };
+
+  const Card = ({
+    id,
+    emoji,
+    title,
+    subtitle1,
+    subtitle2,
+    chips,
+  }: {
+    id: "online" | "inperson";
+    emoji: string;
+    title: string;
+    subtitle1: string;
+    subtitle2: string;
+    chips: [string, string];
+  }) => {
+    const active = selected === id;
+    return (
+      <button
+        type="button"
+        onClick={() => pick(id)}
+        disabled={!!selected && !active}
+        className="relative w-full text-right rounded-[26px] bg-white p-5 transition-all duration-300 active:scale-[0.99]"
+        style={{
+          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
+          boxShadow: active
+            ? `0 22px 48px -18px ${ORANGE}66, 0 0 0 6px ${ORANGE}1A`
+            : "0 10px 26px -16px rgba(0,0,0,0.14)",
+          transform: active ? "scale(1.03)" : "scale(1)",
+          animation: active ? "tt-bounce .55s cubic-bezier(.34,1.56,.64,1)" : undefined,
+        }}
+      >
+        {/* Selection mark */}
+        <div className="absolute top-4 left-4 z-10">
+          {active ? (
+            <div className="relative h-8 w-8 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
+              <Check size={18} strokeWidth={3} className="text-white" />
+              <Sparkles className="absolute -top-2 -right-2 h-3.5 w-3.5" style={{ color: "#FBBF24", animation: "tt-spark 1s ease-in-out infinite" }} />
+              <Sparkles className="absolute -bottom-2 -left-2 h-3 w-3" style={{ color: ORANGE, animation: "tt-spark 1s ease-in-out infinite .2s" }} />
+            </div>
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-white border-2 border-gray-200" />
+          )}
+        </div>
+
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <h3 className="text-[22px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{title}</h3>
+            <p className="mt-2 text-[13px] leading-6 text-neutral-600">{subtitle1}</p>
+            <p className="text-[13px] leading-6 text-neutral-600">{subtitle2}</p>
+            <div className="mt-4 flex gap-2 flex-wrap">
+              {chips.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11.5px] font-bold"
+                  style={{ background: active ? `${ORANGE}15` : "#FFF6EE", color: ORANGE }}>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ORANGE }} />
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div
+            className="shrink-0 h-20 w-20 rounded-2xl grid place-items-center text-[40px] leading-none"
+            style={{
+              background: active ? `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` : "#FFF1E5",
+              boxShadow: active ? `0 12px 24px -10px ${ORANGE}80` : "none",
+              transition: "all .3s",
+            }}
+          >
+            <span style={{ filter: active ? "grayscale(0) brightness(1.05)" : "none" }}>{emoji}</span>
+          </div>
+        </div>
+      </button>
+    );
+  };
+
+  return (
+    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
+      <style>{`
+        @keyframes tt-bounce { 0%{ transform: scale(1);} 35%{ transform: scale(1.06);} 70%{ transform: scale(1.01);} 100%{ transform: scale(1.03);} }
+        @keyframes tt-spark { 0%,100%{ opacity:.5; transform: scale(.85);} 50%{ opacity:1; transform: scale(1.15);} }
+        @keyframes tt-in { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }
+        .tt-in { animation: tt-in .5s ease-out both; }
+      `}</style>
+
+      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+            <ChevronLeft className="h-5 w-5 text-neutral-700" />
+          </button>
+          <div className="text-sm font-bold text-neutral-800">
+            <span style={{ color: ORANGE }}>{CURRENT}</span> من {TOTAL}
+          </div>
+          <div className="w-10" />
+        </div>
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: TOTAL }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="tt-in mt-7 text-center">
+          <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
+            اختر ما <span style={{ color: ORANGE }}>يناسبك</span>
+          </h1>
+          <p className="mt-2 text-[14px] text-neutral-700 font-bold">حتى نساعدك بطريقة أفضل</p>
+          <p className="mt-1 text-[12.5px] text-neutral-500 leading-relaxed px-4">
+            اختر طريقة التدريب الأنسب لك
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="mt-6 space-y-4">
+          <div className="tt-in" style={{ animationDelay: ".08s" }}>
+            <Card
+              id="online"
+              emoji="🌍"
+              title="أونلاين"
+              subtitle1="تدريب ومتابعة عن بعد"
+              subtitle2="عبر التطبيق وواتساب"
+              chips={["مرونة أكبر", "سعر أقل"]}
+            />
+          </div>
+          <div className="tt-in" style={{ animationDelay: ".18s" }}>
+            <Card
+              id="inperson"
+              emoji="🏋️"
+              title="تدريب شخصي"
+              subtitle1="جلسات تدريب مباشرة"
+              subtitle2="في النادي مع المدرب"
+              chips={["نتائج أسرع", "إشراف مباشر"]}
+            />
+          </div>
+        </div>
+
+        {/* Trust note */}
+        <div className="mt-6 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2 tt-in" style={{ animationDelay: ".28s" }}>
+          <ShieldCheck className="h-4 w-4" style={{ color: ORANGE }} />
+          <span className="text-[12px] text-neutral-700">كلا الخيارين يضمن لك متابعة احترافية ونتائج حقيقية</span>
         </div>
       </div>
     </div>
