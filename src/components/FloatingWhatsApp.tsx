@@ -1,6 +1,6 @@
 import { MessageCircle } from "lucide-react";
 
-const WHATSAPP_URL = "https://wa.me/00000000000";
+const WHATSAPP_URL = "https://wa.me/971505129019";
 
 export function FloatingWhatsApp() {
   return (

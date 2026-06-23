@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Check,
@@ -163,7 +164,8 @@ export default function FinalCTA() {
               </div>
 
               {/* CTA */}
-              <button
+              <Link
+                to="/quiz"
                 className="mt-7 group cta-glow w-full sm:w-auto inline-flex items-center justify-between gap-6 rounded-full px-8 py-5 text-white font-bold text-lg transition-transform hover:-translate-y-0.5"
                 style={{
                   background: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",
@@ -173,7 +175,7 @@ export default function FinalCTA() {
               >
                 <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
                 <span className="flex-1 text-center">ابدأ التقييم المجاني الآن</span>
-              </button>
+              </Link>
 
               {/* Social proof */}
               <div className="mt-6 flex items-center gap-4">

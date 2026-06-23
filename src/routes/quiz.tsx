@@ -4327,7 +4327,7 @@ function OfflinePackagesScreen({
       `المشكلة الأساسية: ${ch}\n` +
       `الباقة المختارة: ${packageLabel(selected)}\n\n` +
       `أريد البدء في رحلتي نحو أفضل نسخة مني.`;
-    return `https://wa.me/971501234567?text=${encodeURIComponent(msg)}`;
+    return `https://wa.me/971505129019?text=${encodeURIComponent(msg)}`;
   };
 
   // Package data
@@ -5107,7 +5107,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
 
         {/* WhatsApp help */}
         <a
-          href="https://wa.me/971500000000?text=أحتاج%20مساعدة%20في%20اختيار%20طريقة%20الدفع"
+          href="https://wa.me/971505129019?text=أحتاج%20مساعدة%20في%20اختيار%20طريقة%20الدفع"
           className="mt-5 rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.99] transition"
           style={{ background: "#F0FAF4", border: "1px solid #BBF7D0" }}
         >

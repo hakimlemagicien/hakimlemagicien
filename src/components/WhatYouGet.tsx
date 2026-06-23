@@ -85,6 +85,7 @@ export default function WhatYouGet() {
 
   return (
     <section
+      id="features"
       dir="rtl"
       className="relative w-full overflow-hidden bg-white py-16 md:py-24 font-[Tajawal,Cairo,sans-serif]"
     >
