@@ -4222,3 +4222,495 @@ function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect
     </div>
   );
 }
+
+// ============= OFFLINE PACKAGES (Dubai in-person) =============
+const OFFLINE_GOAL_LABELS: Record<string, string> = {
+  muscle: "بناء العضلات",
+  lose: "خسارة الوزن",
+  strength: "زيادة القوة",
+  fitness: "تحسين اللياقة",
+  tone: "شد الجسم",
+  weight_loss: "خسارة الوزن",
+  toning: "شد وتنسيق الجسم",
+};
+const OFFLINE_CHALLENGE_LABELS: Record<string, string> = {
+  muscle: "صعوبة بناء العضلات",
+  fat: "تراكم الدهون",
+  motivation: "ضعف الالتزام",
+  time: "ضيق الوقت",
+  plan: "عدم وجود خطة واضحة",
+  diet: "صعوبة في التغذية",
+};
+
+type OfflinePkgId = "p12" | "p20" | "custom";
+
+function OfflinePackagesScreen({
+  name,
+  phone,
+  city,
+  goalId,
+  challengeId,
+  total,
+  onBack,
+}: {
+  name: string;
+  phone: string;
+  city: string;
+  goalId: string;
+  challengeId: string;
+  total: number;
+  onBack: () => void;
+}) {
+  const ORANGE = "#FF6B00";
+  const GREEN = "#22C55E";
+  const TEXT = "#111827";
+  const CURRENT = total; // last step
+
+  const [selected, setSelected] = useState<OfflinePkgId | null>(null);
+  const [customSessions, setCustomSessions] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState({ h: 23, m: 59, s: 59 });
+
+  // Countdown
+  useEffect(() => {
+    const t = setInterval(() => {
+      setTimeLeft((p) => {
+        let { h, m, s } = p;
+        s--;
+        if (s < 0) { s = 59; m--; }
+        if (m < 0) { m = 59; h--; }
+        if (h < 0) { h = 23; m = 59; s = 59; }
+        return { h, m, s };
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const pickPackage = (id: OfflinePkgId) => {
+    if (selected) return;
+    setSelected(id);
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+      o.connect(g).connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.15);
+    } catch {}
+  };
+
+  const packageLabel = (id: OfflinePkgId): string => {
+    if (id === "p12") return "باقة 12 حصة (3 مرات أسبوعياً) — 3,600 درهم شهرياً";
+    if (id === "p20") return "باقة 20 حصة (5 مرات أسبوعياً) — 5,500 درهم شهرياً";
+    const s = customSessions || "حسب اقتراح المدرب";
+    return `باقة مخصصة — ${s}`;
+  };
+
+  const buildWhatsapp = () => {
+    if (!selected) return "#";
+    const goal = OFFLINE_GOAL_LABELS[goalId] || goalId || "—";
+    const ch = OFFLINE_CHALLENGE_LABELS[challengeId] || challengeId || "—";
+    const msg =
+      `مرحباً كابتن حكيم،\nأريد حجز باقة التدريب الشخصي في دبي.\n\n` +
+      `الاسم: ${name || "—"}\n` +
+      `الهاتف: ${phone || "—"}\n` +
+      `المدينة: ${city || "دبي"}\n` +
+      `الهدف: ${goal}\n` +
+      `المشكلة الأساسية: ${ch}\n` +
+      `الباقة المختارة: ${packageLabel(selected)}\n\n` +
+      `أريد البدء في رحلتي نحو أفضل نسخة مني.`;
+    return `https://wa.me/971501234567?text=${encodeURIComponent(msg)}`;
+  };
+
+  // Package data
+  const pkg12 = {
+    id: "p12" as const,
+    name: "باقة 12 حصة",
+    badge: "الأكثر توازناً",
+    badgeColor: ORANGE,
+    freq: "3 مرات أسبوعياً",
+    price: "3,600",
+    oldPrice: "4,500",
+    save: "وفر 900 درهم",
+    desc: "مناسبة لمن يريد نتائج قوية مع جدول مرن ومتوازن.",
+    icon: "🏆",
+    iconBg: "#FFF6E6",
+    features: [
+      "12 حصة تدريب شخصية شهرياً",
+      "3 حصص أسبوعياً",
+      "خطة تدريب مخصصة لهدفك",
+      "متابعة تقدمك أسبوعياً",
+      "تعديل التمارين حسب مستواك",
+      "دعم عبر واتساب",
+    ],
+    guaranteeTitle: "ضمان 90 يوم:",
+    guaranteeText: "إذا التزمت بالخطة ولم تحقق تقدماً حقيقياً، تسترجع أموالك.",
+    guaranteeBg: "#FFF1E6",
+    guaranteeColor: ORANGE,
+  };
+  const pkg20 = {
+    id: "p20" as const,
+    name: "باقة 20 حصة",
+    badge: "أسرع نتائج",
+    badgeColor: "#A855F7",
+    freq: "5 مرات أسبوعياً",
+    price: "5,500",
+    oldPrice: "7,000",
+    save: "وفر 1,500 درهم",
+    desc: "لمن يريد أفضل نتيجة في أقل وقت مع التزام أعلى ومتابعة أقوى.",
+    icon: "⚡",
+    iconBg: "#F3E8FF",
+    features: [
+      "20 حصة تدريب شخصية شهرياً",
+      "5 حصص أسبوعياً",
+      "تسريع النتائج بشكل واضح",
+      "متابعة أدق لتقدمك",
+      "تعديل مستمر للبرنامج",
+      "خطة تدريب مكثفة حسب هدفك",
+      "دعم مباشر عبر واتساب",
+      "أولوية في المواعيد",
+    ],
+    guaranteeTitle: "ضمان نتائج أسرع:",
+    guaranteeText: "إذا التزمت ولم تشعر بتغيير حقيقي، سنعالج الأمر أو تسترجع أموالك.",
+    guaranteeBg: "#F5EBFF",
+    guaranteeColor: "#9333EA",
+  };
+
+  const PackageCard = ({ p }: { p: typeof pkg12 }) => {
+    const active = selected === p.id;
+    const hidden = selected !== null && selected !== p.id;
+    return (
+      <div
+        className="off-card transition-all duration-400"
+        style={{
+          opacity: hidden ? 0 : 1,
+          maxHeight: hidden ? 0 : 2000,
+          transform: active ? "scale(1.02)" : "scale(1)",
+          marginBottom: hidden ? 0 : 16,
+          overflow: "hidden",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => pickPackage(p.id)}
+          disabled={!!selected}
+          className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
+          style={{
+            border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.06)"}`,
+            boxShadow: active
+              ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
+              : "0 10px 26px -16px rgba(0,0,0,0.12)",
+          }}
+        >
+          {/* radio */}
+          <div className="absolute top-4 right-4">
+            {active ? (
+              <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
+                <Check size={16} strokeWidth={3} className="text-white" />
+              </div>
+            ) : (
+              <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
+            )}
+          </div>
+
+          {/* header row */}
+          <div className="flex items-start gap-3 pr-9">
+            <div
+              className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center text-[34px] leading-none"
+              style={{ background: p.iconBg }}
+            >
+              {p.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{p.name}</h3>
+                <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: p.badgeColor }}>
+                  {p.badge}
+                </span>
+              </div>
+              <p className="mt-1 text-[12.5px] font-bold" style={{ color: ORANGE }}>{p.freq}</p>
+              <div className="mt-2 flex items-end gap-2 flex-wrap">
+                <span className="text-[26px] font-black leading-none" style={{ color: ORANGE, fontFamily: "'Cairo',sans-serif" }}>{p.price}</span>
+                <span className="text-[12px] text-neutral-600 mb-0.5">درهم شهرياً</span>
+                <span className="text-[13px] text-neutral-400 line-through mb-0.5">{p.oldPrice}</span>
+              </div>
+              <span className="mt-2 inline-block rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-[11px] font-bold">
+                {p.save}
+              </span>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">{p.desc}</p>
+
+          {/* features */}
+          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
+            {p.features.map((f) => (
+              <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
+                <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
+                  <Check size={10} strokeWidth={3} className="text-green-600" />
+                </span>
+                <span>{f}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* guarantee */}
+          <div className="mt-4 rounded-2xl p-3 flex items-start gap-2.5" style={{ background: p.guaranteeBg }}>
+            <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0" style={{ color: p.guaranteeColor }} />
+            <div className="text-right">
+              <p className="text-[12.5px] font-black" style={{ color: p.guaranteeColor }}>{p.guaranteeTitle}</p>
+              <p className="text-[11.5px] text-neutral-700 leading-5">{p.guaranteeText}</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    );
+  };
+
+  // Custom card
+  const customActive = selected === "custom";
+  const customHidden = selected !== null && selected !== "custom";
+  const sessionOptions = ["8 حصص", "12 حصة", "16 حصة", "20 حصة", "أريد اقتراح المدرب"];
+
+  return (
+    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
+      <style>{`
+        @keyframes off-in { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
+        .off-in { animation: off-in .5s ease-out both; }
+        @keyframes off-pulse { 0%,100%{ transform: scale(1); box-shadow: 0 14px 30px -10px rgba(34,197,94,0.55);} 50%{ transform: scale(1.015); box-shadow: 0 18px 40px -10px rgba(34,197,94,0.7);} }
+        .off-pulse { animation: off-pulse 2.2s ease-in-out infinite; }
+        @keyframes off-glow { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,107,0,0.35);} 50%{ box-shadow: 0 0 0 10px rgba(255,107,0,0);} }
+        .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
+      `}</style>
+
+      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-bold text-neutral-800">
+            <span style={{ color: ORANGE }}>{CURRENT}</span> من {total}
+          </div>
+          <button onClick={onBack} className="flex items-center gap-1 text-sm font-bold text-neutral-700">
+            <span>رجوع</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
+          ))}
+        </div>
+
+        {/* Title */}
+        <div className="off-in mt-6">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <h1 className="text-[24px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
+                اختر باقة <span style={{ color: ORANGE }}>التدريب الشخصي</span> المناسبة لك
+              </h1>
+              <p className="mt-2 text-[12.5px] leading-6 text-neutral-600">
+                جلسات حضورية مباشرة في دبي مع متابعة مخصصة لتحقيق أفضل نتيجة خلال 90 يوم.
+              </p>
+            </div>
+            <div className="shrink-0 h-14 w-14 rounded-2xl grid place-items-center text-[28px]" style={{ background: "#FFF1E5" }}>
+              <Dumbbell className="h-7 w-7" style={{ color: ORANGE }} />
+            </div>
+          </div>
+          <div className="mt-3 flex justify-center">
+            <span
+              className="off-urgent-glow inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-black text-white"
+              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` }}
+            >
+              <Flame className="h-4 w-4" /> عرض محدود لعملاء دبي فقط
+            </span>
+          </div>
+        </div>
+
+        {/* Urgency bar */}
+        <div className="off-in mt-5 rounded-[22px] p-4" style={{ background: "linear-gradient(135deg,#FFF6EC 0%, #FFEAD2 100%)", border: "1px solid #FFD1A8" }}>
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
+              <Clock className="h-6 w-6" style={{ color: ORANGE }} />
+            </div>
+            <div className="flex-1 text-right">
+              <p className="text-[13.5px] font-black flex items-center gap-1 justify-start" style={{ color: ORANGE }}>
+                <span>⚠️</span> الأماكن محدودة هذا الأسبوع
+              </p>
+              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">
+                عدد المقاعد المتاحة للتدريب الشخصي محدود بسبب عدد الحصص اليومية. سارع بحجز مكانك قبل أن يسبقك شخص آخر.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-2xl bg-white/70 p-3">
+            <p className="text-[11.5px] font-bold text-neutral-700 text-center">ينتهي العرض خلال:</p>
+            <div className="mt-2 flex items-center justify-center gap-2" dir="ltr">
+              {[
+                { v: pad(timeLeft.h), l: "ساعة" },
+                { v: pad(timeLeft.m), l: "دقيقة" },
+                { v: pad(timeLeft.s), l: "ثانية" },
+              ].map((u, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-[20px] font-black" style={{ color: ORANGE }}>:</span>}
+                  <div className="text-center">
+                    <div className="rounded-xl px-3 py-1.5 text-[20px] font-black text-white min-w-[52px]" style={{ background: `linear-gradient(180deg, ${ORANGE}, #E85F00)` }}>
+                      {u.v}
+                    </div>
+                    <div className="mt-1 text-[10px] text-neutral-600" dir="rtl">{u.l}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Packages */}
+        <div className="mt-6">
+          <PackageCard p={pkg12} />
+          <PackageCard p={pkg20} />
+
+          {/* Custom package */}
+          <div
+            className="off-card transition-all duration-400"
+            style={{
+              opacity: customHidden ? 0 : 1,
+              maxHeight: customHidden ? 0 : 2000,
+              transform: customActive ? "scale(1.02)" : "scale(1)",
+              marginBottom: customHidden ? 0 : 16,
+              overflow: "hidden",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => pickPackage("custom")}
+              disabled={!!selected && !customActive}
+              className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
+              style={{
+                border: `2px solid ${customActive ? ORANGE : "rgba(0,0,0,0.06)"}`,
+                boxShadow: customActive
+                  ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
+                  : "0 10px 26px -16px rgba(0,0,0,0.12)",
+              }}
+            >
+              <div className="absolute top-4 right-4">
+                {customActive ? (
+                  <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
+                    <Check size={16} strokeWidth={3} className="text-white" />
+                  </div>
+                ) : (
+                  <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
+                )}
+              </div>
+
+              <div className="flex items-start gap-3 pr-9">
+                <div className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center" style={{ background: "#E0F2FE" }}>
+                  <Calendar className="h-8 w-8" style={{ color: "#0EA5E9" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>خصص باقتك</h3>
+                    <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: "#0EA5E9" }}>
+                      مرونة كاملة
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12.5px] font-bold text-neutral-700">حسب عدد الحصص</p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">
+                اختر عدد الحصص التي تناسب وقتك وهدفك، وسنصمم لك باقة شخصية بالكامل.
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
+                {[
+                  "اختر عدد الحصص المناسب لك",
+                  "جدول مرن حسب وقتك",
+                  "مناسب للمبتدئين والمشغولين",
+                  "خطة تدريب مخصصة",
+                  "متابعة مباشرة",
+                  "إمكانية ترقية الباقة لاحقاً",
+                ].map((f) => (
+                  <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
+                    <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
+                      <Check size={10} strokeWidth={3} className="text-green-600" />
+                    </span>
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* sessions selector */}
+              <div className="mt-4 rounded-2xl bg-[#F8FAFC] p-3">
+                <p className="text-[12px] font-bold text-neutral-700 text-right mb-2">عدد الحصص المطلوبة شهرياً</p>
+                <div className="flex flex-wrap gap-2">
+                  {sessionOptions.map((opt) => {
+                    const on = customSessions === opt;
+                    return (
+                      <span
+                        key={opt}
+                        onClick={(e) => { e.stopPropagation(); if (!selected || customActive) setCustomSessions(opt); }}
+                        className="cursor-pointer rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all"
+                        style={{
+                          background: on ? ORANGE : "#fff",
+                          color: on ? "#fff" : "#334155",
+                          border: `1.5px solid ${on ? ORANGE : "#E2E8F0"}`,
+                        }}
+                      >
+                        {opt}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Scarcity */}
+        {!selected && (
+          <div className="off-in mt-2 rounded-[22px] p-4 flex items-start gap-3" style={{ background: "#FFF6EC", border: "1px solid #FFD1A8" }}>
+            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
+              <Flame className="h-6 w-6" style={{ color: ORANGE }} />
+            </div>
+            <div className="flex-1 text-right">
+              <p className="text-[13px] font-black" style={{ color: ORANGE }}>المقاعد محدودة جداً لهذا الأسبوع!</p>
+              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">لا تنتظر حتى يسرق شخص آخر حلمك ويحقق ما تتمناه.</p>
+            </div>
+          </div>
+        )}
+
+        {/* WhatsApp CTA */}
+        {selected && (
+          <div className="mt-6 off-in">
+            <p className="text-center text-[12px] text-neutral-700 mb-2 font-bold">
+              <Lock className="inline h-3 w-3 mb-0.5 ml-1" />
+              تدريب شخصي + متابعة احترافية + نتائج مضمونة
+            </p>
+            <a
+              href={buildWhatsapp()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="off-pulse w-full h-14 rounded-[22px] font-black text-white text-[15px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)` }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 fill-white"><path d="M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.32-1.66a11.9 11.9 0 0 0 5.73 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.17-3.44-8.42zM12.06 21.5h-.01a9.6 9.6 0 0 1-4.89-1.34l-.35-.21-3.75.99 1-3.65-.23-.37a9.58 9.58 0 0 1-1.47-5.02c0-5.3 4.31-9.6 9.61-9.6 2.57 0 4.98 1 6.8 2.81a9.55 9.55 0 0 1 2.81 6.8c0 5.3-4.31 9.6-9.62 9.6zm5.55-7.18c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.69.15s-.79.98-.97 1.18c-.18.2-.36.22-.66.07-.3-.15-1.28-.47-2.43-1.5-.9-.8-1.51-1.79-1.69-2.09-.18-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.51.07-.78.38-.27.3-1.02 1-1.02 2.44s1.05 2.83 1.2 3.03c.15.2 2.06 3.14 5 4.4.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.79-.73 2.04-1.43.25-.7.25-1.3.18-1.43-.07-.13-.27-.2-.57-.35z"/></svg>
+              <span>أرسل حجزك على الواتساب الآن وابدأ رحلتك نحو الأفضل</span>
+            </a>
+            <p className="mt-3 text-center text-[11.5px] text-neutral-600 leading-5">
+              سيتم إرسال اختيارك وبياناتك للمدرب لتأكيد الحجز والبدء في رحلتك.
+            </p>
+          </div>
+        )}
+
+        {/* Trust badges */}
+        <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-neutral-600">
+          <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" style={{ color: GREEN }} /> بياناتك محمية</span>
+          <span className="inline-flex items-center gap-1"><Lock className="h-3.5 w-3.5" style={{ color: GREEN }} /> دفع آمن</span>
+          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5" style={{ color: "#F59E0B" }} /> +500 عميل</span>
+        </div>
+      </div>
+    </div>
+  );
+}
