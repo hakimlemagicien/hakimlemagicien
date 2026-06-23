@@ -3836,7 +3836,7 @@ const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
-function PricingScreen({ name, total = 13, onBack, dubai = false }: { name: string; total?: number; onBack: () => void; dubai?: boolean }) {
+function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }: { name: string; total?: number; onBack: () => void; dubai?: boolean; onSelectTier: (id: PricingTier["id"]) => void }) {
   const ORANGE = "#FF6B00";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
@@ -3848,10 +3848,12 @@ function PricingScreen({ name, total = 13, onBack, dubai = false }: { name: stri
     return () => clearTimeout(t);
   }, []);
 
+  void name;
+
   const handleChoose = (tier: PricingTier) => {
     setSelected(tier.id);
-    const msg = `السلام عليكم، أنا ${name || "عميل جديد"}، أريد ${tier.name} (${tier.totalPrice}$ لمدة 90 يوم).`;
-    window.location.href = `https://wa.me/971500000000?text=${encodeURIComponent(msg)}`;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(10);
+    window.setTimeout(() => onSelectTier(tier.id), 180);
   };
 
   return (
