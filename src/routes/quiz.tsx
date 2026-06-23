@@ -3038,7 +3038,7 @@ function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: 
       <div className="px-5 mt-5">
         <button
           disabled={!canSubmit || submitting}
-          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); const isDubai = form.country === "ae" && form.city === "دبي"; setTimeout(() => onDone(form.name.trim(), isDubai), 700); }}
+          onClick={() => { if (!canSubmit || submitting) return; setSubmitting(true); const isDubai = form.country === "ae" && form.city === "دبي"; const country = COUNTRIES.find(c => c.code === form.country); const fullPhone = `${country?.dial ?? ""} ${form.phone.trim()}`.trim(); setTimeout(() => onDone(form.name.trim(), isDubai, fullPhone, form.city), 700); }}
           className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
           style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
         >
