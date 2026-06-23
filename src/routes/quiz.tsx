@@ -97,12 +97,13 @@ function QuizPage() {
       {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai) => { setUserName(name); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
+      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai, phone, city) => { setUserName(name); setUserPhone(phone); setUserCity(city); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
       {step === "congrats" && <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => setStep("reveal")} />}
       {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} total={totalSteps} onNext={afterReveal} />}
-      {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "pricingDubai" : "pricing")} />}
+      {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "offlinePackages" : "pricing")} />}
       {step === "pricing" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "trainingType" : "reveal")} />}
       {step === "pricingDubai" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep("trainingType")} dubai />}
+      {step === "offlinePackages" && <OfflinePackagesScreen name={userName} phone={userPhone} city={userCity} goalId={goalId} challengeId={challengeId} total={totalSteps} onBack={() => setStep("trainingType")} />}
     </div>
   );
 }
