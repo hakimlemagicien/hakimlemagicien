@@ -14,16 +14,246 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes: string | null
+          paid_at: string | null
+          plan_id: string | null
+          proof_url: string | null
+          provider: string | null
+          provider_payment_id: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          plan_id?: string | null
+          proof_url?: string | null
+          provider?: string | null
+          provider_payment_id?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          notes?: string | null
+          paid_at?: string | null
+          plan_id?: string | null
+          proof_url?: string | null
+          provider?: string | null
+          provider_payment_id?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          created_at: string
+          currency: string | null
+          duration_weeks: number | null
+          id: string
+          is_active: boolean
+          price: number | null
+          selected_at: string
+          tier_id: string
+          tier_name: string | null
+          training_mode: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_active?: boolean
+          price?: number | null
+          selected_at?: string
+          tier_id: string
+          tier_name?: string | null
+          training_mode?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_active?: boolean
+          price?: number | null
+          selected_at?: string
+          tier_id?: string
+          tier_name?: string | null
+          training_mode?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          goal: string | null
+          id: string
+          location_preference: string | null
+          phone: string | null
+          program_start_date: string | null
+          training_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          goal?: string | null
+          id: string
+          location_preference?: string | null
+          phone?: string | null
+          program_start_date?: string | null
+          training_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          goal?: string | null
+          id?: string
+          location_preference?: string | null
+          phone?: string | null
+          program_start_date?: string | null
+          training_type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quiz_answers: {
+        Row: {
+          answers: Json
+          created_at: string
+          goal: string | null
+          id: string
+          location: string | null
+          training_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          goal?: string | null
+          id?: string
+          location?: string | null
+          training_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          goal?: string | null
+          id?: string
+          location?: string | null
+          training_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      payment_method:
+        | "binance"
+        | "paypal"
+        | "wise"
+        | "skrill"
+        | "bank_nbd_uae"
+        | "bank_cih_morocco"
+        | "bank_bmce_morocco"
+        | "pix_brazil"
+        | "stripe"
+        | "apple_pay"
+        | "google_pay"
+        | "other"
+      payment_status:
+        | "pending"
+        | "submitted"
+        | "confirmed"
+        | "rejected"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +380,29 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      payment_method: [
+        "binance",
+        "paypal",
+        "wise",
+        "skrill",
+        "bank_nbd_uae",
+        "bank_cih_morocco",
+        "bank_bmce_morocco",
+        "pix_brazil",
+        "stripe",
+        "apple_pay",
+        "google_pay",
+        "other",
+      ],
+      payment_status: [
+        "pending",
+        "submitted",
+        "confirmed",
+        "rejected",
+        "refunded",
+      ],
+    },
   },
 } as const
