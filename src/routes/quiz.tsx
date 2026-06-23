@@ -58,12 +58,14 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [userName, setUserName] = useState<string>("");
+  const [userPhone, setUserPhone] = useState<string>("");
+  const [userCity, setUserCity] = useState<string>("");
   const [goalId, setGoalId] = useState<string>("");
   const [challengeId, setChallengeId] = useState<string>("");
   const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
