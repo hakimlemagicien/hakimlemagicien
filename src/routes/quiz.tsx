@@ -58,7 +58,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
 function QuizPage() {
   const [step, setStep] = useState<Step>("loading");
@@ -69,8 +69,9 @@ function QuizPage() {
   const [goalId, setGoalId] = useState<string>("");
   const [challengeId, setChallengeId] = useState<string>("");
   const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
+  const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
 
-  const totalSteps = userLocation === "dubai" ? 14 : 13;
+  const totalSteps = userLocation === "dubai" ? 15 : 14;
   const afterReveal = () => setStep(userLocation === "dubai" ? "trainingType" : "pricing");
 
   return (
