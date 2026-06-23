@@ -4718,3 +4718,460 @@ function OfflinePackagesScreen({
     </div>
   );
 }
+
+// ============================================================
+// Payment Screen — Online tiers only
+// ============================================================
+type PayMethod = "binance" | "paypal" | "skrill" | "wise";
+type BankId = "uae" | "morocco" | "brazil";
+
+const BANK_DETAILS: Record<BankId, { country: string; flag: string; banks: { name: string; holder: string; account: string; iban: string; swift: string }[] }> = {
+  uae: {
+    country: "الإمارات العربية المتحدة",
+    flag: "🇦🇪",
+    banks: [
+      { name: "Emirates NBD", holder: "Hakim Coaching FZ-LLC", account: "1015432109876", iban: "AE070260001015432109876", swift: "EBILAEAD" },
+    ],
+  },
+  morocco: {
+    country: "المغرب",
+    flag: "🇲🇦",
+    banks: [
+      { name: "CIH BANK", holder: "Hakim Coaching", account: "230 810 2113217221016000 12", iban: "MA64 2308 1021 1321 7221 0160 0012", swift: "CIHMMAMC" },
+      { name: "BMCE BANK", holder: "Hakim Coaching", account: "011 810 0000123456789012 34", iban: "MA64 0118 1000 0001 2345 6789 0134", swift: "BMCEMAMC" },
+    ],
+  },
+  brazil: {
+    country: "البرازيل",
+    flag: "🇧🇷",
+    banks: [
+      { name: "PIX", holder: "Hakim Coaching", account: "hakim@coaching.br", iban: "—", swift: "—" },
+      { name: "Nubank", holder: "Hakim Coaching", account: "0001 / 1234567-8", iban: "—", swift: "NUBKBRSP" },
+    ],
+  },
+};
+
+// --- Inline brand logos (clean SVG) ---
+function BinanceLogo({ size = 38 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 126 126" width={size} height={size} aria-label="Binance">
+      <path fill="#F3BA2F" d="M38.7 53.6 63 29.3l24.3 24.3 14.1-14.1L63 1.1 24.6 39.5zM1.1 63l14.1-14.1L29.3 63 15.2 77.1zM38.7 72.4 63 96.7l24.3-24.3 14.1 14.1L63 124.9 24.6 86.5zm58.1-9.4 14.1-14.1 14.1 14.1-14.1 14.1zM77.3 63 63 48.7 52.4 59.3l-1.2 1.2-2.5 2.5L63 77.3z"/>
+    </svg>
+  );
+}
+function PayPalLogo({ size = 38 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 124 33" width={size * 3} height={size} aria-label="PayPal">
+      <path fill="#253B80" d="M46.2 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.1c.5 0 .9-.3.9-.8l.7-4.5c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm21-6.2h-3.1c-.3 0-.6.2-.7.4l-4.3 6.3-1.8-6.1c-.1-.4-.5-.6-.8-.6h-3c-.4 0-.6.4-.5.7l3.4 10.1-3.2 4.5c-.3.4 0 .9.4.9h3.1c.3 0 .6-.1.7-.4l10.3-14.9c.3-.4.1-.9-.5-.9z"/>
+      <path fill="#179BD7" d="M94.4 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.3c.3 0 .6-.2.7-.6l.7-4.7c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm8.1-12.1L116.1 24c0 .3.2.6.5.6h2.7c.5 0 .9-.3.9-.8l2.6-16.6c0-.3-.2-.6-.5-.6h-3c-.3 0-.5.2-.6.5z"/>
+      <path fill="#253B80" d="M7.3 27.9 7.8 25h-4l3-19h8.4c2.8 0 4.7.6 5.7 1.7.5.5.8 1.1.9 1.7.2.6.2 1.4 0 2.3v.7l.5.3c.4.2.7.5.9.8.4.5.7 1.1.8 1.8.1.8.1 1.6-.1 2.6-.3 1.2-.7 2.3-1.3 3.1-.6.8-1.3 1.5-2.1 2-.8.5-1.7.9-2.7 1.1-1 .2-2.1.3-3.3.3h-.8c-.6 0-1.1.2-1.5.6-.4.4-.7.9-.8 1.4v.4L11.5 28v.2c0 .1 0 .1-.1.1H7.3z"/>
+      <path fill="#179BD7" d="M22.8 8.7v.5c-.8 4.3-3.7 5.8-7.3 5.8h-1.9c-.4 0-.8.3-.9.8L11.7 23l-.3 1.7c-.1.3.2.6.5.6h3.3c.4 0 .7-.3.8-.6v-.2l.6-3.9.1-.2c.1-.4.4-.6.8-.6h.5c3.2 0 5.7-1.3 6.4-5 .3-1.6.2-2.9-.7-3.8-.2-.2-.5-.4-.9-.6z"/>
+    </svg>
+  );
+}
+function SkrillLogo({ size = 38 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 100 32" width={size * 3} height={size} aria-label="Skrill">
+      <text x="0" y="24" fontFamily="Arial, sans-serif" fontSize="28" fontWeight="900" fill="#862165" letterSpacing="-1">Skrill</text>
+    </svg>
+  );
+}
+function WiseLogo({ size = 38 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 110 32" width={size * 3} height={size} aria-label="Wise">
+      <path fill="#9FE870" d="M3 4l10 12L3 28h7l10-12L10 4z"/>
+      <text x="22" y="24" fontFamily="Arial, sans-serif" fontSize="22" fontWeight="900" fill="#163300">wise</text>
+    </svg>
+  );
+}
+function TetherIcon() {
+  return (
+    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path fill="#fff" d="M17.9 14.6v-2h4.6V9.5H9.5v3.1H14v2c-3.7.2-6.5.9-6.5 1.8s2.8 1.6 6.5 1.8v6.4h3.9v-6.4c3.7-.2 6.5-.9 6.5-1.8 0-.9-2.8-1.6-6.5-1.8zm0 3v-.1c-.1 0-.7.1-2 .1-1.1 0-1.8 0-2.1-.1v.1c-3.2-.1-5.6-.7-5.6-1.4s2.4-1.2 5.6-1.4v2.3c.3 0 1 .1 2.1.1 1.3 0 1.9-.1 2-.1v-2.3c3.2.1 5.6.7 5.6 1.4 0 .6-2.4 1.3-5.6 1.4z"/></svg>
+  );
+}
+function PayPalIcon() {
+  return (
+    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#EAF4FB"/><path fill="#253B80" d="M11.5 9.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5l1.7-10.9c.1-.4.4-.6.8-.6z"/><path fill="#179BD7" d="M13 11.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5L13 11.5z" opacity=".6"/></svg>
+  );
+}
+function SkrillIcon() {
+  return (
+    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#862165"/><text x="16" y="22" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="18" fontWeight="900" fill="#fff">S</text></svg>
+  );
+}
+function WiseIcon() {
+  return (
+    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#9FE870"/><path fill="#163300" d="M8 9l5 7-5 7h4l5-7-4-7zm6 0h4l-5 7 4 7h-4l-4-7z"/></svg>
+  );
+}
+function TrophySvg() {
+  return (
+    <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden>
+      <defs>
+        <linearGradient id="trg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFD56B"/><stop offset="1" stopColor="#E69300"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#trg)" d="M20 8h24v6c0 9-5.4 16-12 16S20 23 20 14V8z"/>
+      <rect x="26" y="30" width="12" height="10" rx="2" fill="#E69300"/>
+      <rect x="18" y="40" width="28" height="6" rx="2" fill="#B36A00"/>
+      <path d="M20 12H12v4c0 5 4 9 9 9" fill="none" stroke="#E69300" strokeWidth="3"/>
+      <path d="M44 12h8v4c0 5-4 9-9 9" fill="none" stroke="#E69300" strokeWidth="3"/>
+      <g fill="#FFF3B0"><path d="M32 14l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z"/></g>
+    </svg>
+  );
+}
+
+function BankDetailsModal({ bank, onClose }: { bank: BankId | null; onClose: () => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  if (!bank) return null;
+  const info = BANK_DETAILS[bank];
+  const copy = (key: string, val: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(val).then(() => {
+        setCopied(key);
+        window.setTimeout(() => setCopied(null), 1500);
+      });
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(15,23,42,.55)" }}>
+      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ animation: "pay-slide-up .25s ease-out both" }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+          <button onClick={onClose} className="text-neutral-400 active:scale-90"><ChevronRight className="h-5 w-5 rotate-90" /></button>
+          <div className="font-extrabold text-[15px] text-neutral-900">{info.flag} {info.country}</div>
+          <div className="w-5" />
+        </div>
+        <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
+          {info.banks.map((b, i) => (
+            <div key={i} className="rounded-2xl border border-neutral-200 p-4 bg-neutral-50">
+              <div className="font-extrabold text-[15px] text-neutral-900 mb-3 text-right">{b.name}</div>
+              {[
+                { k: "holder", label: "اسم المستفيد", val: b.holder },
+                { k: "account", label: "رقم الحساب", val: b.account },
+                { k: "iban", label: "IBAN", val: b.iban },
+                { k: "swift", label: "SWIFT", val: b.swift },
+              ].map((row) => (
+                <div key={row.k} className="flex items-center justify-between gap-2 py-2 border-t border-neutral-200 first:border-t-0">
+                  <button
+                    onClick={() => copy(`${i}-${row.k}`, row.val)}
+                    className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg active:scale-95"
+                    style={{ background: copied === `${i}-${row.k}` ? "#16A34A" : "#FF6B00", color: "#fff" }}
+                  >
+                    {copied === `${i}-${row.k}` ? "تم النسخ ✓" : "نسخ"}
+                  </button>
+                  <div className="flex-1 text-right min-w-0">
+                    <div className="text-[10.5px] text-neutral-500 font-bold">{row.label}</div>
+                    <div className="text-[12.5px] font-extrabold text-neutral-900 truncate" dir="ltr" style={{ direction: "ltr", textAlign: "right" }}>{row.val}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="text-center text-[11px] text-neutral-500">بعد التحويل اضغط "لقد قمت بالدفع" وأرفق إثبات التحويل.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaymentProofModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const onPick = (f: File | null) => {
+    setFile(f);
+    if (f && f.type.startsWith("image/")) {
+      const url = URL.createObjectURL(f);
+      setPreview(url);
+    } else {
+      setPreview(null);
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(15,23,42,.55)" }}>
+      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ animation: "pay-slide-up .25s ease-out both" }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+          <button onClick={onClose} className="text-neutral-400 active:scale-90"><ChevronRight className="h-5 w-5 rotate-90" /></button>
+          <div className="font-extrabold text-[15px] text-neutral-900">رفع إثبات الدفع</div>
+          <div className="w-5" />
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-[12.5px] text-neutral-500 text-right leading-relaxed">أرفق صورة أو ملف PDF أو لقطة شاشة للتحويل لتفعيل اشتراكك بشكل أسرع.</p>
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="w-full rounded-2xl border-2 border-dashed p-6 flex flex-col items-center gap-2 active:scale-[0.99] transition"
+            style={{ borderColor: file ? "#16A34A" : "#FF6B00", background: file ? "#F0FAF4" : "#FFF6EE" }}
+          >
+            {preview ? (
+              <img src={preview} alt="proof" className="h-32 rounded-xl object-cover" />
+            ) : (
+              <div className="h-14 w-14 rounded-2xl grid place-items-center" style={{ background: "#fff" }}>
+                <ClipboardList className="h-7 w-7" style={{ color: "#FF6B00" }} />
+              </div>
+            )}
+            <div className="font-extrabold text-[14px]" style={{ color: file ? "#16A34A" : "#FF6B00" }}>
+              {file ? `✓ ${file.name}` : "اضغط لاختيار الملف"}
+            </div>
+            <div className="text-[11px] text-neutral-500">PNG · JPG · PDF · Screenshot</div>
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            className="hidden"
+            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+          />
+          <button
+            disabled={!file}
+            onClick={onSubmit}
+            className="w-full h-14 rounded-2xl font-black text-white text-[15px] active:scale-[0.98] transition disabled:opacity-50"
+            style={{ background: "#FF6B00", boxShadow: "0 12px 28px -12px rgba(255,107,0,.7)" }}
+          >
+            إرسال الإثبات
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tierId: PricingTier["id"]; total?: number; onBack: () => void }) {
+  const ORANGE = "#FF6B00";
+  const TEXT = "#0F172A";
+  const GREEN = "#16A34A";
+  const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
+  const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
+  const [method, setMethod] = useState<PayMethod | null>(null);
+  const [bankOpen, setBankOpen] = useState<BankId | null>(null);
+  const [proofOpen, setProofOpen] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const choose = (m: PayMethod) => {
+    setMethod(m);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(12);
+  };
+
+  const PAY_METHODS: { id: PayMethod; name: string; sub: string; perk: string; Logo: () => JSX.Element; Icon: () => JSX.Element; recommended?: boolean; tagSmall?: string }[] = [
+    { id: "binance", name: "Binance Pay (USDT)", sub: "ادفع باستخدام عملات الكريبتو مثل USDT", perk: "سريع، آمن، ورسوم منخفضة", Logo: () => <BinanceLogo />, Icon: TetherIcon, recommended: true, tagSmall: "الأسرع" },
+    { id: "paypal", name: "PayPal", sub: "ادفع بأمان باستخدام حسابك على باي بال", perk: "سريع وآمن ومقبول عالمياً", Logo: () => <PayPalLogo size={28} />, Icon: PayPalIcon },
+    { id: "skrill", name: "Skrill", sub: "ادفع باستخدام حسابك على سكريل", perk: "سريع وآمن حول العالم", Logo: () => <SkrillLogo size={28} />, Icon: SkrillIcon },
+    { id: "wise", name: "Wise", sub: "حوّل وادفع بعملات متعددة بأقل رسوم", perk: "سعر صرف حقيقي ورسوم منخفضة", Logo: () => <WiseLogo size={28} />, Icon: WiseIcon },
+  ];
+
+  return (
+    <div className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
+      <style>{`
+        @keyframes pay-in { from {opacity:0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pay-slide-up { from {opacity:0; transform: translateY(40px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pay-pop { 0% {transform: scale(.5); opacity:0;} 60% {transform: scale(1.15); opacity:1;} 100% {transform: scale(1);} }
+        @keyframes pay-shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
+        .pay-in { animation: pay-in .5s cubic-bezier(.2,.8,.2,1) both; }
+        .pay-pop { animation: pay-pop .5s cubic-bezier(.2,.8,.2,1) both; }
+        .pay-shake { animation: pay-shake .35s ease-out; }
+        .pay-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      `}</style>
+
+      {/* Top bar */}
+      <div className="px-5 pt-5 pb-3 max-w-md mx-auto">
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95">
+            <ChevronRight className="h-4 w-4" />
+            رجوع
+          </button>
+          <div className="text-[12px] font-extrabold" style={{ color: ORANGE }}>{total} من {total}</div>
+          <div className="flex items-center gap-1.5 text-[10.5px] font-extrabold" style={{ color: GREEN }}>
+            <ShieldCheck className="h-3.5 w-3.5" /> آمن 100%
+          </div>
+        </div>
+        <div className="mt-3 flex gap-1.5">
+          {Array.from({ length: total }).map((_, i) => (
+            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: ORANGE }} />
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 pb-24 max-w-md mx-auto">
+        {/* Title */}
+        <div className="pay-in text-center mt-4">
+          <h1 className="pay-heading text-[24px]" style={{ color: TEXT }}>أكمل اشتراكك <span style={{ color: ORANGE }}>الآن</span></h1>
+          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed">اختر طريقة الدفع المناسبة لك للبدء في برنامجك الخاص</p>
+        </div>
+
+        {/* Summary card */}
+        <div className="pay-in mt-5 rounded-3xl p-4 flex items-center gap-4" style={{ background: "#FFF6EE", border: `1px solid ${ORANGE}22`, animationDelay: ".05s" }}>
+          <div className="shrink-0 h-20 w-20 rounded-2xl grid place-items-center relative" style={{ background: "linear-gradient(160deg,#1E293B,#0F172A)" }}>
+            <TrophySvg />
+            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full grid place-items-center text-white" style={{ background: ORANGE }}>
+              <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
+            </div>
+          </div>
+          <div className="flex-1 text-right min-w-0">
+            <div className="text-[10.5px] text-neutral-500 font-bold">الباقة المختارة</div>
+            <div className="pay-heading text-[17px] mt-0.5" style={{ color: TEXT }}>{tier.id === "pro" ? "باقة Pro" : tier.id === "vip" ? "باقة VIP" : "باقة التحول"}</div>
+            <div className="mt-1 text-[11px] text-neutral-500 leading-snug">12 أسبوع · متابعة ونتائج مضمونة</div>
+          </div>
+          <div className="text-center shrink-0 pr-2 border-r border-orange-200">
+            <div className="text-[10px] text-neutral-500 font-bold">السعر الإجمالي</div>
+            <div className="pay-heading text-[26px] leading-none mt-1" style={{ color: ORANGE }}>{tier.totalPrice}</div>
+            <div className="text-[10px] text-neutral-500 font-bold mt-1">دولار أمريكي</div>
+          </div>
+        </div>
+
+        {/* Choose method header */}
+        <div className="mt-7 text-center">
+          <h2 className="pay-heading text-[18px]" style={{ color: TEXT }}>اختر طريقة الدفع</h2>
+        </div>
+
+        {/* Payment methods list */}
+        <div className="mt-4 space-y-3">
+          {PAY_METHODS.map((m, i) => {
+            const selected = method === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => choose(m.id)}
+                className={`pay-in w-full text-right rounded-2xl p-3 flex items-center gap-3 transition-all ${selected ? "pay-shake" : ""}`}
+                style={{
+                  animationDelay: `${0.1 + i * 0.07}s`,
+                  background: selected ? "#FFF6EE" : "#fff",
+                  border: `2px solid ${selected ? ORANGE : "#EEF1F4"}`,
+                  boxShadow: selected ? `0 12px 30px -16px ${ORANGE}66` : "0 4px 14px -10px rgba(0,0,0,.08)",
+                }}
+              >
+                {/* Brand logo */}
+                <div className="shrink-0 w-[88px] h-[56px] grid place-items-center rounded-xl" style={{ background: m.recommended ? "#FFF" : "#FAFBFC", border: "1px solid #EEF1F4" }}>
+                  <m.Logo />
+                </div>
+                {m.recommended && (
+                  <div className="absolute" />
+                )}
+                {/* Texts */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <span className="pay-heading text-[14.5px]" style={{ color: TEXT }}>{m.name}</span>
+                  </div>
+                  <div className="text-[11.5px] text-neutral-500 leading-snug mt-0.5">{m.sub}</div>
+                  <div className="text-[11px] font-extrabold mt-1" style={{ color: GREEN }}>{m.perk}</div>
+                  {m.tagSmall && (
+                    <div className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold text-white" style={{ background: ORANGE }}>{m.tagSmall}</div>
+                  )}
+                </div>
+                {/* Right icon + chevron */}
+                <div className="shrink-0 relative">
+                  <m.Icon />
+                  {m.recommended && (
+                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold text-white" style={{ background: ORANGE }}>موصى به</div>
+                  )}
+                  {selected && (
+                    <div className="absolute -bottom-1 -left-1 h-5 w-5 rounded-full grid place-items-center pay-pop" style={{ background: GREEN }}>
+                      <Check className="h-3 w-3 text-white" strokeWidth={4} />
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Bank transfer section */}
+        <div className="mt-8">
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <h3 className="pay-heading text-[16px]" style={{ color: TEXT }}>تحويل بنكي</h3>
+          </div>
+          <div className="rounded-3xl p-1.5" style={{ background: "#fff", border: "1px solid #EEF1F4", boxShadow: "0 4px 14px -10px rgba(0,0,0,.08)" }}>
+            {([
+              { id: "uae" as BankId, label: "الإمارات العربية المتحدة", sub: "Emirates NBD", color: "#10B981" },
+              { id: "morocco" as BankId, label: "المغرب", sub: "CIH BANK · BMCE BANK", color: "#DC2626" },
+              { id: "brazil" as BankId, label: "البرازيل", sub: "PIX · Nubank", color: "#7C3AED" },
+            ]).map((b, i) => (
+              <button
+                key={b.id}
+                onClick={() => setBankOpen(b.id)}
+                className="w-full flex items-center gap-3 p-3 rounded-2xl active:scale-[0.99] transition"
+                style={{ borderTop: i === 0 ? "none" : "1px solid #F1F3F5" }}
+              >
+                <div className="shrink-0 h-11 w-11 rounded-xl grid place-items-center" style={{ background: `${b.color}15`, color: b.color }}>
+                  <ShieldHalf className="h-5 w-5" strokeWidth={2.2} />
+                </div>
+                <div className="flex-1 text-right">
+                  <div className="pay-heading text-[13.5px]" style={{ color: TEXT }}>{b.label}</div>
+                  <div className="text-[11px] text-neutral-500 mt-0.5">{b.sub}</div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-neutral-400 rotate-180" />
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 text-center text-[11px] text-neutral-500">ستحصل على بيانات الحساب بعد اختيار البنك</div>
+        </div>
+
+        {/* WhatsApp help */}
+        <a
+          href="https://wa.me/971500000000?text=أحتاج%20مساعدة%20في%20اختيار%20طريقة%20الدفع"
+          className="mt-5 rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.99] transition"
+          style={{ background: "#F0FAF4", border: "1px solid #BBF7D0" }}
+        >
+          <div className="shrink-0 h-11 w-11 rounded-full grid place-items-center" style={{ background: "#25D366" }}>
+            <MessageCircle className="h-5 w-5 text-white" fill="#fff" strokeWidth={0} />
+          </div>
+          <div className="flex-1 text-right">
+            <div className="pay-heading text-[13.5px]" style={{ color: GREEN }}>تحتاج مساعدة؟</div>
+            <div className="text-[11px] text-neutral-500 mt-0.5">تواصل معنا على واتساب وسنساعدك في اختيار طريقة الدفع الأنسب لك</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-neutral-400 rotate-180" />
+        </a>
+
+        {/* Confirm button - appears after selection */}
+        {method && !done && (
+          <div className="mt-6 pay-in">
+            <button
+              onClick={() => setProofOpen(true)}
+              className="w-full h-[58px] rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition"
+              style={{ background: ORANGE, fontFamily: HEADING_FONT, boxShadow: `0 16px 36px -14px ${ORANGE}aa` }}
+            >
+              <Check className="h-5 w-5" strokeWidth={3} />
+              لقد قمت بالدفع
+            </button>
+            <p className="text-center text-[10.5px] text-neutral-500 mt-2">بعد الدفع ارفع إثبات التحويل لتفعيل اشتراكك فوراً</p>
+          </div>
+        )}
+        {done && (
+          <div className="mt-6 rounded-2xl p-5 text-center pay-in" style={{ background: "#F0FAF4", border: `1px solid ${GREEN}33` }}>
+            <div className="mx-auto h-14 w-14 rounded-full grid place-items-center pay-pop" style={{ background: GREEN }}>
+              <Check className="h-7 w-7 text-white" strokeWidth={3.5} />
+            </div>
+            <div className="pay-heading text-[16px] mt-3" style={{ color: GREEN }}>تم استلام إثبات الدفع</div>
+            <p className="text-[12px] text-neutral-500 mt-1">سيتم تفعيل اشتراكك خلال دقائق وسنتواصل معك مباشرة.</p>
+          </div>
+        )}
+
+        {/* Trust bar */}
+        <div className="mt-8 grid grid-cols-2 gap-3">
+          {([
+            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "حماية كاملة لبياناتك" },
+            { Icon: ShieldCheck, color: "#16A34A", t: "حماية كاملة للبيانات", s: "تشفير SSL 256-bit" },
+            { Icon: RefreshCw, color: "#2563EB", t: "ضمان استرجاع الأموال", s: "استرجاع خلال 7 أيام" },
+            { Icon: Headphones, color: "#2563EB", t: "دعم فني 24/7", s: "نحن هنا لمساعدتك دائماً" },
+          ] as const).map((b, i) => (
+            <div key={i} className="rounded-2xl p-3 flex items-center gap-2.5" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
+              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: `${b.color}15` }}>
+                <b.Icon className="h-5 w-5" style={{ color: b.color }} strokeWidth={2.2} />
+              </div>
+              <div className="text-right min-w-0">
+                <div className="pay-heading text-[11.5px]" style={{ color: b.color }}>{b.t}</div>
+                <div className="text-[10px] text-neutral-500 leading-snug mt-0.5">{b.s}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-500">
+          <Lock className="h-3 w-3" />
+          <span>جميع المعاملات آمنة ومشفرة 256-bit SSL</span>
+        </div>
+      </div>
+
+      {bankOpen && <BankDetailsModal bank={bankOpen} onClose={() => setBankOpen(null)} />}
+      {proofOpen && <PaymentProofModal onClose={() => setProofOpen(false)} onSubmit={() => { setProofOpen(false); setDone(true); }} />}
+    </div>
+  );
+}
