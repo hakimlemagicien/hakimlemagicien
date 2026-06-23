@@ -4380,7 +4380,7 @@ function OfflinePackagesScreen({
     guaranteeColor: "#9333EA",
   };
 
-  const PackageCard = ({ p }: { p: typeof pkg12 }) => {
+  const PackageCard = ({ p }: { p: Omit<typeof pkg12, "id"> & { id: OfflinePkgId } }) => {
     const active = selected === p.id;
     const hidden = selected !== null && selected !== p.id;
     return (
