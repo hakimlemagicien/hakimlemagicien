@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -4952,7 +4952,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(12);
   };
 
-  const PAY_METHODS: { id: PayMethod; name: string; sub: string; perk: string; Logo: () => JSX.Element; Icon: () => JSX.Element; recommended?: boolean; tagSmall?: string }[] = [
+  const PAY_METHODS: { id: PayMethod; name: string; sub: string; perk: string; Logo: () => ReactElement; Icon: () => ReactElement; recommended?: boolean; tagSmall?: string }[] = [
     { id: "binance", name: "Binance Pay (USDT)", sub: "ادفع باستخدام عملات الكريبتو مثل USDT", perk: "سريع، آمن، ورسوم منخفضة", Logo: () => <BinanceLogo />, Icon: TetherIcon, recommended: true, tagSmall: "الأسرع" },
     { id: "paypal", name: "PayPal", sub: "ادفع بأمان باستخدام حسابك على باي بال", perk: "سريع وآمن ومقبول عالمياً", Logo: () => <PayPalLogo size={28} />, Icon: PayPalIcon },
     { id: "skrill", name: "Skrill", sub: "ادفع باستخدام حسابك على سكريل", perk: "سريع وآمن حول العالم", Logo: () => <SkrillLogo size={28} />, Icon: SkrillIcon },
