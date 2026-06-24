@@ -8,7 +8,7 @@ CREATE TYPE public.lead_status AS ENUM (
 
 CREATE TABLE public.leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  access_token TEXT NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+access_token TEXT NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex')
 
   status public.lead_status NOT NULL DEFAULT 'pending_lead',
 
@@ -107,11 +107,11 @@ CREATE OR REPLACE FUNCTION public.create_lead(p_payload JSONB)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_id UUID;
-  v_token TEXT := encode(gen_random_bytes(32), 'hex');
+ v_token TEXT := encode(extensions.gen_random_bytes(32), 'hex');
 BEGIN
   INSERT INTO public.leads (
     access_token,
