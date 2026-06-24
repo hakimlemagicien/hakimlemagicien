@@ -123,6 +123,7 @@ export default function FAQ() {
 
   return (
     <section
+      id="faq"
       dir="rtl"
       className="relative w-full overflow-hidden bg-white py-20 md:py-28 font-[Tajawal,Cairo,sans-serif]"
     >
@@ -188,7 +189,7 @@ export default function FAQ() {
               </p>
 
               <a
-                href="https://wa.me/"
+                href="https://wa.me/971505129019"
                 className="group mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-6 py-4 text-sm md:text-base font-bold text-white shadow-[0_10px_30px_-10px_rgba(249,115,22,0.6)] transition-all duration-300 hover:shadow-[0_15px_40px_-10px_rgba(249,115,22,0.8)] hover:brightness-105"
               >
                 <MessageCircle className="h-5 w-5" />

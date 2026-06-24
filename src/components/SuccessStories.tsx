@@ -207,6 +207,7 @@ export default function SuccessStories() {
 
   return (
     <section
+      id="stories"
       dir="rtl"
       className="relative w-full overflow-hidden bg-white py-20 md:py-28 font-[Tajawal,Cairo,sans-serif]"
     >

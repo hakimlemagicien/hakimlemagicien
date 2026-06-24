@@ -25,7 +25,7 @@ function Logo() {
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const whatsapp = "https://wa.me/00000000000";
+  const whatsapp = "https://wa.me/971505129019";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">

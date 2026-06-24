@@ -14,6 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      leads: {
+        Row: {
+          access_token: string
+          answers: Json
+          challenge_id: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          gender: string | null
+          goal_id: string | null
+          id: string
+          location_preference: string | null
+          payment_amount: number | null
+          payment_currency: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          plan_price: number | null
+          proof_path: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          tier_id: string | null
+          tier_name: string | null
+          training_mode: string | null
+          updated_at: string
+          phone: string | null
+        }
+        Insert: {
+          access_token?: string
+          answers?: Json
+          challenge_id?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          gender?: string | null
+          goal_id?: string | null
+          id?: string
+          location_preference?: string | null
+          payment_amount?: number | null
+          payment_currency?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          plan_price?: number | null
+          proof_path?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          tier_id?: string | null
+          tier_name?: string | null
+          training_mode?: string | null
+          updated_at?: string
+          phone?: string | null
+        }
+        Update: {
+          access_token?: string
+          answers?: Json
+          challenge_id?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          gender?: string | null
+          goal_id?: string | null
+          id?: string
+          location_preference?: string | null
+          payment_amount?: number | null
+          payment_currency?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          plan_price?: number | null
+          proof_path?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          tier_id?: string | null
+          tier_name?: string | null
+          training_mode?: string | null
+          updated_at?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -225,6 +306,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_lead: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -232,9 +317,38 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_proof_upload_reserved: {
+        Args: { p_path: string }
+        Returns: boolean
+      }
+      reserve_proof_upload: {
+        Args: {
+          p_file_ext: string
+          p_lead_id: string
+          p_access_token: string
+        }
+        Returns: string
+      }
+      submit_payment_proof_metadata: {
+        Args: {
+          p_lead_id: string
+          p_access_token: string
+          p_proof_path: string
+        }
+        Returns: undefined
+      }
+      update_lead: {
+        Args: {
+          p_lead_id: string
+          p_access_token: string
+          p_payload: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      lead_status: "pending_lead" | "plan_selected" | "payment_submitted"
       payment_method:
         | "binance"
         | "paypal"
@@ -382,6 +496,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      lead_status: ["pending_lead", "plan_selected", "payment_submitted"],
       payment_method: [
         "binance",
         "paypal",

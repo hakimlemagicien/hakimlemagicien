@@ -191,6 +191,7 @@ export function HowItWorks() {
 
   return (
     <section
+      id="how"
       ref={secRef}
       className={`relative bg-white py-20 lg:py-28 overflow-hidden transition-opacity duration-700 ${
         secIn ? "opacity-100" : "opacity-0"
