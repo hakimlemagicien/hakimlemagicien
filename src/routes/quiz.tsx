@@ -1,4 +1,5 @@
 import { createLead } from "@/lib/lead-api";
+import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
@@ -69,8 +70,26 @@ function QuizPage() {
   const [userCity, setUserCity] = useState<string>("");
   const [goalId, setGoalId] = useState<string>("");
   const [challengeId, setChallengeId] = useState<string>("");
+  const [age, setAge] = useState<number>();
+  const [heightCm, setHeightCm] = useState<number>();
+  const [weightKg, setWeightKg] = useState<number>();
+  const [activityLevel, setActivityLevel] = useState<string>();
+  const [investment, setInvestment] = useState<string>();
+  const [bodyType, setBodyType] = useState<string>();
   const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
   const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
+
+  const quizAnswers: QuizAnswersInput = {
+    gender,
+    goalId,
+    challengeId,
+    age,
+    heightCm,
+    weightKg,
+    activityLevel,
+    investment,
+    bodyType,
+  };
 
   const totalSteps = userLocation === "dubai" ? 15 : 14;
   const afterReveal = () => setStep(userLocation === "dubai" ? "trainingType" : "pricing");
@@ -90,16 +109,16 @@ function QuizPage() {
       {step === "gender" && <GenderScreen onSelect={(g) => { setGender(g); setStep(g === "male" ? "goals" : "femaleGoals"); }} />}
       {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
       {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
-      {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={() => setStep("measure")} />}
-      {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={() => setStep("activity")} />}
-      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} />}
+      {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={(value) => { setAge(value); setStep("measure"); }} />}
+      {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={(height, weight) => { setHeightCm(height); setWeightKg(weight); setStep("activity"); }} />}
+      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={(value) => { setActivityLevel(value); setStep(gender === "female" ? "femaleChallenge" : "challenge"); }} />}
       {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
       {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
-      {step === "investment" && <InvestmentScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} />}
-      {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
-      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={() => setStep("analysis")} />}
+      {step === "investment" && <InvestmentScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={(value) => { setInvestment(value); setStep(gender === "female" ? "femaleBodyType" : "bodyType"); }} />}
+      {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={(value) => { setBodyType(value); setStep("analysis"); }} />}
+      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={(value) => { setBodyType(value); setStep("analysis"); }} />}
       {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai, phone, city) => { setUserName(name); setUserPhone(phone); setUserCity(city); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
+      {step === "contact" && <ContactScreen quizAnswers={quizAnswers} onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai, phone, city) => { setUserName(name); setUserPhone(phone); setUserCity(city); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
       {step === "congrats" && <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => setStep("reveal")} />}
       {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} total={totalSteps} onNext={afterReveal} />}
       {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "offlinePackages" : "pricing")} />}
@@ -612,7 +631,7 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
 const AGES = Array.from({ length: 80 - 14 + 1 }, (_, i) => 14 + i);
 const ITEM_H = 56;
 
-function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: (age: number) => void }) {
   const [age, setAge] = useState(24);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const snapTimer = useRef<number | null>(null);
@@ -733,7 +752,7 @@ function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void 
 
         {/* CTA */}
         <button
-          onClick={onNext}
+          onClick={() => onNext(age)}
           className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           style={{
             background: "linear-gradient(180deg,#FF8534,#FF6B00)",
@@ -842,7 +861,7 @@ function HorizontalWheel({
   );
 }
 
-function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: (height: number, weight: number) => void }) {
   const [height, setHeight] = useState(164);
   const [weight, setWeight] = useState(63);
 
@@ -900,7 +919,7 @@ function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: () => v
 
         {/* CTA */}
         <button
-          onClick={onNext}
+          onClick={() => onNext(height, weight)}
           className="mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform"
           style={{
             background: "linear-gradient(180deg,#FF8534,#FF6B00)",
@@ -1015,7 +1034,7 @@ const ACTIVITIES = [
   },
 ];
 
-function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activityLevel: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
@@ -1106,7 +1125,7 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: () => 
 
         {/* CTA */}
         <button
-          onClick={onNext}
+          onClick={() => selected && onNext(selected)}
           disabled={!selected}
           className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
           style={{
@@ -2139,7 +2158,7 @@ const INVESTMENT_OPTIONS = [
   },
 ];
 
-function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (investment: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const ORANGE = "#FF6B00";
 
@@ -2283,7 +2302,7 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: () =
         <div className="mt-auto pt-2.5">
           <button
             disabled={!selected}
-            onClick={() => selected && onNext()}
+            onClick={() => selected && onNext(selected)}
             className="w-full h-[56px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
             style={{
               background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
@@ -2327,7 +2346,7 @@ const BODY_TYPES = [
   { id: "average", title: "جسم متوسط", sub: "وزن طبيعي وكتلة معتدلة", img: bodyAverage },
 ];
 
-function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyType: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const ORANGE = "#FF6B00";
 
@@ -2446,7 +2465,7 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => 
         <div className="mt-2.5">
           <button
             disabled={!selected}
-            onClick={() => selected && onNext()}
+            onClick={() => selected && onNext(selected)}
             className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
             style={{
               background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
@@ -2483,7 +2502,7 @@ const FEMALE_BODY_TYPES = [
   { id: "body_shaping", title: "عدم تناسق الأرداف", sub: "أرغب بجسم أكثر تناسقاً وخصراً أنحف", img: fbodyShaping },
 ];
 
-function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyType: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const ORANGE = "#FF6B00";
 
@@ -2602,7 +2621,7 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
         <div className="mt-2.5">
           <button
             disabled={!selected}
-            onClick={() => selected && onNext()}
+            onClick={() => selected && onNext(selected)}
             className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
             style={{
               background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
@@ -2858,7 +2877,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: string, isDubai: boolean, phone: string, city: string) => void }) {
+function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, isDubai: boolean, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
@@ -3051,14 +3070,14 @@ function ContactScreen({ onBack, onDone }: { onBack: () => void; onDone: (name: 
             const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
           
             try {
-              await createLead({
-                full_name: form.name.trim(),
+              await createLead(buildLeadInsertFromQuiz(quizAnswers, {
+                fullName: form.name.trim(),
                 email: form.email.trim(),
                 phone: fullPhone,
-                country: selectedCountry?.name ?? form.country,
                 city: form.city,
-                location_preference: isDubai ? "dubai" : "remote",
-              });
+                country: selectedCountry?.name ?? form.country,
+                locationPreference: isDubai ? "dubai" : "remote",
+              }));
           
               onDone(form.name.trim(), isDubai, fullPhone, form.city);
             } catch (error) {
