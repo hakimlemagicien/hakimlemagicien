@@ -8,9 +8,9 @@ CREATE TYPE public.lead_status AS ENUM (
 
 CREATE TABLE public.leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-access_token TEXT NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex')
+access_token TEXT NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
 
-  status public.lead_status NOT NULL DEFAULT 'pending_lead',
+status public.lead_status NOT NULL DEFAULT 'pending_lead',
 
   answers JSONB NOT NULL DEFAULT '{}'::jsonb,
   gender TEXT,
@@ -61,15 +61,15 @@ GRANT ALL ON public.leads TO service_role;
 GRANT ALL ON public.lead_proof_uploads TO service_role;
 
 -- Admin-only direct read access to leads (Supabase Studio / future admin UI)
-GRANT SELECT ON public.leads TO authenticated;
-CREATE POLICY "leads_admin_select"
-  ON public.leads FOR SELECT
-  TO authenticated
-  USING (public.has_role(auth.uid(), 'admin'));
+-- GRANT SELECT ON public.leads TO authenticated;
+-- CREATE POLICY "leads_admin_select"
+--   ON public.leads FOR SELECT
+--   TO authenticated
+--   USING (public.has_role(auth.uid(), 'admin'));
 
-CREATE TRIGGER trg_leads_updated_at
-  BEFORE UPDATE ON public.leads
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+-- CREATE TRIGGER trg_leads_updated_at
+--   BEFORE UPDATE ON public.leads
+--   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('payment-proofs', 'payment-proofs', false)
