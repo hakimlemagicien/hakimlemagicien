@@ -245,7 +245,7 @@ function MobileCoachVisual() {
       </div>
 
       {/* progress chart — bottom left */}
-      <div className="absolute bottom-[150px] left-1/2 z-10 w-[74%] max-w-[220px] translate-x-[calc(-50%-40px)] opacity-90">
+      <div className="absolute bottom-[150px] left-1/2 z-10 w-[74%] max-w-[220px] translate-x-[calc(-50%-50px)] opacity-90">
         <ProgressChart compact />
       </div>
     </div>
