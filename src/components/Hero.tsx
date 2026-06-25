@@ -12,6 +12,7 @@ import {
   Zap,
   Star,
 } from "lucide-react";
+import { formatSocialProofClientCount } from "@/lib/social-proof";
 import { ProgressChart } from "./ProgressChart";
 import coachImg from "@/assets/coach.png";
 import avatar1 from "@/assets/avatar1.jpg";
@@ -185,19 +186,7 @@ function MobileHero() {
         اكتشف خلال دقائق الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.
       </p>
 
-      {/* 4. Feature cards — single row */}
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {mobileFeatures.map((f) => (
-          <MobileFeatureCard key={f.label} {...f} />
-        ))}
-      </div>
-
-      {/* 5. Coach visual */}
-      <div className="mt-2">
-        <MobileCoachVisual />
-      </div>
-
-      {/* 6. CTA */}
+      {/* 4. CTA — above the fold on mobile */}
       <Link
         to="/quiz"
         className="mt-4 flex h-[52px] w-full items-center rounded-full cta-gradient px-2 shadow-cta [direction:ltr]"
@@ -211,7 +200,7 @@ function MobileHero() {
         <span className="w-9 shrink-0" aria-hidden />
       </Link>
 
-      {/* 7. Social proof */}
+      {/* 5. Social proof */}
       <div className="mt-3 flex items-center justify-center gap-3 [direction:ltr]">
         <div className="flex shrink-0 -space-x-2">
           {avatars.map((src, i) => (
@@ -231,7 +220,9 @@ function MobileHero() {
             {Array.from({ length: 5 }).map((_, i) => (
               <Star key={i} className="h-3.5 w-3.5 fill-success text-success" />
             ))}
-            <span className="font-[Cairo] text-[13px] font-extrabold text-success">+10,000</span>
+            <span className="font-[Cairo] text-[13px] font-extrabold text-success">
+              {formatSocialProofClientCount()}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
@@ -240,6 +231,18 @@ function MobileHero() {
             <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
           </div>
         </div>
+      </div>
+
+      {/* 6. Feature cards — single row */}
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {mobileFeatures.map((f) => (
+          <MobileFeatureCard key={f.label} {...f} />
+        ))}
+      </div>
+
+      {/* 7. Coach visual */}
+      <div className="mt-2">
+        <MobileCoachVisual />
       </div>
     </div>
   );
@@ -308,7 +311,7 @@ function DesktopHero() {
               ))}
             </div>
             <p className="text-sm font-bold text-foreground">
-              <span className="text-success">+10,000</span> عميل حققوا نتائج مذهلة
+              <span className="text-success">{formatSocialProofClientCount()}</span> عميل حققوا نتائج مذهلة
             </p>
             <BadgeCheck className="h-5 w-5 text-success" />
           </div>

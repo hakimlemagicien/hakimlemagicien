@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   UserCircle2,
@@ -245,10 +246,13 @@ export default function CustomProgram() {
                 <br />
                 دعنا نصمم لك خطة تغير حياتك للأفضل.
               </p>
-              <button className="group inline-flex items-center gap-3 rounded-full border-2 border-neutral-900 bg-white px-6 py-3 text-sm font-bold text-neutral-900 transition-all duration-300 hover:bg-neutral-900 hover:text-white">
+              <Link
+                to="/quiz"
+                className="group inline-flex items-center gap-3 rounded-full border-2 border-neutral-900 bg-white px-6 py-3 text-sm font-bold text-neutral-900 transition-all duration-300 hover:bg-neutral-900 hover:text-white"
+              >
                 اكتشف الحل المناسب لك
                 <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>

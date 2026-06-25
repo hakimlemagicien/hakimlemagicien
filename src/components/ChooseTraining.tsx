@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Globe,
@@ -99,10 +100,13 @@ function TrainingCard({ image, Icon, title, badge, desc, features, cta, delay = 
             ))}
           </ul>
 
-          <button className="group mt-7 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-6 py-4 text-sm md:text-base font-bold text-white shadow-[0_10px_30px_-10px_rgba(249,115,22,0.6)] transition-all duration-300 hover:shadow-[0_15px_40px_-10px_rgba(249,115,22,0.8)] hover:brightness-105">
+          <Link
+            to="/quiz"
+            className="group mt-7 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-6 py-4 text-sm md:text-base font-bold text-white shadow-[0_10px_30px_-10px_rgba(249,115,22,0.6)] transition-all duration-300 hover:shadow-[0_15px_40px_-10px_rgba(249,115,22,0.8)] hover:brightness-105"
+          >
             {cta}
             <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

@@ -14,6 +14,7 @@ import coachHero from "@/assets/coach-hero.jpg";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
+import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
 
 function useInView<T extends HTMLElement>(threshold = 0.15) {
   const ref = useRef<T | null>(null);
@@ -66,7 +67,7 @@ const TRUST_STRIP = [
 
 export default function FinalCTA() {
   const { ref, inView } = useInView<HTMLElement>(0.1);
-  const count = useCount(3500, inView);
+  const count = useCount(SOCIAL_PROOF_CLIENT_COUNT, inView);
   const progress = useCount(76, inView, 1800);
 
   const circumference = 2 * Math.PI * 38;

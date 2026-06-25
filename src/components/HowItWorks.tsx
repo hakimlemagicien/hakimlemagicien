@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   MessageCircleQuestion,
@@ -141,9 +142,12 @@ function PhoneMockup() {
               ))}
             </ul>
 
-            <button className="mt-4 w-full rounded-2xl bg-primary py-3 text-[12px] font-bold text-white shadow-cta">
+            <Link
+              to="/quiz"
+              className="mt-4 flex w-full items-center justify-center rounded-2xl bg-primary py-3 text-[12px] font-bold text-white shadow-cta"
+            >
               متابعة التقييم
-            </button>
+            </Link>
           </div>
         </div>
       </div>

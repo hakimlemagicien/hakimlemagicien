@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Star, Quote, Users, Trophy, TrendingUp, Smile, Sparkles } from "lucide-react";
+import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
 import t1 from "@/assets/transform-1.jpg";
 import t2 from "@/assets/transform-2.jpg";
 import t3 from "@/assets/transform-3.jpg";
@@ -170,10 +171,10 @@ function StoryCard({ story, delay }: { story: Story; delay: number }) {
 
 type Stat = { Icon: typeof Users; value: number; prefix: string; suffix: string; text: string };
 const STATS: Stat[] = [
-  { Icon: Users, value: 3500, prefix: "+", suffix: "", text: "عميل حققوا نتائجهم مع برنامج حكيم" },
+  { Icon: Users, value: SOCIAL_PROOF_CLIENT_COUNT, prefix: "+", suffix: "", text: "عميل حققوا نتائجهم مع برنامج حكيم" },
   { Icon: Trophy, value: 92, prefix: "+", suffix: "%", text: "نسبة رضا العملاء عن البرنامج والمتابعة" },
   { Icon: TrendingUp, value: 85, prefix: "+", suffix: "%", text: "حققوا أهدافهم خلال أول 3 أشهر" },
-  { Icon: Smile, value: 10000, prefix: "+", suffix: "", text: "تحول حقيقي نحو حياة أفضل وأكثر صحة" },
+  { Icon: Smile, value: SOCIAL_PROOF_CLIENT_COUNT, prefix: "+", suffix: "", text: "تحول حقيقي نحو حياة أفضل وأكثر صحة" },
 ];
 
 function StatItem({ stat, index, inView }: { stat: Stat; index: number; inView: boolean }) {
