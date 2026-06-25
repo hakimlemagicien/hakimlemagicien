@@ -18,7 +18,7 @@ import {
   formatSocialProofClientCount,
 } from "@/lib/social-proof";
 import { ProgressChart } from "./ProgressChart";
-import coachImg from "@/assets/coach.png";
+import coachImg from "@/assets/coach-photo.png";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
@@ -190,13 +190,13 @@ function MobileResultCard({
 }) {
   const bg = tone === "success" ? "bg-success-soft text-success" : "bg-primary-soft text-primary";
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${bg}`}>
-        <Icon className="h-4 w-4" strokeWidth={2} />
+    <div className="flex items-center gap-3 rounded-xl bg-white px-3.5 py-3 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
+      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${bg}`}>
+        <Icon className="h-5 w-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 text-right">
-        <p className="font-[Cairo] text-[15px] font-extrabold leading-none text-foreground">{value}</p>
-        <p className="mt-0.5 font-[Tajawal] text-[9px] font-medium leading-tight text-muted-foreground">
+        <p className="font-[Cairo] text-[18px] font-extrabold leading-none text-foreground">{value}</p>
+        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium leading-tight text-muted-foreground">
           {label}
         </p>
       </div>
@@ -206,7 +206,7 @@ function MobileResultCard({
 
 function MobileCoachVisual() {
   return (
-    <div className="relative mx-auto h-[340px] w-full max-w-[320px]">
+    <div className="relative mx-auto -mb-[150px] h-[530px] w-full max-w-[320px]">
       {/* dot grid — left of coach */}
       <div
         aria-hidden
@@ -218,8 +218,8 @@ function MobileCoachVisual() {
       </div>
 
       {/* beige circle */}
-      <div className="absolute inset-x-4 top-2 bottom-6 flex items-center justify-center">
-        <div className="h-[300px] w-[300px] rounded-full bg-beige" />
+      <div className="pointer-events-none absolute inset-x-4 top-2 bottom-6 z-0 flex items-center justify-center -translate-x-[50px] -translate-y-[30px]">
+        <div className="h-[320px] w-[320px] rounded-full bg-beige" />
       </div>
 
       {/* coach */}
@@ -228,28 +228,24 @@ function MobileCoachVisual() {
         alt="مدرب لياقة بدنية"
         width={1024}
         height={1024}
-        className="absolute inset-x-6 bottom-0 z-10 h-[300px] w-auto max-w-none object-contain object-bottom"
+        className="absolute inset-x-6 bottom-[150px] z-10 h-[380px] w-auto max-w-none object-contain object-bottom"
       />
 
       {/* floating result cards — right side */}
-      <div className="absolute right-0 top-[6%] z-20 animate-float">
-        <MobileResultCard icon={TrendingDown} value="-12kg" label="خسارة دهون" tone="success" />
-      </div>
-      <div
-        className="absolute right-0 top-[34%] z-20 animate-float"
-        style={{ animationDelay: "0.8s" }}
-      >
-        <MobileResultCard icon={TrendingUp} value="+4.7kg" label="كتلة عضلية" tone="primary" />
-      </div>
-      <div
-        className="absolute right-0 top-[58%] z-20 animate-float"
-        style={{ animationDelay: "1.6s" }}
-      >
-        <MobileResultCard icon={Zap} value="+85%" label="طاقة ولياقة" tone="success" />
+      <div className="absolute -right-[50px] top-[6%] z-20 flex flex-col gap-5 -translate-y-[30px]">
+        <div className="animate-float">
+          <MobileResultCard icon={TrendingDown} value="-12kg" label="خسارة دهون" tone="success" />
+        </div>
+        <div className="animate-float" style={{ animationDelay: "0.8s" }}>
+          <MobileResultCard icon={TrendingUp} value="+4.7kg" label="كتلة عضلية" tone="primary" />
+        </div>
+        <div className="animate-float" style={{ animationDelay: "1.6s" }}>
+          <MobileResultCard icon={Zap} value="+85%" label="طاقة ولياقة" tone="success" />
+        </div>
       </div>
 
       {/* progress chart — bottom left */}
-      <div className="absolute bottom-0 left-0 z-20 w-[74%] max-w-[220px]">
+      <div className="absolute bottom-[150px] -left-[60px] z-10 w-[74%] max-w-[220px] opacity-90">
         <ProgressChart compact />
       </div>
     </div>
@@ -262,25 +258,15 @@ function MobileHero() {
   return (
     <div className="lg:hidden px-4 pb-8 pt-3">
       {/* 1. Headline */}
-      <h1 className="text-center font-[Tajawal] text-[38px] font-extrabold leading-[1.12] tracking-tight text-foreground">
-        احصل على برنامج
-        <br />
-        <span className="text-primary">تدريبي وغذائي</span>
-        <br />
-        مخصص لهدفك
+      <h1 className="mt-[5px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground">
+        أحصل على برنامج تدريبي وغذائي
+        <span className="mt-[2px] block text-primary">مخصص لهدفك %100</span>
       </h1>
 
       {/* 3. Subtitle */}
-      <p className="mx-auto mt-2 max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
-        اكتشف خلال دقائق الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.
+      <p className="mx-auto mt-[1px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
+        أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
       </p>
-
-      {/* Feature cards — single row */}
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {mobileFeatures.map((f) => (
-          <MobileFeatureCard key={f.label} {...f} />
-        ))}
-      </div>
 
       {/* Coach visual */}
       <div className="mt-2">
@@ -289,7 +275,7 @@ function MobileHero() {
 
       <Link
         to="/quiz"
-        className="mt-4 flex h-[52px] w-full items-center rounded-full cta-gradient px-2 shadow-cta [direction:ltr]"
+        className="relative z-10 -mt-[8px] flex h-[52px] w-full items-center rounded-full cta-gradient px-2 shadow-cta [direction:ltr]"
       >
         <span className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white">
           <ArrowLeft className="h-4 w-4 text-primary" strokeWidth={2.5} />
@@ -301,6 +287,13 @@ function MobileHero() {
       </Link>
 
       <MobileSocialProof avatars={avatars} />
+
+      {/* Feature cards — single row */}
+      <div className="-mt-[3px] grid grid-cols-4 gap-2">
+        {mobileFeatures.map((f) => (
+          <MobileFeatureCard key={f.label} {...f} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -318,15 +311,13 @@ function DesktopHero() {
           </div>
 
           <h1 className="mt-5 font-[Tajawal] font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
-            احصل على برنامج
+            أحصل على برنامج تدريبي وغذائي
             <br />
-            <span className="text-primary">تدريبي وغذائي</span>
-            <br />
-            مخصص لهدفك
+            <span className="text-primary">مخصص لهدفك %100</span>
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 lg:mr-0 leading-relaxed">
-            اكتشف خلال دقائق الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.
+            أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
           </p>
 
           <div className="mt-7 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-xl mx-auto lg:mx-0 lg:mr-0">
