@@ -1,5 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, MessageCircle } from "lucide-react";
+import { Menu, MessageCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -30,8 +29,15 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 lg:h-24 flex items-center justify-between gap-3 lg:gap-4">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 lg:h-24 flex items-center justify-between gap-3 max-lg:[direction:ltr] lg:gap-4">
         <Logo />
+
+        <span
+          className="pointer-events-none absolute left-1/2 top-1/2 inline-flex -translate-y-1/2 translate-x-[calc(-50%+20px)] items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 font-[Tajawal] text-[11px] font-medium text-primary lg:hidden"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          برنامج مخصص 100% لك
+        </span>
 
         <nav className="hidden lg:flex items-center gap-8">
           {navItems.map((item) => (
@@ -62,30 +68,13 @@ export function Header() {
           </a>
         </div>
 
-        <div className="flex lg:hidden items-center gap-2 min-w-0">
-          <Link
-            to="/quiz"
-            className="inline-flex shrink-0 items-center rounded-full cta-gradient px-3 py-2 text-[11px] font-bold text-white shadow-cta"
-          >
-            ابدأ التقييم المجاني
-          </Link>
-          <a
-            href={whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="تواصل عبر واتساب"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-primary text-primary"
-          >
-            <MessageCircle className="h-5 w-5" strokeWidth={1.75} />
-          </a>
-          <button
-            onClick={() => setOpen((o) => !o)}
-            aria-label="Menu"
-            className="grid h-11 w-11 place-items-center rounded-full border border-border text-foreground bg-background"
-          >
-            <Menu className="h-5 w-5" strokeWidth={2} />
-          </button>
-        </div>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Menu"
+          className="grid h-11 w-11 place-items-center rounded-full border border-border text-foreground bg-background lg:hidden"
+        >
+          <Menu className="h-5 w-5" strokeWidth={2} />
+        </button>
 
       </div>
 

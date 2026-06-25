@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -12,7 +13,10 @@ import {
   Zap,
   Star,
 } from "lucide-react";
-import { formatSocialProofClientCount } from "@/lib/social-proof";
+import {
+  SOCIAL_PROOF_CLIENT_COUNT,
+  formatSocialProofClientCount,
+} from "@/lib/social-proof";
 import { ProgressChart } from "./ProgressChart";
 import coachImg from "@/assets/coach.png";
 import avatar1 from "@/assets/avatar1.jpg";
@@ -34,6 +38,99 @@ const mobileFeatures = [
   { icon: Utensils, label: "خطة تغذية مخصصة" },
   { icon: Dumbbell, label: "خطة تدريب مخصصة" },
 ];
+
+const CLIENT_COUNT_LABEL = formatSocialProofClientCount();
+
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function useInViewOnce<T extends HTMLElement>(threshold = 0.25) {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || inView) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { threshold },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [inView, threshold]);
+  return { ref, inView };
+}
+
+function useAnimatedClientCount(active: boolean, duration = 2500) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = easeOutCubic(t);
+      setValue(Math.round(eased * SOCIAL_PROOF_CLIENT_COUNT));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, duration]);
+  return value;
+}
+
+function AnimatedClientCount({ active }: { active: boolean }) {
+  const count = useAnimatedClientCount(active);
+  return (
+    <span
+      className="inline-block min-w-[4.5rem] text-left font-[Tajawal] text-[13px] font-extrabold tabular-nums text-success"
+      aria-label={CLIENT_COUNT_LABEL}
+    >
+      +{count.toLocaleString("en-US")}
+    </span>
+  );
+}
+
+function MobileSocialProof({ avatars }: { avatars: string[] }) {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.2);
+
+  return (
+    <div ref={ref} className="mt-3 flex items-center justify-center gap-3 [direction:ltr]">
+      <div className="flex shrink-0 -space-x-2">
+        {avatars.map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt=""
+            width={36}
+            height={36}
+            loading="lazy"
+            className="h-9 w-9 rounded-full border-2 border-white object-cover"
+          />
+        ))}
+      </div>
+      <div className="flex flex-col items-start gap-0.5">
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className="h-3.5 w-3.5 fill-success text-success" />
+          ))}
+          <AnimatedClientCount active={inView} />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
+            عميل حققوا نتائج مذهلة
+          </span>
+          <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function FeatureCard({ icon: Icon, label }: { icon: typeof Dumbbell; label: string }) {
   return (
@@ -164,16 +261,8 @@ function MobileHero() {
 
   return (
     <div className="lg:hidden px-4 pb-8 pt-3">
-      {/* 1. Badge */}
-      <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 font-[Tajawal] text-[11px] font-medium text-primary">
-          <Sparkles className="h-3.5 w-3.5" />
-          برنامج مخصص 100% لك
-        </span>
-      </div>
-
-      {/* 2. Headline */}
-      <h1 className="mt-2 text-center font-[Cairo] text-[38px] font-extrabold leading-[1.12] tracking-tight text-foreground">
+      {/* 1. Headline */}
+      <h1 className="text-center font-[Tajawal] text-[38px] font-extrabold leading-[1.12] tracking-tight text-foreground">
         احصل على برنامج
         <br />
         <span className="text-primary">تدريبي وغذائي</span>
@@ -186,7 +275,18 @@ function MobileHero() {
         اكتشف خلال دقائق الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.
       </p>
 
-      {/* 4. CTA — above the fold on mobile */}
+      {/* Feature cards — single row */}
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {mobileFeatures.map((f) => (
+          <MobileFeatureCard key={f.label} {...f} />
+        ))}
+      </div>
+
+      {/* Coach visual */}
+      <div className="mt-2">
+        <MobileCoachVisual />
+      </div>
+
       <Link
         to="/quiz"
         className="mt-4 flex h-[52px] w-full items-center rounded-full cta-gradient px-2 shadow-cta [direction:ltr]"
@@ -200,50 +300,7 @@ function MobileHero() {
         <span className="w-9 shrink-0" aria-hidden />
       </Link>
 
-      {/* 5. Social proof */}
-      <div className="mt-3 flex items-center justify-center gap-3 [direction:ltr]">
-        <div className="flex shrink-0 -space-x-2">
-          {avatars.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt=""
-              width={36}
-              height={36}
-              loading="lazy"
-              className="h-9 w-9 rounded-full border-2 border-white object-cover"
-            />
-          ))}
-        </div>
-        <div className="flex flex-col items-start gap-0.5">
-          <div className="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-3.5 w-3.5 fill-success text-success" />
-            ))}
-            <span className="font-[Cairo] text-[13px] font-extrabold text-success">
-              {formatSocialProofClientCount()}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
-              عميل حققوا نتائج مذهلة
-            </span>
-            <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
-          </div>
-        </div>
-      </div>
-
-      {/* 6. Feature cards — single row */}
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {mobileFeatures.map((f) => (
-          <MobileFeatureCard key={f.label} {...f} />
-        ))}
-      </div>
-
-      {/* 7. Coach visual */}
-      <div className="mt-2">
-        <MobileCoachVisual />
-      </div>
+      <MobileSocialProof avatars={avatars} />
     </div>
   );
 }
@@ -260,7 +317,7 @@ function DesktopHero() {
             برنامج مخصص 100% لك
           </div>
 
-          <h1 className="mt-5 font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
+          <h1 className="mt-5 font-[Tajawal] font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
             احصل على برنامج
             <br />
             <span className="text-primary">تدريبي وغذائي</span>
