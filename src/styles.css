@@ -384,3 +384,49 @@
 @utility animate-included-block-lively {
   animation: trust-stat-shadow-float 4.8s ease-in-out infinite;
 }
+
+@keyframes stage-result-glass-glow {
+  0%,
+  100% {
+    transform: translateY(10px) scale(1);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 14px 36px -10px rgba(255, 107, 0, 0.42),
+      0 10px 28px -8px rgba(15, 23, 42, 0.14);
+  }
+  50% {
+    transform: translateY(18px) scale(1.03);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 1) inset,
+      0 26px 52px -8px rgba(255, 107, 0, 0.58),
+      0 22px 44px -6px rgba(255, 107, 0, 0.22);
+  }
+}
+
+@keyframes stage-result-glass-glow-success {
+  0%,
+  100% {
+    transform: translateY(10px) scale(1);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.95) inset,
+      0 14px 36px -10px rgba(34, 197, 94, 0.38),
+      0 10px 28px -8px rgba(15, 23, 42, 0.14);
+  }
+  50% {
+    transform: translateY(18px) scale(1.03);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 1) inset,
+      0 26px 52px -8px rgba(34, 197, 94, 0.52),
+      0 22px 44px -6px rgba(34, 197, 94, 0.2);
+  }
+}
+
+@utility animate-stage-result-glass-glow {
+  animation: stage-result-glass-glow 3.4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@utility animate-stage-result-glass-glow-success {
+  animation: stage-result-glass-glow-success 3.4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}

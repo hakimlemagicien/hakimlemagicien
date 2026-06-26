@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import coachOnline from "@/assets/coach-online.jpg";
 import coachGym from "@/assets/coach-gym.jpg";
+import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -219,41 +220,43 @@ export default function ChooseTraining() {
         </div>
 
         {/* BENEFITS */}
-        <div
+        <DarkPremiumPanel
           ref={benefits.ref}
-          className={`mt-14 md:mt-16 rounded-[40px] bg-[#FAF6F2] px-5 py-10 md:px-10 md:py-14 transition-all duration-700 ease-out ${
-            benefits.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
+          active={benefits.inView}
+          className="mt-14 md:mt-16"
+          innerClassName="px-5 py-10 md:px-10 md:py-14"
         >
           <div className="flex items-center justify-center gap-4">
-            <span className="hidden sm:block h-[2px] w-12 bg-orange-300" />
-            <h3 className="text-2xl md:text-3xl font-black text-neutral-900 text-center">
+            <span className="hidden h-[2px] w-12 bg-gradient-to-r from-transparent via-[#FF6B00]/50 to-transparent sm:block" />
+            <h3 className="text-center text-2xl font-black text-white/95 md:text-3xl [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
               كلا الخيارين يضمنان لك
             </h3>
-            <span className="hidden sm:block h-[2px] w-12 bg-orange-300" />
+            <span className="hidden h-[2px] w-12 bg-gradient-to-l from-transparent via-[#FF6B00]/50 to-transparent sm:block" />
           </div>
 
-          <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-4">
+          <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-4 lg:grid-cols-5">
             {BENEFITS.map((b, i) => {
               const Icon = b.Icon;
               return (
                 <div
                   key={b.title}
-                  className={`text-center px-3 transition-all duration-500 ease-out ${
+                  className={`px-3 text-center transition-all duration-500 ease-out ${
                     benefits.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                  } ${i > 0 ? "lg:border-r lg:border-orange-200/60" : ""}`}
+                  } ${i > 0 ? "lg:border-r lg:border-white/12" : ""}`}
                   style={{ transitionDelay: `${i * 90}ms` }}
                 >
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-white text-orange-500 shadow-[0_8px_20px_-10px_rgba(0,0,0,0.15)]">
+                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-white/15 bg-white/10 text-[#FF8A3D] shadow-[0_8px_20px_-10px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
                     <Icon className="h-6 w-6" strokeWidth={2.2} />
                   </div>
-                  <h4 className="mt-4 text-sm md:text-base font-extrabold text-neutral-900">{b.title}</h4>
-                  <p className="mt-2 text-xs md:text-[13px] leading-loose text-neutral-500">{b.text}</p>
+                  <h4 className="mt-4 text-sm font-extrabold text-white md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                    {b.title}
+                  </h4>
+                  <p className="mt-2 text-xs leading-loose text-white/75 md:text-[13px]">{b.text}</p>
                 </div>
               );
             })}
           </div>
-        </div>
+        </DarkPremiumPanel>
       </div>
 
       <style>{`

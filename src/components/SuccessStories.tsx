@@ -5,6 +5,7 @@ import t1 from "@/assets/transform-1.jpg";
 import t2 from "@/assets/transform-2.jpg";
 import t3 from "@/assets/transform-3.jpg";
 import t4 from "@/assets/transform-4.jpg";
+import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -184,19 +185,19 @@ function StatItem({ stat, index, inView }: { stat: Stat; index: number; inView: 
     <div
       className={`flex items-center justify-center gap-5 px-4 transition-all duration-500 ease-out ${
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      } ${index > 0 ? "lg:border-r lg:border-orange-200/60" : ""}`}
+      } ${index > 0 ? "lg:border-r lg:border-white/12" : ""}`}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
-      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white ring-2 ring-orange-100 text-orange-500 shadow-[0_8px_20px_-10px_rgba(249,115,22,0.4)]">
+      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-[#FF8A3D] shadow-[0_8px_20px_-10px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
         <Icon className="h-7 w-7" strokeWidth={2.2} />
       </div>
       <div className="text-right">
-        <div className="text-2xl md:text-3xl font-black text-neutral-900">
+        <div className="text-2xl font-black text-white md:text-3xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
           {stat.prefix}
           {count.toLocaleString("en-US")}
           {stat.suffix}
         </div>
-        <p className="mt-1 text-xs md:text-[13px] text-neutral-500 leading-snug">{stat.text}</p>
+        <p className="mt-1 text-xs leading-snug text-white/75 md:text-[13px]">{stat.text}</p>
       </div>
     </div>
   );
@@ -251,18 +252,18 @@ export default function SuccessStories() {
         </div>
 
         {/* STATS */}
-        <div
+        <DarkPremiumPanel
           ref={stats.ref}
-          className={`mt-14 md:mt-16 rounded-[36px] bg-[#FAF6F2] px-5 py-10 md:px-8 md:py-12 transition-all duration-700 ease-out ${
-            stats.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
+          active={stats.inView}
+          className="mt-14 md:mt-16"
+          innerClassName="px-5 py-10 md:px-8 md:py-12"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-2">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-2">
             {STATS.map((s, i) => (
               <StatItem key={s.text} stat={s} index={i} inView={stats.inView} />
             ))}
           </div>
-        </div>
+        </DarkPremiumPanel>
       </div>
     </section>
   );

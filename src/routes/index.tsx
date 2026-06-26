@@ -5,7 +5,6 @@ import { HeroProblemTransition } from "@/components/HeroProblemTransition";
 import { TrustStatistics } from "@/components/TrustStatistics";
 import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
-import CustomProgram from "@/components/CustomProgram";
 import HowItWorks from "@/components/HowItWorks";
 import WhatYouGet from "@/components/WhatYouGet";
 import ChooseTraining from "@/components/ChooseTraining";
@@ -42,7 +41,6 @@ function Index() {
         <HeroProblemTransition />
         <div className="bg-[linear-gradient(180deg,#F3EFE8_0%,#F7F5F2_30%,#FAF8F5_55%,#FFFFFF_92%)]">
           <ProblemSection />
-          <CustomProgram />
         </div>
         <HowItWorks />
         <Results90 />

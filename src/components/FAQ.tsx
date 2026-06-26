@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import coachSupport from "@/assets/coach-support.jpg";
+import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -213,44 +214,48 @@ export default function FAQ() {
         </div>
 
         {/* BOTTOM TRUST */}
-        <div
+        <DarkPremiumPanel
           ref={trust.ref}
-          className={`mt-14 md:mt-16 rounded-[36px] bg-[#FAF6F2] px-5 py-8 md:px-10 md:py-10 transition-all duration-700 ease-out ${
-            trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
+          active={trust.inView}
+          className="mt-14 md:mt-16"
+          innerClassName="px-5 py-8 md:px-10 md:py-10"
         >
           <div className="grid items-center gap-8 md:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1.2fr)]">
-            {/* Shield */}
             <div className="flex justify-center md:justify-start">
               <div className="relative">
-                <span className="absolute inset-0 rounded-full bg-orange-200/40 blur-xl animate-pulse" />
-                <div className="relative grid h-20 w-20 place-items-center rounded-2xl bg-white text-orange-500 ring-2 ring-orange-100 shadow-[0_10px_30px_-10px_rgba(249,115,22,0.4)]">
+                <span className="absolute inset-0 rounded-full bg-[#FF6B00]/30 blur-xl animate-warning-card-outer-glow" />
+                <div
+                  className="relative grid h-20 w-20 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
+                  }}
+                >
                   <ShieldCheck className="h-9 w-9" strokeWidth={2.2} />
                 </div>
               </div>
             </div>
 
-            {/* Headline + desc */}
             <div className="text-center md:text-right">
-              <h3 className="text-xl md:text-2xl font-black text-neutral-900">رضاك هو أولويتنا</h3>
-              <p className="mt-2 text-sm leading-loose text-neutral-500 max-w-md mx-auto md:mx-0">
+              <h3 className="text-xl font-black text-white/95 md:text-2xl [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+                رضاك هو أولويتنا
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-loose text-white/75 md:mx-0">
                 نضمن لك تجربة احترافية، دعم مستمر، ونتائج حقيقية أو نعمل معك حتى تحقق هدفك.
               </p>
             </div>
 
-            {/* divider */}
-            <span className="hidden md:block h-20 w-px bg-orange-200/70" />
+            <span className="hidden h-20 w-px bg-white/15 md:block" />
 
-            {/* trust features */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-2">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-2">
               {TRUST.map((t) => {
                 const Icon = t.Icon;
                 return (
                   <div key={t.label} className="text-center">
-                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white text-orange-500 ring-2 ring-orange-100 shadow-[0_8px_20px_-10px_rgba(249,115,22,0.3)]">
+                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-white/10 text-[#FF8A3D] shadow-[0_8px_20px_-10px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
                       <Icon className="h-5 w-5" strokeWidth={2.2} />
                     </div>
-                    <div className="mt-2 text-xs md:text-[13px] font-extrabold text-neutral-900 leading-tight">
+                    <div className="mt-2 text-xs font-extrabold leading-tight text-white md:text-[13px] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
                       {t.label}
                     </div>
                   </div>
@@ -258,7 +263,7 @@ export default function FAQ() {
               })}
             </div>
           </div>
-        </div>
+        </DarkPremiumPanel>
       </div>
 
       <style>{`

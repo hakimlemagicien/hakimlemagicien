@@ -313,9 +313,20 @@ export function HowItWorks() {
 
       <div className="container mx-auto px-4 -mt-[30px]">
         <div className="text-center max-w-2xl mx-auto -mt-[30px]">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight">
-            كيف <span className="text-primary">يعمل</span> التقييم؟
+          <h2 className="origin-top text-[44px] font-[Tajawal] font-extrabold leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]">
+            كيف <span className="inline-block translate-y-[2px] text-primary">يعمل</span> التقييم؟
           </h2>
+          <div
+            aria-hidden
+            className="relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden sm:max-w-sm lg:max-w-md"
+          >
+            <div className="h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" />
+            {secIn && (
+              <span
+                className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
+              />
+            )}
+          </div>
           <p className="mt-2 text-sm text-muted-foreground sm:mt-4 sm:text-base">
             عملية بسيطة وسريعة للحصول على برنامجك المخصص بخطوات مدروسة.
           </p>

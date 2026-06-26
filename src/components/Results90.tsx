@@ -14,6 +14,7 @@ import {
 import stage1Img from "@/assets/stage1.png";
 import stage2Img from "@/assets/stage2.png";
 import stage3Img from "@/assets/stage3.png";
+import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
 
 type Stage = {
   phase: string;
@@ -169,11 +170,22 @@ export function Results90() {
             <Sparkles className="h-4 w-4" />
             نتائج حقيقية خلال 90 يوم
           </div>
-          <h2 className="mt-5 font-black text-foreground tracking-tight text-[40px] sm:text-6xl lg:text-[72px] leading-[1.05]">
+          <h2 className="origin-top mt-5 text-[44px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]">
             ماذا يمكنك تحقيقه
             <br />
-            <span className="text-primary">خلال 90 يوماً؟</span>
+            <span className="inline-block translate-y-[2px] text-primary">خلال 90 يوماً؟</span>
           </h2>
+          <div
+            aria-hidden
+            className="relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden sm:max-w-sm lg:max-w-md"
+          >
+            <div className="h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" />
+            {inView && (
+              <span
+                className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
+              />
+            )}
+          </div>
           <p className="mt-5 text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed">
             برنامجك المخصص مصمم لمساعدتك على تحقيق أفضل نتائج في وقت قياسي وبشكل صحي ومستدام.
           </p>
@@ -237,16 +249,16 @@ export function Results90() {
 
         {/* Mobile: vertical timeline + stacked cards */}
         <div className="mt-12 lg:hidden relative">
-          <div className="absolute right-6 top-6 bottom-6 w-[2px] border-r-2 border-dashed border-primary/25" />
+          <div className="absolute right-[22px] top-5 bottom-5 w-[2px] border-r-2 border-dashed border-primary/25" />
           <div
-            className="absolute right-6 top-6 w-[2px] border-r-2 border-dashed border-primary transition-[height] duration-[1800ms] ease-out"
-            style={{ height: inView ? "calc(100% - 3rem)" : "0%" }}
+            className="absolute right-[22px] top-5 w-[2px] border-r-2 border-dashed border-primary transition-[height] duration-[1800ms] ease-out"
+            style={{ height: inView ? "calc(100% - 2.5rem)" : "0%" }}
           />
-          <ol className="space-y-6">
+          <ol className="space-y-4">
             {STAGES.map((s, i) => (
               <li
                 key={s.dayNumber}
-                className="relative pr-20"
+                className="relative pr-[4.5rem]"
                 style={{
                   opacity: inView ? 1 : 0,
                   transform: inView ? "translateY(0)" : "translateY(20px)",
@@ -255,13 +267,13 @@ export function Results90() {
                 }}
               >
                 <div
-                  className={`absolute right-0 top-6 grid h-14 w-14 place-items-center rounded-full text-white font-black ring-4 ring-background shadow-[0_8px_20px_-6px_rgba(249,115,22,0.55)] animate-pulse-soft ${
+                  className={`absolute right-0 top-4 grid h-12 w-12 place-items-center rounded-full text-white font-black ring-[3px] ring-background shadow-[0_6px_16px_-4px_rgba(249,115,22,0.5)] animate-pulse-soft ${
                     s.badgeTone === "success" ? "bg-success" : "bg-primary"
                   }`}
                 >
                   <div className="text-center leading-none">
-                    <div className="text-base">{s.dayNumber}</div>
-                    <div className="text-[10px] font-bold mt-0.5 opacity-90">يوم</div>
+                    <div className="text-sm">{s.dayNumber}</div>
+                    <div className="text-[9px] font-bold mt-0.5 opacity-90">يوم</div>
                   </div>
                 </div>
                 <StageCard stage={s} index={i} active={inView} mobile />
@@ -294,7 +306,12 @@ function StageCard({
 
   return (
     <div
-      className="group relative rounded-[28px] bg-white border border-border/40 shadow-card p-6 lg:p-7 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_24px_60px_-15px_rgba(0,0,0,0.18)]"
+      className={[
+        "group relative flex flex-col overflow-visible bg-white border border-border/40 shadow-card transition-all duration-500",
+        mobile
+          ? "mb-3 rounded-2xl p-3.5 ring-1 ring-neutral-100/70 shadow-[0_4px_18px_-10px_rgba(15,23,42,0.08)]"
+          : "mb-4 rounded-[28px] p-6 lg:p-7 hover:-translate-y-2 hover:shadow-[0_24px_60px_-15px_rgba(0,0,0,0.18)]",
+      ].join(" ")}
       style={{
         opacity: active ? 1 : 0,
         transform: active ? "translateY(0)" : "translateY(28px)",
@@ -302,85 +319,156 @@ function StageCard({
         transitionDelay: `${600 + index * 150}ms`,
       }}
     >
-      {/* phase badge */}
-      <div className="flex justify-center">
-        <span
-          className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-extrabold ${
-            isSuccessBadge
-              ? "bg-success-soft text-success"
-              : "bg-primary-soft text-primary"
-          }`}
+      <div className={mobile ? "flex items-stretch gap-2" : "flex items-stretch gap-4"}>
+        {/* صورة بارزة — يمين (RTL) */}
+        <div
+          className={[
+            "relative shrink-0 self-stretch overflow-visible",
+            mobile ? "w-[40%] min-w-[100px] min-h-[128px]" : "w-[44%] min-w-[150px] min-h-[210px] lg:min-h-[230px]",
+          ].join(" ")}
         >
-          {stage.phase}
-        </span>
-      </div>
-
-      <h3 className="mt-4 text-center font-black text-foreground tracking-tight text-2xl lg:text-3xl">
-        {stage.title}
-      </h3>
-      <p className="mt-1 text-center text-sm text-muted-foreground font-medium">
-        {stage.days}
-      </p>
-
-      {/* image */}
-      <div className={`mt-4 relative mx-auto ${mobile ? "h-40 w-40" : "h-52 w-full"}`}>
-        <img
-          src={stage.image}
-          alt={stage.title}
-          width={768}
-          height={1024}
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-contain object-bottom animate-float-soft"
-          style={{ animationDelay: `${index * 0.6}s` }}
-        />
-      </div>
-
-      {/* checklist */}
-      <ul className="mt-4 space-y-2.5">
-        {stage.checks.map((c, i) => (
-          <li
-            key={c}
-            className="flex items-center justify-end gap-2 text-[15px] text-foreground/90"
-            style={{
-              opacity: active ? 1 : 0,
-              transform: active ? "translateX(0)" : "translateX(-8px)",
-              transition: "all 400ms ease-out",
-              transitionDelay: `${900 + index * 150 + i * 120}ms`,
-            }}
-          >
-            <span className="text-right">{c}</span>
-            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-success/15 text-success">
-              <Check className="h-3.5 w-3.5" strokeWidth={3} />
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {/* result badge */}
-      <div
-        className={`mt-5 flex items-center justify-end gap-3 rounded-2xl px-4 py-3 animate-glow-soft ${
-          resultPrimary ? "bg-primary-soft" : "bg-success-soft"
-        }`}
-      >
-        <div className="text-right">
-          <div
-            className={`font-black text-base leading-tight ${
-              resultPrimary ? "text-primary" : "text-success"
-            }`}
-          >
-            {stage.resultLine1}
-          </div>
-          <div className="text-xs text-muted-foreground font-bold mt-0.5">
-            {stage.resultLine2}
-          </div>
+          <img
+            src={stage.image}
+            alt={stage.title}
+            width={768}
+            height={1024}
+            loading="lazy"
+            className={[
+              "absolute bottom-0 left-0 right-0 w-full object-contain object-bottom animate-float-soft",
+              mobile ? "h-[125%] max-w-none" : "h-[118%] max-w-none",
+            ].join(" ")}
+            style={{ animationDelay: `${index * 0.6}s` }}
+          />
         </div>
+
+        {/* نص — يسار (RTL) */}
+        <div className="min-w-0 flex-1 flex flex-col">
+          <span
+            className={[
+              "inline-flex items-center rounded-full font-extrabold self-start",
+              mobile ? "px-3 py-1 text-[10px]" : "px-4 py-1.5 text-xs",
+              isSuccessBadge ? "bg-success-soft text-success" : "bg-primary-soft text-primary",
+            ].join(" ")}
+          >
+            {stage.phase}
+          </span>
+
+          <h3
+            className={[
+              "mt-2 text-right font-black text-foreground tracking-tight",
+              mobile ? "text-base leading-snug" : "mt-3 text-xl lg:text-2xl",
+            ].join(" ")}
+          >
+            {stage.title}
+          </h3>
+          <p
+            className={[
+              "text-right text-muted-foreground font-medium",
+              mobile ? "mt-0.5 text-[11px]" : "mt-1 text-sm",
+            ].join(" ")}
+          >
+            {stage.days}
+          </p>
+
+          <ul className={mobile ? "mt-2.5 space-y-1.5" : "mt-3 space-y-2"}>
+            {stage.checks.map((c, i) => (
+              <li
+                key={c}
+                className={[
+                  "flex items-center justify-end gap-2 text-foreground/90",
+                  mobile ? "text-[12px] leading-snug" : "text-[14px]",
+                ].join(" ")}
+                style={{
+                  opacity: active ? 1 : 0,
+                  transform: active ? "translateX(0)" : "translateX(-8px)",
+                  transition: "all 400ms ease-out",
+                  transitionDelay: `${900 + index * 150 + i * 120}ms`,
+                }}
+              >
+                <span className="text-right">{c}</span>
+                <span
+                  className={[
+                    "grid shrink-0 place-items-center rounded-full bg-success/15 text-success",
+                    mobile ? "h-4 w-4" : "h-5 w-5",
+                  ].join(" ")}
+                >
+                  <Check className={mobile ? "h-3 w-3" : "h-3.5 w-3.5"} strokeWidth={3} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className={mobile ? "relative z-10 mt-2 px-0.5" : "relative z-10 mt-3 px-1"}>
         <span
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-white shadow-md ${
-            resultPrimary ? "bg-primary" : "bg-success"
-          }`}
+          aria-hidden
+          className={[
+            "pointer-events-none absolute -inset-x-1 top-1 bottom-[-10px] rounded-2xl blur-2xl opacity-90",
+            resultPrimary ? "bg-[#FF6B00]/30 animate-warning-card-outer-glow" : "bg-[#22C55E]/25 animate-warning-card-outer-glow",
+          ].join(" ")}
+        />
+        <div
+          className={[
+            "relative mx-auto flex w-full max-w-[92%] items-center justify-center gap-2.5 overflow-hidden",
+            mobile ? "rounded-xl px-3 py-2.5" : "gap-3 rounded-2xl px-4 py-3",
+            "border border-white/75 bg-gradient-to-br from-white/85 via-white/55 to-white/35 backdrop-blur-md",
+            "ring-1 ring-white/60",
+            resultPrimary
+              ? "animate-stage-result-glass-glow"
+              : "animate-stage-result-glass-glow-success",
+          ].join(" ")}
         >
-          <ResultIcon className="h-5 w-5" />
-        </span>
+          <span
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl lg:rounded-2xl"
+            aria-hidden
+          >
+            <span
+              className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/45 to-transparent"
+            />
+          </span>
+          <span
+            className={[
+              "pointer-events-none absolute inset-0 rounded-xl lg:rounded-2xl animate-warning-card-inner-glow",
+              !resultPrimary && "opacity-80",
+            ].join(" ")}
+            aria-hidden
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"
+          />
+          <div className="relative z-10 text-center">
+            <div
+              className={[
+                "font-black leading-tight",
+                mobile ? "text-sm" : "text-base",
+                resultPrimary ? "text-primary" : "text-success",
+              ].join(" ")}
+            >
+              {stage.resultLine1}
+            </div>
+            <div
+              className={[
+                "text-muted-foreground font-bold",
+                mobile ? "text-[10px] mt-0.5" : "text-xs mt-0.5",
+              ].join(" ")}
+            >
+              {stage.resultLine2}
+            </div>
+          </div>
+          <span
+            className={[
+              "relative z-10 grid shrink-0 place-items-center rounded-full text-white",
+              mobile ? "h-9 w-9" : "h-11 w-11",
+              resultPrimary
+                ? "bg-primary shadow-[0_8px_22px_-4px_rgba(249,115,22,0.65)]"
+                : "bg-success shadow-[0_8px_22px_-4px_rgba(34,197,94,0.55)]",
+            ].join(" ")}
+          >
+            <ResultIcon className={mobile ? "h-4 w-4" : "h-5 w-5"} />
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -389,25 +477,27 @@ function StageCard({
 function BottomStats() {
   const { ref, inView } = useInView<HTMLDivElement>(0.3);
   return (
-    <div
+    <DarkPremiumPanel
       ref={ref}
-      className="mt-14 lg:mt-20 rounded-[32px] bg-beige p-6 sm:p-8 lg:p-10 border border-border/40"
+      active={inView}
+      className="mt-14 lg:mt-20"
+      innerClassName="sm:p-8 lg:p-10"
     >
-      <h3 className="text-center font-black text-foreground tracking-tight text-2xl sm:text-3xl lg:text-[34px]">
+      <h3 className="text-center font-black tracking-tight text-2xl text-white/95 sm:text-3xl lg:text-[34px] [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
         نتائج تتجاوز التوقعات
       </h3>
 
-      <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
         {STATS.map((s, i) => (
           <StatItem key={s.label} stat={s} index={i} active={inView} />
         ))}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-center gap-2 text-center text-xs sm:text-sm text-muted-foreground">
-        <Shield className="h-4 w-4 text-success shrink-0" />
+      <div className="mt-8 flex items-center justify-center gap-2 border-t border-white/10 pt-6 text-center text-xs text-white/75 sm:text-sm">
+        <Shield className="h-4 w-4 shrink-0 text-success" />
         <span>النتائج تختلف من شخص لآخر وتعتمد على الالتزام بالخطة الموصوفة والمتابعة المستمرة.</span>
       </div>
-    </div>
+    </DarkPremiumPanel>
   );
 }
 
@@ -432,16 +522,16 @@ function StatItem({
         transitionDelay: `${200 + index * 120}ms`,
       }}
     >
-      <span className="grid h-12 w-12 lg:h-14 lg:w-14 shrink-0 place-items-center rounded-full bg-white shadow-card">
-        <Icon className="h-6 w-6 text-success" strokeWidth={2} />
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-success shadow-[0_4px_16px_-6px_rgba(34,197,94,0.35)] ring-1 ring-[#22C55E]/20 backdrop-blur-sm lg:h-14 lg:w-14">
+        <Icon className="h-6 w-6" strokeWidth={2} />
       </span>
       <div className="text-right">
-        <div className="font-black text-foreground text-xl lg:text-2xl leading-none tabular-nums">
+        <div className="text-xl font-black leading-none tabular-nums text-white lg:text-2xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
           {stat.prefix}
           {stat.decimals ? value.toFixed(stat.decimals) : Math.round(value)}
           {stat.suffix}
         </div>
-        <div className="mt-1 text-xs lg:text-sm text-muted-foreground font-medium">
+        <div className="mt-1 text-xs font-medium text-white/75 lg:text-sm">
           {stat.label}
         </div>
       </div>
