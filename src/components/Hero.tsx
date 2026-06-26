@@ -132,7 +132,7 @@ function CyclingHeroLine({ className = "" }: { className?: string }) {
         <span className="invisible whitespace-nowrap select-none" aria-hidden>
           {HERO_WIDTH_HOLDER_PHRASE}
         </span>
-        <span className="absolute right-0 top-0 inline-flex translate-x-[50px] -translate-y-[10px] items-center gap-0.5 whitespace-nowrap">
+        <span className="absolute right-0 top-0 inline-flex translate-x-[55px] -translate-y-[20px] items-center gap-0.5 whitespace-nowrap">
           {displayed}
           <span
             className="inline-block h-[0.85em] w-[2px] shrink-0 animate-cursor-blink bg-[#FF6B00]"
@@ -352,7 +352,7 @@ function MobileCoachVisual() {
         alt="مدرب لياقة بدنية"
         width={1024}
         height={1024}
-        className="absolute inset-x-6 bottom-[150px] z-10 h-[380px] w-auto max-w-none object-contain object-bottom"
+        className="absolute inset-x-6 bottom-[150px] z-10 h-[400px] w-auto max-w-none object-contain object-bottom"
       />
 
       {/* floating result cards — right side */}
@@ -376,8 +376,65 @@ function MobileCoachVisual() {
   );
 }
 
-function MobileHero() {
+function HeroQuizCTA({ className = "" }: { className?: string }) {
+  return (
+    <Link
+      to="/quiz"
+      className={[
+        "relative flex h-[52px] w-full items-center overflow-hidden rounded-full cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse",
+        className,
+      ].join(" ")}
+    >
+      <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden>
+        <span
+          className="absolute inset-y-[-20%] left-0 h-[140%] w-[45%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"
+        />
+      </span>
+      <span className="relative z-10 ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white">
+        <ArrowLeft className="h-4 w-4 text-primary" strokeWidth={2.5} />
+      </span>
+      <span className="relative z-10 flex-1 text-center font-[Tajawal] text-[15px] font-extrabold text-white">
+        ابدأ تقييمك المجاني
+      </span>
+      <span className="relative z-10 w-9 shrink-0" aria-hidden />
+    </Link>
+  );
+}
+
+function HeroStickyQuizBar({ visible }: { visible: boolean }) {
+  return (
+    <div
+      className={[
+        "fixed inset-x-0 bottom-0 z-50 border-t border-white/70 bg-white/80 backdrop-blur-md px-4 pt-3 shadow-[0_-12px_40px_-10px_rgba(15,23,42,0.16)] pb-[max(1rem,env(safe-area-inset-bottom))] transition-[transform,opacity] duration-500 ease-out lg:hidden",
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0",
+      ].join(" ")}
+      role="region"
+      aria-label="ابدأ تقييمك المجاني"
+      aria-hidden={!visible}
+    >
+      <HeroQuizCTA />
+    </div>
+  );
+}
+
+function MobileHero({ onCtaOutOfView }: { onCtaOutOfView: (outOfView: boolean) => void }) {
   const avatars = [avatar1, avatar2, avatar3, avatar4];
+  const ctaAnchorRef = useRef<HTMLDivElement>(null);
+  const onCtaOutOfViewRef = useRef(onCtaOutOfView);
+  onCtaOutOfViewRef.current = onCtaOutOfView;
+
+  useEffect(() => {
+    const el = ctaAnchorRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => onCtaOutOfViewRef.current(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="lg:hidden px-4 pb-8 pt-3">
@@ -388,7 +445,7 @@ function MobileHero() {
       </h1>
 
       {/* 3. Subtitle */}
-      <p className="mx-auto -mt-[49px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
+      <p className="mx-auto -mt-[69px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
         أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
       </p>
 
@@ -403,22 +460,13 @@ function MobileHero() {
         <MobileCoachVisual />
       </div>
 
-      <Link
-        to="/quiz"
-        className="relative z-10 mt-[2px] flex h-[52px] w-full items-center rounded-full cta-gradient px-2 shadow-cta [direction:ltr]"
-      >
-        <span className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white">
-          <ArrowLeft className="h-4 w-4 text-primary" strokeWidth={2.5} />
-        </span>
-        <span className="flex-1 text-center font-[Cairo] text-[15px] font-extrabold text-white">
-          ابدأ تقييمك المجاني
-        </span>
-        <span className="w-9 shrink-0" aria-hidden />
-      </Link>
+      <div ref={ctaAnchorRef}>
+        <HeroQuizCTA className="relative z-10 mt-[2px]" />
+      </div>
 
       <MobileSocialProof avatars={avatars} />
 
-      <div className="-mx-4 mt-3 bg-[#FAF8F5] px-4 pt-4 pb-5">
+      <div className="mt-3 px-1 pt-2 pb-2">
         <TrustStatistics embedded />
       </div>
     </div>
@@ -501,23 +549,29 @@ function DesktopHero() {
 }
 
 export function Hero() {
-  return (
-    <section className="relative overflow-hidden bg-background">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-1/3 right-0 lg:right-auto lg:left-0 w-40 h-40 opacity-40"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, oklch(0.7 0.2 41 / 0.25) 1.2px, transparent 1.5px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
+  const [stickyCtaVisible, setStickyCtaVisible] = useState(false);
 
-      <MobileHero />
-      <div className="hidden lg:block">
-        <DesktopHero />
-      </div>
-    </section>
+  return (
+    <>
+      <section className="relative overflow-hidden bg-background">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-1/3 right-0 lg:right-auto lg:left-0 w-40 h-40 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, oklch(0.7 0.2 41 / 0.25) 1.2px, transparent 1.5px)",
+            backgroundSize: "14px 14px",
+          }}
+        />
+
+        <MobileHero onCtaOutOfView={setStickyCtaVisible} />
+        <div className="hidden lg:block">
+          <DesktopHero />
+        </div>
+      </section>
+
+      <HeroStickyQuizBar visible={stickyCtaVisible} />
+    </>
   );
 }
 

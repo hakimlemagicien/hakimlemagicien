@@ -1,4 +1,4 @@
-import { Menu, MessageCircle, Sparkles } from "lucide-react";
+import { Menu, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -31,13 +31,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 lg:h-24 flex items-center justify-between gap-3 max-lg:[direction:ltr] lg:gap-4">
         <Logo />
-
-        <span
-          className="pointer-events-none absolute left-1/2 top-1/2 inline-flex -translate-y-1/2 translate-x-[calc(-50%+20px)] items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1.5 font-[Tajawal] text-[11px] font-medium text-primary lg:hidden"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          برنامج مخصص 100% لك
-        </span>
 
         <nav className="hidden lg:flex items-center gap-8">
           {navItems.map((item) => (

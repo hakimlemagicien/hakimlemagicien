@@ -116,21 +116,8 @@ function TrustStatCard({
   const delay = STAGGER_DELAYS[index] ?? 0;
   const delayMs = Math.round(delay * 1000);
 
-  return (
-    <article
-      className={[
-        "group",
-        compact ? "w-full min-h-[140px] py-3" : "h-[170px] w-[170px] shrink-0 snap-center",
-        "flex flex-col items-center justify-center gap-1.5",
-        "rounded-[24px] border border-black/[0.04] bg-white",
-        "shadow-[0_8px_32px_-10px_rgba(0,0,0,0.08)]",
-        "transition-[transform,box-shadow] duration-300 ease-out",
-        "active:scale-[0.98] lg:active:scale-100",
-        "lg:hover:-translate-y-[6px] lg:hover:shadow-[0_20px_48px_-14px_rgba(0,0,0,0.14)]",
-        active ? "animate-trust-stat-enter" : "pointer-events-none opacity-0",
-      ].join(" ")}
-      style={{ animationDelay: `${delay}s` }}
-    >
+  const content = (
+    <>
       <div
         className={[
           "flex shrink-0 items-center justify-center rounded-full bg-[rgba(255,107,0,0.08)]",
@@ -163,6 +150,40 @@ function TrustStatCard({
       >
         {stat.label}
       </p>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <article
+        className={[
+          "w-full",
+          active ? "animate-trust-stat-enter" : "pointer-events-none opacity-0",
+        ].join(" ")}
+        style={{ animationDelay: `${delay}s` }}
+      >
+        <div className="flex min-h-[128px] w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-black/[0.04] bg-white px-1 py-2 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)]">
+          {content}
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article
+      className={[
+        "group h-[170px] w-[170px] shrink-0 snap-center",
+        "flex flex-col items-center justify-center gap-1.5",
+        "rounded-[24px] border border-black/[0.04] bg-white",
+        "shadow-[0_8px_32px_-10px_rgba(0,0,0,0.08)]",
+        "transition-[transform,box-shadow] duration-300 ease-out",
+        "active:scale-[0.98] lg:active:scale-100",
+        "lg:hover:-translate-y-[6px] lg:hover:shadow-[0_20px_48px_-14px_rgba(0,0,0,0.14)]",
+        active ? "animate-trust-stat-enter" : "pointer-events-none opacity-0",
+      ].join(" ")}
+      style={{ animationDelay: `${delay}s` }}
+    >
+      {content}
     </article>
   );
 }
@@ -181,7 +202,7 @@ export function TrustStatistics({
       ref={ref}
       className={[
         "w-full",
-        embedded ? "bg-transparent" : "bg-[#FAF8F5]",
+        embedded ? "bg-transparent" : "bg-[#FAF8F5] pb-0",
         className,
       ].join(" ")}
       aria-label="إحصائيات الثقة"

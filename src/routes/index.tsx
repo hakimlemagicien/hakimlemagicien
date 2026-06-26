@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { HeroProblemTransition } from "@/components/HeroProblemTransition";
 import { TrustStatistics } from "@/components/TrustStatistics";
 import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
@@ -38,6 +39,7 @@ function Index() {
       <main>
         <Hero />
         <TrustStatistics className="hidden lg:block" />
+        <HeroProblemTransition />
         <ProblemSection />
         <CustomProgram />
         <HowItWorks />
