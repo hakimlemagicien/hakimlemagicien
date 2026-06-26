@@ -18,6 +18,7 @@ import {
   formatSocialProofClientCount,
 } from "@/lib/social-proof";
 import { ProgressChart } from "./ProgressChart";
+import { TrustStatistics } from "./TrustStatistics";
 import coachImg from "@/assets/coach-photo.png";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
@@ -40,6 +41,108 @@ const mobileFeatures = [
 ];
 
 const CLIENT_COUNT_LABEL = formatSocialProofClientCount();
+
+const HERO_CYCLING_PHRASES = [
+  "مخصص لهدفك وجسدك 100% ",
+  "مصمم ليصنع أفضل نسخة منك ",
+  "يضمن لك النتيجة خلال 90 يوماً ",
+];
+
+const PHRASE_CYCLE_MS = 2500;
+const TYPE_INTERVAL_MS = 55;
+
+function splitGraphemes(text: string): string[] {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("ar", { granularity: "grapheme" });
+    return Array.from(segmenter.segment(text), (s) => s.segment);
+  }
+  return Array.from(text);
+}
+
+const HERO_WIDTH_HOLDER_PHRASE = HERO_CYCLING_PHRASES.reduce((longest, phrase) =>
+  splitGraphemes(phrase).length > splitGraphemes(longest).length ? phrase : longest,
+);
+
+const HERO_LINE_FONT_CLASS =
+  "font-[Tajawal] text-[clamp(20px,5vw,76px)] sm:text-[clamp(28px,5.5vw,92px)] lg:text-[clamp(48px,6.5vw,118px)] leading-none text-[#FF6B00]";
+
+function CyclingHeroLine({ className = "" }: { className?: string }) {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  const graphemes = splitGraphemes(HERO_CYCLING_PHRASES[phraseIndex]);
+  const displayed = graphemes.slice(0, charIndex).join("");
+
+  useEffect(() => {
+    setCharIndex(0);
+    setVisible(true);
+
+    const graphemeCount = splitGraphemes(HERO_CYCLING_PHRASES[phraseIndex]).length;
+    const cycleStart = performance.now();
+    let count = 0;
+    let typeInterval: ReturnType<typeof setInterval> | undefined;
+    let switchTimeout: ReturnType<typeof setTimeout> | undefined;
+    let fadeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    typeInterval = window.setInterval(() => {
+      count += 1;
+      setCharIndex(count);
+
+      if (count >= graphemeCount) {
+        window.clearInterval(typeInterval);
+        const elapsed = performance.now() - cycleStart;
+        const holdMs = Math.max(400, PHRASE_CYCLE_MS - elapsed);
+
+        switchTimeout = window.setTimeout(() => {
+          setVisible(false);
+          fadeTimeout = window.setTimeout(() => {
+            setPhraseIndex((prev) => (prev + 1) % HERO_CYCLING_PHRASES.length);
+          }, 280);
+        }, holdMs);
+      }
+    }, TYPE_INTERVAL_MS);
+
+    return () => {
+      if (typeInterval) window.clearInterval(typeInterval);
+      if (switchTimeout) window.clearTimeout(switchTimeout);
+      if (fadeTimeout) window.clearTimeout(fadeTimeout);
+    };
+  }, [phraseIndex]);
+
+  return (
+    <div
+      className={[
+        "flex h-[76px] w-full translate-x-[10px] -translate-y-[30px] items-center justify-end",
+        "sm:h-[92px] lg:h-[118px]",
+        className,
+      ].join(" ")}
+    >
+      <div
+        dir="rtl"
+        lang="ar"
+        className={[
+          "relative inline-block max-w-full text-right",
+          HERO_LINE_FONT_CLASS,
+          "transition-opacity duration-300",
+          visible ? "opacity-100" : "opacity-0",
+        ].join(" ")}
+        aria-live="polite"
+      >
+        <span className="invisible whitespace-nowrap select-none" aria-hidden>
+          {HERO_WIDTH_HOLDER_PHRASE}
+        </span>
+        <span className="absolute right-0 top-0 inline-flex translate-x-[50px] -translate-y-[10px] items-center gap-0.5 whitespace-nowrap">
+          {displayed}
+          <span
+            className="inline-block h-[0.85em] w-[2px] shrink-0 animate-cursor-blink bg-[#FF6B00]"
+            aria-hidden
+          />
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -141,13 +244,34 @@ function FeatureCard({ icon: Icon, label }: { icon: typeof Dumbbell; label: stri
   );
 }
 
-function MobileFeatureCard({ icon: Icon, label }: { icon: typeof Dumbbell; label: string }) {
+function MobileFeatureCard({
+  icon: Icon,
+  label,
+  index = 0,
+}: {
+  icon: typeof Dumbbell;
+  label: string;
+  index?: number;
+}) {
   return (
-    <div className="flex h-[84px] flex-col items-center justify-center rounded-xl bg-white px-1 py-2 text-center shadow-[0_4px_16px_-6px_rgba(0,0,0,0.08)]">
-      <Icon className="h-6 w-6 text-primary" strokeWidth={2} />
-      <p className="mt-1.5 font-[Tajawal] text-[9px] font-medium leading-tight text-foreground">
+    <div className="flex h-[36px] min-w-0 flex-row items-center gap-1 overflow-hidden rounded-lg border border-black/[0.04] bg-white px-1.5 py-0.5 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)] [direction:ltr]">
+      <div
+        className="relative h-[22px] w-[22px] shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#FF6B00]/20 via-[#FF6B00]/10 to-[#FF6B00]/5 animate-feature-icon-glow"
+        style={{ animationDelay: `${index * 0.35}s` }}
+      >
+        <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+          <span
+            className="absolute -inset-y-3 -left-1/2 h-[200%] w-[200%] animate-feature-icon-shine bg-gradient-to-r from-transparent via-white/70 to-transparent"
+            style={{ animationDelay: `${index * 0.35 + 0.5}s` }}
+          />
+        </span>
+        <span className="relative z-10 flex h-full w-full items-center justify-center">
+          <Icon className="h-3 w-3 text-[#FF6B00]" strokeWidth={2.25} />
+        </span>
+      </div>
+      <span className="min-w-0 flex-1 truncate text-right font-[Tajawal] text-[7px] font-medium leading-none whitespace-nowrap text-foreground">
         {label}
-      </p>
+      </span>
     </div>
   );
 }
@@ -258,15 +382,21 @@ function MobileHero() {
   return (
     <div className="lg:hidden px-4 pb-8 pt-3">
       {/* 1. Headline */}
-      <h1 className="mt-[5px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground">
+      <h1 className="mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground">
         أحصل على برنامج تدريبي وغذائي
-        <span className="mt-[2px] block text-primary">مخصص لهدفك %100</span>
+        <CyclingHeroLine className="mt-[30px]" />
       </h1>
 
       {/* 3. Subtitle */}
-      <p className="mx-auto mt-[1px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
+      <p className="mx-auto -mt-[49px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
         أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
       </p>
+
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
+        {mobileFeatures.map((f, i) => (
+          <MobileFeatureCard key={f.label} {...f} index={i} />
+        ))}
+      </div>
 
       {/* Coach visual */}
       <div className="mt-2">
@@ -288,11 +418,8 @@ function MobileHero() {
 
       <MobileSocialProof avatars={avatars} />
 
-      {/* Feature cards — single row */}
-      <div className="-mt-[3px] grid grid-cols-4 gap-2">
-        {mobileFeatures.map((f) => (
-          <MobileFeatureCard key={f.label} {...f} />
-        ))}
+      <div className="-mx-4 mt-3 bg-[#FAF8F5] px-4 pt-4 pb-5">
+        <TrustStatistics embedded />
       </div>
     </div>
   );
@@ -313,7 +440,7 @@ function DesktopHero() {
           <h1 className="mt-5 font-[Tajawal] font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
             أحصل على برنامج تدريبي وغذائي
             <br />
-            <span className="text-primary">مخصص لهدفك %100</span>
+            <CyclingHeroLine />
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 lg:mr-0 leading-relaxed">
