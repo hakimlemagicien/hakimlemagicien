@@ -68,89 +68,164 @@ const trustFeatures = [
   { Icon: Target, title: "دقيق", text: "تحليل شامل لبياناتك" },
 ];
 
-function PhoneMockup() {
-  const progress = 50;
-  const r = 54;
-  const c = 2 * Math.PI * r;
-  const dash = (progress / 100) * c;
+const ASSESSMENT_CHECKLIST = [
+  { label: "المعلومات الأساسية", progress: 25 },
+  { label: "الهدف والمدة", progress: 50 },
+  { label: "النشاط الحالي", progress: 75 },
+  { label: "التغذية ونمط الحياة", progress: 100 },
+];
 
-  const checklist = [
-    { label: "المعلومات الأساسية", done: true },
-    { label: "الهدف والمدة", done: true },
-    { label: "النشاط الحالي", done: false },
-    { label: "التغذية ونمط الحياة", done: false },
-  ];
+const STEP_INTERVAL_MS = 2500;
+const PROGRESS_R = 54;
+const PROGRESS_C = 2 * Math.PI * PROGRESS_R;
+
+function PhoneMockup({
+  activeStep,
+  compact = false,
+}: {
+  activeStep: number;
+  compact?: boolean;
+}) {
+  const progress = ASSESSMENT_CHECKLIST[activeStep].progress;
+  const dash = (progress / 100) * PROGRESS_C;
+  const prevProgressRef = useRef(progress);
+  const [pulseKey, setPulseKey] = useState(0);
+
+  useEffect(() => {
+    if (prevProgressRef.current !== progress) {
+      prevProgressRef.current = progress;
+      setPulseKey((k) => k + 1);
+    }
+  }, [progress]);
+
+  const shellW = compact ? "w-[220px]" : "w-[280px] sm:w-[300px]";
+  const beigeSize = compact ? "w-[280px] h-[280px]" : "w-[360px] h-[360px]";
+  const ringBox = compact ? "w-[112px] h-[112px]" : "w-[140px] h-[140px]";
+  const pctText = compact ? "text-xl" : "text-2xl";
 
   return (
-    <div className="relative mx-auto w-[280px] sm:w-[300px] animate-float-phone">
-      {/* Soft beige circle behind */}
+    <div className={`relative mx-auto ${shellW} animate-float-phone font-[Tajawal,Cairo,sans-serif]`}>
       <div className="absolute inset-0 -z-10 flex items-center justify-center">
-        <div className="w-[360px] h-[360px] rounded-full bg-beige" />
+        <div className={`${beigeSize} rounded-full bg-beige`} />
       </div>
 
-      <div className="relative rounded-[44px] bg-black p-2 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.35)]">
-        <div className="relative overflow-hidden rounded-[36px] bg-white aspect-[9/19.5]">
-          {/* status bar */}
-          <div className="flex items-center justify-between px-6 pt-3 text-[11px] font-semibold text-black">
+      <div className="relative rounded-[40px] bg-black p-1.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.35)] sm:rounded-[44px] sm:p-2">
+        <div className="relative overflow-hidden rounded-[32px] bg-white aspect-[9/19.5] sm:rounded-[36px]">
+          <div className="flex items-center justify-between px-5 pt-2.5 text-[10px] font-semibold text-black sm:px-6 sm:pt-3 sm:text-[11px]">
             <span>9:41</span>
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 h-6 w-28 rounded-full bg-black" />
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black sm:h-6 sm:w-28" />
             <div className="flex items-center gap-1">
-              <Signal size={12} />
-              <Wifi size={12} />
-              <BatteryFull size={14} />
+              <Signal size={11} />
+              <Wifi size={11} />
+              <BatteryFull size={13} />
             </div>
           </div>
 
-          <div className="px-5 pt-6 pb-4">
-            <p className="text-center text-[13px] font-bold text-foreground">تقدم التقييم</p>
+          <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4">
+            <p className="text-center text-[12px] font-bold text-foreground sm:text-[13px]">تقدم التقييم</p>
 
-            <div className="relative mx-auto mt-4 w-[140px] h-[140px]">
-              <svg viewBox="0 0 140 140" className="-rotate-90">
-                <circle cx="70" cy="70" r={r} stroke="#FFF1E5" strokeWidth="10" fill="none" />
+            <div className={`relative mx-auto mt-3 ${ringBox} sm:mt-4`}>
+              <svg viewBox="0 0 140 140" className="-rotate-90 w-full h-full">
+                <circle cx="70" cy="70" r={PROGRESS_R} stroke="#FFF1E5" strokeWidth="10" fill="none" />
                 <circle
                   cx="70"
                   cy="70"
-                  r={r}
+                  r={PROGRESS_R}
                   stroke="#F97316"
                   strokeWidth="10"
                   fill="none"
                   strokeLinecap="round"
-                  strokeDasharray={`${dash} ${c}`}
+                  strokeDasharray={`${dash} ${PROGRESS_C}`}
+                  className="transition-[stroke-dasharray] duration-700 ease-out"
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-extrabold text-foreground">50%</span>
-                <span className="text-[10px] text-muted-foreground mt-1">تم إكمال التقييم</span>
+                <span
+                  key={pulseKey}
+                  className={`${pctText} font-extrabold text-foreground animate-how-step-slide-in`}
+                >
+                  {progress}%
+                </span>
+                <span className="text-[9px] text-muted-foreground mt-0.5 sm:text-[10px] sm:mt-1">
+                  تم إكمال التقييم
+                </span>
               </div>
             </div>
 
-            <ul className="mt-4 space-y-2">
-              {checklist.map((it) => (
-                <li
-                  key={it.label}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-[#F1F1F1] bg-white px-3 py-2"
-                >
-                  <span className="text-[11px] font-semibold text-foreground">{it.label}</span>
-                  {it.done ? (
-                    <span className="grid h-5 w-5 place-items-center rounded-full bg-[#22C55E] text-white">
-                      <Check size={12} strokeWidth={3} />
+            <ul className="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2">
+              {ASSESSMENT_CHECKLIST.map((it, i) => {
+                const isDone = i < activeStep;
+                const isActive = i === activeStep;
+                return (
+                  <li
+                    key={it.label}
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-2.5 py-1.5 transition-all duration-500 ease-out sm:px-3 sm:py-2 ${
+                      isActive
+                        ? "border-primary/45 bg-[#FFF7ED] shadow-[0_4px_14px_-6px_rgba(249,115,22,0.35)] ring-1 ring-primary/15 scale-[1.02]"
+                        : isDone
+                          ? "border-[#E8F5E9] bg-white"
+                          : "border-[#F1F1F1] bg-white opacity-80"
+                    } ${isActive ? "animate-how-step-slide-in" : ""}`}
+                  >
+                    <span
+                      className={`text-[10px] font-semibold leading-snug sm:text-[11px] ${
+                        isActive ? "text-primary font-bold" : isDone ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
+                      {it.label}
                     </span>
-                  ) : (
-                    <span className="h-5 w-5 rounded-full border-2 border-[#E5E7EB]" />
-                  )}
-                </li>
-              ))}
+                    {isDone ? (
+                      <span className="grid h-4 w-4 place-items-center rounded-full bg-[#22C55E] text-white sm:h-5 sm:w-5">
+                        <Check size={10} strokeWidth={3} className="sm:hidden" />
+                        <Check size={12} strokeWidth={3} className="hidden sm:block" />
+                      </span>
+                    ) : isActive ? (
+                      <span className="relative grid h-4 w-4 place-items-center sm:h-5 sm:w-5">
+                        <span className="absolute inset-0 rounded-full bg-primary/25 animate-pulse-soft" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-primary sm:h-3 sm:w-3" />
+                      </span>
+                    ) : (
+                      <span className="h-4 w-4 rounded-full border-2 border-[#E5E7EB] sm:h-5 sm:w-5" />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
 
             <Link
               to="/quiz"
-              className="mt-4 flex w-full items-center justify-center rounded-2xl bg-primary py-3 text-[12px] font-bold text-white shadow-cta"
+              className="mt-3 flex w-full items-center justify-center rounded-2xl bg-primary py-2.5 text-[11px] font-bold text-white shadow-cta sm:mt-4 sm:py-3 sm:text-[12px]"
             >
               متابعة التقييم
             </Link>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StepDots({
+  activeStep,
+  onSelect,
+}: {
+  activeStep: number;
+  onSelect: (i: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-2 mt-4" dir="rtl">
+      {ASSESSMENT_CHECKLIST.map((it, i) => (
+        <button
+          key={it.label}
+          type="button"
+          aria-label={`الخطوة ${i + 1}: ${it.label}`}
+          aria-current={i === activeStep ? "step" : undefined}
+          onClick={() => onSelect(i)}
+          className={`rounded-full transition-all duration-500 ease-out ${
+            i === activeStep ? "h-2.5 w-7 bg-primary shadow-[0_0_12px_rgba(249,115,22,0.45)]" : "h-2.5 w-2.5 bg-primary/25 hover:bg-primary/40"
+          }`}
+        />
+      ))}
     </div>
   );
 }
@@ -192,18 +267,35 @@ function Arrow() {
 
 export function HowItWorks() {
   const { ref: secRef, inView: secIn } = useInView<HTMLElement>({ threshold: 0.05 });
+  const [activeStep, setActiveStep] = useState(0);
+  const pauseUntilRef = useRef(0);
+
+  useEffect(() => {
+    if (!secIn) return;
+    const tick = () => {
+      if (Date.now() < pauseUntilRef.current) return;
+      setActiveStep((s) => (s + 1) % ASSESSMENT_CHECKLIST.length);
+    };
+    const id = setInterval(tick, STEP_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [secIn]);
+
+  const handleStepSelect = (i: number) => {
+    setActiveStep(i);
+    pauseUntilRef.current = Date.now() + STEP_INTERVAL_MS * 2;
+  };
 
   return (
     <section
       id="how"
       ref={secRef}
-      className={`relative bg-white py-20 lg:py-28 overflow-hidden transition-opacity duration-700 ${
+      dir="rtl"
+      className={`relative bg-white py-10 lg:py-28 overflow-hidden font-[Tajawal,Cairo,sans-serif] transition-opacity duration-700 ${
         secIn ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* dotted decorations */}
       <div
-        className="absolute top-32 right-8 w-24 h-24 opacity-40"
+        className="absolute top-20 right-8 w-20 h-20 opacity-30 lg:top-32 lg:opacity-40"
         style={{
           backgroundImage: "radial-gradient(#F97316 1.2px, transparent 1.2px)",
           backgroundSize: "12px 12px",
@@ -211,7 +303,7 @@ export function HowItWorks() {
         aria-hidden
       />
       <div
-        className="absolute top-32 left-8 w-24 h-24 opacity-40"
+        className="absolute top-20 left-8 w-20 h-20 opacity-30 lg:top-32 lg:opacity-40"
         style={{
           backgroundImage: "radial-gradient(#F97316 1.2px, transparent 1.2px)",
           backgroundSize: "12px 12px",
@@ -219,30 +311,35 @@ export function HowItWorks() {
         aria-hidden
       />
 
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-flex items-center gap-2 rounded-full bg-[#FFF7ED] px-4 py-1.5 text-sm font-bold text-primary">
-            <Rocket size={14} /> 4 خطوات بسيطة
-          </span>
-          <h2 className="mt-5 text-4xl sm:text-5xl font-extrabold text-foreground leading-tight">
+      <div className="container mx-auto px-4 -mt-[30px]">
+        <div className="text-center max-w-2xl mx-auto -mt-[30px]">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-foreground leading-tight">
             كيف <span className="text-primary">يعمل</span> التقييم؟
           </h2>
-          <p className="mt-4 text-base text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground sm:mt-4 sm:text-base">
             عملية بسيطة وسريعة للحصول على برنامجك المخصص بخطوات مدروسة.
           </p>
         </div>
 
-        {/* Desktop layout: timeline row + phone center + cards row */}
-        <div className="relative mt-16">
-          {/* dotted line behind numbers */}
+        {/* Mobile: compact animated viewport */}
+        <div
+          className="lg:hidden mt-5 flex flex-col items-center justify-center max-h-[85vh] min-h-0 px-1"
+        >
+          <PhoneMockup activeStep={activeStep} compact />
+          <StepDots activeStep={activeStep} onSelect={handleStepSelect} />
+          <p className="mt-3 text-center text-[11px] text-muted-foreground max-w-[240px] leading-relaxed">
+            {ASSESSMENT_CHECKLIST[activeStep].label}
+          </p>
+        </div>
+
+        {/* Desktop: timeline + cards + animated phone */}
+        <div className="relative mt-16 hidden lg:block">
           <div
-            className="hidden lg:block absolute left-0 right-0 top-[40px] h-0 border-t-2 border-dashed border-primary/40"
+            className="absolute left-0 right-0 top-[40px] h-0 border-t-2 border-dashed border-primary/40"
             aria-hidden
           />
 
-          {/* Numbers row */}
-          <div className="hidden lg:grid grid-cols-[1fr_auto_1fr_auto_320px_auto_1fr_auto_1fr] items-center gap-4 relative z-10">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_320px_auto_1fr_auto_1fr] items-center gap-4 relative z-10">
             <StepNumber n="01" />
             <Arrow />
             <StepNumber n="02" />
@@ -254,47 +351,110 @@ export function HowItWorks() {
             <StepNumber n="04" />
           </div>
 
-          {/* Cards + phone row */}
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_320px_1fr_1fr] gap-6 items-start">
+          <div className="mt-8 grid grid-cols-[1fr_1fr_320px_1fr_1fr] gap-6 items-start">
             <StepCard step={steps[0]} index={0} />
             <StepCard step={steps[1]} index={1} />
-            <div className="order-first sm:order-none sm:col-span-2 lg:col-span-1 lg:row-span-1 lg:-mt-32 flex justify-center">
-              <PhoneMockup />
+            <div className="-mt-32 flex flex-col items-center justify-center">
+              <PhoneMockup activeStep={activeStep} />
+              <StepDots activeStep={activeStep} onSelect={handleStepSelect} />
             </div>
             <StepCard step={steps[2]} index={2} />
             <StepCard step={steps[3]} index={3} />
           </div>
         </div>
 
-        {/* Bottom trust block */}
-        <div className="mt-16 rounded-[32px] bg-gradient-to-l from-[#FAF6F2] to-[#FFF7ED] p-6 sm:p-8 lg:p-10 border border-[#F1F1F1]">
-          <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] items-center gap-8">
-            {/* Rocket card */}
-            <div className="grid h-24 w-24 place-items-center rounded-3xl bg-white shadow-card mx-auto animate-float-soft">
-              <Rocket className="text-primary" size={36} strokeWidth={1.8} />
-            </div>
+        <div className="relative mt-10 lg:mt-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-3 top-4 bottom-0 rounded-2xl bg-[#1A1816]/20 shadow-[inset_0_3px_10px_rgba(15,23,42,0.12)] lg:inset-x-4 lg:rounded-3xl"
+          />
 
-            {/* Headline */}
-            <div className="text-center lg:text-right">
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground">
-                تقييم دقيق، برنامج مخصص، <span className="text-primary">نتائج حقيقية.</span>
-              </h3>
-              <p className="mt-3 text-muted-foreground">
-                كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
-              </p>
-            </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-2 rounded-2xl bg-[#FF6B00]/20 blur-2xl animate-warning-card-outer-glow lg:-inset-3 lg:rounded-3xl"
+          />
 
-            {/* Features */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              {trustFeatures.map((f) => (
-                <div key={f.title} className="text-center">
-                  <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-white border border-[#F1F1F1] shadow-sm">
-                    <f.Icon className="text-primary" size={20} strokeWidth={1.8} />
+          <div
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#2A2521] via-[#1F1C18] to-[#2E2824] p-5 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_22px_48px_-14px_rgba(255,107,0,0.28),0_16px_40px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/[0.05] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:p-8 lg:rounded-3xl lg:p-10"
+            style={{
+              opacity: secIn ? 1 : 0,
+              transform: secIn ? "translateY(-8px) scale(1)" : "translateY(18px) scale(0.97)",
+              boxShadow: secIn
+                ? "0 1px 0 rgba(255,255,255,0.08) inset, 0 28px 56px -16px rgba(255,107,0,0.32), 0 20px 48px -18px rgba(15,23,42,0.55), 0 0 0 1px rgba(255,107,0,0.14)"
+                : undefined,
+              transitionDelay: "400ms",
+            }}
+          >
+            <span
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl lg:rounded-3xl"
+              aria-hidden
+            >
+              <span
+                className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/14 to-transparent"
+              />
+            </span>
+            <span
+              className="pointer-events-none absolute inset-0 rounded-2xl animate-warning-card-inner-glow lg:rounded-3xl"
+              aria-hidden
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-px animate-warning-card-border-pulse bg-gradient-to-r from-transparent via-white/25 to-transparent"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#FF6B00]/[0.12] blur-3xl animate-warning-card-outer-glow"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute bottom-4 left-1/4 h-20 w-20 opacity-30"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(255,107,0,0.5) 1px, transparent 1.5px)",
+                backgroundSize: "10px 10px",
+              }}
+            />
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] items-center gap-6 lg:gap-8">
+              <div
+                className="mx-auto grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)] lg:h-16 lg:w-16 lg:rounded-3xl animate-float-soft"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
+                }}
+              >
+                <Rocket className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={1.8} />
+              </div>
+
+              <div className="min-w-0 text-center font-[Tajawal] lg:text-right">
+                <h3 className="text-[25px] font-black leading-[1.2] tracking-tight sm:text-[27px] lg:text-[29px]">
+                  <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+                    تقييم دقيق، برنامج مخصص،
+                  </span>
+                  <span className="block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
+                    نتائج حقيقية.
+                  </span>
+                </h3>
+                <p className="mt-2 lg:mt-3 text-[14px] leading-relaxed text-white/85 sm:text-[15px] lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                  كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
+                {trustFeatures.map((f) => (
+                  <div key={f.title} className="text-center">
+                    <div className="mx-auto grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full border border-white/20 bg-white/10 shadow-[0_4px_16px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
+                      <f.Icon className="text-[#FF8A3D] h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
+                    </div>
+                    <p className="mt-2 text-[13px] sm:text-sm font-extrabold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                      {f.title}
+                    </p>
+                    <p className="mt-1 text-[11px] sm:text-xs leading-snug text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+                      {f.text}
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm font-bold text-foreground">{f.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{f.text}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>

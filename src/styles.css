@@ -167,6 +167,12 @@
 @utility animate-feature-icon-glow { animation: feature-icon-glow 2.8s ease-in-out infinite; }
 @utility animate-feature-icon-shine { animation: feature-icon-shine 3.2s ease-in-out infinite; }
 @utility animate-float-phone { animation: float-phone 5s ease-in-out infinite; }
+
+@keyframes how-step-slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@utility animate-how-step-slide-in { animation: how-step-slide-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 @utility animate-trust-glow { animation: trust-glow 3s ease-in-out infinite; }
 @utility animate-pulse-soft { animation: pulse-soft 2.8s ease-in-out infinite; }
 @utility animate-glow-soft { animation: glow-soft 3.5s ease-in-out infinite; }
@@ -249,4 +255,132 @@
 
 @utility animate-title-line-shimmer-pingpong {
   animation: title-line-shimmer-pingpong 3s ease-in-out infinite;
+}
+
+@keyframes warning-cta-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes warning-cta-inner-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes warning-cta-arrow {
+  0%,
+  88%,
+  100% {
+    transform: translateX(0);
+  }
+  92% {
+    transform: translateX(-3px);
+  }
+  96% {
+    transform: translateX(0);
+  }
+}
+
+@utility animate-warning-cta-glow {
+  animation: warning-cta-glow 3.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@utility animate-warning-cta-inner-glow {
+  animation: warning-cta-inner-glow 3.5s ease-in-out infinite;
+  background: radial-gradient(ellipse at center, rgba(255, 107, 0, 0.14) 0%, transparent 70%);
+}
+
+@utility animate-warning-cta-arrow {
+  animation: warning-cta-arrow 4s ease-in-out infinite;
+}
+
+@keyframes warning-card-outer-glow {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.62;
+    transform: scale(1.015);
+  }
+}
+
+@keyframes warning-card-inner-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes warning-card-border-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@utility animate-warning-card-outer-glow {
+  animation: warning-card-outer-glow 4s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@utility animate-warning-card-inner-glow {
+  animation: warning-card-inner-glow 4.5s ease-in-out infinite;
+  background:
+    radial-gradient(ellipse 75% 55% at 18% 12%, rgba(255, 107, 0, 0.2) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 78%, rgba(255, 107, 0, 0.12) 0%, transparent 62%);
+}
+
+@utility animate-warning-card-shimmer {
+  animation: cta-shimmer 6.5s ease-in-out infinite;
+}
+
+@utility animate-warning-card-border-pulse {
+  animation: warning-card-border-pulse 3.5s ease-in-out infinite;
+}
+
+@keyframes feature-cards-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -5px, 0);
+  }
+}
+
+@utility animate-feature-cards-float {
+  animation: feature-cards-float 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@utility animate-feature-card-lively {
+  animation:
+    feature-cards-float 4.8s ease-in-out infinite,
+    trust-stat-shadow-float 4.5s ease-in-out infinite;
+  will-change: transform, box-shadow;
+}
+
+@utility animate-included-block-lively {
+  animation: trust-stat-shadow-float 4.8s ease-in-out infinite;
 }

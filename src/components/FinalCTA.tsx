@@ -10,7 +10,7 @@ import {
   Lock,
   TrendingDown,
 } from "lucide-react";
-import coachHero from "@/assets/coach-hero.jpg";
+import coachHero from "@/assets/coach-hero.jpeg";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";

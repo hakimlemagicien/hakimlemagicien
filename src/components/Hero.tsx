@@ -404,6 +404,7 @@ function HeroQuizCTA({ className = "" }: { className?: string }) {
 function HeroStickyQuizBar({ visible }: { visible: boolean }) {
   return (
     <div
+      id="hero-sticky-quiz-bar"
       className={[
         "fixed inset-x-0 bottom-0 z-50 border-t border-white/70 bg-white/80 backdrop-blur-md px-4 pt-3 shadow-[0_-12px_40px_-10px_rgba(15,23,42,0.16)] pb-[max(1rem,env(safe-area-inset-bottom))] transition-[transform,opacity] duration-500 ease-out lg:hidden",
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0",
@@ -460,14 +461,50 @@ function MobileHero({ onCtaOutOfView }: { onCtaOutOfView: (outOfView: boolean) =
         <MobileCoachVisual />
       </div>
 
-      <div ref={ctaAnchorRef}>
+      <div ref={ctaAnchorRef} id="hero-inline-quiz-cta">
         <HeroQuizCTA className="relative z-10 mt-[2px]" />
       </div>
 
       <MobileSocialProof avatars={avatars} />
 
       <div className="mt-3 px-1 pt-2 pb-2">
-        <TrustStatistics embedded />
+        <div className="relative">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-2 top-3 bottom-0 rounded-2xl bg-[#1A1816]/20 shadow-[inset_0_3px_10px_rgba(15,23,42,0.12)]"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-1 rounded-2xl bg-[#FF6B00]/20 blur-2xl animate-warning-card-outer-glow"
+          />
+          <div
+            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#2A2521] via-[#1F1C18] to-[#2E2824] p-3 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_22px_48px_-14px_rgba(255,107,0,0.28),0_16px_40px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/[0.05] sm:p-4"
+          >
+            <span
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+              aria-hidden
+            >
+              <span
+                className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/14 to-transparent"
+              />
+            </span>
+            <span
+              className="pointer-events-none absolute inset-0 rounded-2xl animate-warning-card-inner-glow"
+              aria-hidden
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 h-px animate-warning-card-border-pulse bg-gradient-to-r from-transparent via-white/25 to-transparent"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#FF6B00]/[0.12] blur-3xl animate-warning-card-outer-glow"
+            />
+            <div className="relative z-10">
+              <TrustStatistics embedded variant="dark" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

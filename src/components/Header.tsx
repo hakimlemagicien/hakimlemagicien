@@ -1,4 +1,5 @@
-import { Menu, MessageCircle } from "lucide-react";
+import { Menu } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { useState } from "react";
 
 const navItems = [
@@ -56,7 +57,7 @@ export function Header() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border-2 border-primary px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
           >
-            <MessageCircle className="h-4 w-4" />
+            <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
             تواصل عبر واتساب
           </a>
         </div>

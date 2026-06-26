@@ -40,8 +40,10 @@ function Index() {
         <Hero />
         <TrustStatistics className="hidden lg:block" />
         <HeroProblemTransition />
-        <ProblemSection />
-        <CustomProgram />
+        <div className="bg-[linear-gradient(180deg,#F3EFE8_0%,#F7F5F2_30%,#FAF8F5_55%,#FFFFFF_92%)]">
+          <ProblemSection />
+          <CustomProgram />
+        </div>
         <HowItWorks />
         <Results90 />
         <WhatYouGet />

@@ -106,11 +106,13 @@ function TrustStatCard({
   index,
   active,
   compact,
+  dark,
 }: {
   stat: StatCard;
   index: number;
   active: boolean;
   compact?: boolean;
+  dark?: boolean;
 }) {
   const Icon = stat.icon;
   const delay = STAGGER_DELAYS[index] ?? 0;
@@ -120,7 +122,8 @@ function TrustStatCard({
     <>
       <div
         className={[
-          "flex shrink-0 items-center justify-center rounded-full bg-[rgba(255,107,0,0.08)]",
+          "flex shrink-0 items-center justify-center rounded-full",
+          dark ? "bg-[#FF6B00]/15 ring-1 ring-[#FF6B00]/25" : "bg-[rgba(255,107,0,0.08)]",
           compact ? "h-10 w-10" : "h-[52px] w-[52px]",
         ].join(" ")}
       >
@@ -144,7 +147,8 @@ function TrustStatCard({
 
       <p
         className={[
-          "px-2 text-center font-[Tajawal] font-medium leading-snug text-[#444444]",
+          "px-2 text-center font-[Tajawal] font-medium leading-snug",
+          dark ? "text-white/85 [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]" : "text-[#444444]",
           compact ? "text-[11px]" : "text-[17px]",
         ].join(" ")}
       >
@@ -162,7 +166,14 @@ function TrustStatCard({
         ].join(" ")}
         style={{ animationDelay: `${delay}s` }}
       >
-        <div className="flex min-h-[128px] w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-black/[0.04] bg-white px-1 py-2 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)]">
+        <div
+          className={[
+            "flex min-h-[128px] w-full flex-col items-center justify-center gap-1.5 rounded-xl px-1 py-2",
+            dark
+              ? "border border-white/[0.12] bg-white/[0.06] shadow-[0_4px_16px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/15 backdrop-blur-sm"
+              : "border border-black/[0.04] bg-white shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)]",
+          ].join(" ")}
+        >
           {content}
         </div>
       </article>
@@ -190,11 +201,14 @@ function TrustStatCard({
 
 export function TrustStatistics({
   embedded = false,
+  variant = "default",
   className = "",
 }: {
   embedded?: boolean;
+  variant?: "default" | "dark";
   className?: string;
 }) {
+  const dark = variant === "dark";
   const { ref, inView } = useInViewOnce<HTMLElement>(0.15);
 
   return (
@@ -226,6 +240,7 @@ export function TrustStatistics({
             index={index}
             active={inView}
             compact={embedded}
+            dark={dark}
           />
         ))}
       </div>
