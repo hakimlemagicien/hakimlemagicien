@@ -537,7 +537,7 @@ function StoriesPrimaryScreen() {
           }}
         >
           <h2
-            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(19px,6vw,25px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
+            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(14px,6vw,20px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
           >
             <span className="success-stories-primary-title-line text-[#111]">نتائج حقيقية</span>
             <br />

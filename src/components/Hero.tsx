@@ -254,9 +254,9 @@ function MobileFeatureCard({
   index?: number;
 }) {
   return (
-    <div className="flex h-[36px] min-w-0 flex-row items-center gap-1 overflow-hidden rounded-lg border border-black/[0.04] bg-white px-1.5 py-0.5 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)] [direction:ltr]">
+    <div className="flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-xl border border-black/[0.04] bg-white px-1 py-1.5 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)]">
       <div
-        className="relative h-[22px] w-[22px] shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#FF6B00]/20 via-[#FF6B00]/10 to-[#FF6B00]/5 animate-feature-icon-glow"
+        className="relative h-[27px] w-[27px] shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#FF6B00]/20 via-[#FF6B00]/10 to-[#FF6B00]/5 animate-feature-icon-glow"
         style={{ animationDelay: `${index * 0.35}s` }}
       >
         <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
@@ -266,10 +266,10 @@ function MobileFeatureCard({
           />
         </span>
         <span className="relative z-10 flex h-full w-full items-center justify-center">
-          <Icon className="h-3 w-3 text-[#FF6B00]" strokeWidth={2.25} />
+          <Icon className="h-3.5 w-3.5 text-[#FF6B00]" strokeWidth={2.25} />
         </span>
       </div>
-      <span className="min-w-0 flex-1 truncate text-right font-[Tajawal] text-[7px] font-medium leading-none whitespace-nowrap text-foreground">
+      <span className="max-w-full text-center font-[Tajawal] text-[8px] font-medium leading-tight text-foreground line-clamp-2">
         {label}
       </span>
     </div>
@@ -326,8 +326,8 @@ function MobileResultCard({
 }) {
   const bg = tone === "success" ? "bg-success-soft text-success" : "bg-primary-soft text-primary";
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white px-3.5 py-3 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
-      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${bg}`}>
+    <div className="flex items-center gap-3 rounded-xl bg-white px-[14px] py-3 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
+      <span className={`grid h-[44px] w-[44px] shrink-0 place-items-center rounded-full ${bg}`}>
         <Icon className="h-5 w-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 text-right">
@@ -366,11 +366,11 @@ function MobileCoachVisual() {
         alt="مدرب لياقة بدنية"
         width={1024}
         height={1024}
-        className="absolute inset-x-6 bottom-[150px] z-10 h-[400px] w-auto max-w-none object-contain object-bottom"
+        className="absolute inset-x-6 bottom-[140px] z-10 h-[400px] w-auto max-w-none object-contain object-bottom"
       />
 
       {/* floating result cards — right side */}
-      <div className="absolute -right-[50px] top-[6%] z-20 flex flex-col gap-5 -translate-y-[30px]">
+      <div className="absolute -right-[38px] top-[6%] z-20 flex flex-col gap-5 -translate-y-[26px]">
         <div className="animate-float">
           <MobileResultCard icon={TrendingDown} value="-12kg" label="خسارة دهون" tone="success" />
         </div>
@@ -464,7 +464,7 @@ function MobileHero({ onCtaOutOfView }: { onCtaOutOfView: (outOfView: boolean) =
         أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
       </p>
 
-      <div className="mt-2 grid grid-cols-4 gap-1.5">
+      <div className="mt-2 grid grid-cols-4 gap-2.5">
         {mobileFeatures.map((f, i) => (
           <MobileFeatureCard key={f.label} {...f} index={i} />
         ))}

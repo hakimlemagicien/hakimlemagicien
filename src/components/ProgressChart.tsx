@@ -167,7 +167,7 @@ function AnimatedProgressSvg({ gradientId, compact }: { gradientId: string; comp
 export function ProgressChart({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
-      <div className="w-full -translate-x-[10px] rounded-xl bg-white/90 p-2.5 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
+      <div className="w-full -translate-x-[10px] translate-y-[3px] rounded-xl bg-white/90 p-2.5 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.1)]">
         <p className="mb-1 font-[Tajawal] text-[10px] font-medium text-foreground text-right">
           تقدمك خلال 12 أسبوع
         </p>
