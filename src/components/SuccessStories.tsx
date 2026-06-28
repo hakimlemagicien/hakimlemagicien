@@ -6,23 +6,13 @@ import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import {
   ArrowLeft,
-  BadgeCheck,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   ChevronsRight,
   Dumbbell,
   Scale,
   Star,
   Users,
 } from "lucide-react";
-import {
-  SOCIAL_PROOF_CLIENT_COUNT,
-} from "@/lib/social-proof";
-import avatar1 from "@/assets/avatar1.jpg";
-import avatar2 from "@/assets/avatar2.jpg";
-import avatar3 from "@/assets/avatar3.jpg";
-import avatar4 from "@/assets/avatar4.jpg";
 import t1 from "@/assets/transform-1.jpg";
 import t2 from "@/assets/transform-2.jpg";
 import t3 from "@/assets/transform-3.jpg";
@@ -31,8 +21,6 @@ import beforeOver from "@/assets/body-overweight.jpg";
 import beforeAvg from "@/assets/body-average.jpg";
 import beforeSkinny from "@/assets/body-skinny-fat.jpg";
 import "swiper/css";
-
-const AVATARS = [avatar1, avatar2, avatar3, avatar4];
 
 type StorySlide = {
   name: string;
@@ -123,10 +111,6 @@ const STORY_SLIDES: StorySlide[] = [
   },
 ];
 
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
-
 function useInViewOnce<T extends HTMLElement>(threshold = 0.2) {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
@@ -146,80 +130,6 @@ function useInViewOnce<T extends HTMLElement>(threshold = 0.2) {
     return () => io.disconnect();
   }, [inView, threshold]);
   return { ref, inView };
-}
-
-function useAnimatedClientCount(active: boolean, duration = 2500) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      setValue(Math.round(easeOutCubic(t) * SOCIAL_PROOF_CLIENT_COUNT));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [active, duration]);
-  return value;
-}
-
-function HeroStyleSocialProof() {
-  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.2);
-  const count = useAnimatedClientCount(inView);
-
-  return (
-    <div ref={ref} className="mt-5 flex items-center justify-center gap-3 [direction:ltr]">
-      <div className="flex shrink-0 -space-x-2">
-        {AVATARS.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt=""
-            width={36}
-            height={36}
-            loading="lazy"
-            className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm"
-          />
-        ))}
-        <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-white bg-[#F3F3F3] text-[11px] font-bold text-neutral-500 shadow-sm">
-          +
-        </span>
-      </div>
-      <div className="flex flex-col items-start gap-0.5 [direction:rtl]">
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="h-3.5 w-3.5 fill-success text-success" strokeWidth={0} />
-          ))}
-          <span className="min-w-[4.5rem] text-left font-[Tajawal] text-[13px] font-extrabold tabular-nums text-success">
-            +{count.toLocaleString("en-US")}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
-            عميل حققوا نتائج مذهلة
-          </span>
-          <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function OrangeStars({ size = 22, className = "" }: { size?: number; className?: string }) {
-  return (
-    <div className={`flex items-center justify-center gap-[6px] ${className}`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className="fill-[#FF6B00] text-[#FF6B00]"
-          style={{ width: size, height: size }}
-          strokeWidth={0}
-        />
-      ))}
-    </div>
-  );
 }
 
 function renderSignedStatValue(value: string) {
@@ -270,11 +180,24 @@ function StatColumn({
   );
 }
 
-function StorySlideCard({ story, isActive }: { story: StorySlide; isActive: boolean }) {
+function StorySlideCard({
+  story,
+  isActive,
+  surface,
+}: {
+  story: StorySlide;
+  isActive: boolean;
+  surface: "primary" | "clone";
+}) {
+  const cardClass =
+    surface === "primary" ? "success-stories-primary-card" : "success-stories-clone-card";
+
   return (
-    <div className="w-full overflow-hidden rounded-[26px] bg-white shadow-[0_14px_48px_rgba(15,23,42,0.08)]">
+    <div
+      className={`${cardClass} w-full overflow-hidden rounded-[26px] bg-white shadow-[0_14px_48px_rgba(15,23,42,0.08)]`}
+    >
       <motion.div
-        className="relative flex h-[350px] w-full overflow-hidden bg-neutral-100"
+        className="relative flex h-[310px] w-full overflow-hidden bg-neutral-100"
         animate={{ scale: isActive ? 1 : 0.98 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
@@ -312,7 +235,7 @@ function StorySlideCard({ story, isActive }: { story: StorySlide; isActive: bool
         </div>
       </motion.div>
 
-      <div className="grid h-[105px] grid-cols-3 divide-x divide-[#EFE5DD]/80 bg-white">
+      <div className="grid h-[75px] grid-cols-3 divide-x divide-[#EFE5DD]/80 bg-white">
         <StatColumn
           icon={Scale}
           value={story.weightValue}
@@ -358,7 +281,7 @@ function StorySlideCard({ story, isActive }: { story: StorySlide; isActive: bool
               hidden: {},
               visible: { transition: { staggerChildren: 0.06 } },
             }}
-            className="mt-3.5 flex justify-center gap-1"
+            className="mt-2.5 flex justify-center gap-1"
           >
             {Array.from({ length: 5 }).map((_, i) => (
               <motion.span
@@ -381,7 +304,7 @@ function StorySlideCard({ story, isActive }: { story: StorySlide; isActive: bool
   );
 }
 
-function StoriesSlider() {
+function StoriesPrimarySlider() {
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoplayEnabled, setAutoplayEnabled] = useState(true);
@@ -393,9 +316,10 @@ function StoriesSlider() {
   };
 
   return (
-    <div className="mx-auto mt-6 w-[calc(100%-36px)] max-w-[360px]">
+    <div className="success-stories-primary-slider-wrap relative mx-auto mt-6 w-[calc(100%-24px)] max-w-[388px]">
       <Swiper
         modules={[Autoplay]}
+        dir="rtl"
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
         }}
@@ -409,81 +333,110 @@ function StoriesSlider() {
         autoplay={
           autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false
         }
-        className="stories-swiper overflow-hidden rounded-[26px]"
+        className="success-stories-primary-swiper overflow-hidden rounded-[26px]"
       >
         {STORY_SLIDES.map((story) => (
           <SwiperSlide key={story.name}>
             <StorySlideCard
               story={story}
+              surface="primary"
               isActive={story.name === STORY_SLIDES[activeIndex].name}
             />
           </SwiperSlide>
         ))}
       </Swiper>
 
-      <div className="mt-[22px] flex items-center justify-between gap-2">
-        <span className="font-[Tajawal] text-[14px] font-semibold tabular-nums text-[#999]">
-          {activeIndex + 1} / {STORY_SLIDES.length}
-        </span>
-
-        <div className="flex items-center gap-2">
-          {STORY_SLIDES.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`الشريحة ${i + 1}`}
-              onClick={() => {
-                stopAutoplay();
-                swiperRef.current?.slideToLoop(i);
-              }}
-              className={[
-                "rounded-full transition-all duration-300",
-                i === activeIndex
-                  ? "h-[14px] w-[14px] bg-[#FF6B00]"
-                  : "h-[11px] w-[11px] bg-[#EFE5DD]",
-              ].join(" ")}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <motion.button
+      <div className="success-stories-primary-pagination absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/20 px-2 py-1 backdrop-blur-[2px]">
+        {STORY_SLIDES.map((_, i) => (
+          <button
+            key={i}
             type="button"
-            aria-label="الشريحة السابقة"
-            whileHover={{ x: 2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            aria-label={`الشريحة ${i + 1}`}
             onClick={() => {
               stopAutoplay();
-              swiperRef.current?.slidePrev();
+              swiperRef.current?.slideToLoop(i);
             }}
-            className="grid h-12 w-12 place-items-center rounded-full bg-white text-neutral-500 shadow-[0_4px_16px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.04]"
-          >
-            <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
-          </motion.button>
-          <motion.button
-            type="button"
-            aria-label="الشريحة التالية"
-            whileHover={{ x: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 400, damping: 18 }}
-            onClick={() => {
-              stopAutoplay();
-              swiperRef.current?.slideNext();
-            }}
-            className="grid h-12 w-12 place-items-center rounded-full bg-[#FF6B00] text-white shadow-[0_8px_22px_rgba(255,107,0,0.35)]"
-          >
-            <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
-          </motion.button>
-        </div>
+            className={[
+              "success-stories-primary-pagination-dot rounded-full transition-all duration-300",
+              i === activeIndex
+                ? "h-1.5 w-4 bg-[#FF6B00]"
+                : "h-1.5 w-1.5 bg-white/55",
+            ].join(" ")}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function StoriesCTABlock() {
+function StoriesCloneSlider() {
+  const swiperRef = useRef<SwiperType | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(true);
+
+  const stopAutoplay = () => {
+    if (!autoplayEnabled) return;
+    setAutoplayEnabled(false);
+    swiperRef.current?.autoplay?.stop();
+  };
+
   return (
-    <div className="mx-auto mt-[22px] w-[calc(100%-36px)] max-w-[360px] rounded-[28px] bg-[#FF6B00]/[0.06] px-3.5 py-[18px]">
+    <div className="success-stories-clone-slider-wrap relative mx-auto mt-[30px] w-[calc(100%-24px)] max-w-[388px]">
+      <Swiper
+        modules={[Autoplay]}
+        dir="ltr"
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+        }}
+        onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
+        onTouchStart={stopAutoplay}
+        onSliderMove={stopAutoplay}
+        loop
+        speed={680}
+        spaceBetween={0}
+        slidesPerView={1}
+        autoplay={
+          autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false
+        }
+        className="success-stories-clone-swiper overflow-hidden rounded-[26px]"
+      >
+        {STORY_SLIDES.map((story) => (
+          <SwiperSlide key={story.name}>
+            <StorySlideCard
+              story={story}
+              surface="clone"
+              isActive={story.name === STORY_SLIDES[activeIndex].name}
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      <div className="success-stories-clone-pagination absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/20 px-2 py-1 backdrop-blur-[2px]">
+        {STORY_SLIDES.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`الشريحة ${i + 1}`}
+            onClick={() => {
+              stopAutoplay();
+              swiperRef.current?.slideToLoop(i);
+            }}
+            className={[
+              "success-stories-clone-pagination-dot rounded-full transition-all duration-300",
+              i === activeIndex
+                ? "h-1.5 w-4 bg-[#FF6B00]"
+                : "h-1.5 w-1.5 bg-white/55",
+            ].join(" ")}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StoriesCloneCTA() {
+  return (
+    <div className="success-stories-clone-cta mx-auto mt-[22px] w-[calc(100%-36px)] max-w-[360px] rounded-[28px] bg-[#FF6B00]/[0.06] px-3.5 py-[18px]">
       <div className="mb-3 flex items-center justify-center gap-2">
         <Users className="h-5 w-5 text-[#FF6B00]" strokeWidth={2.2} />
         <p className="text-center font-[Tajawal] text-[18px] font-bold text-[#111]">
@@ -504,7 +457,7 @@ function StoriesCTABlock() {
         </span>
         <span className="relative z-10 flex-1 text-center font-[Tajawal] text-white">
           <span className="block text-[15px] font-extrabold leading-tight">
-            ابدأ تقييمك المجاني الآن
+            ابدأ رحلتك الآن
           </span>
           <span className="mt-0.5 block text-[11px] font-medium text-white/90">
             خطوتك الأولى نحو أفضل نسخة منك
@@ -516,10 +469,10 @@ function StoriesCTABlock() {
   );
 }
 
-function StoriesSectionBadge({ inView }: { inView: boolean }) {
+function StoriesPrimaryBadge({ inView }: { inView: boolean }) {
   return (
     <div
-      className="flex items-center justify-center gap-2.5 transition-all duration-700"
+      className="success-stories-primary-badge flex items-center justify-center gap-2.5 transition-all duration-700"
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? "translateY(0) scale(1)" : "translateY(16px) scale(0.96)",
@@ -535,7 +488,7 @@ function StoriesSectionBadge({ inView }: { inView: boolean }) {
           className="pointer-events-none absolute -inset-1 rounded-full bg-[#FF6B00]/18 blur-md"
         />
         <span
-          className="relative inline-flex min-h-[34px] min-w-[180px] items-center justify-center gap-1.5 rounded-full bg-gradient-to-br from-[#FF6B00]/14 via-white to-[#FF6B00]/10 px-4 py-1.5 shadow-[0_10px_30px_-12px_rgba(255,107,0,0.45)] ring-1 ring-[#FF6B00]/25 transition-all duration-700 [direction:ltr]"
+          className="relative inline-flex min-h-[29px] min-w-[175px] items-center justify-center gap-1 rounded-full bg-gradient-to-br from-[#FF6B00]/14 via-white to-[#FF6B00]/10 px-3 py-1 shadow-[0_10px_30px_-12px_rgba(255,107,0,0.45)] ring-1 ring-[#FF6B00]/25 transition-all duration-700 [direction:ltr]"
         >
           <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden>
             <span
@@ -543,15 +496,15 @@ function StoriesSectionBadge({ inView }: { inView: boolean }) {
             />
           </span>
           <span
-            className="relative z-10 grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-white shadow-[0_3px_10px_rgba(255,107,0,0.24)] ring-1 ring-[#FF6B00]/20"
+            className="relative z-10 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full bg-white shadow-[0_3px_10px_rgba(255,107,0,0.24)] ring-1 ring-[#FF6B00]/20"
           >
             <span
               aria-hidden
-              className="absolute inset-0 rounded-full bg-[#FF6B00]/18 animate-pulse-soft"
+              className="absolute inset-[0.5px] rounded-full bg-[#FF6B00]/18 animate-pulse-soft"
             />
-            <Star className="relative z-10 h-3.5 w-3.5 fill-[#FF6B00] text-[#FF6B00]" strokeWidth={0} />
+            <Star className="relative z-10 h-3 w-3 fill-[#FF6B00] text-[#FF6B00]" strokeWidth={0} />
           </span>
-          <span className="relative z-10 font-[Tajawal] text-[14px] font-extrabold tracking-[0.02em] text-[#FF6B00] [direction:rtl]">
+          <span className="relative z-10 font-[Tajawal] text-[12px] font-extrabold tracking-[0.02em] text-[#FF6B00] [direction:rtl]">
             قصص نجاح عملائنا
           </span>
         </span>
@@ -564,19 +517,19 @@ function StoriesSectionBadge({ inView }: { inView: boolean }) {
   );
 }
 
-function StoriesScreen() {
+function StoriesPrimaryScreen() {
   const { ref, inView } = useInViewOnce<HTMLDivElement>(0.12);
 
   return (
     <div
       ref={ref}
-      className="relative mx-auto min-h-[100vh] max-w-[430px] px-[18px] pb-6 pt-7"
+      className="success-stories-primary-screen relative mx-auto max-w-[430px] px-[18px] pb-0 pt-7"
     >
-      <div className="text-center">
-        <StoriesSectionBadge inView={inView} />
+      <div className="success-stories-primary-header text-center">
+        <StoriesPrimaryBadge inView={inView} />
 
         <div
-          className="transition-all duration-700"
+          className="success-stories-primary-title-wrap transition-all duration-700"
           style={{
             opacity: inView ? 1 : 0,
             transform: inView ? "translateY(0)" : "translateY(16px)",
@@ -584,29 +537,31 @@ function StoriesScreen() {
           }}
         >
           <h2
-            className="origin-top mt-[22px] font-[Tajawal] text-[clamp(24px,7.2vw,30px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
+            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(19px,6vw,25px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
           >
-            <span className="text-[#111]">نتائج حقيقية</span>
+            <span className="success-stories-primary-title-line text-[#111]">نتائج حقيقية</span>
             <br />
-            <span className="text-[#FF6B00]">من أشخاص كانوا مثلك تماماً</span>
+            <span className="success-stories-primary-title-highlight text-[#FF6B00]">
+              من أشخاص كانوا مثلك تماماً
+            </span>
           </h2>
           <div
             aria-hidden
-            className="relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden"
+            className="success-stories-primary-title-line-wrap relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden"
           >
             <div
-              className="h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent"
+              className="success-stories-primary-title-line-base h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent"
             />
             {inView && (
               <span
-                className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
+                className="success-stories-primary-title-line-shimmer pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
               />
             )}
           </div>
         </div>
 
         <p
-          className="mx-auto mt-3.5 max-w-[330px] font-[Tajawal] text-[15px] leading-[1.7] text-[#666] transition-all duration-700"
+          className="success-stories-primary-subtitle mx-auto mt-3.5 max-w-[330px] font-[Tajawal] text-[13px] leading-[1.7] text-[#666] transition-all duration-700"
           style={{
             opacity: inView ? 1 : 0,
             transform: inView ? "translateY(0)" : "translateY(16px)",
@@ -617,22 +572,18 @@ function StoriesScreen() {
           <br />
           غيروا حياتهم مع حكيم .
         </p>
-
-        <div
-          className="transition-all duration-700"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? "translateY(0)" : "translateY(16px)",
-            transitionDelay: "360ms",
-          }}
-        >
-          <OrangeStars size={22} className="mt-3" />
-        </div>
       </div>
 
-      <StoriesSlider />
-      <StoriesCTABlock />
-      <HeroStyleSocialProof />
+      <StoriesPrimarySlider />
+    </div>
+  );
+}
+
+function StoriesCloneScreen() {
+  return (
+    <div className="success-stories-clone-screen relative mx-auto max-w-[430px] px-[18px] pb-6 pt-0">
+      <StoriesCloneSlider />
+      <StoriesCloneCTA />
     </div>
   );
 }
@@ -653,8 +604,8 @@ export default function SuccessStories() {
         className="pointer-events-none absolute -right-10 top-[40%] h-40 w-40 rounded-full bg-beige blur-2xl"
       />
 
-      <StoriesScreen />
-      <StoriesScreen />
+      <StoriesPrimaryScreen />
+      <StoriesCloneScreen />
     </section>
   );
 }

@@ -6,11 +6,8 @@ import {
   MessageSquare,
   RefreshCw,
   Target,
-  Check,
   Star,
 } from "lucide-react";
-import targetIllustration from "@/assets/target-illustration.png";
-import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
 
 function useInView<T extends HTMLElement>(threshold = 0.1) {
   const ref = useRef<T | null>(null);
@@ -70,13 +67,6 @@ const FEATURES = [
     title: "استراتيجية واضحة لتحقيق هدفك",
     desc: "خطة واضحة خطوة بخطوة مع أهداف قصيرة وطويلة المدى لتحقيق أفضل النتائج.",
   },
-];
-
-const CHECKLIST = [
-  "برامج مبنية على العلم والخبرة",
-  "خطط عملية قابلة للتطبيق.",
-  "متابعة مستمرة حتى تحقيق هدفك",
-  "نتائج حقيقية تستمر مدى الحياة",
 ];
 
 const ORBIT_POSITIONS = [
@@ -446,7 +436,6 @@ function FeatureOrbitLayout({ active }: { active: boolean }) {
 export default function WhatYouGet() {
   const head = useInView<HTMLDivElement>(0.1);
   const cards = useInView<HTMLDivElement>(0.1);
-  const trust = useInView<HTMLDivElement>(0.1);
 
   return (
     <section
@@ -516,61 +505,6 @@ export default function WhatYouGet() {
           <FeatureOrbitLayout active={cards.inView} />
           <FeatureSnapRail active={cards.inView} />
         </div>
-
-        {/* BOTTOM TRUST BLOCK */}
-        <DarkPremiumPanel
-          ref={trust.ref}
-          active={trust.inView}
-          className="mt-12 md:mt-16"
-          innerClassName="p-6 md:p-8 lg:p-10"
-        >
-          <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-10">
-            <div className="relative order-3 shrink-0 lg:order-1">
-              <div className="absolute inset-0 scale-110 rounded-full bg-[#FF6B00]/20 blur-3xl" />
-              <img
-                src={targetIllustration}
-                alt="هدفك"
-                width={320}
-                height={320}
-                loading="lazy"
-                className="relative h-48 w-48 object-contain animate-float-soft md:h-56 md:w-56 lg:h-64 lg:w-64"
-              />
-            </div>
-
-            <div className="order-2 flex-1 text-center lg:order-2 lg:border-r lg:border-white/15 lg:pr-10">
-              <h3 className="text-xl font-black leading-snug text-white/95 md:text-2xl lg:text-3xl [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
-                نحن لا نقدم لك ملف PDF فقط...
-              </h3>
-              <p className="mt-2 text-xl font-black leading-snug text-[#FF6B00] md:text-2xl lg:text-3xl [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
-                بل نظاماً متكاملاً يساعدك على الوصول لهدفك
-              </p>
-              <p className="mt-1 text-xl font-black leading-snug text-[#FF6B00] md:text-2xl lg:text-3xl [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
-                خطوة بخطوة.
-              </p>
-            </div>
-
-            <div className="order-1 shrink-0 lg:order-3">
-              <ul className="space-y-3 text-right">
-                {CHECKLIST.map((item, i) => (
-                  <li
-                    key={i}
-                    className={`flex items-center justify-end gap-2 transition-all duration-500 ease-out ${
-                      trust.inView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"
-                    }`}
-                    style={{ transitionDelay: `${300 + i * 100}ms` }}
-                  >
-                    <span className="text-sm font-bold text-white/85 md:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                      {item}
-                    </span>
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#FF6B00] text-white shadow-[0_4px_12px_-4px_rgba(255,107,0,0.55)]">
-                      <Check className="h-3 w-3" strokeWidth={3} />
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </DarkPremiumPanel>
       </div>
     </section>
   );
