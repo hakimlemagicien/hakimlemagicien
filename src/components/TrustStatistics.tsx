@@ -69,6 +69,18 @@ function useCountUp(
   return value;
 }
 
+function renderSignedFormatted(value: string) {
+  const signed = value.match(/^([+-])(.+)$/);
+  if (!signed) return value;
+
+  return (
+    <span className="inline-flex flex-row items-baseline [direction:ltr]">
+      <span>{signed[1]}</span>
+      <span>{signed[2]}</span>
+    </span>
+  );
+}
+
 function AnimatedStatValue({
   value,
   suffix,
@@ -96,7 +108,7 @@ function AnimatedStatValue({
       ].join(" ")}
       aria-label={formatted}
     >
-      {formatted}
+      {renderSignedFormatted(formatted)}
     </p>
   );
 }

@@ -426,41 +426,46 @@ export function HowItWorks() {
               }}
             />
 
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[auto_1fr_auto] items-center gap-6 lg:gap-8">
-              <div
-                className="mx-auto grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)] lg:h-16 lg:w-16 lg:rounded-3xl animate-float-soft"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
-                }}
-              >
-                <Rocket className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={1.8} />
+            <div className="relative z-10 flex flex-col gap-8 lg:gap-10">
+              <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-8">
+                <div
+                  className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)] lg:h-16 lg:w-16 lg:rounded-3xl animate-float-soft"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
+                  }}
+                >
+                  <Rocket className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={1.8} />
+                </div>
+
+                <div className="min-w-0 text-center font-[Tajawal] lg:text-right">
+                  <h3 className="text-[25px] font-black leading-[1.2] tracking-tight sm:text-[27px] lg:text-[29px]">
+                    <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+                      تقييم دقيق، برنامج مخصص،
+                    </span>
+                    <span className="block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
+                      نتائج حقيقية.
+                    </span>
+                  </h3>
+                  <p className="mt-2 lg:mt-3 text-[14px] leading-relaxed text-white/85 sm:text-[15px] lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                    كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
+                  </p>
+                </div>
               </div>
 
-              <div className="min-w-0 text-center font-[Tajawal] lg:text-right">
-                <h3 className="text-[25px] font-black leading-[1.2] tracking-tight sm:text-[27px] lg:text-[29px]">
-                  <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
-                    تقييم دقيق، برنامج مخصص،
-                  </span>
-                  <span className="block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
-                    نتائج حقيقية.
-                  </span>
-                </h3>
-                <p className="mt-2 lg:mt-3 text-[14px] leading-relaxed text-white/85 sm:text-[15px] lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                  كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:gap-6">
                 {trustFeatures.map((f) => (
-                  <div key={f.title} className="text-center">
-                    <div className="mx-auto grid h-10 w-10 sm:h-11 sm:w-11 place-items-center rounded-full border border-white/20 bg-white/10 shadow-[0_4px_16px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
-                      <f.Icon className="text-[#FF8A3D] h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
+                  <div
+                    key={f.title}
+                    className="flex flex-col items-center px-2 text-center"
+                  >
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/20 bg-white/10 shadow-[0_4px_16px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm sm:h-12 sm:w-12">
+                      <f.Icon className="h-5 w-5 shrink-0 text-[#FF8A3D]" strokeWidth={2.2} />
                     </div>
-                    <p className="mt-2 text-[13px] sm:text-sm font-extrabold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                    <p className="mt-2.5 text-[13px] font-extrabold text-white sm:text-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
                       {f.title}
                     </p>
-                    <p className="mt-1 text-[11px] sm:text-xs leading-snug text-white/80 [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+                    <p className="mt-1 min-h-[2.5rem] text-[11px] leading-snug text-white/80 sm:min-h-0 sm:text-xs [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
                       {f.text}
                     </p>
                   </div>

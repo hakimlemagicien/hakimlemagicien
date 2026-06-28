@@ -7,7 +7,6 @@ import { ProblemSection } from "@/components/ProblemSection";
 import { Results90 } from "@/components/Results90";
 import HowItWorks from "@/components/HowItWorks";
 import WhatYouGet from "@/components/WhatYouGet";
-import ChooseTraining from "@/components/ChooseTraining";
 import SuccessStories from "@/components/SuccessStories";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
@@ -45,7 +44,6 @@ function Index() {
         <HowItWorks />
         <Results90 />
         <WhatYouGet />
-        <ChooseTraining />
         <SuccessStories />
         <FAQ />
         <FinalCTA />

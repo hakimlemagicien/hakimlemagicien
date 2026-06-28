@@ -137,44 +137,234 @@ function FeatureSnapCard({
   feature,
   index,
   active,
+  highlighted,
 }: {
   feature: (typeof FEATURES)[number];
   index: number;
   active: boolean;
+  highlighted: boolean;
 }) {
   const Icon = feature.icon;
   return (
     <article
-      className={`group relative w-[min(88vw,300px)] shrink-0 snap-center transition-all duration-700 ease-out ${
-        active ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-      } ${index % 2 === 1 ? "sm:translate-y-3" : ""}`}
-      style={{ transitionDelay: `${index * 90}ms` }}
+      className={[
+        "group relative w-[min(88vw,300px)] shrink-0 snap-center transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        active ? "translate-y-0" : "translate-y-6",
+        highlighted
+          ? "scale-100 opacity-100 z-[2]"
+          : "scale-[0.92] opacity-65",
+      ].join(" ")}
+      style={{ transitionDelay: active ? `${index * 90}ms` : "0ms" }}
     >
-      <div className="relative overflow-hidden rounded-[24px] border border-white/80 bg-gradient-to-br from-white via-white to-[#FFF8F2] p-5 shadow-[0_10px_36px_-14px_rgba(15,23,42,0.12)] ring-1 ring-neutral-100/70">
+      <div
+        className={[
+          "relative overflow-hidden rounded-[24px] border bg-gradient-to-br from-white via-white to-[#FFF8F2] p-5 ring-1 transition-all duration-500 ease-out",
+          highlighted
+            ? "border-[#FF6B00]/35 shadow-[0_16px_44px_-14px_rgba(255,107,0,0.35)] ring-[#FF6B00]/25"
+            : "border-white/80 shadow-[0_10px_36px_-14px_rgba(15,23,42,0.12)] ring-neutral-100/70",
+        ].join(" ")}
+      >
         <span
           aria-hidden
-          className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[#FF6B00]/10 blur-2xl"
+          className={[
+            "pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[#FF6B00]/10 blur-2xl transition-opacity duration-500",
+            highlighted ? "opacity-100" : "opacity-40",
+          ].join(" ")}
         />
         <div className="relative flex flex-row-reverse items-center gap-4 text-right">
           <div className="relative shrink-0">
             <span
               aria-hidden
-              className="absolute inset-0 rounded-2xl bg-[#FF6B00]/25 blur-lg animate-feature-icon-glow"
+              className={[
+                "absolute inset-0 rounded-2xl bg-[#FF6B00]/25 blur-lg transition-opacity duration-500",
+                highlighted ? "opacity-100 animate-feature-icon-glow" : "opacity-0",
+              ].join(" ")}
             />
-            <div className="relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#FFF6EE] via-white to-orange-50/80 text-[#FF6B00] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_12px_28px_-8px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/15">
+            <div
+              className={[
+                "relative grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-[#FFF6EE] via-white to-orange-50/80 text-[#FF6B00] ring-1 transition-transform duration-500",
+                highlighted
+                  ? "scale-105 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_16px_32px_-8px_rgba(255,107,0,0.45)] ring-[#FF6B00]/30"
+                  : "shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_12px_28px_-8px_rgba(255,107,0,0.35)] ring-[#FF6B00]/15",
+              ].join(" ")}
+            >
               <Icon className="h-7 w-7" strokeWidth={2.1} />
             </div>
-            <span className="absolute -bottom-1 -left-1 grid h-6 w-6 place-items-center rounded-full bg-[#FF6B00] text-[10px] font-black text-white shadow-[0_4px_12px_-4px_rgba(255,107,0,0.55)]">
+            <span
+              className={[
+                "absolute -bottom-1 -left-1 grid h-6 w-6 place-items-center rounded-full bg-[#FF6B00] text-[10px] font-black text-white transition-transform duration-500",
+                highlighted
+                  ? "scale-110 shadow-[0_6px_16px_-4px_rgba(255,107,0,0.65)]"
+                  : "shadow-[0_4px_12px_-4px_rgba(255,107,0,0.55)]",
+              ].join(" ")}
+            >
               {feature.num}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-extrabold leading-snug text-neutral-900">{feature.title}</h3>
+            <h3
+              className={[
+                "text-base font-extrabold leading-snug transition-colors duration-500",
+                highlighted ? "text-neutral-900" : "text-neutral-700",
+              ].join(" ")}
+            >
+              {feature.title}
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-neutral-500">{feature.desc}</p>
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+const SNAP_AUTO_MS = 3200;
+const SNAP_USER_PAUSE_MS = 12000;
+
+function FeatureSnapRail({ active }: { active: boolean }) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const autoScrollRef = useRef(false);
+  const pauseUntilRef = useRef(0);
+
+  const pauseAuto = () => {
+    pauseUntilRef.current = Date.now() + SNAP_USER_PAUSE_MS;
+  };
+
+  const scrollToCard = (index: number) => {
+    const rail = railRef.current;
+    if (!rail || index < 0 || index >= FEATURES.length) return;
+    const card = rail.children[index] as HTMLElement | undefined;
+    if (!card) return;
+
+    autoScrollRef.current = true;
+    const railRect = rail.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const delta = cardRect.left + cardRect.width / 2 - (railRect.left + railRect.width / 2);
+    rail.scrollBy({ left: delta, behavior: "smooth" });
+
+    window.setTimeout(() => {
+      autoScrollRef.current = false;
+    }, 750);
+  };
+
+  const syncActiveFromScroll = () => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const railCenter = rail.getBoundingClientRect().left + rail.clientWidth / 2;
+    let closest = 0;
+    let minDist = Infinity;
+
+    for (let i = 0; i < rail.children.length; i++) {
+      const child = rail.children[i] as HTMLElement;
+      const rect = child.getBoundingClientRect();
+      const childCenter = rect.left + rect.width / 2;
+      const dist = Math.abs(childCenter - railCenter);
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    }
+
+    setActiveIndex(closest);
+  };
+
+  useEffect(() => {
+    if (!active) return;
+
+    const startTimer = window.setTimeout(() => scrollToCard(0), 400);
+
+    const interval = window.setInterval(() => {
+      if (Date.now() < pauseUntilRef.current) return;
+      setActiveIndex((prev) => {
+        const next = (prev + 1) % FEATURES.length;
+        scrollToCard(next);
+        return next;
+      });
+    }, SNAP_AUTO_MS);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearInterval(interval);
+    };
+  }, [active]);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const onScroll = () => {
+      syncActiveFromScroll();
+      if (!autoScrollRef.current) pauseAuto();
+    };
+
+    const onUserIntent = () => pauseAuto();
+
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    rail.addEventListener("pointerdown", onUserIntent);
+    rail.addEventListener("touchstart", onUserIntent, { passive: true });
+    rail.addEventListener("wheel", onUserIntent, { passive: true });
+
+    return () => {
+      rail.removeEventListener("scroll", onScroll);
+      rail.removeEventListener("pointerdown", onUserIntent);
+      rail.removeEventListener("touchstart", onUserIntent);
+      rail.removeEventListener("wheel", onUserIntent);
+    };
+  }, []);
+
+  return (
+    <div className="relative xl:hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-12"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-12"
+      />
+
+      <div
+        ref={railRef}
+        className={[
+          "flex gap-4 overflow-x-auto scroll-smooth pb-3 snap-x snap-mandatory",
+          "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+          "-mx-4 px-4 sm:-mx-6 sm:px-6",
+        ].join(" ")}
+      >
+        {FEATURES.map((f, i) => (
+          <FeatureSnapCard
+            key={f.num}
+            feature={f}
+            index={i}
+            active={active}
+            highlighted={i === activeIndex}
+          />
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center justify-center gap-2" aria-hidden>
+        {FEATURES.map((f, i) => (
+          <button
+            key={f.num}
+            type="button"
+            aria-label={`البطاقة ${i + 1}`}
+            onClick={() => {
+              pauseAuto();
+              setActiveIndex(i);
+              scrollToCard(i);
+            }}
+            className={[
+              "rounded-full transition-all duration-500 ease-out",
+              i === activeIndex
+                ? "h-2.5 w-7 bg-[#FF6B00] shadow-[0_0_12px_rgba(255,107,0,0.45)]"
+                : "h-2.5 w-2.5 bg-neutral-300/80 hover:bg-primary/40",
+            ].join(" ")}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -287,7 +477,7 @@ export default function WhatYouGet() {
         {/* HEADER */}
         <div
           ref={head.ref}
-          className={`text-center transition-all duration-700 ease-out ${
+          className={`text-center -mt-[60px] transition-all duration-700 ease-out ${
             head.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
@@ -324,18 +514,7 @@ export default function WhatYouGet() {
         {/* 6 FEATURE CARDS — orbit (xl) + snap rail (mobile/tablet) */}
         <div ref={cards.ref} className="mt-12 md:mt-16">
           <FeatureOrbitLayout active={cards.inView} />
-
-          <div
-            className={[
-              "flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory xl:hidden",
-              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-              "-mx-4 px-4 sm:-mx-6 sm:px-6",
-            ].join(" ")}
-          >
-            {FEATURES.map((f, i) => (
-              <FeatureSnapCard key={f.num} feature={f} index={i} active={cards.inView} />
-            ))}
-          </div>
+          <FeatureSnapRail active={cards.inView} />
         </div>
 
         {/* BOTTOM TRUST BLOCK */}

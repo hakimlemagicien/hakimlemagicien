@@ -301,6 +301,18 @@ function ResultCard({
   );
 }
 
+function renderSignedValue(value: string) {
+  const signed = value.match(/^([+-])(.+)$/);
+  if (!signed) return value;
+
+  return (
+    <span className="inline-flex flex-row items-baseline [direction:ltr]">
+      <span>{signed[1]}</span>
+      <span>{signed[2]}</span>
+    </span>
+  );
+}
+
 function MobileResultCard({
   icon: Icon,
   value,
@@ -319,7 +331,9 @@ function MobileResultCard({
         <Icon className="h-5 w-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 text-right">
-        <p className="font-[Cairo] text-[18px] font-extrabold leading-none text-foreground">{value}</p>
+        <p className="font-[Cairo] text-[18px] font-extrabold leading-none text-foreground">
+          {renderSignedValue(value)}
+        </p>
         <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium leading-tight text-muted-foreground">
           {label}
         </p>

@@ -100,7 +100,7 @@ export function ProblemSection() {
             }}
           >
             <h2
-              className="origin-top text-[44px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]"
+              className="origin-top text-[34px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-5xl lg:scale-[0.926] lg:text-[68px]"
             >
               لماذا لا يحقق أغلب الناس{" "}
               <span className="text-[#FF6B00]">النتائج التي يريدونها؟</span>

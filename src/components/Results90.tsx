@@ -487,7 +487,7 @@ function BottomStats() {
         نتائج تتجاوز التوقعات
       </h3>
 
-      <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
+      <div className="mt-8 grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
         {STATS.map((s, i) => (
           <StatItem key={s.label} stat={s} index={i} active={inView} />
         ))}
@@ -514,7 +514,7 @@ function StatItem({
   const Icon = stat.icon;
   return (
     <div
-      className="flex items-center gap-3 lg:gap-4 justify-center lg:justify-start"
+      className="flex flex-col items-center px-2 text-center"
       style={{
         opacity: active ? 1 : 0,
         transform: active ? "translateY(0)" : "translateY(12px)",
@@ -522,18 +522,16 @@ function StatItem({
         transitionDelay: `${200 + index * 120}ms`,
       }}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/15 bg-white/10 text-success shadow-[0_4px_16px_-6px_rgba(34,197,94,0.35)] ring-1 ring-[#22C55E]/20 backdrop-blur-sm lg:h-14 lg:w-14">
-        <Icon className="h-6 w-6" strokeWidth={2} />
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10 text-success shadow-[0_8px_20px_-10px_rgba(34,197,94,0.35)] ring-1 ring-[#22C55E]/20 backdrop-blur-sm sm:h-[52px] sm:w-[52px]">
+        <Icon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={2.2} />
       </span>
-      <div className="text-right">
-        <div className="text-xl font-black leading-none tabular-nums text-white lg:text-2xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
-          {stat.prefix}
-          {stat.decimals ? value.toFixed(stat.decimals) : Math.round(value)}
-          {stat.suffix}
-        </div>
-        <div className="mt-1 text-xs font-medium text-white/75 lg:text-sm">
-          {stat.label}
-        </div>
+      <div className="mt-3 text-xl font-black leading-none tabular-nums text-white sm:text-2xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+        {stat.prefix}
+        {stat.decimals ? value.toFixed(stat.decimals) : Math.round(value)}
+        {stat.suffix}
+      </div>
+      <div className="mt-1.5 text-xs font-medium leading-snug text-white/75 sm:text-sm">
+        {stat.label}
       </div>
     </div>
   );
