@@ -6,7 +6,6 @@ import {
   ClipboardList,
   CheckCircle2,
   ArrowLeft,
-  Rocket,
   Target,
   ShieldCheck,
   Zap,
@@ -386,12 +385,12 @@ export function HowItWorks() {
           />
 
           <div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#2A2521] via-[#1F1C18] to-[#2E2824] p-5 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_22px_48px_-14px_rgba(255,107,0,0.28),0_16px_40px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/[0.05] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:p-8 lg:rounded-3xl lg:p-10"
+            className="relative overflow-hidden rounded-2xl border border-white/[0.10] bg-gradient-to-br from-[#252220] via-[#1A1818] to-[#232019] p-4 shadow-[0_1px_0_rgba(255,255,255,0.07)_inset,0_20px_44px_-16px_rgba(255,107,0,0.24),0_14px_36px_-16px_rgba(15,23,42,0.42)] ring-1 ring-white/[0.06] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:p-5 lg:rounded-3xl lg:p-6"
             style={{
               opacity: secIn ? 1 : 0,
               transform: secIn ? "translateY(-8px) scale(1)" : "translateY(18px) scale(0.97)",
               boxShadow: secIn
-                ? "0 1px 0 rgba(255,255,255,0.08) inset, 0 28px 56px -16px rgba(255,107,0,0.32), 0 20px 48px -18px rgba(15,23,42,0.55), 0 0 0 1px rgba(255,107,0,0.14)"
+                ? "0 1px 0 rgba(255,255,255,0.09) inset, 0 24px 52px -18px rgba(255,107,0,0.28), 0 18px 44px -18px rgba(15,23,42,0.52), 0 0 0 1px rgba(255,107,0,0.12)"
                 : undefined,
               transitionDelay: "400ms",
             }}
@@ -426,48 +425,38 @@ export function HowItWorks() {
               }}
             />
 
-            <div className="relative z-10 flex flex-col gap-8 lg:gap-10">
-              <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-8">
-                <div
-                  className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)] lg:h-16 lg:w-16 lg:rounded-3xl animate-float-soft"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
-                  }}
-                >
-                  <Rocket className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={1.8} />
-                </div>
-
-                <div className="min-w-0 text-center font-[Tajawal] lg:text-right">
-                  <h3 className="text-[25px] font-black leading-[1.2] tracking-tight sm:text-[27px] lg:text-[29px]">
-                    <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
-                      تقييم دقيق، برنامج مخصص،
-                    </span>
-                    <span className="block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
-                      نتائج حقيقية.
-                    </span>
-                  </h3>
-                  <p className="mt-2 lg:mt-3 text-[14px] leading-relaxed text-white/85 sm:text-[15px] lg:text-base [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                    كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
-                  </p>
-                </div>
+            <div className="relative z-10 flex flex-col gap-4 sm:gap-5">
+              <div className="min-w-0 text-center font-[Tajawal]">
+                <h3 className="text-[22px] font-black leading-[1.2] tracking-tight sm:text-[25px] lg:text-[27px]">
+                  <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+                    تقييم دقيق، برنامج مخصص،
+                  </span>
+                  <span className="mt-0.5 block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
+                    نتائج حقيقية.
+                  </span>
+                </h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-white/80 sm:text-[14px] lg:text-[15px] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+                  كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:gap-6">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
                 {trustFeatures.map((f) => (
                   <div
                     key={f.title}
-                    className="flex flex-col items-center px-2 text-center"
+                    className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-2.5 backdrop-blur-[2px] sm:gap-3 sm:p-3"
                   >
-                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/20 bg-white/10 shadow-[0_4px_16px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm sm:h-12 sm:w-12">
-                      <f.Icon className="h-5 w-5 shrink-0 text-[#FF8A3D]" strokeWidth={2.2} />
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/10 shadow-[0_4px_14px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/15 sm:h-10 sm:w-10">
+                      <f.Icon className="h-4 w-4 shrink-0 text-[#FF8A3D] sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
                     </div>
-                    <p className="mt-2.5 text-[13px] font-extrabold text-white sm:text-sm [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
-                      {f.title}
-                    </p>
-                    <p className="mt-1 min-h-[2.5rem] text-[11px] leading-snug text-white/80 sm:min-h-0 sm:text-xs [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
-                      {f.text}
-                    </p>
+                    <div className="min-w-0 text-right">
+                      <p className="text-[12px] font-extrabold text-white sm:text-[13px] [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+                        {f.title}
+                      </p>
+                      <p className="mt-0.5 text-[10px] leading-snug text-white/75 sm:text-[11px] [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
+                        {f.text}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>

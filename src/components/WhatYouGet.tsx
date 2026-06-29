@@ -6,7 +6,6 @@ import {
   MessageSquare,
   RefreshCw,
   Target,
-  Star,
 } from "lucide-react";
 
 function useInView<T extends HTMLElement>(threshold = 0.1) {
@@ -470,14 +469,8 @@ export default function WhatYouGet() {
             head.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          {/* Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-500 -mt-[30px]">
-            <Star className="h-4 w-4 fill-orange-500 text-orange-500" />
-            كل ما تحتاجه في مكان واحد
-          </span>
-
           {/* Heading */}
-          <h2 className="origin-top mt-5 text-[44px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]">
+          <h2 className="-mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:mt-0 lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
             ماذا ستحصل عليه
             <br />
             <span className="inline-block translate-y-[2px] text-primary">داخل برنامجك؟</span>

@@ -6,7 +6,6 @@ import {
   CalendarCheck,
   Dumbbell,
   LineChart,
-  Sparkles,
   TrendingUp,
   TrendingDown,
   Utensils,
@@ -531,11 +530,6 @@ function DesktopHero() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
       <div className="grid lg:grid-cols-2 gap-10 lg:gap-8 items-center">
         <div className="order-1 text-center lg:text-right animate-fade-up">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-sm font-bold text-primary">
-            <Sparkles className="h-4 w-4" />
-            برنامج مخصص 100% لك
-          </div>
-
           <h1 className="mt-5 font-[Tajawal] font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
             أحصل على برنامج تدريبي وغذائي
             <br />

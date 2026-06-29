@@ -7,19 +7,36 @@ import type { Swiper as SwiperType } from "swiper";
 import {
   ArrowLeft,
   Calendar,
-  ChevronsRight,
+  ChevronsLeft,
   Dumbbell,
   Scale,
   Star,
   Users,
 } from "lucide-react";
-import t1 from "@/assets/transform-1.jpg";
-import t2 from "@/assets/transform-2.jpg";
-import t3 from "@/assets/transform-3.jpg";
-import t4 from "@/assets/transform-4.jpg";
-import beforeOver from "@/assets/body-overweight.jpg";
-import beforeAvg from "@/assets/body-average.jpg";
-import beforeSkinny from "@/assets/body-skinny-fat.jpg";
+import khaledBefore from "@/assets/خالد قبل.jpg";
+import khaledAfter from "@/assets/خالد بعد.jpg";
+import samirBefore from "@/assets/سمير قبل.jpg";
+import samirAfter from "@/assets/سمير بعد.jpg";
+import abuKhaledBefore from "@/assets/بو خالد قبل.jpg";
+import abuKhaledAfter from "@/assets/بو خالد بعد.jpg";
+import pedroBefore from "@/assets/بيدرو قبل.jpg";
+import pedroAfter from "@/assets/بيدرو بعد.jpg";
+import anwarBefore from "@/assets/انوار قبل.jpg";
+import anwarAfter from "@/assets/انوار بعد.jpg";
+import nasserBefore from "@/assets/ناصر قبل.jpg";
+import nasserAfter from "@/assets/ناصر بعد.jpg";
+import juliaBefore from "@/assets/جوليا قبل.jpg";
+import juliaAfter from "@/assets/جوليا بعد.jpg";
+import yasminBefore from "@/assets/ياسمين قبل.jpg";
+import yasminAfter from "@/assets/ياسمين بعد.jpg";
+import fatimaBefore from "@/assets/فاطمة قبل.jpg";
+import fatimaAfter from "@/assets/فاطمة بعد.jpg";
+import salmaBefore from "@/assets/سلمى قبل.jpg";
+import salmaAfter from "@/assets/سلمى بعد.jpg";
+import mayaBefore from "@/assets/مايا قبل.jpg";
+import mayaAfter from "@/assets/مايا عبد.jpg";
+import kawtharBefore from "@/assets/كوثر قبل.jpg";
+import kawtharAfter from "@/assets/كوثر بعد.jpg";
 import "swiper/css";
 
 type StorySlide = {
@@ -35,11 +52,11 @@ type StorySlide = {
   quote: string;
 };
 
-const STORY_SLIDES: StorySlide[] = [
+const PRIMARY_STORY_SLIDES: StorySlide[] = [
   {
-    name: "أحمد العتيبي",
-    before: beforeOver,
-    after: t1,
+    name: "خالد",
+    before: khaledBefore,
+    after: khaledAfter,
     weightValue: "-16kg",
     weightLabel: "خسارة وزن",
     muscleValue: "+7kg",
@@ -50,9 +67,9 @@ const STORY_SLIDES: StorySlide[] = [
       "كنت أجرب أنظمة كثيرة بدون نتيجة، مع خطة حكيم المخصصة قدرت أخسر 16 كغ وأبني جسم قوي وصحي.",
   },
   {
-    name: "محمد",
-    before: beforeAvg,
-    after: t2,
+    name: "سمير",
+    before: samirBefore,
+    after: samirAfter,
     weightValue: "-12kg",
     weightLabel: "خسارة وزن",
     muscleValue: "+5kg",
@@ -62,9 +79,9 @@ const STORY_SLIDES: StorySlide[] = [
     quote: "البرنامج كان واضحاً وسهل الالتزام. تحسّن أدائي وزادت كتلتي العضلية خلال أسابيع قليلة.",
   },
   {
-    name: "سلمان",
-    before: beforeSkinny,
-    after: t3,
+    name: "بو خالد",
+    before: abuKhaledBefore,
+    after: abuKhaledAfter,
     weightValue: "+6kg",
     weightLabel: "كتلة عضلية",
     muscleValue: "+6kg",
@@ -74,9 +91,9 @@ const STORY_SLIDES: StorySlide[] = [
     quote: "المتابعة الأسبوعية ساعدتني أضبط الخطة. النتائج جاءت تدريجياً وبثبات دون إرهاق.",
   },
   {
-    name: "يوسف",
-    before: beforeOver,
-    after: t4,
+    name: "بيدرو",
+    before: pedroBefore,
+    after: pedroAfter,
     weightValue: "-18kg",
     weightLabel: "خسارة وزن",
     muscleValue: "+4kg",
@@ -86,9 +103,9 @@ const STORY_SLIDES: StorySlide[] = [
     quote: "أخيراً خطة تغذية لا تشعرني بالحرمان. خسرت وزناً حقيقياً مع الحفاظ على طاقتي اليومية.",
   },
   {
-    name: "فهد",
-    before: beforeAvg,
-    after: t2,
+    name: "انوار",
+    before: anwarBefore,
+    after: anwarAfter,
     weightValue: "-11kg",
     weightLabel: "خسارة وزن",
     muscleValue: "+4kg",
@@ -99,8 +116,8 @@ const STORY_SLIDES: StorySlide[] = [
   },
   {
     name: "ناصر",
-    before: beforeSkinny,
-    after: t3,
+    before: nasserBefore,
+    after: nasserAfter,
     weightValue: "-9kg",
     weightLabel: "خسارة وزن",
     muscleValue: "جسم متناسق",
@@ -108,6 +125,83 @@ const STORY_SLIDES: StorySlide[] = [
     durationValue: "12",
     durationLabel: "أسبوع",
     quote: "خطة مرنة تناسب عملي وحياتي. استعدت ثقتي بنفسي وشكل جسمي خلال فترة قصيرة.",
+  },
+];
+
+/** نسخة السلايدر السفلي — قصص نساء (منفصلة عن السلايدر العلوي) */
+const CLONE_STORY_SLIDES: StorySlide[] = [
+  {
+    name: "جوليا",
+    before: juliaBefore,
+    after: juliaAfter,
+    weightValue: "-14kg",
+    weightLabel: "خسارة وزن",
+    muscleValue: "+3kg",
+    muscleLabel: "كتلة عضلية",
+    durationValue: "12",
+    durationLabel: "أسبوع",
+    quote:
+      "كنت أتعب من تجربة أنظمة بدون نتيجة، مع خطة حكيم المخصصة خسرت وزناً حقيقياً واستعدت نشاطي.",
+  },
+  {
+    name: "ياسمين",
+    before: yasminBefore,
+    after: yasminAfter,
+    weightValue: "-10kg",
+    weightLabel: "خسارة وزن",
+    muscleValue: "جسم مشدود",
+    muscleLabel: "جسم مشدود",
+    durationValue: "10",
+    durationLabel: "أسابيع",
+    quote: "البرنامج كان واضحاً وسهل الالتزام. تحسّن شكل جسمي وزادت ثقتي بنفسي خلال أسابيع قليلة.",
+  },
+  {
+    name: "فاطمة",
+    before: fatimaBefore,
+    after: fatimaAfter,
+    weightValue: "+4kg",
+    weightLabel: "كتلة عضلية",
+    muscleValue: "+4kg",
+    muscleLabel: "كتلة عضلية",
+    durationValue: "14",
+    durationLabel: "أسبوع",
+    quote: "المتابعة الأسبوعية ساعدتني أضبط الخطة. النتائج جاءت تدريجياً وبثبات دون إرهاق.",
+  },
+  {
+    name: "سلمى",
+    before: salmaBefore,
+    after: salmaAfter,
+    weightValue: "-15kg",
+    weightLabel: "خسارة وزن",
+    muscleValue: "+2kg",
+    muscleLabel: "كتلة عضلية",
+    durationValue: "16",
+    durationLabel: "أسبوع",
+    quote: "أخيراً خطة تغذية لا تشعرني بالحرمان. خسرت وزناً حقيقياً مع الحفاظ على طاقتي اليومية.",
+  },
+  {
+    name: "مايا",
+    before: mayaBefore,
+    after: mayaAfter,
+    weightValue: "-9kg",
+    weightLabel: "خسارة وزن",
+    muscleValue: "جسم متناسق",
+    muscleLabel: "جسم متناسق",
+    durationValue: "8",
+    durationLabel: "أسابيع",
+    quote: "مع حكيم تغير كل شيء. خطة مخصصة ودعم مستمر، والنتائج فاقت توقعاتي.",
+  },
+  {
+    name: "كوثر",
+    before: kawtharBefore,
+    after: kawtharAfter,
+    weightValue: "-7kg",
+    weightLabel: "خسارة وزن",
+    muscleValue: "+3kg",
+    muscleLabel: "كتلة عضلية",
+    durationValue: "12",
+    durationLabel: "أسبوع",
+    quote: "خطة مرنة تناسب حياتي. استعدت ثقتي بنفسي وشكل جسمي خلال فترة قصيرة.",
   },
 ];
 
@@ -231,7 +325,7 @@ function StorySlideCard({
           className="absolute left-1/2 top-1/2 z-10 grid h-[46px] w-[46px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white shadow-[0_6px_20px_rgba(0,0,0,0.12)]"
           aria-hidden
         >
-          <ChevronsRight className="h-5 w-5 text-[#FF6B00]" strokeWidth={2.5} />
+          <ChevronsLeft className="h-5 w-5 text-[#FF6B00]" strokeWidth={2.5} />
         </div>
       </motion.div>
 
@@ -240,19 +334,19 @@ function StorySlideCard({
           icon={Scale}
           value={story.weightValue}
           label={story.weightLabel}
-          animateKey={`${story.name}-w-${isActive}`}
+          animateKey={`${surface}-${story.name}-w-${isActive}`}
         />
         <StatColumn
           icon={Dumbbell}
           value={story.muscleValue}
           label={story.muscleLabel}
-          animateKey={`${story.name}-m-${isActive}`}
+          animateKey={`${surface}-${story.name}-m-${isActive}`}
         />
         <StatColumn
           icon={Calendar}
           value={story.durationValue}
           label={story.durationLabel}
-          animateKey={`${story.name}-d-${isActive}`}
+          animateKey={`${surface}-${story.name}-d-${isActive}`}
         />
       </div>
 
@@ -262,7 +356,7 @@ function StorySlideCard({
             “
           </p>
           <p className="mt-1 text-center font-[Tajawal] text-[15px] leading-[1.65] text-[#111]">
-            {story.name === "أحمد العتيبي" ? (
+            {surface === "primary" && story.name === "خالد" ? (
               <>
                 كنت أجرب أنظمة كثيرة بدون نتيجة،
                 <br />
@@ -335,19 +429,19 @@ function StoriesPrimarySlider() {
         }
         className="success-stories-primary-swiper overflow-hidden rounded-[26px]"
       >
-        {STORY_SLIDES.map((story) => (
-          <SwiperSlide key={story.name}>
+        {PRIMARY_STORY_SLIDES.map((story) => (
+          <SwiperSlide key={`primary-${story.name}`}>
             <StorySlideCard
               story={story}
               surface="primary"
-              isActive={story.name === STORY_SLIDES[activeIndex].name}
+              isActive={story.name === PRIMARY_STORY_SLIDES[activeIndex].name}
             />
           </SwiperSlide>
         ))}
       </Swiper>
 
       <div className="success-stories-primary-pagination absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/20 px-2 py-1 backdrop-blur-[2px]">
-        {STORY_SLIDES.map((_, i) => (
+        {PRIMARY_STORY_SLIDES.map((_, i) => (
           <button
             key={i}
             type="button"
@@ -400,19 +494,19 @@ function StoriesCloneSlider() {
         }
         className="success-stories-clone-swiper overflow-hidden rounded-[26px]"
       >
-        {STORY_SLIDES.map((story) => (
-          <SwiperSlide key={story.name}>
+        {CLONE_STORY_SLIDES.map((story) => (
+          <SwiperSlide key={`clone-${story.name}`}>
             <StorySlideCard
               story={story}
               surface="clone"
-              isActive={story.name === STORY_SLIDES[activeIndex].name}
+              isActive={story.name === CLONE_STORY_SLIDES[activeIndex].name}
             />
           </SwiperSlide>
         ))}
       </Swiper>
 
       <div className="success-stories-clone-pagination absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full bg-black/20 px-2 py-1 backdrop-blur-[2px]">
-        {STORY_SLIDES.map((_, i) => (
+        {CLONE_STORY_SLIDES.map((_, i) => (
           <button
             key={i}
             type="button"

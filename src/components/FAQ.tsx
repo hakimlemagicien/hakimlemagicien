@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Plus,
-  Headphones,
-  MessageCircle,
-  ShieldCheck,
-  Users,
-  Lock,
-  Calendar,
-  Star,
   Sparkles,
 } from "lucide-react";
-import coachSupport from "@/assets/coach-support.jpg";
-import { DarkPremiumPanel } from "@/components/DarkPremiumPanel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -69,58 +67,38 @@ const FAQS: { q: string; a: string }[] = [
   },
 ];
 
-const TRUST = [
-  { Icon: Users, label: "دعم شخصي" },
-  { Icon: Lock, label: "خصوصيتك محفوظة" },
-  { Icon: Calendar, label: "خطة مرنة تناسبك" },
-  { Icon: Star, label: "نتائج مضمونة" },
-];
-
-function FaqItem({ item, index, open, onToggle }: { item: { q: string; a: string }; index: number; open: boolean; onToggle: () => void }) {
-  const { ref, inView } = useInView<HTMLDivElement>();
+function FaqItem({
+  item,
+  index,
+  onOpen,
+}: {
+  item: { q: string; a: string };
+  index: number;
+  onOpen: () => void;
+}) {
+  const { ref, inView } = useInView<HTMLButtonElement>();
   return (
-    <div
+    <button
       ref={ref}
-      className={`overflow-hidden rounded-[20px] bg-white ring-1 ring-neutral-100 transition-all duration-500 ease-out ${
+      type="button"
+      onClick={onOpen}
+      className={`flex w-full items-center justify-between gap-4 overflow-hidden rounded-[20px] bg-white px-5 py-5 text-right ring-1 ring-neutral-100 shadow-[0_4px_14px_rgba(0,0,0,0.04)] transition-all duration-500 ease-out hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:ring-orange-100 md:px-6 ${
         inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      } ${open ? "shadow-[0_10px_30px_rgba(0,0,0,0.08)]" : "shadow-[0_4px_14px_rgba(0,0,0,0.04)]"}`}
+      }`}
       style={{ transitionDelay: `${index * 60}ms` }}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 px-5 md:px-6 py-5 text-right"
-      >
-        <span
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-orange-50 text-orange-500 transition-transform duration-300 ${
-            open ? "rotate-45" : ""
-          }`}
-        >
-          <Plus className="h-5 w-5" strokeWidth={2.4} />
-        </span>
-        <span className="flex-1 text-right text-sm md:text-base font-bold text-neutral-900">{item.q}</span>
-      </button>
-      <div
-        className={`grid transition-all duration-400 ease-out ${
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <div className="mx-4 mb-4 rounded-2xl bg-[#FAF6F2] px-5 py-4 text-right text-sm leading-loose text-neutral-600">
-            {item.a}
-          </div>
-        </div>
-      </div>
-    </div>
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-orange-50 text-orange-500">
+        <Plus className="h-5 w-5" strokeWidth={2.4} />
+      </span>
+      <span className="flex-1 text-right text-sm font-bold text-neutral-900 md:text-base">{item.q}</span>
+    </button>
   );
 }
 
 export default function FAQ() {
   const head = useInView<HTMLDivElement>();
-  const support = useInView<HTMLDivElement>();
-  const trust = useInView<HTMLDivElement>();
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [activeFaqIdx, setActiveFaqIdx] = useState<number | null>(null);
+  const activeFaq = activeFaqIdx !== null ? FAQS[activeFaqIdx] : null;
 
   return (
     <section
@@ -160,118 +138,46 @@ export default function FAQ() {
           </p>
         </div>
 
-        {/* MAIN GRID */}
-        <div className="mt-14 md:mt-16 grid gap-8 lg:gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-          {/* SUPPORT CARD */}
-          <div
-            ref={support.ref}
-            className={`rounded-[32px] bg-white ring-1 ring-neutral-100 shadow-[0_10px_40px_rgba(0,0,0,0.06)] p-5 md:p-6 transition-all duration-700 ease-out ${
-              support.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <div className="relative overflow-hidden rounded-2xl">
-              <img
-                src={coachSupport}
-                alt="فريق الدعم"
-                width={1024}
-                height={1024}
-                loading="lazy"
-                className="h-64 md:h-72 w-full object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-
-            <div className="mt-6 text-center">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-orange-50 text-orange-500 ring-1 ring-orange-100 animate-[float_5s_ease-in-out_infinite]">
-                <Headphones className="h-6 w-6" strokeWidth={2.2} />
-              </div>
-              <h3 className="mt-4 text-xl md:text-2xl font-black text-neutral-900">لم تجد إجابة لسؤالك؟</h3>
-              <p className="mt-3 text-sm leading-loose text-neutral-500">
-                فريق الدعم لدينا جاهز لمساعدتك والرد على جميع استفساراتك.
-              </p>
-
-              <a
-                href="https://wa.me/971505129019"
-                className="group mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-l from-orange-500 to-orange-600 px-6 py-4 text-sm md:text-base font-bold text-white shadow-[0_10px_30px_-10px_rgba(249,115,22,0.6)] transition-all duration-300 hover:shadow-[0_15px_40px_-10px_rgba(249,115,22,0.8)] hover:brightness-105"
-              >
-                <MessageCircle className="h-5 w-5" />
-                تواصل معنا على واتساب
-              </a>
-            </div>
-          </div>
-
-          {/* ACCORDION */}
-          <div className="space-y-3">
-            {FAQS.map((item, i) => (
-              <FaqItem
-                key={item.q}
-                item={item}
-                index={i}
-                open={openIdx === i}
-                onToggle={() => setOpenIdx(openIdx === i ? null : i)}
-              />
-            ))}
-          </div>
+        <div className="mx-auto mt-14 md:mt-16 max-w-3xl space-y-3">
+          {FAQS.map((item, i) => (
+            <FaqItem
+              key={item.q}
+              item={item}
+              index={i}
+              onOpen={() => setActiveFaqIdx(i)}
+            />
+          ))}
         </div>
 
-        {/* BOTTOM TRUST */}
-        <DarkPremiumPanel
-          ref={trust.ref}
-          active={trust.inView}
-          className="mt-14 md:mt-16"
-          innerClassName="px-5 py-8 md:px-10 md:py-10"
+        <Dialog
+          open={activeFaqIdx !== null}
+          onOpenChange={(open) => {
+            if (!open) setActiveFaqIdx(null);
+          }}
         >
-          <div className="grid items-center gap-8 md:grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1.2fr)]">
-            <div className="flex justify-center md:justify-start">
-              <div className="relative">
-                <span className="absolute inset-0 rounded-full bg-[#FF6B00]/30 blur-xl animate-warning-card-outer-glow" />
-                <div
-                  className="relative grid h-20 w-20 place-items-center rounded-2xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)]"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
-                  }}
+          <DialogContent
+            dir="rtl"
+            className="max-w-md gap-0 overflow-hidden rounded-[24px] border-orange-100 p-0 sm:max-w-lg [&>button]:left-4 [&>button]:right-auto"
+          >
+            {activeFaq && (
+              <>
+                <div className="h-1.5 w-full bg-gradient-to-l from-orange-500 to-orange-400" />
+                <DialogHeader className="space-y-3 px-6 pb-2 pt-6 text-right">
+                  <DialogTitle className="text-lg font-black leading-snug text-neutral-900 md:text-xl">
+                    {activeFaq.q}
+                  </DialogTitle>
+                </DialogHeader>
+                <DialogDescription
+                  asChild
+                  className="px-6 pb-6 text-right text-sm leading-loose text-neutral-600 md:text-base"
                 >
-                  <ShieldCheck className="h-9 w-9" strokeWidth={2.2} />
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center md:text-right">
-              <h3 className="text-xl font-black text-white/95 md:text-2xl [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
-                رضاك هو أولويتنا
-              </h3>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-loose text-white/75 md:mx-0">
-                نضمن لك تجربة احترافية، دعم مستمر، ونتائج حقيقية أو نعمل معك حتى تحقق هدفك.
-              </p>
-            </div>
-
-            <span className="hidden h-20 w-px bg-white/15 md:block" />
-
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-2">
-              {TRUST.map((t) => {
-                const Icon = t.Icon;
-                return (
-                  <div key={t.label} className="text-center">
-                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-white/10 text-[#FF8A3D] shadow-[0_8px_20px_-10px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/20 backdrop-blur-sm">
-                      <Icon className="h-5 w-5" strokeWidth={2.2} />
-                    </div>
-                    <div className="mt-2 text-xs font-extrabold leading-tight text-white md:text-[13px] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                      {t.label}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </DarkPremiumPanel>
+                  <p>{activeFaq.a}</p>
+                </DialogDescription>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-      `}</style>
     </section>
   );
 }

@@ -10,7 +10,6 @@ import {
   Lock,
   TrendingDown,
 } from "lucide-react";
-import coachHero from "@/assets/coach-hero.jpeg";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
@@ -209,17 +208,6 @@ export default function FinalCTA() {
                 className="absolute inset-0 m-auto h-[88%] w-[88%] rounded-full"
                 style={{ background: "rgba(249,115,22,0.08)" }}
               />
-              <img
-                src={coachHero}
-                alt="Hakim Coach"
-                className="relative z-10 mx-auto h-full w-auto max-h-[600px] object-contain"
-                style={{
-                  opacity: inView ? 1 : 0,
-                  transform: inView ? "scale(1)" : "scale(0.96)",
-                  transition: "all 900ms ease-out 200ms",
-                }}
-              />
-
               {/* Floating Card 01 — Progress */}
               <div
                 className="absolute top-2 left-0 sm:top-6 sm:left-2 z-20 bg-white p-4 cta-float"

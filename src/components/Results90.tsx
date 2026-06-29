@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Activity,
   Shield,
-  Sparkles,
   Ruler,
   Zap,
 } from "lucide-react";
@@ -166,11 +165,7 @@ export function Results90() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-2 text-sm font-bold text-primary">
-            <Sparkles className="h-4 w-4" />
-            نتائج حقيقية خلال 90 يوم
-          </div>
-          <h2 className="origin-top mt-5 text-[44px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]">
+          <h2 className="-mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:mt-0 lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
             ماذا يمكنك تحقيقه
             <br />
             <span className="inline-block translate-y-[2px] text-primary">خلال 90 يوماً؟</span>

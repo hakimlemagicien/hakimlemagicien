@@ -100,10 +100,10 @@ export function ProblemSection() {
             }}
           >
             <h2
-              className="origin-top text-[34px] font-[Tajawal] font-black leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-5xl lg:scale-[0.926] lg:text-[68px]"
+              className="text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]"
             >
-              لماذا لا يحقق أغلب الناس{" "}
-              <span className="text-[#FF6B00]">النتائج التي يريدونها؟</span>
+              <span className="block text-foreground">لماذا لا يحقق أغلب الناس</span>
+              <span className="block text-[#FF6B00]">النتائج التي يريدونها؟</span>
             </h2>
             <div
               aria-hidden
