@@ -50,6 +50,12 @@ import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
 import avatar4 from "@/assets/avatar4.jpg";
+import goalFatImg from "@/assets/body-skinny-fat.jpg";
+import goalMuscleImg from "@/assets/body-muscular.jpg";
+import goalFitnessImg from "@/assets/coach-gym.jpg";
+import goalAthleticImg from "@/assets/transform-3.jpg";
+import goalShapeImg from "@/assets/transform-1.jpg";
+import goalGainImg from "@/assets/transform-4.jpg";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -630,22 +636,22 @@ function GenderCard({
 
 /* ===================== GOALS SCREEN ===================== */
 
-type Goal = { id: string; label: string; Icon: typeof Dumbbell };
+type Goal = { id: string; label: string; image: string };
 
 const GOALS: Goal[] = [
-  { id: "muscle", label: "بناء العضلات", Icon: Dumbbell },
-  { id: "fat", label: "خسارة الدهون", Icon: Flame },
-  { id: "athletic", label: "جسم رياضي ومتناسق", Icon: Trophy },
-  { id: "fitness", label: "تحسين اللياقة والطاقة", Icon: Zap },
-  { id: "gain", label: "زيادة وزن صحي", Icon: TrendingUp },
-  { id: "shape", label: "تغيير شكل الجسم", Icon: Target },
+  { id: "fat", label: "خسارة الدهون", image: goalFatImg },
+  { id: "muscle", label: "بناء العضلات", image: goalMuscleImg },
+  { id: "fitness", label: "تحسين اللياقة والطاقة", image: goalFitnessImg },
+  { id: "athletic", label: "جسم رياضي ومتناسق", image: goalAthleticImg },
+  { id: "shape", label: "تغيير شكل الجسم", image: goalShapeImg },
+  { id: "gain", label: "زيادة وزن صحي", image: goalGainImg },
 ];
 
 function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
-  const [selected, setSelected] = useState<string>("muscle");
+  const [selected, setSelected] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   useEffect(() => {
-    if (!touched) return;
+    if (!touched || !selected) return;
     onSelect?.(selected);
     const t = setTimeout(onNext, HAPTIC_NAV_DELAY_MS);
     return () => clearTimeout(t);
@@ -674,7 +680,7 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
         </div>
 
         {/* Grid */}
-        <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch">
+        <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
           {GOALS.map((g, i) => {
             const active = selected === g.id;
             return (
@@ -685,35 +691,32 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
                   setSelected(g.id);
                   setTouched(true);
                 }}
-                className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-3 py-3 transition-all active:scale-[0.97]"
+                className="relative flex min-h-0 flex-col overflow-hidden rounded-[18px] bg-white text-center transition-all active:scale-[0.98]"
                 style={{
+                  border: active ? "2px solid #FF6B00" : "2px solid transparent",
                   boxShadow: active
-                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
-                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                    ? "0 12px 28px -10px rgba(255,107,0,0.28)"
+                    : "0 8px 20px -12px rgba(0,0,0,0.1)",
                   animation: `fadeUp .5s ease-out ${i * 70}ms both`,
                 }}
               >
-                {active && (
-                  <span
-                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
-                    style={{ background: "#FF6B00" }}
+                <div className="relative h-[min(34vw,135px)] w-full overflow-hidden">
+                  <img
+                    src={g.image}
+                    alt={g.label}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div className="flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center">
+                  <p
+                    className="text-[14px] font-black leading-tight"
+                    style={{ color: active ? "#FF6B00" : "#1F1F1F" }}
                   >
-                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
-                  </span>
-                )}
-                <span
-                  className="grid place-items-center rounded-full"
-                  style={{
-                    height: 64,
-                    width: 64,
-                    background: "rgba(255,107,0,0.10)",
-                  }}
-                >
-                  <g.Icon className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
-                </span>
-                <span className="mt-3 text-[14px] font-bold text-neutral-900 text-center leading-tight">
-                  {g.label}
-                </span>
+                    {g.label}
+                  </p>
+                </div>
               </button>
             );
           })}
