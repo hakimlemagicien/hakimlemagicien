@@ -165,7 +165,7 @@ export function Results90() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="-mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:mt-0 lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
+          <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
             ماذا يمكنك تحقيقه
             <br />
             <span className="inline-block translate-y-[2px] text-primary">خلال 90 يوماً؟</span>
@@ -475,21 +475,21 @@ function BottomStats() {
     <DarkPremiumPanel
       ref={ref}
       active={inView}
-      className="mt-14 lg:mt-20"
-      innerClassName="sm:p-8 lg:p-10"
+      className="mx-auto mt-10 max-w-2xl sm:max-w-3xl lg:mt-14"
+      innerClassName="px-4 py-5 sm:px-6 sm:py-6"
     >
-      <h3 className="text-center font-black tracking-tight text-2xl text-white/95 sm:text-3xl lg:text-[34px] [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+      <h3 className="text-center text-base font-black tracking-tight text-white/95 sm:text-lg [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
         نتائج تتجاوز التوقعات
       </h3>
 
-      <div className="mt-8 grid grid-cols-2 gap-6 sm:gap-8 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:grid-cols-4 sm:gap-2">
         {STATS.map((s, i) => (
           <StatItem key={s.label} stat={s} index={i} active={inView} />
         ))}
       </div>
 
-      <div className="mt-8 flex items-center justify-center gap-2 border-t border-white/10 pt-6 text-center text-xs text-white/75 sm:text-sm">
-        <Shield className="h-4 w-4 shrink-0 text-success" />
+      <div className="mt-4 flex items-start justify-center gap-2 border-t border-white/10 pt-4 text-center text-[11px] leading-relaxed text-white/70 sm:items-center sm:text-xs">
+        <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success sm:mt-0" />
         <span>النتائج تختلف من شخص لآخر وتعتمد على الالتزام بالخطة الموصوفة والمتابعة المستمرة.</span>
       </div>
     </DarkPremiumPanel>
@@ -509,7 +509,7 @@ function StatItem({
   const Icon = stat.icon;
   return (
     <div
-      className="flex flex-col items-center px-2 text-center"
+      className="flex flex-col items-center px-1 text-center sm:px-2"
       style={{
         opacity: active ? 1 : 0,
         transform: active ? "translateY(0)" : "translateY(12px)",
@@ -517,15 +517,15 @@ function StatItem({
         transitionDelay: `${200 + index * 120}ms`,
       }}
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10 text-success shadow-[0_8px_20px_-10px_rgba(34,197,94,0.35)] ring-1 ring-[#22C55E]/20 backdrop-blur-sm sm:h-[52px] sm:w-[52px]">
-        <Icon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={2.2} />
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/10 text-success shadow-[0_6px_16px_-8px_rgba(34,197,94,0.35)] ring-1 ring-[#22C55E]/20 backdrop-blur-sm sm:h-10 sm:w-10">
+        <Icon className="h-4 w-4 shrink-0" strokeWidth={2.2} />
       </span>
-      <div className="mt-3 text-xl font-black leading-none tabular-nums text-white sm:text-2xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
+      <div className="mt-2 text-lg font-black leading-none tabular-nums text-white sm:text-xl [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
         {stat.prefix}
         {stat.decimals ? value.toFixed(stat.decimals) : Math.round(value)}
         {stat.suffix}
       </div>
-      <div className="mt-1.5 text-xs font-medium leading-snug text-white/75 sm:text-sm">
+      <div className="mt-1 text-[10px] font-medium leading-snug text-white/75 sm:text-xs">
         {stat.label}
       </div>
     </div>

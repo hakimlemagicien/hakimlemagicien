@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { FloatingWhatsApp } from "../components/FloatingWhatsApp";
+import { ScrollToTopButton } from "../components/ScrollToTopButton";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -131,6 +132,7 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       {!isQuiz && <FloatingWhatsApp />}
+      {!isQuiz && <ScrollToTopButton />}
     </QueryClientProvider>
   );
 }

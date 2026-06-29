@@ -312,7 +312,7 @@ export function HowItWorks() {
 
       <div className="container mx-auto px-4 -mt-[30px]">
         <div className="text-center max-w-2xl mx-auto -mt-[30px]">
-          <h2 className="origin-top text-[44px] font-[Tajawal] font-extrabold leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[59px] lg:scale-[0.926] lg:text-[78px]">
+          <h2 className="origin-top text-[40px] font-[Tajawal] font-extrabold leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[55px] lg:scale-[0.926] lg:text-[74px]">
             كيف <span className="inline-block translate-y-[2px] text-primary">يعمل</span> التقييم؟
           </h2>
           <div

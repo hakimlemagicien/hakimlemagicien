@@ -470,7 +470,7 @@ export default function WhatYouGet() {
           }`}
         >
           {/* Heading */}
-          <h2 className="-mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:mt-0 lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
+          <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
             ماذا ستحصل عليه
             <br />
             <span className="inline-block translate-y-[2px] text-primary">داخل برنامجك؟</span>

@@ -130,8 +130,9 @@ export default function FAQ() {
             <Sparkles className="h-4 w-4" />
             إجابات على أكثر الأسئلة شيوعاً
           </span>
-          <h2 className="mt-5 text-4xl md:text-6xl lg:text-7xl font-black leading-[1.15] text-neutral-900">
-            الأسئلة <span className="text-orange-500">الشائعة</span>
+          <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
+            الأسئلة{" "}
+            <span className="inline-block translate-y-[2px] text-primary">الشائعة</span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-base md:text-lg text-neutral-500 leading-loose">
             كل ما تحتاج معرفته قبل البدء في برنامجك التدريبي والغذائي.
