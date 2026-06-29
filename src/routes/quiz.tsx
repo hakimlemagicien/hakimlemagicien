@@ -1,7 +1,8 @@
 import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
 import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
-import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
+import { useQuizProgress } from "@/hooks/use-quiz-progress";
+import { MotionStepView } from "@/components/motion/MotionStepView";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
@@ -56,6 +57,19 @@ import goalFitnessImg from "@/assets/coach-gym.jpg";
 import goalAthleticImg from "@/assets/transform-3.jpg";
 import goalShapeImg from "@/assets/transform-1.jpg";
 import goalGainImg from "@/assets/transform-4.jpg";
+import quizMaleImg from "@/assets/quiz-male.jpg";
+import transform2Img from "@/assets/transform-2.jpg";
+import bodyAverageImg from "@/assets/body-average.jpg";
+import bodyLeanImg from "@/assets/body-lean.jpg";
+import coachSupportImg from "@/assets/coach-support.jpg";
+import targetImg from "@/assets/target-illustration.png";
+import confusedCoachImg from "@/assets/confused-coach.png";
+import fbodySlim from "@/assets/fbody-slim.jpg";
+import fbodyBellyLight from "@/assets/fbody-belly-light.jpg";
+import fbodyToning from "@/assets/fbody-toning.jpg";
+import fbodyShaping from "@/assets/fbody-shaping.jpg";
+import fbodyAthletic from "@/assets/fbody-athletic.jpg";
+import fbodyOverweight from "@/assets/fbody-overweight.jpg";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -71,21 +85,41 @@ const FONT = "'Tajawal', sans-serif";
 type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
 function QuizPage() {
-  const { step, phase, transitionTo, selectAndGo, goBack } = useQuizStepTransition<Step>("loading");
-  const [gender, setGender] = useState<"male" | "female" | null>(null);
-  const [userName, setUserName] = useState<string>("");
-  const [userPhone, setUserPhone] = useState<string>("");
-  const [userCity, setUserCity] = useState<string>("");
-  const [goalId, setGoalId] = useState<string>("");
-  const [challengeId, setChallengeId] = useState<string>("");
-  const [age, setAge] = useState<number>();
-  const [heightCm, setHeightCm] = useState<number>();
-  const [weightKg, setWeightKg] = useState<number>();
-  const [activityLevel, setActivityLevel] = useState<string>();
-  const [investment, setInvestment] = useState<string>();
-  const [bodyType, setBodyType] = useState<string>();
-  const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
-  const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
+  const {
+    step,
+    phase,
+    transitionTo,
+    selectAndGo,
+    goBack,
+    gender,
+    setGender,
+    userName,
+    setUserName,
+    userPhone,
+    setUserPhone,
+    userCity,
+    setUserCity,
+    goalId,
+    setGoalId,
+    challengeId,
+    setChallengeId,
+    age,
+    setAge,
+    heightCm,
+    setHeightCm,
+    weightKg,
+    setWeightKg,
+    activityLevel,
+    setActivityLevel,
+    investment,
+    setInvestment,
+    bodyType,
+    setBodyType,
+    userLocation,
+    setUserLocation,
+    selectedTierId,
+    setSelectedTierId,
+  } = useQuizProgress();
 
   const quizAnswers: QuizAnswersInput = {
     gender,
@@ -114,7 +148,7 @@ function QuizPage() {
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@700;800;900&display=swap"
       />
-      <div className={`quiz-step-view quiz-step-view--${phase}`}>
+      <MotionStepView phase={phase}>
       {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
       {step === "gender" && (
         <GenderScreen
@@ -130,11 +164,20 @@ function QuizPage() {
         <FemaleGoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
       )}
       {step === "age" && (
-        <AgeScreen onBack={() => goBack("gender")} onNext={(value) => selectAndGo("measure", () => setAge(value))} />
+        <AgeScreen
+          onBack={() => goBack("gender")}
+          onNext={(value) => selectAndGo("measure", () => setAge(value))}
+          initialAge={age ?? 24}
+          onAgeChange={setAge}
+        />
       )}
       {step === "measure" && (
         <MeasureScreen
           onBack={() => goBack("age")}
+          initialHeight={heightCm ?? 164}
+          initialWeight={weightKg ?? 63}
+          onHeightChange={setHeightCm}
+          onWeightChange={setWeightKg}
           onNext={(height, weight) =>
             selectAndGo("activity", () => {
               setHeightCm(height);
@@ -260,7 +303,7 @@ function QuizPage() {
           onBack={() => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")}
         />
       )}
-      </div>
+      </MotionStepView>
     </div>
   );
 }
@@ -636,7 +679,50 @@ function GenderCard({
 
 /* ===================== GOALS SCREEN ===================== */
 
-type Goal = { id: string; label: string; image: string };
+type ImageOption = { id: string; label: string; image: string };
+
+function QuizImageOptionCard({
+  label,
+  image,
+  active,
+  index,
+  onClick,
+}: {
+  label: string;
+  image: string;
+  active: boolean;
+  index: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="relative flex min-h-0 flex-col overflow-hidden rounded-[18px] bg-white text-center transition-all active:scale-[0.98]"
+      style={{
+        border: active ? "2px solid #FF6B00" : "2px solid transparent",
+        boxShadow: active
+          ? "0 12px 28px -10px rgba(255,107,0,0.28)"
+          : "0 8px 20px -12px rgba(0,0,0,0.1)",
+        animation: `fadeUp .5s ease-out ${index * 70}ms both`,
+      }}
+    >
+      <div className="relative h-[min(34vw,135px)] w-full overflow-hidden">
+        <img src={image} alt={label} loading="lazy" className="h-full w-full object-cover" />
+      </div>
+      <div className="flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center">
+        <p
+          className="text-[14px] font-black leading-tight"
+          style={{ color: active ? "#FF6B00" : "#1F1F1F" }}
+        >
+          {label}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+type Goal = ImageOption;
 
 const GOALS: Goal[] = [
   { id: "fat", label: "خسارة الدهون", image: goalFatImg },
@@ -681,45 +767,20 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
 
         {/* Grid */}
         <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
-          {GOALS.map((g, i) => {
-            const active = selected === g.id;
-            return (
-              <button
-                key={g.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(g.id);
-                  setTouched(true);
-                }}
-                className="relative flex min-h-0 flex-col overflow-hidden rounded-[18px] bg-white text-center transition-all active:scale-[0.98]"
-                style={{
-                  border: active ? "2px solid #FF6B00" : "2px solid transparent",
-                  boxShadow: active
-                    ? "0 12px 28px -10px rgba(255,107,0,0.28)"
-                    : "0 8px 20px -12px rgba(0,0,0,0.1)",
-                  animation: `fadeUp .5s ease-out ${i * 70}ms both`,
-                }}
-              >
-                <div className="relative h-[min(34vw,135px)] w-full overflow-hidden">
-                  <img
-                    src={g.image}
-                    alt={g.label}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-
-                <div className="flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center">
-                  <p
-                    className="text-[14px] font-black leading-tight"
-                    style={{ color: active ? "#FF6B00" : "#1F1F1F" }}
-                  >
-                    {g.label}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
+          {GOALS.map((g, i) => (
+            <QuizImageOptionCard
+              key={g.id}
+              label={g.label}
+              image={g.image}
+              active={selected === g.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(g.id);
+                setTouched(true);
+              }}
+            />
+          ))}
         </div>
 
         {/* Bottom badge */}
@@ -801,13 +862,13 @@ function TorsoIcon({ className }: { className?: string }) {
   );
 }
 
-const FEMALE_GOALS = [
-  { id: "fat", label: "خسارة الدهون", icon: <Flame className="h-7 w-7" style={{ color: "#FF6B00" }} strokeWidth={2.4} /> },
-  { id: "glutes", label: "تكبير المؤخرة", icon: <PeachIcon className="h-7 w-7" /> },
-  { id: "waist", label: "خصر أنحف ومشدود", icon: <WaistIcon className="h-7 w-7" /> },
-  { id: "body", label: "جسم متناسق وأنثوي", icon: <FemaleBodyIcon className="h-7 w-7" /> },
-  { id: "fit", label: "جسم صحي ورياضي", icon: <Dumbbell className="h-7 w-7" style={{ color: "#F472B6" }} strokeWidth={2.4} /> },
-  { id: "tone", label: "شد الجسم ونحته", icon: <TorsoIcon className="h-7 w-7" /> },
+const FEMALE_GOALS: ImageOption[] = [
+  { id: "fat", label: "خسارة الدهون", image: fbodyBellyLight },
+  { id: "glutes", label: "تكبير المؤخرة", image: fbodyShaping },
+  { id: "waist", label: "خصر أنحف ومشدود", image: fbodyToning },
+  { id: "body", label: "جسم متناسق وأنثوي", image: fbodyAthletic },
+  { id: "fit", label: "جسم صحي ورياضي", image: fbodySlim },
+  { id: "tone", label: "شد الجسم ونحته", image: fbodyToning },
 ];
 
 function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -841,48 +902,20 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch">
-          {FEMALE_GOALS.map((g, i) => {
-            const active = selected === g.id;
-            return (
-              <button
-                key={g.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(g.id);
-                }}
-                className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-2 py-4 transition-all active:scale-[0.97]"
-                style={{
-                  boxShadow: active
-                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
-                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
-                  animation: `fadeUp .5s ease-out ${i * 70}ms both`,
-                }}
-              >
-                {active && (
-                  <span
-                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
-                    style={{ background: "#FF6B00" }}
-                  >
-                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
-                  </span>
-                )}
-                <span
-                  className="grid place-items-center rounded-full"
-                  style={{
-                    height: 56,
-                    width: 56,
-                    background: "rgba(255,107,0,0.08)",
-                  }}
-                >
-                  {g.icon}
-                </span>
-                <span className="mt-2 text-[13px] font-bold text-neutral-900 text-center leading-tight px-1">
-                  {g.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-3 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+          {FEMALE_GOALS.map((g, i) => (
+            <QuizImageOptionCard
+              key={g.id}
+              label={g.label}
+              image={g.image}
+              active={selected === g.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(g.id);
+              }}
+            />
+          ))}
         </div>
 
         {/* Bottom badge */}
@@ -907,16 +940,30 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
 const AGES = Array.from({ length: 80 - 14 + 1 }, (_, i) => 14 + i);
 const ITEM_H = 56;
 
-function AgeScreen({ onBack, onNext }: { onBack: () => void; onNext: (age: number) => void }) {
-  const [age, setAge] = useState(24);
+function AgeScreen({
+  onBack,
+  onNext,
+  initialAge = 24,
+  onAgeChange,
+}: {
+  onBack: () => void;
+  onNext: (age: number) => void;
+  initialAge?: number;
+  onAgeChange?: (age: number) => void;
+}) {
+  const [age, setAge] = useState(initialAge);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const snapTimer = useRef<number | null>(null);
 
   useEffect(() => {
+    onAgeChange?.(age);
+  }, [age, onAgeChange]);
+
+  useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    el.scrollTop = (24 - 14) * ITEM_H;
-  }, []);
+    el.scrollTop = (initialAge - 14) * ITEM_H;
+  }, [initialAge]);
 
   const onScroll = () => {
     const el = scrollerRef.current;
@@ -1137,9 +1184,31 @@ function HorizontalWheel({
   );
 }
 
-function MeasureScreen({ onBack, onNext }: { onBack: () => void; onNext: (height: number, weight: number) => void }) {
-  const [height, setHeight] = useState(164);
-  const [weight, setWeight] = useState(63);
+function MeasureScreen({
+  onBack,
+  onNext,
+  initialHeight = 164,
+  initialWeight = 63,
+  onHeightChange,
+  onWeightChange,
+}: {
+  onBack: () => void;
+  onNext: (height: number, weight: number) => void;
+  initialHeight?: number;
+  initialWeight?: number;
+  onHeightChange?: (height: number) => void;
+  onWeightChange?: (weight: number) => void;
+}) {
+  const [height, setHeight] = useState(initialHeight);
+  const [weight, setWeight] = useState(initialWeight);
+
+  useEffect(() => {
+    onHeightChange?.(height);
+  }, [height, onHeightChange]);
+
+  useEffect(() => {
+    onWeightChange?.(weight);
+  }, [weight, onWeightChange]);
 
   return (
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
@@ -1271,43 +1340,13 @@ function SneakerIcon({ className }: { className?: string }) {
   );
 }
 
-const ACTIVITIES = [
-  {
-    id: "sedentary",
-    label: "خامل تماماً",
-    desc: "لا أمارس أي نشاط بدني وأقضي معظم وقتي جالساً.",
-    icon: <SofaIcon className="h-8 w-8" />,
-  },
-  {
-    id: "light",
-    label: "نشاط خفيف",
-    desc: "أتحرك قليلاً في يومي (مثل المشي الخفيف).",
-    icon: <WalkingIcon className="h-8 w-8" />,
-  },
-  {
-    id: "moderate",
-    label: "نشاط متوسط",
-    desc: "أمارس التمارين 1 - 3 مرات في الأسبوع.",
-    icon: <SneakerIcon className="h-8 w-8" />,
-  },
-  {
-    id: "high",
-    label: "نشاط عالي",
-    desc: "أمارس التمارين 3 - 5 مرات في الأسبوع.",
-    icon: <Dumbbell className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
-  },
-  {
-    id: "veryhigh",
-    label: "نشاط عالي جداً",
-    desc: "أمارس التمارين 6 - 7 مرات في الأسبوع.",
-    icon: <Flame className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
-  },
-  {
-    id: "athlete",
-    label: "رياضي محترف",
-    desc: "أتمرن يومياً أو لدي نشاط رياضي مكثف جداً.",
-    icon: <Trophy className="h-8 w-8" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
-  },
+const ACTIVITIES: ImageOption[] = [
+  { id: "sedentary", label: "خامل تماماً", image: bodyAverageImg },
+  { id: "light", label: "نشاط خفيف", image: quizMaleImg },
+  { id: "moderate", label: "نشاط متوسط", image: goalFitnessImg },
+  { id: "high", label: "نشاط عالي", image: transform2Img },
+  { id: "veryhigh", label: "نشاط عالي جداً", image: goalAthleticImg },
+  { id: "athlete", label: "رياضي محترف", image: goalMuscleImg },
 ];
 
 function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activityLevel: string) => void }) {
@@ -1333,52 +1372,20 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
-          {ACTIVITIES.map((a, i) => {
-            const active = selected === a.id;
-            return (
-              <button
-                key={a.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(a.id);
-                }}
-                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-2.5 transition-all active:scale-[0.97]"
-                style={{
-                  boxShadow: active
-                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
-                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
-                  transform: active ? "scale(1.03)" : "scale(1)",
-                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
-                }}
-              >
-                {active && (
-                  <span
-                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
-                    style={{ background: "#FF6B00" }}
-                  >
-                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
-                  </span>
-                )}
-                <span
-                  className="grid place-items-center rounded-full"
-                  style={{
-                    height: 56,
-                    width: 56,
-                    background: "rgba(255,107,0,0.10)",
-                  }}
-                >
-                  {a.icon}
-                </span>
-                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight">
-                  {a.label}
-                </span>
-                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
-                  {a.desc}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+          {ACTIVITIES.map((a, i) => (
+            <QuizImageOptionCard
+              key={a.id}
+              label={a.label}
+              image={a.image}
+              active={selected === a.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(a.id);
+              }}
+            />
+          ))}
         </div>
 
         {/* Bottom info card */}
@@ -1524,43 +1531,13 @@ function SadFaceIcon({ className }: { className?: string }) {
   );
 }
 
-const CHALLENGES = [
-  {
-    id: "belly",
-    label: "دهون البطن",
-    desc: "تراكم الدهون في منطقة البطن والكرش.",
-    icon: <MaleAbsIcon className="h-8 w-8" />,
-  },
-  {
-    id: "muscle",
-    label: "صعوبة بناء العضلات",
-    desc: "أجد صعوبة في زيادة الكتلة العضلية.",
-    icon: <BicepIcon className="h-8 w-8" />,
-  },
-  {
-    id: "energy",
-    label: "قلة الطاقة والحيوية",
-    desc: "أشعر بالتعب والخمول معظم الوقت.",
-    icon: <LowBatteryIcon className="h-8 w-8" />,
-  },
-  {
-    id: "goal",
-    label: "عدم وضوح الهدف",
-    desc: "ليس لدي هدف محدد أو خطة واضحة.",
-    icon: <BullseyeIcon className="h-8 w-8" />,
-  },
-  {
-    id: "commitment",
-    label: "الالتزام والاستمرارية",
-    desc: "أبدأ ثم أترك بسهولة ولا أستمر.",
-    icon: <BrainIcon className="h-8 w-8" />,
-  },
-  {
-    id: "confidence",
-    label: "الثقة بالنفس والمظهر",
-    desc: "غير راضٍ عن مظهري وأريد تغييراً حقيقياً.",
-    icon: <SadFaceIcon className="h-8 w-8" />,
-  },
+const CHALLENGES: ImageOption[] = [
+  { id: "belly", label: "دهون البطن", image: goalFatImg },
+  { id: "muscle", label: "صعوبة بناء العضلات", image: goalMuscleImg },
+  { id: "energy", label: "قلة الطاقة والحيوية", image: bodyLeanImg },
+  { id: "goal", label: "عدم وضوح الهدف", image: targetImg },
+  { id: "commitment", label: "الالتزام والاستمرارية", image: confusedCoachImg },
+  { id: "confidence", label: "الثقة بالنفس والمظهر", image: goalShapeImg },
 ];
 
 function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -1587,52 +1564,20 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
-          {CHALLENGES.map((c, i) => {
-            const active = selected === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(c.id);
-                }}
-                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
-                style={{
-                  boxShadow: active
-                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
-                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
-                  transform: active ? "scale(1.03)" : "scale(1)",
-                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
-                }}
-              >
-                {active && (
-                  <span
-                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
-                    style={{ background: "#FF6B00" }}
-                  >
-                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
-                  </span>
-                )}
-                <span
-                  className="grid place-items-center rounded-full"
-                  style={{
-                    height: 56,
-                    width: 56,
-                    background: "rgba(255,107,0,0.10)",
-                  }}
-                >
-                  {c.icon}
-                </span>
-                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight px-1">
-                  {c.label}
-                </span>
-                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
-                  {c.desc}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+          {CHALLENGES.map((c, i) => (
+            <QuizImageOptionCard
+              key={c.id}
+              label={c.label}
+              image={c.image}
+              active={selected === c.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(c.id);
+              }}
+            />
+          ))}
         </div>
 
         {/* Bottom info card */}
@@ -1810,43 +1755,13 @@ function CupcakeIcon({ className }: { className?: string }) {
   );
 }
 
-const FEMALE_CHALLENGES = [
-  {
-    id: "belly",
-    label: "الكرش والدهون البطن",
-    desc: "تراكم الدهون في منطقة البطن وصعوبة التخلص منها.",
-    icon: <FemaleWaistIcon className="h-8 w-8" />,
-  },
-  {
-    id: "glutes",
-    label: "شكل المؤخرة",
-    desc: "أريد تكبير المؤخرة وشدها وتحسين شكلها.",
-    icon: <PeachIcon className="h-8 w-8" />,
-  },
-  {
-    id: "sagging",
-    label: "ترهلات الجسم",
-    desc: "ترهل الجلد وفقدان الشد بعد خسارة الوزن.",
-    icon: <FemaleToneIcon className="h-8 w-8" />,
-  },
-  {
-    id: "weight",
-    label: "عدم نزول الوزن",
-    desc: "أبذل مجهوداً لكن وزني لا ينخفض.",
-    icon: <PinkScaleIcon className="h-8 w-8" />,
-  },
-  {
-    id: "confidence",
-    label: "الثقة بالنفس",
-    desc: "أشعر بعدم الرضا عن مظهري وأريد أن أكون واثقة أكثر.",
-    icon: <PinkSadFaceIcon className="h-8 w-8" />,
-  },
-  {
-    id: "cravings",
-    label: "الرغبة الشديدة في الأكل",
-    desc: "أجد صعوبة في التحكم في شهيتي وخاصة الحلويات.",
-    icon: <CupcakeIcon className="h-8 w-8" />,
-  },
+const FEMALE_CHALLENGES: ImageOption[] = [
+  { id: "belly", label: "الكرش والدهون البطن", image: fbodyBellyLight },
+  { id: "glutes", label: "شكل المؤخرة", image: fbodyShaping },
+  { id: "sagging", label: "ترهلات الجسم", image: fbodyToning },
+  { id: "weight", label: "عدم نزول الوزن", image: fbodyOverweight },
+  { id: "confidence", label: "الثقة بالنفس", image: fbodySlim },
+  { id: "cravings", label: "الرغبة الشديدة في الأكل", image: coachSupportImg },
 ];
 
 function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -1873,52 +1788,20 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch">
-          {FEMALE_CHALLENGES.map((c, i) => {
-            const active = selected === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(c.id);
-                }}
-                className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
-                style={{
-                  boxShadow: active
-                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
-                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
-                  transform: active ? "scale(1.03)" : "scale(1)",
-                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
-                }}
-              >
-                {active && (
-                  <span
-                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
-                    style={{ background: "#FF6B00" }}
-                  >
-                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
-                  </span>
-                )}
-                <span
-                  className="grid place-items-center rounded-full"
-                  style={{
-                    height: 56,
-                    width: 56,
-                    background: "rgba(255,107,0,0.10)",
-                  }}
-                >
-                  {c.icon}
-                </span>
-                <span className="mt-2 text-[13px] font-black text-neutral-900 text-center leading-tight px-1">
-                  {c.label}
-                </span>
-                <span className="mt-1 text-[10.5px] text-neutral-500 text-center leading-snug px-1">
-                  {c.desc}
-                </span>
-              </button>
-            );
-          })}
+        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+          {FEMALE_CHALLENGES.map((c, i) => (
+            <QuizImageOptionCard
+              key={c.id}
+              label={c.label}
+              image={c.image}
+              active={selected === c.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(c.id);
+              }}
+            />
+          ))}
         </div>
 
         {/* Bottom info card */}
@@ -2779,13 +2662,6 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
     </div>
   );
 }
-
-import fbodySlim from "@/assets/fbody-slim.jpg";
-import fbodyBellyLight from "@/assets/fbody-belly-light.jpg";
-import fbodyToning from "@/assets/fbody-toning.jpg";
-import fbodyShaping from "@/assets/fbody-shaping.jpg";
-import fbodyAthletic from "@/assets/fbody-athletic.jpg";
-import fbodyOverweight from "@/assets/fbody-overweight.jpg";
 
 const FEMALE_BODY_TYPES = [
   { id: "needs_toning", title: "جسم يحتاج شد", sub: "ترهلات خفيفة في البطن أو الذراعين والجسم", img: fbodyToning },

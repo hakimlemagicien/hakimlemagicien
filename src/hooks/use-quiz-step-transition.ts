@@ -35,5 +35,10 @@ export function useQuizStepTransition<T extends string>(initial: T) {
     [transitionTo],
   );
 
-  return { step, phase, transitionTo, selectAndGo, goBack };
+  const replaceStep = useCallback((next: T) => {
+    setStep(next);
+    setPhase("in");
+  }, []);
+
+  return { step, phase, transitionTo, selectAndGo, goBack, replaceStep };
 }

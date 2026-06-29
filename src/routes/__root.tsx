@@ -13,7 +13,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { FloatingWhatsApp } from "../components/FloatingWhatsApp";
 import { ScrollToTopButton } from "../components/ScrollToTopButton";
+import { MotionProvider } from "../components/motion/MotionProvider";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { registerServiceWorker } from "../lib/pwa";
 
 function NotFoundComponent() {
   return (
@@ -79,21 +81,47 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#FF6B00" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "author", content: "Hakim Coaching" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { title: "Hakim Le Magicien" },
       { property: "og:title", content: "Hakim Le Magicien" },
       { name: "twitter:title", content: "Hakim Le Magicien" },
-      { name: "description", content: "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching." },
-      { property: "og:description", content: "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching." },
-      { name: "twitter:description", content: "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp" },
+      {
+        name: "description",
+        content:
+          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+      },
+      {
+        property: "og:description",
+        content:
+          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/icon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/icon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -110,7 +138,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ar" dir="rtl">
       <head>
         <HeadContent />
       </head>
@@ -122,17 +150,27 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function PwaRegistrar() {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isQuiz = pathname.startsWith("/quiz");
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
-      {!isQuiz && <FloatingWhatsApp />}
-      {!isQuiz && <ScrollToTopButton />}
-    </QueryClientProvider>
+    <MotionProvider>
+      <QueryClientProvider client={queryClient}>
+        <PwaRegistrar />
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        {!isQuiz && <FloatingWhatsApp />}
+        {!isQuiz && <ScrollToTopButton />}
+      </QueryClientProvider>
+    </MotionProvider>
   );
 }
