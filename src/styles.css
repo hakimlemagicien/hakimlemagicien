@@ -430,3 +430,24 @@
   animation: stage-result-glass-glow-success 3.4s ease-in-out infinite;
   will-change: transform, box-shadow;
 }
+
+/* Quiz step cross-fade (haptic-first navigation) */
+.quiz-step-view {
+  width: 100%;
+  height: 100%;
+  transition:
+    opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.quiz-step-view--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quiz-step-view--out {
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}

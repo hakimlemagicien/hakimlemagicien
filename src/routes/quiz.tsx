@@ -1,5 +1,7 @@
 import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
+import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
+import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
@@ -40,8 +42,8 @@ import {
   UserCheck,
 } from "lucide-react";
 import { useRef } from "react";
-import maleImg from "@/assets/quiz-male.jpg";
-import femaleImg from "@/assets/quiz-female.jpg";
+import maleImg from "@/assets/ذكر.png";
+import femaleImg from "@/assets/آنثى.png";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
 import coachImg from "@/assets/coach.png";
 import avatar1 from "@/assets/avatar1.jpg";
@@ -63,7 +65,7 @@ const FONT = "'Tajawal', sans-serif";
 type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
 function QuizPage() {
-  const [step, setStep] = useState<Step>("loading");
+  const { step, phase, transitionTo, selectAndGo, goBack } = useQuizStepTransition<Step>("loading");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [userName, setUserName] = useState<string>("");
   const [userPhone, setUserPhone] = useState<string>("");
@@ -92,7 +94,8 @@ function QuizPage() {
   };
 
   const totalSteps = userLocation === "dubai" ? 15 : 14;
-  const afterReveal = () => setStep(userLocation === "dubai" ? "trainingType" : "pricing");
+  const afterReveal = () =>
+    selectAndGo(userLocation === "dubai" ? "trainingType" : "pricing");
 
   return (
     <div
@@ -105,27 +108,153 @@ function QuizPage() {
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@700;800;900&display=swap"
       />
-      {step === "loading" && <LoadingScreen onDone={() => setStep("gender")} />}
-      {step === "gender" && <GenderScreen onSelect={(g) => { setGender(g); setStep(g === "male" ? "goals" : "femaleGoals"); }} />}
-      {step === "goals" && <GoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
-      {step === "femaleGoals" && <FemaleGoalsScreen onBack={() => setStep("gender")} onNext={() => setStep("age")} onSelect={setGoalId} />}
-      {step === "age" && <AgeScreen onBack={() => setStep("gender")} onNext={(value) => { setAge(value); setStep("measure"); }} />}
-      {step === "measure" && <MeasureScreen onBack={() => setStep("age")} onNext={(height, weight) => { setHeightCm(height); setWeightKg(weight); setStep("activity"); }} />}
-      {step === "activity" && <ActivityScreen onBack={() => setStep("measure")} onNext={(value) => { setActivityLevel(value); setStep(gender === "female" ? "femaleChallenge" : "challenge"); }} />}
-      {step === "challenge" && <ChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
-      {step === "femaleChallenge" && <FemaleChallengeScreen onBack={() => setStep("activity")} onNext={() => setStep("investment")} onSelect={setChallengeId} />}
-      {step === "investment" && <InvestmentScreen onBack={() => setStep(gender === "female" ? "femaleChallenge" : "challenge")} onNext={(value) => { setInvestment(value); setStep(gender === "female" ? "femaleBodyType" : "bodyType"); }} />}
-      {step === "bodyType" && <BodyTypeScreen onBack={() => setStep("investment")} onNext={(value) => { setBodyType(value); setStep("analysis"); }} />}
-      {step === "femaleBodyType" && <FemaleBodyTypeScreen onBack={() => setStep("investment")} onNext={(value) => { setBodyType(value); setStep("analysis"); }} />}
-      {step === "analysis" && <AnalysisScreen onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={() => setStep("contact")} />}
-      {step === "contact" && <ContactScreen quizAnswers={quizAnswers} onBack={() => setStep(gender === "female" ? "femaleBodyType" : "bodyType")} onDone={(name, isDubai, phone, city) => { setUserName(name); setUserPhone(phone); setUserCity(city); setUserLocation(isDubai ? "dubai" : "remote"); setStep("congrats"); }} />}
-      {step === "congrats" && <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => setStep("reveal")} />}
-      {step === "reveal" && <ProgramRevealScreen name={userName} gender={gender} goalId={goalId} challengeId={challengeId} total={totalSteps} onNext={afterReveal} />}
-      {step === "trainingType" && <TrainingTypeScreen onBack={() => setStep("reveal")} onSelect={(t) => setStep(t === "inperson" ? "offlinePackages" : "pricing")} />}
-      {step === "pricing" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "trainingType" : "reveal")} onSelectTier={(id) => { setSelectedTierId(id); setStep("payment"); }} />}
-      {step === "pricingDubai" && <PricingScreen name={userName} total={totalSteps} onBack={() => setStep("trainingType")} dubai onSelectTier={(id) => { setSelectedTierId(id); setStep("payment"); }} />}
-      {step === "offlinePackages" && <OfflinePackagesScreen name={userName} phone={userPhone} city={userCity} goalId={goalId} challengeId={challengeId} total={totalSteps} onBack={() => setStep("trainingType")} />}
-      {step === "payment" && <PaymentScreen name={userName} tierId={selectedTierId} total={totalSteps} onBack={() => setStep(userLocation === "dubai" ? "pricingDubai" : "pricing")} />}
+      <div className={`quiz-step-view quiz-step-view--${phase}`}>
+      {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
+      {step === "gender" && (
+        <GenderScreen
+          onSelect={(g) =>
+            selectAndGo(g === "male" ? "goals" : "femaleGoals", () => setGender(g))
+          }
+        />
+      )}
+      {step === "goals" && (
+        <GoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
+      )}
+      {step === "femaleGoals" && (
+        <FemaleGoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
+      )}
+      {step === "age" && (
+        <AgeScreen onBack={() => goBack("gender")} onNext={(value) => selectAndGo("measure", () => setAge(value))} />
+      )}
+      {step === "measure" && (
+        <MeasureScreen
+          onBack={() => goBack("age")}
+          onNext={(height, weight) =>
+            selectAndGo("activity", () => {
+              setHeightCm(height);
+              setWeightKg(weight);
+            })
+          }
+        />
+      )}
+      {step === "activity" && (
+        <ActivityScreen
+          onBack={() => goBack("measure")}
+          onNext={(value) =>
+            selectAndGo(gender === "female" ? "femaleChallenge" : "challenge", () => setActivityLevel(value))
+          }
+        />
+      )}
+      {step === "challenge" && (
+        <ChallengeScreen
+          onBack={() => goBack("activity")}
+          onNext={() => selectAndGo("investment")}
+          onSelect={setChallengeId}
+        />
+      )}
+      {step === "femaleChallenge" && (
+        <FemaleChallengeScreen
+          onBack={() => goBack("activity")}
+          onNext={() => selectAndGo("investment")}
+          onSelect={setChallengeId}
+        />
+      )}
+      {step === "investment" && (
+        <InvestmentScreen
+          onBack={() => goBack(gender === "female" ? "femaleChallenge" : "challenge")}
+          onNext={(value) =>
+            selectAndGo(gender === "female" ? "femaleBodyType" : "bodyType", () => setInvestment(value))
+          }
+        />
+      )}
+      {step === "bodyType" && (
+        <BodyTypeScreen
+          onBack={() => goBack("investment")}
+          onNext={(value) => selectAndGo("analysis", () => setBodyType(value))}
+        />
+      )}
+      {step === "femaleBodyType" && (
+        <FemaleBodyTypeScreen
+          onBack={() => goBack("investment")}
+          onNext={(value) => selectAndGo("analysis", () => setBodyType(value))}
+        />
+      )}
+      {step === "analysis" && (
+        <AnalysisScreen
+          onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
+          onDone={() => transitionTo("contact")}
+        />
+      )}
+      {step === "contact" && (
+        <ContactScreen
+          quizAnswers={quizAnswers}
+          onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
+          onDone={(name, isDubai, phone, city) =>
+            selectAndGo("congrats", () => {
+              setUserName(name);
+              setUserPhone(phone);
+              setUserCity(city);
+              setUserLocation(isDubai ? "dubai" : "remote");
+            })
+          }
+        />
+      )}
+      {step === "congrats" && (
+        <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => selectAndGo("reveal")} />
+      )}
+      {step === "reveal" && (
+        <ProgramRevealScreen
+          name={userName}
+          gender={gender}
+          goalId={goalId}
+          challengeId={challengeId}
+          total={totalSteps}
+          onNext={afterReveal}
+        />
+      )}
+      {step === "trainingType" && (
+        <TrainingTypeScreen
+          onBack={() => goBack("reveal")}
+          onSelect={(t) => transitionTo(t === "inperson" ? "offlinePackages" : "pricing")}
+        />
+      )}
+      {step === "pricing" && (
+        <PricingScreen
+          name={userName}
+          total={totalSteps}
+          onBack={() => goBack(userLocation === "dubai" ? "trainingType" : "reveal")}
+          onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
+        />
+      )}
+      {step === "pricingDubai" && (
+        <PricingScreen
+          name={userName}
+          total={totalSteps}
+          onBack={() => goBack("trainingType")}
+          dubai
+          onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
+        />
+      )}
+      {step === "offlinePackages" && (
+        <OfflinePackagesScreen
+          name={userName}
+          phone={userPhone}
+          city={userCity}
+          goalId={goalId}
+          challengeId={challengeId}
+          total={totalSteps}
+          onBack={() => goBack("trainingType")}
+        />
+      )}
+      {step === "payment" && (
+        <PaymentScreen
+          name={userName}
+          tierId={selectedTierId}
+          total={totalSteps}
+          onBack={() => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")}
+        />
+      )}
+      </div>
     </div>
   );
 }
@@ -265,45 +394,51 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
         <ProgressHeader current={1} />
         <div className="mt-5 text-center">
-          <p className="text-base font-bold text-neutral-800">لنخصص رحلتك 👇</p>
-          <h1 className="mt-2 text-3xl font-black text-neutral-900 leading-tight">
-            ما هو <span style={{ color: "#FF6B00" }}>جنسك</span> ؟
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 leading-tight">
+            لنبدأ رحلتك مع <span style={{ color: "#FF6B00" }}>حكيم</span>
           </h1>
-          <p className="mt-2 text-[13px] text-neutral-500 leading-relaxed px-4">
-            سنخصص الأسئلة والخطة بناء على هدفك وطبيعة جسمك.
+          <h2 className="mt-3 text-xl sm:text-2xl font-bold text-neutral-900 leading-snug">
+            ما هو جنسك؟
+          </h2>
+          <p className="mt-2 text-sm text-neutral-500 leading-relaxed px-2">
+            هذا يساعدنا على تخصيص تجربتك بشكل أفضل
           </p>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0">
+        <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 items-start content-start">
           <GenderCard
             image={maleImg}
             label="ذكر"
-            color="#2563EB"
-            tintFrom="#EFF6FF"
-            tintTo="#FFFFFF"
+            color="#3B82F6"
+            tintFrom="#DDEAF8"
+            tintTo="#F5F9FF"
             symbol="♂"
+            enterVariant="male"
+            enterDelay={120}
             onClick={() => onSelect("male")}
             features={[
               { Icon: Dumbbell, text: "بناء عضلات" },
-              { Icon: Flame, text: "خسارة الدهون" },
+              { Icon: Zap, text: "زيادة القوة" },
               { Icon: PersonStanding, text: "جسم رياضي" },
             ]}
           />
           <GenderCard
             image={femaleImg}
             label="أنثى"
-            color="#F472B6"
-            tintFrom="#FDF2F8"
-            tintTo="#FFFFFF"
+            color="#EC4899"
+            tintFrom="#FADCE8"
+            tintTo="#FFF5F9"
             symbol="♀"
+            enterVariant="female"
+            enterDelay={260}
             onClick={() => onSelect("female")}
             features={[
               { Icon: Dumbbell, text: "شد الجسم" },
-              { Icon: Flame, text: "خصر أنحف" },
+              { Icon: Flame, text: "خسارة الدهون" },
               { Icon: PersonStanding, text: "جسم متناسق" },
             ]}
           />
         </div>
-        <div className="mt-3 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2">
+        <div className="gender-footer-enter mt-3 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "#FF6B00" }}>
             <Lock className="h-3.5 w-3.5 text-white" />
           </span>
@@ -312,6 +447,79 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
           </p>
         </div>
       </div>
+      <style>{`
+        @keyframes genderCardEnterMale {
+          0% { opacity: 0; transform: translate(22px, 40px) scale(0.86); }
+          55% { opacity: 1; transform: translate(0, -5px) scale(1.03); }
+          100% { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes genderCardEnterFemale {
+          0% { opacity: 0; transform: translate(-22px, 40px) scale(0.86); }
+          55% { opacity: 1; transform: translate(0, -5px) scale(1.03); }
+          100% { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes genderIconPop {
+          0% { opacity: 0; transform: scale(0.35); }
+          65% { transform: scale(1.14); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes genderImgReveal {
+          from { opacity: 0; transform: translateY(18px) scale(0.94); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes genderFeatureSlide {
+          from { opacity: 0; transform: translateX(10px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes genderShimmerSweep {
+          from { transform: translateX(-140%); }
+          to { transform: translateX(240%); }
+        }
+        @keyframes genderFooterEnter {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .gender-card-enter-male {
+          animation: genderCardEnterMale 0.75s cubic-bezier(0.22, 1.15, 0.36, 1) both;
+        }
+        .gender-card-enter-female {
+          animation: genderCardEnterFemale 0.75s cubic-bezier(0.22, 1.15, 0.36, 1) both;
+        }
+        .gender-icon-pop {
+          animation: genderIconPop 0.55s cubic-bezier(0.34, 1.4, 0.44, 1) both;
+        }
+        .gender-img-reveal {
+          animation: genderImgReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .gender-feature-enter {
+          animation: genderFeatureSlide 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .gender-card-shimmer-sweep {
+          animation: genderShimmerSweep 0.85s ease-out both;
+        }
+        .gender-footer-enter {
+          animation: genderFooterEnter 0.55s ease-out 0.55s both;
+        }
+        .gender-card-interactive {
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+        .gender-card-interactive:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 20px 44px -18px rgba(15, 23, 42, 0.28);
+        }
+        .gender-card-interactive:active {
+          transform: translateY(-1px) scale(0.98);
+        }
+        @keyframes genderBorderOrbit {
+          to { transform: rotate(360deg); }
+        }
+        .gender-card-border-orbit {
+          animation: genderBorderOrbit 3.8s linear infinite;
+        }
+        .gender-card-border-orbit-female {
+          animation: genderBorderOrbit 4.6s linear infinite reverse;
+        }
+      `}</style>
     </div>
   );
 }
@@ -320,45 +528,103 @@ type Feature = { Icon: typeof Dumbbell; text: string };
 
 function GenderCard({
   image, label, color, tintFrom, tintTo, symbol, features, onClick,
+  enterVariant = "male",
+  enterDelay = 0,
 }: {
   image: string; label: string; color: string; tintFrom: string; tintTo: string;
   symbol: string; features: Feature[]; onClick?: () => void;
+  enterVariant?: "male" | "female";
+  enterDelay?: number;
 }) {
+  const enterClass =
+    enterVariant === "male" ? "gender-card-enter-male" : "gender-card-enter-female";
+
+  const borderOrbitClass =
+    enterVariant === "male" ? "gender-card-border-orbit" : "gender-card-border-orbit-female";
+
   return (
-    <button
-      onClick={onClick}
-      className="relative flex flex-col rounded-3xl overflow-hidden bg-white ring-1 ring-black/5 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-transform"
-      style={{ background: `linear-gradient(180deg,${tintFrom},${tintTo})` }}
-    >
-      <div className="relative w-full" style={{ aspectRatio: "1/1.15" }}>
-        <img src={image} alt={label} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute top-3 right-3 grid grid-cols-6 gap-1 opacity-40" style={{ direction: "ltr" }}>
-          {Array.from({ length: 30 }).map((_, i) => (
-            <span key={i} className="h-1 w-1 rounded-full" style={{ background: color }} />
-          ))}
-        </div>
+    <div className="gender-card-wrap relative w-full overflow-hidden rounded-[24px] p-[2px]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[24px]" aria-hidden>
         <div
-          className="absolute -bottom-5 left-1/2 -translate-x-1/2 grid h-12 w-12 place-items-center rounded-full ring-4 ring-white shadow-lg"
-          style={{ background: color }}
-        >
-          <span className="text-white text-xl font-black leading-none">{symbol}</span>
-        </div>
+          className={`${borderOrbitClass} absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2`}
+          style={{
+            background: `conic-gradient(from 0deg, transparent 0deg, transparent 73%, ${color} 81%, rgba(255,255,255,0.95) 86%, transparent 94%)`,
+            animationDelay: `${enterDelay}ms`,
+          }}
+        />
       </div>
-      <div className="px-3 pt-7 pb-4 flex-1 flex flex-col">
-        <h3 className="text-center text-xl font-black text-neutral-900">{label}</h3>
-        <div className="mx-auto mt-1.5 h-[2px] w-8 rounded-full" style={{ background: color, opacity: 0.5 }} />
-        <ul className="mt-3 space-y-2">
-          {features.map((f) => (
-            <li key={f.text} className="flex items-center justify-end gap-2 text-[12px] text-neutral-800 font-medium">
+      <button
+      onClick={onClick}
+      className={[
+        "gender-card-interactive relative z-10 flex min-h-0 w-full flex-col overflow-hidden rounded-[22px] bg-white text-right shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.05]",
+        enterClass,
+      ].join(" ")}
+      style={{ animationDelay: `${enterDelay}ms` }}
+    >
+      <span
+        className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[22px]"
+        aria-hidden
+      >
+        <span
+          className="gender-card-shimmer-sweep absolute inset-y-[-10%] left-0 h-[120%] w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent"
+          style={{ animationDelay: `${enterDelay + 320}ms` }}
+        />
+      </span>
+
+      <div
+        className="relative flex flex-col items-center overflow-hidden px-2 pt-3 pb-0"
+        style={{ background: `linear-gradient(180deg, ${tintFrom} 0%, ${tintTo} 70%, #ffffff 100%)` }}
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-4 top-6 h-20 w-20 rounded-full opacity-30 blur-md"
+          style={{ background: color }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-3 bottom-8 h-24 w-24 rounded-full opacity-20 blur-lg"
+          style={{ background: color }}
+        />
+
+        <div
+          className="gender-icon-pop relative z-10 grid h-10 w-10 place-items-center rounded-full shadow-[0_6px_16px_-4px_rgba(15,23,42,0.18)]"
+          style={{ background: color, animationDelay: `${enterDelay + 220}ms` }}
+        >
+          <span className="text-[17px] font-black leading-none text-white">{symbol}</span>
+        </div>
+        <p className="relative z-10 mt-2 text-[15px] font-black" style={{ color }}>{label}</p>
+        <div className="relative z-10 mt-1 h-[2px] w-9 rounded-full" style={{ background: color }} />
+
+        <img
+          src={image}
+          alt={label}
+          loading="lazy"
+          className="gender-img-reveal relative z-10 mt-1 h-[min(58vw,395px)] w-full object-contain object-bottom"
+          style={{ animationDelay: `${enterDelay + 380}ms` }}
+        />
+      </div>
+
+      <div className="relative z-10 -mt-2 rounded-t-[16px] bg-white px-2.5 pt-2 pb-2">
+        <ul className="space-y-1.5">
+          {features.map((f, i) => (
+            <li
+              key={f.text}
+              className="gender-feature-enter flex items-center justify-end gap-2 text-[11px] font-semibold text-neutral-800"
+              style={{ animationDelay: `${enterDelay + 520 + i * 90}ms` }}
+            >
               <span>{f.text}</span>
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg" style={{ background: `${color}1A`, color }}>
-                <f.Icon className="h-3 w-3" strokeWidth={2.4} />
+              <span
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-full"
+                style={{ background: `${color}1A`, color }}
+              >
+                <f.Icon className="h-3.5 w-3.5" strokeWidth={2.5} />
               </span>
             </li>
           ))}
         </ul>
       </div>
     </button>
+    </div>
   );
 }
 
@@ -381,7 +647,7 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
   useEffect(() => {
     if (!touched) return;
     onSelect?.(selected);
-    const t = setTimeout(onNext, 350);
+    const t = setTimeout(onNext, HAPTIC_NAV_DELAY_MS);
     return () => clearTimeout(t);
   }, [touched, selected, onNext, onSelect]);
 
@@ -414,7 +680,11 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
             return (
               <button
                 key={g.id}
-                onClick={() => { setSelected(g.id); setTouched(true); }}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(g.id);
+                  setTouched(true);
+                }}
                 className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-3 py-3 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -542,7 +812,7 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
   useEffect(() => {
     if (!selected) return;
     onSelect?.(selected);
-    const t = setTimeout(onNext, 350);
+    const t = setTimeout(onNext, HAPTIC_NAV_DELAY_MS);
     return () => clearTimeout(t);
   }, [selected, onNext, onSelect]);
 
@@ -574,7 +844,10 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
             return (
               <button
                 key={g.id}
-                onClick={() => setSelected(g.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(g.id);
+                }}
                 className="relative flex flex-col items-center justify-center rounded-3xl bg-white px-2 py-4 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -1063,7 +1336,10 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
             return (
               <button
                 key={a.id}
-                onClick={() => setSelected(a.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(a.id);
+                }}
                 className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-2.5 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -1314,7 +1590,10 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
             return (
               <button
                 key={c.id}
-                onClick={() => setSelected(c.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(c.id);
+                }}
                 className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -1597,7 +1876,10 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
             return (
               <button
                 key={c.id}
-                onClick={() => setSelected(c.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(c.id);
+                }}
                 className="relative flex flex-col items-center justify-center rounded-[20px] bg-white px-2 py-3 transition-all active:scale-[0.97]"
                 style={{
                   boxShadow: active
@@ -1791,7 +2073,10 @@ function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: 
     const active = selected === id;
     return (
       <button
-        onClick={() => setSelected(id)}
+        onClick={() => {
+          triggerSelectionHaptic();
+          setSelected(id);
+        }}
         className="relative w-full rounded-[26px] bg-white text-right overflow-hidden transition-all duration-250"
         style={{
           border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
@@ -2234,7 +2519,10 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
             return (
               <button
                 key={opt.id}
-                onClick={() => setSelected(opt.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(opt.id);
+                }}
                 className="relative w-full rounded-[22px] bg-white text-right overflow-hidden transition-all duration-250 active:scale-[0.98]"
                 style={{
                   border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
@@ -2398,7 +2686,10 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
             return (
               <button
                 key={b.id}
-                onClick={() => setSelected(b.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(b.id);
+                }}
                 className="relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250"
                 style={{
                   border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
@@ -2554,7 +2845,10 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
             return (
               <button
                 key={b.id}
-                onClick={() => setSelected(b.id)}
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(b.id);
+                }}
                 className="relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250"
                 style={{
                   border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
@@ -3897,8 +4191,8 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
 
   const handleChoose = (tier: PricingTier) => {
     setSelected(tier.id);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(10);
-    window.setTimeout(() => onSelectTier(tier.id), 180);
+    triggerSelectionHaptic();
+    window.setTimeout(() => onSelectTier(tier.id), HAPTIC_NAV_DELAY_MS);
   };
 
   return (
@@ -4112,19 +4406,8 @@ function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect
   const pick = (id: "online" | "inperson") => {
     if (selected) return;
     setSelected(id);
-    try {
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = "sine"; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
-      o.connect(g).connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.13);
-    } catch {}
-    setTimeout(() => onSelect(id), 650);
+    triggerSelectionHaptic();
+    window.setTimeout(() => onSelect(id), HAPTIC_NAV_DELAY_MS);
   };
 
   const Card = ({
@@ -4339,17 +4622,7 @@ function OfflinePackagesScreen({
   const pickPackage = (id: OfflinePkgId) => {
     if (selected) return;
     setSelected(id);
-    try {
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const o = ctx.createOscillator(); const g = ctx.createGain();
-      o.type = "sine"; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
-      o.connect(g).connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.15);
-    } catch {}
+    triggerSelectionHaptic();
   };
 
   const packageLabel = (id: OfflinePkgId): string => {
