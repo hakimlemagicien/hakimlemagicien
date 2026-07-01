@@ -5,13 +5,13 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { nitro } from "nitro/vite";
 
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  vite: {
-    plugins: [nitro()],
+  // Required for Vercel (and any non-Lovable CI build): use the Vercel Nitro preset.
+  nitro: {
+    preset: "vercel",
   },
 });
