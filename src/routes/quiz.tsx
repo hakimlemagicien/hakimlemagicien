@@ -57,15 +57,10 @@ import goalFitnessImg from "@/assets/تحسين اللياقة والطاقة.PN
 import goalAthleticImg from "@/assets/جسم رياضي ومتناسق.PNG";
 import goalShapeImg from "@/assets/تغير شكل الجسم.jpg";
 import goalGainImg from "@/assets/زيادة وزن صحي.jpg";
-import quizMaleImg from "@/assets/quiz-male.jpg";
-import transform2Img from "@/assets/transform-2.jpg";
-import transform3Img from "@/assets/transform-3.jpg";
 import transform1Img from "@/assets/transform-1.jpg";
-import bodyAverageImg from "@/assets/body-average.jpg";
 import bodyLeanImg from "@/assets/body-lean.jpg";
 import bodyMuscularImg from "@/assets/body-muscular.jpg";
 import bodySkinnyFatImg from "@/assets/body-skinny-fat.jpg";
-import coachGymImg from "@/assets/coach-gym.jpg";
 import coachSupportImg from "@/assets/coach-support.jpg";
 import targetImg from "@/assets/target-illustration.png";
 import confusedCoachImg from "@/assets/confused-coach.png";
@@ -932,7 +927,7 @@ const FEMALE_GOALS: StyledImageOption[] = [
     image: gluteGrowth,
     imageWrapClassName: "female-goal-glutes-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
     imageClassName:
-      "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+120px)] w-[calc(100%+120px)] -translate-x-1/2 -translate-y-1/2 object-cover",
+      "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+180px)] w-[calc(100%+180px)] -translate-x-1/2 -translate-y-1/2 object-cover",
   },
   {
     id: "waist",
@@ -946,7 +941,8 @@ const FEMALE_GOALS: StyledImageOption[] = [
     label: "جسم متناسق وأنثوي",
     image: feminineTonedBody,
     imageWrapClassName: "female-goal-body-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
-    imageClassName: "female-goal-body-img h-full w-full object-cover",
+    imageClassName:
+      "female-goal-body-img h-[calc(100%+40px)] w-full object-cover -translate-y-[40px]",
   },
   {
     id: "fit",
@@ -1435,13 +1431,84 @@ function SneakerIcon({ className }: { className?: string }) {
   );
 }
 
-const ACTIVITIES: ImageOption[] = [
-  { id: "sedentary", label: "خامل تماماً", image: bodyAverageImg },
-  { id: "light", label: "نشاط خفيف", image: quizMaleImg },
-  { id: "moderate", label: "نشاط متوسط", image: coachGymImg },
-  { id: "high", label: "نشاط عالي", image: transform2Img },
-  { id: "veryhigh", label: "نشاط عالي جداً", image: transform3Img },
-  { id: "athlete", label: "رياضي محترف", image: bodyMuscularImg },
+function ActivityIconShell({
+  animClass,
+  stagger = 0,
+  children,
+}: {
+  animClass: string;
+  stagger?: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className="activity-icon-shell relative grid place-items-center rounded-full overflow-hidden"
+      style={{
+        height: 44,
+        width: 44,
+        background: "rgba(255,107,0,0.10)",
+        animationDelay: `${stagger * 140}ms`,
+      }}
+    >
+      <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden>
+        <span
+          className="activity-icon-shine-beam absolute inset-y-[-25%] w-[55%]"
+          style={{ animationDelay: `${stagger * 140 + 400}ms` }}
+        />
+      </span>
+      <span
+        className={`relative z-[1] grid place-items-center ${animClass}`}
+        style={{ animationDelay: `${stagger * 140}ms` }}
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
+const ACTIVITIES = [
+  {
+    id: "sedentary",
+    label: "خامل تماماً",
+    desc: "لا أمارس أي نشاط بدني وأقضي معظم وقتي جالساً.",
+    animClass: "act-anim-float",
+    icon: <SofaIcon className="h-7 w-7" />,
+  },
+  {
+    id: "light",
+    label: "نشاط خفيف",
+    desc: "أتحرك قليلاً في يومي (مثل المشي الخفيف).",
+    animClass: "act-anim-walk",
+    icon: <WalkingIcon className="h-7 w-7" />,
+  },
+  {
+    id: "moderate",
+    label: "نشاط متوسط",
+    desc: "أمارس التمارين 1 - 3 مرات في الأسبوع.",
+    animClass: "act-anim-step",
+    icon: <SneakerIcon className="h-7 w-7" />,
+  },
+  {
+    id: "high",
+    label: "نشاط عالي",
+    desc: "أمارس التمارين 3 - 5 مرات في الأسبوع.",
+    animClass: "act-anim-lift",
+    icon: <Dumbbell className="h-7 w-7" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
+  {
+    id: "veryhigh",
+    label: "نشاط عالي جداً",
+    desc: "أمارس التمارين 6 - 7 مرات في الأسبوع.",
+    animClass: "act-anim-flame",
+    icon: <Flame className="h-7 w-7" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
+  {
+    id: "athlete",
+    label: "رياضي محترف",
+    desc: "أتمرن يومياً أو لدي نشاط رياضي مكثف جداً.",
+    animClass: "act-anim-trophy",
+    icon: <Trophy className="h-7 w-7" style={{ color: "#FF6B00" }} strokeWidth={2.4} />,
+  },
 ];
 
 function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activityLevel: string) => void }) {
@@ -1468,19 +1535,45 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
 
         {/* Grid */}
         <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
-          {ACTIVITIES.map((a, i) => (
-            <QuizImageOptionCard
-              key={a.id}
-              label={a.label}
-              image={a.image}
-              active={selected === a.id}
-              index={i}
-              onClick={() => {
-                triggerSelectionHaptic();
-                setSelected(a.id);
-              }}
-            />
-          ))}
+          {ACTIVITIES.map((a, i) => {
+            const active = selected === a.id;
+            return (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(a.id);
+                }}
+                className="relative flex flex-col items-center justify-center rounded-[18px] bg-white px-2 py-1.5 transition-all active:scale-[0.97]"
+                style={{
+                  boxShadow: active
+                    ? "0 12px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 20px -12px rgba(0,0,0,0.12)",
+                  transform: active ? "scale(1.03)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 60}ms both`,
+                }}
+              >
+                {active && (
+                  <span
+                    className="absolute top-2 right-2 grid h-6 w-6 place-items-center rounded-full shadow"
+                    style={{ background: "#FF6B00" }}
+                  >
+                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
+                  </span>
+                )}
+                <ActivityIconShell animClass={a.animClass} stagger={i}>
+                  {a.icon}
+                </ActivityIconShell>
+                <span className="mt-1.5 text-[12.5px] font-black text-neutral-900 text-center leading-tight">
+                  {a.label}
+                </span>
+                <span className="mt-0.5 text-[10px] text-neutral-500 text-center leading-snug px-1">
+                  {a.desc}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Bottom info card */}
@@ -1529,6 +1622,63 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
       <style>{`
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes actIconGlow {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(255,107,0,0.06), inset 0 0 0 0 rgba(255,107,0,0);
+          }
+          50% {
+            box-shadow: 0 0 16px 1px rgba(255,107,0,0.18), inset 0 0 12px rgba(255,107,0,0.06);
+          }
+        }
+        @keyframes actIconShine {
+          0% { transform: translateX(-140%) skewX(-14deg); opacity: 0; }
+          18% { opacity: 0.45; }
+          55% { opacity: 0.25; }
+          100% { transform: translateX(220%) skewX(-14deg); opacity: 0; }
+        }
+        @keyframes actFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes actWalk {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          35% { transform: translateY(-2px) rotate(-4deg); }
+          70% { transform: translateY(-1px) rotate(3deg); }
+        }
+        @keyframes actStep {
+          0%, 100% { transform: translateY(0) scale(1); }
+          45% { transform: translateY(-4px) scale(1.05); }
+          75% { transform: translateY(-1px) scale(1.01); }
+        }
+        @keyframes actLift {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-4px) rotate(-10deg); }
+        }
+        @keyframes actFlame {
+          0%, 100% { transform: scale(1) translateY(0); opacity: 1; }
+          30% { transform: scale(1.07) translateY(-2px); opacity: 0.92; }
+          60% { transform: scale(0.97) translateY(0); opacity: 1; }
+          85% { transform: scale(1.04) translateY(-1px); opacity: 0.96; }
+        }
+        @keyframes actTrophy {
+          0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+          50% { transform: translateY(-3px) scale(1.06); filter: brightness(1.15); }
+        }
+        .activity-icon-shell {
+          animation: actIconGlow 3.8s ease-in-out infinite;
+          will-change: box-shadow;
+        }
+        .activity-icon-shine-beam {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          animation: actIconShine 4.5s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+        .act-anim-float { animation: actFloat 4s ease-in-out infinite; will-change: transform; }
+        .act-anim-walk { animation: actWalk 2.8s ease-in-out infinite; will-change: transform; }
+        .act-anim-step { animation: actStep 2.5s ease-in-out infinite; will-change: transform; }
+        .act-anim-lift { animation: actLift 2.6s ease-in-out infinite; will-change: transform; }
+        .act-anim-flame { animation: actFlame 2.3s ease-in-out infinite; will-change: transform, opacity; }
+        .act-anim-trophy { animation: actTrophy 3.4s ease-in-out infinite; will-change: transform, filter; }
       `}</style>
     </div>
   );
