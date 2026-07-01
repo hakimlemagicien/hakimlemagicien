@@ -27,7 +27,15 @@ export default defineConfig({
 
   nitro: {
     preset: "vercel",
-    noExternals: ["tslib"],
+    output: {
+      dir: ".vercel/output",
+      serverDir: ".vercel/output/functions/__server.func",
+      publicDir: ".vercel/output/static",
+    },
+    noExternals: ["tslib", "@radix-ui/react-dialog"],
     traceDeps: ["tslib"],
+    externals: {
+      inline: ["tslib", "@radix-ui/react-dialog"],
+    },
   },
 });
