@@ -10,7 +10,11 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  // Required for Vercel (and any non-Lovable CI build): use the Vercel Nitro preset.
+
+  ssr: {
+    noExternal: ["tslib"],
+  },
+
   nitro: {
     preset: "vercel",
   },
