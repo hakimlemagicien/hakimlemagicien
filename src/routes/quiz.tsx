@@ -51,16 +51,21 @@ import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
 import avatar4 from "@/assets/avatar4.jpg";
-import goalFatImg from "@/assets/body-skinny-fat.jpg";
-import goalMuscleImg from "@/assets/body-muscular.jpg";
-import goalFitnessImg from "@/assets/coach-gym.jpg";
-import goalAthleticImg from "@/assets/transform-3.jpg";
-import goalShapeImg from "@/assets/transform-1.jpg";
-import goalGainImg from "@/assets/transform-4.jpg";
+import goalFatImg from "@/assets/خسارة الدهون.jpg";
+import goalMuscleImg from "@/assets/بناء العضلات.webp";
+import goalFitnessImg from "@/assets/تحسين اللياقة والطاقة.PNG";
+import goalAthleticImg from "@/assets/جسم رياضي ومتناسق.PNG";
+import goalShapeImg from "@/assets/تغير شكل الجسم.jpg";
+import goalGainImg from "@/assets/زيادة وزن صحي.jpg";
 import quizMaleImg from "@/assets/quiz-male.jpg";
 import transform2Img from "@/assets/transform-2.jpg";
+import transform3Img from "@/assets/transform-3.jpg";
+import transform1Img from "@/assets/transform-1.jpg";
 import bodyAverageImg from "@/assets/body-average.jpg";
 import bodyLeanImg from "@/assets/body-lean.jpg";
+import bodyMuscularImg from "@/assets/body-muscular.jpg";
+import bodySkinnyFatImg from "@/assets/body-skinny-fat.jpg";
+import coachGymImg from "@/assets/coach-gym.jpg";
 import coachSupportImg from "@/assets/coach-support.jpg";
 import targetImg from "@/assets/target-illustration.png";
 import confusedCoachImg from "@/assets/confused-coach.png";
@@ -70,6 +75,12 @@ import fbodyToning from "@/assets/fbody-toning.jpg";
 import fbodyShaping from "@/assets/fbody-shaping.jpg";
 import fbodyAthletic from "@/assets/fbody-athletic.jpg";
 import fbodyOverweight from "@/assets/fbody-overweight.jpg";
+import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
+import femaleGoalGlutesImg from "@/assets/تكبير المؤخرة.png";
+import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
+import femaleGoalBodyImg from "@/assets/جسم متناسق وآنثوي.png";
+import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
+import femaleGoalChestImg from "@/assets/تحسين شكل الصدر.jpg";
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -687,12 +698,16 @@ function QuizImageOptionCard({
   active,
   index,
   onClick,
+  imageWrapClassName = "relative h-[min(34vw,135px)] w-full overflow-hidden",
+  imageClassName = "h-full w-full object-cover",
 }: {
   label: string;
   image: string;
   active: boolean;
   index: number;
   onClick: () => void;
+  imageWrapClassName?: string;
+  imageClassName?: string;
 }) {
   return (
     <button
@@ -707,8 +722,8 @@ function QuizImageOptionCard({
         animation: `fadeUp .5s ease-out ${index * 70}ms both`,
       }}
     >
-      <div className="relative h-[min(34vw,135px)] w-full overflow-hidden">
-        <img src={image} alt={label} loading="lazy" className="h-full w-full object-cover" />
+      <div className={imageWrapClassName}>
+        <img src={image} alt={label} loading="lazy" className={imageClassName} />
       </div>
       <div className="flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center">
         <p
@@ -722,15 +737,54 @@ function QuizImageOptionCard({
   );
 }
 
-type Goal = ImageOption;
+type StyledImageOption = ImageOption & {
+  imageWrapClassName: string;
+  imageClassName: string;
+};
 
-const GOALS: Goal[] = [
-  { id: "fat", label: "خسارة الدهون", image: goalFatImg },
-  { id: "muscle", label: "بناء العضلات", image: goalMuscleImg },
-  { id: "fitness", label: "تحسين اللياقة والطاقة", image: goalFitnessImg },
-  { id: "athletic", label: "جسم رياضي ومتناسق", image: goalAthleticImg },
-  { id: "shape", label: "تغيير شكل الجسم", image: goalShapeImg },
-  { id: "gain", label: "زيادة وزن صحي", image: goalGainImg },
+const GOALS: StyledImageOption[] = [
+  {
+    id: "fat",
+    label: "خسارة الدهون",
+    image: goalFatImg,
+    imageWrapClassName: "male-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-fat-img h-full w-full object-cover",
+  },
+  {
+    id: "muscle",
+    label: "بناء العضلات",
+    image: goalMuscleImg,
+    imageWrapClassName: "male-goal-muscle-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-muscle-img h-full w-full object-cover",
+  },
+  {
+    id: "fitness",
+    label: "تحسين اللياقة والطاقة",
+    image: goalFitnessImg,
+    imageWrapClassName: "male-goal-fitness-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-fitness-img h-full w-full object-cover",
+  },
+  {
+    id: "athletic",
+    label: "جسم رياضي ومتناسق",
+    image: goalAthleticImg,
+    imageWrapClassName: "male-goal-athletic-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-athletic-img h-full w-full object-cover",
+  },
+  {
+    id: "shape",
+    label: "تغيير شكل الجسم",
+    image: goalShapeImg,
+    imageWrapClassName: "male-goal-shape-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-shape-img h-full w-full object-cover",
+  },
+  {
+    id: "gain",
+    label: "زيادة وزن صحي",
+    image: goalGainImg,
+    imageWrapClassName: "male-goal-gain-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "male-goal-gain-img h-full w-full object-cover",
+  },
 ];
 
 function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -774,6 +828,8 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
               image={g.image}
               active={selected === g.id}
               index={i}
+              imageWrapClassName={g.imageWrapClassName}
+              imageClassName={g.imageClassName}
               onClick={() => {
                 triggerSelectionHaptic();
                 setSelected(g.id);
@@ -862,13 +918,50 @@ function TorsoIcon({ className }: { className?: string }) {
   );
 }
 
-const FEMALE_GOALS: ImageOption[] = [
-  { id: "fat", label: "خسارة الدهون", image: fbodyBellyLight },
-  { id: "glutes", label: "تكبير المؤخرة", image: fbodyShaping },
-  { id: "waist", label: "خصر أنحف ومشدود", image: fbodyToning },
-  { id: "body", label: "جسم متناسق وأنثوي", image: fbodyAthletic },
-  { id: "fit", label: "جسم صحي ورياضي", image: fbodySlim },
-  { id: "tone", label: "شد الجسم ونحته", image: fbodyToning },
+const FEMALE_GOALS: StyledImageOption[] = [
+  {
+    id: "fat",
+    label: "خسارة الدهون",
+    image: femaleGoalFatImg,
+    imageWrapClassName: "female-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "female-goal-fat-img h-full w-full object-cover",
+  },
+  {
+    id: "glutes",
+    label: "تكبير المؤخرة",
+    image: femaleGoalGlutesImg,
+    imageWrapClassName: "female-goal-glutes-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName:
+      "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+120px)] w-[calc(100%+120px)] -translate-x-1/2 -translate-y-1/2 object-cover",
+  },
+  {
+    id: "waist",
+    label: "خصر أنحف ومشدود",
+    image: femaleGoalWaistImg,
+    imageWrapClassName: "female-goal-waist-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "female-goal-waist-img h-full w-full object-cover",
+  },
+  {
+    id: "body",
+    label: "جسم متناسق وأنثوي",
+    image: femaleGoalBodyImg,
+    imageWrapClassName: "female-goal-body-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "female-goal-body-img h-full w-full object-cover",
+  },
+  {
+    id: "fit",
+    label: "جسم صحي ورياضي",
+    image: femaleGoalFitImg,
+    imageWrapClassName: "female-goal-fit-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "female-goal-fit-img h-full w-full object-cover",
+  },
+  {
+    id: "tone",
+    label: "تحسين شكل الصدر",
+    image: femaleGoalChestImg,
+    imageWrapClassName: "female-goal-chest-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageClassName: "female-goal-chest-img h-full w-full object-cover",
+  },
 ];
 
 function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -910,6 +1003,8 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
               image={g.image}
               active={selected === g.id}
               index={i}
+              imageWrapClassName={g.imageWrapClassName}
+              imageClassName={g.imageClassName}
               onClick={() => {
                 triggerSelectionHaptic();
                 setSelected(g.id);
@@ -1343,10 +1438,10 @@ function SneakerIcon({ className }: { className?: string }) {
 const ACTIVITIES: ImageOption[] = [
   { id: "sedentary", label: "خامل تماماً", image: bodyAverageImg },
   { id: "light", label: "نشاط خفيف", image: quizMaleImg },
-  { id: "moderate", label: "نشاط متوسط", image: goalFitnessImg },
+  { id: "moderate", label: "نشاط متوسط", image: coachGymImg },
   { id: "high", label: "نشاط عالي", image: transform2Img },
-  { id: "veryhigh", label: "نشاط عالي جداً", image: goalAthleticImg },
-  { id: "athlete", label: "رياضي محترف", image: goalMuscleImg },
+  { id: "veryhigh", label: "نشاط عالي جداً", image: transform3Img },
+  { id: "athlete", label: "رياضي محترف", image: bodyMuscularImg },
 ];
 
 function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activityLevel: string) => void }) {
@@ -1532,12 +1627,12 @@ function SadFaceIcon({ className }: { className?: string }) {
 }
 
 const CHALLENGES: ImageOption[] = [
-  { id: "belly", label: "دهون البطن", image: goalFatImg },
-  { id: "muscle", label: "صعوبة بناء العضلات", image: goalMuscleImg },
+  { id: "belly", label: "دهون البطن", image: bodySkinnyFatImg },
+  { id: "muscle", label: "صعوبة بناء العضلات", image: bodyMuscularImg },
   { id: "energy", label: "قلة الطاقة والحيوية", image: bodyLeanImg },
   { id: "goal", label: "عدم وضوح الهدف", image: targetImg },
   { id: "commitment", label: "الالتزام والاستمرارية", image: confusedCoachImg },
-  { id: "confidence", label: "الثقة بالنفس والمظهر", image: goalShapeImg },
+  { id: "confidence", label: "الثقة بالنفس والمظهر", image: transform1Img },
 ];
 
 function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
