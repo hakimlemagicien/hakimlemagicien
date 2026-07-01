@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  BadgeCheck,
   Check,
+  Star,
   Zap,
   ShieldCheck,
   Headphones,
@@ -15,6 +17,16 @@ import readyCoachImg from "@/assets/هل انت جاهز.png";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
+import avatar4 from "@/assets/avatar4.jpg";
+import khaledAfter from "@/assets/خالد بعد.jpg";
+import samirAfter from "@/assets/سمير بعد.jpg";
+import nasserAfter from "@/assets/ناصر بعد.jpg";
+import juliaAfter from "@/assets/جوليا بعد.jpg";
+import yasminAfter from "@/assets/ياسمين بعد.jpg";
+import fatimaAfter from "@/assets/فاطمة بعد.jpg";
+import salmaAfter from "@/assets/سلمى بعد.jpg";
+import anwarAfter from "@/assets/انوار بعد.jpg";
+import kawtharAfter from "@/assets/كوثر بعد.jpg";
 import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
 
 function useInView<T extends HTMLElement>(threshold = 0.15) {
@@ -203,6 +215,100 @@ function GoalCard() {
   );
 }
 
+const SOCIAL_PROOF_AVATARS = [
+  avatar1,
+  avatar2,
+  avatar3,
+  avatar4,
+  khaledAfter,
+  samirAfter,
+  nasserAfter,
+  juliaAfter,
+  yasminAfter,
+  fatimaAfter,
+  salmaAfter,
+  anwarAfter,
+  kawtharAfter,
+];
+
+const VISIBLE_AVATAR_COUNT = 4;
+const AVATAR_CYCLE_MS = 2400;
+
+function useCyclingAvatarStack(pool: string[], visibleCount = VISIBLE_AVATAR_COUNT, intervalMs = AVATAR_CYCLE_MS) {
+  const [stack, setStack] = useState(() => pool.slice(0, visibleCount));
+  const poolCursor = useRef(visibleCount);
+  const slotCursor = useRef(0);
+
+  useEffect(() => {
+    if (pool.length <= visibleCount) return;
+
+    const id = window.setInterval(() => {
+      setStack((prev) => {
+        const next = [...prev];
+        const slot = slotCursor.current % visibleCount;
+        slotCursor.current += 1;
+
+        let tries = 0;
+        let candidate = pool[poolCursor.current % pool.length];
+        while (next.includes(candidate) && tries < pool.length) {
+          poolCursor.current += 1;
+          candidate = pool[poolCursor.current % pool.length];
+          tries += 1;
+        }
+        poolCursor.current += 1;
+        next[slot] = candidate;
+        return next;
+      });
+    }, intervalMs);
+
+    return () => window.clearInterval(id);
+  }, [pool, visibleCount, intervalMs]);
+
+  return stack;
+}
+
+function FinalCtaSocialProof({ active, count }: { active: boolean; count: number }) {
+  const avatars = useCyclingAvatarStack(SOCIAL_PROOF_AVATARS);
+
+  return (
+    <div className="mt-6 flex items-center justify-center gap-3 [direction:ltr]">
+      <div className="flex shrink-0 -space-x-2">
+        {avatars.map((src, i) => (
+          <img
+            key={`${i}-${src}`}
+            src={src}
+            alt=""
+            width={36}
+            height={36}
+            loading="lazy"
+            className="cta-avatar-cycle h-9 w-9 rounded-full border-2 border-white object-cover"
+          />
+        ))}
+      </div>
+      <div className="flex flex-col items-start gap-0.5 text-right [direction:rtl]">
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className="h-3.5 w-3.5 fill-success text-success" />
+          ))}
+          <span
+            className="inline-block min-w-[4.5rem] text-left font-[Tajawal] text-[13px] font-extrabold tabular-nums text-success"
+            aria-hidden={!active}
+          >
+            +{count.toLocaleString("en-US")}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
+            عميل حققوا نتائج مذهلة
+          </span>
+          <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
+        </div>
+        <span className="font-[Tajawal] text-[11px] font-bold text-[#F97316]">كن أنت التالي!</span>
+      </div>
+    </div>
+  );
+}
+
 function TodayCard() {
   return (
     <div
@@ -244,10 +350,12 @@ export default function FinalCTA() {
         @keyframes ctaGlow { 0%,100%{box-shadow:0 10px 30px -8px rgba(249,115,22,0.45)} 50%{box-shadow:0 16px 44px -8px rgba(249,115,22,0.65)} }
         @keyframes ctaMotivationBounce { 0%,100%{transform:translateY(0) scale(1) rotate(0deg)} 35%{transform:translateY(-4px) scale(1.14) rotate(-6deg)} 70%{transform:translateY(-1px) scale(1.06) rotate(6deg)} }
         @keyframes ctaMotivationPulse { 0%,100%{transform:scale(0.72);opacity:0.55} 50%{transform:scale(1.35);opacity:0} }
+        @keyframes ctaAvatarCycle { from { opacity: 0; transform: scale(0.82); } to { opacity: 1; transform: scale(1); } }
         .cta-float { animation: ctaFloat 6s ease-in-out infinite; }
         .cta-glow { animation: ctaGlow 3s ease-in-out infinite; }
         .cta-motivation-bounce { animation: ctaMotivationBounce 1.35s ease-in-out infinite; }
         .cta-motivation-pulse { animation: ctaMotivationPulse 1.35s ease-out infinite; }
+        .cta-avatar-cycle { animation: ctaAvatarCycle 0.45s ease-out; }
       `}</style>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -351,24 +459,7 @@ export default function FinalCTA() {
             </span>
           </Link>
 
-          <div className="mt-6 flex items-center justify-center gap-4">
-            <div className="flex -space-x-3 space-x-reverse">
-              {[avatar1, avatar2, avatar3].map((a, i) => (
-                <img
-                  key={i}
-                  src={a}
-                  alt=""
-                  className="h-11 w-11 rounded-full object-cover ring-2 ring-white"
-                />
-              ))}
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-bold text-[#111827]">
-                +{count.toLocaleString()} عميل حققوا نتائجهم معنا
-              </div>
-              <div className="text-sm font-bold text-[#F97316]">كن أنت التالي!</div>
-            </div>
-          </div>
+          <FinalCtaSocialProof active={inView} count={count} />
         </div>
 
         {/* Bottom trust strip — closing section */}
