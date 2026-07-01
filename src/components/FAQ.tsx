@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Plus,
-  Sparkles,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -126,11 +123,7 @@ export default function FAQ() {
             head.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
           }`}
         >
-          <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-2 text-sm font-bold text-orange-600">
-            <Sparkles className="h-4 w-4" />
-            إجابات على أكثر الأسئلة شيوعاً
-          </span>
-          <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
+          <h2 className="text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
             الأسئلة{" "}
             <span className="inline-block translate-y-[2px] text-primary">الشائعة</span>
           </h2>
