@@ -4,21 +4,30 @@
 //     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+import { createRequire } from "node:module";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
 
-  ssr: {
-    noExternal: ["tslib", "@radix-ui/react-dialog"],
+  vite: {
+    resolve: {
+      alias: {
+        tslib: require.resolve("tslib/tslib.es6.mjs"),
+      },
+    },
+    ssr: {
+      noExternal: ["tslib", "@radix-ui/react-dialog"],
+    },
   },
 
   nitro: {
     preset: "vercel",
-    externals: {
-      inline: ["tslib"],
-    },
+    noExternals: ["tslib"],
+    traceDeps: ["tslib"],
   },
 });
