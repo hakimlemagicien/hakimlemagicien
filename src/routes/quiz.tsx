@@ -76,9 +76,9 @@ import fbodyShaping from "@/assets/fbody-shaping.jpg";
 import fbodyAthletic from "@/assets/fbody-athletic.jpg";
 import fbodyOverweight from "@/assets/fbody-overweight.jpg";
 import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
-import femaleGoalGlutesImg from "@/assets/تكبير المؤخرة.png";
+import gluteGrowth from "@/assets/glute-growth.png";
 import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
-import femaleGoalBodyImg from "@/assets/جسم متناسق وآنثوي.png";
+import feminineTonedBody from "@/assets/feminine-toned-body.png";
 import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
 import femaleGoalChestImg from "@/assets/تحسين شكل الصدر.jpg";
 
@@ -929,7 +929,7 @@ const FEMALE_GOALS: StyledImageOption[] = [
   {
     id: "glutes",
     label: "تكبير المؤخرة",
-    image: femaleGoalGlutesImg,
+    image: gluteGrowth,
     imageWrapClassName: "female-goal-glutes-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
     imageClassName:
       "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+120px)] w-[calc(100%+120px)] -translate-x-1/2 -translate-y-1/2 object-cover",
@@ -944,7 +944,7 @@ const FEMALE_GOALS: StyledImageOption[] = [
   {
     id: "body",
     label: "جسم متناسق وأنثوي",
-    image: femaleGoalBodyImg,
+    image: feminineTonedBody,
     imageWrapClassName: "female-goal-body-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
     imageClassName: "female-goal-body-img h-full w-full object-cover",
   },

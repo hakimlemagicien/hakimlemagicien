@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hakim Coaching">
+  <rect width="512" height="512" rx="112" fill="#FF6B00"/>
+  <path fill="#FFFFFF" d="M148 368V144h72c48 0 84 28 84 72 0 28-14 50-38 62 30 12 48 36 48 68 0 52-40 84-92 84h-112zm72-196c24 0 40-14 40-36s-16-36-40-36h-40v72h40zm8 120c28 0 44-14 44-38s-16-38-44-38h-48v76h48z"/>
+</svg>

@@ -1,0 +1,7577 @@
+import { o as __toESM } from "../_runtime.mjs";
+import { t as supabase } from "./client-DaoHZWri.mjs";
+import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
+import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
+import { a as triggerSelectionHaptic, i as quiz_gym_bg_default, n as pageVariants, t as pageTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
+import { a as confused_coach_default, i as avatar4_default, n as avatar2_default, r as avatar3_default, t as avatar1_default } from "./confused-coach-kMd8JcLH.mjs";
+import { A as Lightbulb, E as MessageCircle, F as Flame, G as ChevronDown, I as Dumbbell, K as Check, L as Crown, M as Headphones, P as Gem, R as Clock, S as RefreshCw, U as ChevronRight, W as ChevronLeft, Y as Calendar, _ as ShieldHalf, c as Trophy, f as Target, j as Heart, k as Lock, m as Sparkles, p as Star, t as Zap, tt as ArrowLeft, v as ShieldCheck, w as PersonStanding, x as Ruler, y as Scale, z as ClipboardList } from "../_libs/lucide-react.mjs";
+import { n as motion } from "../_libs/framer-motion.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/quiz-DVPgked9.js
+var import_react = /* @__PURE__ */ __toESM(require_react());
+var import_jsx_runtime = require_jsx_runtime();
+var LEAD_ID_KEY = "hakim_lead_id";
+var LEAD_TOKEN_KEY = "hakim_lead_token";
+function canUseStorage$1() {
+	return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+function setLeadCredentials(credentials) {
+	if (!canUseStorage$1()) return;
+	window.localStorage.setItem(LEAD_ID_KEY, credentials.leadId);
+	window.localStorage.setItem(LEAD_TOKEN_KEY, credentials.accessToken);
+}
+function isCreateLeadRpcResponse(value) {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+	const record = value;
+	return typeof record.lead_id === "string" && typeof record.access_token === "string";
+}
+async function createLead(payload) {
+	const { data, error } = await supabase.rpc("create_lead", { p_payload: payload });
+	if (error) throw error;
+	if (!isCreateLeadRpcResponse(data)) throw new Error("Lead created without credentials.");
+	const credentials = {
+		leadId: data.lead_id,
+		accessToken: data.access_token
+	};
+	setLeadCredentials(credentials);
+	return credentials;
+}
+function buildQuizAnswersPayload(input) {
+	return {
+		gender: input.gender ?? null,
+		goalId: input.goalId ?? null,
+		challengeId: input.challengeId ?? null,
+		age: input.age ?? null,
+		heightCm: input.heightCm ?? null,
+		weightKg: input.weightKg ?? null,
+		activityLevel: input.activityLevel ?? null,
+		investment: input.investment ?? null,
+		bodyType: input.bodyType ?? null,
+		trainingType: input.trainingType ?? null,
+		userLocation: input.userLocation ?? null,
+		selectedTierId: input.selectedTierId ?? null,
+		lastStep: input.lastStep ?? null
+	};
+}
+function buildLeadInsertFromQuiz(answersInput, contact) {
+	return {
+		status: "pending_lead",
+		answers: buildQuizAnswersPayload({
+			...answersInput,
+			userLocation: contact.locationPreference,
+			lastStep: "contact"
+		}),
+		gender: answersInput.gender ?? null,
+		goal_id: answersInput.goalId ?? null,
+		challenge_id: answersInput.challengeId ?? null,
+		full_name: contact.fullName,
+		email: contact.email,
+		phone: contact.phone,
+		city: contact.city,
+		country: contact.country,
+		location_preference: contact.locationPreference
+	};
+}
+var STORAGE_KEY = "hakim_quiz_progress_v1";
+var SCHEMA_VERSION = 1;
+function canUseStorage() {
+	return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+function isValidSnapshot(value) {
+	if (!value || typeof value !== "object") return false;
+	const s = value;
+	return s.version === SCHEMA_VERSION && typeof s.step === "string" && typeof s.savedAt === "number";
+}
+function readQuizProgress() {
+	if (!canUseStorage()) return null;
+	try {
+		const raw = window.localStorage.getItem(STORAGE_KEY);
+		if (!raw) return null;
+		const parsed = JSON.parse(raw);
+		if (!isValidSnapshot(parsed)) return null;
+		return parsed;
+	} catch {
+		return null;
+	}
+}
+function writeQuizProgress(snapshot) {
+	if (!canUseStorage()) return;
+	try {
+		const payload = {
+			...snapshot,
+			version: SCHEMA_VERSION,
+			savedAt: Date.now()
+		};
+		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+	} catch {}
+}
+function useQuizStepTransition(initial) {
+	const [step, setStep] = (0, import_react.useState)(initial);
+	const [phase, setPhase] = (0, import_react.useState)("in");
+	const transitionTo = (0, import_react.useCallback)((next, sideEffect) => {
+		setPhase("out");
+		window.setTimeout(() => {
+			sideEffect?.();
+			setStep(next);
+			setPhase("in");
+		}, 180);
+	}, []);
+	return {
+		step,
+		phase,
+		transitionTo,
+		selectAndGo: (0, import_react.useCallback)((next, sideEffect) => {
+			triggerSelectionHaptic();
+			window.setTimeout(() => transitionTo(next, sideEffect), 150);
+		}, [transitionTo]),
+		goBack: (0, import_react.useCallback)((next) => {
+			transitionTo(next);
+		}, [transitionTo]),
+		replaceStep: (0, import_react.useCallback)((next) => {
+			setStep(next);
+			setPhase("in");
+		}, [])
+	};
+}
+var PERSIST_DEBOUNCE_MS = 280;
+function applySnapshot(saved, setters) {
+	setters.setGender(saved.gender);
+	setters.setUserName(saved.userName);
+	setters.setUserPhone(saved.userPhone);
+	setters.setUserCity(saved.userCity);
+	setters.setGoalId(saved.goalId);
+	setters.setChallengeId(saved.challengeId);
+	setters.setAge(saved.age);
+	setters.setHeightCm(saved.heightCm);
+	setters.setWeightKg(saved.weightKg);
+	setters.setActivityLevel(saved.activityLevel);
+	setters.setInvestment(saved.investment);
+	setters.setBodyType(saved.bodyType);
+	setters.setUserLocation(saved.userLocation);
+	setters.setSelectedTierId(saved.selectedTierId);
+}
+function useQuizProgress() {
+	const hydratedRef = (0, import_react.useRef)(false);
+	const { step, phase, transitionTo, selectAndGo, goBack, replaceStep } = useQuizStepTransition("loading");
+	const [gender, setGender] = (0, import_react.useState)(null);
+	const [userName, setUserName] = (0, import_react.useState)("");
+	const [userPhone, setUserPhone] = (0, import_react.useState)("");
+	const [userCity, setUserCity] = (0, import_react.useState)("");
+	const [goalId, setGoalId] = (0, import_react.useState)("");
+	const [challengeId, setChallengeId] = (0, import_react.useState)("");
+	const [age, setAge] = (0, import_react.useState)();
+	const [heightCm, setHeightCm] = (0, import_react.useState)();
+	const [weightKg, setWeightKg] = (0, import_react.useState)();
+	const [activityLevel, setActivityLevel] = (0, import_react.useState)();
+	const [investment, setInvestment] = (0, import_react.useState)();
+	const [bodyType, setBodyType] = (0, import_react.useState)();
+	const [userLocation, setUserLocation] = (0, import_react.useState)(null);
+	const [selectedTierId, setSelectedTierId] = (0, import_react.useState)("transform");
+	(0, import_react.useEffect)(() => {
+		const saved = readQuizProgress();
+		if (saved) {
+			applySnapshot(saved, {
+				setGender,
+				setUserName,
+				setUserPhone,
+				setUserCity,
+				setGoalId,
+				setChallengeId,
+				setAge,
+				setHeightCm,
+				setWeightKg,
+				setActivityLevel,
+				setInvestment,
+				setBodyType,
+				setUserLocation,
+				setSelectedTierId
+			});
+			if (saved.step && saved.step !== "loading") replaceStep(saved.step);
+		}
+		hydratedRef.current = true;
+	}, [replaceStep]);
+	(0, import_react.useEffect)(() => {
+		if (!hydratedRef.current) return;
+		const snapshot = {
+			step,
+			gender,
+			userName,
+			userPhone,
+			userCity,
+			goalId,
+			challengeId,
+			age,
+			heightCm,
+			weightKg,
+			activityLevel,
+			investment,
+			bodyType,
+			userLocation,
+			selectedTierId
+		};
+		const timer = window.setTimeout(() => writeQuizProgress(snapshot), PERSIST_DEBOUNCE_MS);
+		return () => window.clearTimeout(timer);
+	}, [
+		step,
+		gender,
+		userName,
+		userPhone,
+		userCity,
+		goalId,
+		challengeId,
+		age,
+		heightCm,
+		weightKg,
+		activityLevel,
+		investment,
+		bodyType,
+		userLocation,
+		selectedTierId
+	]);
+	return {
+		step,
+		phase,
+		transitionTo,
+		selectAndGo,
+		goBack,
+		gender,
+		setGender,
+		userName,
+		setUserName,
+		userPhone,
+		setUserPhone,
+		userCity,
+		setUserCity,
+		goalId,
+		setGoalId,
+		challengeId,
+		setChallengeId,
+		age,
+		setAge,
+		heightCm,
+		setHeightCm,
+		weightKg,
+		setWeightKg,
+		activityLevel,
+		setActivityLevel,
+		investment,
+		setInvestment,
+		bodyType,
+		setBodyType,
+		userLocation,
+		setUserLocation,
+		selectedTierId,
+		setSelectedTierId
+	};
+}
+function MotionStepView({ phase, children, className = "" }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+		className: `w-full h-full ${className}`,
+		variants: pageVariants,
+		initial: false,
+		animate: phase === "in" ? "animate" : "exit",
+		transition: pageTransition,
+		children
+	});
+}
+var ذكر_default = "/assets/%D8%B0%D9%83%D8%B1-BKVowxgR.png";
+var آنثى_default = "/assets/%D8%A2%D9%86%D8%AB%D9%89-KAWfG-Vn.png";
+var coach_default = "/assets/coach-BIPmcWDQ.png";
+var خسارة_الدهون_default = "/assets/%D8%AE%D8%B3%D8%A7%D8%B1%D8%A9%20%D8%A7%D9%84%D8%AF%D9%87%D9%88%D9%86-COMM0BSy.jpg";
+var بناء_العضلات_default = "/assets/%D8%A8%D9%86%D8%A7%D8%A1%20%D8%A7%D9%84%D8%B9%D8%B6%D9%84%D8%A7%D8%AA-BYdK9eew.webp";
+var تحسين_اللياقة_والطاقة_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%A7%D9%84%D9%84%D9%8A%D8%A7%D9%82%D8%A9%20%D9%88%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-DXgPoeiw.PNG";
+var جسم_رياضي_ومتناسق_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%88%D9%85%D8%AA%D9%86%D8%A7%D8%B3%D9%82-DOYjakbf.PNG";
+var تغير_شكل_الجسم_default = "/assets/%D8%AA%D8%BA%D9%8A%D8%B1%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%AC%D8%B3%D9%85-BqYqs_YX.jpg";
+var زيادة_وزن_صحي_default = "/assets/%D8%B2%D9%8A%D8%A7%D8%AF%D8%A9%20%D9%88%D8%B2%D9%86%20%D8%B5%D8%AD%D9%8A-C5BXtAdV.jpg";
+var quiz_male_default = "/assets/quiz-male-B5oELl-G.jpg";
+var transform_2_default = "/assets/transform-2-BwvVShAt.jpg";
+var transform_3_default = "/assets/transform-3-ClV06AzM.jpg";
+var transform_1_default = "/assets/transform-1-BrbZVXEJ.jpg";
+var body_average_default = "/assets/body-average-DeODgUDX.jpg";
+var body_lean_default = "/assets/body-lean-CqHp6z19.jpg";
+var body_muscular_default = "/assets/body-muscular-DUx6xA0k.jpg";
+var body_skinny_fat_default = "/assets/body-skinny-fat-Ykep_DEn.jpg";
+var coach_gym_default = "/assets/coach-gym-CG2kDr0Y.jpg";
+var coach_support_default = "/assets/coach-support-CT4Xd0Gc.jpg";
+var target_illustration_default = "/assets/target-illustration-DriYTIHR.png";
+var fbody_slim_default = "/assets/fbody-slim-Z8X-NHHI.jpg";
+var fbody_belly_light_default = "/assets/fbody-belly-light-DraLXieX.jpg";
+var fbody_toning_default = "/assets/fbody-toning-BWLWI57L.jpg";
+var fbody_shaping_default = "/assets/fbody-shaping-BEiOVFvh.jpg";
+var fbody_athletic_default = "/assets/fbody-athletic-CoZMsJyo.jpg";
+var fbody_overweight_default = "/assets/fbody-overweight-COgvi1CS.jpg";
+var خسارة_دهون_للبنات_default = "/assets/%D8%AE%D8%B3%D8%A7%D8%B1%D8%A9%20%D8%AF%D9%87%D9%88%D9%86%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-CDfYA_c_.JPG";
+var glute_growth_default = "/assets/glute-growth-B3hXYJl5.png";
+var خصر_انحف_ومشدود_default = "/assets/%D8%AE%D8%B5%D8%B1%20%D8%A7%D9%86%D8%AD%D9%81%20%D9%88%D9%85%D8%B4%D8%AF%D9%88%D8%AF-BXgAjdRr.png";
+var feminine_toned_body_default = "/assets/feminine-toned-body-ULTMdfL-.png";
+var جسم_صحي_ورياضي_للبنات_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B5%D8%AD%D9%8A%20%D9%88%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-D1R1oUOx.png";
+var تحسين_شكل_الصدر_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%B5%D8%AF%D8%B1-BNPobXQ4.jpg";
+var body_very_skinny_default = "/assets/body-very-skinny-DfHgEwJL.jpg";
+var body_overweight_default = "/assets/body-overweight-D_ThJNGl.jpg";
+var FONT = "'Tajawal', sans-serif";
+function QuizPage() {
+	const { step, phase, transitionTo, selectAndGo, goBack, gender, setGender, userName, setUserName, userPhone, setUserPhone, userCity, setUserCity, goalId, setGoalId, challengeId, setChallengeId, age, setAge, heightCm, setHeightCm, weightKg, setWeightKg, activityLevel, setActivityLevel, investment, setInvestment, bodyType, setBodyType, userLocation, setUserLocation, selectedTierId, setSelectedTierId } = useQuizProgress();
+	const quizAnswers = {
+		gender,
+		goalId,
+		challengeId,
+		age,
+		heightCm,
+		weightKg,
+		activityLevel,
+		investment,
+		bodyType
+	};
+	const totalSteps = userLocation === "dubai" ? 15 : 14;
+	const afterReveal = () => selectAndGo(userLocation === "dubai" ? "trainingType" : "pricing");
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		dir: "rtl",
+		lang: "ar",
+		style: {
+			fontFamily: FONT,
+			backgroundColor: "#FAF8F5"
+		},
+		className: "fixed inset-0 w-full h-[100dvh] overflow-hidden",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("link", {
+			rel: "stylesheet",
+			href: "https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@700;800;900&display=swap"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(MotionStepView, {
+			phase,
+			children: [
+				step === "loading" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoadingScreen, { onDone: () => transitionTo("gender") }),
+				step === "gender" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GenderScreen, { onSelect: (g) => selectAndGo(g === "male" ? "goals" : "femaleGoals", () => setGender(g)) }),
+				step === "goals" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GoalsScreen, {
+					onBack: () => goBack("gender"),
+					onNext: () => transitionTo("age"),
+					onSelect: setGoalId
+				}),
+				step === "femaleGoals" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FemaleGoalsScreen, {
+					onBack: () => goBack("gender"),
+					onNext: () => transitionTo("age"),
+					onSelect: setGoalId
+				}),
+				step === "age" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AgeScreen, {
+					onBack: () => goBack("gender"),
+					onNext: (value) => selectAndGo("measure", () => setAge(value)),
+					initialAge: age ?? 24,
+					onAgeChange: setAge
+				}),
+				step === "measure" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MeasureScreen, {
+					onBack: () => goBack("age"),
+					initialHeight: heightCm ?? 164,
+					initialWeight: weightKg ?? 63,
+					onHeightChange: setHeightCm,
+					onWeightChange: setWeightKg,
+					onNext: (height, weight) => selectAndGo("activity", () => {
+						setHeightCm(height);
+						setWeightKg(weight);
+					})
+				}),
+				step === "activity" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ActivityScreen, {
+					onBack: () => goBack("measure"),
+					onNext: (value) => selectAndGo(gender === "female" ? "femaleChallenge" : "challenge", () => setActivityLevel(value))
+				}),
+				step === "challenge" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChallengeScreen, {
+					onBack: () => goBack("activity"),
+					onNext: () => selectAndGo("investment"),
+					onSelect: setChallengeId
+				}),
+				step === "femaleChallenge" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FemaleChallengeScreen, {
+					onBack: () => goBack("activity"),
+					onNext: () => selectAndGo("investment"),
+					onSelect: setChallengeId
+				}),
+				step === "investment" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InvestmentScreen, {
+					onBack: () => goBack(gender === "female" ? "femaleChallenge" : "challenge"),
+					onNext: (value) => selectAndGo(gender === "female" ? "femaleBodyType" : "bodyType", () => setInvestment(value))
+				}),
+				step === "bodyType" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BodyTypeScreen, {
+					onBack: () => goBack("investment"),
+					onNext: (value) => selectAndGo("analysis", () => setBodyType(value))
+				}),
+				step === "femaleBodyType" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FemaleBodyTypeScreen, {
+					onBack: () => goBack("investment"),
+					onNext: (value) => selectAndGo("analysis", () => setBodyType(value))
+				}),
+				step === "analysis" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnalysisScreen, {
+					onBack: () => goBack(gender === "female" ? "femaleBodyType" : "bodyType"),
+					onDone: () => transitionTo("contact")
+				}),
+				step === "contact" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContactScreen, {
+					quizAnswers,
+					onBack: () => goBack(gender === "female" ? "femaleBodyType" : "bodyType"),
+					onDone: (name, isDubai, phone, city) => selectAndGo("congrats", () => {
+						setUserName(name);
+						setUserPhone(phone);
+						setUserCity(city);
+						setUserLocation(isDubai ? "dubai" : "remote");
+					})
+				}),
+				step === "congrats" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CongratsScreen, {
+					name: userName,
+					gender,
+					total: totalSteps,
+					onNext: () => selectAndGo("reveal")
+				}),
+				step === "reveal" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgramRevealScreen, {
+					name: userName,
+					gender,
+					goalId,
+					challengeId,
+					total: totalSteps,
+					onNext: afterReveal
+				}),
+				step === "trainingType" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrainingTypeScreen, {
+					onBack: () => goBack("reveal"),
+					onSelect: (t) => transitionTo(t === "inperson" ? "offlinePackages" : "pricing")
+				}),
+				step === "pricing" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PricingScreen, {
+					name: userName,
+					total: totalSteps,
+					onBack: () => goBack(userLocation === "dubai" ? "trainingType" : "reveal"),
+					onSelectTier: (id) => transitionTo("payment", () => setSelectedTierId(id))
+				}),
+				step === "pricingDubai" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PricingScreen, {
+					name: userName,
+					total: totalSteps,
+					onBack: () => goBack("trainingType"),
+					dubai: true,
+					onSelectTier: (id) => transitionTo("payment", () => setSelectedTierId(id))
+				}),
+				step === "offlinePackages" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OfflinePackagesScreen, {
+					name: userName,
+					phone: userPhone,
+					city: userCity,
+					goalId,
+					challengeId,
+					total: totalSteps,
+					onBack: () => goBack("trainingType")
+				}),
+				step === "payment" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentScreen, {
+					name: userName,
+					tierId: selectedTierId,
+					total: totalSteps,
+					onBack: () => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")
+				})
+			]
+		})]
+	});
+}
+function LoadingScreen({ onDone }) {
+	const steps = [
+		"تحليل الأهداف",
+		"تخصيص الأسئلة",
+		"إعداد الخطة المناسبة"
+	];
+	const [done, setDone] = (0, import_react.useState)(0);
+	(0, import_react.useEffect)(() => {
+		const timers = [
+			setTimeout(() => setDone(1), 500),
+			setTimeout(() => setDone(2), 1050),
+			setTimeout(() => setDone(3), 1600),
+			setTimeout(onDone, 2100)
+		];
+		return () => timers.forEach(clearTimeout);
+	}, [onDone]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col items-center justify-center px-8 text-center animate-[fadeIn_.4s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "absolute inset-0 opacity-60",
+				style: { background: "radial-gradient(ellipse at top, rgba(255,107,0,0.12), transparent 60%), radial-gradient(ellipse at bottom, rgba(255,107,0,0.08), transparent 60%)" }
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "absolute inset-0 rounded-full blur-2xl opacity-50",
+					style: { background: "#FF6B00" }
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "relative grid place-items-center h-28 w-28 rounded-full shadow-[0_20px_60px_-15px_rgba(255,107,0,0.6)]",
+					style: { background: "linear-gradient(135deg,#FF8534,#FF6B00)" },
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "absolute inset-0 rounded-full border-4 border-white/30 animate-[spin_2s_linear_infinite]",
+						style: {
+							borderTopColor: "transparent",
+							borderRightColor: "transparent"
+						}
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dumbbell, {
+						className: "h-12 w-12 text-white",
+						strokeWidth: 2.4
+					})]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "relative mt-10 text-2xl font-black text-neutral-900",
+				children: "جاري تجهيز تقييمك الشخصي"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "relative mt-3 text-sm text-neutral-500 max-w-xs leading-loose",
+				children: "نقوم بتحليل بياناتك لإنشاء تجربة مخصصة بالكامل"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+				className: "relative mt-10 space-y-3 w-full max-w-xs",
+				children: steps.map((s, i) => {
+					const active = done > i;
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+						className: `flex items-center justify-end gap-3 rounded-2xl px-4 py-3 transition-all duration-500 ${active ? "bg-white shadow-[0_8px_24px_-12px_rgba(0,0,0,0.1)]" : "bg-white/40"}`,
+						style: {
+							opacity: done >= i ? 1 : .4,
+							transform: active ? "translateY(0)" : "translateY(4px)"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-sm font-bold text-neutral-800",
+							children: s
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: `grid h-6 w-6 place-items-center rounded-full transition-all ${active ? "scale-100" : "scale-90"}`,
+							style: { background: active ? "#FF6B00" : "#E5E5E5" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+								className: "h-3.5 w-3.5 text-white",
+								strokeWidth: 3.5
+							})
+						})]
+					}, s);
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `@keyframes fadeIn{from{opacity:0}to{opacity:1}}` })
+		]
+	});
+}
+function ProgressHeader({ current, total = 13, onBack }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex items-center justify-between",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				onClick: onBack,
+				className: "grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, { className: "h-5 w-5 text-neutral-700" })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "text-sm font-bold text-neutral-800",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						style: { color: "#FF6B00" },
+						children: current
+					}),
+					" من ",
+					total
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+		]
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "mt-3 flex gap-1.5",
+		children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex-1 h-1.5 rounded-full",
+			style: { background: i < current ? "#FF6B00" : "rgba(0,0,0,0.1)" }
+		}, i))
+	})] });
+}
+function GymBackdrop() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute inset-0",
+			style: {
+				backgroundImage: `url(${quiz_gym_bg_default})`,
+				backgroundSize: "cover",
+				backgroundPosition: "center",
+				opacity: .3
+			}
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute inset-0",
+			style: { background: "linear-gradient(180deg,#FAF8F5 0%,rgba(250,248,245,0.75) 40%,rgba(250,248,245,0.9) 100%)" }
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute top-2 right-2 grid grid-cols-8 gap-1.5 opacity-30",
+			style: { direction: "ltr" },
+			children: Array.from({ length: 40 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "h-1 w-1 rounded-full",
+				style: { background: "#FF6B00" }
+			}, i))
+		})
+	] });
+}
+function GenderScreen({ onSelect }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, { current: 1 }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-5 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+								className: "text-2xl sm:text-3xl font-black text-neutral-900 leading-tight",
+								children: ["لنبدأ رحلتك مع ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: "#FF6B00" },
+									children: "حكيم"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+								className: "mt-3 text-xl sm:text-2xl font-bold text-neutral-900 leading-snug",
+								children: "ما هو جنسك؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-sm text-neutral-500 leading-relaxed px-2",
+								children: "هذا يساعدنا على تخصيص تجربتك بشكل أفضل"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 items-start content-start",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GenderCard, {
+							image: ذكر_default,
+							label: "ذكر",
+							color: "#3B82F6",
+							tintFrom: "#DDEAF8",
+							tintTo: "#F5F9FF",
+							symbol: "♂",
+							enterVariant: "male",
+							enterDelay: 120,
+							onClick: () => onSelect("male"),
+							features: [
+								{
+									Icon: Dumbbell,
+									text: "بناء عضلات"
+								},
+								{
+									Icon: Zap,
+									text: "زيادة القوة"
+								},
+								{
+									Icon: PersonStanding,
+									text: "جسم رياضي"
+								}
+							]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GenderCard, {
+							image: آنثى_default,
+							label: "أنثى",
+							color: "#EC4899",
+							tintFrom: "#FADCE8",
+							tintTo: "#FFF5F9",
+							symbol: "♀",
+							enterVariant: "female",
+							enterDelay: 260,
+							onClick: () => onSelect("female"),
+							features: [
+								{
+									Icon: Dumbbell,
+									text: "شد الجسم"
+								},
+								{
+									Icon: Flame,
+									text: "خسارة الدهون"
+								},
+								{
+									Icon: PersonStanding,
+									text: "جسم متناسق"
+								}
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "gender-footer-enter mt-3 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-7 w-7 place-items-center rounded-lg",
+							style: { background: "#FF6B00" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "h-3.5 w-3.5 text-white" })
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-[12px] text-neutral-700 font-medium",
+							children: [
+								"اختيارك يساعدني على بناء ",
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "font-bold",
+									style: { color: "#FF6B00" },
+									children: "تجربة مناسبة"
+								}),
+								" لك."
+							]
+						})]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes genderCardEnterMale {
+          0% { opacity: 0; transform: translate(22px, 40px) scale(0.86); }
+          55% { opacity: 1; transform: translate(0, -5px) scale(1.03); }
+          100% { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes genderCardEnterFemale {
+          0% { opacity: 0; transform: translate(-22px, 40px) scale(0.86); }
+          55% { opacity: 1; transform: translate(0, -5px) scale(1.03); }
+          100% { opacity: 1; transform: translate(0, 0) scale(1); }
+        }
+        @keyframes genderIconPop {
+          0% { opacity: 0; transform: scale(0.35); }
+          65% { transform: scale(1.14); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes genderImgReveal {
+          from { opacity: 0; transform: translateY(18px) scale(0.94); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes genderFeatureSlide {
+          from { opacity: 0; transform: translateX(10px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes genderShimmerSweep {
+          from { transform: translateX(-140%); }
+          to { transform: translateX(240%); }
+        }
+        @keyframes genderFooterEnter {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .gender-card-enter-male {
+          animation: genderCardEnterMale 0.75s cubic-bezier(0.22, 1.15, 0.36, 1) both;
+        }
+        .gender-card-enter-female {
+          animation: genderCardEnterFemale 0.75s cubic-bezier(0.22, 1.15, 0.36, 1) both;
+        }
+        .gender-icon-pop {
+          animation: genderIconPop 0.55s cubic-bezier(0.34, 1.4, 0.44, 1) both;
+        }
+        .gender-img-reveal {
+          animation: genderImgReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .gender-feature-enter {
+          animation: genderFeatureSlide 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .gender-card-shimmer-sweep {
+          animation: genderShimmerSweep 0.85s ease-out both;
+        }
+        .gender-footer-enter {
+          animation: genderFooterEnter 0.55s ease-out 0.55s both;
+        }
+        .gender-card-interactive {
+          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+        .gender-card-interactive:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 20px 44px -18px rgba(15, 23, 42, 0.28);
+        }
+        .gender-card-interactive:active {
+          transform: translateY(-1px) scale(0.98);
+        }
+        @keyframes genderBorderOrbit {
+          to { transform: rotate(360deg); }
+        }
+        .gender-card-border-orbit {
+          animation: genderBorderOrbit 3.8s linear infinite;
+        }
+        .gender-card-border-orbit-female {
+          animation: genderBorderOrbit 4.6s linear infinite reverse;
+        }
+      ` })
+		]
+	});
+}
+function GenderCard({ image, label, color, tintFrom, tintTo, symbol, features, onClick, enterVariant = "male", enterDelay = 0 }) {
+	const enterClass = enterVariant === "male" ? "gender-card-enter-male" : "gender-card-enter-female";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "gender-card-wrap relative w-full overflow-hidden rounded-[24px] p-[2px]",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "pointer-events-none absolute inset-0 overflow-hidden rounded-[24px]",
+			"aria-hidden": true,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: `${enterVariant === "male" ? "gender-card-border-orbit" : "gender-card-border-orbit-female"} absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2`,
+				style: {
+					background: `conic-gradient(from 0deg, transparent 0deg, transparent 73%, ${color} 81%, rgba(255,255,255,0.95) 86%, transparent 94%)`,
+					animationDelay: `${enterDelay}ms`
+				}
+			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+			onClick,
+			className: ["gender-card-interactive relative z-10 flex min-h-0 w-full flex-col overflow-hidden rounded-[22px] bg-white text-right shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.05]", enterClass].join(" "),
+			style: { animationDelay: `${enterDelay}ms` },
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[22px]",
+					"aria-hidden": true,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "gender-card-shimmer-sweep absolute inset-y-[-10%] left-0 h-[120%] w-1/2 bg-gradient-to-r from-transparent via-white/45 to-transparent",
+						style: { animationDelay: `${enterDelay + 320}ms` }
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "relative flex flex-col items-center overflow-hidden px-2 pt-3 pb-0",
+					style: { background: `linear-gradient(180deg, ${tintFrom} 0%, ${tintTo} 70%, #ffffff 100%)` },
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							"aria-hidden": true,
+							className: "pointer-events-none absolute -left-4 top-6 h-20 w-20 rounded-full opacity-30 blur-md",
+							style: { background: color }
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							"aria-hidden": true,
+							className: "pointer-events-none absolute -right-3 bottom-8 h-24 w-24 rounded-full opacity-20 blur-lg",
+							style: { background: color }
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "gender-icon-pop relative z-10 grid h-10 w-10 place-items-center rounded-full shadow-[0_6px_16px_-4px_rgba(15,23,42,0.18)]",
+							style: {
+								background: color,
+								animationDelay: `${enterDelay + 220}ms`
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[17px] font-black leading-none text-white",
+								children: symbol
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "relative z-10 mt-2 text-[15px] font-black",
+							style: { color },
+							children: label
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "relative z-10 mt-1 h-[2px] w-9 rounded-full",
+							style: { background: color }
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+							src: image,
+							alt: label,
+							loading: "lazy",
+							className: "gender-img-reveal relative z-10 mt-1 h-[min(58vw,395px)] w-full object-contain object-bottom",
+							style: { animationDelay: `${enterDelay + 380}ms` }
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "relative z-10 -mt-2 rounded-t-[16px] bg-white px-2.5 pt-2 pb-2",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+						className: "space-y-1.5",
+						children: features.map((f, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+							className: "gender-feature-enter flex items-center justify-end gap-2 text-[11px] font-semibold text-neutral-800",
+							style: { animationDelay: `${enterDelay + 520 + i * 90}ms` },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: f.text }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "grid h-7 w-7 shrink-0 place-items-center rounded-full",
+								style: {
+									background: `${color}1A`,
+									color
+								},
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(f.Icon, {
+									className: "h-3.5 w-3.5",
+									strokeWidth: 2.5
+								})
+							})]
+						}, f.text))
+					})
+				})
+			]
+		})]
+	});
+}
+function QuizImageOptionCard({ label, image, active, index, onClick, imageWrapClassName = "relative h-[min(34vw,135px)] w-full overflow-hidden", imageClassName = "h-full w-full object-cover" }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		onClick,
+		className: "relative flex min-h-0 flex-col overflow-hidden rounded-[18px] bg-white text-center transition-all active:scale-[0.98]",
+		style: {
+			border: active ? "2px solid #FF6B00" : "2px solid transparent",
+			boxShadow: active ? "0 12px 28px -10px rgba(255,107,0,0.28)" : "0 8px 20px -12px rgba(0,0,0,0.1)",
+			animation: `fadeUp .5s ease-out ${index * 70}ms both`
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: imageWrapClassName,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+				src: image,
+				alt: label,
+				loading: "lazy",
+				className: imageClassName
+			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[14px] font-black leading-tight",
+				style: { color: active ? "#FF6B00" : "#1F1F1F" },
+				children: label
+			})
+		})]
+	});
+}
+var GOALS = [
+	{
+		id: "fat",
+		label: "خسارة الدهون",
+		image: خسارة_الدهون_default,
+		imageWrapClassName: "male-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-fat-img h-full w-full object-cover"
+	},
+	{
+		id: "muscle",
+		label: "بناء العضلات",
+		image: بناء_العضلات_default,
+		imageWrapClassName: "male-goal-muscle-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-muscle-img h-full w-full object-cover"
+	},
+	{
+		id: "fitness",
+		label: "تحسين اللياقة والطاقة",
+		image: تحسين_اللياقة_والطاقة_default,
+		imageWrapClassName: "male-goal-fitness-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-fitness-img h-full w-full object-cover"
+	},
+	{
+		id: "athletic",
+		label: "جسم رياضي ومتناسق",
+		image: جسم_رياضي_ومتناسق_default,
+		imageWrapClassName: "male-goal-athletic-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-athletic-img h-full w-full object-cover"
+	},
+	{
+		id: "shape",
+		label: "تغيير شكل الجسم",
+		image: تغير_شكل_الجسم_default,
+		imageWrapClassName: "male-goal-shape-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-shape-img h-full w-full object-cover"
+	},
+	{
+		id: "gain",
+		label: "زيادة وزن صحي",
+		image: زيادة_وزن_صحي_default,
+		imageWrapClassName: "male-goal-gain-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "male-goal-gain-img h-full w-full object-cover"
+	}
+];
+function GoalsScreen({ onBack, onNext, onSelect }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const [touched, setTouched] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		if (!touched || !selected) return;
+		onSelect?.(selected);
+		const t = setTimeout(onNext, 150);
+		return () => clearTimeout(t);
+	}, [
+		touched,
+		selected,
+		onNext,
+		onSelect
+	]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 2,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xl font-black",
+								style: { color: "#FF6B00" },
+								children: ["ممتاز ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "inline-block align-middle",
+									children: "🤩"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[26px] font-black text-neutral-900 leading-tight",
+								children: "ما هو هدفك الأساسي؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[13px] text-neutral-500 leading-relaxed px-6",
+								children: "اختر الهدف الأقرب لك وسأخصص خطتك بناءً عليه."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1",
+						children: GOALS.map((g, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizImageOptionCard, {
+							label: g.label,
+							image: g.image,
+							active: selected === g.id,
+							index: i,
+							imageWrapClassName: g.imageWrapClassName,
+							imageClassName: g.imageClassName,
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(g.id);
+								setTouched(true);
+							}
+						}, g.id))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-base",
+							children: "🎯"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[13px] font-bold text-neutral-800",
+							children: "كل هدف يحتاج خطة مختلفة"
+						})]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+function FeminineBackdrop() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute inset-0",
+			style: { background: "linear-gradient(180deg, #FFF8F5 0%, #FFF0EC 50%, #FDF0EB 100%)" }
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute -left-16 top-1/4 w-60 h-72 rounded-full blur-3xl opacity-40",
+			style: { background: "#FFB5A7" }
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute -right-20 top-1/3 w-56 h-64 rounded-full blur-3xl opacity-30",
+			style: { background: "#FFD4C4" }
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute left-1/4 bottom-0 w-48 h-48 rounded-full blur-3xl opacity-25",
+			style: { background: "#FFC4B0" }
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute top-2 right-2 grid grid-cols-8 gap-1.5 opacity-20",
+			style: { direction: "ltr" },
+			children: Array.from({ length: 40 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "h-1 w-1 rounded-full",
+				style: { background: "#FF6B00" }
+			}, i))
+		})
+	] });
+}
+var FEMALE_GOALS = [
+	{
+		id: "fat",
+		label: "خسارة الدهون",
+		image: خسارة_دهون_للبنات_default,
+		imageWrapClassName: "female-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-fat-img h-full w-full object-cover"
+	},
+	{
+		id: "glutes",
+		label: "تكبير المؤخرة",
+		image: glute_growth_default,
+		imageWrapClassName: "female-goal-glutes-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+120px)] w-[calc(100%+120px)] -translate-x-1/2 -translate-y-1/2 object-cover"
+	},
+	{
+		id: "waist",
+		label: "خصر أنحف ومشدود",
+		image: خصر_انحف_ومشدود_default,
+		imageWrapClassName: "female-goal-waist-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-waist-img h-full w-full object-cover"
+	},
+	{
+		id: "body",
+		label: "جسم متناسق وأنثوي",
+		image: feminine_toned_body_default,
+		imageWrapClassName: "female-goal-body-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-body-img h-full w-full object-cover"
+	},
+	{
+		id: "fit",
+		label: "جسم صحي ورياضي",
+		image: جسم_صحي_ورياضي_للبنات_default,
+		imageWrapClassName: "female-goal-fit-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-fit-img h-full w-full object-cover"
+	},
+	{
+		id: "tone",
+		label: "تحسين شكل الصدر",
+		image: تحسين_شكل_الصدر_default,
+		imageWrapClassName: "female-goal-chest-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+		imageClassName: "female-goal-chest-img h-full w-full object-cover"
+	}
+];
+function FemaleGoalsScreen({ onBack, onNext, onSelect }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		if (!selected) return;
+		onSelect?.(selected);
+		const t = setTimeout(onNext, 150);
+		return () => clearTimeout(t);
+	}, [
+		selected,
+		onNext,
+		onSelect
+	]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FeminineBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 2,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-lg font-black",
+								style: { color: "#FF6B00" },
+								children: ["ممتاز ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "inline-block align-middle",
+									children: "✨"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[24px] font-black text-neutral-900 leading-tight",
+								children: "ما هو هدفك الأساسي؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12px] text-neutral-500 leading-relaxed px-4",
+								children: "اختاري الهدف الأقرب لك وسأخصص خطتك بناء عليه."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1",
+						children: FEMALE_GOALS.map((g, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizImageOptionCard, {
+							label: g.label,
+							image: g.image,
+							active: selected === g.id,
+							index: i,
+							imageWrapClassName: g.imageWrapClassName,
+							imageClassName: g.imageClassName,
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(g.id);
+							}
+						}, g.id))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-7 w-7 place-items-center rounded-lg",
+							style: { background: "#FF6B00" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+								className: "h-3.5 w-3.5 text-white",
+								strokeWidth: 2.5
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[12px] font-bold text-neutral-800",
+							children: "كل هدف يحتاج خطة مختلفة"
+						})]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+var AGES = Array.from({ length: 67 }, (_, i) => 14 + i);
+var ITEM_H = 56;
+function AgeScreen({ onBack, onNext, initialAge = 24, onAgeChange }) {
+	const [age, setAge] = (0, import_react.useState)(initialAge);
+	const scrollerRef = (0, import_react.useRef)(null);
+	const snapTimer = (0, import_react.useRef)(null);
+	(0, import_react.useEffect)(() => {
+		onAgeChange?.(age);
+	}, [age, onAgeChange]);
+	(0, import_react.useEffect)(() => {
+		const el = scrollerRef.current;
+		if (!el) return;
+		el.scrollTop = (initialAge - 14) * ITEM_H;
+	}, [initialAge]);
+	const onScroll = () => {
+		const el = scrollerRef.current;
+		if (!el) return;
+		const idx = Math.round(el.scrollTop / ITEM_H);
+		const next = AGES[Math.max(0, Math.min(AGES.length - 1, idx))];
+		if (next !== age) setAge(next);
+		if (snapTimer.current) window.clearTimeout(snapTimer.current);
+		snapTimer.current = window.setTimeout(() => {
+			el.scrollTo({
+				top: idx * ITEM_H,
+				behavior: "smooth"
+			});
+		}, 90);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 3,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+									className: "h-5 w-5",
+									style: {
+										color: "#FFB547",
+										fill: "#FFB547"
+									}
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-2xl font-black",
+									style: { color: "#FF6B00" },
+									children: "رائع"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-2 text-[24px] font-black text-neutral-900 leading-tight",
+								children: "ما هو عمرك الحالي؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-6",
+								children: "اختر عمرك للحصول على خطة مناسبة لمرحلتك."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "relative mt-5 mx-1 flex-1 min-h-0 flex flex-col",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "relative rounded-[28px] bg-white/85 backdrop-blur-sm ring-1 ring-black/5 flex-1 min-h-0",
+							style: { boxShadow: "0 20px 50px -25px rgba(255,107,0,0.25), 0 10px 30px -15px rgba(0,0,0,0.08)" },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "absolute -top-6 left-1/2 -translate-x-1/2 grid h-12 w-12 place-items-center rounded-full bg-white ring-1 ring-black/5",
+								style: { boxShadow: "0 8px 20px -8px rgba(255,107,0,0.4)" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Calendar, {
+									className: "h-5 w-5",
+									style: { color: "#FF6B00" },
+									strokeWidth: 2.4
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative h-full overflow-hidden rounded-[28px] pt-4",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "pointer-events-none absolute left-4 right-4 top-1/2 -translate-y-1/2 z-10",
+										style: { height: ITEM_H },
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "absolute inset-x-0 top-0 h-px",
+												style: { background: "rgba(255,107,0,0.35)" }
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "absolute inset-x-0 bottom-0 h-px",
+												style: { background: "rgba(255,107,0,0.35)" }
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "absolute right-6 top-1/2 -translate-y-1/2 text-base font-medium text-neutral-400",
+												children: "سنة"
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pointer-events-none absolute inset-x-0 top-0 h-1/3 z-20",
+										style: { background: "linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pointer-events-none absolute inset-x-0 bottom-0 h-1/3 z-20",
+										style: { background: "linear-gradient(0deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										ref: scrollerRef,
+										onScroll,
+										className: "h-full overflow-y-scroll scrollbar-none",
+										style: {
+											scrollSnapType: "y mandatory",
+											WebkitOverflowScrolling: "touch",
+											paddingTop: "calc(50% - 28px)",
+											paddingBottom: "calc(50% - 28px)"
+										},
+										children: AGES.map((n) => {
+											const dist = Math.abs(n - age);
+											const active = n === age;
+											return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												style: {
+													height: ITEM_H,
+													scrollSnapAlign: "center",
+													opacity: active ? 1 : Math.max(.15, 1 - dist * .28),
+													transform: `scale(${active ? 1 : Math.max(.75, 1 - dist * .08)})`,
+													transition: "opacity .2s, transform .2s, color .2s",
+													color: active ? "#0A0A0A" : "#9CA3AF",
+													fontWeight: active ? 900 : 600,
+													fontSize: active ? 32 : 24
+												},
+												className: "flex items-center justify-center leading-none",
+												children: n
+											}, n);
+										})
+									})
+								]
+							})]
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 rounded-3xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3",
+						style: { boxShadow: "0 8px 20px -12px rgba(0,0,0,0.08)" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-11 w-11 place-items-center rounded-full bg-white shrink-0",
+							style: { boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Heart, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[13px] font-extrabold",
+								style: { color: "#FF6B00" },
+								children: "العمر مجرد رقم..."
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[12px] text-neutral-700 font-medium mt-0.5",
+								children: "الالتزام هو ما يصنع الفارق الحقيقي 💪"
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => onNext(age),
+						className: "mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform",
+						style: {
+							background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+							boxShadow: "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.6
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-3.5 w-3.5",
+							style: { color: "#FF6B00" }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .scrollbar-none::-webkit-scrollbar{display:none}
+        .scrollbar-none{scrollbar-width:none;-ms-overflow-style:none}
+      ` })
+		]
+	});
+}
+var ITEM_W = 88;
+function HorizontalWheel({ min, max, value, unit, onChange }) {
+	const ref = (0, import_react.useRef)(null);
+	const snap = (0, import_react.useRef)(null);
+	const values = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+	(0, import_react.useEffect)(() => {
+		const el = ref.current;
+		if (!el) return;
+		el.scrollLeft = (value - min) * ITEM_W;
+	}, []);
+	const handle = () => {
+		const el = ref.current;
+		if (!el) return;
+		const idx = Math.round(el.scrollLeft / ITEM_W);
+		const v = values[Math.max(0, Math.min(values.length - 1, idx))];
+		if (v !== value) onChange(v);
+		if (snap.current) window.clearTimeout(snap.current);
+		snap.current = window.setTimeout(() => {
+			el.scrollTo({
+				left: idx * ITEM_W,
+				behavior: "smooth"
+			});
+		}, 90);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative h-[88px]",
+		dir: "ltr",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-2 z-10 flex flex-col items-center gap-1",
+				style: { width: ITEM_W },
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "h-[2px] w-12 rounded-full",
+					style: { background: "#FF6B00" }
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "pointer-events-none absolute left-1/2 -translate-x-1/2 top-0 z-10",
+				style: { width: ITEM_W },
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "h-[2px] w-full rounded-full",
+					style: { background: "rgba(255,107,0,0.6)" }
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "pointer-events-none absolute inset-y-0 left-0 w-16 z-20",
+				style: { background: "linear-gradient(90deg,#fff,rgba(255,255,255,0))" }
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "pointer-events-none absolute inset-y-0 right-0 w-16 z-20",
+				style: { background: "linear-gradient(270deg,#fff,rgba(255,255,255,0))" }
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				ref,
+				onScroll: handle,
+				className: "h-full overflow-x-scroll scrollbar-none flex items-center",
+				style: {
+					scrollSnapType: "x mandatory",
+					WebkitOverflowScrolling: "touch",
+					paddingLeft: `calc(50% - ${ITEM_W / 2}px)`,
+					paddingRight: `calc(50% - ${ITEM_W / 2}px)`
+				},
+				children: values.map((n) => {
+					const dist = Math.abs(n - value);
+					const active = n === value;
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						style: {
+							width: ITEM_W,
+							scrollSnapAlign: "center",
+							opacity: active ? 1 : Math.max(.2, 1 - dist * .25),
+							transform: `scale(${active ? 1 : Math.max(.7, 1 - dist * .1)})`,
+							transition: "opacity .2s, transform .2s"
+						},
+						className: "shrink-0 flex flex-col items-center justify-center",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							style: {
+								color: active ? "#FF6B00" : "#9CA3AF",
+								fontWeight: active ? 900 : 600,
+								fontSize: active ? 34 : 22,
+								lineHeight: 1
+							},
+							children: n
+						}), active && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "mt-1 text-[12px] font-bold",
+							style: { color: "#FF6B00" },
+							children: unit
+						})]
+					}, n);
+				})
+			})
+		]
+	});
+}
+function MeasureScreen({ onBack, onNext, initialHeight = 164, initialWeight = 63, onHeightChange, onWeightChange }) {
+	const [height, setHeight] = (0, import_react.useState)(initialHeight);
+	const [weight, setWeight] = (0, import_react.useState)(initialWeight);
+	(0, import_react.useEffect)(() => {
+		onHeightChange?.(height);
+	}, [height, onHeightChange]);
+	(0, import_react.useEffect)(() => {
+		onWeightChange?.(weight);
+	}, [weight, onWeightChange]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 4,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-xl",
+									children: "📏"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-xl font-black",
+									style: { color: "#FF6B00" },
+									children: "ممتاز"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[22px] font-black text-neutral-900 leading-tight",
+								children: "ما هو طوله و وزنك الحالي؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1.5 text-[12px] text-neutral-500 leading-relaxed px-6",
+								children: "أدخلي معلوماتك بدقة لتحصلي على خطة مخصصة لك."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex-1 min-h-0 flex flex-col justify-center gap-5 mt-6",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MeasureCard, {
+							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Ruler, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							}),
+							label: "الطول (سم)",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HorizontalWheel, {
+								min: 130,
+								max: 230,
+								value: height,
+								unit: "سم",
+								onChange: setHeight
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MeasureCard, {
+							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scale, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							}),
+							label: "الوزن (كجم)",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HorizontalWheel, {
+								min: 35,
+								max: 250,
+								value: weight,
+								unit: "كجم",
+								onChange: setWeight
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 rounded-3xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3",
+						style: { boxShadow: "0 8px 20px -12px rgba(0,0,0,0.08)" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-11 w-11 place-items-center rounded-full bg-white shrink-0",
+							style: { boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[13px] font-extrabold",
+								style: { color: "#FF6B00" },
+								children: "نصيحة مهمة"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed",
+								children: "كلما كانت المعلومات دقيقة، كانت خطتك أكثر فعالية ونتائجك أسرع."
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => onNext(height, weight),
+						className: "mt-3 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 active:scale-[0.98] transition-transform",
+						style: {
+							background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+							boxShadow: "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.6
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-3.5 w-3.5",
+							style: { color: "#FF6B00" }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .scrollbar-none::-webkit-scrollbar{display:none}
+        .scrollbar-none{scrollbar-width:none;-ms-overflow-style:none}
+      ` })
+		]
+	});
+}
+function MeasureCard({ icon, label, children }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "absolute -top-5 left-1/2 -translate-x-1/2 z-10 grid h-11 w-11 place-items-center rounded-full bg-white ring-1 ring-black/5",
+			style: { boxShadow: "0 6px 16px -6px rgba(255,107,0,0.4)" },
+			children: icon
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "rounded-[28px] bg-white/90 backdrop-blur-sm ring-1 ring-black/5 pt-7 pb-3 px-2",
+			style: { boxShadow: "0 18px 40px -25px rgba(255,107,0,0.25), 0 8px 24px -15px rgba(0,0,0,0.08)" },
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-center text-[13px] font-bold text-neutral-700",
+				children: label
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mt-2",
+				children
+			})]
+		})]
+	});
+}
+var ACTIVITIES = [
+	{
+		id: "sedentary",
+		label: "خامل تماماً",
+		image: body_average_default
+	},
+	{
+		id: "light",
+		label: "نشاط خفيف",
+		image: quiz_male_default
+	},
+	{
+		id: "moderate",
+		label: "نشاط متوسط",
+		image: coach_gym_default
+	},
+	{
+		id: "high",
+		label: "نشاط عالي",
+		image: transform_2_default
+	},
+	{
+		id: "veryhigh",
+		label: "نشاط عالي جداً",
+		image: transform_3_default
+	},
+	{
+		id: "athlete",
+		label: "رياضي محترف",
+		image: body_muscular_default
+	}
+];
+function ActivityScreen({ onBack, onNext }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 5,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xl font-black",
+								style: { color: "#FF6B00" },
+								children: ["ممتاز ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "inline-block align-middle",
+									children: "🏃"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[24px] font-black text-neutral-900 leading-tight",
+								children: "ما هو مستوى نشاطك الحالي؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2",
+								children: "اختر المستوى الأقرب لحالتك اليومية لنصمم لك خطة مناسبة لواقعك."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1",
+						children: ACTIVITIES.map((a, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizImageOptionCard, {
+							label: a.label,
+							image: a.image,
+							active: selected === a.id,
+							index: i,
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(a.id);
+							}
+						}, a.id))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3",
+						style: { boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-10 w-10 place-items-center rounded-full bg-white shrink-0",
+							style: { boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[13px] font-extrabold",
+								style: { color: "#FF6B00" },
+								children: "معلومة مهمة"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed",
+								children: "اختيارك الصحيح يساعدنا في تصميم خطة فعالة وآمنة لك."
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => selected && onNext(selected),
+						disabled: !selected,
+						className: `mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`,
+						style: {
+							background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+							boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)" : "none"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.6
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-3.5 w-3.5",
+							style: { color: "#FF6B00" }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+var CHALLENGES = [
+	{
+		id: "belly",
+		label: "دهون البطن",
+		image: body_skinny_fat_default
+	},
+	{
+		id: "muscle",
+		label: "صعوبة بناء العضلات",
+		image: body_muscular_default
+	},
+	{
+		id: "energy",
+		label: "قلة الطاقة والحيوية",
+		image: body_lean_default
+	},
+	{
+		id: "goal",
+		label: "عدم وضوح الهدف",
+		image: target_illustration_default
+	},
+	{
+		id: "commitment",
+		label: "الالتزام والاستمرارية",
+		image: confused_coach_default
+	},
+	{
+		id: "confidence",
+		label: "الثقة بالنفس والمظهر",
+		image: transform_1_default
+	}
+];
+function ChallengeScreen({ onBack, onNext, onSelect }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		if (selected) onSelect?.(selected);
+	}, [selected, onSelect]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GymBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 6,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xl font-black",
+								style: { color: "#FF6B00" },
+								children: ["ممتاز ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "inline-block align-middle",
+									children: "✨"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[24px] font-black text-neutral-900 leading-tight",
+								children: "ما هي أكبر مشكلة تواجهك حالياً؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2",
+								children: "اختر التحدي الذي يؤثر عليك أكثر لنساعدك على التغلب عليه."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1",
+						children: CHALLENGES.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizImageOptionCard, {
+							label: c.label,
+							image: c.image,
+							active: selected === c.id,
+							index: i,
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(c.id);
+							}
+						}, c.id))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3",
+						style: { boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-10 w-10 place-items-center rounded-full bg-white shrink-0",
+							style: { boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[13px] font-extrabold",
+								style: { color: "#FF6B00" },
+								children: "معلومة مهمة"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed",
+								children: "معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي."
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: onNext,
+						disabled: !selected,
+						className: `mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`,
+						style: {
+							background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+							boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)" : "none"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.6
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-3.5 w-3.5",
+							style: { color: "#FF6B00" }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+var FEMALE_CHALLENGES = [
+	{
+		id: "belly",
+		label: "الكرش والدهون البطن",
+		image: fbody_belly_light_default
+	},
+	{
+		id: "glutes",
+		label: "شكل المؤخرة",
+		image: fbody_shaping_default
+	},
+	{
+		id: "sagging",
+		label: "ترهلات الجسم",
+		image: fbody_toning_default
+	},
+	{
+		id: "weight",
+		label: "عدم نزول الوزن",
+		image: fbody_overweight_default
+	},
+	{
+		id: "confidence",
+		label: "الثقة بالنفس",
+		image: fbody_slim_default
+	},
+	{
+		id: "cravings",
+		label: "الرغبة الشديدة في الأكل",
+		image: coach_support_default
+	}
+];
+function FemaleChallengeScreen({ onBack, onNext, onSelect }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	(0, import_react.useEffect)(() => {
+		if (selected) onSelect?.(selected);
+	}, [selected, onSelect]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FeminineBackdrop, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative flex flex-col h-full px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ProgressHeader, {
+						current: 6,
+						onBack
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 text-center",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xl font-black",
+								style: { color: "#FF6B00" },
+								children: ["ممتاز ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "inline-block align-middle",
+									children: "✨"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-1 text-[24px] font-black text-neutral-900 leading-tight",
+								children: "ما هي أكبر مشكلة تواجهك حالياً؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] text-neutral-500 leading-relaxed px-2",
+								children: "اختاري التحدي الذي يؤثر عليك أكثر لنساعدك على التغلب عليه."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1",
+						children: FEMALE_CHALLENGES.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuizImageOptionCard, {
+							label: c.label,
+							image: c.image,
+							active: selected === c.id,
+							index: i,
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(c.id);
+							}
+						}, c.id))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3",
+						style: { boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "grid h-10 w-10 place-items-center rounded-full bg-white shrink-0",
+							style: { boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+								className: "h-5 w-5",
+								style: { color: "#FF6B00" },
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[13px] font-extrabold",
+								style: { color: "#FF6B00" },
+								children: "معلومة مهمة"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed",
+								children: "معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي."
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: onNext,
+						disabled: !selected,
+						className: `mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`,
+						style: {
+							background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+							boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)" : "none"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.6
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-3.5 w-3.5",
+							style: { color: "#FF6B00" }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+function TrophyIcon({ size = 48 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 64 64",
+		width: size,
+		height: size,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "trophyGrad",
+				x1: "0%",
+				y1: "0%",
+				x2: "0%",
+				y2: "100%",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "0%",
+						stopColor: "#FFD700"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "50%",
+						stopColor: "#FFC107"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "100%",
+						stopColor: "#B8860B"
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "trophyBase",
+				x1: "0%",
+				y1: "0%",
+				x2: "0%",
+				y2: "100%",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0%",
+					stopColor: "#8B6914"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "100%",
+					stopColor: "#5C4008"
+				})]
+			})] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "22",
+				y: "50",
+				width: "20",
+				height: "6",
+				rx: "2",
+				fill: "url(#trophyBase)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "18",
+				y: "54",
+				width: "28",
+				height: "5",
+				rx: "2",
+				fill: "url(#trophyBase)",
+				opacity: "0.8"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M16 16 Q16 42 32 46 Q48 42 48 16 Z",
+				fill: "url(#trophyGrad)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M32 22 L34 28 L40 28 L35 32 L37 38 L32 34 L27 38 L29 32 L24 28 L30 28 Z",
+				fill: "#FFF8DC",
+				opacity: "0.9"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M16 18 Q8 18 8 28 Q8 38 18 38",
+				fill: "none",
+				stroke: "url(#trophyGrad)",
+				strokeWidth: "4",
+				strokeLinecap: "round"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M48 18 Q56 18 56 28 Q56 38 46 38",
+				fill: "none",
+				stroke: "url(#trophyGrad)",
+				strokeWidth: "4",
+				strokeLinecap: "round"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "32",
+				cy: "16",
+				rx: "16",
+				ry: "3",
+				fill: "#FFD700"
+			})
+		]
+	});
+}
+function CoinIcon({ size = 48 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 64 64",
+		width: size,
+		height: size,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "coinGrad",
+				x1: "0%",
+				y1: "0%",
+				x2: "100%",
+				y2: "100%",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "0%",
+						stopColor: "#FFD700"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "40%",
+						stopColor: "#FFC107"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "100%",
+						stopColor: "#B8860B"
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "coinEdge",
+				x1: "0%",
+				y1: "0%",
+				x2: "0%",
+				y2: "100%",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0%",
+					stopColor: "#D4AF37"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "100%",
+					stopColor: "#8B6914"
+				})]
+			})] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "32",
+				cy: "32",
+				r: "28",
+				fill: "url(#coinGrad)",
+				stroke: "url(#coinEdge)",
+				strokeWidth: "2"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "32",
+				cy: "32",
+				r: "20",
+				fill: "none",
+				stroke: "#B8860B",
+				strokeWidth: "1.5",
+				opacity: "0.5"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+				x: "32",
+				y: "40",
+				textAnchor: "middle",
+				fontSize: "28",
+				fontWeight: "bold",
+				fill: "#5C4008",
+				fontFamily: "Arial",
+				children: "$"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "24",
+				cy: "22",
+				rx: "8",
+				ry: "5",
+				fill: "white",
+				opacity: "0.25",
+				transform: "rotate(-30 24 22)"
+			})
+		]
+	});
+}
+function PiggyBankIcon({ size = 48 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 64 64",
+		width: size,
+		height: size,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "piggyGrad",
+				x1: "0%",
+				y1: "0%",
+				x2: "0%",
+				y2: "100%",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "0%",
+						stopColor: "#FFB6C1"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "50%",
+						stopColor: "#FF91A4"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "100%",
+						stopColor: "#F06279"
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "coinSmall",
+				x1: "0%",
+				y1: "0%",
+				x2: "100%",
+				y2: "100%",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0%",
+					stopColor: "#FFD700"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "100%",
+					stopColor: "#D4AF37"
+				})]
+			})] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "32",
+				cy: "38",
+				rx: "22",
+				ry: "16",
+				fill: "url(#piggyGrad)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "48",
+				cy: "30",
+				r: "10",
+				fill: "url(#piggyGrad)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "56",
+				cy: "30",
+				rx: "4",
+				ry: "5",
+				fill: "#FF91A4"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "55",
+				cy: "28",
+				r: "1.5",
+				fill: "#D4506B"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "57",
+				cy: "28",
+				r: "1.5",
+				fill: "#D4506B"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "50",
+				cy: "26",
+				r: "2",
+				fill: "#333"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "50.5",
+				cy: "25.5",
+				r: "0.7",
+				fill: "white"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "42",
+				cy: "20",
+				rx: "5",
+				ry: "7",
+				fill: "#FF91A4",
+				transform: "rotate(-20 42 20)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "18",
+				y: "50",
+				width: "6",
+				height: "8",
+				rx: "3",
+				fill: "#F06279"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "40",
+				y: "50",
+				width: "6",
+				height: "8",
+				rx: "3",
+				fill: "#F06279"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M12 38 Q8 36 10 32 Q12 30 10 28",
+				fill: "none",
+				stroke: "#FF91A4",
+				strokeWidth: "2",
+				strokeLinecap: "round"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "26",
+				y: "22",
+				width: "12",
+				height: "3",
+				rx: "1.5",
+				fill: "#D4506B"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "32",
+				cy: "14",
+				r: "6",
+				fill: "url(#coinSmall)",
+				stroke: "#D4AF37",
+				strokeWidth: "1"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+				x: "32",
+				y: "17",
+				textAnchor: "middle",
+				fontSize: "8",
+				fontWeight: "bold",
+				fill: "#8B6914",
+				children: "$"
+			})
+		]
+	});
+}
+function MagnifyingGlassIcon({ size = 48 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 64 64",
+		width: size,
+		height: size,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "glassGrad",
+				x1: "0%",
+				y1: "0%",
+				x2: "100%",
+				y2: "100%",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "0%",
+						stopColor: "#E8E8E8"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "50%",
+						stopColor: "#F5F5F5"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+						offset: "100%",
+						stopColor: "#D0D0D0"
+					})
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "handleGrad",
+				x1: "0%",
+				y1: "0%",
+				x2: "0%",
+				y2: "100%",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0%",
+					stopColor: "#888"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "100%",
+					stopColor: "#555"
+				})]
+			})] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "42",
+				y: "42",
+				width: "8",
+				height: "20",
+				rx: "4",
+				fill: "url(#handleGrad)",
+				transform: "rotate(45 46 52)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "28",
+				cy: "28",
+				r: "18",
+				fill: "none",
+				stroke: "url(#handleGrad)",
+				strokeWidth: "4"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "28",
+				cy: "28",
+				r: "15",
+				fill: "url(#glassGrad)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "22",
+				cy: "20",
+				rx: "6",
+				ry: "4",
+				fill: "white",
+				opacity: "0.5",
+				transform: "rotate(-45 22 20)"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ellipse", {
+				cx: "24",
+				cy: "22",
+				rx: "3",
+				ry: "2",
+				fill: "white",
+				opacity: "0.7",
+				transform: "rotate(-45 24 22)"
+			})
+		]
+	});
+}
+function TargetIconSmall({ size = 22 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 24 24",
+		width: size,
+		height: size,
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "2.2",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "12",
+				cy: "12",
+				r: "10"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "12",
+				cy: "12",
+				r: "6"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "12",
+				cy: "12",
+				r: "2"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "12",
+				y1: "2",
+				x2: "12",
+				y2: "6"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "12",
+				y1: "18",
+				x2: "12",
+				y2: "22"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "2",
+				y1: "12",
+				x2: "6",
+				y2: "12"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "18",
+				y1: "12",
+				x2: "22",
+				y2: "12"
+			})
+		]
+	});
+}
+var INVESTMENT_OPTIONS = [
+	{
+		id: "premium",
+		title: "مستعد لفعل كل ما يلزم",
+		highlight: "أريد أسرع وأفضل نتيجة ممكنة.",
+		description: "أنا جاد وأؤمن أن الاستثمار في نفسي هو أفضل قرار سأتخذه.",
+		Icon: TrophyIcon,
+		iconBg: "#FFF8E7"
+	},
+	{
+		id: "standard",
+		title: "مستعد لكن بميزانية متوسطة",
+		highlight: "أبحث عن خطة مناسبة أستطيع الالتزام بها.",
+		description: "أريد نتائج قوية مع خطة تناسب ميزانيتي الحالية.",
+		Icon: CoinIcon,
+		iconBg: "#FFF8E7"
+	},
+	{
+		id: "budget",
+		title: "أبحث عن أرخص خيار",
+		highlight: "أريد البدء بأقل تكلفة ممكنة.",
+		description: "ميزانيتي محدودة حالياً وأبحث عن خيار اقتصادي.",
+		Icon: PiggyBankIcon,
+		iconBg: "#FFF0F3"
+	},
+	{
+		id: "price_only",
+		title: "أريد فقط معرفة السعر",
+		highlight: "لست متأكداً بعد.",
+		description: "أحتاج معلومات أكثر قبل أن أقرر إذا كنت سأبدأ أم لا.",
+		Icon: MagnifyingGlassIcon,
+		iconBg: "#F0F0F0"
+	}
+];
+function InvestmentScreen({ onBack, onNext }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const ORANGE = "#FF6B00";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative w-full h-full overflow-hidden",
+		style: {
+			backgroundColor: "#FAF8F5",
+			backgroundImage: `url(${quiz_gym_bg_default})`,
+			backgroundSize: "cover",
+			backgroundPosition: "center",
+			animation: "fadeIn .35s ease-out"
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "absolute inset-0",
+				style: { background: "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)" }
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative h-full flex flex-col px-5 pt-3 pb-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center justify-between",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								onClick: onBack,
+								className: "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+								"aria-label": "رجوع",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+									size: 20,
+									className: "text-neutral-700"
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-[15px] font-bold text-neutral-800",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: ORANGE },
+									children: "7"
+								}), " من 13"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 flex gap-1.5",
+						children: Array.from({ length: 13 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "h-full rounded-full",
+								style: {
+									width: i < 6 ? "100%" : i === 6 ? "55%" : "0%",
+									background: ORANGE
+								}
+							})
+						}, i))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 text-center",
+						style: { animation: "fadeUp .5s ease-out" },
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "inline-flex items-center justify-center gap-2",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TargetIconSmall, { size: 22 }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[20px] font-extrabold",
+										style: { color: ORANGE },
+										children: "كن صريحاً معي"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[20px]",
+										children: "👇"
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "mt-2 text-[24px] font-extrabold text-[#1F1F1F] leading-tight",
+								children: "كم أنت مستعد للاستثمار في تغيير جسمك؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[13px] text-gray-500 font-medium leading-relaxed px-4",
+								children: "النتائج الحقيقية تحتاج التزاماً واستثماراً حقيقياً."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 flex flex-col gap-2.5 flex-1 min-h-0 overflow-hidden",
+						children: INVESTMENT_OPTIONS.map((opt, i) => {
+							const active = selected === opt.id;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => {
+									triggerSelectionHaptic();
+									setSelected(opt.id);
+								},
+								className: "relative w-full rounded-[22px] bg-white text-right overflow-hidden transition-all duration-250 active:scale-[0.98]",
+								style: {
+									border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+									boxShadow: active ? "0 14px 36px -14px rgba(255,107,0,0.4), 0 6px 16px -8px rgba(0,0,0,0.08)" : "0 8px 22px -14px rgba(0,0,0,0.14), 0 2px 6px -2px rgba(0,0,0,0.05)",
+									transform: active ? "scale(1.02)" : "scale(1)",
+									animation: `fadeUp .5s ease-out ${i * 70}ms both`
+								},
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute top-3 left-3 z-10",
+									children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "w-7 h-7 rounded-full flex items-center justify-center",
+										style: {
+											background: ORANGE,
+											boxShadow: "0 4px 12px rgba(255,107,0,0.45)"
+										},
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+											size: 16,
+											color: "#fff",
+											strokeWidth: 3
+										})
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-7 h-7 rounded-full border-2 border-gray-300 bg-white" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex flex-row-reverse items-stretch",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "w-[72px] shrink-0 self-stretch flex items-center justify-center",
+										style: { background: opt.iconBg },
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(opt.Icon, { size: 48 })
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex-1 px-4 py-3 flex flex-col justify-center gap-0.5 text-right",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+												className: "text-[15px] font-extrabold text-[#2A2A2A] leading-tight",
+												children: opt.title
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "text-[12.5px] font-bold",
+												style: { color: ORANGE },
+												children: opt.highlight
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "text-[11.5px] text-[#4A4A4A] font-medium leading-snug",
+												children: opt.description
+											})
+										]
+									})]
+								})]
+							}, opt.id);
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2.5 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3",
+						style: {
+							boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)",
+							animation: "fadeUp .5s ease-out .35s both"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0",
+							style: {
+								boxShadow: "0 4px 12px rgba(255,107,0,0.18)",
+								border: "1px solid #F5E6D6"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+								size: 20,
+								style: { color: ORANGE }
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[13px] font-extrabold",
+								style: { color: ORANGE },
+								children: "معلومة مهمة"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[11.5px] text-[#3D3D3D] font-medium leading-snug",
+								children: "كلما كان استثمارك أعلى، كانت نتائجك أسرع وأفضل. أنا هنا لمساعدتك على تحقيق أفضل نسخة منك."
+							})]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-auto pt-2.5",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							disabled: !selected,
+							onClick: () => selected && onNext(selected),
+							className: "w-full h-[56px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]",
+							style: {
+								background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+								boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+								opacity: selected ? 1 : .7
+							},
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { size: 20 })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { size: 12 }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+						})]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      ` })
+		]
+	});
+}
+var BODY_TYPES = [
+	{
+		id: "skinny_fat",
+		title: "دهون بسيطة بالبطن",
+		sub: "بطن بارز وعضلات خفيفة",
+		img: body_skinny_fat_default
+	},
+	{
+		id: "lean",
+		title: "نحيف رياضي",
+		sub: "جسم رشيق وعضلات قليلة",
+		img: body_lean_default
+	},
+	{
+		id: "very_skinny",
+		title: "نحيف جداً",
+		sub: "وزن أقل من الطبيعي",
+		img: body_very_skinny_default
+	},
+	{
+		id: "muscular",
+		title: "عضلي",
+		sub: "كتلة عضلية واضحة",
+		img: body_muscular_default
+	},
+	{
+		id: "overweight",
+		title: "ممتلئ",
+		sub: "زيادة في الوزن والدهون",
+		img: body_overweight_default
+	},
+	{
+		id: "average",
+		title: "جسم متوسط",
+		sub: "وزن طبيعي وكتلة معتدلة",
+		img: body_average_default
+	}
+];
+function BodyTypeScreen({ onBack, onNext }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const ORANGE = "#FF6B00";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "relative w-full h-full overflow-hidden",
+		style: {
+			backgroundColor: "#FAF8F5",
+			animation: "fadeIn .35s ease-out"
+		},
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative h-full flex flex-col px-5 pt-3 pb-3",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onBack,
+							className: "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+							"aria-label": "رجوع",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+								size: 20,
+								className: "text-neutral-700"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-[15px] font-bold text-neutral-800",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "8"
+							}), " من 13"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: 13 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "h-full rounded-full",
+							style: {
+								width: i < 8 ? "100%" : "0%",
+								background: ORANGE
+							}
+						})
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-3 text-center",
+					style: { animation: "fadeUp .5s ease-out" },
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+							className: "text-[22px] font-extrabold text-[#1F1F1F] leading-tight",
+							children: "أي شكل أقرب لجسمك الحالي؟"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1.5 text-[12.5px] text-gray-500 font-medium",
+							children: "اختر الشكل الأقرب لك حتى أخصص لك الخطة المناسبة."
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mx-auto mt-1.5 h-[3px] w-10 rounded-full",
+							style: { background: ORANGE }
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 grid grid-cols-3 gap-2 flex-1 min-h-0",
+					children: BODY_TYPES.map((b, i) => {
+						const active = selected === b.id;
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(b.id);
+							},
+							className: "relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250",
+							style: {
+								border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+								boxShadow: active ? "0 12px 28px -12px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)" : "0 6px 16px -10px rgba(0,0,0,0.14), 0 2px 4px -2px rgba(0,0,0,0.05)",
+								transform: active ? "scale(1.03)" : "scale(1)",
+								animation: `fadeUp .5s ease-out ${i * 50}ms both`
+							},
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "w-full rounded-[12px] overflow-hidden bg-[#F2EDE6] aspect-[3/4]",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+										src: b.img,
+										alt: b.title,
+										loading: "lazy",
+										className: "w-full h-full object-cover"
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-1 text-[11.5px] font-extrabold text-[#1F1F1F] text-center leading-tight",
+									children: b.title
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[9.5px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2",
+									children: b.sub
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-1 mb-0.5",
+									children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "w-5 h-5 rounded-full flex items-center justify-center",
+										style: {
+											background: ORANGE,
+											boxShadow: "0 3px 8px rgba(255,107,0,0.45)"
+										},
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+											size: 12,
+											color: "#fff",
+											strokeWidth: 3
+										})
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5 h-5 rounded-full border-2 border-gray-300 bg-white" })
+								})
+							]
+						}, b.id);
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-2.5 rounded-[18px] bg-white/85 backdrop-blur px-3 py-2.5 flex flex-row-reverse items-center gap-3 relative overflow-hidden",
+					style: {
+						boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)",
+						animation: "fadeUp .5s ease-out .35s both"
+					},
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0",
+							style: {
+								boxShadow: "0 4px 12px rgba(255,107,0,0.18)",
+								border: "1px solid #F5E6D6"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+								size: 22,
+								style: { color: ORANGE }
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[12.5px] font-extrabold",
+								style: { color: ORANGE },
+								children: "لماذا نسأل هذا؟"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[11px] text-[#3D3D3D] font-medium leading-snug",
+								children: "اختبارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك."
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							size: 14,
+							className: "absolute left-2 top-2 opacity-50",
+							style: { color: ORANGE }
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							size: 10,
+							className: "absolute left-3 bottom-2 opacity-40",
+							style: { color: ORANGE }
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-2.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						disabled: !selected,
+						onClick: () => selected && onNext(selected),
+						className: "w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]",
+						style: {
+							background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+							boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+							opacity: selected ? 1 : .7
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { size: 20 })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-1.5 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { size: 12 }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})]
+				})
+			]
+		})
+	});
+}
+var FEMALE_BODY_TYPES = [
+	{
+		id: "needs_toning",
+		title: "جسم يحتاج شد",
+		sub: "ترهلات خفيفة في البطن أو الذراعين والجسم",
+		img: fbody_toning_default
+	},
+	{
+		id: "belly_fat_light",
+		title: "كرش خفيفة",
+		sub: "دهون بسيطة في منطقة البطن فقط",
+		img: fbody_belly_light_default
+	},
+	{
+		id: "slim",
+		title: "نحيفة",
+		sub: "وزن أقل من الطبيعي ودهون قليلة جداً",
+		img: fbody_slim_default
+	},
+	{
+		id: "overweight",
+		title: "جسم ممتلئ بدهون",
+		sub: "زيادة واضحة في الوزن وتراكم الدهون",
+		img: fbody_overweight_default
+	},
+	{
+		id: "athletic",
+		title: "جسم رياضي",
+		sub: "جسم مشدود وعضلات بارزة وقوام رياضي",
+		img: fbody_athletic_default
+	},
+	{
+		id: "body_shaping",
+		title: "عدم تناسق الأرداف",
+		sub: "أرغب بجسم أكثر تناسقاً وخصراً أنحف",
+		img: fbody_shaping_default
+	}
+];
+function FemaleBodyTypeScreen({ onBack, onNext }) {
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const ORANGE = "#FF6B00";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "relative w-full h-full overflow-hidden",
+		style: {
+			backgroundColor: "#FAF8F5",
+			animation: "fadeIn .35s ease-out"
+		},
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative h-full flex flex-col px-5 pt-3 pb-3",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onBack,
+							className: "w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+							"aria-label": "رجوع",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+								size: 20,
+								className: "text-neutral-700"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-[15px] font-bold text-neutral-800",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "8"
+							}), " من 13"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: 13 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "h-full rounded-full",
+							style: {
+								width: i < 8 ? "100%" : "0%",
+								background: ORANGE
+							}
+						})
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-3 text-center",
+					style: { animation: "fadeUp .5s ease-out" },
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+							className: "text-[22px] font-extrabold text-[#1F1F1F] leading-tight",
+							children: "أي شكل أقرب لجسمك الحالي؟"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1.5 text-[12.5px] text-gray-500 font-medium",
+							children: "اختري الشكل الأقرب لك حتى أخصص لك الخطة المثالية."
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mx-auto mt-1.5 h-[3px] w-10 rounded-full",
+							style: { background: ORANGE }
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 grid grid-cols-3 gap-2 flex-1 min-h-0",
+					children: FEMALE_BODY_TYPES.map((b, i) => {
+						const active = selected === b.id;
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => {
+								triggerSelectionHaptic();
+								setSelected(b.id);
+							},
+							className: "relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250",
+							style: {
+								border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
+								boxShadow: active ? "0 12px 28px -12px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)" : "0 6px 16px -10px rgba(0,0,0,0.14), 0 2px 4px -2px rgba(0,0,0,0.05)",
+								transform: active ? "scale(1.03)" : "scale(1)",
+								animation: `fadeUp .5s ease-out ${i * 50}ms both`
+							},
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "w-full rounded-[12px] overflow-hidden bg-[#F2EDE6] aspect-[3/4]",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+										src: b.img,
+										alt: b.title,
+										loading: "lazy",
+										className: "w-full h-full object-cover"
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-1 text-[11px] font-extrabold text-[#1F1F1F] text-center leading-tight px-0.5 line-clamp-2",
+									children: b.title
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2 mt-0.5",
+									children: b.sub
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "mt-1 mb-0.5",
+									children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "w-5 h-5 rounded-full flex items-center justify-center",
+										style: {
+											background: ORANGE,
+											boxShadow: "0 3px 8px rgba(255,107,0,0.45)"
+										},
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+											size: 12,
+											color: "#fff",
+											strokeWidth: 3
+										})
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5 h-5 rounded-full border-2 border-gray-300 bg-white" })
+								})
+							]
+						}, b.id);
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-2.5 rounded-[18px] bg-white/85 backdrop-blur px-3 py-2.5 flex flex-row-reverse items-center gap-3 relative overflow-hidden",
+					style: {
+						boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)",
+						animation: "fadeUp .5s ease-out .35s both"
+					},
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0",
+							style: {
+								boxShadow: "0 4px 12px rgba(255,107,0,0.18)",
+								border: "1px solid #F5E6D6"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+								size: 22,
+								style: { color: ORANGE }
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[12.5px] font-extrabold",
+								style: { color: ORANGE },
+								children: "لماذا نسألك هذا؟"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[11px] text-[#3D3D3D] font-medium leading-snug",
+								children: "اختيارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك."
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							size: 14,
+							className: "absolute left-2 top-2 opacity-50",
+							style: { color: ORANGE }
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							size: 10,
+							className: "absolute left-3 bottom-2 opacity-40",
+							style: { color: ORANGE }
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-2.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						disabled: !selected,
+						onClick: () => selected && onNext(selected),
+						className: "w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]",
+						style: {
+							background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+							boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+							opacity: selected ? 1 : .7
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "متابعة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, { size: 20 })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-1.5 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { size: 12 }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "معلوماتك تبقى خاصة وآمنة" })]
+					})]
+				})
+			]
+		})
+	});
+}
+function AnalysisScreen({ onBack, onDone }) {
+	const [pct, setPct] = (0, import_react.useState)(0);
+	const DURATION = 1e4;
+	(0, import_react.useEffect)(() => {
+		const start = performance.now();
+		let raf = 0;
+		const tick = (now) => {
+			const elapsed = now - start;
+			setPct(Math.min(100, Math.round(elapsed / DURATION * 100)));
+			if (elapsed < DURATION) raf = requestAnimationFrame(tick);
+			else setTimeout(() => onDone(), 1e3);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	}, [onDone]);
+	const thresholds = [
+		25,
+		50,
+		75,
+		90,
+		100
+	];
+	const stepStatus = (i) => {
+		if (pct >= thresholds[i]) return "done";
+		if (pct >= (i === 0 ? 0 : thresholds[i - 1])) return "loading";
+		return "pending";
+	};
+	const items = [
+		{
+			title: "فهم هدفك الحالي",
+			sub: "أحلل هدفك وأولوياتك تحقيقه",
+			icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+				size: 22,
+				className: "text-[#FF6B00]"
+			})
+		},
+		{
+			title: "مقارنة حالتك بنتائج متدربين مشابهين",
+			sub: "أقارن وضعك الحالي بنتائج حقيقية لمتدربين لديهم هدف مشابه",
+			icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BarsIcon, {})
+		},
+		{
+			title: "اختيار أفضل استراتيجية لك",
+			sub: "أختار الاستراتيجية الأكثر فعالية لتحقيق هدفك",
+			icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrainIcon2, {})
+		},
+		{
+			title: "تحديد الخطة المناسبة لجسمك",
+			sub: "أختار الخطة التي تناسب جسمك وهدفك ونمط حياتك",
+			icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ClipboardIcon, {})
+		},
+		{
+			title: "تجهيز برنامجك الخاص",
+			sub: "أجهز برنامجك خطوة بخطوة مع جميع التفاصيل",
+			icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ClipboardStarIcon, {})
+		}
+	];
+	const R = 70;
+	const C = 2 * Math.PI * R;
+	const dash = pct / 100 * C;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 flex flex-col",
+		style: {
+			backgroundColor: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-4 pt-3 pb-2 shrink-0",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onBack,
+							"aria-label": "رجوع",
+							className: "w-9 h-9 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-center justify-center",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+								size: 20,
+								className: "text-gray-700 rotate-180"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-[15px] font-bold text-gray-800",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[#FF6B00]",
+								children: "9"
+							}), " من 13"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-9" })
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-2 flex gap-1",
+					children: Array.from({ length: 13 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "h-[3px] flex-1 rounded-full",
+						style: { backgroundColor: i < 9 ? "#FF6B00" : "#F0E6DC" }
+					}, i))
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex-1 overflow-hidden px-4 flex flex-col",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "text-center mt-1.5",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+							className: "text-[19px] font-bold text-gray-900 leading-tight",
+							children: ["لحظة... جاري تجهيز برنامجك الخاص ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "inline-block",
+								children: "✨"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-[12px] text-gray-600 mt-1 leading-snug px-4",
+							children: [
+								"أراجع هدفك وحالتك الحالية لاختيار الخطة الأنسب ",
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[#FF6B00] font-bold",
+									children: "لجسمك وهدفك"
+								}),
+								"."
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "relative flex items-center justify-center my-1.5",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+								size: 12,
+								className: "absolute text-[#FFB37A]/70 top-2 left-6 animate-pulse"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+								size: 10,
+								className: "absolute text-[#FFB37A]/60 bottom-3 right-7 animate-pulse",
+								style: { animationDelay: "0.4s" }
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+								size: 14,
+								className: "absolute text-[#FFB37A]/50 top-8 right-2 animate-pulse",
+								style: { animationDelay: "0.8s" }
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+								size: 9,
+								className: "absolute text-[#FFB37A]/60 bottom-6 left-2 animate-pulse",
+								style: { animationDelay: "1.2s" }
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+								width: "170",
+								height: "170",
+								viewBox: "0 0 170 170",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+										id: "ringGrad",
+										x1: "0",
+										y1: "0",
+										x2: "1",
+										y2: "1",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+											offset: "0%",
+											stopColor: "#FF8A3D"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+											offset: "100%",
+											stopColor: "#FF5A00"
+										})]
+									}) }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+										cx: "85",
+										cy: "85",
+										r: R,
+										fill: "none",
+										stroke: "#FCE6D4",
+										strokeWidth: "12"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+										cx: "85",
+										cy: "85",
+										r: R,
+										fill: "none",
+										stroke: "url(#ringGrad)",
+										strokeWidth: "12",
+										strokeLinecap: "round",
+										strokeDasharray: `${dash} ${C - dash}`,
+										transform: "rotate(-90 85 85)",
+										style: { transition: "stroke-dasharray 80ms linear" }
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "absolute inset-0 flex flex-col items-center justify-center",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-baseline",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[36px] font-black text-gray-900 leading-none tabular-nums",
+										children: pct
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[16px] font-bold text-gray-700 mr-0.5",
+										children: "%"
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[11px] text-gray-500 mt-0.5",
+									children: "...جاري التحضير"
+								})]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "relative flex-1 min-h-0 mt-1",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute right-[10px] top-3 bottom-3 w-px bg-gray-200" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex flex-col gap-1.5",
+							children: items.map((it, i) => {
+								const status = stepStatus(i);
+								return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-2",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: `w-2.5 h-2.5 rounded-full shrink-0 z-10 ${status === "pending" ? "bg-gray-300" : "bg-[#FF6B00]"}` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex-1 bg-white rounded-xl px-2.5 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.04)] flex items-center gap-2.5",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "w-9 h-9 rounded-lg bg-[#FFF1E5] flex items-center justify-center shrink-0",
+												children: it.icon
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex-1 min-w-0 text-right",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "text-[12.5px] font-bold text-gray-900 leading-tight",
+													children: it.title
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "text-[10.5px] text-gray-500 leading-snug line-clamp-2",
+													children: it.sub
+												})]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "w-6 h-6 shrink-0 flex items-center justify-center",
+												children: [
+													status === "done" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+														className: "w-6 h-6 rounded-full border-2 border-[#FF6B00] flex items-center justify-center",
+														children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+															size: 14,
+															className: "text-[#FF6B00]",
+															strokeWidth: 3
+														})
+													}),
+													status === "loading" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5 h-5 rounded-full border-2 border-[#FF6B00] border-t-transparent animate-spin" }),
+													status === "pending" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5 h-5 rounded-full border-2 border-dashed border-gray-300" })
+												]
+											})
+										]
+									})]
+								}, i);
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "relative mt-1.5 rounded-2xl bg-gradient-to-l from-[#FFF1E5] to-[#FFF7EF] p-2 flex items-center gap-2 overflow-hidden shrink-0",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+								size: 56,
+								className: "absolute left-3 top-1/2 -translate-y-1/2 text-[#FF6B00]/10"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative w-12 h-12 rounded-full bg-white overflow-hidden shrink-0 shadow",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: coach_default,
+									alt: "Coach Hakim",
+									className: "w-full h-full object-cover"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute -bottom-0.5 -left-0.5 w-4 h-4 rounded-full bg-[#FF6B00] border-2 border-white flex items-center justify-center",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+										size: 8,
+										className: "text-white",
+										strokeWidth: 4
+									})
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex-1 text-right",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-[12px] font-bold text-gray-900 flex items-center justify-end gap-1",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "خصوصيتك 100% آمنة" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+										size: 11,
+										className: "text-[#FF6B00]"
+									})]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-[10.5px] text-gray-600 leading-snug",
+									children: "جميع بياناتك محمية ولن يتم مشاركتها مع أي جهة خارجية نهائياً."
+								})]
+							})
+						]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "shrink-0 mt-1.5 mx-4 mb-2 rounded-xl bg-[#FFF1E5] px-3 py-2 flex items-center justify-center gap-1.5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lightbulb, {
+					size: 14,
+					className: "text-[#FF6B00]"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[11.5px] text-gray-700 text-center",
+					children: [
+						"أنت في ",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[#FF6B00] font-bold",
+							children: "الخطوة الأخيرة!"
+						}),
+						" بعد التحضير ستستلم برنامجك مباشرة."
+					]
+				})]
+			})
+		]
+	});
+}
+function BarsIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "22",
+		height: "22",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "2.2",
+		strokeLinecap: "round",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "6",
+				y1: "18",
+				x2: "6",
+				y2: "14"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "12",
+				y1: "18",
+				x2: "12",
+				y2: "10"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "18",
+				y1: "18",
+				x2: "18",
+				y2: "6"
+			})
+		]
+	});
+}
+function BrainIcon2() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "22",
+		height: "22",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 3 3h1V4H9z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5v1a3 3 0 0 1-3 3h-1V4h1z" })]
+	});
+}
+function ClipboardIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "22",
+		height: "22",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "6",
+				y: "4",
+				width: "12",
+				height: "17",
+				rx: "2"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 3h6v3H9z" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "9",
+				y1: "11",
+				x2: "15",
+				y2: "11"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+				x1: "9",
+				y1: "15",
+				x2: "13",
+				y2: "15"
+			})
+		]
+	});
+}
+function ClipboardStarIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "22",
+		height: "22",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "6",
+				y: "4",
+				width: "12",
+				height: "17",
+				rx: "2"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 3h6v3H9z" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M12 10l1.2 2.4 2.6.4-1.9 1.8.4 2.6L12 16l-2.3 1.2.4-2.6-1.9-1.8 2.6-.4z",
+				fill: "#FF6B00",
+				stroke: "none"
+			})
+		]
+	});
+}
+var COUNTRIES = [
+	{
+		code: "ae",
+		name: "الإمارات العربية المتحدة",
+		dial: "+971",
+		flag: "🇦🇪",
+		cities: [
+			"دبي",
+			"أبوظبي",
+			"الشارقة",
+			"عجمان",
+			"رأس الخيمة",
+			"الفجيرة",
+			"أم القيوين",
+			"العين"
+		]
+	},
+	{
+		code: "sa",
+		name: "المملكة العربية السعودية",
+		dial: "+966",
+		flag: "🇸🇦",
+		cities: [
+			"الرياض",
+			"جدة",
+			"مكة المكرمة",
+			"المدينة المنورة",
+			"الدمام",
+			"الخبر",
+			"الطائف",
+			"تبوك",
+			"أبها",
+			"حائل"
+		]
+	},
+	{
+		code: "kw",
+		name: "الكويت",
+		dial: "+965",
+		flag: "🇰🇼",
+		cities: [
+			"مدينة الكويت",
+			"حولي",
+			"الفروانية",
+			"الأحمدي",
+			"الجهراء",
+			"مبارك الكبير"
+		]
+	},
+	{
+		code: "qa",
+		name: "قطر",
+		dial: "+974",
+		flag: "🇶🇦",
+		cities: [
+			"الدوحة",
+			"الريان",
+			"الوكرة",
+			"الخور",
+			"أم صلال"
+		]
+	},
+	{
+		code: "bh",
+		name: "البحرين",
+		dial: "+973",
+		flag: "🇧🇭",
+		cities: [
+			"المنامة",
+			"المحرق",
+			"الرفاع",
+			"مدينة عيسى",
+			"مدينة حمد"
+		]
+	},
+	{
+		code: "om",
+		name: "عمان",
+		dial: "+968",
+		flag: "🇴🇲",
+		cities: [
+			"مسقط",
+			"صلالة",
+			"صحار",
+			"نزوى",
+			"صور"
+		]
+	},
+	{
+		code: "eg",
+		name: "مصر",
+		dial: "+20",
+		flag: "🇪🇬",
+		cities: [
+			"القاهرة",
+			"الإسكندرية",
+			"الجيزة",
+			"شبرا الخيمة",
+			"بورسعيد",
+			"السويس",
+			"المنصورة",
+			"طنطا",
+			"أسيوط"
+		]
+	},
+	{
+		code: "jo",
+		name: "الأردن",
+		dial: "+962",
+		flag: "🇯🇴",
+		cities: [
+			"عمّان",
+			"الزرقاء",
+			"إربد",
+			"العقبة",
+			"السلط"
+		]
+	},
+	{
+		code: "lb",
+		name: "لبنان",
+		dial: "+961",
+		flag: "🇱🇧",
+		cities: [
+			"بيروت",
+			"طرابلس",
+			"صيدا",
+			"صور",
+			"زحلة"
+		]
+	},
+	{
+		code: "iq",
+		name: "العراق",
+		dial: "+964",
+		flag: "🇮🇶",
+		cities: [
+			"بغداد",
+			"البصرة",
+			"الموصل",
+			"أربيل",
+			"النجف",
+			"كربلاء"
+		]
+	},
+	{
+		code: "ma",
+		name: "المغرب",
+		dial: "+212",
+		flag: "🇲🇦",
+		cities: [
+			"الدار البيضاء",
+			"الرباط",
+			"سلا",
+			"فاس",
+			"مراكش",
+			"طنجة",
+			"أكادير",
+			"وجدة",
+			"القنيطرة",
+			"مكناس",
+			"تطوان",
+			"الصويرة",
+			"العيون",
+			"الناظور",
+			"الجديدة",
+			"بني ملال",
+			"خريبكة",
+			"آسفي",
+			"تازة",
+			"الرشيدية",
+			"ورزازات",
+			"الحسيمة",
+			"العرائش",
+			"القصر الكبير",
+			"تارودانت",
+			"برشيد",
+			"سطات",
+			"إفران",
+			"أزرو",
+			"خنيفرة",
+			"الداخلة",
+			"تيزنيت",
+			"كلميم",
+			"بوجدور",
+			"الفنيدق",
+			"المحمدية",
+			"تمارة",
+			"بركان",
+			"تاوريرت"
+		]
+	},
+	{
+		code: "dz",
+		name: "الجزائر",
+		dial: "+213",
+		flag: "🇩🇿",
+		cities: [
+			"الجزائر",
+			"وهران",
+			"قسنطينة",
+			"عنابة",
+			"البليدة"
+		]
+	},
+	{
+		code: "tn",
+		name: "تونس",
+		dial: "+216",
+		flag: "🇹🇳",
+		cities: [
+			"تونس",
+			"صفاقس",
+			"سوسة",
+			"بنزرت",
+			"القيروان"
+		]
+	},
+	{
+		code: "ly",
+		name: "ليبيا",
+		dial: "+218",
+		flag: "🇱🇾",
+		cities: [
+			"طرابلس",
+			"بنغازي",
+			"مصراتة",
+			"الزاوية",
+			"البيضاء"
+		]
+	},
+	{
+		code: "ye",
+		name: "اليمن",
+		dial: "+967",
+		flag: "🇾🇪",
+		cities: [
+			"صنعاء",
+			"عدن",
+			"تعز",
+			"الحديدة",
+			"إب"
+		]
+	},
+	{
+		code: "sd",
+		name: "السودان",
+		dial: "+249",
+		flag: "🇸🇩",
+		cities: [
+			"الخرطوم",
+			"أم درمان",
+			"بورتسودان",
+			"كسلا"
+		]
+	},
+	{
+		code: "sy",
+		name: "سوريا",
+		dial: "+963",
+		flag: "🇸🇾",
+		cities: [
+			"دمشق",
+			"حلب",
+			"حمص",
+			"اللاذقية",
+			"حماة"
+		]
+	},
+	{
+		code: "ps",
+		name: "فلسطين",
+		dial: "+970",
+		flag: "🇵🇸",
+		cities: [
+			"القدس",
+			"غزة",
+			"رام الله",
+			"الخليل",
+			"نابلس"
+		]
+	},
+	{
+		code: "tr",
+		name: "تركيا",
+		dial: "+90",
+		flag: "🇹🇷",
+		cities: [
+			"إسطنبول",
+			"أنقرة",
+			"إزمير",
+			"بورصة",
+			"أنطاليا"
+		]
+	},
+	{
+		code: "us",
+		name: "الولايات المتحدة",
+		dial: "+1",
+		flag: "🇺🇸",
+		cities: [
+			"نيويورك",
+			"لوس أنجلوس",
+			"شيكاغو",
+			"هيوستن",
+			"ميامي"
+		]
+	},
+	{
+		code: "gb",
+		name: "المملكة المتحدة",
+		dial: "+44",
+		flag: "🇬🇧",
+		cities: [
+			"لندن",
+			"مانشستر",
+			"برمنغهام",
+			"ليفربول",
+			"غلاسكو"
+		]
+	},
+	{
+		code: "ca",
+		name: "كندا",
+		dial: "+1",
+		flag: "🇨🇦",
+		cities: [
+			"تورنتو",
+			"مونتريال",
+			"فانكوفر",
+			"كالغاري",
+			"أوتاوا"
+		]
+	},
+	{
+		code: "de",
+		name: "ألمانيا",
+		dial: "+49",
+		flag: "🇩🇪",
+		cities: [
+			"برلين",
+			"هامبورغ",
+			"ميونخ",
+			"كولونيا",
+			"فرانكفورت"
+		]
+	},
+	{
+		code: "fr",
+		name: "فرنسا",
+		dial: "+33",
+		flag: "🇫🇷",
+		cities: [
+			"باريس",
+			"مرسيليا",
+			"ليون",
+			"تولوز",
+			"نيس"
+		]
+	}
+];
+function ContactScreen({ quizAnswers, onBack, onDone }) {
+	const ORANGE = "#FF6B00";
+	const [showOverlay, setShowOverlay] = (0, import_react.useState)(true);
+	const [fadingOverlay, setFadingOverlay] = (0, import_react.useState)(false);
+	const [overlayProgress, setOverlayProgress] = (0, import_react.useState)(0);
+	const [form, setForm] = (0, import_react.useState)({
+		name: "",
+		email: "",
+		phone: "",
+		country: "ae",
+		city: ""
+	});
+	const [submitting, setSubmitting] = (0, import_react.useState)(false);
+	const [countryOpen, setCountryOpen] = (0, import_react.useState)(false);
+	const [cityOpen, setCityOpen] = (0, import_react.useState)(false);
+	const [countryQuery, setCountryQuery] = (0, import_react.useState)("");
+	(0, import_react.useEffect)(() => {
+		const DURATION = 1e4;
+		const start = Date.now();
+		const tick = setInterval(() => {
+			const p = Math.min(100, (Date.now() - start) / DURATION * 100);
+			setOverlayProgress(p);
+			if (p >= 100) clearInterval(tick);
+		}, 50);
+		const tFade = setTimeout(() => setFadingOverlay(true), DURATION - 500);
+		const tHide = setTimeout(() => setShowOverlay(false), DURATION);
+		return () => {
+			clearInterval(tick);
+			clearTimeout(tFade);
+			clearTimeout(tHide);
+		};
+	}, []);
+	const country = COUNTRIES.find((c) => c.code === form.country) ?? COUNTRIES[0];
+	const filteredCountries = countryQuery ? COUNTRIES.filter((c) => c.name.includes(countryQuery) || c.dial.includes(countryQuery)) : COUNTRIES;
+	const cities = country.cities;
+	const canSubmit = form.name.trim() && form.email.trim() && form.phone.trim() && form.city.trim();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		dir: "rtl",
+		className: "relative h-full w-full overflow-y-auto",
+		style: { backgroundColor: "#FAF8F5" },
+		children: [
+			showOverlay && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: `fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`,
+				style: { background: "linear-gradient(180deg, #FFF8F1 0%, #FAF8F5 100%)" },
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "grid h-20 w-20 place-items-center rounded-full mb-6 animate-scale-in",
+						style: { background: "rgba(255,107,0,0.12)" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+							className: "h-10 w-10",
+							style: { color: ORANGE },
+							strokeWidth: 3
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+						className: "text-2xl font-black text-neutral-900 leading-snug animate-fade-in",
+						children: "تهانينا! 🎉 تم تحليل بياناتك بنجاح"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-4 max-w-sm text-[14px] leading-7 text-neutral-600 animate-fade-in",
+						children: "لقد وجدت الخطة المثالية التي تضمن لك الوصول لنتائجك المرغوبة خلال 90 يوماً بدقة. خطوتك الأخيرة هي تزويدي بمعلومات التواصل الأساسية لتأكيد استلام برنامجك الخاص."
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden",
+						style: { background: "rgba(255,107,0,0.15)" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "h-full rounded-full transition-[width] duration-100 ease-linear",
+							style: {
+								width: `${overlayProgress}%`,
+								background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)`
+							}
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-2 text-[11.5px] text-neutral-500",
+						children: [Math.ceil((100 - overlayProgress) / 10), " ثوانٍ..."]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pt-5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: onBack,
+							className: "flex items-center gap-1 text-neutral-700",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-5 w-5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-sm",
+								children: "رجوع"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-sm font-bold",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "10"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-neutral-700",
+								children: " من 13"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-12" })
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: 13 }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "h-1.5 flex-1 rounded-full",
+						style: { backgroundColor: i < 10 ? ORANGE : "#E5E5E5" }
+					}, i))
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "relative px-5 pt-4 flex items-start justify-between gap-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex-1 pt-4",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", {
+						className: "text-[26px] font-black leading-[1.25] text-neutral-900",
+						children: [
+							"لقد وجدت",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+							"البرنامج المناسب ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "لك"
+							})
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 text-[13px] leading-7 text-neutral-600 max-w-[200px]",
+						children: "بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك."
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "relative shrink-0",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "relative h-[180px] w-[150px] rounded-[80px] overflow-hidden",
+							style: { background: "rgba(255,107,0,0.10)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+								src: coach_default,
+								alt: "Coach Hakim",
+								className: "absolute inset-0 h-full w-full object-cover"
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -top-1 -right-1 h-5 w-5",
+							style: { color: "#FFB547" },
+							fill: "#FFB547"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute top-8 -left-2 h-3 w-3",
+							style: { color: "#FFD580" },
+							fill: "#FFD580"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute bottom-4 -right-2 h-3 w-3",
+							style: { color: "#FFD580" },
+							fill: "#FFD580"
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-5 mt-6 rounded-2xl bg-white p-4 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] ring-1 ring-black/5",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "grid grid-cols-3 gap-2",
+					children: [
+						{
+							icon: "🍎",
+							title: "تغذية مرنة",
+							sub: "محسوبة السعرات بدون حرمان"
+						},
+						{
+							icon: "🏋️",
+							title: "تدريب مخصص",
+							sub: "يناسب وقتك ونمط حياتك"
+						},
+						{
+							icon: "📈",
+							title: "متابعة ذكية",
+							sub: "تعديلات مستمرة حسب تطورك"
+						}
+					].map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col items-center text-center px-1",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "grid h-10 w-10 place-items-center rounded-full text-lg",
+								style: { background: "rgba(255,107,0,0.10)" },
+								children: c.icon
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-2 text-[12.5px] font-bold text-neutral-900",
+								children: c.title
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-1 text-[10.5px] leading-snug text-neutral-500",
+								children: c.sub
+							})
+						]
+					}, i))
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 mt-7 text-center",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-center gap-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+						className: "h-5 w-5",
+						style: { color: ORANGE }
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", {
+						className: "text-[18px] font-black text-neutral-900",
+						children: [
+							"بقيت ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "خطوة أخيرة"
+							}),
+							" فقط"
+						]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mt-1.5 text-[13px] text-neutral-600",
+					children: "أدخل بياناتك لاستلام برنامجك الخاص."
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 mt-4 space-y-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FieldRow, {
+						icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserIcon, {}),
+						label: "الاسم",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							value: form.name,
+							onChange: (e) => setForm({
+								...form,
+								name: e.target.value
+							}),
+							placeholder: "مثال: أحمد",
+							dir: "rtl",
+							className: "quiz-input w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400"
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FieldRow, {
+						icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MailIcon, {}),
+						label: "البريد الإلكتروني",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "email",
+							value: form.email,
+							onChange: (e) => setForm({
+								...form,
+								email: e.target.value
+							}),
+							placeholder: "example@email.com",
+							dir: "ltr",
+							className: "quiz-input w-full bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400"
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FieldRow, {
+						icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WhatsAppIcon, {}),
+						label: "واتساب للتواصل",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2 w-full",
+							dir: "ltr",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => setCountryOpen(true),
+								className: "flex items-center gap-1 rounded-lg bg-neutral-50 px-2 py-1.5 ring-1 ring-black/5",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-base leading-none",
+										children: country.flag
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[13px] font-semibold",
+										children: country.dial
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-3 w-3 text-neutral-500" })
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								value: form.phone,
+								onChange: (e) => setForm({
+									...form,
+									phone: e.target.value.replace(/\D/g, "").slice(0, 12)
+								}),
+								placeholder: "5X XXX XXXX",
+								dir: "ltr",
+								inputMode: "numeric",
+								className: "quiz-input flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400"
+							})]
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FieldRow, {
+						icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GlobeIcon, {}),
+						label: "الدولة",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setCountryOpen(true),
+							className: "flex items-center justify-between w-full",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-4 w-4 text-neutral-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[14px]",
+									children: country.name
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-base leading-none",
+									children: country.flag
+								})]
+							})]
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FieldRow, {
+						icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PinIcon, {}),
+						label: "المدينة",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setCityOpen(true),
+							className: "flex items-center justify-between w-full",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronDown, { className: "h-4 w-4 text-neutral-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: `text-[14px] ${form.city ? "text-neutral-900" : "text-neutral-400"}`,
+								children: form.city || `اختر مدينة في ${country.name}`
+							})]
+						})
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-5 mt-5 rounded-2xl p-4",
+				style: { background: "rgba(255,107,0,0.06)" },
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid grid-cols-3 gap-2 text-center",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustItem, {
+							color: "#22C55E",
+							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WhatsAppIcon, { small: true }),
+							text: "ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustItem, {
+							color: "#3B82F6",
+							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MailIcon, { small: true }),
+							text: "سأرسل برنامجك وتفاصيله على البريد الإلكتروني"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustItem, {
+							color: "#16A34A",
+							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldIcon, {}),
+							text: "بياناتك خاصة وآمنة 100%"
+						})
+					]
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 mt-5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					disabled: !canSubmit || submitting,
+					onClick: async () => {
+						if (!canSubmit || submitting) return;
+						setSubmitting(true);
+						const selectedCountry = COUNTRIES.find((c) => c.code === form.country);
+						const isDubai = form.country === "ae" && form.city === "دبي";
+						const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
+						try {
+							await createLead(buildLeadInsertFromQuiz(quizAnswers, {
+								fullName: form.name.trim(),
+								email: form.email.trim(),
+								phone: fullPhone,
+								city: form.city,
+								country: selectedCountry?.name ?? form.country,
+								locationPreference: isDubai ? "dubai" : "remote"
+							}));
+							onDone(form.name.trim(), isDubai, fullPhone, form.city);
+						} catch (error) {
+							console.error("Failed to save lead:", error);
+							alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
+							setSubmitting(false);
+						}
+					},
+					className: "cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none",
+					style: { background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` },
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "🚀" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "استلم برنامجي الآن" })]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-neutral-500",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "h-3 w-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "لن تتم مشاركة بياناتك مع أي جهة خارجية" })]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 mt-4 pb-8 flex items-center justify-center gap-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex -space-x-2 rtl:space-x-reverse",
+					children: [
+						avatar1_default,
+						avatar2_default,
+						avatar3_default,
+						avatar4_default
+					].map((a, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+						src: a,
+						alt: "",
+						className: "h-7 w-7 rounded-full ring-2 ring-white object-cover"
+					}, i))
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-[12px] text-neutral-600",
+					children: [
+						"أكثر من ",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-black",
+							style: { color: ORANGE },
+							children: "2500"
+						}),
+						" شخص غيروا حياتهم مع البرنامج"
+					]
+				})]
+			}),
+			countryOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PickerSheet, {
+				title: "اختر الدولة",
+				onClose: () => {
+					setCountryOpen(false);
+					setCountryQuery("");
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "px-4 pb-3",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						value: countryQuery,
+						onChange: (e) => setCountryQuery(e.target.value),
+						placeholder: "ابحث عن دولة...",
+						className: "w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[#FF6B00]/40 text-right",
+						dir: "rtl"
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "max-h-[55vh] overflow-y-auto px-2 pb-4",
+					children: filteredCountries.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => {
+							setForm((f) => ({
+								...f,
+								country: c.code,
+								city: ""
+							}));
+							setCountryOpen(false);
+							setCountryQuery("");
+						},
+						className: `w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-right hover:bg-neutral-50 ${c.code === form.country ? "bg-orange-50" : ""}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[12px] text-neutral-500",
+							dir: "ltr",
+							children: c.dial
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-2 flex-1 justify-end",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[14px] font-medium text-neutral-900",
+								children: c.name
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xl leading-none",
+								children: c.flag
+							})]
+						})]
+					}, c.code))
+				})]
+			}),
+			cityOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PickerSheet, {
+				title: `مدن ${country.name}`,
+				onClose: () => setCityOpen(false),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "max-h-[55vh] overflow-y-auto px-2 pb-4",
+					children: cities.map((city) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => {
+							setForm((f) => ({
+								...f,
+								city
+							}));
+							setCityOpen(false);
+						},
+						className: `w-full flex items-center justify-end gap-2 px-4 py-3 rounded-xl text-right hover:bg-neutral-50 ${city === form.city ? "bg-orange-50" : ""}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[14px] font-medium text-neutral-900",
+							children: city
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PinIcon, {})]
+					}, city))
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        .quiz-input { transition: box-shadow .2s ease; }
+        .quiz-input:focus { box-shadow: 0 0 0 3px rgba(255,107,0,0.18); border-radius: 8px; }
+        @keyframes cta-pulse-kf { 0%,100% { box-shadow: 0 8px 20px -6px rgba(255,107,0,0.5), 0 0 0 0 rgba(255,107,0,0.55); } 50% { box-shadow: 0 8px 24px -4px rgba(255,107,0,0.6), 0 0 0 10px rgba(255,107,0,0); } }
+        .cta-pulse { animation: cta-pulse-kf 2.2s ease-in-out infinite; }
+      ` })
+		]
+	});
+}
+function PickerSheet({ title, onClose, children }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "fixed inset-0 z-[60] flex items-end justify-center",
+		onClick: onClose,
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute inset-0 bg-black/40 animate-fade-in" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			dir: "rtl",
+			onClick: (e) => e.stopPropagation(),
+			className: "relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl animate-slide-in-right",
+			style: { animation: "slideUp .3s ease-out both" },
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between px-5 pt-4 pb-3 border-b border-neutral-100",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onClose,
+							className: "text-neutral-500 text-sm",
+							children: "إلغاء"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
+							className: "text-[15px] font-bold text-neutral-900",
+							children: title
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+					]
+				}),
+				children,
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `@keyframes slideUp { from { transform: translateY(100%);} to { transform: translateY(0);} }` })
+			]
+		})]
+	});
+}
+function FieldRow({ icon, label, children }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-[#FF6B00]/40 focus-within:shadow-[0_4px_18px_-6px_rgba(255,107,0,0.35)] transition-all",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-2 shrink-0",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "grid h-7 w-7 place-items-center",
+				children: icon
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "text-[13px] font-bold text-neutral-800",
+				children: label
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex-1 min-w-0 text-left",
+			children
+		})]
+	});
+}
+function TrustItem({ icon, text, color }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-col items-center gap-1.5",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-black/5",
+			style: { color },
+			children: icon
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "text-[10.5px] leading-snug text-neutral-700",
+			children: text
+		})]
+	});
+}
+function UserIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "18",
+		height: "18",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "8",
+			r: "4"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 21c0-4 4-7 8-7s8 3 8 7" })]
+	});
+}
+function MailIcon({ small } = {}) {
+	const s = small ? 16 : 18;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: s,
+		height: s,
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "currentColor",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		style: { color: small ? "#3B82F6" : "#FF6B00" },
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "3",
+			y: "5",
+			width: "18",
+			height: "14",
+			rx: "2"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 7l9 6 9-6" })]
+	});
+}
+function WhatsAppIcon({ small } = {}) {
+	const s = small ? 16 : 20;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+		width: s,
+		height: s,
+		viewBox: "0 0 24 24",
+		fill: "#22C55E",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.4A10 10 0 1012 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.2-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5.3.7 1 2.3 1 2.4.1.1.1.3 0 .5-.1.2-.2.3-.3.5l-.5.5c-.2.2-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.7.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.4.1.1.1.7-.1 1.3z" })
+	});
+}
+function GlobeIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "18",
+		height: "18",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "9"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" })]
+	});
+}
+function PinIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "18",
+		height: "18",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#FF6B00",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 22s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "10",
+			r: "2.5"
+		})]
+	});
+}
+function ShieldIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		width: "16",
+		height: "16",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "#16A34A",
+		strokeWidth: "1.8",
+		strokeLinecap: "round",
+		strokeLinejoin: "round",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 12l2 2 4-4" })]
+	});
+}
+function buildRevealConfig(gender, goalId, challengeId) {
+	const isFemale = gender === "female";
+	if (isFemale && (goalId === "glutes" || challengeId === "glutes")) return {
+		programTitle: "برنامج شد وتكبير المؤخرة",
+		goalLabel: "تكبير وشد المؤخرة",
+		problemLabel: "شكل المؤخرة غير متناسق",
+		metricNumbers: [
+			"6.2",
+			"5.7",
+			"4.8",
+			"5.1",
+			"6.5"
+		],
+		metricUnit: "سم",
+		metricDesc: "زيادة في محيط المؤخرة",
+		benefits: [
+			{
+				label: "زيادة الثقة بالنفس",
+				value: "+70%",
+				color: "#FF6B00",
+				bg: "#FFE9D9",
+				Icon: Zap
+			},
+			{
+				label: "تقليل مقاسات الجسم",
+				value: "4 - 10 سم",
+				color: "#22C55E",
+				bg: "#E8FAEE",
+				Icon: Ruler
+			},
+			{
+				label: "حرق الدهون",
+				value: "10-18 كجم",
+				color: "#9333EA",
+				bg: "#F3E8FF",
+				Icon: Flame
+			},
+			{
+				label: "تحسين شكل الجسم",
+				value: "+80%",
+				color: "#3B82F6",
+				bg: "#DBEAFE",
+				Icon: PersonStanding
+			}
+		]
+	};
+	if (goalId === "fat" || challengeId === "belly") return {
+		programTitle: isFemale ? "برنامج خسارة دهون البطن" : "برنامج خسارة الدهون وشد البطن",
+		goalLabel: "خسارة الدهون",
+		problemLabel: isFemale ? "الكرش ودهون البطن" : "دهون البطن والكرش",
+		metricNumbers: [
+			"8.5",
+			"12.3",
+			"10.1",
+			"14.0",
+			"9.7"
+		],
+		metricUnit: "كجم",
+		metricDesc: "خسارة في الدهون",
+		benefits: [
+			{
+				label: "حرق الدهون",
+				value: "10-18 كجم",
+				color: "#FF6B00",
+				bg: "#FFE9D9",
+				Icon: Flame
+			},
+			{
+				label: "تقليل محيط الخصر",
+				value: "8 - 15 سم",
+				color: "#22C55E",
+				bg: "#E8FAEE",
+				Icon: Ruler
+			},
+			{
+				label: "زيادة الطاقة والنشاط",
+				value: "+85%",
+				color: "#3B82F6",
+				bg: "#DBEAFE",
+				Icon: Zap
+			},
+			{
+				label: "تحسين شكل الجسم",
+				value: "+80%",
+				color: "#9333EA",
+				bg: "#F3E8FF",
+				Icon: PersonStanding
+			}
+		]
+	};
+	if (goalId === "muscle" || challengeId === "muscle") return {
+		programTitle: "برنامج بناء العضلات والقوة",
+		goalLabel: "بناء العضلات",
+		problemLabel: "صعوبة بناء الكتلة العضلية",
+		metricNumbers: [
+			"5.8",
+			"6.4",
+			"4.9",
+			"5.5",
+			"7.1"
+		],
+		metricUnit: "كجم",
+		metricDesc: "زيادة في الكتلة العضلية",
+		benefits: [
+			{
+				label: "زيادة الكتلة العضلية",
+				value: "+5-8 كجم",
+				color: "#FF6B00",
+				bg: "#FFE9D9",
+				Icon: Dumbbell
+			},
+			{
+				label: "زيادة القوة",
+				value: "+90%",
+				color: "#22C55E",
+				bg: "#E8FAEE",
+				Icon: Zap
+			},
+			{
+				label: "تحسين شكل الجسم",
+				value: "+85%",
+				color: "#3B82F6",
+				bg: "#DBEAFE",
+				Icon: PersonStanding
+			},
+			{
+				label: "زيادة الثقة بالنفس",
+				value: "+75%",
+				color: "#9333EA",
+				bg: "#F3E8FF",
+				Icon: Trophy
+			}
+		]
+	};
+	return {
+		programTitle: isFemale ? "برنامج شد القوام المخصص لكِ" : "برنامج التحول الكامل المخصص لك",
+		goalLabel: isFemale ? "جسم متناسق ورشيق" : "جسم رياضي ومتناسق",
+		problemLabel: "عدم الرضا عن الشكل الحالي",
+		metricNumbers: [
+			"6.0",
+			"5.5",
+			"5.0",
+			"6.5",
+			"5.8"
+		],
+		metricUnit: "سم",
+		metricDesc: "تحسن في مقاسات الجسم",
+		benefits: [
+			{
+				label: "تحسين شكل الجسم",
+				value: "+85%",
+				color: "#FF6B00",
+				bg: "#FFE9D9",
+				Icon: PersonStanding
+			},
+			{
+				label: "تقليل المقاسات",
+				value: "5 - 12 سم",
+				color: "#22C55E",
+				bg: "#E8FAEE",
+				Icon: Ruler
+			},
+			{
+				label: "زيادة الطاقة",
+				value: "+80%",
+				color: "#3B82F6",
+				bg: "#DBEAFE",
+				Icon: Zap
+			},
+			{
+				label: "زيادة الثقة بالنفس",
+				value: "+75%",
+				color: "#9333EA",
+				bg: "#F3E8FF",
+				Icon: Trophy
+			}
+		]
+	};
+}
+var TIMELINE_STAGES = [
+	{
+		week: "الأسبوع 1-2",
+		title: "بداية التغيير",
+		desc: ["تحسن في الطاقة", "بداية حرق الدهون"],
+		color: "#22C55E",
+		bg: "#E8FAEE",
+		Icon: Sparkles
+	},
+	{
+		week: "الأسبوع 3-6",
+		title: "تغير ملحوظ",
+		desc: ["نزول المقاسات", "تحسن في شكل الجسم"],
+		color: "#FF6B00",
+		bg: "#FFE9D9",
+		Icon: Flame
+	},
+	{
+		week: "الأسبوع 7-12",
+		title: "نتائج واضحة",
+		desc: ["شد وتناسق أكبر", "زيادة في الكتلة العضلية"],
+		color: "#9333EA",
+		bg: "#F3E8FF",
+		Icon: Dumbbell
+	},
+	{
+		week: "الأسبوع 13+",
+		title: "الشكل المثالي",
+		desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"],
+		color: "#3B82F6",
+		bg: "#DBEAFE",
+		Icon: Trophy
+	}
+];
+function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, onNext }) {
+	const ORANGE = "#FF6B00";
+	const GREEN = "#22C55E";
+	const TEXT = "#0F172A";
+	const cfg = buildRevealConfig(gender, goalId, challengeId);
+	const [showGoal, setShowGoal] = (0, import_react.useState)(false);
+	const [showResults, setShowResults] = (0, import_react.useState)(false);
+	const [showBenefits, setShowBenefits] = (0, import_react.useState)(false);
+	const [showTimeline, setShowTimeline] = (0, import_react.useState)(false);
+	const [showSuccess, setShowSuccess] = (0, import_react.useState)(false);
+	const [showCTA, setShowCTA] = (0, import_react.useState)(false);
+	const [carouselIdx, setCarouselIdx] = (0, import_react.useState)(0);
+	(0, import_react.useEffect)(() => {
+		const timers = [];
+		timers.push(window.setTimeout(() => setShowGoal(true), 1e3));
+		timers.push(window.setTimeout(() => setShowResults(true), 2e3));
+		timers.push(window.setTimeout(() => setShowBenefits(true), 3500));
+		timers.push(window.setTimeout(() => setShowTimeline(true), 5e3));
+		timers.push(window.setTimeout(() => setShowSuccess(true), 7e3));
+		timers.push(window.setTimeout(() => setShowCTA(true), 8500));
+		return () => {
+			timers.forEach(clearTimeout);
+		};
+	}, []);
+	(0, import_react.useEffect)(() => {
+		if (!showResults) return;
+		const id = window.setInterval(() => {
+			setCarouselIdx((i) => (i + 1) % cfg.metricNumbers.length);
+		}, 2200);
+		return () => clearInterval(id);
+	}, [showResults, cfg.metricNumbers.length]);
+	const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "h-full w-full overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes pr-fade { from { opacity: 0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pr-pop  { 0% { opacity:0; transform: scale(.7);} 60% { transform: scale(1.05);} 100% { opacity:1; transform: scale(1);} }
+        @keyframes pr-stagger { from {opacity:0; transform: translateY(18px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pr-glow-success { 0%,100% { box-shadow: 0 10px 30px -8px rgba(34,197,94,.35);} 50% { box-shadow: 0 22px 55px -6px rgba(34,197,94,.55);} }
+        @keyframes pr-draw { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+        @keyframes pr-shimmer-bg { 0%{ background-position: -200% 0;} 100%{ background-position: 200% 0;} }
+        @keyframes pr-dot-in { from { opacity:0; transform: scale(0);} to {opacity:1; transform: scale(1);} }
+        .pr-fade { animation: pr-fade .7s ease-out both; }
+        .pr-pop { animation: pr-pop .55s cubic-bezier(.34,1.56,.64,1) both; }
+        .pr-stagger { animation: pr-stagger .55s cubic-bezier(.2,.8,.2,1) both; }
+        .pr-glow { animation: pr-glow-success 2.4s ease-in-out infinite; }
+        .pr-line { stroke-dasharray: 400; animation: pr-draw 1.6s ease-out forwards; }
+        .pr-dot { animation: pr-dot-in .5s cubic-bezier(.34,1.56,.64,1) both; }
+        .pr-shimmer { background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); background-size: 200% 100%; animation: pr-shimmer-bg 1.6s linear infinite; }
+        .pr-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      ` }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pt-5 max-w-md mx-auto",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "text-center text-[12px] font-bold text-neutral-500 mb-2",
+					children: ["12 من ", total]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex gap-1.5",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < 12 ? ORANGE : "#ECE8E1" }
+					}, i))
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pt-6 pb-32 max-w-md mx-auto",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pr-fade flex items-start gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+								className: "pr-heading text-[24px] leading-tight",
+								style: { color: TEXT },
+								children: "هذا ما يمكنك تحقيقه خلال"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "pr-heading text-[34px] leading-none mt-1",
+								style: { color: ORANGE },
+								children: "90 يوم"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-14 w-14 rounded-2xl grid place-items-center",
+							style: { background: "#FFE9D9" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+								className: "h-8 w-8",
+								style: { color: ORANGE },
+								strokeWidth: 2.4
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "pr-fade mt-3 text-[13px] text-neutral-600 leading-relaxed text-center px-2",
+						style: { animationDelay: ".15s" },
+						children: [name ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+							"بناءً على هدفك يا ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-bold",
+								style: { color: ORANGE },
+								children: name
+							}),
+							" وتحليل بياناتك، "
+						] }) : "بناءً على هدفك الحالي وتحليل بياناتك، ", "هذه نتائج حقيقية لأشخاص يعانون من نفس المشكلة التي تعاني منها."]
+					}),
+					showGoal && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pr-pop mt-5 rounded-3xl bg-white p-1 grid grid-cols-2 gap-1",
+						style: {
+							boxShadow: "0 10px 30px -16px rgba(0,0,0,.14)",
+							border: "1px solid #ECE8E1"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "rounded-[20px] p-3 flex items-center gap-2.5",
+							style: { background: "#FFF7F0" },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "shrink-0 h-10 w-10 rounded-xl grid place-items-center",
+								style: { background: "#FFE0CC" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, {
+									className: "h-5 w-5",
+									style: { color: ORANGE },
+									strokeWidth: 2.4
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-right min-w-0",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[10px] font-extrabold",
+									style: { color: GREEN },
+									children: "هدفك"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[12px] font-black leading-tight mt-0.5",
+									style: { color: TEXT },
+									children: cfg.goalLabel
+								})]
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "rounded-[20px] p-3 flex items-center gap-2.5",
+							style: { background: "#FFF1F1" },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "shrink-0 h-10 w-10 rounded-xl grid place-items-center",
+								style: { background: "#FFD9D9" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-lg font-black",
+									style: { color: "#EF4444" },
+									children: "!"
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-right min-w-0",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[10px] font-extrabold",
+									style: { color: "#EF4444" },
+									children: "مشكلتك الحالية"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[12px] font-black leading-tight mt-0.5",
+									style: { color: TEXT },
+									children: cfg.problemLabel
+								})]
+							})]
+						})]
+					}),
+					showResults && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pr-stagger mt-6",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center justify-center gap-2 mb-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "h-6 w-6 rounded-full grid place-items-center",
+									style: { background: GREEN },
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+										className: "h-3.5 w-3.5 text-white",
+										strokeWidth: 3.5
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+									className: "pr-heading text-[15px]",
+									style: { color: TEXT },
+									children: "نتائج حقيقية لعملاء حققوا نفس هدفك"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "relative overflow-hidden rounded-3xl",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "flex gap-3 transition-transform duration-700 ease-out",
+									style: { transform: `translateX(${carouselIdx * 50}%)` },
+									children: cfg.metricNumbers.map((num, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "shrink-0 w-[48%] rounded-2xl bg-white overflow-hidden",
+										style: {
+											border: "1px solid #ECE8E1",
+											boxShadow: "0 8px 24px -16px rgba(0,0,0,.14)"
+										},
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "relative grid grid-cols-2 gap-0.5 p-1.5",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BeforeAfterTile, {
+												label: "قبل",
+												tone: "muted",
+												seed: i
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BeforeAfterTile, {
+												label: "بعد",
+												tone: "bright",
+												seed: i
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "px-3 pb-3 pt-1 text-center",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "text-[10px] text-neutral-500 font-bold",
+													children: "بعد 90 يوم"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "pr-heading text-[22px] mt-0.5",
+													style: { color: ORANGE },
+													children: [
+														cfg.metricDesc.startsWith("خسارة") ? "-" : "+",
+														num,
+														" ",
+														cfg.metricUnit
+													]
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "text-[10.5px] text-neutral-500 mt-0.5 leading-snug",
+													children: cfg.metricDesc
+												})
+											]
+										})]
+									}, i))
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center justify-center gap-1.5 mt-3",
+								children: cfg.metricNumbers.map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "h-1.5 rounded-full transition-all duration-300",
+									style: {
+										width: i === carouselIdx ? 18 : 6,
+										background: i === carouselIdx ? ORANGE : "#E5E1DA"
+									}
+								}, i))
+							})
+						]
+					}),
+					showBenefits && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-6 grid grid-cols-2 gap-2.5",
+						children: cfg.benefits.map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "pr-stagger rounded-2xl bg-white p-3",
+							style: {
+								border: "1px solid #ECE8E1",
+								boxShadow: "0 6px 20px -14px rgba(0,0,0,.12)",
+								animationDelay: `${i * 120}ms`
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "shrink-0 h-9 w-9 rounded-full grid place-items-center",
+									style: { background: b.bg },
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(b.Icon, {
+										className: "h-4.5 w-4.5",
+										style: {
+											color: b.color,
+											width: 18,
+											height: 18
+										},
+										strokeWidth: 2.4
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex-1 text-right min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10.5px] text-neutral-500 font-bold leading-tight",
+										children: b.label
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pr-heading text-[15px] mt-0.5",
+										style: { color: b.color },
+										children: b.value
+									})]
+								})]
+							})
+						}, i))
+					}),
+					showTimeline && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-7",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+								className: "pr-heading text-center text-[16px] mb-4",
+								style: { color: TEXT },
+								children: "ماذا تتوقع خلال رحلتك؟"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative h-7 mb-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+									viewBox: "0 0 320 28",
+									className: "w-full h-full",
+									preserveAspectRatio: "none",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+										className: "pr-line",
+										x1: "10",
+										y1: "14",
+										x2: "310",
+										y2: "14",
+										stroke: "#E5E1DA",
+										strokeWidth: "2",
+										strokeDasharray: "4 4"
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute inset-0 flex items-center justify-between px-2",
+									children: TIMELINE_STAGES.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pr-dot h-4 w-4 rounded-full ring-4 ring-[#FAF8F5]",
+										style: {
+											background: s.color,
+											animationDelay: `${600 + i * 250}ms`
+										}
+									}, i))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "grid grid-cols-2 gap-2.5",
+								children: TIMELINE_STAGES.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "pr-stagger rounded-2xl bg-white p-3",
+									style: {
+										border: "1px solid #ECE8E1",
+										boxShadow: "0 6px 20px -14px rgba(0,0,0,.12)",
+										animationDelay: `${800 + i * 150}ms`
+									},
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center justify-between",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "text-[10.5px] font-extrabold",
+												style: { color: s.color },
+												children: s.week
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "h-8 w-8 rounded-xl grid place-items-center",
+												style: { background: s.bg },
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(s.Icon, {
+													className: "h-4 w-4",
+													style: { color: s.color },
+													strokeWidth: 2.4
+												})
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "pr-heading text-[13.5px] mt-2 text-right",
+											style: { color: TEXT },
+											children: s.title
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+											className: "mt-1.5 space-y-1",
+											children: s.desc.map((d, j) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+												className: "text-[11px] text-neutral-600 text-right leading-snug flex items-center justify-end gap-1.5",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: d }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "h-1 w-1 rounded-full",
+													style: { background: s.color }
+												})]
+											}, j))
+										})
+									]
+								}, i))
+							})
+						]
+					}),
+					showSuccess && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pr-pop pr-glow mt-6 rounded-3xl p-4 flex items-start gap-3",
+						style: {
+							background: "linear-gradient(135deg, #EAFBEF 0%, #FFFFFF 100%)",
+							border: `1.5px solid ${GREEN}55`
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center bg-white",
+							style: { boxShadow: "0 6px 16px -8px rgba(34,197,94,.5)" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+								className: "h-7 w-7",
+								style: { color: GREEN },
+								strokeWidth: 2.2
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "pr-heading text-[15px]",
+								style: { color: TEXT },
+								children: "أنت على بعد 90 يوم فقط من أفضل نسخة منك!"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "mt-1 text-[12px] text-neutral-600 leading-relaxed",
+								children: ["التزم بالخطة، ثق بالعملية، والنتيجة ستكون مذهلة ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "👍" })]
+							})]
+						})]
+					})
+				]
+			}),
+			showCTA && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "fixed bottom-0 left-0 right-0 px-5 pt-4 pb-6",
+				style: { background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 35%)" },
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "max-w-md mx-auto",
+					style: { animation: "pr-cta-in .6s cubic-bezier(.34,1.56,.64,1) both" },
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: onNext,
+						className: "w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform",
+						style: {
+							height: 60,
+							borderRadius: 18,
+							background: ORANGE,
+							color: "#fff",
+							fontFamily: HEADING_FONT,
+							fontWeight: 900,
+							fontSize: 16,
+							boxShadow: "0 10px 24px -10px rgba(255,107,0,.55)",
+							letterSpacing: "-0.01em"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "ممتاز 💪 أريد رؤية الخطة المناسبة لي" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ArrowLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 2.8
+						})]
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `@keyframes pr-cta-in { 0% { opacity:0; transform: translateY(20px) scale(.92);} 100% { opacity:1; transform: translateY(0) scale(1);} }` })]
+			})
+		]
+	});
+}
+function BeforeAfterTile({ label, tone, seed }) {
+	const palettes = [
+		["#6B7280", "#22C55E"],
+		["#9CA3AF", "#FF6B00"],
+		["#737373", "#3B82F6"],
+		["#71717A", "#9333EA"],
+		["#525B6B", "#22C55E"]
+	];
+	const [muted, bright] = palettes[seed % palettes.length];
+	const accent = tone === "muted" ? muted : bright;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "relative aspect-[3/4] rounded-xl overflow-hidden",
+		style: { background: tone === "muted" ? "linear-gradient(160deg,#E5E7EB 0%,#D1D5DB 100%)" : `linear-gradient(160deg, ${accent}33 0%, ${accent}55 100%)` },
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+			viewBox: "0 0 60 80",
+			className: "absolute inset-0 w-full h-full",
+			preserveAspectRatio: "xMidYMid slice",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: `g-${tone}-${seed}`,
+				x1: "0",
+				y1: "0",
+				x2: "0",
+				y2: "1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0%",
+					stopColor: tone === "muted" ? "#9CA3AF" : accent,
+					stopOpacity: "0.75"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "100%",
+					stopColor: tone === "muted" ? "#6B7280" : accent,
+					stopOpacity: "0.95"
+				})]
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: tone === "muted" ? "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 18 50 14 58 16 70 L 44 70 C 46 58 42 50 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z" : "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 16 48 12 60 14 72 L 46 72 C 48 60 44 48 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z",
+				fill: `url(#g-${tone}-${seed})`
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: "absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-2 py-0.5 text-[10px] font-extrabold text-white",
+			style: { background: tone === "muted" ? "rgba(0,0,0,.55)" : GREEN_BADGE_COLOR },
+			children: label
+		})]
+	});
+}
+var GREEN_BADGE_COLOR = "#22C55E";
+function CongratsScreen({ name, gender, total = 13, onNext }) {
+	const ORANGE = "#FF6B00";
+	const GREEN = "#22C55E";
+	const TEXT = "#0F172A";
+	const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
+	const programTitle = gender === "female" ? "برنامج شد القوام والتنحيف" : "برنامج بناء العضلات وحرق الدهون";
+	const [showBadge, setShowBadge] = (0, import_react.useState)(false);
+	const [showTitle, setShowTitle] = (0, import_react.useState)(false);
+	const [showCard, setShowCard] = (0, import_react.useState)(false);
+	const [showCta, setShowCta] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		const t1 = window.setTimeout(() => setShowBadge(true), 150);
+		const t2 = window.setTimeout(() => setShowTitle(true), 700);
+		const t3 = window.setTimeout(() => setShowCard(true), 1400);
+		const t4 = window.setTimeout(() => setShowCta(true), 2100);
+		return () => {
+			[
+				t1,
+				t2,
+				t3,
+				t4
+			].forEach(clearTimeout);
+		};
+	}, []);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "h-full w-full overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes cg-pop { 0%{opacity:0; transform: scale(.5);} 60%{transform: scale(1.08);} 100%{opacity:1; transform: scale(1);} }
+        @keyframes cg-fade { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
+        @keyframes cg-pulse-btn { 0%,100%{ box-shadow: 0 14px 32px -10px rgba(255,107,0,.55);} 50%{ box-shadow: 0 18px 44px -8px rgba(255,107,0,.85);} }
+        @keyframes cg-ring { 0%{ transform: scale(.9); opacity:.6;} 100%{ transform: scale(1.5); opacity:0;} }
+        @keyframes cg-spark { 0%,100%{opacity:.4; transform: scale(.9);} 50%{opacity:1; transform: scale(1.15);} }
+        .cg-pop { animation: cg-pop .7s cubic-bezier(.34,1.56,.64,1) both; }
+        .cg-fade { animation: cg-fade .6s ease-out both; }
+        .cg-pulse-btn { animation: cg-pulse-btn 2s ease-in-out infinite; }
+        .cg-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      ` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "min-h-full max-w-md mx-auto px-5 pt-8 pb-10 flex flex-col",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "text-center text-[12px] font-bold text-neutral-500 mb-2",
+					children: ["11 من ", total]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex gap-1.5 mb-8",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < 11 ? ORANGE : "#ECE8E1" }
+					}, i))
+				}),
+				showBadge && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "cg-pop relative mx-auto mt-2 mb-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "absolute inset-0 rounded-full",
+							style: {
+								background: `${GREEN}30`,
+								animation: "cg-ring 1.8s ease-out infinite"
+							}
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "absolute inset-0 rounded-full",
+							style: {
+								background: `${GREEN}20`,
+								animation: "cg-ring 1.8s ease-out infinite .6s"
+							}
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "relative h-24 w-24 rounded-full grid place-items-center",
+							style: {
+								background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)`,
+								boxShadow: "0 18px 40px -10px rgba(34,197,94,.55)"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+								className: "h-12 w-12 text-white",
+								strokeWidth: 3.5
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -top-1 -right-2 h-5 w-5",
+							style: {
+								color: ORANGE,
+								animation: "cg-spark 1.6s ease-in-out infinite"
+							}
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -bottom-1 -left-2 h-4 w-4",
+							style: {
+								color: "#FBBF24",
+								animation: "cg-spark 1.6s ease-in-out infinite .4s"
+							}
+						})
+					]
+				}),
+				showTitle && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "cg-fade text-center",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+							className: "cg-heading text-[26px] leading-tight",
+							style: { color: TEXT },
+							children: [
+								"تهانينا",
+								name ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [" ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: ORANGE },
+									children: name
+								})] }) : "",
+								" ",
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "🎉" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "cg-heading text-[18px] mt-2",
+							style: { color: TEXT },
+							children: "لقد تم تجهيز برنامجك الخاص"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-3 text-[13px] text-neutral-600 leading-relaxed px-2",
+							children: "قمنا بتحليل جميع بياناتك وإعداد برنامج مخصص يناسب هدفك ومستواك الحالي."
+						})
+					]
+				}),
+				showCard && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "cg-fade mt-6 rounded-3xl p-5",
+					style: {
+						background: "linear-gradient(135deg, #FFF7F0 0%, #FFFFFF 100%)",
+						border: "1.5px solid #FFD9B8",
+						boxShadow: "0 14px 36px -18px rgba(255,107,0,.35)"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+							style: {
+								background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`,
+								boxShadow: "0 8px 18px -6px rgba(255,107,0,.55)"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trophy, {
+								className: "h-6 w-6 text-white",
+								strokeWidth: 2.4
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[11px] font-extrabold",
+								style: { color: GREEN },
+								children: "برنامجك جاهز"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "cg-heading text-[16px] mt-0.5",
+								style: { color: TEXT },
+								children: programTitle
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 grid grid-cols-3 gap-2",
+						children: [
+							{
+								Icon: Calendar,
+								label: "90 يوم"
+							},
+							{
+								Icon: Target,
+								label: "هدف مخصص"
+							},
+							{
+								Icon: ShieldCheck,
+								label: "متابعة"
+							}
+						].map(({ Icon, label }, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "rounded-2xl bg-white p-2.5 text-center",
+							style: { border: "1px solid #ECE8E1" },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+								className: "h-5 w-5 mx-auto",
+								style: { color: ORANGE },
+								strokeWidth: 2.4
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[10.5px] font-bold mt-1",
+								style: { color: TEXT },
+								children: label
+							})]
+						}, i))
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "flex-1" }),
+				showCta && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "cg-fade mt-8",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: onNext,
+						className: "cg-pulse-btn w-full rounded-2xl py-4 px-5 text-white flex items-center justify-center gap-2 active:scale-[.98] transition-transform",
+						style: {
+							background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`,
+							fontFamily: HEADING_FONT,
+							fontWeight: 900,
+							fontSize: 16
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "اكتشف ما يمكنك تحقيقه خلال 90 يوم" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+							className: "h-5 w-5",
+							strokeWidth: 3
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-center text-[11.5px] text-neutral-500 mt-3 leading-relaxed",
+						children: "شاهد النتائج المتوقعة لبرنامجك قبل الاطلاع على الأسعار"
+					})]
+				})
+			]
+		})]
+	});
+}
+var PRICING_TIERS = [
+	{
+		id: "transform",
+		name: "باقة التحول",
+		tagline: "كل ما تحتاجه لتحقيق أفضل نسخة منك في 90 يوم.",
+		pricePerDay: "3.3",
+		totalPrice: "299",
+		features: [
+			"خطة تدريب مخصصة",
+			"خطة تغذية مخصصة",
+			"مراجعة كل أسبوعين",
+			"دعم واتساب",
+			"تعديلات حسب التقدم"
+		],
+		primary: "#FF6B00",
+		primarySoft: "#FFE6D2",
+		primaryBg: "#FFF6EE",
+		ring: "#FFB07A",
+		Icon: Crown,
+		topBadge: "الأكثر اختياراً"
+	},
+	{
+		id: "pro",
+		name: "باقة Pro",
+		tagline: "للأشخاص الذين يريدون متابعة أقرب ونتائج أسرع.",
+		pricePerDay: "5.5",
+		totalPrice: "499",
+		features: [
+			"كل مزايا باقة التحول",
+			"مراجعة أسبوعية",
+			"أولوية في الدعم",
+			"تعديلات أسرع",
+			"متابعة أدق للتقدم"
+		],
+		primary: "#2563EB",
+		primarySoft: "#DBEAFE",
+		primaryBg: "#F2F7FF",
+		ring: "#93B8F2",
+		Icon: Star
+	},
+	{
+		id: "vip",
+		name: "VIP",
+		tagline: "لمن يريد أعلى مستوى من المتابعة والدعم.",
+		pricePerDay: "11",
+		totalPrice: "999",
+		features: [
+			"جميع مزايا باقة Pro",
+			"متابعة شخصية",
+			"تواصل مباشر مع المدرب",
+			"مراجعة مستمرة",
+			"خطة مخصصة بالكامل",
+			"دعم فوري على مدار الساعة"
+		],
+		primary: "#7C3AED",
+		primarySoft: "#EDE3FF",
+		primaryBg: "#F7F1FF",
+		ring: "#C4A7F2",
+		Icon: Gem
+	}
+];
+function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }) {
+	const ORANGE = "#FF6B00";
+	const TEXT = "#0F172A";
+	const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
+	const [selected, setSelected] = (0, import_react.useState)("transform");
+	const [mounted, setMounted] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		const t = window.setTimeout(() => setMounted(true), 30);
+		return () => clearTimeout(t);
+	}, []);
+	const handleChoose = (tier) => {
+		setSelected(tier.id);
+		triggerSelectionHaptic();
+		window.setTimeout(() => onSelectTier(tier.id), 150);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "h-full w-full overflow-y-auto",
+		style: {
+			background: "#FFFFFF",
+			fontFamily: FONT
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes pri-in { from {opacity:0; transform: translateY(16px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pri-ring { from { stroke-dashoffset: 360;} to { stroke-dashoffset: 0;} }
+        .pri-in { animation: pri-in .45s cubic-bezier(.2,.8,.2,1) both; }
+        .pri-ring circle.anim { stroke-dasharray: 360; animation: pri-ring 1.2s ease-out forwards; }
+        .pri-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      ` }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pt-5 pb-3 max-w-md mx-auto",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: onBack,
+							className: "flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4" }), "رجوع"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-[12px] font-extrabold",
+							style: { color: ORANGE },
+							children: [
+								total,
+								" من ",
+								total
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-12" })
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: ORANGE }
+					}, i))
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pb-10 max-w-md mx-auto",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: `pri-in flex items-start gap-3 mt-4`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex-1 text-right",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+								className: "pri-heading text-[24px] leading-snug",
+								style: { color: TEXT },
+								children: [
+									"اختر مستوى ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										style: { color: ORANGE },
+										children: "المتابعة"
+									}),
+									" المناسب لك"
+								]
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+							style: { background: "#FFE9D9" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Crown, {
+								className: "h-6 w-6",
+								style: { color: ORANGE },
+								strokeWidth: 2.4
+							})
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed",
+						style: { animationDelay: ".08s" },
+						children: dubai ? "باقات التدريب الحضوري + الأونلاين قادمة قريباً. في الوقت الحالي يمكنك اختيار باقات المتابعة عن بُعد." : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+							"تم تصميم جميع الباقات لتحقيق هدفك خلال ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "font-extrabold",
+								style: { color: ORANGE },
+								children: "90 يوماً"
+							}),
+							"."
+						] })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-6 space-y-4",
+						children: PRICING_TIERS.map((tier, idx) => {
+							const isSelected = selected === tier.id;
+							tier.id;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "relative pri-in",
+								style: {
+									animationDelay: `${.15 + idx * .12}s`,
+									borderRadius: 28,
+									background: tier.primaryBg,
+									border: `2px solid ${isSelected ? tier.primary : "transparent"}`,
+									boxShadow: isSelected ? `0 18px 40px -18px ${tier.primary}66` : "0 8px 22px -16px rgba(0,0,0,.12)",
+									paddingTop: tier.topBadge ? 28 : 18,
+									paddingBottom: 18,
+									paddingLeft: 16,
+									paddingRight: 16,
+									transition: "box-shadow .25s, border-color .25s"
+								},
+								children: [
+									tier.topBadge && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "absolute -top-3 right-5 flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-[11px] font-extrabold",
+										style: {
+											background: tier.primary,
+											boxShadow: `0 6px 14px -6px ${tier.primary}88`
+										},
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: tier.topBadge }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Star, {
+											className: "h-3 w-3",
+											fill: "#fff",
+											strokeWidth: 0
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-start gap-3",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex-1 text-right pt-1",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-center gap-2 justify-end",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+														className: "pri-heading text-[22px]",
+														style: { color: TEXT },
+														children: tier.id === "pro" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: ["باقة ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+															style: { color: tier.primary },
+															children: "Pro"
+														})] }) : tier.name
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(tier.Icon, {
+														className: "h-6 w-6",
+														style: { color: tier.primary },
+														strokeWidth: 2.4,
+														fill: tier.id === "vip" ? `${tier.primary}33` : "none"
+													})]
+												}),
+												tier.id === "vip" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "mt-1 text-[11.5px] font-extrabold",
+													style: { color: tier.primary },
+													children: "عدد محدود جداً"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "mt-2 text-[12px] text-neutral-500 leading-relaxed",
+													children: tier.tagline
+												})
+											]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "shrink-0 relative h-[110px] w-[110px] grid place-items-center",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+												viewBox: "0 0 120 120",
+												className: "absolute inset-0 pri-ring -rotate-90",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+													cx: "60",
+													cy: "60",
+													r: "54",
+													fill: "white",
+													stroke: `${tier.primary}22`,
+													strokeWidth: "3"
+												}), mounted && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+													className: "anim",
+													cx: "60",
+													cy: "60",
+													r: "54",
+													fill: "none",
+													stroke: tier.primary,
+													strokeWidth: "3",
+													strokeLinecap: "round",
+													style: { animationDelay: `${.4 + idx * .12}s` }
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "relative text-center",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+													className: "flex items-baseline justify-center gap-0.5",
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "pri-heading text-[26px] leading-none",
+														style: { color: tier.primary },
+														children: tier.pricePerDay
+													}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "pri-heading text-[14px]",
+														style: { color: tier.primary },
+														children: "$"
+													})]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+													className: "text-[10px] text-neutral-500 font-bold mt-1",
+													children: "في اليوم فقط"
+												})]
+											})]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "mt-3 mx-auto w-fit px-4 py-1.5 rounded-full text-center",
+										style: { background: `${tier.primary}14` },
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10.5px] text-neutral-500 font-bold",
+												children: "يعادل "
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "pri-heading text-[13px]",
+												style: { color: tier.primary },
+												children: [tier.totalPrice, "$"]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[10.5px] text-neutral-500 font-bold",
+												children: " لمدة 90 يوم"
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+										className: "mt-4 space-y-2.5",
+										children: tier.features.map((f, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+											className: "flex items-center justify-end gap-2.5 text-[13px] text-right",
+											style: { color: TEXT },
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "leading-tight",
+												children: f
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "shrink-0 h-5 w-5 rounded-full grid place-items-center",
+												style: { background: tier.primary },
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+													className: "h-3 w-3 text-white",
+													strokeWidth: 3.5
+												})
+											})]
+										}, i))
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										onClick: () => handleChoose(tier),
+										className: "mt-5 w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform",
+										style: {
+											height: 56,
+											borderRadius: 16,
+											background: tier.primary,
+											color: "#fff",
+											fontFamily: HEADING_FONT,
+											fontWeight: 900,
+											fontSize: 15.5,
+											boxShadow: `0 10px 22px -10px ${tier.primary}88`
+										},
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "h-7 w-7 rounded-full grid place-items-center",
+											style: { background: "rgba(255,255,255,.22)" },
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, {
+												className: "h-4 w-4 text-white",
+												strokeWidth: 3
+											})
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "أريد هذه الباقة" })]
+									})
+								]
+							}, tier.id);
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-6 pri-in",
+						style: { animationDelay: ".7s" },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "rounded-3xl p-4 grid grid-cols-2 gap-3",
+							style: {
+								background: "#F8FBF9",
+								border: "1px solid #E6F0EA"
+							},
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "shrink-0 h-10 w-10 rounded-xl grid place-items-center",
+									style: { background: "#E7F7EE" },
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+										className: "h-5 w-5",
+										style: { color: "#16A34A" },
+										strokeWidth: 2.4
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-right min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pri-heading text-[12.5px]",
+										style: { color: "#16A34A" },
+										children: "بياناتك محمية"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10.5px] text-neutral-500 leading-snug mt-0.5",
+										children: "نحن لا نشارك بياناتك مع أي جهة"
+									})]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "shrink-0 h-10 w-10 rounded-xl grid place-items-center",
+									style: { background: "#E7F7EE" },
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+										className: "h-5 w-5",
+										style: { color: "#16A34A" },
+										strokeWidth: 2.4
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-right min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pri-heading text-[12.5px]",
+										style: { color: "#16A34A" },
+										children: "دفع آمن 100%"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10.5px] text-neutral-500 leading-snug mt-0.5",
+										children: "جميع المدفوعات مشفرة وآمنة"
+									})]
+								})]
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-4 flex items-center justify-center gap-1.5 text-[11px] text-neutral-500",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "h-3 w-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "كل خطط التدريب والتغذية خاصة بك وحدك" })]
+						})]
+					})
+				]
+			})
+		]
+	});
+}
+function TrainingTypeScreen({ onBack, onSelect }) {
+	const ORANGE = "#FF6B00";
+	const TEXT = "#0F172A";
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const TOTAL = 14;
+	const CURRENT = 13;
+	const pick = (id) => {
+		if (selected) return;
+		setSelected(id);
+		triggerSelectionHaptic();
+		window.setTimeout(() => onSelect(id), 150);
+	};
+	const Card = ({ id, emoji, title, subtitle1, subtitle2, chips }) => {
+		const active = selected === id;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+			type: "button",
+			onClick: () => pick(id),
+			disabled: !!selected && !active,
+			className: "relative w-full text-right rounded-[26px] bg-white p-5 transition-all duration-300 active:scale-[0.99]",
+			style: {
+				border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
+				boxShadow: active ? `0 22px 48px -18px ${ORANGE}66, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.14)",
+				transform: active ? "scale(1.03)" : "scale(1)",
+				animation: active ? "tt-bounce .55s cubic-bezier(.34,1.56,.64,1)" : void 0
+			},
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "absolute top-4 left-4 z-10",
+				children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "relative h-8 w-8 rounded-full grid place-items-center",
+					style: {
+						background: ORANGE,
+						boxShadow: `0 6px 14px ${ORANGE}66`
+					},
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+							size: 18,
+							strokeWidth: 3,
+							className: "text-white"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -top-2 -right-2 h-3.5 w-3.5",
+							style: {
+								color: "#FBBF24",
+								animation: "tt-spark 1s ease-in-out infinite"
+							}
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -bottom-2 -left-2 h-3 w-3",
+							style: {
+								color: ORANGE,
+								animation: "tt-spark 1s ease-in-out infinite .2s"
+							}
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-8 w-8 rounded-full bg-white border-2 border-gray-200" })
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-start gap-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex-1",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-[22px] font-black leading-tight",
+							style: {
+								color: TEXT,
+								fontFamily: "'Cairo','Tajawal',sans-serif"
+							},
+							children: title
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-2 text-[13px] leading-6 text-neutral-600",
+							children: subtitle1
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[13px] leading-6 text-neutral-600",
+							children: subtitle2
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-4 flex gap-2 flex-wrap",
+							children: chips.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11.5px] font-bold",
+								style: {
+									background: active ? `${ORANGE}15` : "#FFF6EE",
+									color: ORANGE
+								},
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "h-1.5 w-1.5 rounded-full",
+									style: { background: ORANGE }
+								}), c]
+							}, c))
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "shrink-0 h-20 w-20 rounded-2xl grid place-items-center text-[40px] leading-none",
+					style: {
+						background: active ? `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` : "#FFF1E5",
+						boxShadow: active ? `0 12px 24px -10px ${ORANGE}80` : "none",
+						transition: "all .3s"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						style: { filter: active ? "grayscale(0) brightness(1.05)" : "none" },
+						children: emoji
+					})
+				})]
+			})]
+		});
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes tt-bounce { 0%{ transform: scale(1);} 35%{ transform: scale(1.06);} 70%{ transform: scale(1.01);} 100%{ transform: scale(1.03);} }
+        @keyframes tt-spark { 0%,100%{ opacity:.5; transform: scale(.85);} 50%{ opacity:1; transform: scale(1.15);} }
+        @keyframes tt-in { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }
+        .tt-in { animation: tt-in .5s ease-out both; }
+      ` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md mx-auto px-5 pt-4 pb-10",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onBack,
+							className: "grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, { className: "h-5 w-5 text-neutral-700" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-sm font-bold text-neutral-800",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: ORANGE },
+									children: CURRENT
+								}),
+								" من ",
+								TOTAL
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: TOTAL }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "tt-in mt-7 text-center",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+							className: "text-[26px] font-black leading-tight",
+							style: {
+								color: TEXT,
+								fontFamily: "'Cairo','Tajawal',sans-serif"
+							},
+							children: ["اختر ما ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "يناسبك"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-2 text-[14px] text-neutral-700 font-bold",
+							children: "حتى نساعدك بطريقة أفضل"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 text-[12.5px] text-neutral-500 leading-relaxed px-4",
+							children: "اختر طريقة التدريب الأنسب لك"
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 space-y-4",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "tt-in",
+						style: { animationDelay: ".08s" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, {
+							id: "online",
+							emoji: "🌍",
+							title: "أونلاين",
+							subtitle1: "تدريب ومتابعة عن بعد",
+							subtitle2: "عبر التطبيق وواتساب",
+							chips: ["مرونة أكبر", "سعر أقل"]
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "tt-in",
+						style: { animationDelay: ".18s" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, {
+							id: "inperson",
+							emoji: "🏋️",
+							title: "تدريب شخصي",
+							subtitle1: "جلسات تدريب مباشرة",
+							subtitle2: "في النادي مع المدرب",
+							chips: ["نتائج أسرع", "إشراف مباشر"]
+						})
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2 tt-in",
+					style: { animationDelay: ".28s" },
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+						className: "h-4 w-4",
+						style: { color: ORANGE }
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[12px] text-neutral-700",
+						children: "كلا الخيارين يضمن لك متابعة احترافية ونتائج حقيقية"
+					})]
+				})
+			]
+		})]
+	});
+}
+var OFFLINE_GOAL_LABELS = {
+	muscle: "بناء العضلات",
+	lose: "خسارة الوزن",
+	strength: "زيادة القوة",
+	fitness: "تحسين اللياقة",
+	tone: "شد الجسم",
+	weight_loss: "خسارة الوزن",
+	toning: "شد وتنسيق الجسم"
+};
+var OFFLINE_CHALLENGE_LABELS = {
+	muscle: "صعوبة بناء العضلات",
+	fat: "تراكم الدهون",
+	motivation: "ضعف الالتزام",
+	time: "ضيق الوقت",
+	plan: "عدم وجود خطة واضحة",
+	diet: "صعوبة في التغذية"
+};
+function OfflinePackagesScreen({ name, phone, city, goalId, challengeId, total, onBack }) {
+	const ORANGE = "#FF6B00";
+	const GREEN = "#22C55E";
+	const TEXT = "#111827";
+	const CURRENT = total;
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const [customSessions, setCustomSessions] = (0, import_react.useState)("");
+	const [timeLeft, setTimeLeft] = (0, import_react.useState)({
+		h: 23,
+		m: 59,
+		s: 59
+	});
+	(0, import_react.useEffect)(() => {
+		const t = setInterval(() => {
+			setTimeLeft((p) => {
+				let { h, m, s } = p;
+				s--;
+				if (s < 0) {
+					s = 59;
+					m--;
+				}
+				if (m < 0) {
+					m = 59;
+					h--;
+				}
+				if (h < 0) {
+					h = 23;
+					m = 59;
+					s = 59;
+				}
+				return {
+					h,
+					m,
+					s
+				};
+			});
+		}, 1e3);
+		return () => clearInterval(t);
+	}, []);
+	const pad = (n) => String(n).padStart(2, "0");
+	const pickPackage = (id) => {
+		if (selected) return;
+		setSelected(id);
+		triggerSelectionHaptic();
+	};
+	const packageLabel = (id) => {
+		if (id === "p12") return "باقة 12 حصة (3 مرات أسبوعياً) — 3,600 درهم شهرياً";
+		if (id === "p20") return "باقة 20 حصة (5 مرات أسبوعياً) — 5,500 درهم شهرياً";
+		return `باقة مخصصة — ${customSessions || "حسب اقتراح المدرب"}`;
+	};
+	const buildWhatsapp = () => {
+		if (!selected) return "#";
+		const goal = OFFLINE_GOAL_LABELS[goalId] || goalId || "—";
+		const ch = OFFLINE_CHALLENGE_LABELS[challengeId] || challengeId || "—";
+		const msg = `مرحباً كابتن حكيم،\nأريد حجز باقة التدريب الشخصي في دبي.\n\nالاسم: ${name || "—"}\nالهاتف: ${phone || "—"}\nالمدينة: ${city || "دبي"}\nالهدف: ${goal}\nالمشكلة الأساسية: ${ch}\nالباقة المختارة: ${packageLabel(selected)}\n\nأريد البدء في رحلتي نحو أفضل نسخة مني.`;
+		return `https://wa.me/971505129019?text=${encodeURIComponent(msg)}`;
+	};
+	const pkg12 = {
+		id: "p12",
+		name: "باقة 12 حصة",
+		badge: "الأكثر توازناً",
+		badgeColor: ORANGE,
+		freq: "3 مرات أسبوعياً",
+		price: "3,600",
+		oldPrice: "4,500",
+		save: "وفر 900 درهم",
+		desc: "مناسبة لمن يريد نتائج قوية مع جدول مرن ومتوازن.",
+		icon: "🏆",
+		iconBg: "#FFF6E6",
+		features: [
+			"12 حصة تدريب شخصية شهرياً",
+			"3 حصص أسبوعياً",
+			"خطة تدريب مخصصة لهدفك",
+			"متابعة تقدمك أسبوعياً",
+			"تعديل التمارين حسب مستواك",
+			"دعم عبر واتساب"
+		],
+		guaranteeTitle: "ضمان 90 يوم:",
+		guaranteeText: "إذا التزمت بالخطة ولم تحقق تقدماً حقيقياً، تسترجع أموالك.",
+		guaranteeBg: "#FFF1E6",
+		guaranteeColor: ORANGE
+	};
+	const pkg20 = {
+		id: "p20",
+		name: "باقة 20 حصة",
+		badge: "أسرع نتائج",
+		badgeColor: "#A855F7",
+		freq: "5 مرات أسبوعياً",
+		price: "5,500",
+		oldPrice: "7,000",
+		save: "وفر 1,500 درهم",
+		desc: "لمن يريد أفضل نتيجة في أقل وقت مع التزام أعلى ومتابعة أقوى.",
+		icon: "⚡",
+		iconBg: "#F3E8FF",
+		features: [
+			"20 حصة تدريب شخصية شهرياً",
+			"5 حصص أسبوعياً",
+			"تسريع النتائج بشكل واضح",
+			"متابعة أدق لتقدمك",
+			"تعديل مستمر للبرنامج",
+			"خطة تدريب مكثفة حسب هدفك",
+			"دعم مباشر عبر واتساب",
+			"أولوية في المواعيد"
+		],
+		guaranteeTitle: "ضمان نتائج أسرع:",
+		guaranteeText: "إذا التزمت ولم تشعر بتغيير حقيقي، سنعالج الأمر أو تسترجع أموالك.",
+		guaranteeBg: "#F5EBFF",
+		guaranteeColor: "#9333EA"
+	};
+	const PackageCard = ({ p }) => {
+		const active = selected === p.id;
+		const hidden = selected !== null && selected !== p.id;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "off-card transition-all duration-400",
+			style: {
+				opacity: hidden ? 0 : 1,
+				maxHeight: hidden ? 0 : 2e3,
+				transform: active ? "scale(1.02)" : "scale(1)",
+				marginBottom: hidden ? 0 : 16,
+				overflow: "hidden"
+			},
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => pickPackage(p.id),
+				disabled: !!selected,
+				className: "w-full text-right rounded-[24px] bg-white p-5 transition-all relative",
+				style: {
+					border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.06)"}`,
+					boxShadow: active ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.12)"
+				},
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "absolute top-4 right-4",
+						children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "h-7 w-7 rounded-full grid place-items-center",
+							style: {
+								background: ORANGE,
+								boxShadow: `0 6px 14px ${ORANGE}66`
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+								size: 16,
+								strokeWidth: 3,
+								className: "text-white"
+							})
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-7 w-7 rounded-full border-2 border-gray-300" })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3 pr-9",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-16 w-16 rounded-2xl grid place-items-center text-[34px] leading-none",
+							style: { background: p.iconBg },
+							children: p.icon
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 min-w-0",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-2 flex-wrap",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+										className: "text-[19px] font-black",
+										style: {
+											color: TEXT,
+											fontFamily: "'Cairo','Tajawal',sans-serif"
+										},
+										children: p.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white",
+										style: { background: p.badgeColor },
+										children: p.badge
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "mt-1 text-[12.5px] font-bold",
+									style: { color: ORANGE },
+									children: p.freq
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "mt-2 flex items-end gap-2 flex-wrap",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[26px] font-black leading-none",
+											style: {
+												color: ORANGE,
+												fontFamily: "'Cairo',sans-serif"
+											},
+											children: p.price
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[12px] text-neutral-600 mb-0.5",
+											children: "درهم شهرياً"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[13px] text-neutral-400 line-through mb-0.5",
+											children: p.oldPrice
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "mt-2 inline-block rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-[11px] font-bold",
+									children: p.save
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 text-[12.5px] leading-6 text-neutral-600",
+						children: p.desc
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 grid grid-cols-2 gap-x-3 gap-y-2",
+						children: p.features.map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center",
+								style: { background: "#DCFCE7" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+									size: 10,
+									strokeWidth: 3,
+									className: "text-green-600"
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: f })]
+						}, f))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 rounded-2xl p-3 flex items-start gap-2.5",
+						style: { background: p.guaranteeBg },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+							className: "h-5 w-5 mt-0.5 shrink-0",
+							style: { color: p.guaranteeColor }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[12.5px] font-black",
+								style: { color: p.guaranteeColor },
+								children: p.guaranteeTitle
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 leading-5",
+								children: p.guaranteeText
+							})]
+						})]
+					})
+				]
+			})
+		});
+	};
+	const customActive = selected === "custom";
+	const customHidden = selected !== null && selected !== "custom";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes off-in { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
+        .off-in { animation: off-in .5s ease-out both; }
+        @keyframes off-pulse { 0%,100%{ transform: scale(1); box-shadow: 0 14px 30px -10px rgba(34,197,94,0.55);} 50%{ transform: scale(1.015); box-shadow: 0 18px 40px -10px rgba(34,197,94,0.7);} }
+        .off-pulse { animation: off-pulse 2.2s ease-in-out infinite; }
+        @keyframes off-glow { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,107,0,0.35);} 50%{ box-shadow: 0 0 0 10px rgba(255,107,0,0);} }
+        .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
+      ` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md mx-auto px-5 pt-4 pb-10",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "text-sm font-bold text-neutral-800",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: CURRENT
+							}),
+							" من ",
+							total
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: onBack,
+						className: "flex items-center gap-1 text-sm font-bold text-neutral-700",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "رجوع" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4" })]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-6",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+								className: "text-[24px] font-black leading-tight",
+								style: {
+									color: TEXT,
+									fontFamily: "'Cairo','Tajawal',sans-serif"
+								},
+								children: [
+									"اختر باقة ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										style: { color: ORANGE },
+										children: "التدريب الشخصي"
+									}),
+									" المناسبة لك"
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] leading-6 text-neutral-600",
+								children: "جلسات حضورية مباشرة في دبي مع متابعة مخصصة لتحقيق أفضل نتيجة خلال 90 يوم."
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-14 w-14 rounded-2xl grid place-items-center text-[28px]",
+							style: { background: "#FFF1E5" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dumbbell, {
+								className: "h-7 w-7",
+								style: { color: ORANGE }
+							})
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 flex justify-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "off-urgent-glow inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-black text-white",
+							style: { background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, { className: "h-4 w-4" }), " عرض محدود لعملاء دبي فقط"]
+						})
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-5 rounded-[22px] p-4",
+					style: {
+						background: "linear-gradient(135deg,#FFF6EC 0%, #FFEAD2 100%)",
+						border: "1px solid #FFD1A8"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+							style: { background: "#FFE1C2" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, {
+								className: "h-6 w-6",
+								style: { color: ORANGE }
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-[13.5px] font-black flex items-center gap-1 justify-start",
+								style: { color: ORANGE },
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚠️" }), " الأماكن محدودة هذا الأسبوع"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 text-[11.5px] text-neutral-700 leading-5",
+								children: "عدد المقاعد المتاحة للتدريب الشخصي محدود بسبب عدد الحصص اليومية. سارع بحجز مكانك قبل أن يسبقك شخص آخر."
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 rounded-2xl bg-white/70 p-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[11.5px] font-bold text-neutral-700 text-center",
+							children: "ينتهي العرض خلال:"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-2 flex items-center justify-center gap-2",
+							dir: "ltr",
+							children: [
+								{
+									v: pad(timeLeft.h),
+									l: "ساعة"
+								},
+								{
+									v: pad(timeLeft.m),
+									l: "دقيقة"
+								},
+								{
+									v: pad(timeLeft.s),
+									l: "ثانية"
+								}
+							].map((u, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [i > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[20px] font-black",
+									style: { color: ORANGE },
+									children: ":"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-center",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "rounded-xl px-3 py-1.5 text-[20px] font-black text-white min-w-[52px]",
+										style: { background: `linear-gradient(180deg, ${ORANGE}, #E85F00)` },
+										children: u.v
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-1 text-[10px] text-neutral-600",
+										dir: "rtl",
+										children: u.l
+									})]
+								})]
+							}, i))
+						})]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PackageCard, { p: pkg12 }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PackageCard, { p: pkg20 }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "off-card transition-all duration-400",
+							style: {
+								opacity: customHidden ? 0 : 1,
+								maxHeight: customHidden ? 0 : 2e3,
+								transform: customActive ? "scale(1.02)" : "scale(1)",
+								marginBottom: customHidden ? 0 : 16,
+								overflow: "hidden"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => pickPackage("custom"),
+								disabled: !!selected && !customActive,
+								className: "w-full text-right rounded-[24px] bg-white p-5 transition-all relative",
+								style: {
+									border: `2px solid ${customActive ? ORANGE : "rgba(0,0,0,0.06)"}`,
+									boxShadow: customActive ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.12)"
+								},
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "absolute top-4 right-4",
+										children: customActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "h-7 w-7 rounded-full grid place-items-center",
+											style: {
+												background: ORANGE,
+												boxShadow: `0 6px 14px ${ORANGE}66`
+											},
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+												size: 16,
+												strokeWidth: 3,
+												className: "text-white"
+											})
+										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-7 w-7 rounded-full border-2 border-gray-300" })
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-start gap-3 pr-9",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "shrink-0 h-16 w-16 rounded-2xl grid place-items-center",
+											style: { background: "#E0F2FE" },
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Calendar, {
+												className: "h-8 w-8",
+												style: { color: "#0EA5E9" }
+											})
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex-1 min-w-0",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2 flex-wrap",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+													className: "text-[19px] font-black",
+													style: {
+														color: TEXT,
+														fontFamily: "'Cairo','Tajawal',sans-serif"
+													},
+													children: "خصص باقتك"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white",
+													style: { background: "#0EA5E9" },
+													children: "مرونة كاملة"
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "mt-1 text-[12.5px] font-bold text-neutral-700",
+												children: "حسب عدد الحصص"
+											})]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "mt-3 text-[12.5px] leading-6 text-neutral-600",
+										children: "اختر عدد الحصص التي تناسب وقتك وهدفك، وسنصمم لك باقة شخصية بالكامل."
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-4 grid grid-cols-2 gap-x-3 gap-y-2",
+										children: [
+											"اختر عدد الحصص المناسب لك",
+											"جدول مرن حسب وقتك",
+											"مناسب للمبتدئين والمشغولين",
+											"خطة تدريب مخصصة",
+											"متابعة مباشرة",
+											"إمكانية ترقية الباقة لاحقاً"
+										].map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center",
+												style: { background: "#DCFCE7" },
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+													size: 10,
+													strokeWidth: 3,
+													className: "text-green-600"
+												})
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: f })]
+										}, f))
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "mt-4 rounded-2xl bg-[#F8FAFC] p-3",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "text-[12px] font-bold text-neutral-700 text-right mb-2",
+											children: "عدد الحصص المطلوبة شهرياً"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "flex flex-wrap gap-2",
+											children: [
+												"8 حصص",
+												"12 حصة",
+												"16 حصة",
+												"20 حصة",
+												"أريد اقتراح المدرب"
+											].map((opt) => {
+												const on = customSessions === opt;
+												return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													onClick: (e) => {
+														e.stopPropagation();
+														if (!selected || customActive) setCustomSessions(opt);
+													},
+													className: "cursor-pointer rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all",
+													style: {
+														background: on ? ORANGE : "#fff",
+														color: on ? "#fff" : "#334155",
+														border: `1.5px solid ${on ? ORANGE : "#E2E8F0"}`
+													},
+													children: opt
+												}, opt);
+											})
+										})]
+									})
+								]
+							})
+						})
+					]
+				}),
+				!selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-2 rounded-[22px] p-4 flex items-start gap-3",
+					style: {
+						background: "#FFF6EC",
+						border: "1px solid #FFD1A8"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+						style: { background: "#FFE1C2" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, {
+							className: "h-6 w-6",
+							style: { color: ORANGE }
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex-1 text-right",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[13px] font-black",
+							style: { color: ORANGE },
+							children: "المقاعد محدودة جداً لهذا الأسبوع!"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 text-[11.5px] text-neutral-700 leading-5",
+							children: "لا تنتظر حتى يسرق شخص آخر حلمك ويحقق ما تتمناه."
+						})]
+					})]
+				}),
+				selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 off-in",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-center text-[12px] text-neutral-700 mb-2 font-bold",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "inline h-3 w-3 mb-0.5 ml-1" }), "تدريب شخصي + متابعة احترافية + نتائج مضمونة"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+							href: buildWhatsapp(),
+							target: "_blank",
+							rel: "noopener noreferrer",
+							className: "off-pulse w-full h-14 rounded-[22px] font-black text-white text-[15px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]",
+							style: { background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)` },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+								xmlns: "http://www.w3.org/2000/svg",
+								viewBox: "0 0 24 24",
+								className: "h-6 w-6 fill-white",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.32-1.66a11.9 11.9 0 0 0 5.73 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.17-3.44-8.42zM12.06 21.5h-.01a9.6 9.6 0 0 1-4.89-1.34l-.35-.21-3.75.99 1-3.65-.23-.37a9.58 9.58 0 0 1-1.47-5.02c0-5.3 4.31-9.6 9.61-9.6 2.57 0 4.98 1 6.8 2.81a9.55 9.55 0 0 1 2.81 6.8c0 5.3-4.31 9.6-9.62 9.6zm5.55-7.18c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.69.15s-.79.98-.97 1.18c-.18.2-.36.22-.66.07-.3-.15-1.28-.47-2.43-1.5-.9-.8-1.51-1.79-1.69-2.09-.18-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.51.07-.78.38-.27.3-1.02 1-1.02 2.44s1.05 2.83 1.2 3.03c.15.2 2.06 3.14 5 4.4.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.79-.73 2.04-1.43.25-.7.25-1.3.18-1.43-.07-.13-.27-.2-.57-.35z" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "أرسل حجزك على الواتساب الآن وابدأ رحلتك نحو الأفضل" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-3 text-center text-[11.5px] text-neutral-600 leading-5",
+							children: "سيتم إرسال اختيارك وبياناتك للمدرب لتأكيد الحجز والبدء في رحلتك."
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 flex items-center justify-center gap-4 text-[11px] text-neutral-600",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+								className: "h-3.5 w-3.5",
+								style: { color: GREEN }
+							}), " بياناتك محمية"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+								className: "h-3.5 w-3.5",
+								style: { color: GREEN }
+							}), " دفع آمن"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Star, {
+								className: "h-3.5 w-3.5",
+								style: { color: "#F59E0B" }
+							}), " +500 عميل"]
+						})
+					]
+				})
+			]
+		})]
+	});
+}
+var BANK_DETAILS = {
+	uae: {
+		country: "الإمارات العربية المتحدة",
+		flag: "🇦🇪",
+		banks: [{
+			name: "Emirates NBD",
+			holder: "Hakim Coaching FZ-LLC",
+			account: "1015432109876",
+			iban: "AE070260001015432109876",
+			swift: "EBILAEAD"
+		}]
+	},
+	morocco: {
+		country: "المغرب",
+		flag: "🇲🇦",
+		banks: [{
+			name: "CIH BANK",
+			holder: "Hakim Coaching",
+			account: "230 810 2113217221016000 12",
+			iban: "MA64 2308 1021 1321 7221 0160 0012",
+			swift: "CIHMMAMC"
+		}, {
+			name: "BMCE BANK",
+			holder: "Hakim Coaching",
+			account: "011 810 0000123456789012 34",
+			iban: "MA64 0118 1000 0001 2345 6789 0134",
+			swift: "BMCEMAMC"
+		}]
+	},
+	brazil: {
+		country: "البرازيل",
+		flag: "🇧🇷",
+		banks: [{
+			name: "PIX",
+			holder: "Hakim Coaching",
+			account: "hakim@coaching.br",
+			iban: "—",
+			swift: "—"
+		}, {
+			name: "Nubank",
+			holder: "Hakim Coaching",
+			account: "0001 / 1234567-8",
+			iban: "—",
+			swift: "NUBKBRSP"
+		}]
+	}
+};
+function BinanceLogo({ size = 38 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+		viewBox: "0 0 126 126",
+		width: size,
+		height: size,
+		"aria-label": "Binance",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			fill: "#F3BA2F",
+			d: "M38.7 53.6 63 29.3l24.3 24.3 14.1-14.1L63 1.1 24.6 39.5zM1.1 63l14.1-14.1L29.3 63 15.2 77.1zM38.7 72.4 63 96.7l24.3-24.3 14.1 14.1L63 124.9 24.6 86.5zm58.1-9.4 14.1-14.1 14.1 14.1-14.1 14.1zM77.3 63 63 48.7 52.4 59.3l-1.2 1.2-2.5 2.5L63 77.3z"
+		})
+	});
+}
+function PayPalLogo({ size = 38 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 124 33",
+		width: size * 3,
+		height: size,
+		"aria-label": "PayPal",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#253B80",
+				d: "M46.2 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.1c.5 0 .9-.3.9-.8l.7-4.5c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm21-6.2h-3.1c-.3 0-.6.2-.7.4l-4.3 6.3-1.8-6.1c-.1-.4-.5-.6-.8-.6h-3c-.4 0-.6.4-.5.7l3.4 10.1-3.2 4.5c-.3.4 0 .9.4.9h3.1c.3 0 .6-.1.7-.4l10.3-14.9c.3-.4.1-.9-.5-.9z"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#179BD7",
+				d: "M94.4 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.3c.3 0 .6-.2.7-.6l.7-4.7c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm8.1-12.1L116.1 24c0 .3.2.6.5.6h2.7c.5 0 .9-.3.9-.8l2.6-16.6c0-.3-.2-.6-.5-.6h-3c-.3 0-.5.2-.6.5z"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#253B80",
+				d: "M7.3 27.9 7.8 25h-4l3-19h8.4c2.8 0 4.7.6 5.7 1.7.5.5.8 1.1.9 1.7.2.6.2 1.4 0 2.3v.7l.5.3c.4.2.7.5.9.8.4.5.7 1.1.8 1.8.1.8.1 1.6-.1 2.6-.3 1.2-.7 2.3-1.3 3.1-.6.8-1.3 1.5-2.1 2-.8.5-1.7.9-2.7 1.1-1 .2-2.1.3-3.3.3h-.8c-.6 0-1.1.2-1.5.6-.4.4-.7.9-.8 1.4v.4L11.5 28v.2c0 .1 0 .1-.1.1H7.3z"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#179BD7",
+				d: "M22.8 8.7v.5c-.8 4.3-3.7 5.8-7.3 5.8h-1.9c-.4 0-.8.3-.9.8L11.7 23l-.3 1.7c-.1.3.2.6.5.6h3.3c.4 0 .7-.3.8-.6v-.2l.6-3.9.1-.2c.1-.4.4-.6.8-.6h.5c3.2 0 5.7-1.3 6.4-5 .3-1.6.2-2.9-.7-3.8-.2-.2-.5-.4-.9-.6z"
+			})
+		]
+	});
+}
+function SkrillLogo({ size = 38 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+		viewBox: "0 0 100 32",
+		width: size * 3,
+		height: size,
+		"aria-label": "Skrill",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+			x: "0",
+			y: "24",
+			fontFamily: "Arial, sans-serif",
+			fontSize: "28",
+			fontWeight: "900",
+			fill: "#862165",
+			letterSpacing: "-1",
+			children: "Skrill"
+		})
+	});
+}
+function WiseLogo({ size = 38 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 110 32",
+		width: size * 3,
+		height: size,
+		"aria-label": "Wise",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			fill: "#9FE870",
+			d: "M3 4l10 12L3 28h7l10-12L10 4z"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+			x: "22",
+			y: "24",
+			fontFamily: "Arial, sans-serif",
+			fontSize: "22",
+			fontWeight: "900",
+			fill: "#163300",
+			children: "wise"
+		})]
+	});
+}
+function TetherIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 32 32",
+		width: "32",
+		height: "32",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "16",
+			cy: "16",
+			r: "16",
+			fill: "#26A17B"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			fill: "#fff",
+			d: "M17.9 14.6v-2h4.6V9.5H9.5v3.1H14v2c-3.7.2-6.5.9-6.5 1.8s2.8 1.6 6.5 1.8v6.4h3.9v-6.4c3.7-.2 6.5-.9 6.5-1.8 0-.9-2.8-1.6-6.5-1.8zm0 3v-.1c-.1 0-.7.1-2 .1-1.1 0-1.8 0-2.1-.1v.1c-3.2-.1-5.6-.7-5.6-1.4s2.4-1.2 5.6-1.4v2.3c.3 0 1 .1 2.1.1 1.3 0 1.9-.1 2-.1v-2.3c3.2.1 5.6.7 5.6 1.4 0 .6-2.4 1.3-5.6 1.4z"
+		})]
+	});
+}
+function PayPalIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 32 32",
+		width: "32",
+		height: "32",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "16",
+				cy: "16",
+				r: "16",
+				fill: "#EAF4FB"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#253B80",
+				d: "M11.5 9.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5l1.7-10.9c.1-.4.4-.6.8-.6z"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "#179BD7",
+				d: "M13 11.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5L13 11.5z",
+				opacity: ".6"
+			})
+		]
+	});
+}
+function SkrillIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 32 32",
+		width: "32",
+		height: "32",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "16",
+			cy: "16",
+			r: "16",
+			fill: "#862165"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+			x: "16",
+			y: "22",
+			textAnchor: "middle",
+			fontFamily: "Arial, sans-serif",
+			fontSize: "18",
+			fontWeight: "900",
+			fill: "#fff",
+			children: "S"
+		})]
+	});
+}
+function WiseIcon() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 32 32",
+		width: "32",
+		height: "32",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "16",
+			cy: "16",
+			r: "16",
+			fill: "#9FE870"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			fill: "#163300",
+			d: "M8 9l5 7-5 7h4l5-7-4-7zm6 0h4l-5 7 4 7h-4l-4-7z"
+		})]
+	});
+}
+function TrophySvg() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		viewBox: "0 0 64 64",
+		width: "56",
+		height: "56",
+		"aria-hidden": true,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
+				id: "trg",
+				x1: "0",
+				y1: "0",
+				x2: "0",
+				y2: "1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "0",
+					stopColor: "#FFD56B"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
+					offset: "1",
+					stopColor: "#E69300"
+				})]
+			}) }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				fill: "url(#trg)",
+				d: "M20 8h24v6c0 9-5.4 16-12 16S20 23 20 14V8z"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "26",
+				y: "30",
+				width: "12",
+				height: "10",
+				rx: "2",
+				fill: "#E69300"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+				x: "18",
+				y: "40",
+				width: "28",
+				height: "6",
+				rx: "2",
+				fill: "#B36A00"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M20 12H12v4c0 5 4 9 9 9",
+				fill: "none",
+				stroke: "#E69300",
+				strokeWidth: "3"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+				d: "M44 12h8v4c0 5-4 9-9 9",
+				fill: "none",
+				stroke: "#E69300",
+				strokeWidth: "3"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", {
+				fill: "#FFF3B0",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M32 14l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z" })
+			})
+		]
+	});
+}
+function BankDetailsModal({ bank, onClose }) {
+	const [copied, setCopied] = (0, import_react.useState)(null);
+	if (!bank) return null;
+	const info = BANK_DETAILS[bank];
+	const copy = (key, val) => {
+		if (typeof navigator !== "undefined" && navigator.clipboard) navigator.clipboard.writeText(val).then(() => {
+			setCopied(key);
+			window.setTimeout(() => setCopied(null), 1500);
+		});
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-end sm:items-center justify-center",
+		style: { background: "rgba(15,23,42,.55)" },
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden",
+			style: { animation: "pay-slide-up .25s ease-out both" },
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between px-5 py-4 border-b border-neutral-100",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: onClose,
+						className: "text-neutral-400 active:scale-90",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-5 w-5 rotate-90" })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "font-extrabold text-[15px] text-neutral-900",
+						children: [
+							info.flag,
+							" ",
+							info.country
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5" })
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "max-h-[70vh] overflow-y-auto p-5 space-y-4",
+				children: [info.banks.map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "rounded-2xl border border-neutral-200 p-4 bg-neutral-50",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "font-extrabold text-[15px] text-neutral-900 mb-3 text-right",
+						children: b.name
+					}), [
+						{
+							k: "holder",
+							label: "اسم المستفيد",
+							val: b.holder
+						},
+						{
+							k: "account",
+							label: "رقم الحساب",
+							val: b.account
+						},
+						{
+							k: "iban",
+							label: "IBAN",
+							val: b.iban
+						},
+						{
+							k: "swift",
+							label: "SWIFT",
+							val: b.swift
+						}
+					].map((row) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center justify-between gap-2 py-2 border-t border-neutral-200 first:border-t-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: () => copy(`${i}-${row.k}`, row.val),
+							className: "text-[11px] font-extrabold px-2.5 py-1 rounded-lg active:scale-95",
+							style: {
+								background: copied === `${i}-${row.k}` ? "#16A34A" : "#FF6B00",
+								color: "#fff"
+							},
+							children: copied === `${i}-${row.k}` ? "تم النسخ ✓" : "نسخ"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[10.5px] text-neutral-500 font-bold",
+								children: row.label
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[12.5px] font-extrabold text-neutral-900 truncate",
+								dir: "ltr",
+								style: {
+									direction: "ltr",
+									textAlign: "right"
+								},
+								children: row.val
+							})]
+						})]
+					}, row.k))]
+				}, i)), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "text-center text-[11px] text-neutral-500",
+					children: "بعد التحويل اضغط \"لقد قمت بالدفع\" وأرفق إثبات التحويل."
+				})]
+			})]
+		})
+	});
+}
+function PaymentProofModal({ onClose, onSubmit }) {
+	const [file, setFile] = (0, import_react.useState)(null);
+	const [preview, setPreview] = (0, import_react.useState)(null);
+	const inputRef = (0, import_react.useRef)(null);
+	const onPick = (f) => {
+		setFile(f);
+		if (f && f.type.startsWith("image/")) setPreview(URL.createObjectURL(f));
+		else setPreview(null);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-end sm:items-center justify-center",
+		style: { background: "rgba(15,23,42,.55)" },
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden",
+			style: { animation: "pay-slide-up .25s ease-out both" },
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between px-5 py-4 border-b border-neutral-100",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						onClick: onClose,
+						className: "text-neutral-400 active:scale-90",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-5 w-5 rotate-90" })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "font-extrabold text-[15px] text-neutral-900",
+						children: "رفع إثبات الدفع"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-5" })
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "p-5 space-y-4",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-[12.5px] text-neutral-500 text-right leading-relaxed",
+						children: "أرفق صورة أو ملف PDF أو لقطة شاشة للتحويل لتفعيل اشتراكك بشكل أسرع."
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: () => inputRef.current?.click(),
+						className: "w-full rounded-2xl border-2 border-dashed p-6 flex flex-col items-center gap-2 active:scale-[0.99] transition",
+						style: {
+							borderColor: file ? "#16A34A" : "#FF6B00",
+							background: file ? "#F0FAF4" : "#FFF6EE"
+						},
+						children: [
+							preview ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+								src: preview,
+								alt: "proof",
+								className: "h-32 rounded-xl object-cover"
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "h-14 w-14 rounded-2xl grid place-items-center",
+								style: { background: "#fff" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ClipboardList, {
+									className: "h-7 w-7",
+									style: { color: "#FF6B00" }
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "font-extrabold text-[14px]",
+								style: { color: file ? "#16A34A" : "#FF6B00" },
+								children: file ? `✓ ${file.name}` : "اضغط لاختيار الملف"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "text-[11px] text-neutral-500",
+								children: "PNG · JPG · PDF · Screenshot"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						ref: inputRef,
+						type: "file",
+						accept: "image/*,application/pdf",
+						className: "hidden",
+						onChange: (e) => onPick(e.target.files?.[0] ?? null)
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						disabled: !file,
+						onClick: onSubmit,
+						className: "w-full h-14 rounded-2xl font-black text-white text-[15px] active:scale-[0.98] transition disabled:opacity-50",
+						style: {
+							background: "#FF6B00",
+							boxShadow: "0 12px 28px -12px rgba(255,107,0,.7)"
+						},
+						children: "إرسال الإثبات"
+					})
+				]
+			})]
+		})
+	});
+}
+function PaymentScreen({ name, tierId, total = 14, onBack }) {
+	const ORANGE = "#FF6B00";
+	const TEXT = "#0F172A";
+	const GREEN = "#16A34A";
+	const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
+	const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
+	const [method, setMethod] = (0, import_react.useState)(null);
+	const [bankOpen, setBankOpen] = (0, import_react.useState)(null);
+	const [proofOpen, setProofOpen] = (0, import_react.useState)(false);
+	const [done, setDone] = (0, import_react.useState)(false);
+	const choose = (m) => {
+		setMethod(m);
+		if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(12);
+	};
+	const PAY_METHODS = [
+		{
+			id: "binance",
+			name: "Binance Pay (USDT)",
+			sub: "ادفع باستخدام عملات الكريبتو مثل USDT",
+			perk: "سريع، آمن، ورسوم منخفضة",
+			Logo: () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BinanceLogo, {}),
+			Icon: TetherIcon,
+			recommended: true,
+			tagSmall: "الأسرع"
+		},
+		{
+			id: "paypal",
+			name: "PayPal",
+			sub: "ادفع بأمان باستخدام حسابك على باي بال",
+			perk: "سريع وآمن ومقبول عالمياً",
+			Logo: () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PayPalLogo, { size: 28 }),
+			Icon: PayPalIcon
+		},
+		{
+			id: "skrill",
+			name: "Skrill",
+			sub: "ادفع باستخدام حسابك على سكريل",
+			perk: "سريع وآمن حول العالم",
+			Logo: () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SkrillLogo, { size: 28 }),
+			Icon: SkrillIcon
+		},
+		{
+			id: "wise",
+			name: "Wise",
+			sub: "حوّل وادفع بعملات متعددة بأقل رسوم",
+			perk: "سعر صرف حقيقي ورسوم منخفضة",
+			Logo: () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WiseLogo, { size: 28 }),
+			Icon: WiseIcon
+		}
+	];
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "h-full w-full overflow-y-auto",
+		style: {
+			background: "#FFFFFF",
+			fontFamily: FONT
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes pay-in { from {opacity:0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pay-slide-up { from {opacity:0; transform: translateY(40px);} to {opacity:1; transform: translateY(0);} }
+        @keyframes pay-pop { 0% {transform: scale(.5); opacity:0;} 60% {transform: scale(1.15); opacity:1;} 100% {transform: scale(1);} }
+        @keyframes pay-shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
+        .pay-in { animation: pay-in .5s cubic-bezier(.2,.8,.2,1) both; }
+        .pay-pop { animation: pay-pop .5s cubic-bezier(.2,.8,.2,1) both; }
+        .pay-shake { animation: pay-shake .35s ease-out; }
+        .pay-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+      ` }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pt-5 pb-3 max-w-md mx-auto",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: onBack,
+							className: "flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4" }), "رجوع"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-[12px] font-extrabold",
+							style: { color: ORANGE },
+							children: [
+								total,
+								" من ",
+								total
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1.5 text-[10.5px] font-extrabold",
+							style: { color: GREEN },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, { className: "h-3.5 w-3.5" }), " آمن 100%"]
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: ORANGE }
+					}, i))
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "px-5 pb-24 max-w-md mx-auto",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pay-in text-center mt-4",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+							className: "pay-heading text-[24px]",
+							style: { color: TEXT },
+							children: ["أكمل اشتراكك ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "الآن"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed",
+							children: "اختر طريقة الدفع المناسبة لك للبدء في برنامجك الخاص"
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "pay-in mt-5 rounded-3xl p-4 flex items-center gap-4",
+						style: {
+							background: "#FFF6EE",
+							border: `1px solid ${ORANGE}22`,
+							animationDelay: ".05s"
+						},
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "shrink-0 h-20 w-20 rounded-2xl grid place-items-center relative",
+								style: { background: "linear-gradient(160deg,#1E293B,#0F172A)" },
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrophySvg, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "absolute -bottom-1 -right-1 h-6 w-6 rounded-full grid place-items-center text-white",
+									style: { background: ORANGE },
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+										className: "h-3.5 w-3.5",
+										strokeWidth: 3.5
+									})
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex-1 text-right min-w-0",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10.5px] text-neutral-500 font-bold",
+										children: "الباقة المختارة"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pay-heading text-[17px] mt-0.5",
+										style: { color: TEXT },
+										children: tier.id === "pro" ? "باقة Pro" : tier.id === "vip" ? "باقة VIP" : "باقة التحول"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-1 text-[11px] text-neutral-500 leading-snug",
+										children: "12 أسبوع · متابعة ونتائج مضمونة"
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-center shrink-0 pr-2 border-r border-orange-200",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10px] text-neutral-500 font-bold",
+										children: "السعر الإجمالي"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "pay-heading text-[26px] leading-none mt-1",
+										style: { color: ORANGE },
+										children: tier.totalPrice
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "text-[10px] text-neutral-500 font-bold mt-1",
+										children: "دولار أمريكي"
+									})
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-7 text-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+							className: "pay-heading text-[18px]",
+							style: { color: TEXT },
+							children: "اختر طريقة الدفع"
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 space-y-3",
+						children: PAY_METHODS.map((m, i) => {
+							const selected = method === m.id;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => choose(m.id),
+								className: `pay-in w-full text-right rounded-2xl p-3 flex items-center gap-3 transition-all ${selected ? "pay-shake" : ""}`,
+								style: {
+									animationDelay: `${.1 + i * .07}s`,
+									background: selected ? "#FFF6EE" : "#fff",
+									border: `2px solid ${selected ? ORANGE : "#EEF1F4"}`,
+									boxShadow: selected ? `0 12px 30px -16px ${ORANGE}66` : "0 4px 14px -10px rgba(0,0,0,.08)"
+								},
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "shrink-0 w-[88px] h-[56px] grid place-items-center rounded-xl",
+										style: {
+											background: m.recommended ? "#FFF" : "#FAFBFC",
+											border: "1px solid #EEF1F4"
+										},
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(m.Logo, {})
+									}),
+									m.recommended && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "absolute" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex-1 min-w-0",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "flex items-center gap-1.5 justify-end",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "pay-heading text-[14.5px]",
+													style: { color: TEXT },
+													children: m.name
+												})
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "text-[11.5px] text-neutral-500 leading-snug mt-0.5",
+												children: m.sub
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "text-[11px] font-extrabold mt-1",
+												style: { color: GREEN },
+												children: m.perk
+											}),
+											m.tagSmall && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold text-white",
+												style: { background: ORANGE },
+												children: m.tagSmall
+											})
+										]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "shrink-0 relative",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(m.Icon, {}),
+											m.recommended && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "absolute -top-2 -right-2 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold text-white",
+												style: { background: ORANGE },
+												children: "موصى به"
+											}),
+											selected && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "absolute -bottom-1 -left-1 h-5 w-5 rounded-full grid place-items-center pay-pop",
+												style: { background: GREEN },
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+													className: "h-3 w-3 text-white",
+													strokeWidth: 4
+												})
+											})
+										]
+									})
+								]
+							}, m.id);
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-8",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center justify-end gap-2 mb-3",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+									className: "pay-heading text-[16px]",
+									style: { color: TEXT },
+									children: "تحويل بنكي"
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "rounded-3xl p-1.5",
+								style: {
+									background: "#fff",
+									border: "1px solid #EEF1F4",
+									boxShadow: "0 4px 14px -10px rgba(0,0,0,.08)"
+								},
+								children: [
+									{
+										id: "uae",
+										label: "الإمارات العربية المتحدة",
+										sub: "Emirates NBD",
+										color: "#10B981"
+									},
+									{
+										id: "morocco",
+										label: "المغرب",
+										sub: "CIH BANK · BMCE BANK",
+										color: "#DC2626"
+									},
+									{
+										id: "brazil",
+										label: "البرازيل",
+										sub: "PIX · Nubank",
+										color: "#7C3AED"
+									}
+								].map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									onClick: () => setBankOpen(b.id),
+									className: "w-full flex items-center gap-3 p-3 rounded-2xl active:scale-[0.99] transition",
+									style: { borderTop: i === 0 ? "none" : "1px solid #F1F3F5" },
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "shrink-0 h-11 w-11 rounded-xl grid place-items-center",
+											style: {
+												background: `${b.color}15`,
+												color: b.color
+											},
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldHalf, {
+												className: "h-5 w-5",
+												strokeWidth: 2.2
+											})
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex-1 text-right",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "pay-heading text-[13.5px]",
+												style: { color: TEXT },
+												children: b.label
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "text-[11px] text-neutral-500 mt-0.5",
+												children: b.sub
+											})]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4 text-neutral-400 rotate-180" })
+									]
+								}, b.id))
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mt-2 text-center text-[11px] text-neutral-500",
+								children: "ستحصل على بيانات الحساب بعد اختيار البنك"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+						href: "https://wa.me/971505129019?text=أحتاج%20مساعدة%20في%20اختيار%20طريقة%20الدفع",
+						className: "mt-5 rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.99] transition",
+						style: {
+							background: "#F0FAF4",
+							border: "1px solid #BBF7D0"
+						},
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "shrink-0 h-11 w-11 rounded-full grid place-items-center",
+								style: { background: "#25D366" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MessageCircle, {
+									className: "h-5 w-5 text-white",
+									fill: "#fff",
+									strokeWidth: 0
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex-1 text-right",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "pay-heading text-[13.5px]",
+									style: { color: GREEN },
+									children: "تحتاج مساعدة؟"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[11px] text-neutral-500 mt-0.5",
+									children: "تواصل معنا على واتساب وسنساعدك في اختيار طريقة الدفع الأنسب لك"
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4 text-neutral-400 rotate-180" })
+						]
+					}),
+					method && !done && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-6 pay-in",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => setProofOpen(true),
+							className: "w-full h-[58px] rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition",
+							style: {
+								background: ORANGE,
+								fontFamily: HEADING_FONT,
+								boxShadow: `0 16px 36px -14px ${ORANGE}aa`
+							},
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+								className: "h-5 w-5",
+								strokeWidth: 3
+							}), "لقد قمت بالدفع"]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-center text-[10.5px] text-neutral-500 mt-2",
+							children: "بعد الدفع ارفع إثبات التحويل لتفعيل اشتراكك فوراً"
+						})]
+					}),
+					done && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-6 rounded-2xl p-5 text-center pay-in",
+						style: {
+							background: "#F0FAF4",
+							border: `1px solid ${GREEN}33`
+						},
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "mx-auto h-14 w-14 rounded-full grid place-items-center pay-pop",
+								style: { background: GREEN },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+									className: "h-7 w-7 text-white",
+									strokeWidth: 3.5
+								})
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "pay-heading text-[16px] mt-3",
+								style: { color: GREEN },
+								children: "تم استلام إثبات الدفع"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[12px] text-neutral-500 mt-1",
+								children: "سيتم تفعيل اشتراكك خلال دقائق وسنتواصل معك مباشرة."
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-8 grid grid-cols-2 gap-3",
+						children: [
+							{
+								Icon: Lock,
+								color: "#16A34A",
+								t: "دفع آمن ومشفر",
+								s: "حماية كاملة لبياناتك"
+							},
+							{
+								Icon: ShieldCheck,
+								color: "#16A34A",
+								t: "حماية كاملة للبيانات",
+								s: "تشفير SSL 256-bit"
+							},
+							{
+								Icon: RefreshCw,
+								color: "#2563EB",
+								t: "ضمان استرجاع الأموال",
+								s: "استرجاع خلال 7 أيام"
+							},
+							{
+								Icon: Headphones,
+								color: "#2563EB",
+								t: "دعم فني 24/7",
+								s: "نحن هنا لمساعدتك دائماً"
+							}
+						].map((b, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "rounded-2xl p-3 flex items-center gap-2.5",
+							style: {
+								background: "#FAFBFC",
+								border: "1px solid #EEF1F4"
+							},
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "shrink-0 h-10 w-10 rounded-xl grid place-items-center",
+								style: { background: `${b.color}15` },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(b.Icon, {
+									className: "h-5 w-5",
+									style: { color: b.color },
+									strokeWidth: 2.2
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "text-right min-w-0",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "pay-heading text-[11.5px]",
+									style: { color: b.color },
+									children: b.t
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "text-[10px] text-neutral-500 leading-snug mt-0.5",
+									children: b.s
+								})]
+							})]
+						}, i))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-500",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "h-3 w-3" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "جميع المعاملات آمنة ومشفرة 256-bit SSL" })]
+					})
+				]
+			}),
+			bankOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BankDetailsModal, {
+				bank: bankOpen,
+				onClose: () => setBankOpen(null)
+			}),
+			proofOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentProofModal, {
+				onClose: () => setProofOpen(false),
+				onSubmit: () => {
+					setProofOpen(false);
+					setDone(true);
+				}
+			})
+		]
+	});
+}
+//#endregion
+export { QuizPage as component };
