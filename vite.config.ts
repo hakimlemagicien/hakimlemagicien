@@ -12,10 +12,13 @@ export default defineConfig({
   },
 
   ssr: {
-    noExternal: ["tslib"],
+    noExternal: ["tslib", "@radix-ui/react-dialog"],
   },
 
   nitro: {
     preset: "vercel",
+    externals: {
+      inline: ["tslib"],
+    },
   },
 });
