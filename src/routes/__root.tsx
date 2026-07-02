@@ -88,9 +88,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "Hakim Coaching" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Hakim Le Magicien" },
-      { property: "og:title", content: "Hakim Le Magicien" },
-      { name: "twitter:title", content: "Hakim Le Magicien" },
+      { title: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
+      { property: "og:title", content: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
+      { name: "twitter:title", content: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
       {
         name: "description",
         content:

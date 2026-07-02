@@ -3,7 +3,16 @@ import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answe
 import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
 import { useQuizProgress } from "@/hooks/use-quiz-progress";
 import { MotionStepView } from "@/components/motion/MotionStepView";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteFooter } from "@/components/SiteFooter";
+import {
+  LEGAL_ROUTES,
+  PRODUCT_SUMMARY,
+  SITE_LEGAL_ENTITY,
+  SITE_SUPPORT_EMAIL,
+  SITE_WHATSAPP_URL,
+} from "@/lib/site-legal";
+import { isPaddleConfigured, openPaddleCheckout } from "@/lib/paddle-checkout";
 import { useEffect, useState, type ReactElement } from "react";
 import {
   ChevronLeft,
@@ -37,10 +46,11 @@ import {
   ShieldHalf,
   Headphones,
   ClipboardList,
-  Utensils,
   RefreshCw,
   Clock,
   UserCheck,
+  CreditCard,
+  FileText,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/ذكر.png";
@@ -57,17 +67,21 @@ import goalFitnessImg from "@/assets/تحسين اللياقة والطاقة.PN
 import goalAthleticImg from "@/assets/جسم رياضي ومتناسق.PNG";
 import goalShapeImg from "@/assets/تغير شكل الجسم.jpg";
 import goalGainImg from "@/assets/زيادة وزن صحي.jpg";
-import transform1Img from "@/assets/transform-1.jpg";
-import bodyLeanImg from "@/assets/body-lean.jpg";
-import bodyMuscularImg from "@/assets/body-muscular.jpg";
-import bodySkinnyFatImg from "@/assets/body-skinny-fat.jpg";
-import coachSupportImg from "@/assets/coach-support.jpg";
-import targetImg from "@/assets/target-illustration.png";
-import confusedCoachImg from "@/assets/confused-coach.png";
+import challengeBellyImg from "@/assets/مشكلة دهون البطن للرجال.png";
+import challengeMuscleImg from "@/assets/صعوبة في بناء العضلات.jpeg";
+import challengeEnergyImg from "@/assets/قلة.الطاقة والحيوية.png";
+import challengeGoalImg from "@/assets/عدم وضوح الهدف.png";
+import challengeCommitmentImg from "@/assets/الالتزام والاستمرارية.png";
+import challengeConfidenceImg from "@/assets/الثقة بالنفس والمظهر.png";
+import femaleChallengeBellyImg from "@/assets/الكرش و الدهون البطن.jpg";
+import femaleChallengeGlutesImg from "@/assets/شكل المؤخرة.JPG";
+import femaleChallengeSaggingImg from "@/assets/ترهلات الجسم للبنات.jpg";
+import femaleChallengeConfidenceImg from "@/assets/عدم الثقة بالنفس للبنات.png";
+import femaleChallengeBodyShapeImg from "@/assets/عدم تناسق الجسم.jpg";
+import femaleBodyGlutesImg from "@/assets/عدم تناسق الارداف.jpg";
+import femaleBodyNeedsToningImg from "@/assets/جسم يحتاج شد.png";
+import femaleBodyLightBellyImg from "@/assets/كرش خفيفة.png";
 import fbodySlim from "@/assets/fbody-slim.jpg";
-import fbodyBellyLight from "@/assets/fbody-belly-light.jpg";
-import fbodyToning from "@/assets/fbody-toning.jpg";
-import fbodyShaping from "@/assets/fbody-shaping.jpg";
 import fbodyAthletic from "@/assets/fbody-athletic.jpg";
 import fbodyOverweight from "@/assets/fbody-overweight.jpg";
 import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
@@ -76,6 +90,34 @@ import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
 import feminineTonedBody from "@/assets/feminine-toned-body.png";
 import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
 import femaleGoalChestImg from "@/assets/تحسين شكل الصدر.jpg";
+import revealGlutesBefore0 from "@/assets/قبل شاشة 12 المؤخرة.jpg";
+import revealGlutesBefore1 from "@/assets/قبل شاشة 12 المؤخرة 1.jpg";
+import revealGlutesBefore2 from "@/assets/قبل شاشة 12 المؤخرة 2.jpg";
+import revealGlutesBefore3 from "@/assets/قبل شاشة 12 المؤخرة 3.jpg";
+import revealGlutesBefore4 from "@/assets/قبل شاشة 12 المؤخرة 4.jpg";
+import revealGlutesAfter0 from "@/assets/بعد شاشة 12 المؤخرة.jpg";
+import revealGlutesAfter1 from "@/assets/بعد شاشة 12 المؤخرة 1.jpg";
+import revealGlutesAfter2 from "@/assets/بعد شاشة 12 المؤخرة 2.jpg";
+import revealGlutesAfter3 from "@/assets/بعد شاشة 12 المؤخرة 3.jpg";
+import revealGlutesAfter4 from "@/assets/بعد شاشة 12 المؤخرة 4.jpg";
+import pricingCompareBefore from "@/assets/سمير قبل.jpg";
+import pricingCompareAfter from "@/assets/سمير بعد.jpg";
+import pricingSnackCompare from "@/assets/سندويش المقارنة.png";
+
+const REVEAL_GLUTES_BEFORE = [
+  revealGlutesBefore0,
+  revealGlutesBefore1,
+  revealGlutesBefore2,
+  revealGlutesBefore3,
+  revealGlutesBefore4,
+];
+const REVEAL_GLUTES_AFTER = [
+  revealGlutesAfter0,
+  revealGlutesAfter1,
+  revealGlutesAfter2,
+  revealGlutesAfter3,
+  revealGlutesAfter4,
+];
 
 export const Route = createFileRoute("/quiz")({
   head: () => ({
@@ -693,7 +735,7 @@ function QuizImageOptionCard({
   active,
   index,
   onClick,
-  imageWrapClassName = "relative h-[min(34vw,135px)] w-full overflow-hidden",
+  imageWrapClassName = "relative h-[min(38vw,148px)] w-full overflow-hidden",
   imageClassName = "h-full w-full object-cover",
 }: {
   label: string;
@@ -720,9 +762,9 @@ function QuizImageOptionCard({
       <div className={imageWrapClassName}>
         <img src={image} alt={label} loading="lazy" className={imageClassName} />
       </div>
-      <div className="flex flex-1 min-h-[40px] items-center justify-center px-2 py-1.5 text-center">
+      <div className="flex shrink-0 items-center justify-center px-1.5 py-0.5 min-h-[26px] text-center">
         <p
-          className="text-[14px] font-black leading-tight"
+          className="text-[11px] font-black leading-tight"
           style={{ color: active ? "#FF6B00" : "#1F1F1F" }}
         >
           {label}
@@ -742,42 +784,42 @@ const GOALS: StyledImageOption[] = [
     id: "fat",
     label: "خسارة الدهون",
     image: goalFatImg,
-    imageWrapClassName: "male-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-fat-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-fat-img h-full w-full object-cover",
   },
   {
     id: "muscle",
     label: "بناء العضلات",
     image: goalMuscleImg,
-    imageWrapClassName: "male-goal-muscle-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-muscle-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-muscle-img h-full w-full object-cover",
   },
   {
     id: "fitness",
     label: "تحسين اللياقة والطاقة",
     image: goalFitnessImg,
-    imageWrapClassName: "male-goal-fitness-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-fitness-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-fitness-img h-full w-full object-cover",
   },
   {
     id: "athletic",
     label: "جسم رياضي ومتناسق",
     image: goalAthleticImg,
-    imageWrapClassName: "male-goal-athletic-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-athletic-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-athletic-img h-full w-full object-cover",
   },
   {
     id: "shape",
     label: "تغيير شكل الجسم",
     image: goalShapeImg,
-    imageWrapClassName: "male-goal-shape-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-shape-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-shape-img h-full w-full object-cover",
   },
   {
     id: "gain",
     label: "زيادة وزن صحي",
     image: goalGainImg,
-    imageWrapClassName: "male-goal-gain-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "male-goal-gain-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "male-goal-gain-img h-full w-full object-cover",
   },
 ];
@@ -918,14 +960,14 @@ const FEMALE_GOALS: StyledImageOption[] = [
     id: "fat",
     label: "خسارة الدهون",
     image: femaleGoalFatImg,
-    imageWrapClassName: "female-goal-fat-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-fat-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "female-goal-fat-img h-full w-full object-cover",
   },
   {
     id: "glutes",
     label: "تكبير المؤخرة",
     image: gluteGrowth,
-    imageWrapClassName: "female-goal-glutes-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-glutes-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName:
       "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+180px)] w-[calc(100%+180px)] -translate-x-1/2 -translate-y-1/2 object-cover",
   },
@@ -933,14 +975,14 @@ const FEMALE_GOALS: StyledImageOption[] = [
     id: "waist",
     label: "خصر أنحف ومشدود",
     image: femaleGoalWaistImg,
-    imageWrapClassName: "female-goal-waist-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-waist-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "female-goal-waist-img h-full w-full object-cover",
   },
   {
     id: "body",
     label: "جسم متناسق وأنثوي",
     image: feminineTonedBody,
-    imageWrapClassName: "female-goal-body-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-body-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName:
       "female-goal-body-img h-[calc(100%+40px)] w-full object-cover -translate-y-[40px]",
   },
@@ -948,14 +990,14 @@ const FEMALE_GOALS: StyledImageOption[] = [
     id: "fit",
     label: "جسم صحي ورياضي",
     image: femaleGoalFitImg,
-    imageWrapClassName: "female-goal-fit-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-fit-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "female-goal-fit-img h-full w-full object-cover",
   },
   {
     id: "tone",
     label: "تحسين شكل الصدر",
     image: femaleGoalChestImg,
-    imageWrapClassName: "female-goal-chest-wrap relative h-[min(34vw,135px)] w-full overflow-hidden",
+    imageWrapClassName: "female-goal-chest-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
     imageClassName: "female-goal-chest-img h-full w-full object-cover",
   },
 ];
@@ -1777,12 +1819,12 @@ function SadFaceIcon({ className }: { className?: string }) {
 }
 
 const CHALLENGES: ImageOption[] = [
-  { id: "belly", label: "دهون البطن", image: bodySkinnyFatImg },
-  { id: "muscle", label: "صعوبة بناء العضلات", image: bodyMuscularImg },
-  { id: "energy", label: "قلة الطاقة والحيوية", image: bodyLeanImg },
-  { id: "goal", label: "عدم وضوح الهدف", image: targetImg },
-  { id: "commitment", label: "الالتزام والاستمرارية", image: confusedCoachImg },
-  { id: "confidence", label: "الثقة بالنفس والمظهر", image: transform1Img },
+  { id: "belly", label: "دهون البطن", image: challengeBellyImg },
+  { id: "muscle", label: "صعوبة بناء العضلات", image: challengeMuscleImg },
+  { id: "energy", label: "قلة الطاقة والحيوية", image: challengeEnergyImg },
+  { id: "goal", label: "عدم وضوح الهدف", image: challengeGoalImg },
+  { id: "commitment", label: "الالتزام والاستمرارية", image: challengeCommitmentImg },
+  { id: "confidence", label: "الثقة بالنفس والمظهر", image: challengeConfidenceImg },
 ];
 
 function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -2001,12 +2043,12 @@ function CupcakeIcon({ className }: { className?: string }) {
 }
 
 const FEMALE_CHALLENGES: ImageOption[] = [
-  { id: "belly", label: "الكرش والدهون البطن", image: fbodyBellyLight },
-  { id: "glutes", label: "شكل المؤخرة", image: fbodyShaping },
-  { id: "sagging", label: "ترهلات الجسم", image: fbodyToning },
+  { id: "belly", label: "الكرش والدهون البطن", image: femaleChallengeBellyImg },
+  { id: "glutes", label: "شكل المؤخرة", image: femaleChallengeGlutesImg },
+  { id: "sagging", label: "ترهلات الجسم", image: femaleChallengeSaggingImg },
   { id: "weight", label: "عدم نزول الوزن", image: fbodyOverweight },
-  { id: "confidence", label: "الثقة بالنفس", image: fbodySlim },
-  { id: "cravings", label: "الرغبة الشديدة في الأكل", image: coachSupportImg },
+  { id: "confidence", label: "الثقة بالنفس", image: femaleChallengeConfidenceImg },
+  { id: "cravings", label: "عدم تناسق الجسم", image: femaleChallengeBodyShapeImg },
 ];
 
 function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
@@ -2217,20 +2259,6 @@ function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: 
           transform: active ? "scale(1.02)" : "scale(1)",
         }}
       >
-        {/* selection indicator */}
-        <div className="absolute top-3 left-3 z-10">
-          {active ? (
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center"
-              style={{ background: ORANGE, boxShadow: "0 4px 12px rgba(255,107,0,0.45)" }}
-            >
-              <Check size={16} color="#fff" strokeWidth={3} />
-            </div>
-          ) : (
-            <div className="w-7 h-7 rounded-full border-2 border-gray-300 bg-white" />
-          )}
-        </div>
-
         {/* watermark right */}
         <div className="absolute right-2 bottom-2 w-16 h-16 opacity-15 pointer-events-none">
           {watermark}
@@ -2664,20 +2692,6 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
                   animation: `fadeUp .5s ease-out ${i * 70}ms both`,
                 }}
               >
-                {/* Selection indicator - left side in RTL */}
-                <div className="absolute top-3 left-3 z-10">
-                  {active ? (
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center"
-                      style={{ background: ORANGE, boxShadow: "0 4px 12px rgba(255,107,0,0.45)" }}
-                    >
-                      <Check size={16} color="#fff" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-7 h-7 rounded-full border-2 border-gray-300 bg-white" />
-                  )}
-                </div>
-
                 <div className="flex flex-row-reverse items-stretch">
                   {/* Icon - right side in RTL */}
                   <div
@@ -2765,6 +2779,96 @@ const BODY_TYPES = [
   { id: "average", title: "جسم متوسط", sub: "وزن طبيعي وكتلة معتدلة", img: bodyAverage },
 ];
 
+function DelayedExplainBubble({
+  title,
+  body,
+  delayMs = 5000,
+}: {
+  title: string;
+  body: string;
+  delayMs?: number;
+}) {
+  const ORANGE = "#FF6B00";
+  const [phase, setPhase] = useState<"idle" | "icon" | "open">("idle");
+
+  useEffect(() => {
+    const showTimer = setTimeout(() => setPhase("icon"), delayMs);
+    return () => clearTimeout(showTimer);
+  }, [delayMs]);
+
+  useEffect(() => {
+    if (phase !== "icon") return;
+    const expandTimer = setTimeout(() => setPhase("open"), 650);
+    return () => clearTimeout(expandTimer);
+  }, [phase]);
+
+  if (phase === "idle") return null;
+
+  const isOpen = phase === "open";
+
+  return (
+    <>
+      <div className={`mt-2.5 w-full ${isOpen ? "" : "flex justify-end"}`}>
+        <div
+          className="rounded-[18px] bg-white/85 backdrop-blur flex flex-row-reverse items-center relative overflow-hidden"
+          style={{
+            width: isOpen ? "100%" : 44,
+            padding: isOpen ? "10px 12px" : 0,
+            gap: isOpen ? 12 : 0,
+            boxShadow: isOpen
+              ? "0 6px 18px -10px rgba(0,0,0,0.12)"
+              : "0 6px 20px -6px rgba(255,107,0,0.35)",
+            border: isOpen ? "1px solid rgba(255,107,0,0.08)" : `2px solid rgba(255,107,0,0.22)`,
+            transition: "width 0.55s cubic-bezier(0.22, 1, 0.36, 1), padding 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease, border-color 0.4s ease",
+            animation: phase === "icon" ? "explainSlideFromRight 0.55s cubic-bezier(0.22, 1, 0.36, 1) both" : undefined,
+          }}
+        >
+          <div
+            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
+            style={{
+              boxShadow: "0 4px 12px rgba(255,107,0,0.18)",
+              border: "1px solid #F5E6D6",
+              animation: phase === "icon" ? "explainIconPulse 1.4s ease-in-out 0.55s 2" : undefined,
+            }}
+          >
+            <MessageCircle size={22} style={{ color: ORANGE }} />
+          </div>
+          <div
+            className="flex-1 min-w-0 text-right"
+            style={{
+              opacity: isOpen ? 1 : 0,
+              transform: isOpen ? "translateX(0)" : "translateX(12px)",
+              transition: "opacity 0.4s ease 0.15s, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.12s",
+            }}
+          >
+            <div className="text-[12.5px] font-extrabold" style={{ color: ORANGE }}>
+              {title}
+            </div>
+            <div className="text-[11px] text-[#3D3D3D] font-medium leading-snug">{body}</div>
+          </div>
+          {isOpen && (
+            <>
+              <Sparkles size={14} className="absolute left-2 top-2 opacity-50" style={{ color: ORANGE }} />
+              <Sparkles size={10} className="absolute left-3 bottom-2 opacity-40" style={{ color: ORANGE }} />
+            </>
+          )}
+        </div>
+      </div>
+      <style>{`
+        @keyframes explainSlideFromRight {
+          0% { opacity: 0; transform: translateX(52px) scale(0.88); }
+          72% { opacity: 1; transform: translateX(-3px) scale(1.03); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes explainIconPulse {
+          0%, 100% { box-shadow: 0 4px 12px rgba(255,107,0,0.18); }
+          50% { box-shadow: 0 4px 18px rgba(255,107,0,0.42); }
+        }
+      `}</style>
+    </>
+  );
+}
+
 function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyType: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const ORANGE = "#FF6B00";
@@ -2845,43 +2949,15 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
                 <div className="text-[9.5px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2">
                   {b.sub}
                 </div>
-                <div className="mt-1 mb-0.5">
-                  {active ? (
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ background: ORANGE, boxShadow: "0 3px 8px rgba(255,107,0,0.45)" }}
-                    >
-                      <Check size={12} color="#fff" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white" />
-                  )}
-                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Info card */}
-        <div
-          className="mt-2.5 rounded-[18px] bg-white/85 backdrop-blur px-3 py-2.5 flex flex-row-reverse items-center gap-3 relative overflow-hidden"
-          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)", animation: "fadeUp .5s ease-out .35s both" }}
-        >
-          <div
-            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
-            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-          >
-            <Target size={22} style={{ color: ORANGE }} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-[12.5px] font-extrabold" style={{ color: ORANGE }}>لماذا نسأل هذا؟</div>
-            <div className="text-[11px] text-[#3D3D3D] font-medium leading-snug">
-              اختبارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك.
-            </div>
-          </div>
-          <Sparkles size={14} className="absolute left-2 top-2 opacity-50" style={{ color: ORANGE }} />
-          <Sparkles size={10} className="absolute left-3 bottom-2 opacity-40" style={{ color: ORANGE }} />
-        </div>
+        <DelayedExplainBubble
+          title="لماذا نسأل هذا؟"
+          body="اختبارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك."
+        />
 
         {/* CTA */}
         <div className="mt-2.5">
@@ -2909,12 +2985,12 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
 }
 
 const FEMALE_BODY_TYPES = [
-  { id: "needs_toning", title: "جسم يحتاج شد", sub: "ترهلات خفيفة في البطن أو الذراعين والجسم", img: fbodyToning },
-  { id: "belly_fat_light", title: "كرش خفيفة", sub: "دهون بسيطة في منطقة البطن فقط", img: fbodyBellyLight },
+  { id: "needs_toning", title: "جسم يحتاج شد", sub: "ترهلات خفيفة في البطن أو الذراعين والجسم", img: femaleBodyNeedsToningImg },
+  { id: "belly_fat_light", title: "كرش خفيفة", sub: "دهون بسيطة في منطقة البطن فقط", img: femaleBodyLightBellyImg },
   { id: "slim", title: "نحيفة", sub: "وزن أقل من الطبيعي ودهون قليلة جداً", img: fbodySlim },
   { id: "overweight", title: "جسم ممتلئ بدهون", sub: "زيادة واضحة في الوزن وتراكم الدهون", img: fbodyOverweight },
   { id: "athletic", title: "جسم رياضي", sub: "جسم مشدود وعضلات بارزة وقوام رياضي", img: fbodyAthletic },
-  { id: "body_shaping", title: "عدم تناسق الأرداف", sub: "أرغب بجسم أكثر تناسقاً وخصراً أنحف", img: fbodyShaping },
+  { id: "body_shaping", title: "عدم تناسق الأرداف", sub: "أرغب بجسم أكثر تناسقاً وخصراً أنحف", img: femaleBodyGlutesImg },
 ];
 
 function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyType: string) => void }) {
@@ -2997,43 +3073,15 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
                 <div className="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2 mt-0.5">
                   {b.sub}
                 </div>
-                <div className="mt-1 mb-0.5">
-                  {active ? (
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ background: ORANGE, boxShadow: "0 3px 8px rgba(255,107,0,0.45)" }}
-                    >
-                      <Check size={12} color="#fff" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 bg-white" />
-                  )}
-                </div>
               </button>
             );
           })}
         </div>
 
-        {/* Info card */}
-        <div
-          className="mt-2.5 rounded-[18px] bg-white/85 backdrop-blur px-3 py-2.5 flex flex-row-reverse items-center gap-3 relative overflow-hidden"
-          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)", animation: "fadeUp .5s ease-out .35s both" }}
-        >
-          <div
-            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
-            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-          >
-            <Target size={22} style={{ color: ORANGE }} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-[12.5px] font-extrabold" style={{ color: ORANGE }}>لماذا نسألك هذا؟</div>
-            <div className="text-[11px] text-[#3D3D3D] font-medium leading-snug">
-              اختيارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك.
-            </div>
-          </div>
-          <Sparkles size={14} className="absolute left-2 top-2 opacity-50" style={{ color: ORANGE }} />
-          <Sparkles size={10} className="absolute left-3 bottom-2 opacity-40" style={{ color: ORANGE }} />
-        </div>
+        <DelayedExplainBubble
+          title="لماذا نسألك هذا؟"
+          body="اختيارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك."
+        />
 
         {/* CTA */}
         <div className="mt-2.5">
@@ -3368,54 +3416,33 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         </div>
       </div>
 
-      {/* Hero */}
-      <div className="relative px-5 pt-4 flex items-start justify-between gap-3">
-        <div className="flex-1 pt-4">
-          <h2 className="text-[26px] font-black leading-[1.25] text-neutral-900">
-            لقد وجدت<br />البرنامج المناسب <span style={{ color: ORANGE }}>لك</span>
-          </h2>
-          <p className="mt-3 text-[13px] leading-7 text-neutral-600 max-w-[200px]">
-            بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
-          </p>
-        </div>
-        <div className="relative shrink-0">
-          <div className="relative h-[180px] w-[150px] rounded-[80px] overflow-hidden" style={{ background: "rgba(255,107,0,0.10)" }}>
-            <img src={coachImg} alt="Coach Hakim" className="absolute inset-0 h-full w-full object-cover" />
-          </div>
-          <Sparkles className="absolute -top-1 -right-1 h-5 w-5" style={{ color: "#FFB547" }} fill="#FFB547" />
-          <Sparkles className="absolute top-8 -left-2 h-3 w-3" style={{ color: "#FFD580" }} fill="#FFD580" />
-          <Sparkles className="absolute bottom-4 -right-2 h-3 w-3" style={{ color: "#FFD580" }} fill="#FFD580" />
-        </div>
-      </div>
-
-      {/* 3 result tags */}
-      <div className="mx-5 mt-6 rounded-2xl bg-white p-4 shadow-[0_4px_16px_-8px_rgba(0,0,0,0.08)] ring-1 ring-black/5">
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { icon: "🍎", title: "تغذية مرنة", sub: "محسوبة السعرات بدون حرمان" },
-            { icon: "🏋️", title: "تدريب مخصص", sub: "يناسب وقتك ونمط حياتك" },
-            { icon: "📈", title: "متابعة ذكية", sub: "تعديلات مستمرة حسب تطورك" },
-          ].map((c, i) => (
-            <div key={i} className="flex flex-col items-center text-center px-1">
-              <div className="grid h-10 w-10 place-items-center rounded-full text-lg" style={{ background: "rgba(255,107,0,0.10)" }}>
-                {c.icon}
-              </div>
-              <div className="mt-2 text-[12.5px] font-bold text-neutral-900">{c.title}</div>
-              <div className="mt-1 text-[10.5px] leading-snug text-neutral-500">{c.sub}</div>
-            </div>
-          ))}
-        </div>
+      {/* Title */}
+      <div className="px-5 pt-4 text-center">
+        <h1 className="font-[Tajawal] text-[25px] font-black leading-[1.25] text-neutral-900">
+          لقد وجدت
+          <br />
+          <span className="program-match-title relative inline-block pb-2" style={{ color: ORANGE }}>
+            البرنامج المناسب لك
+            <span className="program-match-lines" aria-hidden="true">
+              <span className="program-match-line program-match-line-1" />
+              <span className="program-match-line program-match-line-2" />
+            </span>
+          </span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-7 text-neutral-600">
+          بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
+        </p>
       </div>
 
       {/* Last step prompt */}
       <div className="px-5 mt-7 text-center">
-        <div className="flex items-center justify-center gap-2">
+        <div className="-translate-y-[10px] flex items-center justify-center gap-2">
           <Target className="h-5 w-5" style={{ color: ORANGE }} />
           <h3 className="text-[18px] font-black text-neutral-900">
             بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
           </h3>
         </div>
-        <p className="mt-1.5 text-[13px] text-neutral-600">أدخل بياناتك لاستلام برنامجك الخاص.</p>
+        <p className="-translate-y-[10px] mt-1.5 text-[13px] text-neutral-600">أدخل بياناتك لاستلام برنامجك الخاص.</p>
       </div>
 
       {/* Form */}
@@ -3440,7 +3467,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
               <ChevronDown className="h-3 w-3 text-neutral-500" />
             </button>
             <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
-              placeholder="5X XXX XXXX" dir="ltr" inputMode="numeric"
+              placeholder={form.country === "ma" ? "6X XXX XXXX" : "5X XXX XXXX"} dir="ltr" inputMode="numeric"
               className="quiz-input flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
           </div>
         </FieldRow>
@@ -3468,9 +3495,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
       {/* Trust trio */}
       <div className="mx-5 mt-5 rounded-2xl p-4" style={{ background: "rgba(255,107,0,0.06)" }}>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <TrustItem color="#22C55E" icon={<WhatsAppIcon small />} text="ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب" />
-          <TrustItem color="#3B82F6" icon={<MailIcon small />} text="سأرسل برنامجك وتفاصيله على البريد الإلكتروني" />
-          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة وآمنة 100%" />
+          <TrustItem color="#22C55E" icon={<WhatsAppIcon small />} text="ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب" signalDelay={0} />
+          <TrustItem color="#3B82F6" icon={<MailIcon small />} text="سأرسل برنامجك وتفاصيله على البريد الإلكتروني" signalDelay={450} />
+          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة وآمنة 100%" signalDelay={900} />
         </div>
       </div>
 
@@ -3581,6 +3608,66 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         .quiz-input:focus { box-shadow: 0 0 0 3px rgba(255,107,0,0.18); border-radius: 8px; }
         @keyframes cta-pulse-kf { 0%,100% { box-shadow: 0 8px 20px -6px rgba(255,107,0,0.5), 0 0 0 0 rgba(255,107,0,0.55); } 50% { box-shadow: 0 8px 24px -4px rgba(255,107,0,0.6), 0 0 0 10px rgba(255,107,0,0); } }
         .cta-pulse { animation: cta-pulse-kf 2.2s ease-in-out infinite; }
+        .trust-signal-ring {
+          border: 1.5px solid var(--trust-signal-color);
+          opacity: 0;
+          animation: trustSignalPing 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        }
+        .trust-signal-ring-2 { animation-delay: calc(var(--trust-signal-delay, 0ms) + 800ms); }
+        .trust-signal-dot {
+          animation: trustSignalDot 1.8s ease-in-out infinite;
+          animation-delay: var(--trust-signal-delay, 0ms);
+        }
+        .trust-signal-icon {
+          animation: trustSignalGlow 2.5s ease-in-out infinite;
+          animation-delay: var(--trust-signal-delay, 0ms);
+        }
+        @keyframes trustSignalPing {
+          0% { transform: scale(0.9); opacity: 0.5; }
+          75%, 100% { transform: scale(1.65); opacity: 0; }
+        }
+        @keyframes trustSignalDot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.35; transform: scale(0.72); }
+        }
+        @keyframes trustSignalGlow {
+          0%, 100% { box-shadow: 0 0 0 0 transparent; }
+          50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--trust-signal-color) 18%, transparent); }
+        }
+        .program-match-lines {
+          position: absolute;
+          right: 0;
+          left: 0;
+          bottom: -7px;
+          height: 7px;
+          overflow: hidden;
+          pointer-events: none;
+        }
+        .program-match-line {
+          display: block;
+          height: 2px;
+          border-radius: 999px;
+          transform-origin: center center;
+          will-change: transform, opacity;
+        }
+        .program-match-line-1 {
+          background: linear-gradient(90deg, transparent 0%, #FF6B00 18%, #FFB547 52%, #FF6B00 82%, transparent 100%);
+          animation: programMatchLineSweep 2.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+        }
+        .program-match-line-2 {
+          margin-top: 3px;
+          height: 1.5px;
+          opacity: 0.75;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,107,0,0.35) 20%, rgba(255,181,71,0.95) 50%, rgba(255,107,0,0.35) 80%, transparent 100%);
+          animation: programMatchLineSweep 2.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+          animation-delay: 0.45s;
+        }
+        @keyframes programMatchLineSweep {
+          0% { transform: scaleX(0.12); opacity: 0.2; }
+          45% { transform: scaleX(1); opacity: 1; }
+          55% { transform: scaleX(1); opacity: 1; }
+          100% { transform: scaleX(0.12); opacity: 0.2; }
+        }
       `}</style>
     </div>
   );
@@ -3620,11 +3707,37 @@ function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: str
   );
 }
 
-function TrustItem({ icon, text, color }: { icon: React.ReactNode; text: string; color: string }) {
+function TrustItem({
+  icon,
+  text,
+  color,
+  signalDelay = 0,
+}: {
+  icon: React.ReactNode;
+  text: string;
+  color: string;
+  signalDelay?: number;
+}) {
+  const signalStyle = {
+    "--trust-signal-color": color,
+    "--trust-signal-delay": `${signalDelay}ms`,
+  } as React.CSSProperties;
+
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-black/5" style={{ color }}>
-        {icon}
+      <div className="relative grid h-8 w-8 place-items-center" style={signalStyle}>
+        <span className="trust-signal-ring absolute inset-0 rounded-full" style={{ animationDelay: `${signalDelay}ms` }} />
+        <span className="trust-signal-ring trust-signal-ring-2 absolute inset-0 rounded-full" />
+        <span
+          className="trust-signal-dot absolute -top-0.5 -left-0.5 h-2 w-2 rounded-full ring-2 ring-white"
+          style={{ background: color }}
+        />
+        <div
+          className="trust-signal-icon relative grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-black/5"
+          style={{ color }}
+        >
+          {icon}
+        </div>
       </div>
       <div className="text-[10.5px] leading-snug text-neutral-700">{text}</div>
     </div>
@@ -3754,6 +3867,8 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
   const TEXT = "#0F172A";
 
   const cfg = buildRevealConfig(gender, goalId, challengeId);
+  const useGlutesRevealPhotos =
+    gender === "female" && (goalId === "glutes" || challengeId === "glutes");
 
   // Reveal stages
   const [showGoal, setShowGoal] = useState(false);
@@ -3821,17 +3936,14 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
 
       <div className="px-5 pt-6 pb-32 max-w-md mx-auto">
         {/* HEADER */}
-        <div className="pr-fade flex items-start gap-3">
-          <div className="flex-1 text-right">
-            <h1 className="pr-heading text-[24px] leading-tight" style={{ color: TEXT }}>
+        <div className="pr-fade text-right">
+          <div>
+            <h1 className="font-[Tajawal] text-[24px] font-black leading-tight" style={{ color: TEXT }}>
               هذا ما يمكنك تحقيقه خلال
             </h1>
-            <div className="pr-heading text-[34px] leading-none mt-1" style={{ color: ORANGE }}>
+            <div className="font-[Tajawal] text-[34px] font-black leading-none mt-1" style={{ color: ORANGE }}>
               90 يوم
             </div>
-          </div>
-          <div className="shrink-0 h-14 w-14 rounded-2xl grid place-items-center" style={{ background: "#FFE9D9" }}>
-            <Target className="h-8 w-8" style={{ color: ORANGE }} strokeWidth={2.4} />
           </div>
         </div>
 
@@ -3867,11 +3979,11 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
         {/* STAGE 3: Real results carousel */}
         {showResults && (
           <div className="pr-stagger mt-6">
-            <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="flex items-center justify-center gap-2 mb-3 font-[Tajawal]">
               <div className="h-6 w-6 rounded-full grid place-items-center" style={{ background: GREEN }}>
                 <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />
               </div>
-              <h2 className="pr-heading text-[15px]" style={{ color: TEXT }}>نتائج حقيقية لعملاء حققوا نفس هدفك</h2>
+              <h2 className="text-[15px] font-black" style={{ color: TEXT }}>نتائج حقيقية لعملاء حققوا نفس هدفك</h2>
             </div>
 
             <div className="relative overflow-hidden rounded-3xl">
@@ -3886,8 +3998,18 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
                     style={{ border: "1px solid #ECE8E1", boxShadow: "0 8px 24px -16px rgba(0,0,0,.14)" }}
                   >
                     <div className="relative grid grid-cols-2 gap-0.5 p-1.5">
-                      <BeforeAfterTile label="قبل" tone="muted" seed={i} />
-                      <BeforeAfterTile label="بعد" tone="bright" seed={i} />
+                      <BeforeAfterTile
+                        label="قبل"
+                        tone="muted"
+                        seed={i}
+                        image={useGlutesRevealPhotos ? REVEAL_GLUTES_BEFORE[i] : undefined}
+                      />
+                      <BeforeAfterTile
+                        label="بعد"
+                        tone="bright"
+                        seed={i}
+                        image={useGlutesRevealPhotos ? REVEAL_GLUTES_AFTER[i] : undefined}
+                      />
                     </div>
                     <div className="px-3 pb-3 pt-1 text-center">
                       <div className="text-[10px] text-neutral-500 font-bold">بعد 90 يوم</div>
@@ -4052,7 +4174,17 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
   );
 }
 
-function BeforeAfterTile({ label, tone, seed }: { label: string; tone: "muted" | "bright"; seed: number }) {
+function BeforeAfterTile({
+  label,
+  tone,
+  seed,
+  image,
+}: {
+  label: string;
+  tone: "muted" | "bright";
+  seed: number;
+  image?: string;
+}) {
   const palettes = [
     ["#6B7280", "#22C55E"],
     ["#9CA3AF", "#FF6B00"],
@@ -4066,23 +4198,31 @@ function BeforeAfterTile({ label, tone, seed }: { label: string; tone: "muted" |
     ? "linear-gradient(160deg,#E5E7EB 0%,#D1D5DB 100%)"
     : `linear-gradient(160deg, ${accent}33 0%, ${accent}55 100%)`;
   return (
-    <div className="relative aspect-[3/4] rounded-xl overflow-hidden" style={{ background: bg }}>
-      {/* Abstract silhouette */}
-      <svg viewBox="0 0 60 80" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id={`g-${tone}-${seed}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={tone === "muted" ? "#9CA3AF" : accent} stopOpacity="0.75" />
-            <stop offset="100%" stopColor={tone === "muted" ? "#6B7280" : accent} stopOpacity="0.95" />
-          </linearGradient>
-        </defs>
-        <path
-          d={tone === "muted"
-            ? "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 18 50 14 58 16 70 L 44 70 C 46 58 42 50 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
-            : "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 16 48 12 60 14 72 L 46 72 C 48 60 44 48 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
-          }
-          fill={`url(#g-${tone}-${seed})`}
+    <div className="relative aspect-[3/4] rounded-xl overflow-hidden" style={{ background: image ? "#E5E7EB" : bg }}>
+      {image ? (
+        <img
+          src={image}
+          alt={label}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-      </svg>
+      ) : (
+        <svg viewBox="0 0 60 80" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id={`g-${tone}-${seed}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={tone === "muted" ? "#9CA3AF" : accent} stopOpacity="0.75" />
+              <stop offset="100%" stopColor={tone === "muted" ? "#6B7280" : accent} stopOpacity="0.95" />
+            </linearGradient>
+          </defs>
+          <path
+            d={tone === "muted"
+              ? "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 18 50 14 58 16 70 L 44 70 C 46 58 42 50 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
+              : "M30 12 C 22 12 18 18 18 26 C 18 34 22 38 22 44 C 16 48 12 60 14 72 L 46 72 C 48 60 44 48 38 44 C 38 38 42 34 42 26 C 42 18 38 12 30 12 Z"
+            }
+            fill={`url(#g-${tone}-${seed})`}
+          />
+        </svg>
+      )}
       <span
         className="absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-md px-2 py-0.5 text-[10px] font-extrabold text-white"
         style={{ background: tone === "muted" ? "rgba(0,0,0,.55)" : GREEN_BADGE_COLOR }}
@@ -4121,12 +4261,55 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
         @keyframes cg-pop { 0%{opacity:0; transform: scale(.5);} 60%{transform: scale(1.08);} 100%{opacity:1; transform: scale(1);} }
         @keyframes cg-fade { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
         @keyframes cg-pulse-btn { 0%,100%{ box-shadow: 0 14px 32px -10px rgba(255,107,0,.55);} 50%{ box-shadow: 0 18px 44px -8px rgba(255,107,0,.85);} }
-        @keyframes cg-ring { 0%{ transform: scale(.9); opacity:.6;} 100%{ transform: scale(1.5); opacity:0;} }
         @keyframes cg-spark { 0%,100%{opacity:.4; transform: scale(.9);} 50%{opacity:1; transform: scale(1.15);} }
+        @keyframes cg-success-burst {
+          0% { transform: scale(0.55); opacity: 0.75; }
+          100% { transform: scale(2.35); opacity: 0; }
+        }
+        @keyframes cg-success-ring {
+          0% { transform: scale(0.88); opacity: 0.55; box-shadow: 0 0 0 0 rgba(34,197,94,0.45); }
+          100% { transform: scale(1.9); opacity: 0; box-shadow: 0 0 0 14px rgba(34,197,94,0); }
+        }
+        @keyframes cg-success-check {
+          0% { opacity: 0; transform: scale(0.15) rotate(-14deg); }
+          58% { transform: scale(1.14) rotate(5deg); }
+          100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes cg-success-badge-glow {
+          0%, 100% { box-shadow: 0 18px 40px -10px rgba(34,197,94,.55), 0 0 0 0 rgba(34,197,94,0.28); }
+          50% { box-shadow: 0 22px 50px -8px rgba(34,197,94,.68), 0 0 0 12px rgba(34,197,94,0); }
+        }
+        @keyframes cg-success-shine {
+          0% { transform: translateX(-130%) skewX(-16deg); opacity: 0; }
+          25% { opacity: 0.45; }
+          100% { transform: translateX(130%) skewX(-16deg); opacity: 0; }
+        }
         .cg-pop { animation: cg-pop .7s cubic-bezier(.34,1.56,.64,1) both; }
         .cg-fade { animation: cg-fade .6s ease-out both; }
         .cg-pulse-btn { animation: cg-pulse-btn 2s ease-in-out infinite; }
         .cg-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+        .cg-success-ring { animation: cg-success-ring 2.1s ease-out infinite; }
+        .cg-success-burst {
+          background: radial-gradient(circle, rgba(34,197,94,0.42) 0%, rgba(34,197,94,0.12) 42%, transparent 72%);
+          animation: cg-success-burst 1.05s ease-out both;
+        }
+        .cg-success-badge {
+          animation: cg-success-badge-glow 2.5s ease-in-out infinite;
+          animation-delay: 0.65s;
+        }
+        .cg-success-check { animation: cg-success-check 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.38s both; }
+        .cg-success-shine {
+          background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.55) 50%, transparent 62%);
+          animation: cg-success-shine 0.95s ease-out 0.55s both;
+        }
+        @keyframes cg-feature-shadow-drift {
+          0%, 100% { box-shadow: 0 4px 14px -8px rgba(255,107,0,0.1), 0 2px 6px -4px rgba(15,23,42,0.07); }
+          33% { box-shadow: 5px 8px 18px -7px rgba(255,107,0,0.2), 2px 4px 10px -5px rgba(15,23,42,0.09); }
+          66% { box-shadow: -4px 9px 16px -7px rgba(255,107,0,0.16), -2px 3px 8px -5px rgba(15,23,42,0.08); }
+        }
+        .cg-feature-card {
+          animation: cg-feature-shadow-drift 3.2s ease-in-out infinite;
+        }
       `}</style>
 
       <div className="min-h-full max-w-md mx-auto px-5 pt-8 pb-10 flex flex-col">
@@ -4140,24 +4323,30 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
 
         {/* Success badge with rings */}
         {showBadge && (
-          <div className="cg-pop relative mx-auto mt-2 mb-6">
-            <span className="absolute inset-0 rounded-full" style={{ background: `${GREEN}30`, animation: "cg-ring 1.8s ease-out infinite" }} />
-            <span className="absolute inset-0 rounded-full" style={{ background: `${GREEN}20`, animation: "cg-ring 1.8s ease-out infinite .6s" }} />
-            <div className="relative h-24 w-24 rounded-full grid place-items-center" style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)`, boxShadow: "0 18px 40px -10px rgba(34,197,94,.55)" }}>
-              <Check className="h-12 w-12 text-white" strokeWidth={3.5} />
+          <div className="cg-pop relative mx-auto mt-2 mb-6 h-24 w-24">
+            <span className="cg-success-burst absolute -inset-3 rounded-full pointer-events-none" />
+            <span className="cg-success-ring absolute inset-0 rounded-full" style={{ animationDelay: "0ms" }} />
+            <span className="cg-success-ring absolute inset-0 rounded-full" style={{ animationDelay: "520ms" }} />
+            <span className="cg-success-ring absolute inset-0 rounded-full" style={{ animationDelay: "1040ms" }} />
+            <div
+              className="cg-success-badge relative h-24 w-24 overflow-hidden rounded-full grid place-items-center"
+              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)`, boxShadow: "0 18px 40px -10px rgba(34,197,94,.55)" }}
+            >
+              <span className="cg-success-shine absolute inset-0 pointer-events-none" aria-hidden="true" />
+              <Check className="cg-success-check relative z-10 h-12 w-12 text-white" strokeWidth={3.5} />
             </div>
-            <Sparkles className="absolute -top-1 -right-2 h-5 w-5" style={{ color: ORANGE, animation: "cg-spark 1.6s ease-in-out infinite" }} />
-            <Sparkles className="absolute -bottom-1 -left-2 h-4 w-4" style={{ color: "#FBBF24", animation: "cg-spark 1.6s ease-in-out infinite .4s" }} />
+            <Sparkles className="absolute -top-1 -right-2 h-5 w-5" style={{ color: ORANGE, animation: "cg-spark 1.6s ease-in-out infinite .7s" }} />
+            <Sparkles className="absolute -bottom-1 -left-2 h-4 w-4" style={{ color: "#FBBF24", animation: "cg-spark 1.6s ease-in-out infinite 1.1s" }} />
           </div>
         )}
 
         {/* Title */}
         {showTitle && (
-          <div className="cg-fade text-center">
-            <h1 className="cg-heading text-[26px] leading-tight" style={{ color: TEXT }}>
+          <div className="cg-fade text-center font-[Tajawal]">
+            <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT }}>
               تهانينا{name ? <> <span style={{ color: ORANGE }}>{name}</span></> : ""} <span>🎉</span>
             </h1>
-            <p className="cg-heading text-[18px] mt-2" style={{ color: TEXT }}>
+            <p className="mt-2 text-[18px] font-black" style={{ color: TEXT }}>
               لقد تم تجهيز برنامجك الخاص
             </p>
             <p className="mt-3 text-[13px] text-neutral-600 leading-relaxed px-2">
@@ -4175,7 +4364,7 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
               </div>
               <div className="flex-1 text-right min-w-0">
                 <div className="text-[11px] font-extrabold" style={{ color: GREEN }}>برنامجك جاهز</div>
-                <div className="cg-heading text-[16px] mt-0.5" style={{ color: TEXT }}>{programTitle}</div>
+                <div className="font-[Tajawal] text-[16px] font-black mt-0.5" style={{ color: TEXT }}>{programTitle}</div>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -4184,7 +4373,11 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
                 { Icon: Target, label: "هدف مخصص" },
                 { Icon: ShieldCheck, label: "متابعة" },
               ].map(({ Icon, label }, i) => (
-                <div key={i} className="rounded-2xl bg-white p-2.5 text-center" style={{ border: "1px solid #ECE8E1" }}>
+                <div
+                  key={i}
+                  className="cg-feature-card rounded-2xl bg-white p-2.5 text-center"
+                  style={{ border: "1px solid #ECE8E1", animationDelay: `${i * 350}ms` }}
+                >
                   <Icon className="h-5 w-5 mx-auto" style={{ color: ORANGE }} strokeWidth={2.4} />
                   <div className="text-[10.5px] font-bold mt-1" style={{ color: TEXT }}>{label}</div>
                 </div>
@@ -4201,8 +4394,8 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
             <button
               type="button"
               onClick={onNext}
-              className="cg-pulse-btn w-full rounded-2xl py-4 px-5 text-white flex items-center justify-center gap-2 active:scale-[.98] transition-transform"
-              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`, fontFamily: HEADING_FONT, fontWeight: 900, fontSize: 16 }}
+              className="cg-pulse-btn w-full rounded-2xl py-4 px-5 font-[Tajawal] text-white flex items-center justify-center gap-2 active:scale-[.98] transition-transform"
+              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`, fontWeight: 900, fontSize: 16 }}
             >
               <span>اكتشف ما يمكنك تحقيقه خلال 90 يوم</span>
               <ChevronLeft className="h-5 w-5" strokeWidth={3} />
@@ -4240,7 +4433,7 @@ type PricingTier = {
 const PRICING_TIERS: PricingTier[] = [
   {
     id: "transform",
-    name: "باقة التحول",
+    name: "باقة التحول العادية",
     tagline: "كل ما تحتاجه لتحقيق أفضل نسخة منك في 90 يوم.",
     pricePerDay: "3.3",
     totalPrice: "299",
@@ -4256,16 +4449,15 @@ const PRICING_TIERS: PricingTier[] = [
     primaryBg: "#FFF6EE",
     ring: "#FFB07A",
     Icon: Crown,
-    topBadge: "الأكثر اختياراً",
   },
   {
     id: "pro",
-    name: "باقة Pro",
+    name: "باقة التحول Pro",
     tagline: "للأشخاص الذين يريدون متابعة أقرب ونتائج أسرع.",
     pricePerDay: "5.5",
     totalPrice: "499",
     features: [
-      "كل مزايا باقة التحول",
+      "كل مزايا باقة التحول العادية",
       "مراجعة أسبوعية",
       "أولوية في الدعم",
       "تعديلات أسرع",
@@ -4276,15 +4468,16 @@ const PRICING_TIERS: PricingTier[] = [
     primaryBg: "#F2F7FF",
     ring: "#93B8F2",
     Icon: Star,
+    topBadge: "الأكثر اختياراً",
   },
   {
     id: "vip",
-    name: "VIP",
+    name: "باقة التحول VIP",
     tagline: "لمن يريد أعلى مستوى من المتابعة والدعم.",
     pricePerDay: "11",
     totalPrice: "999",
     features: [
-      "جميع مزايا باقة Pro",
+      "جميع مزايا باقة التحول Pro",
       "متابعة شخصية",
       "تواصل مباشر مع المدرب",
       "مراجعة مستمرة",
@@ -4299,11 +4492,205 @@ const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
+function PricingTierTitle({ tier, color }: { tier: PricingTier; color: string }) {
+  const suffix = tier.id === "transform" ? "العادية" : tier.id === "pro" ? "Pro" : "VIP";
+  return (
+    <h3 className="pri-heading text-[22px]" style={{ color }}>
+      باقة التحول <span style={{ color: tier.primary }}>{suffix}</span>
+    </h3>
+  );
+}
+
+const PRICING_CTA_COPY: Record<PricingTier["id"], string> = {
+  transform: "ابدأ تحولي الآن — 90 يوم",
+  pro: "انطلق مع الأكثر اختياراً",
+  vip: "احجز مقعدك VIP الآن",
+};
+
+const PRICING_TIER_TABS: { id: PricingTier["id"]; label: string }[] = [
+  { id: "transform", label: "العادية" },
+  { id: "pro", label: "Pro" },
+  { id: "vip", label: "VIP" },
+];
+
+function PricingTrustInline() {
+  return (
+    <div dir="rtl">
+      <div
+        className="mt-5 grid grid-cols-2 gap-2.5 rounded-2xl p-3"
+        style={{ background: "#F0FAF4", border: "1px solid #D8EFE0" }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="shrink-0 h-9 w-9 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
+            <ShieldCheck className="h-4 w-4" style={{ color: "#16A34A" }} strokeWidth={2.4} />
+          </div>
+          <div className="text-right min-w-0">
+            <div className="pri-heading text-[11.5px]" style={{ color: "#16A34A" }}>بياناتك محمية</div>
+            <div className="text-[9.5px] text-neutral-500 leading-snug mt-0.5">نحن لا نشارك بياناتك مع أي جهة</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="shrink-0 h-9 w-9 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
+            <Lock className="h-4 w-4" style={{ color: "#16A34A" }} strokeWidth={2.4} />
+          </div>
+          <div className="text-right min-w-0">
+            <div className="pri-heading text-[11.5px]" style={{ color: "#16A34A" }}>دفع آمن 100%</div>
+            <div className="text-[9.5px] text-neutral-500 leading-snug mt-0.5">جميع المدفوعات مشفرة وآمنة</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-500">
+        <Lock className="h-3 w-3 shrink-0" />
+        <span>كل خطط التدريب والتغذية خاصة بك وحدك</span>
+      </div>
+    </div>
+  );
+}
+
+function PricingPriceRing({ tier, mounted, className = "" }: { tier: PricingTier; mounted: boolean; className?: string }) {
+  return (
+    <div className={`relative shrink-0 h-[96px] w-[96px] -translate-y-3 ${className}`}>
+      <svg viewBox="0 0 120 120" className="absolute inset-0 pri-ring -rotate-90">
+        <circle cx="60" cy="60" r="54" fill="white" stroke={`${tier.primary}22`} strokeWidth="3" />
+        {mounted && (
+          <circle
+            className="anim"
+            cx="60" cy="60" r="54" fill="none"
+            stroke={tier.primary} strokeWidth="3" strokeLinecap="round"
+            style={{ animationDelay: "0.15s" }}
+          />
+        )}
+      </svg>
+      <div className="relative h-full grid place-items-center text-center">
+        <div>
+          <div className="flex items-baseline justify-center gap-0.5" dir="ltr">
+            <span className="pri-heading text-[24px] leading-none" style={{ color: tier.primary }}>{tier.pricePerDay}</span>
+            <span className="pri-heading text-[13px]" style={{ color: tier.primary }}>$</span>
+          </div>
+          <div className="text-[9px] text-neutral-500 font-bold mt-0.5">في اليوم فقط</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PricingValueCompare({ tier }: { tier: PricingTier }) {
+  const snackApprox = tier.id === "transform" ? "3" : tier.id === "pro" ? "5" : "11";
+  const compareBg = tier.id === "transform" ? "#FFF4EB" : tier.id === "pro" ? "#F2F7FF" : "#F7F1FF";
+
+  return (
+    <div className="mt-2 relative" dir="rtl">
+      <svg
+        className="pointer-events-none absolute -top-5 left-3 h-[36px] w-[48px] text-neutral-800/75 z-[1]"
+        viewBox="0 0 54 42"
+        fill="none"
+        aria-hidden
+      >
+        <path
+          d="M50 8 C36 8 26 18 16 34"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        <path d="M21 31 L14 36 L18 28" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+
+      <div
+        className="relative rounded-[18px] px-2.5 py-2.5 min-h-[118px]"
+        style={{ background: compareBg, border: `1px solid ${tier.primary}22` }}
+      >
+        <div className="flex h-full items-stretch gap-2">
+          <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-1 w-[58px]">
+            <img
+              src={pricingSnackCompare}
+              alt=""
+              className="h-[46px] w-full max-w-[54px] object-contain object-bottom"
+            />
+            <span className="text-[10px] font-extrabold text-neutral-600">≈ {snackApprox}$</span>
+          </div>
+
+          <div className="flex-1 text-right min-w-0 flex flex-col justify-center">
+            <div className="pri-heading text-[11px] leading-snug" style={{ color: tier.primary }}>
+              {tier.pricePerDay}$ في اليوم...
+            </div>
+            <p className="mt-1 text-[9px] text-neutral-600 leading-[1.55]">
+              أقل من ثمن كوب قهوة ووجبة خفيفة، لكنه استثمار حقيقي في صحتك ولياقتك خلال{" "}
+              <span className="font-extrabold" style={{ color: tier.primary }}>90 يوماً</span>.
+            </p>
+          </div>
+
+          <div className="shrink-0 flex flex-col items-center justify-center gap-1">
+            <div className="relative flex items-center gap-0.5">
+              <img src={pricingCompareBefore} alt="" className="h-[52px] w-[38px] rounded-lg object-cover object-top" />
+              <span className="text-[#22C55E] text-[11px] font-black leading-none">←</span>
+              <img src={pricingCompareAfter} alt="" className="h-[52px] w-[38px] rounded-lg object-cover object-top" />
+            </div>
+            <span
+              className="rounded-md px-2 py-0.5 text-[8px] font-extrabold text-white whitespace-nowrap"
+              style={{ background: "#22C55E" }}
+            >
+              تغيير حقيقي يدوم
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PricingFeaturesList({
+  features,
+  primary,
+  textColor,
+  mountDelayMs = 0,
+}: {
+  features: string[];
+  primary: string;
+  textColor: string;
+  mountDelayMs?: number;
+}) {
+  const [revealedCount, setRevealedCount] = useState(0);
+
+  useEffect(() => {
+    setRevealedCount(0);
+    const timers: number[] = [];
+    features.forEach((_, i) => {
+      timers.push(
+        window.setTimeout(() => setRevealedCount(i + 1), mountDelayMs + i * 500),
+      );
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [features, mountDelayMs]);
+
+  return (
+    <ul dir="rtl" className="mt-4 space-y-2.5">
+      {features.map((f, i) => {
+        const isChecked = i < revealedCount;
+        return (
+          <li key={i} className="flex items-center gap-2.5 text-[13px]" style={{ color: textColor }}>
+            <span
+              className={`pri-feat-icon shrink-0 h-5 w-5 rounded-full grid place-items-center ${isChecked ? "pri-feat-icon--checked" : "pri-feat-icon--pending"}`}
+              style={{ "--feat-primary": primary } as React.CSSProperties}
+            >
+              {isChecked ? (
+                <Check className="h-3 w-3 text-white pri-feat-check" strokeWidth={3.5} />
+              ) : (
+                <span className="pri-feat-dot" aria-hidden="true" />
+              )}
+            </span>
+            <span className="flex-1 text-right leading-tight">{f}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }: { name: string; total?: number; onBack: () => void; dubai?: boolean; onSelectTier: (id: PricingTier["id"]) => void }) {
   const ORANGE = "#FF6B00";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
-  const [selected, setSelected] = useState<PricingTier["id"] | null>("transform");
+  const [selected, setSelected] = useState<PricingTier["id"] | null>("pro");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -4319,14 +4706,306 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
     window.setTimeout(() => onSelectTier(tier.id), HAPTIC_NAV_DELAY_MS);
   };
 
+  const handleTabSelect = (id: PricingTier["id"]) => {
+    if (selected === id) return;
+    setSelected(id);
+    triggerSelectionHaptic();
+  };
+
+  const activeTier = PRICING_TIERS.find((t) => t.id === selected) ?? PRICING_TIERS[1];
+
   return (
-    <div className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
+    <div className="relative h-full w-full overflow-y-auto" dir="rtl" style={{ background: "#FFFFFF", fontFamily: FONT }}>
       <style>{`
-        @keyframes pri-in { from {opacity:0; transform: translateY(16px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes pri-ring { from { stroke-dashoffset: 360;} to { stroke-dashoffset: 0;} }
+        @keyframes pri-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pri-in-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pri-ring { from { stroke-dashoffset: 360; } to { stroke-dashoffset: 0; } }
         .pri-in { animation: pri-in .45s cubic-bezier(.2,.8,.2,1) both; }
+        .pri-glass-wrap--pro.pri-in { animation: pri-in-fade .45s cubic-bezier(.2,.8,.2,1) both; }
         .pri-ring circle.anim { stroke-dasharray: 360; animation: pri-ring 1.2s ease-out forwards; }
         .pri-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
+
+        @keyframes pri-glass-shine {
+          0% { transform: translateX(-145%) skewX(-14deg); opacity: 0; }
+          14% { opacity: 0.28; }
+          100% { transform: translateX(145%) skewX(-14deg); opacity: 0; }
+        }
+        @keyframes pri-glass-glow-pro {
+          0%, 100% {
+            box-shadow:
+              0 24px 52px -20px rgba(37,99,235,0.42),
+              0 10px 28px -14px rgba(37,99,235,0.2),
+              0 0 0 1px rgba(147,197,253,0.35),
+              inset 0 1px 0 rgba(255,255,255,0.92),
+              inset 0 -1px 0 rgba(37,99,235,0.06);
+          }
+          50% {
+            box-shadow:
+              0 30px 64px -16px rgba(37,99,235,0.55),
+              0 14px 32px -12px rgba(59,130,246,0.28),
+              0 0 0 1px rgba(96,165,250,0.5),
+              inset 0 1px 0 rgba(255,255,255,0.98),
+              inset 0 -1px 0 rgba(37,99,235,0.1);
+          }
+        }
+
+        .pri-glass-wrap {
+          position: relative;
+          z-index: 1;
+        }
+        .pri-glass-wrap--pro {
+          z-index: 2;
+          padding-top: 12px;
+        }
+        .pri-glass-wrap--badge {
+          padding-top: 4px;
+        }
+        .pri-glass-badge {
+          top: 12px;
+          transform: translateY(-50%);
+        }
+
+        .pri-glass-card {
+          position: relative;
+          border-radius: 28px;
+          overflow: hidden;
+          padding: 18px 16px;
+          backdrop-filter: blur(14px) saturate(1.15);
+          -webkit-backdrop-filter: blur(14px) saturate(1.15);
+          isolation: isolate;
+          transition: box-shadow .25s ease, border-color .25s ease;
+        }
+        .pri-glass-card--badge {
+          padding-top: 28px;
+        }
+
+        .pri-glass-shine {
+          pointer-events: none;
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          border-radius: 28px;
+          background: linear-gradient(105deg, transparent 44%, rgba(255,255,255,0.16) 50%, transparent 56%);
+        }
+        .pri-glass-shine--pro {
+          background: linear-gradient(105deg, transparent 44%, rgba(255,255,255,0.32) 50%, transparent 56%);
+          animation: pri-glass-shine 5.2s ease-in-out infinite;
+          will-change: transform;
+        }
+
+        .pri-glass-edge {
+          pointer-events: none;
+          position: absolute;
+          inset-inline: 20px;
+          top: 0;
+          z-index: 1;
+          height: 1px;
+          background: linear-gradient(90deg, transparent 12%, rgba(255,255,255,0.45) 50%, transparent 88%);
+        }
+        .pri-glass-edge--pro {
+          background: linear-gradient(90deg, transparent 8%, rgba(255,255,255,0.55) 28%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0.55) 72%, transparent 92%);
+        }
+
+        .pri-glass-inner-glow {
+          pointer-events: none;
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          border-radius: 28px;
+        }
+        .pri-glass-inner-glow--pro {
+          background: radial-gradient(ellipse 85% 55% at 50% -8%, rgba(59,130,246,0.14) 0%, transparent 68%);
+        }
+        .pri-glass-inner-glow--transform {
+          background: radial-gradient(ellipse 80% 50% at 50% -6%, rgba(255,107,0,0.08) 0%, transparent 65%);
+        }
+        .pri-glass-inner-glow--vip {
+          background: radial-gradient(ellipse 80% 50% at 50% -6%, rgba(124,58,237,0.1) 0%, transparent 65%);
+        }
+
+        .pri-glass-transform {
+          background: linear-gradient(155deg, rgba(255,255,255,0.97) 0%, rgba(255,248,240,0.91) 48%, rgba(255,230,210,0.84) 100%);
+          border: 1.5px solid rgba(255,107,0,0.24);
+          box-shadow:
+            0 10px 28px -18px rgba(255,107,0,0.16),
+            inset 0 1px 0 rgba(255,255,255,0.84),
+            inset 0 -1px 0 rgba(255,107,0,0.04);
+        }
+        .pri-glass-transform.pri-glass-selected {
+          border-color: rgba(255,107,0,0.52);
+          box-shadow:
+            0 16px 36px -16px rgba(255,107,0,0.28),
+            inset 0 1px 0 rgba(255,255,255,0.9),
+            inset 0 -1px 0 rgba(255,107,0,0.06);
+        }
+
+        .pri-glass-pro {
+          background: linear-gradient(155deg, rgba(255,255,255,0.98) 0%, rgba(245,249,255,0.93) 42%, rgba(224,236,255,0.86) 100%);
+          backdrop-filter: blur(20px) saturate(1.35);
+          -webkit-backdrop-filter: blur(20px) saturate(1.35);
+          border: 1.5px solid rgba(96,165,250,0.48);
+          animation: pri-glass-glow-pro 3.4s ease-in-out infinite;
+        }
+        .pri-glass-pro.pri-glass-selected {
+          border-color: rgba(37,99,235,0.72);
+        }
+
+        .pri-glass-vip {
+          background: linear-gradient(155deg, rgba(255,255,255,0.97) 0%, rgba(249,245,255,0.91) 48%, rgba(237,227,255,0.84) 100%);
+          border: 1.5px solid rgba(124,58,237,0.28);
+          box-shadow:
+            0 12px 30px -18px rgba(124,58,237,0.2),
+            inset 0 1px 0 rgba(255,255,255,0.84),
+            inset 0 -1px 0 rgba(124,58,237,0.05);
+        }
+        .pri-glass-vip.pri-glass-selected {
+          border-color: rgba(124,58,237,0.55);
+          box-shadow:
+            0 18px 40px -16px rgba(124,58,237,0.32),
+            inset 0 1px 0 rgba(255,255,255,0.9),
+            inset 0 -1px 0 rgba(124,58,237,0.07);
+        }
+
+        @keyframes pri-cta-pulse {
+          0%, 100% { box-shadow: 0 10px 22px -10px var(--cta-glow), 0 0 0 0 var(--cta-ring); }
+          50% { box-shadow: 0 14px 28px -8px var(--cta-glow), 0 0 0 4px var(--cta-ring); }
+        }
+        @keyframes pri-cta-shimmer {
+          0% { transform: translateX(120%) skewX(-12deg); opacity: 0; }
+          18% { opacity: 0.45; }
+          100% { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+        }
+        .pri-cta-btn {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          animation: pri-cta-pulse 2.8s ease-in-out infinite;
+        }
+        .pri-cta-btn::after {
+          content: "";
+          pointer-events: none;
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.28) 50%, transparent 60%);
+          animation: pri-cta-shimmer 3.6s ease-in-out infinite;
+        }
+        .pri-cta-arrow {
+          transition: transform .2s ease;
+        }
+        .pri-cta-btn:active .pri-cta-arrow {
+          transform: translateX(-3px);
+        }
+
+        @keyframes pri-feat-pop {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.12); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pri-feat-pulse-dot {
+          0%, 100% { transform: scale(1); opacity: 0.55; }
+          50% { transform: scale(1.15); opacity: 0.85; }
+        }
+        .pri-feat-icon {
+          transition: background-color .35s ease, box-shadow .35s ease;
+        }
+        .pri-feat-icon--pending {
+          background: color-mix(in srgb, var(--feat-primary) 14%, transparent);
+          border: 1.5px solid color-mix(in srgb, var(--feat-primary) 38%, transparent);
+        }
+        .pri-feat-icon--checked {
+          background: var(--feat-primary);
+          box-shadow: 0 4px 10px -4px var(--feat-primary);
+          animation: pri-feat-pop .45s cubic-bezier(.2,.8,.2,1) both;
+        }
+        .pri-feat-dot {
+          display: block;
+          width: 6px;
+          height: 6px;
+          border-radius: 9999px;
+          background: var(--feat-primary);
+          animation: pri-feat-pulse-dot 1.8s ease-in-out infinite;
+        }
+        .pri-feat-check {
+          animation: pri-feat-pop .4s cubic-bezier(.2,.8,.2,1) both;
+        }
+
+        @keyframes pri-rate-shimmer {
+          0% { transform: translateX(130%) skewX(-14deg); opacity: 0; }
+          16% { opacity: 0.65; }
+          100% { transform: translateX(-130%) skewX(-14deg); opacity: 0; }
+        }
+        @keyframes pri-rate-glow {
+          0%, 100% {
+            box-shadow:
+              0 0 0 1px rgba(255,255,255,0.7) inset,
+              0 4px 14px -6px var(--rate-glow);
+          }
+          50% {
+            box-shadow:
+              0 0 0 1px rgba(255,255,255,0.95) inset,
+              0 6px 20px -4px var(--rate-glow),
+              0 0 18px -2px var(--rate-glow-soft);
+          }
+        }
+        .pri-rate-badge {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+          animation: pri-rate-glow 2.6s ease-in-out infinite;
+        }
+        .pri-rate-badge::after {
+          content: "";
+          pointer-events: none;
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(105deg, transparent 36%, rgba(255,255,255,0.72) 50%, transparent 64%);
+          animation: pri-rate-shimmer 3.4s ease-in-out infinite;
+        }
+
+        @keyframes pri-tab-panel-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .pri-tier-tabs {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 0;
+          border-radius: 0;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+        }
+        .pri-tier-tab {
+          position: relative;
+          border-radius: 0;
+          padding: 10px 4px 8px;
+          text-align: center;
+          background: transparent;
+          border: none;
+          border-top: 2.5px solid transparent;
+          border-bottom: 2.5px solid transparent;
+          transition: border-color .22s ease, color .22s ease;
+        }
+        .pri-tier-tab--active {
+          background: transparent;
+          box-shadow: none;
+        }
+        .pri-plan-card {
+          position: relative;
+          border-radius: 20px;
+          overflow: hidden;
+          padding: 16px 14px 14px;
+          background: #fff;
+          box-shadow: 0 10px 28px -16px rgba(15, 23, 42, 0.12);
+          transition: border-color .25s ease, box-shadow .25s ease;
+        }
+        .pri-tab-panel {
+          animation: pri-tab-panel-in .35s cubic-bezier(.2,.8,.2,1) both;
+        }
+        .pri-sticky-cta {
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+        }
       `}</style>
 
       {/* Header */}
@@ -4346,17 +5025,15 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
         </div>
       </div>
 
-      <div className="px-5 pb-10 max-w-md mx-auto">
+      <div className="px-5 pb-28 max-w-md mx-auto">
         {/* Title */}
-        <div className={`pri-in flex items-start gap-3 mt-4`}>
-          <div className="flex-1 text-right">
-            <h1 className="pri-heading text-[24px] leading-snug" style={{ color: TEXT }}>
-              اختر مستوى <span style={{ color: ORANGE }}>المتابعة</span> المناسب لك
-            </h1>
-          </div>
-          <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE9D9" }}>
-            <Crown className="h-6 w-6" style={{ color: ORANGE }} strokeWidth={2.4} />
-          </div>
+        <div className="pri-in mt-4 w-full text-center">
+          <h1
+            className="pri-heading text-[24px] leading-snug"
+            style={{ color: TEXT, fontFamily: "'Tajawal', 'Cairo', sans-serif" }}
+          >
+            اختر مستوى <span style={{ color: ORANGE }}>المتابعة</span> المناسب لك
+          </h1>
         </div>
         <p className="pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed" style={{ animationDelay: ".08s" }}>
           {dubai
@@ -4364,33 +5041,59 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
             : <>تم تصميم جميع الباقات لتحقيق هدفك خلال <span className="font-extrabold" style={{ color: ORANGE }}>90 يوماً</span>.</>}
         </p>
 
-        {/* Tiers */}
-        <div className="mt-6 space-y-4">
-          {PRICING_TIERS.map((tier, idx) => {
-            const isSelected = selected === tier.id;
-            const isFeatured = tier.id === "transform";
-            return (
-              <div
-                key={tier.id}
-                className="relative pri-in"
-                style={{
-                  animationDelay: `${0.15 + idx * 0.12}s`,
-                  borderRadius: 28,
-                  background: tier.primaryBg,
-                  border: `2px solid ${isSelected ? tier.primary : "transparent"}`,
-                  boxShadow: isSelected
-                    ? `0 18px 40px -18px ${tier.primary}66`
-                    : "0 8px 22px -16px rgba(0,0,0,.12)",
-                  paddingTop: tier.topBadge ? 28 : 18,
-                  paddingBottom: 18,
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  transition: "box-shadow .25s, border-color .25s",
-                }}
-              >
-                {tier.topBadge && (
+        {/* Tier switcher */}
+        <div className="pri-in mt-5 border-b border-neutral-200/80" style={{ animationDelay: ".12s" }}>
+          <div dir="rtl" className="pri-tier-tabs" role="tablist" aria-label="اختر الباقة">
+            {PRICING_TIER_TABS.map((tab) => {
+              const tierMeta = PRICING_TIERS.find((t) => t.id === tab.id)!;
+              const TabIcon = tierMeta.Icon;
+              const isActive = selected === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => handleTabSelect(tab.id)}
+                  className={`pri-tier-tab ${isActive ? "pri-tier-tab--active" : ""} active:scale-[0.98]`}
+                  style={{
+                    borderTopColor: isActive ? tierMeta.primary : "transparent",
+                    borderBottomColor: isActive ? tierMeta.primary : "transparent",
+                  }}
+                >
                   <div
-                    className="absolute -top-3 right-5 flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-[11px] font-extrabold"
+                    className="flex items-center justify-center gap-1 pri-heading text-[13px]"
+                    style={{ color: isActive ? tierMeta.primary : TEXT }}
+                  >
+                    {tab.id !== "transform" && (
+                      <TabIcon
+                        className="h-3.5 w-3.5"
+                        style={{ color: tab.id === "pro" ? "#F59E0B" : tierMeta.primary }}
+                        strokeWidth={2.3}
+                        fill={tab.id === "vip" ? `${tierMeta.primary}33` : tab.id === "pro" ? "#F59E0B" : "none"}
+                      />
+                    )}
+                    <span>{tab.label}</span>
+                  </div>
+                  <div className="mt-0.5 text-[10px] font-bold text-neutral-500">
+                    {tierMeta.pricePerDay}$ / يوم
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active tier card */}
+        <div className="mt-3">
+          {(() => {
+            const tier = activeTier;
+
+            return (
+              <div key={tier.id} className="pri-tab-panel relative">
+                {tier.topBadge && selected === "pro" && (
+                  <div
+                    className="absolute -top-3 right-5 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-[11px] font-extrabold"
                     style={{ background: tier.primary, boxShadow: `0 6px 14px -6px ${tier.primary}88` }}
                   >
                     <span>{tier.topBadge}</span>
@@ -4398,119 +5101,87 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
                   </div>
                 )}
 
-                {/* Top row: title block + price ring */}
-                <div className="flex items-start gap-3">
-                  {/* Left: title & tagline */}
-                  <div className="flex-1 text-right pt-1">
-                    <div className="flex items-center gap-2 justify-end">
-                      <h3 className="pri-heading text-[22px]" style={{ color: TEXT }}>
-                        {tier.id === "pro" ? <>باقة <span style={{ color: tier.primary }}>Pro</span></> : tier.name}
-                      </h3>
-                      <tier.Icon className="h-6 w-6" style={{ color: tier.primary }} strokeWidth={2.4} fill={tier.id === "vip" ? `${tier.primary}33` : "none"} />
-                    </div>
-                    {tier.id === "vip" && (
-                      <div className="mt-1 text-[11.5px] font-extrabold" style={{ color: tier.primary }}>عدد محدود جداً</div>
-                    )}
-                    <p className="mt-2 text-[12px] text-neutral-500 leading-relaxed">{tier.tagline}</p>
-                  </div>
-
-                  {/* Right: animated price ring */}
-                  <div className="shrink-0 relative h-[110px] w-[110px] grid place-items-center">
-                    <svg viewBox="0 0 120 120" className="absolute inset-0 pri-ring -rotate-90">
-                      <circle cx="60" cy="60" r="54" fill="white" stroke={`${tier.primary}22`} strokeWidth="3" />
-                      {mounted && (
-                        <circle
-                          className="anim"
-                          cx="60" cy="60" r="54" fill="none"
-                          stroke={tier.primary} strokeWidth="3" strokeLinecap="round"
-                          style={{ animationDelay: `${0.4 + idx * 0.12}s` }}
-                        />
-                      )}
-                    </svg>
-                    <div className="relative text-center">
-                      <div className="flex items-baseline justify-center gap-0.5">
-                        <span className="pri-heading text-[26px] leading-none" style={{ color: tier.primary }}>{tier.pricePerDay}</span>
-                        <span className="pri-heading text-[14px]" style={{ color: tier.primary }}>$</span>
-                      </div>
-                      <div className="text-[10px] text-neutral-500 font-bold mt-1">في اليوم فقط</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total price chip */}
-                <div className="mt-3 mx-auto w-fit px-4 py-1.5 rounded-full text-center" style={{ background: `${tier.primary}14` }}>
-                  <span className="text-[10.5px] text-neutral-500 font-bold">يعادل </span>
-                  <span className="pri-heading text-[13px]" style={{ color: tier.primary }}>{tier.totalPrice}$</span>
-                  <span className="text-[10.5px] text-neutral-500 font-bold"> لمدة 90 يوم</span>
-                </div>
-
-                {/* Features */}
-                <ul className="mt-4 space-y-2.5">
-                  {tier.features.map((f, i) => (
-                    <li key={i} className="flex items-center justify-end gap-2.5 text-[13px] text-right" style={{ color: TEXT }}>
-                      <span className="leading-tight">{f}</span>
-                      <span className="shrink-0 h-5 w-5 rounded-full grid place-items-center" style={{ background: tier.primary }}>
-                        <Check className="h-3 w-3 text-white" strokeWidth={3.5} />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA */}
-                <button
-                  onClick={() => handleChoose(tier)}
-                  className="mt-5 w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                <div
+                  className="pri-plan-card"
                   style={{
-                    height: 56,
-                    borderRadius: 16,
-                    background: tier.primary,
-                    color: "#fff",
-                    fontFamily: HEADING_FONT,
-                    fontWeight: 900,
-                    fontSize: 15.5,
-                    boxShadow: `0 10px 22px -10px ${tier.primary}88`,
+                    border: `1.5px solid ${tier.primary}${selected === tier.id ? "88" : "33"}`,
                   }}
                 >
-                  <span className="h-7 w-7 rounded-full grid place-items-center" style={{ background: "rgba(255,255,255,.22)" }}>
-                    <ChevronRight className="h-4 w-4 text-white" strokeWidth={3} />
-                  </span>
-                  <span>أريد هذه الباقة</span>
-                </button>
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 text-right min-w-0">
+                      <div className="flex items-center gap-2">
+                        <tier.Icon className="h-6 w-6 shrink-0" style={{ color: tier.primary }} strokeWidth={2.4} fill={tier.id === "vip" ? `${tier.primary}33` : "none"} />
+                        <PricingTierTitle tier={tier} color={TEXT} />
+                      </div>
+                      {tier.id === "vip" && (
+                        <div className="mt-1 text-[11.5px] font-extrabold" style={{ color: tier.primary }}>عدد محدود جداً</div>
+                      )}
+                      <p className="mt-1.5 text-[12px] text-neutral-500 leading-relaxed">{tier.tagline}</p>
+                    </div>
+                    <PricingPriceRing tier={tier} mounted={mounted} />
+                  </div>
+
+                  <div className="mt-2 flex justify-center">
+                    <div
+                      className="pri-rate-badge inline-flex rounded-full px-3 py-1 text-[10.5px] font-bold"
+                      style={{
+                        background: `${tier.primary}16`,
+                        color: tier.primary,
+                        border: `1px solid ${tier.primary}33`,
+                        ["--rate-glow" as string]: `${tier.primary}44`,
+                        ["--rate-glow-soft" as string]: `${tier.primary}22`,
+                      }}
+                    >
+                      <span className="relative z-[1]">بمعدل ${tier.totalPrice} لمدة 90 يوم</span>
+                    </div>
+                  </div>
+
+                  <PricingValueCompare tier={tier} />
+
+                  <PricingFeaturesList
+                    features={tier.features}
+                    primary={tier.primary}
+                    textColor={TEXT}
+                    mountDelayMs={300}
+                  />
+
+                  <PricingTrustInline />
+                </div>
               </div>
             );
-          })}
+          })()}
         </div>
+      </div>
 
-        {/* Trust row */}
-        <div className="mt-6 pri-in" style={{ animationDelay: ".7s" }}>
-          <div
-            className="rounded-3xl p-4 grid grid-cols-2 gap-3"
-            style={{ background: "#F8FBF9", border: "1px solid #E6F0EA" }}
+      {/* Sticky CTA */}
+      <div
+        className="pri-sticky-cta fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/88"
+        style={{ boxShadow: "0 -12px 32px -16px rgba(15,23,42,0.18)" }}
+      >
+        <div className="mx-auto max-w-md px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <button
+            onClick={() => handleChoose(activeTier)}
+            className="pri-cta-btn w-full flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
+            style={{
+              height: 56,
+              borderRadius: 16,
+              background: activeTier.primary,
+              color: "#fff",
+              fontFamily: HEADING_FONT,
+              fontWeight: 900,
+              fontSize: 15.5,
+              ["--cta-glow" as string]: `${activeTier.primary}88`,
+              ["--cta-ring" as string]: `${activeTier.primary}33`,
+            }}
           >
-            <div className="flex items-center gap-2.5">
-              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
-                <ShieldCheck className="h-5 w-5" style={{ color: "#16A34A" }} strokeWidth={2.4} />
-              </div>
-              <div className="text-right min-w-0">
-                <div className="pri-heading text-[12.5px]" style={{ color: "#16A34A" }}>بياناتك محمية</div>
-                <div className="text-[10.5px] text-neutral-500 leading-snug mt-0.5">نحن لا نشارك بياناتك مع أي جهة</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: "#E7F7EE" }}>
-                <Lock className="h-5 w-5" style={{ color: "#16A34A" }} strokeWidth={2.4} />
-              </div>
-              <div className="text-right min-w-0">
-                <div className="pri-heading text-[12.5px]" style={{ color: "#16A34A" }}>دفع آمن 100%</div>
-                <div className="text-[10.5px] text-neutral-500 leading-snug mt-0.5">جميع المدفوعات مشفرة وآمنة</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-neutral-500">
-            <Lock className="h-3 w-3" />
-            <span>كل خطط التدريب والتغذية خاصة بك وحدك</span>
-          </div>
+            <span className="relative z-[1] tracking-tight">{PRICING_CTA_COPY[activeTier.id]}</span>
+            <span
+              className="pri-cta-arrow relative z-[1] h-7 w-7 rounded-full grid place-items-center"
+              style={{ background: "rgba(255,255,255,.22)" }}
+            >
+              <ChevronLeft className="h-4 w-4 text-white" strokeWidth={3} />
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -5164,7 +5835,7 @@ function OfflinePackagesScreen({
 // ============================================================
 // Payment Screen — Online tiers only
 // ============================================================
-type PayMethod = "binance" | "paypal" | "skrill" | "wise";
+type PayMethod = "paddle" | "binance" | "paypal" | "skrill" | "wise";
 type BankId = "uae" | "morocco" | "brazil";
 
 const BANK_DETAILS: Record<BankId, { country: string; flag: string; banks: { name: string; holder: string; account: string; iban: string; swift: string }[] }> = {
@@ -5388,21 +6059,39 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
   const [bankOpen, setBankOpen] = useState<BankId | null>(null);
   const [proofOpen, setProofOpen] = useState(false);
   const [done, setDone] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(false);
+  const [paddleLoading, setPaddleLoading] = useState(false);
+  const paddleReady = isPaddleConfigured();
 
   const choose = (m: PayMethod) => {
     setMethod(m);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(12);
   };
 
+  const handlePaddlePay = async () => {
+    if (!legalAccepted) return;
+    setPaddleLoading(true);
+    try {
+      await openPaddleCheckout({
+        tierId,
+        customData: { tierId, customerName: name },
+      });
+    } catch {
+      // Paddle not configured or checkout failed — user can pick another method
+    } finally {
+      setPaddleLoading(false);
+    }
+  };
+
   const PAY_METHODS: { id: PayMethod; name: string; sub: string; perk: string; Logo: () => ReactElement; Icon: () => ReactElement; recommended?: boolean; tagSmall?: string }[] = [
-    { id: "binance", name: "Binance Pay (USDT)", sub: "ادفع باستخدام عملات الكريبتو مثل USDT", perk: "سريع، آمن، ورسوم منخفضة", Logo: () => <BinanceLogo />, Icon: TetherIcon, recommended: true, tagSmall: "الأسرع" },
+    { id: "binance", name: "Binance Pay (USDT)", sub: "ادفع باستخدام عملات الكريبتو مثل USDT", perk: "سريع، آمن، ورسوم منخفضة", Logo: () => <BinanceLogo />, Icon: TetherIcon, tagSmall: "بديل" },
     { id: "paypal", name: "PayPal", sub: "ادفع بأمان باستخدام حسابك على باي بال", perk: "سريع وآمن ومقبول عالمياً", Logo: () => <PayPalLogo size={28} />, Icon: PayPalIcon },
     { id: "skrill", name: "Skrill", sub: "ادفع باستخدام حسابك على سكريل", perk: "سريع وآمن حول العالم", Logo: () => <SkrillLogo size={28} />, Icon: SkrillIcon },
     { id: "wise", name: "Wise", sub: "حوّل وادفع بعملات متعددة بأقل رسوم", perk: "سعر صرف حقيقي ورسوم منخفضة", Logo: () => <WiseLogo size={28} />, Icon: WiseIcon },
   ];
 
   return (
-    <div className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
+    <div dir="rtl" lang="ar" className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
       <style>{`
         @keyframes pay-in { from {opacity:0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
         @keyframes pay-slide-up { from {opacity:0; transform: translateY(40px);} to {opacity:1; transform: translateY(0);} }
@@ -5436,8 +6125,8 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
       <div className="px-5 pb-24 max-w-md mx-auto">
         {/* Title */}
         <div className="pay-in text-center mt-4">
-          <h1 className="pay-heading text-[24px]" style={{ color: TEXT }}>أكمل اشتراكك <span style={{ color: ORANGE }}>الآن</span></h1>
-          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed">اختر طريقة الدفع المناسبة لك للبدء في برنامجك الخاص</p>
+          <h1 className="pay-heading text-[24px]" style={{ color: TEXT }}>أكمل <span style={{ color: ORANGE }}>طلبك</span> الآن</h1>
+          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed">اختر طريقة الدفع المناسبة لك لبدء برنامجك الرقمي المخصص</p>
         </div>
 
         {/* Summary card */}
@@ -5450,19 +6139,104 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
           </div>
           <div className="flex-1 text-right min-w-0">
             <div className="text-[10.5px] text-neutral-500 font-bold">الباقة المختارة</div>
-            <div className="pay-heading text-[17px] mt-0.5" style={{ color: TEXT }}>{tier.id === "pro" ? "باقة Pro" : tier.id === "vip" ? "باقة VIP" : "باقة التحول"}</div>
-            <div className="mt-1 text-[11px] text-neutral-500 leading-snug">12 أسبوع · متابعة ونتائج مضمونة</div>
+            <div className="pay-heading text-[17px] mt-0.5" style={{ color: TEXT }}>{tier.name}</div>
+            <div className="mt-1 text-[11px] text-neutral-500 leading-snug">{PRODUCT_SUMMARY.duration} · {PRODUCT_SUMMARY.type}</div>
           </div>
           <div className="text-center shrink-0 pr-2 border-r border-orange-200">
             <div className="text-[10px] text-neutral-500 font-bold">السعر الإجمالي</div>
             <div className="pay-heading text-[26px] leading-none mt-1" style={{ color: ORANGE }}>{tier.totalPrice}</div>
-            <div className="text-[10px] text-neutral-500 font-bold mt-1">دولار أمريكي</div>
+            <div className="text-[10px] text-neutral-500 font-bold mt-1">USD · دفعة واحدة</div>
           </div>
         </div>
 
-        {/* Choose method header */}
+        {/* Product & delivery disclosure (Paddle compliance) */}
+        <div className="pay-in mt-4 rounded-2xl p-4 text-right" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
+          <div className="flex items-center gap-2 justify-end">
+            <span className="pay-heading text-[14px]" style={{ color: TEXT }}>ما الذي تشتريه؟</span>
+            <FileText className="h-4 w-4 text-neutral-500" />
+          </div>
+          <p className="mt-2 text-[12px] leading-relaxed text-neutral-600">{PRODUCT_SUMMARY.type} — {PRODUCT_SUMMARY.billing}.</p>
+          <ul className="mt-2.5 space-y-1.5 text-[11.5px] text-neutral-600">
+            {PRODUCT_SUMMARY.includes.slice(0, 4).map((item) => (
+              <li key={item} className="flex items-start gap-1.5 justify-end">
+                <span>{item}</span>
+                <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: GREEN }} strokeWidth={3} />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[11.5px] leading-relaxed text-neutral-600">
+            <span className="font-black text-neutral-700">التسليم: </span>
+            {PRODUCT_SUMMARY.delivery}
+          </p>
+          <p className="mt-2 text-[11px] text-neutral-500">
+            {SITE_LEGAL_ENTITY} ·{" "}
+            <a href={`mailto:${SITE_SUPPORT_EMAIL}`} className="font-bold hover:text-primary">{SITE_SUPPORT_EMAIL}</a>
+          </p>
+        </div>
+
+        {/* Legal consent */}
+        <label className="pay-in mt-4 flex items-start gap-3 rounded-2xl p-3.5 cursor-pointer text-right" style={{ background: "#fff", border: "1px solid #EEF1F4" }}>
+          <div className="flex-1 min-w-0">
+            <span className="text-[12px] leading-relaxed text-neutral-700">
+              أوافق على{" "}
+              <Link to={LEGAL_ROUTES.terms} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
+                الشروط والأحكام
+              </Link>
+              {" "}و{" "}
+              <Link to={LEGAL_ROUTES.privacy} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
+                سياسة الخصوصية
+              </Link>
+              {" "}و{" "}
+              <Link to={LEGAL_ROUTES.refund} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
+                سياسة الاسترجاع
+              </Link>
+              .
+            </span>
+          </div>
+          <input
+            type="checkbox"
+            checked={legalAccepted}
+            onChange={(e) => setLegalAccepted(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#FF6B00]"
+          />
+        </label>
+
+        {/* Paddle — primary checkout (card, Apple Pay, etc.) */}
         <div className="mt-7 text-center">
-          <h2 className="pay-heading text-[18px]" style={{ color: TEXT }}>اختر طريقة الدفع</h2>
+          <h2 className="pay-heading text-[18px]" style={{ color: TEXT }}>الدفع الآمن بالبطاقة</h2>
+          <p className="mt-1 text-[11.5px] text-neutral-500">Visa · Mastercard · Apple Pay · Google Pay عبر Paddle</p>
+        </div>
+        <div className="mt-3 pay-in">
+          <button
+            type="button"
+            disabled={!legalAccepted || paddleLoading}
+            onClick={() => {
+              choose("paddle");
+              void handlePaddlePay();
+            }}
+            className="w-full rounded-2xl p-4 flex items-center gap-3 text-right transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+            style={{
+              background: method === "paddle" ? "#FFF6EE" : "#fff",
+              border: `2px solid ${method === "paddle" ? ORANGE : "#EEF1F4"}`,
+              boxShadow: method === "paddle" ? `0 12px 30px -16px ${ORANGE}66` : "0 4px 14px -10px rgba(0,0,0,.08)",
+            }}
+          >
+            <div className="shrink-0 h-12 w-12 rounded-xl grid place-items-center" style={{ background: "#0F172A" }}>
+              <CreditCard className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="pay-heading text-[15px]" style={{ color: TEXT }}>ادفع بالبطاقة أو Apple Pay</div>
+              <div className="text-[11.5px] text-neutral-500 mt-0.5">
+                {paddleReady ? "معالجة آمنة عبر Paddle (Merchant of Record)" : "يُفعّل بعد إعداد حساب Paddle — أضف VITE_PADDLE_CLIENT_TOKEN"}
+              </div>
+            </div>
+            <div className="shrink-0 px-2 py-1 rounded-md text-[9px] font-extrabold text-white" style={{ background: ORANGE }}>موصى به</div>
+          </button>
+        </div>
+
+        {/* Alternative methods */}
+        <div className="mt-7 text-center">
+          <h2 className="pay-heading text-[16px] text-neutral-600">طرق دفع بديلة</h2>
         </div>
 
         {/* Payment methods list */}
@@ -5472,8 +6246,12 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
             return (
               <button
                 key={m.id}
-                onClick={() => choose(m.id)}
-                className={`pay-in w-full text-right rounded-2xl p-3 flex items-center gap-3 transition-all ${selected ? "pay-shake" : ""}`}
+                onClick={() => {
+                  if (!legalAccepted) return;
+                  choose(m.id);
+                }}
+                disabled={!legalAccepted}
+                className={`pay-in w-full text-right rounded-2xl p-3 flex items-center gap-3 transition-all disabled:opacity-45 disabled:cursor-not-allowed ${selected ? "pay-shake" : ""}`}
                 style={{
                   animationDelay: `${0.1 + i * 0.07}s`,
                   background: selected ? "#FFF6EE" : "#fff",
@@ -5549,7 +6327,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
 
         {/* WhatsApp help */}
         <a
-          href="https://wa.me/971505129019?text=أحتاج%20مساعدة%20في%20اختيار%20طريقة%20الدفع"
+          href={`${SITE_WHATSAPP_URL}?text=${encodeURIComponent("أحتاج مساعدة في اختيار طريقة الدفع")}`}
           className="mt-5 rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.99] transition"
           style={{ background: "#F0FAF4", border: "1px solid #BBF7D0" }}
         >
@@ -5563,8 +6341,8 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
           <ChevronRight className="h-4 w-4 text-neutral-400 rotate-180" />
         </a>
 
-        {/* Confirm button - appears after selection */}
-        {method && !done && (
+        {/* Confirm button - appears after alternative method selection */}
+        {method && method !== "paddle" && !done && legalAccepted && (
           <div className="mt-6 pay-in">
             <button
               onClick={() => setProofOpen(true)}
@@ -5574,7 +6352,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
               <Check className="h-5 w-5" strokeWidth={3} />
               لقد قمت بالدفع
             </button>
-            <p className="text-center text-[10.5px] text-neutral-500 mt-2">بعد الدفع ارفع إثبات التحويل لتفعيل اشتراكك فوراً</p>
+            <p className="text-center text-[10.5px] text-neutral-500 mt-2">بعد الدفع ارفع إثبات التحويل لتفعيل طلبك</p>
           </div>
         )}
         {done && (
@@ -5583,34 +6361,54 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
               <Check className="h-7 w-7 text-white" strokeWidth={3.5} />
             </div>
             <div className="pay-heading text-[16px] mt-3" style={{ color: GREEN }}>تم استلام إثبات الدفع</div>
-            <p className="text-[12px] text-neutral-500 mt-1">سيتم تفعيل اشتراكك خلال دقائق وسنتواصل معك مباشرة.</p>
+            <p className="text-[12px] text-neutral-500 mt-1">سيتم تفعيل طلبك خلال 24–48 ساعة وسنتواصل معك عبر الواتساب.</p>
           </div>
         )}
 
         {/* Trust bar */}
         <div className="mt-8 grid grid-cols-2 gap-3">
           {([
-            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "حماية كاملة لبياناتك" },
-            { Icon: ShieldCheck, color: "#16A34A", t: "حماية كاملة للبيانات", s: "تشفير SSL 256-bit" },
-            { Icon: RefreshCw, color: "#2563EB", t: "ضمان استرجاع الأموال", s: "استرجاع خلال 7 أيام" },
-            { Icon: Headphones, color: "#2563EB", t: "دعم فني 24/7", s: "نحن هنا لمساعدتك دائماً" },
-          ] as const).map((b, i) => (
-            <div key={i} className="rounded-2xl p-3 flex items-center gap-2.5" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
-              <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: `${b.color}15` }}>
-                <b.Icon className="h-5 w-5" style={{ color: b.color }} strokeWidth={2.2} />
+            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "SSL · معالجة عبر مزود موثوق" },
+            { Icon: ShieldCheck, color: "#16A34A", t: "حماية البيانات", s: "لا نخزّن بيانات البطاقة" },
+            { Icon: RefreshCw, color: "#2563EB", t: "سياسة استرجاع", s: "7 أيام — راجع السياسة", link: LEGAL_ROUTES.refund },
+            { Icon: Headphones, color: "#2563EB", t: "دعم العملاء", s: "واتساب وبريد إلكتروني" },
+          ] as const).map((b, i) => {
+            const inner = (
+              <>
+                <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: `${b.color}15` }}>
+                  <b.Icon className="h-5 w-5" style={{ color: b.color }} strokeWidth={2.2} />
+                </div>
+                <div className="text-right min-w-0">
+                  <div className="pay-heading text-[11.5px]" style={{ color: b.color }}>{b.t}</div>
+                  <div className="text-[10px] text-neutral-500 leading-snug mt-0.5">{b.s}</div>
+                </div>
+              </>
+            );
+            return "link" in b && b.link ? (
+              <Link key={i} to={b.link} className="rounded-2xl p-3 flex items-center gap-2.5 hover:bg-neutral-50 transition" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={i} className="rounded-2xl p-3 flex items-center gap-2.5" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
+                {inner}
               </div>
-              <div className="text-right min-w-0">
-                <div className="pay-heading text-[11.5px]" style={{ color: b.color }}>{b.t}</div>
-                <div className="text-[10px] text-neutral-500 leading-snug mt-0.5">{b.s}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10.5px] text-neutral-500">
+          <Link to={LEGAL_ROUTES.privacy} className="font-bold hover:text-primary">الخصوصية</Link>
+          <span>·</span>
+          <Link to={LEGAL_ROUTES.terms} className="font-bold hover:text-primary">الشروط</Link>
+          <span>·</span>
+          <Link to={LEGAL_ROUTES.refund} className="font-bold hover:text-primary">الاسترجاع</Link>
         </div>
         <div className="mt-4 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-500">
           <Lock className="h-3 w-3" />
-          <span>جميع المعاملات آمنة ومشفرة 256-bit SSL</span>
+          <span>جميع المعاملات محمية بتشفير SSL</span>
         </div>
       </div>
+
+      <SiteFooter compact />
 
       {bankOpen && <BankDetailsModal bank={bankOpen} onClose={() => setBankOpen(null)} />}
       {proofOpen && <PaymentProofModal onClose={() => setProofOpen(false)} onSubmit={() => { setProofOpen(false); setDone(true); }} />}

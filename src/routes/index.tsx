@@ -10,6 +10,7 @@ import WhatYouGet from "@/components/WhatYouGet";
 import SuccessStories from "@/components/SuccessStories";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -48,6 +49,7 @@ function Index() {
         <FAQ />
         <FinalCTA />
       </main>
+      <SiteFooter />
     </div>
   );
 }

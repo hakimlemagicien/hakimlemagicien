@@ -1,5 +1,7 @@
 import { Menu } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { LEGAL_ROUTES } from "@/lib/site-legal";
 import { useState } from "react";
 
 const navItems = [
@@ -86,6 +88,24 @@ export function Header() {
                 >
                   {item.label}
                 </a>
+              </li>
+            ))}
+            <li className="pt-2 mt-2 border-t border-border">
+              <div className="px-4 py-2 text-[11px] font-black text-neutral-400">روابط قانونية</div>
+            </li>
+            {[
+              { label: "سياسة الخصوصية", to: LEGAL_ROUTES.privacy },
+              { label: "الشروط والأحكام", to: LEGAL_ROUTES.terms },
+              { label: "سياسة الاسترجاع", to: LEGAL_ROUTES.refund },
+            ].map((item) => (
+              <li key={item.to}>
+                <Link
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className="block rounded-lg px-4 py-3 text-base font-bold text-foreground hover:bg-muted"
+                >
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
