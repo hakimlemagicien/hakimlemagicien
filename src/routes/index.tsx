@@ -8,6 +8,7 @@ import { Results90 } from "@/components/Results90";
 import HowItWorks from "@/components/HowItWorks";
 import WhatYouGet from "@/components/WhatYouGet";
 import SuccessStories from "@/components/SuccessStories";
+import PricingTransparency from "@/components/PricingTransparency";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -46,6 +47,7 @@ function Index() {
         <Results90 />
         <WhatYouGet />
         <SuccessStories />
+        <PricingTransparency />
         <FAQ />
         <FinalCTA />
       </main>

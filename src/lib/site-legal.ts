@@ -1,10 +1,14 @@
-export const SITE_BRAND = "Hakim Coaching";
+export const SITE_BRAND = "Hakim Le Magicien";
 export const SITE_LEGAL_ENTITY = "Hakim Coaching FZ-LLC";
 export const SITE_JURISDICTION = "الإمارات العربية المتحدة";
-export const SITE_SUPPORT_EMAIL = "support@hakimcoaching.com";
+export const SITE_SUPPORT_EMAIL = "support@hakimlemagicien.com";
 export const SITE_WHATSAPP = "+971505129019";
 export const SITE_WHATSAPP_URL = "https://wa.me/971505129019";
 export const SITE_LAST_UPDATED = "3 يوليو 2026";
+
+export const PAYMENT_PROCESSING_SUMMARY = `تعالج جميع المدفوعات على موقع ${SITE_BRAND} عبر مزود دفع عالمي معتمد يضمن حماية معلومات الدفع والامتثال للمعايير الدولية.`;
+
+export const PAYMENT_PADDLE_DISCLOSURE = `وفي الحالات التي تتم فيها معالجة الدفع عبر Paddle، قد تنطبق سياسات Paddle باعتبارها مزود خدمة الدفع الرسمي. أما سياسة الاسترجاع المنشورة على موقع ${SITE_BRAND} فهي المرجع الأساسي لعملائنا.`;
 
 export const LEGAL_ROUTES = {
   privacy: "/privacy",

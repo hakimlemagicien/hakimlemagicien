@@ -8,6 +8,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import {
   LEGAL_ROUTES,
   PRODUCT_SUMMARY,
+  PAYMENT_PROCESSING_SUMMARY,
+  PAYMENT_PADDLE_DISCLOSURE,
   SITE_LEGAL_ENTITY,
   SITE_SUPPORT_EMAIL,
   SITE_WHATSAPP_URL,
@@ -6201,10 +6203,10 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
           />
         </label>
 
-        {/* Paddle — primary checkout (card, Apple Pay, etc.) */}
+        {/* Secure card checkout */}
         <div className="mt-7 text-center">
           <h2 className="pay-heading text-[18px]" style={{ color: TEXT }}>الدفع الآمن بالبطاقة</h2>
-          <p className="mt-1 text-[11.5px] text-neutral-500">Visa · Mastercard · Apple Pay · Google Pay عبر Paddle</p>
+          <p className="mt-1 text-[11.5px] text-neutral-500">Visa · Mastercard · Apple Pay · Google Pay</p>
         </div>
         <div className="mt-3 pay-in">
           <button
@@ -6227,11 +6229,16 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
             <div className="flex-1 min-w-0">
               <div className="pay-heading text-[15px]" style={{ color: TEXT }}>ادفع بالبطاقة أو Apple Pay</div>
               <div className="text-[11.5px] text-neutral-500 mt-0.5">
-                {paddleReady ? "معالجة آمنة عبر Paddle (Merchant of Record)" : "يُفعّل بعد إعداد حساب Paddle — أضف VITE_PADDLE_CLIENT_TOKEN"}
+                {paddleReady ? "مدفوعات آمنة عبر مزود دفع عالمي معتمد" : "يُفعّل بعد إعداد مزود الدفع — أضف VITE_PADDLE_CLIENT_TOKEN"}
               </div>
             </div>
             <div className="shrink-0 px-2 py-1 rounded-md text-[9px] font-extrabold text-white" style={{ background: ORANGE }}>موصى به</div>
           </button>
+        </div>
+
+        <div className="pay-in mt-3 rounded-2xl p-4 text-right" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
+          <p className="text-[11.5px] leading-relaxed text-neutral-600">{PAYMENT_PROCESSING_SUMMARY}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">{PAYMENT_PADDLE_DISCLOSURE}</p>
         </div>
 
         {/* Alternative methods */}
@@ -6368,7 +6375,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
         {/* Trust bar */}
         <div className="mt-8 grid grid-cols-2 gap-3">
           {([
-            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "SSL · معالجة عبر مزود موثوق" },
+            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "مزود دفع عالمي معتمد" },
             { Icon: ShieldCheck, color: "#16A34A", t: "حماية البيانات", s: "لا نخزّن بيانات البطاقة" },
             { Icon: RefreshCw, color: "#2563EB", t: "سياسة استرجاع", s: "7 أيام — راجع السياسة", link: LEGAL_ROUTES.refund },
             { Icon: Headphones, color: "#2563EB", t: "دعم العملاء", s: "واتساب وبريد إلكتروني" },

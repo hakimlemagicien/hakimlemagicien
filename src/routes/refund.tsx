@@ -6,6 +6,8 @@ import {
   SITE_LEGAL_ENTITY,
   SITE_SUPPORT_EMAIL,
   SITE_WHATSAPP,
+  PAYMENT_PROCESSING_SUMMARY,
+  PAYMENT_PADDLE_DISCLOSURE,
 } from "@/lib/site-legal";
 
 export const Route = createFileRoute("/refund")({
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/refund")({
 function RefundPage() {
   return (
     <LegalPageShell
+      kind="refund"
       title="سياسة الاسترجاع والإلغاء"
       description={`توضّح ${SITE_BRAND} (${SITE_LEGAL_ENTITY}) شروط استرجاع المبالغ وإلغاء الطلبات للخدمات الرقمية.`}
       sections={[
@@ -64,7 +67,7 @@ function RefundPage() {
           title: "6. طريقة الاسترداد",
           body: [
             "يُعاد المبلغ بنفس وسيلة الدفع الأصلية عندما يكون ذلك ممكناً.",
-            "قد تستغرق المعالجة 5–14 يوماً حسب البنك أو مزود الدفع (مثل Paddle).",
+            "قد تستغرق المعالجة 5–14 يوماً حسب البنك أو مزود الدفع المعتمد.",
           ],
         },
         {
@@ -74,11 +77,8 @@ function RefundPage() {
           ],
         },
         {
-          title: "8. التوافق مع Paddle",
-          body: [
-            "عند الدفع عبر Paddle، تُطبَّق أيضاً سياسات Paddle كـ Merchant of Record حيث ينطبق ذلك.",
-            "هذه السياسة على موقعنا هي المرجع الأساسي لعملائنا.",
-          ],
+          title: "8. معالجة المدفوعات الآمنة",
+          body: [PAYMENT_PROCESSING_SUMMARY, PAYMENT_PADDLE_DISCLOSURE],
         },
       ]}
     />

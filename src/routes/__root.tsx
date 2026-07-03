@@ -157,6 +157,22 @@ function PwaRegistrar() {
   return null;
 }
 
+function HashScrollHandler() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const hash = useRouterState({ select: (s) => s.location.hash });
+
+  useEffect(() => {
+    if (pathname !== "/" || !hash) return;
+    const id = hash.replace(/^#/, "");
+    const timer = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [pathname, hash]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -166,6 +182,7 @@ function RootComponent() {
     <MotionProvider>
       <QueryClientProvider client={queryClient}>
         <PwaRegistrar />
+        <HashScrollHandler />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         {!isQuiz && <FloatingWhatsApp />}

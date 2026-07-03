@@ -1,20 +1,20 @@
 import { Menu } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { LEGAL_ROUTES } from "@/lib/site-legal";
 import { useState } from "react";
 
 const navItems = [
-  { label: "الرئيسية", href: "#", active: true },
-  { label: "كيف يعمل التقييم", href: "#how" },
-  { label: "ماذا ستحصل عليه", href: "#features" },
-  { label: "قصص النجاح", href: "#stories" },
-  { label: "أسئلة شائعة", href: "#faq" },
-];
+  { label: "الرئيسية", hash: undefined },
+  { label: "كيف يعمل التقييم", hash: "how" },
+  { label: "ماذا ستحصل عليه", hash: "features" },
+  { label: "قصص النجاح", hash: "stories" },
+  { label: "أسئلة شائعة", hash: "faq" },
+] as const;
 
 function Logo() {
   return (
-    <a href="#" className="flex items-center gap-2 shrink-0">
+    <Link to="/" className="flex items-center gap-2 shrink-0">
       <span className="grid h-11 w-11 max-lg:h-10 max-lg:w-10 place-items-center rounded-xl max-lg:rounded-full bg-primary text-primary-foreground font-black text-2xl max-lg:text-xl">
         H
       </span>
@@ -22,13 +22,45 @@ function Logo() {
         <span className="text-lg max-lg:text-base font-black tracking-tight text-foreground">HAKIM</span>
         <span className="text-[10px] font-bold tracking-[0.25em] text-primary">COACHING</span>
       </span>
-    </a>
+    </Link>
   );
+}
+
+function NavLink({
+  label,
+  hash,
+  onNavigate,
+  className,
+}: {
+  label: string;
+  hash?: string;
+  onNavigate?: () => void;
+  className: string;
+}) {
+  return (
+    <Link
+      to="/"
+      hash={hash}
+      onClick={onNavigate}
+      className={className}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function isNavItemActive(pathname: string, currentHash: string, itemHash?: string) {
+  if (pathname !== "/") return false;
+  if (!itemHash) return !currentHash;
+  return currentHash === itemHash;
 }
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const whatsapp = "https://wa.me/971505129019";
+  const pathname = useLocation({ select: (l) => l.pathname });
+  const currentHash = useLocation({ select: (l) => l.hash.replace(/^#/, "") });
+  const closeMenu = () => setOpen(false);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">
@@ -36,20 +68,23 @@ export function Header() {
         <Logo />
 
         <nav className="hidden lg:flex items-center gap-8">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className={`relative text-[15px] font-bold transition-colors hover:text-primary ${
-                item.active ? "text-primary" : "text-foreground"
-              }`}
-            >
-              {item.label}
-              {item.active && (
-                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-[3px] w-6 rounded-full bg-primary" />
-              )}
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const active = isNavItemActive(pathname, currentHash, item.hash);
+            return (
+              <div key={item.label} className="relative">
+                <NavLink
+                  label={item.label}
+                  hash={item.hash}
+                  className={`text-[15px] font-bold transition-colors hover:text-primary ${
+                    active ? "text-primary" : "text-foreground"
+                  }`}
+                />
+                {active && (
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-[3px] w-6 rounded-full bg-primary" />
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="hidden lg:block">
@@ -71,25 +106,26 @@ export function Header() {
         >
           <Menu className="h-5 w-5" strokeWidth={2} />
         </button>
-
       </div>
 
       {open && (
         <nav className="lg:hidden border-t border-border bg-background">
           <ul className="px-4 py-4 space-y-1">
-            {navItems.map((item) => (
-              <li key={item.label}>
-                <a
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className={`block rounded-lg px-4 py-3 text-base font-bold ${
-                    item.active ? "bg-primary-soft text-primary" : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              const active = isNavItemActive(pathname, currentHash, item.hash);
+              return (
+                <li key={item.label}>
+                  <NavLink
+                    label={item.label}
+                    hash={item.hash}
+                    onNavigate={closeMenu}
+                    className={`block rounded-lg px-4 py-3 text-base font-bold ${
+                      active ? "bg-primary-soft text-primary" : "text-foreground hover:bg-muted"
+                    }`}
+                  />
+                </li>
+              );
+            })}
             <li className="pt-2 mt-2 border-t border-border">
               <div className="px-4 py-2 text-[11px] font-black text-neutral-400">روابط قانونية</div>
             </li>
@@ -101,7 +137,7 @@ export function Header() {
               <li key={item.to}>
                 <Link
                   to={item.to}
-                  onClick={() => setOpen(false)}
+                  onClick={closeMenu}
                   className="block rounded-lg px-4 py-3 text-base font-bold text-foreground hover:bg-muted"
                 >
                   {item.label}
