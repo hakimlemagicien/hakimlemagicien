@@ -3,18 +3,8 @@ import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answe
 import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
 import { useQuizProgress } from "@/hooks/use-quiz-progress";
 import { MotionStepView } from "@/components/motion/MotionStepView";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteFooter } from "@/components/SiteFooter";
-import {
-  LEGAL_ROUTES,
-  PRODUCT_SUMMARY,
-  PAYMENT_PROCESSING_SUMMARY,
-  PAYMENT_PADDLE_DISCLOSURE,
-  SITE_LEGAL_ENTITY,
-  SITE_SUPPORT_EMAIL,
-  SITE_WHATSAPP_URL,
-} from "@/lib/site-legal";
-import { isPaddleConfigured, openPaddleCheckout } from "@/lib/paddle-checkout";
+import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
   ChevronLeft,
@@ -51,8 +41,6 @@ import {
   RefreshCw,
   Clock,
   UserCheck,
-  CreditCard,
-  FileText,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/ذكر.png";
@@ -5837,7 +5825,6 @@ function OfflinePackagesScreen({
 // ============================================================
 // Payment Screen — Online tiers only
 // ============================================================
-type PayMethod = "paddle" | "binance" | "paypal" | "skrill" | "wise";
 type BankId = "uae" | "morocco" | "brazil";
 
 const BANK_DETAILS: Record<BankId, { country: string; flag: string; banks: { name: string; holder: string; account: string; iban: string; swift: string }[] }> = {
@@ -6051,374 +6038,22 @@ function PaymentProofModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
   );
 }
 
+
 function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tierId: PricingTier["id"]; total?: number; onBack: () => void }) {
-  const ORANGE = "#FF6B00";
-  const TEXT = "#0F172A";
-  const GREEN = "#16A34A";
-  const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
   const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
-  const [method, setMethod] = useState<PayMethod | null>(null);
-  const [bankOpen, setBankOpen] = useState<BankId | null>(null);
-  const [proofOpen, setProofOpen] = useState(false);
-  const [done, setDone] = useState(false);
-  const [legalAccepted, setLegalAccepted] = useState(false);
-  const [paddleLoading, setPaddleLoading] = useState(false);
-  const paddleReady = isPaddleConfigured();
-
-  const choose = (m: PayMethod) => {
-    setMethod(m);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(12);
-  };
-
-  const handlePaddlePay = async () => {
-    if (!legalAccepted) return;
-    setPaddleLoading(true);
-    try {
-      await openPaddleCheckout({
-        tierId,
-        customData: { tierId, customerName: name },
-      });
-    } catch {
-      // Paddle not configured or checkout failed — user can pick another method
-    } finally {
-      setPaddleLoading(false);
-    }
-  };
-
-  const PAY_METHODS: { id: PayMethod; name: string; sub: string; perk: string; Logo: () => ReactElement; Icon: () => ReactElement; recommended?: boolean; tagSmall?: string }[] = [
-    { id: "binance", name: "Binance Pay (USDT)", sub: "ادفع باستخدام عملات الكريبتو مثل USDT", perk: "سريع، آمن، ورسوم منخفضة", Logo: () => <BinanceLogo />, Icon: TetherIcon, tagSmall: "بديل" },
-    { id: "paypal", name: "PayPal", sub: "ادفع بأمان باستخدام حسابك على باي بال", perk: "سريع وآمن ومقبول عالمياً", Logo: () => <PayPalLogo size={28} />, Icon: PayPalIcon },
-    { id: "skrill", name: "Skrill", sub: "ادفع باستخدام حسابك على سكريل", perk: "سريع وآمن حول العالم", Logo: () => <SkrillLogo size={28} />, Icon: SkrillIcon },
-    { id: "wise", name: "Wise", sub: "حوّل وادفع بعملات متعددة بأقل رسوم", perk: "سعر صرف حقيقي ورسوم منخفضة", Logo: () => <WiseLogo size={28} />, Icon: WiseIcon },
-  ];
-
   return (
-    <div dir="rtl" lang="ar" className="h-full w-full overflow-y-auto" style={{ background: "#FFFFFF", fontFamily: FONT }}>
-      <style>{`
-        @keyframes pay-in { from {opacity:0; transform: translateY(14px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes pay-slide-up { from {opacity:0; transform: translateY(40px);} to {opacity:1; transform: translateY(0);} }
-        @keyframes pay-pop { 0% {transform: scale(.5); opacity:0;} 60% {transform: scale(1.15); opacity:1;} 100% {transform: scale(1);} }
-        @keyframes pay-shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-3px);} 75%{transform:translateX(3px);} }
-        .pay-in { animation: pay-in .5s cubic-bezier(.2,.8,.2,1) both; }
-        .pay-pop { animation: pay-pop .5s cubic-bezier(.2,.8,.2,1) both; }
-        .pay-shake { animation: pay-shake .35s ease-out; }
-        .pay-heading { font-family: ${HEADING_FONT}; font-weight: 900; letter-spacing: -0.01em; }
-      `}</style>
-
-      {/* Top bar */}
-      <div className="px-5 pt-5 pb-3 max-w-md mx-auto">
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95">
-            <ChevronRight className="h-4 w-4" />
-            رجوع
-          </button>
-          <div className="text-[12px] font-extrabold" style={{ color: ORANGE }}>{total} من {total}</div>
-          <div className="flex items-center gap-1.5 text-[10.5px] font-extrabold" style={{ color: GREEN }}>
-            <ShieldCheck className="h-3.5 w-3.5" /> آمن 100%
-          </div>
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: total }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: ORANGE }} />
-          ))}
-        </div>
-      </div>
-
-      <div className="px-5 pb-24 max-w-md mx-auto">
-        {/* Title */}
-        <div className="pay-in text-center mt-4">
-          <h1 className="pay-heading text-[24px]" style={{ color: TEXT }}>أكمل <span style={{ color: ORANGE }}>طلبك</span> الآن</h1>
-          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed">اختر طريقة الدفع المناسبة لك لبدء برنامجك الرقمي المخصص</p>
-        </div>
-
-        {/* Summary card */}
-        <div className="pay-in mt-5 rounded-3xl p-4 flex items-center gap-4" style={{ background: "#FFF6EE", border: `1px solid ${ORANGE}22`, animationDelay: ".05s" }}>
-          <div className="shrink-0 h-20 w-20 rounded-2xl grid place-items-center relative" style={{ background: "linear-gradient(160deg,#1E293B,#0F172A)" }}>
-            <TrophySvg />
-            <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full grid place-items-center text-white" style={{ background: ORANGE }}>
-              <Check className="h-3.5 w-3.5" strokeWidth={3.5} />
-            </div>
-          </div>
-          <div className="flex-1 text-right min-w-0">
-            <div className="text-[10.5px] text-neutral-500 font-bold">الباقة المختارة</div>
-            <div className="pay-heading text-[17px] mt-0.5" style={{ color: TEXT }}>{tier.name}</div>
-            <div className="mt-1 text-[11px] text-neutral-500 leading-snug">{PRODUCT_SUMMARY.duration} · {PRODUCT_SUMMARY.type}</div>
-          </div>
-          <div className="text-center shrink-0 pr-2 border-r border-orange-200">
-            <div className="text-[10px] text-neutral-500 font-bold">السعر الإجمالي</div>
-            <div className="pay-heading text-[26px] leading-none mt-1" style={{ color: ORANGE }}>{tier.totalPrice}</div>
-            <div className="text-[10px] text-neutral-500 font-bold mt-1">USD · دفعة واحدة</div>
-          </div>
-        </div>
-
-        {/* Product & delivery disclosure (Paddle compliance) */}
-        <div className="pay-in mt-4 rounded-2xl p-4 text-right" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
-          <div className="flex items-center gap-2 justify-end">
-            <span className="pay-heading text-[14px]" style={{ color: TEXT }}>ما الذي تشتريه؟</span>
-            <FileText className="h-4 w-4 text-neutral-500" />
-          </div>
-          <p className="mt-2 text-[12px] leading-relaxed text-neutral-600">{PRODUCT_SUMMARY.type} — {PRODUCT_SUMMARY.billing}.</p>
-          <ul className="mt-2.5 space-y-1.5 text-[11.5px] text-neutral-600">
-            {PRODUCT_SUMMARY.includes.slice(0, 4).map((item) => (
-              <li key={item} className="flex items-start gap-1.5 justify-end">
-                <span>{item}</span>
-                <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: GREEN }} strokeWidth={3} />
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-[11.5px] leading-relaxed text-neutral-600">
-            <span className="font-black text-neutral-700">التسليم: </span>
-            {PRODUCT_SUMMARY.delivery}
-          </p>
-          <p className="mt-2 text-[11px] text-neutral-500">
-            {SITE_LEGAL_ENTITY} ·{" "}
-            <a href={`mailto:${SITE_SUPPORT_EMAIL}`} className="font-bold hover:text-primary">{SITE_SUPPORT_EMAIL}</a>
-          </p>
-        </div>
-
-        {/* Legal consent */}
-        <label className="pay-in mt-4 flex items-start gap-3 rounded-2xl p-3.5 cursor-pointer text-right" style={{ background: "#fff", border: "1px solid #EEF1F4" }}>
-          <div className="flex-1 min-w-0">
-            <span className="text-[12px] leading-relaxed text-neutral-700">
-              أوافق على{" "}
-              <Link to={LEGAL_ROUTES.terms} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
-                الشروط والأحكام
-              </Link>
-              {" "}و{" "}
-              <Link to={LEGAL_ROUTES.privacy} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
-                سياسة الخصوصية
-              </Link>
-              {" "}و{" "}
-              <Link to={LEGAL_ROUTES.refund} className="font-black text-primary underline-offset-2 hover:underline" target="_blank">
-                سياسة الاسترجاع
-              </Link>
-              .
-            </span>
-          </div>
-          <input
-            type="checkbox"
-            checked={legalAccepted}
-            onChange={(e) => setLegalAccepted(e.target.checked)}
-            className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#FF6B00]"
-          />
-        </label>
-
-        {/* Secure card checkout */}
-        <div className="mt-7 text-center">
-          <h2 className="pay-heading text-[18px]" style={{ color: TEXT }}>الدفع الآمن بالبطاقة</h2>
-          <p className="mt-1 text-[11.5px] text-neutral-500">Visa · Mastercard · Apple Pay · Google Pay</p>
-        </div>
-        <div className="mt-3 pay-in">
-          <button
-            type="button"
-            disabled={!legalAccepted || paddleLoading}
-            onClick={() => {
-              choose("paddle");
-              void handlePaddlePay();
-            }}
-            className="w-full rounded-2xl p-4 flex items-center gap-3 text-right transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
-            style={{
-              background: method === "paddle" ? "#FFF6EE" : "#fff",
-              border: `2px solid ${method === "paddle" ? ORANGE : "#EEF1F4"}`,
-              boxShadow: method === "paddle" ? `0 12px 30px -16px ${ORANGE}66` : "0 4px 14px -10px rgba(0,0,0,.08)",
-            }}
-          >
-            <div className="shrink-0 h-12 w-12 rounded-xl grid place-items-center" style={{ background: "#0F172A" }}>
-              <CreditCard className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="pay-heading text-[15px]" style={{ color: TEXT }}>ادفع بالبطاقة أو Apple Pay</div>
-              <div className="text-[11.5px] text-neutral-500 mt-0.5">
-                {paddleReady ? "مدفوعات آمنة عبر مزود دفع عالمي معتمد" : "يُفعّل بعد إعداد مزود الدفع — أضف VITE_PADDLE_CLIENT_TOKEN"}
-              </div>
-            </div>
-            <div className="shrink-0 px-2 py-1 rounded-md text-[9px] font-extrabold text-white" style={{ background: ORANGE }}>موصى به</div>
-          </button>
-        </div>
-
-        <div className="pay-in mt-3 rounded-2xl p-4 text-right" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
-          <p className="text-[11.5px] leading-relaxed text-neutral-600">{PAYMENT_PROCESSING_SUMMARY}</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">{PAYMENT_PADDLE_DISCLOSURE}</p>
-        </div>
-
-        {/* Alternative methods */}
-        <div className="mt-7 text-center">
-          <h2 className="pay-heading text-[16px] text-neutral-600">طرق دفع بديلة</h2>
-        </div>
-
-        {/* Payment methods list */}
-        <div className="mt-4 space-y-3">
-          {PAY_METHODS.map((m, i) => {
-            const selected = method === m.id;
-            return (
-              <button
-                key={m.id}
-                onClick={() => {
-                  if (!legalAccepted) return;
-                  choose(m.id);
-                }}
-                disabled={!legalAccepted}
-                className={`pay-in w-full text-right rounded-2xl p-3 flex items-center gap-3 transition-all disabled:opacity-45 disabled:cursor-not-allowed ${selected ? "pay-shake" : ""}`}
-                style={{
-                  animationDelay: `${0.1 + i * 0.07}s`,
-                  background: selected ? "#FFF6EE" : "#fff",
-                  border: `2px solid ${selected ? ORANGE : "#EEF1F4"}`,
-                  boxShadow: selected ? `0 12px 30px -16px ${ORANGE}66` : "0 4px 14px -10px rgba(0,0,0,.08)",
-                }}
-              >
-                {/* Brand logo */}
-                <div className="shrink-0 w-[88px] h-[56px] grid place-items-center rounded-xl" style={{ background: m.recommended ? "#FFF" : "#FAFBFC", border: "1px solid #EEF1F4" }}>
-                  <m.Logo />
-                </div>
-                {m.recommended && (
-                  <div className="absolute" />
-                )}
-                {/* Texts */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 justify-end">
-                    <span className="pay-heading text-[14.5px]" style={{ color: TEXT }}>{m.name}</span>
-                  </div>
-                  <div className="text-[11.5px] text-neutral-500 leading-snug mt-0.5">{m.sub}</div>
-                  <div className="text-[11px] font-extrabold mt-1" style={{ color: GREEN }}>{m.perk}</div>
-                  {m.tagSmall && (
-                    <div className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-extrabold text-white" style={{ background: ORANGE }}>{m.tagSmall}</div>
-                  )}
-                </div>
-                {/* Right icon + chevron */}
-                <div className="shrink-0 relative">
-                  <m.Icon />
-                  {m.recommended && (
-                    <div className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-md text-[9px] font-extrabold text-white" style={{ background: ORANGE }}>موصى به</div>
-                  )}
-                  {selected && (
-                    <div className="absolute -bottom-1 -left-1 h-5 w-5 rounded-full grid place-items-center pay-pop" style={{ background: GREEN }}>
-                      <Check className="h-3 w-3 text-white" strokeWidth={4} />
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Bank transfer section */}
-        <div className="mt-8">
-          <div className="flex items-center justify-end gap-2 mb-3">
-            <h3 className="pay-heading text-[16px]" style={{ color: TEXT }}>تحويل بنكي</h3>
-          </div>
-          <div className="rounded-3xl p-1.5" style={{ background: "#fff", border: "1px solid #EEF1F4", boxShadow: "0 4px 14px -10px rgba(0,0,0,.08)" }}>
-            {([
-              { id: "uae" as BankId, label: "الإمارات العربية المتحدة", sub: "Emirates NBD", color: "#10B981" },
-              { id: "morocco" as BankId, label: "المغرب", sub: "CIH BANK · BMCE BANK", color: "#DC2626" },
-              { id: "brazil" as BankId, label: "البرازيل", sub: "PIX · Nubank", color: "#7C3AED" },
-            ]).map((b, i) => (
-              <button
-                key={b.id}
-                onClick={() => setBankOpen(b.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl active:scale-[0.99] transition"
-                style={{ borderTop: i === 0 ? "none" : "1px solid #F1F3F5" }}
-              >
-                <div className="shrink-0 h-11 w-11 rounded-xl grid place-items-center" style={{ background: `${b.color}15`, color: b.color }}>
-                  <ShieldHalf className="h-5 w-5" strokeWidth={2.2} />
-                </div>
-                <div className="flex-1 text-right">
-                  <div className="pay-heading text-[13.5px]" style={{ color: TEXT }}>{b.label}</div>
-                  <div className="text-[11px] text-neutral-500 mt-0.5">{b.sub}</div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-neutral-400 rotate-180" />
-              </button>
-            ))}
-          </div>
-          <div className="mt-2 text-center text-[11px] text-neutral-500">ستحصل على بيانات الحساب بعد اختيار البنك</div>
-        </div>
-
-        {/* WhatsApp help */}
-        <a
-          href={`${SITE_WHATSAPP_URL}?text=${encodeURIComponent("أحتاج مساعدة في اختيار طريقة الدفع")}`}
-          className="mt-5 rounded-2xl p-3.5 flex items-center gap-3 active:scale-[0.99] transition"
-          style={{ background: "#F0FAF4", border: "1px solid #BBF7D0" }}
-        >
-          <div className="shrink-0 h-11 w-11 rounded-full grid place-items-center" style={{ background: "#25D366" }}>
-            <MessageCircle className="h-5 w-5 text-white" fill="#fff" strokeWidth={0} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="pay-heading text-[13.5px]" style={{ color: GREEN }}>تحتاج مساعدة؟</div>
-            <div className="text-[11px] text-neutral-500 mt-0.5">تواصل معنا على واتساب وسنساعدك في اختيار طريقة الدفع الأنسب لك</div>
-          </div>
-          <ChevronRight className="h-4 w-4 text-neutral-400 rotate-180" />
-        </a>
-
-        {/* Confirm button - appears after alternative method selection */}
-        {method && method !== "paddle" && !done && legalAccepted && (
-          <div className="mt-6 pay-in">
-            <button
-              onClick={() => setProofOpen(true)}
-              className="w-full h-[58px] rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition"
-              style={{ background: ORANGE, fontFamily: HEADING_FONT, boxShadow: `0 16px 36px -14px ${ORANGE}aa` }}
-            >
-              <Check className="h-5 w-5" strokeWidth={3} />
-              لقد قمت بالدفع
-            </button>
-            <p className="text-center text-[10.5px] text-neutral-500 mt-2">بعد الدفع ارفع إثبات التحويل لتفعيل طلبك</p>
-          </div>
-        )}
-        {done && (
-          <div className="mt-6 rounded-2xl p-5 text-center pay-in" style={{ background: "#F0FAF4", border: `1px solid ${GREEN}33` }}>
-            <div className="mx-auto h-14 w-14 rounded-full grid place-items-center pay-pop" style={{ background: GREEN }}>
-              <Check className="h-7 w-7 text-white" strokeWidth={3.5} />
-            </div>
-            <div className="pay-heading text-[16px] mt-3" style={{ color: GREEN }}>تم استلام إثبات الدفع</div>
-            <p className="text-[12px] text-neutral-500 mt-1">سيتم تفعيل طلبك خلال 24–48 ساعة وسنتواصل معك عبر الواتساب.</p>
-          </div>
-        )}
-
-        {/* Trust bar */}
-        <div className="mt-8 grid grid-cols-2 gap-3">
-          {([
-            { Icon: Lock, color: "#16A34A", t: "دفع آمن ومشفر", s: "مزود دفع عالمي معتمد" },
-            { Icon: ShieldCheck, color: "#16A34A", t: "حماية البيانات", s: "لا نخزّن بيانات البطاقة" },
-            { Icon: RefreshCw, color: "#2563EB", t: "سياسة استرجاع", s: "7 أيام — راجع السياسة", link: LEGAL_ROUTES.refund },
-            { Icon: Headphones, color: "#2563EB", t: "دعم العملاء", s: "واتساب وبريد إلكتروني" },
-          ] as const).map((b, i) => {
-            const inner = (
-              <>
-                <div className="shrink-0 h-10 w-10 rounded-xl grid place-items-center" style={{ background: `${b.color}15` }}>
-                  <b.Icon className="h-5 w-5" style={{ color: b.color }} strokeWidth={2.2} />
-                </div>
-                <div className="text-right min-w-0">
-                  <div className="pay-heading text-[11.5px]" style={{ color: b.color }}>{b.t}</div>
-                  <div className="text-[10px] text-neutral-500 leading-snug mt-0.5">{b.s}</div>
-                </div>
-              </>
-            );
-            return "link" in b && b.link ? (
-              <Link key={i} to={b.link} className="rounded-2xl p-3 flex items-center gap-2.5 hover:bg-neutral-50 transition" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
-                {inner}
-              </Link>
-            ) : (
-              <div key={i} className="rounded-2xl p-3 flex items-center gap-2.5" style={{ background: "#FAFBFC", border: "1px solid #EEF1F4" }}>
-                {inner}
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10.5px] text-neutral-500">
-          <Link to={LEGAL_ROUTES.privacy} className="font-bold hover:text-primary">الخصوصية</Link>
-          <span>·</span>
-          <Link to={LEGAL_ROUTES.terms} className="font-bold hover:text-primary">الشروط</Link>
-          <span>·</span>
-          <Link to={LEGAL_ROUTES.refund} className="font-bold hover:text-primary">الاسترجاع</Link>
-        </div>
-        <div className="mt-4 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-500">
-          <Lock className="h-3 w-3" />
-          <span>جميع المعاملات محمية بتشفير SSL</span>
-        </div>
-      </div>
-
-      <SiteFooter compact />
-
-      {bankOpen && <BankDetailsModal bank={bankOpen} onClose={() => setBankOpen(null)} />}
-      {proofOpen && <PaymentProofModal onClose={() => setProofOpen(false)} onSubmit={() => { setProofOpen(false); setDone(true); }} />}
-    </div>
+    <CheckoutScreen
+      name={name}
+      tier={{
+        id: tier.id,
+        name: tier.name,
+        pricePerDay: tier.pricePerDay,
+        totalPrice: tier.totalPrice,
+        topBadge: tier.topBadge,
+      }}
+      total={total}
+      onBack={onBack}
+    />
   );
 }
+
