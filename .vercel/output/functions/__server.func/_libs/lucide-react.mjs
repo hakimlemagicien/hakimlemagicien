@@ -475,6 +475,26 @@ var Clock = createLucideIcon("clock", [["circle", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var CreditCard = createLucideIcon("credit-card", [["rect", {
+	width: "20",
+	height: "14",
+	x: "2",
+	y: "5",
+	rx: "2",
+	key: "ynyp8z"
+}], ["line", {
+	x1: "2",
+	x2: "22",
+	y1: "10",
+	y2: "10",
+	key: "1b3vmo"
+}]]);
+/**
+* @license lucide-react v1.21.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Crown = createLucideIcon("crown", [["path", {
 	d: "M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z",
 	key: "1vdc57"
@@ -508,6 +528,34 @@ var Dumbbell = createLucideIcon("dumbbell", [
 	["path", {
 		d: "m9.6 14.4 4.8-4.8",
 		key: "6umqxw"
+	}]
+]);
+/**
+* @license lucide-react v1.21.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var FileText = createLucideIcon("file-text", [
+	["path", {
+		d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+		key: "1oefj6"
+	}],
+	["path", {
+		d: "M14 2v5a1 1 0 0 0 1 1h5",
+		key: "wfsgrz"
+	}],
+	["path", {
+		d: "M10 9H8",
+		key: "b1mrlr"
+	}],
+	["path", {
+		d: "M16 13H8",
+		key: "t4e002"
+	}],
+	["path", {
+		d: "M16 17H8",
+		key: "z1uh3a"
 	}]
 ]);
 /**
@@ -1164,4 +1212,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { BadgeCheck as $, Lightbulb as A, CircleCheck as B, Plus as C, MessageCircleQuestionMark as D, MessageCircle as E, Flame as F, ChevronDown as G, ChevronUp as H, Dumbbell as I, ChartColumn as J, Check as K, Crown as L, Headphones as M, Globe as N, Menu as O, Gem as P, BatteryFull as Q, Clock as R, RefreshCw as S, MessageSquare as T, ChevronRight as U, ChevronsLeft as V, ChevronLeft as W, CalendarX as X, Calendar as Y, CalendarCheck as Z, ShieldHalf as _, UtensilsCrossed as a, Salad as b, Trophy as c, TrendingDown as d, Award as et, Target as f, Shield as g, Signal as h, Utensils as i, Heart as j, Lock as k, TrendingUp as l, Sparkles as m, X as n, Activity as nt, Users as o, Star as p, ChartLine as q, Wifi as r, User as s, Zap as t, ArrowLeft as tt, TriangleAlert as u, ShieldCheck as v, PersonStanding as w, Ruler as x, Scale as y, ClipboardList as z };
+export { CalendarCheck as $, Lightbulb as A, Clock as B, Plus as C, MessageCircleQuestionMark as D, MessageCircle as E, Flame as F, ChevronRight as G, CircleCheck as H, FileText as I, Check as J, ChevronLeft as K, Dumbbell as L, Headphones as M, Globe as N, Menu as O, Gem as P, CalendarX as Q, Crown as R, RefreshCw as S, MessageSquare as T, ChevronsLeft as U, ClipboardList as V, ChevronUp as W, ChartColumn as X, ChartLine as Y, Calendar as Z, ShieldHalf as _, UtensilsCrossed as a, Salad as b, Trophy as c, TrendingDown as d, BatteryFull as et, Target as f, Shield as g, Signal as h, Utensils as i, Activity as it, Heart as j, Lock as k, TrendingUp as l, Sparkles as m, X as n, Award as nt, Users as o, Star as p, ChevronDown as q, Wifi as r, ArrowLeft as rt, User as s, Zap as t, BadgeCheck as tt, TriangleAlert as u, ShieldCheck as v, PersonStanding as w, Ruler as x, Scale as y, CreditCard as z };
