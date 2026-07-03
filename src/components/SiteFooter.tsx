@@ -15,7 +15,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className={`grid gap-6 ${compact ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
-          <div className="text-right">
+          <div className="text-start">
             <div className="font-[Cairo] text-[16px] font-black text-[#0F172A]">{SITE_BRAND}</div>
             <p className="mt-2 text-[12.5px] leading-relaxed text-neutral-600">
               برامج تدريب وتغذية رقمية مخصصة لتحقيق أهدافك خلال 90 يوماً، مع متابعة ودعم حسب الباقة
@@ -24,7 +24,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
           </div>
 
           {!compact && (
-            <div className="text-right">
+            <div className="text-start">
               <div className="text-[13px] font-black text-[#0F172A]">روابط قانونية</div>
               <ul className="mt-3 space-y-2 text-[13px] font-bold text-neutral-600">
                 <li>
@@ -46,7 +46,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
             </div>
           )}
 
-          <div className="text-right">
+          <div className="text-start">
             <div className="text-[13px] font-black text-[#0F172A]">التواصل</div>
             <ul className="mt-3 space-y-2 text-[12.5px] text-neutral-600">
               <li>{SITE_LEGAL_ENTITY}</li>
