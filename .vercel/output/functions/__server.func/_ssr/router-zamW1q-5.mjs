@@ -9,7 +9,7 @@ import { r as premiumTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
 import { r as MotionConfig, t as useReducedMotion } from "../_libs/framer-motion.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-DHDUBE_V.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-zamW1q-5.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var styles_default = "/assets/styles-CxTCzYNv.css";
@@ -259,7 +259,7 @@ function ErrorComponent({ error, reset }) {
 		})
 	});
 }
-var Route$8 = createRootRouteWithContext()({
+var Route$9 = createRootRouteWithContext()({
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },
@@ -389,7 +389,7 @@ function HashScrollHandler() {
 	return null;
 }
 function RootComponent() {
-	const { queryClient } = Route$8.useRouteContext();
+	const { queryClient } = Route$9.useRouteContext();
 	const isQuiz = useRouterState({ select: (s) => s.location.pathname }).startsWith("/quiz");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MotionProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(QueryClientProvider, {
 		client: queryClient,
@@ -402,20 +402,32 @@ function RootComponent() {
 		]
 	}) });
 }
-var $$splitComponentImporter$7 = () => import("./terms-CpKU_SZ7.mjs");
-var Route$7 = createFileRoute("/terms")({ component: lazyRouteComponent($$splitComponentImporter$7, "component") });
-var $$splitComponentImporter$6 = () => import("./refund-B75oU5xu.mjs");
-var Route$6 = createFileRoute("/refund")({ component: lazyRouteComponent($$splitComponentImporter$6, "component") });
-var $$splitComponentImporter$5 = () => import("./quiz-BLJPMjhL.mjs");
-var Route$5 = createFileRoute("/quiz")({
+var $$splitComponentImporter$7 = () => import("./terms-BNT-dcs9.mjs");
+var Route$8 = createFileRoute("/terms")({ component: lazyRouteComponent($$splitComponentImporter$7, "component") });
+var $$splitComponentImporter$6 = () => import("./refund-D0igSGbK.mjs");
+var Route$7 = createFileRoute("/refund")({ component: lazyRouteComponent($$splitComponentImporter$6, "component") });
+var $$splitComponentImporter$5 = () => import("./quiz-yPWS4pD4.mjs");
+var Route$6 = createFileRoute("/quiz")({
 	head: () => ({ meta: [{ title: "ابدأ تقييمك المجاني — Hakim Coaching" }, {
 		name: "description",
 		content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة."
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
-var $$splitComponentImporter$4 = () => import("./privacy-BbX3-Y0H.mjs");
-var Route$4 = createFileRoute("/privacy")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
+var $$splitComponentImporter$4 = () => import("./privacy-0uOSx_Ww.mjs");
+var Route$5 = createFileRoute("/privacy")({ component: lazyRouteComponent($$splitComponentImporter$4, "component") });
+var Route$4 = createFileRoute("/pricing")({
+	head: () => ({ meta: [{ title: "كيف يتم تحديد السعر؟ — Hakim Coaching" }, {
+		name: "description",
+		content: "تعرّف على كيفية تحديد سعر برنامجك قبل الدفع — عملية واضحة وبسيطة بدون أي التزام."
+	}] }),
+	beforeLoad: () => {
+		throw redirect({
+			to: "/",
+			hash: "pricing"
+		});
+	}
+});
 var $$splitComponentImporter$3 = () => import("./auth-Bo8x8Gfx.mjs");
 var Route$3 = createFileRoute("/auth")({
 	head: () => ({ meta: [{ title: "تسجيل الدخول | Hakim Coaching" }] }),
@@ -431,7 +443,7 @@ var Route$2 = createFileRoute("/_authenticated")({
 	},
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./routes-BkhVJ8W2.mjs");
+var $$splitComponentImporter$1 = () => import("./routes-90LbgeU7.mjs");
 var Route$1 = createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Hakim Coaching — برنامج تدريبي وغذائي مخصص لهدفك" },
@@ -455,39 +467,44 @@ var Route = createFileRoute("/_authenticated/dashboard")({
 	head: () => ({ meta: [{ title: "حسابي | Hakim Coaching" }] }),
 	component: lazyRouteComponent($$splitComponentImporter, "component")
 });
-var TermsRoute = Route$7.update({
+var TermsRoute = Route$8.update({
 	id: "/terms",
 	path: "/terms",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
-var RefundRoute = Route$6.update({
+var RefundRoute = Route$7.update({
 	id: "/refund",
 	path: "/refund",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
-var QuizRoute = Route$5.update({
+var QuizRoute = Route$6.update({
 	id: "/quiz",
 	path: "/quiz",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
-var PrivacyRoute = Route$4.update({
+var PrivacyRoute = Route$5.update({
 	id: "/privacy",
 	path: "/privacy",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
+});
+var PricingRoute = Route$4.update({
+	id: "/pricing",
+	path: "/pricing",
+	getParentRoute: () => Route$9
 });
 var AuthRoute = Route$3.update({
 	id: "/auth",
 	path: "/auth",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
 var AuthenticatedRouteRoute = Route$2.update({
 	id: "/_authenticated",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
 var IndexRoute = Route$1.update({
 	id: "/",
 	path: "/",
-	getParentRoute: () => Route$8
+	getParentRoute: () => Route$9
 });
 var AuthenticatedRouteRouteChildren = { AuthenticatedDashboardRoute: Route.update({
 	id: "/dashboard",
@@ -498,12 +515,13 @@ var rootRouteChildren = {
 	IndexRoute,
 	AuthenticatedRouteRoute: AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren),
 	AuthRoute,
+	PricingRoute,
 	PrivacyRoute,
 	QuizRoute,
 	RefundRoute,
 	TermsRoute
 };
-var routeTree = Route$8._addFileChildren(rootRouteChildren)._addFileTypes();
+var routeTree = Route$9._addFileChildren(rootRouteChildren)._addFileTypes();
 var getRouter = () => {
 	return createRouter({
 		routeTree,

@@ -4,7 +4,7 @@ import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime, t as createContextScope } from "../_libs/radix-ui__react-context+react.mjs";
 import { a as createSlot, i as Primitive, n as useDismissableLayerSurface, t as DismissableLayer } from "../_libs/@radix-ui/react-dismissable-layer+[...].mjs";
 import { B as Headphones, C as Scale, D as Plus, E as RefreshCw, K as Dumbbell, N as MessageCircleQuestionMark, Q as Clock, St as Activity, T as Ruler, V as Globe, W as Flame, _t as BatteryFull, b as ShieldCheck, bt as Award, c as Users, d as Trophy, dt as ChartColumn, et as ClipboardList, f as TrendingUp, ft as Calendar, g as Star, h as Target, ht as CalendarCheck, i as Wifi, it as ChevronsLeft, j as MessageSquare, l as User, lt as Check, m as TrendingDown, n as X, o as Utensils, p as TriangleAlert, pt as CalendarX, rt as CircleCheck, s as UtensilsCrossed, t as Zap, ut as ChartLine, v as Signal, w as Salad, xt as ArrowLeft, y as Shield, yt as BadgeCheck } from "../_libs/lucide-react.mjs";
-import { n as SiteFooter, t as Header } from "./SiteFooter-BmMXIoIE.mjs";
+import { n as SiteFooter, t as Header } from "./SiteFooter-CSS0r33x.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
 import { n as Swiper, r as SwiperSlide, t as Autoplay } from "../_libs/swiper.mjs";
@@ -17,7 +17,7 @@ import { t as Presence } from "../_libs/radix-ui__react-presence.mjs";
 import { t as useFocusGuards } from "../_libs/radix-ui__react-focus-guards.mjs";
 import { t as ReactRemoveScroll } from "../_libs/react-remove-scroll+[...].mjs";
 import { t as hideOthers } from "../_libs/aria-hidden.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BkhVJ8W2.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-90LbgeU7.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /** Unified client social-proof count shown across the landing page. */

@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-BEXb-T4f.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-WiOvMlZc.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/__root.tsx",
@@ -6,16 +6,17 @@ var tsrStartManifest = () => ({ routes: {
 			"/",
 			"/_authenticated",
 			"/auth",
+			"/pricing",
 			"/privacy",
 			"/quiz",
 			"/refund",
 			"/terms"
 		],
-		preloads: ["/assets/index-js3qHs_Y.js", "/assets/useRouter-C7pTCAcE.js"],
+		preloads: ["/assets/index-DxBSr2GA.js", "/assets/useRouter-C7pTCAcE.js"],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-js3qHs_Y.js"
+			src: "/assets/index-DxBSr2GA.js"
 		} }]
 	},
 	"/": {
@@ -23,63 +24,63 @@ var tsrStartManifest = () => ({ routes: {
 		children: void 0,
 		css: ["/assets/routes-D-CQQIgx.css"],
 		preloads: [
-			"/assets/routes-B4V7GKN8.js",
-			"/assets/SiteFooter-Dta_oP1e.js",
-			"/assets/utils-CPVIHDyC.js",
-			"/assets/site-legal-6077WK4d.js"
+			"/assets/routes-CErZc0Zy.js",
+			"/assets/SiteFooter-B-tuMehV.js",
+			"/assets/utils-BYFANbK-.js",
+			"/assets/site-legal-CAsXBZtK.js"
 		]
 	},
 	"/_authenticated": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/_authenticated/route.tsx",
 		children: ["/_authenticated/dashboard"],
-		preloads: ["/assets/route-DRn2pju8.js"]
+		preloads: ["/assets/route-DGNLvJPw.js"]
 	},
 	"/auth": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/auth.tsx",
 		children: void 0,
-		preloads: ["/assets/auth-iFpz7RjD.js"]
+		preloads: ["/assets/auth-CRncMOjK.js"]
 	},
 	"/privacy": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/privacy.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/privacy-DmQBXsN2.js",
-			"/assets/LegalPageShell-CrXo1tme.js",
-			"/assets/site-legal-6077WK4d.js"
+			"/assets/privacy-q5DcMNzV.js",
+			"/assets/LegalPageShell-CDKl9rWM.js",
+			"/assets/site-legal-CAsXBZtK.js"
 		]
 	},
 	"/quiz": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/quiz.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/quiz-FDqv0Lbv.js",
-			"/assets/utils-CPVIHDyC.js",
-			"/assets/wallet-DWzADV5n.js",
-			"/assets/site-legal-6077WK4d.js"
+			"/assets/quiz-fTQuJvdN.js",
+			"/assets/utils-BYFANbK-.js",
+			"/assets/wallet-DXBl9xKZ.js",
+			"/assets/site-legal-CAsXBZtK.js"
 		]
 	},
 	"/refund": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/refund.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/refund-B9wqQP1x.js",
-			"/assets/LegalPageShell-CrXo1tme.js",
-			"/assets/site-legal-6077WK4d.js"
+			"/assets/refund-CgSv_xKh.js",
+			"/assets/LegalPageShell-CDKl9rWM.js",
+			"/assets/site-legal-CAsXBZtK.js"
 		]
 	},
 	"/terms": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/terms.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/terms-ra2MDX9E.js",
-			"/assets/LegalPageShell-CrXo1tme.js",
-			"/assets/site-legal-6077WK4d.js"
+			"/assets/terms-Do0ezKX6.js",
+			"/assets/LegalPageShell-CDKl9rWM.js",
+			"/assets/site-legal-CAsXBZtK.js"
 		]
 	},
 	"/_authenticated/dashboard": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/_authenticated/dashboard.tsx",
 		children: void 0,
-		preloads: ["/assets/dashboard-1-vqj2l2.js"]
+		preloads: ["/assets/dashboard-D-1h_lOs.js"]
 	}
 } });
 //#endregion

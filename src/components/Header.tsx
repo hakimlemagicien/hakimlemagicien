@@ -9,6 +9,7 @@ const navItems = [
   { label: "كيف يعمل التقييم", hash: "how" },
   { label: "ماذا ستحصل عليه", hash: "features" },
   { label: "قصص النجاح", hash: "stories" },
+  { label: "تحديد السعر", hash: "pricing" },
   { label: "أسئلة شائعة", hash: "faq" },
 ] as const;
 

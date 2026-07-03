@@ -1,7 +1,7 @@
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, o as SITE_JURISDICTION } from "./site-legal-3UhVOjyr.mjs";
-import { t as LegalPageShell } from "./LegalPageShell-KoeYvGNd.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/terms-CpKU_SZ7.js
+import { t as LegalPageShell } from "./LegalPageShell-wmqxhSEx.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/terms-BNT-dcs9.js
 var import_jsx_runtime = require_jsx_runtime();
 function TermsPage() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegalPageShell, {
