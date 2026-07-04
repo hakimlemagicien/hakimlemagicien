@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ShieldCheck, Smartphone } from "lucide-react";
-import { PRODUCT_SUMMARY } from "@/lib/site-legal";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -95,8 +94,7 @@ export default function PricingTransparency() {
             )}
           </div>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-loose text-neutral-500 md:text-lg">
-            عملية واضحة وبسيطة — تعرف ما ستدفعه قبل أي التزام. جميع الباقات{" "}
-            <span className="font-bold text-neutral-700">رقمية بالكامل</span> ولا تشمل شحن منتجات مادية.
+            عملية واضحة وبسيطة — تعرف ما ستدفعه قبل أي التزام.
           </p>
         </div>
 
@@ -162,38 +160,6 @@ export default function PricingTransparency() {
                   نؤمن بالشفافية الكاملة. سيتم عرض سعر اشتراكك النهائي وجميع المزايا المشمولة وتفاصيل
                   الفوترة قبل أي عملية دفع، دون أي رسوم مخفية.
                 </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Digital product disclosure */}
-        <div
-          className={`mx-auto mt-8 max-w-4xl transition-all duration-700 ease-out md:mt-10 ${
-            trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-          }`}
-          style={{ transitionDelay: "120ms" }}
-        >
-          <div className="relative overflow-hidden rounded-[28px] border border-neutral-200 bg-white p-6 shadow-[0_10px_32px_-18px_rgba(15,23,42,0.12)] md:p-8">
-            <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:gap-5">
-              <div className="grid h-14 w-14 shrink-0 place-items-center self-center rounded-2xl bg-orange-50 text-primary ring-1 ring-orange-100 sm:self-start">
-                <Smartphone className="h-7 w-7" strokeWidth={2.2} />
-              </div>
-              <div className="min-w-0 flex-1 text-center sm:text-right">
-                <h3 className="font-[Tajawal] text-[20px] font-black text-neutral-900 md:text-[22px]">
-                  منتج رقمي — كيف تستلم برنامجك؟
-                </h3>
-                <p className="mt-2.5 text-[13.5px] leading-[1.85] text-neutral-600 md:text-[15px]">
-                  {PRODUCT_SUMMARY.type}. {PRODUCT_SUMMARY.delivery} لا جلسات حضورية ولا شحن عبر الموقع.
-                </p>
-                <ul className="mt-4 space-y-2 text-[13px] leading-relaxed text-neutral-600 md:text-[14px]">
-                  {PRODUCT_SUMMARY.includes.slice(0, 4).map((item) => (
-                    <li key={item} className="flex items-start justify-end gap-2">
-                      <span>{item}</span>
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           </div>

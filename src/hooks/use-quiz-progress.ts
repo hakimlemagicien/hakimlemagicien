@@ -4,8 +4,6 @@ import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
 
 const PERSIST_DEBOUNCE_MS = 280;
 
-const LEGACY_STEPS = new Set(["trainingType", "pricingDubai", "offlinePackages"]);
-
 type QuizStep =
   | "loading"
   | "gender"
@@ -23,13 +21,11 @@ type QuizStep =
   | "contact"
   | "congrats"
   | "reveal"
+  | "trainingType"
   | "pricing"
+  | "pricingDubai"
+  | "offlinePackages"
   | "payment";
-
-function normalizeStep(step: string): QuizStep {
-  if (LEGACY_STEPS.has(step)) return "pricing";
-  return step as QuizStep;
-}
 
 function applySnapshot(
   saved: QuizProgressSnapshot,
@@ -46,6 +42,7 @@ function applySnapshot(
     setActivityLevel: (v: string | undefined) => void;
     setInvestment: (v: string | undefined) => void;
     setBodyType: (v: string | undefined) => void;
+    setUserLocation: (v: "dubai" | "remote" | null) => void;
     setSelectedTierId: (v: "transform" | "pro" | "vip") => void;
   },
 ) {
@@ -61,6 +58,7 @@ function applySnapshot(
   setters.setActivityLevel(saved.activityLevel);
   setters.setInvestment(saved.investment);
   setters.setBodyType(saved.bodyType);
+  setters.setUserLocation(saved.userLocation);
   setters.setSelectedTierId(saved.selectedTierId);
 }
 
@@ -88,6 +86,7 @@ export function useQuizProgress() {
   const [activityLevel, setActivityLevel] = useState<string | undefined>();
   const [investment, setInvestment] = useState<string | undefined>();
   const [bodyType, setBodyType] = useState<string | undefined>();
+  const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
   const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
 
   useEffect(() => {
@@ -106,10 +105,11 @@ export function useQuizProgress() {
         setActivityLevel,
         setInvestment,
         setBodyType,
+        setUserLocation,
         setSelectedTierId,
       });
       if (saved.step && saved.step !== "loading") {
-        replaceStep(normalizeStep(saved.step));
+        replaceStep(saved.step as QuizStep);
       }
     }
     hydratedRef.current = true;
@@ -132,6 +132,7 @@ export function useQuizProgress() {
       activityLevel,
       investment,
       bodyType,
+      userLocation,
       selectedTierId,
     };
 
@@ -151,6 +152,7 @@ export function useQuizProgress() {
     activityLevel,
     investment,
     bodyType,
+    userLocation,
     selectedTierId,
   ]);
 
@@ -184,6 +186,8 @@ export function useQuizProgress() {
     setInvestment,
     bodyType,
     setBodyType,
+    userLocation,
+    setUserLocation,
     selectedTierId,
     setSelectedTierId,
   };

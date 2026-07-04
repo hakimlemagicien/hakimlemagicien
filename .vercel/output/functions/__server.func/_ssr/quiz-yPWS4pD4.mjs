@@ -4,12 +4,12 @@ import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from "./site-legal-3UhVOjyr.mjs";
-import { E as Ruler, G as Flame, I as Mail, L as Lock, N as MessageCircle, R as Lightbulb, St as ArrowLeft, U as Gem, V as Headphones, Y as Crown, _ as Sparkles, a as Wallet, b as Shield, ct as ChevronLeft, d as Trophy, g as Star, h as Target, k as PersonStanding, lt as ChevronDown, pt as Calendar, q as Dumbbell, st as ChevronRight, t as Zap, ut as Check, w as Scale, x as ShieldCheck, z as Heart } from "../_libs/lucide-react.mjs";
-import { n as pageVariants, t as pageTransition } from "./motion-C5gqCalS.mjs";
+import { B as Headphones, C as Scale, F as Mail, H as Gem, I as Lock, J as Crown, K as Dumbbell, L as Lightbulb, M as MessageCircle, O as PersonStanding, Q as Clock, R as Heart, T as Ruler, W as Flame, _ as Sparkles, a as Wallet, b as ShieldCheck, ct as ChevronDown, d as Trophy, ft as Calendar, g as Star, h as Target, lt as Check, ot as ChevronRight, st as ChevronLeft, t as Zap, xt as ArrowLeft, y as Shield } from "../_libs/lucide-react.mjs";
+import { a as triggerSelectionHaptic, i as quiz_gym_bg_default, n as pageVariants, t as pageTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
 import { t as initializePaddle } from "../_libs/paddle__paddle-js.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/quiz-B9cV5lGZ.js
+//#region node_modules/.nitro/vite/services/ssr/assets/quiz-yPWS4pD4.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var LEAD_ID_KEY = "hakim_lead_id";
@@ -74,18 +74,6 @@ function buildLeadInsertFromQuiz(answersInput, contact) {
 		location_preference: contact.locationPreference
 	};
 }
-/**
-* Premium selection haptic. Safe on iOS Safari (no-op) and optimized for
-* Chrome mobile where `navigator.vibrate` is natively supported.
-*/
-function triggerSelectionHaptic(durationMs = 25) {
-	if (typeof navigator === "undefined") return;
-	const vibrateFn = navigator.vibrate;
-	if (typeof vibrateFn !== "function") return;
-	try {
-		vibrateFn(durationMs);
-	} catch {}
-}
 var STORAGE_KEY = "hakim_quiz_progress_v1";
 var SCHEMA_VERSION = 1;
 function canUseStorage() {
@@ -148,15 +136,6 @@ function useQuizStepTransition(initial) {
 	};
 }
 var PERSIST_DEBOUNCE_MS = 280;
-var LEGACY_STEPS = new Set([
-	"trainingType",
-	"pricingDubai",
-	"offlinePackages"
-]);
-function normalizeStep(step) {
-	if (LEGACY_STEPS.has(step)) return "pricing";
-	return step;
-}
 function applySnapshot(saved, setters) {
 	setters.setGender(saved.gender);
 	setters.setUserName(saved.userName);
@@ -170,6 +149,7 @@ function applySnapshot(saved, setters) {
 	setters.setActivityLevel(saved.activityLevel);
 	setters.setInvestment(saved.investment);
 	setters.setBodyType(saved.bodyType);
+	setters.setUserLocation(saved.userLocation);
 	setters.setSelectedTierId(saved.selectedTierId);
 }
 function useQuizProgress() {
@@ -187,6 +167,7 @@ function useQuizProgress() {
 	const [activityLevel, setActivityLevel] = (0, import_react.useState)();
 	const [investment, setInvestment] = (0, import_react.useState)();
 	const [bodyType, setBodyType] = (0, import_react.useState)();
+	const [userLocation, setUserLocation] = (0, import_react.useState)(null);
 	const [selectedTierId, setSelectedTierId] = (0, import_react.useState)("transform");
 	(0, import_react.useEffect)(() => {
 		const saved = readQuizProgress();
@@ -204,9 +185,10 @@ function useQuizProgress() {
 				setActivityLevel,
 				setInvestment,
 				setBodyType,
+				setUserLocation,
 				setSelectedTierId
 			});
-			if (saved.step && saved.step !== "loading") replaceStep(normalizeStep(saved.step));
+			if (saved.step && saved.step !== "loading") replaceStep(saved.step);
 		}
 		hydratedRef.current = true;
 	}, [replaceStep]);
@@ -226,6 +208,7 @@ function useQuizProgress() {
 			activityLevel,
 			investment,
 			bodyType,
+			userLocation,
 			selectedTierId
 		};
 		const timer = window.setTimeout(() => writeQuizProgress(snapshot), PERSIST_DEBOUNCE_MS);
@@ -244,6 +227,7 @@ function useQuizProgress() {
 		activityLevel,
 		investment,
 		bodyType,
+		userLocation,
 		selectedTierId
 	]);
 	return {
@@ -276,6 +260,8 @@ function useQuizProgress() {
 		setInvestment,
 		bodyType,
 		setBodyType,
+		userLocation,
+		setUserLocation,
 		selectedTierId,
 		setSelectedTierId
 	};
@@ -1024,7 +1010,6 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 }
 var ذكر_default = "/assets/%D8%B0%D9%83%D8%B1-BKVowxgR.png";
 var آنثى_default = "/assets/%D8%A2%D9%86%D8%AB%D9%89-KAWfG-Vn.png";
-var quiz_gym_bg_default = "/assets/quiz-gym-bg-CQgth5sC.jpg";
 var coach_default = "/assets/coach-BIPmcWDQ.png";
 var خسارة_الدهون_default = "/assets/%D8%AE%D8%B3%D8%A7%D8%B1%D8%A9%20%D8%A7%D9%84%D8%AF%D9%87%D9%88%D9%86-COMM0BSy.jpg";
 var بناء_العضلات_default = "/assets/%D8%A8%D9%86%D8%A7%D8%A1%20%D8%A7%D9%84%D8%B9%D8%B6%D9%84%D8%A7%D8%AA-BYdK9eew.webp";
@@ -1055,11 +1040,11 @@ var خصر_انحف_ومشدود_default = "/assets/%D8%AE%D8%B5%D8%B1%20%D8%A7%
 var feminine_toned_body_default = "/assets/feminine-toned-body-ULTMdfL-.png";
 var جسم_صحي_ورياضي_للبنات_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B5%D8%AD%D9%8A%20%D9%88%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-D1R1oUOx.png";
 var تحسين_شكل_الصدر_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%B5%D8%AF%D8%B1-BNPobXQ4.jpg";
-var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
 var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
 var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
 var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
@@ -1088,7 +1073,7 @@ var REVEAL_GLUTES_AFTER = [
 ];
 var FONT = "'Tajawal', sans-serif";
 function QuizPage() {
-	const { step, phase, transitionTo, selectAndGo, goBack, gender, setGender, userName, setUserName, setUserPhone, setUserCity, goalId, setGoalId, challengeId, setChallengeId, age, setAge, heightCm, setHeightCm, weightKg, setWeightKg, activityLevel, setActivityLevel, investment, setInvestment, bodyType, setBodyType, selectedTierId, setSelectedTierId } = useQuizProgress();
+	const { step, phase, transitionTo, selectAndGo, goBack, gender, setGender, userName, setUserName, userPhone, setUserPhone, userCity, setUserCity, goalId, setGoalId, challengeId, setChallengeId, age, setAge, heightCm, setHeightCm, weightKg, setWeightKg, activityLevel, setActivityLevel, investment, setInvestment, bodyType, setBodyType, userLocation, setUserLocation, selectedTierId, setSelectedTierId } = useQuizProgress();
 	const quizAnswers = {
 		gender,
 		goalId,
@@ -1100,8 +1085,8 @@ function QuizPage() {
 		investment,
 		bodyType
 	};
-	const totalSteps = 14;
-	const afterReveal = () => selectAndGo("pricing");
+	const totalSteps = userLocation === "dubai" ? 15 : 14;
+	const afterReveal = () => selectAndGo(userLocation === "dubai" ? "trainingType" : "pricing");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		dir: "rtl",
 		lang: "ar",
@@ -1178,10 +1163,11 @@ function QuizPage() {
 				step === "contact" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContactScreen, {
 					quizAnswers,
 					onBack: () => goBack(gender === "female" ? "femaleBodyType" : "bodyType"),
-					onDone: (name, phone, city) => selectAndGo("congrats", () => {
+					onDone: (name, isDubai, phone, city) => selectAndGo("congrats", () => {
 						setUserName(name);
 						setUserPhone(phone);
 						setUserCity(city);
+						setUserLocation(isDubai ? "dubai" : "remote");
 					})
 				}),
 				step === "congrats" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CongratsScreen, {
@@ -1198,17 +1184,37 @@ function QuizPage() {
 					total: totalSteps,
 					onNext: afterReveal
 				}),
+				step === "trainingType" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrainingTypeScreen, {
+					onBack: () => goBack("reveal"),
+					onSelect: (t) => transitionTo(t === "inperson" ? "offlinePackages" : "pricing")
+				}),
 				step === "pricing" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PricingScreen, {
 					name: userName,
 					total: totalSteps,
-					onBack: () => goBack("reveal"),
+					onBack: () => goBack(userLocation === "dubai" ? "trainingType" : "reveal"),
 					onSelectTier: (id) => transitionTo("payment", () => setSelectedTierId(id))
+				}),
+				step === "pricingDubai" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PricingScreen, {
+					name: userName,
+					total: totalSteps,
+					onBack: () => goBack("trainingType"),
+					dubai: true,
+					onSelectTier: (id) => transitionTo("payment", () => setSelectedTierId(id))
+				}),
+				step === "offlinePackages" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(OfflinePackagesScreen, {
+					name: userName,
+					phone: userPhone,
+					city: userCity,
+					goalId,
+					challengeId,
+					total: totalSteps,
+					onBack: () => goBack("trainingType")
 				}),
 				step === "payment" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentScreen, {
 					name: userName,
 					tierId: selectedTierId,
 					total: totalSteps,
-					onBack: () => goBack("pricing")
+					onBack: () => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")
 				})
 			]
 		})]
@@ -5138,6 +5144,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }) {
 						if (!canSubmit || submitting) return;
 						setSubmitting(true);
 						const selectedCountry = COUNTRIES.find((c) => c.code === form.country);
+						const isDubai = form.country === "ae" && form.city === "دبي";
 						const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
 						try {
 							await createLead(buildLeadInsertFromQuiz(quizAnswers, {
@@ -5146,9 +5153,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }) {
 								phone: fullPhone,
 								city: form.city,
 								country: selectedCountry?.name ?? form.country,
-								locationPreference: "remote"
+								locationPreference: isDubai ? "dubai" : "remote"
 							}));
-							onDone(form.name.trim(), fullPhone, form.city);
+							onDone(form.name.trim(), isDubai, fullPhone, form.city);
 						} catch (error) {
 							console.error("Failed to save lead:", error);
 							alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
@@ -6755,7 +6762,7 @@ function PricingFeaturesList({ features, primary, textColor, mountDelayMs = 0 })
 		})
 	});
 }
-function PricingScreen({ name, total = 14, onBack, onSelectTier }) {
+function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }) {
 	const ORANGE = "#FF6B00";
 	const TEXT = "#0F172A";
 	const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
@@ -7125,19 +7132,18 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }) {
 							]
 						})
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed",
 						style: { animationDelay: ".08s" },
-						children: [
-							"برنامج رقمي بالكامل — خطة تدريب وتغذية تُسلَّم إلكترونياً مع متابعة عبر واتساب. تم تصميم جميع الباقات لتحقيق هدفك خلال",
-							" ",
+						children: dubai ? "باقات التدريب الحضوري + الأونلاين قادمة قريباً. في الوقت الحالي يمكنك اختيار باقات المتابعة عن بُعد." : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+							"تم تصميم جميع الباقات لتحقيق هدفك خلال ",
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "font-extrabold",
 								style: { color: ORANGE },
 								children: "90 يوماً"
 							}),
 							"."
-						]
+						] })
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "pri-in mt-5 border-b border-neutral-200/80",
@@ -7301,6 +7307,847 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }) {
 				})
 			})
 		]
+	});
+}
+function TrainingTypeScreen({ onBack, onSelect }) {
+	const ORANGE = "#FF6B00";
+	const TEXT = "#0F172A";
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const TOTAL = 14;
+	const CURRENT = 13;
+	const pick = (id) => {
+		if (selected) return;
+		setSelected(id);
+		triggerSelectionHaptic();
+		window.setTimeout(() => onSelect(id), 150);
+	};
+	const Card = ({ id, emoji, title, subtitle1, subtitle2, chips }) => {
+		const active = selected === id;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+			type: "button",
+			onClick: () => pick(id),
+			disabled: !!selected && !active,
+			className: "relative w-full text-right rounded-[26px] bg-white p-5 transition-all duration-300 active:scale-[0.99]",
+			style: {
+				border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
+				boxShadow: active ? `0 22px 48px -18px ${ORANGE}66, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.14)",
+				transform: active ? "scale(1.03)" : "scale(1)",
+				animation: active ? "tt-bounce .55s cubic-bezier(.34,1.56,.64,1)" : void 0
+			},
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "absolute top-4 left-4 z-10",
+				children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "relative h-8 w-8 rounded-full grid place-items-center",
+					style: {
+						background: ORANGE,
+						boxShadow: `0 6px 14px ${ORANGE}66`
+					},
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+							size: 18,
+							strokeWidth: 3,
+							className: "text-white"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -top-2 -right-2 h-3.5 w-3.5",
+							style: {
+								color: "#FBBF24",
+								animation: "tt-spark 1s ease-in-out infinite"
+							}
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sparkles, {
+							className: "absolute -bottom-2 -left-2 h-3 w-3",
+							style: {
+								color: ORANGE,
+								animation: "tt-spark 1s ease-in-out infinite .2s"
+							}
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-8 w-8 rounded-full bg-white border-2 border-gray-200" })
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-start gap-4",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex-1",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-[22px] font-black leading-tight",
+							style: {
+								color: TEXT,
+								fontFamily: "'Cairo','Tajawal',sans-serif"
+							},
+							children: title
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-2 text-[13px] leading-6 text-neutral-600",
+							children: subtitle1
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[13px] leading-6 text-neutral-600",
+							children: subtitle2
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-4 flex gap-2 flex-wrap",
+							children: chips.map((c) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11.5px] font-bold",
+								style: {
+									background: active ? `${ORANGE}15` : "#FFF6EE",
+									color: ORANGE
+								},
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "h-1.5 w-1.5 rounded-full",
+									style: { background: ORANGE }
+								}), c]
+							}, c))
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "shrink-0 h-20 w-20 rounded-2xl grid place-items-center text-[40px] leading-none",
+					style: {
+						background: active ? `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` : "#FFF1E5",
+						boxShadow: active ? `0 12px 24px -10px ${ORANGE}80` : "none",
+						transition: "all .3s"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						style: { filter: active ? "grayscale(0) brightness(1.05)" : "none" },
+						children: emoji
+					})
+				})]
+			})]
+		});
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes tt-bounce { 0%{ transform: scale(1);} 35%{ transform: scale(1.06);} 70%{ transform: scale(1.01);} 100%{ transform: scale(1.03);} }
+        @keyframes tt-spark { 0%,100%{ opacity:.5; transform: scale(.85);} 50%{ opacity:1; transform: scale(1.15);} }
+        @keyframes tt-in { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }
+        .tt-in { animation: tt-in .5s ease-out both; }
+      ` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md mx-auto px-5 pt-4 pb-10",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							onClick: onBack,
+							className: "grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, { className: "h-5 w-5 text-neutral-700" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-sm font-bold text-neutral-800",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: ORANGE },
+									children: CURRENT
+								}),
+								" من ",
+								TOTAL
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-10" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: TOTAL }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "tt-in mt-7 text-center",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+							className: "text-[26px] font-black leading-tight",
+							style: {
+								color: TEXT,
+								fontFamily: "'Cairo','Tajawal',sans-serif"
+							},
+							children: ["اختر ما ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: "يناسبك"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-2 text-[14px] text-neutral-700 font-bold",
+							children: "حتى نساعدك بطريقة أفضل"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 text-[12.5px] text-neutral-500 leading-relaxed px-4",
+							children: "اختر طريقة التدريب الأنسب لك"
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 space-y-4",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "tt-in",
+						style: { animationDelay: ".08s" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, {
+							id: "online",
+							emoji: "🌍",
+							title: "أونلاين",
+							subtitle1: "تدريب ومتابعة عن بعد",
+							subtitle2: "عبر التطبيق وواتساب",
+							chips: ["مرونة أكبر", "سعر أقل"]
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "tt-in",
+						style: { animationDelay: ".18s" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, {
+							id: "inperson",
+							emoji: "🏋️",
+							title: "تدريب شخصي",
+							subtitle1: "جلسات تدريب مباشرة",
+							subtitle2: "في النادي مع المدرب",
+							chips: ["نتائج أسرع", "إشراف مباشر"]
+						})
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2 tt-in",
+					style: { animationDelay: ".28s" },
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+						className: "h-4 w-4",
+						style: { color: ORANGE }
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[12px] text-neutral-700",
+						children: "كلا الخيارين يضمن لك متابعة احترافية ونتائج حقيقية"
+					})]
+				})
+			]
+		})]
+	});
+}
+var OFFLINE_GOAL_LABELS = {
+	muscle: "بناء العضلات",
+	lose: "خسارة الوزن",
+	strength: "زيادة القوة",
+	fitness: "تحسين اللياقة",
+	tone: "شد الجسم",
+	weight_loss: "خسارة الوزن",
+	toning: "شد وتنسيق الجسم"
+};
+var OFFLINE_CHALLENGE_LABELS = {
+	muscle: "صعوبة بناء العضلات",
+	fat: "تراكم الدهون",
+	motivation: "ضعف الالتزام",
+	time: "ضيق الوقت",
+	plan: "عدم وجود خطة واضحة",
+	diet: "صعوبة في التغذية"
+};
+function OfflinePackagesScreen({ name, phone, city, goalId, challengeId, total, onBack }) {
+	const ORANGE = "#FF6B00";
+	const GREEN = "#22C55E";
+	const TEXT = "#111827";
+	const CURRENT = total;
+	const [selected, setSelected] = (0, import_react.useState)(null);
+	const [customSessions, setCustomSessions] = (0, import_react.useState)("");
+	const [timeLeft, setTimeLeft] = (0, import_react.useState)({
+		h: 23,
+		m: 59,
+		s: 59
+	});
+	(0, import_react.useEffect)(() => {
+		const t = setInterval(() => {
+			setTimeLeft((p) => {
+				let { h, m, s } = p;
+				s--;
+				if (s < 0) {
+					s = 59;
+					m--;
+				}
+				if (m < 0) {
+					m = 59;
+					h--;
+				}
+				if (h < 0) {
+					h = 23;
+					m = 59;
+					s = 59;
+				}
+				return {
+					h,
+					m,
+					s
+				};
+			});
+		}, 1e3);
+		return () => clearInterval(t);
+	}, []);
+	const pad = (n) => String(n).padStart(2, "0");
+	const pickPackage = (id) => {
+		if (selected) return;
+		setSelected(id);
+		triggerSelectionHaptic();
+	};
+	const packageLabel = (id) => {
+		if (id === "p12") return "باقة 12 حصة (3 مرات أسبوعياً) — 3,600 درهم شهرياً";
+		if (id === "p20") return "باقة 20 حصة (5 مرات أسبوعياً) — 5,500 درهم شهرياً";
+		return `باقة مخصصة — ${customSessions || "حسب اقتراح المدرب"}`;
+	};
+	const buildWhatsapp = () => {
+		if (!selected) return "#";
+		const goal = OFFLINE_GOAL_LABELS[goalId] || goalId || "—";
+		const ch = OFFLINE_CHALLENGE_LABELS[challengeId] || challengeId || "—";
+		const msg = `مرحباً كابتن حكيم،\nأريد حجز باقة التدريب الشخصي في دبي.\n\nالاسم: ${name || "—"}\nالهاتف: ${phone || "—"}\nالمدينة: ${city || "دبي"}\nالهدف: ${goal}\nالمشكلة الأساسية: ${ch}\nالباقة المختارة: ${packageLabel(selected)}\n\nأريد البدء في رحلتي نحو أفضل نسخة مني.`;
+		return `https://wa.me/971505129019?text=${encodeURIComponent(msg)}`;
+	};
+	const pkg12 = {
+		id: "p12",
+		name: "باقة 12 حصة",
+		badge: "الأكثر توازناً",
+		badgeColor: ORANGE,
+		freq: "3 مرات أسبوعياً",
+		price: "3,600",
+		oldPrice: "4,500",
+		save: "وفر 900 درهم",
+		desc: "مناسبة لمن يريد نتائج قوية مع جدول مرن ومتوازن.",
+		icon: "🏆",
+		iconBg: "#FFF6E6",
+		features: [
+			"12 حصة تدريب شخصية شهرياً",
+			"3 حصص أسبوعياً",
+			"خطة تدريب مخصصة لهدفك",
+			"متابعة تقدمك أسبوعياً",
+			"تعديل التمارين حسب مستواك",
+			"دعم عبر واتساب"
+		],
+		guaranteeTitle: "ضمان 90 يوم:",
+		guaranteeText: "إذا التزمت بالخطة ولم تحقق تقدماً حقيقياً، تسترجع أموالك.",
+		guaranteeBg: "#FFF1E6",
+		guaranteeColor: ORANGE
+	};
+	const pkg20 = {
+		id: "p20",
+		name: "باقة 20 حصة",
+		badge: "أسرع نتائج",
+		badgeColor: "#A855F7",
+		freq: "5 مرات أسبوعياً",
+		price: "5,500",
+		oldPrice: "7,000",
+		save: "وفر 1,500 درهم",
+		desc: "لمن يريد أفضل نتيجة في أقل وقت مع التزام أعلى ومتابعة أقوى.",
+		icon: "⚡",
+		iconBg: "#F3E8FF",
+		features: [
+			"20 حصة تدريب شخصية شهرياً",
+			"5 حصص أسبوعياً",
+			"تسريع النتائج بشكل واضح",
+			"متابعة أدق لتقدمك",
+			"تعديل مستمر للبرنامج",
+			"خطة تدريب مكثفة حسب هدفك",
+			"دعم مباشر عبر واتساب",
+			"أولوية في المواعيد"
+		],
+		guaranteeTitle: "ضمان نتائج أسرع:",
+		guaranteeText: "إذا التزمت ولم تشعر بتغيير حقيقي، سنعالج الأمر أو تسترجع أموالك.",
+		guaranteeBg: "#F5EBFF",
+		guaranteeColor: "#9333EA"
+	};
+	const PackageCard = ({ p }) => {
+		const active = selected === p.id;
+		const hidden = selected !== null && selected !== p.id;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "off-card transition-all duration-400",
+			style: {
+				opacity: hidden ? 0 : 1,
+				maxHeight: hidden ? 0 : 2e3,
+				transform: active ? "scale(1.02)" : "scale(1)",
+				marginBottom: hidden ? 0 : 16,
+				overflow: "hidden"
+			},
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => pickPackage(p.id),
+				disabled: !!selected,
+				className: "w-full text-right rounded-[24px] bg-white p-5 transition-all relative",
+				style: {
+					border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.06)"}`,
+					boxShadow: active ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.12)"
+				},
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "absolute top-4 right-4",
+						children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "h-7 w-7 rounded-full grid place-items-center",
+							style: {
+								background: ORANGE,
+								boxShadow: `0 6px 14px ${ORANGE}66`
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+								size: 16,
+								strokeWidth: 3,
+								className: "text-white"
+							})
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-7 w-7 rounded-full border-2 border-gray-300" })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3 pr-9",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-16 w-16 rounded-2xl grid place-items-center text-[34px] leading-none",
+							style: { background: p.iconBg },
+							children: p.icon
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 min-w-0",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-2 flex-wrap",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+										className: "text-[19px] font-black",
+										style: {
+											color: TEXT,
+											fontFamily: "'Cairo','Tajawal',sans-serif"
+										},
+										children: p.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white",
+										style: { background: p.badgeColor },
+										children: p.badge
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "mt-1 text-[12.5px] font-bold",
+									style: { color: ORANGE },
+									children: p.freq
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "mt-2 flex items-end gap-2 flex-wrap",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[26px] font-black leading-none",
+											style: {
+												color: ORANGE,
+												fontFamily: "'Cairo',sans-serif"
+											},
+											children: p.price
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[12px] text-neutral-600 mb-0.5",
+											children: "درهم شهرياً"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "text-[13px] text-neutral-400 line-through mb-0.5",
+											children: p.oldPrice
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "mt-2 inline-block rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-[11px] font-bold",
+									children: p.save
+								})
+							]
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 text-[12.5px] leading-6 text-neutral-600",
+						children: p.desc
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-4 grid grid-cols-2 gap-x-3 gap-y-2",
+						children: p.features.map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center",
+								style: { background: "#DCFCE7" },
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+									size: 10,
+									strokeWidth: 3,
+									className: "text-green-600"
+								})
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: f })]
+						}, f))
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-4 rounded-2xl p-3 flex items-start gap-2.5",
+						style: { background: p.guaranteeBg },
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+							className: "h-5 w-5 mt-0.5 shrink-0",
+							style: { color: p.guaranteeColor }
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[12.5px] font-black",
+								style: { color: p.guaranteeColor },
+								children: p.guaranteeTitle
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[11.5px] text-neutral-700 leading-5",
+								children: p.guaranteeText
+							})]
+						})]
+					})
+				]
+			})
+		});
+	};
+	const customActive = selected === "custom";
+	const customHidden = selected !== null && selected !== "custom";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "absolute inset-0 overflow-y-auto",
+		style: {
+			background: "#FAF8F5",
+			fontFamily: FONT
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("style", { children: `
+        @keyframes off-in { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
+        .off-in { animation: off-in .5s ease-out both; }
+        @keyframes off-pulse { 0%,100%{ transform: scale(1); box-shadow: 0 14px 30px -10px rgba(34,197,94,0.55);} 50%{ transform: scale(1.015); box-shadow: 0 18px 40px -10px rgba(34,197,94,0.7);} }
+        .off-pulse { animation: off-pulse 2.2s ease-in-out infinite; }
+        @keyframes off-glow { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,107,0,0.35);} 50%{ box-shadow: 0 0 0 10px rgba(255,107,0,0);} }
+        .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
+      ` }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "max-w-md mx-auto px-5 pt-4 pb-10",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "text-sm font-bold text-neutral-800",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								style: { color: ORANGE },
+								children: CURRENT
+							}),
+							" من ",
+							total
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						onClick: onBack,
+						className: "flex items-center gap-1 text-sm font-bold text-neutral-700",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "رجوع" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronRight, { className: "h-4 w-4" })]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mt-3 flex gap-1.5",
+					children: Array.from({ length: total }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex-1 h-1.5 rounded-full",
+						style: { background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }
+					}, i))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-6",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
+								className: "text-[24px] font-black leading-tight",
+								style: {
+									color: TEXT,
+									fontFamily: "'Cairo','Tajawal',sans-serif"
+								},
+								children: [
+									"اختر باقة ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										style: { color: ORANGE },
+										children: "التدريب الشخصي"
+									}),
+									" المناسبة لك"
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-2 text-[12.5px] leading-6 text-neutral-600",
+								children: "جلسات حضورية مباشرة في دبي مع متابعة مخصصة لتحقيق أفضل نتيجة خلال 90 يوم."
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-14 w-14 rounded-2xl grid place-items-center text-[28px]",
+							style: { background: "#FFF1E5" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dumbbell, {
+								className: "h-7 w-7",
+								style: { color: ORANGE }
+							})
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "mt-3 flex justify-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "off-urgent-glow inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-black text-white",
+							style: { background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, { className: "h-4 w-4" }), " عرض محدود لعملاء دبي فقط"]
+						})
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-5 rounded-[22px] p-4",
+					style: {
+						background: "linear-gradient(135deg,#FFF6EC 0%, #FFEAD2 100%)",
+						border: "1px solid #FFD1A8"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+							style: { background: "#FFE1C2" },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Clock, {
+								className: "h-6 w-6",
+								style: { color: ORANGE }
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-right",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-[13.5px] font-black flex items-center gap-1 justify-start",
+								style: { color: ORANGE },
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚠️" }), " الأماكن محدودة هذا الأسبوع"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 text-[11.5px] text-neutral-700 leading-5",
+								children: "عدد المقاعد المتاحة للتدريب الشخصي محدود بسبب عدد الحصص اليومية. سارع بحجز مكانك قبل أن يسبقك شخص آخر."
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 rounded-2xl bg-white/70 p-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[11.5px] font-bold text-neutral-700 text-center",
+							children: "ينتهي العرض خلال:"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "mt-2 flex items-center justify-center gap-2",
+							dir: "ltr",
+							children: [
+								{
+									v: pad(timeLeft.h),
+									l: "ساعة"
+								},
+								{
+									v: pad(timeLeft.m),
+									l: "دقيقة"
+								},
+								{
+									v: pad(timeLeft.s),
+									l: "ثانية"
+								}
+							].map((u, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [i > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[20px] font-black",
+									style: { color: ORANGE },
+									children: ":"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "text-center",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "rounded-xl px-3 py-1.5 text-[20px] font-black text-white min-w-[52px]",
+										style: { background: `linear-gradient(180deg, ${ORANGE}, #E85F00)` },
+										children: u.v
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-1 text-[10px] text-neutral-600",
+										dir: "rtl",
+										children: u.l
+									})]
+								})]
+							}, i))
+						})]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PackageCard, { p: pkg12 }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PackageCard, { p: pkg20 }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "off-card transition-all duration-400",
+							style: {
+								opacity: customHidden ? 0 : 1,
+								maxHeight: customHidden ? 0 : 2e3,
+								transform: customActive ? "scale(1.02)" : "scale(1)",
+								marginBottom: customHidden ? 0 : 16,
+								overflow: "hidden"
+							},
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => pickPackage("custom"),
+								disabled: !!selected && !customActive,
+								className: "w-full text-right rounded-[24px] bg-white p-5 transition-all relative",
+								style: {
+									border: `2px solid ${customActive ? ORANGE : "rgba(0,0,0,0.06)"}`,
+									boxShadow: customActive ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A` : "0 10px 26px -16px rgba(0,0,0,0.12)"
+								},
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "absolute top-4 right-4",
+										children: customActive ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "h-7 w-7 rounded-full grid place-items-center",
+											style: {
+												background: ORANGE,
+												boxShadow: `0 6px 14px ${ORANGE}66`
+											},
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+												size: 16,
+												strokeWidth: 3,
+												className: "text-white"
+											})
+										}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-7 w-7 rounded-full border-2 border-gray-300" })
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-start gap-3 pr-9",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "shrink-0 h-16 w-16 rounded-2xl grid place-items-center",
+											style: { background: "#E0F2FE" },
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Calendar, {
+												className: "h-8 w-8",
+												style: { color: "#0EA5E9" }
+											})
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex-1 min-w-0",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex items-center gap-2 flex-wrap",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+													className: "text-[19px] font-black",
+													style: {
+														color: TEXT,
+														fontFamily: "'Cairo','Tajawal',sans-serif"
+													},
+													children: "خصص باقتك"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white",
+													style: { background: "#0EA5E9" },
+													children: "مرونة كاملة"
+												})]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "mt-1 text-[12.5px] font-bold text-neutral-700",
+												children: "حسب عدد الحصص"
+											})]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "mt-3 text-[12.5px] leading-6 text-neutral-600",
+										children: "اختر عدد الحصص التي تناسب وقتك وهدفك، وسنصمم لك باقة شخصية بالكامل."
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "mt-4 grid grid-cols-2 gap-x-3 gap-y-2",
+										children: [
+											"اختر عدد الحصص المناسب لك",
+											"جدول مرن حسب وقتك",
+											"مناسب للمبتدئين والمشغولين",
+											"خطة تدريب مخصصة",
+											"متابعة مباشرة",
+											"إمكانية ترقية الباقة لاحقاً"
+										].map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center",
+												style: { background: "#DCFCE7" },
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+													size: 10,
+													strokeWidth: 3,
+													className: "text-green-600"
+												})
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: f })]
+										}, f))
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "mt-4 rounded-2xl bg-[#F8FAFC] p-3",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "text-[12px] font-bold text-neutral-700 text-right mb-2",
+											children: "عدد الحصص المطلوبة شهرياً"
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "flex flex-wrap gap-2",
+											children: [
+												"8 حصص",
+												"12 حصة",
+												"16 حصة",
+												"20 حصة",
+												"أريد اقتراح المدرب"
+											].map((opt) => {
+												const on = customSessions === opt;
+												return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													onClick: (e) => {
+														e.stopPropagation();
+														if (!selected || customActive) setCustomSessions(opt);
+													},
+													className: "cursor-pointer rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all",
+													style: {
+														background: on ? ORANGE : "#fff",
+														color: on ? "#fff" : "#334155",
+														border: `1.5px solid ${on ? ORANGE : "#E2E8F0"}`
+													},
+													children: opt
+												}, opt);
+											})
+										})]
+									})
+								]
+							})
+						})
+					]
+				}),
+				!selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "off-in mt-2 rounded-[22px] p-4 flex items-start gap-3",
+					style: {
+						background: "#FFF6EC",
+						border: "1px solid #FFD1A8"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "shrink-0 h-12 w-12 rounded-2xl grid place-items-center",
+						style: { background: "#FFE1C2" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flame, {
+							className: "h-6 w-6",
+							style: { color: ORANGE }
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex-1 text-right",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[13px] font-black",
+							style: { color: ORANGE },
+							children: "المقاعد محدودة جداً لهذا الأسبوع!"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-1 text-[11.5px] text-neutral-700 leading-5",
+							children: "لا تنتظر حتى يسرق شخص آخر حلمك ويحقق ما تتمناه."
+						})]
+					})]
+				}),
+				selected && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 off-in",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-center text-[12px] text-neutral-700 mb-2 font-bold",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "inline h-3 w-3 mb-0.5 ml-1" }), "تدريب شخصي + متابعة احترافية + نتائج مضمونة"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+							href: buildWhatsapp(),
+							target: "_blank",
+							rel: "noopener noreferrer",
+							className: "off-pulse w-full h-14 rounded-[22px] font-black text-white text-[15px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]",
+							style: { background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)` },
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+								xmlns: "http://www.w3.org/2000/svg",
+								viewBox: "0 0 24 24",
+								className: "h-6 w-6 fill-white",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.32-1.66a11.9 11.9 0 0 0 5.73 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.17-3.44-8.42zM12.06 21.5h-.01a9.6 9.6 0 0 1-4.89-1.34l-.35-.21-3.75.99 1-3.65-.23-.37a9.58 9.58 0 0 1-1.47-5.02c0-5.3 4.31-9.6 9.61-9.6 2.57 0 4.98 1 6.8 2.81a9.55 9.55 0 0 1 2.81 6.8c0 5.3-4.31 9.6-9.62 9.6zm5.55-7.18c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.69.15s-.79.98-.97 1.18c-.18.2-.36.22-.66.07-.3-.15-1.28-.47-2.43-1.5-.9-.8-1.51-1.79-1.69-2.09-.18-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.51.07-.78.38-.27.3-1.02 1-1.02 2.44s1.05 2.83 1.2 3.03c.15.2 2.06 3.14 5 4.4.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.79-.73 2.04-1.43.25-.7.25-1.3.18-1.43-.07-.13-.27-.2-.57-.35z" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "أرسل حجزك على الواتساب الآن وابدأ رحلتك نحو الأفضل" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "mt-3 text-center text-[11.5px] text-neutral-600 leading-5",
+							children: "سيتم إرسال اختيارك وبياناتك للمدرب لتأكيد الحجز والبدء في رحلتك."
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-6 flex items-center justify-center gap-4 text-[11px] text-neutral-600",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
+								className: "h-3.5 w-3.5",
+								style: { color: GREEN }
+							}), " بياناتك محمية"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+								className: "h-3.5 w-3.5",
+								style: { color: GREEN }
+							}), " دفع آمن"]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "inline-flex items-center gap-1",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Star, {
+								className: "h-3.5 w-3.5",
+								style: { color: "#F59E0B" }
+							}), " +500 عميل"]
+						})
+					]
+				})
+			]
+		})]
 	});
 }
 function PaymentScreen({ name, tierId, total = 14, onBack }) {

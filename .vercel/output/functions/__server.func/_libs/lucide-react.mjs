@@ -1304,24 +1304,6 @@ var Signal = createLucideIcon("signal", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var Smartphone = createLucideIcon("smartphone", [["rect", {
-	width: "14",
-	height: "20",
-	x: "5",
-	y: "2",
-	rx: "2",
-	ry: "2",
-	key: "1yt0o3"
-}], ["path", {
-	d: "M12 18h.01",
-	key: "mhygvu"
-}]]);
-/**
-* @license lucide-react v1.21.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var Sparkles = createLucideIcon("sparkles", [
 	["path", {
 		d: "M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z",
@@ -1652,4 +1634,4 @@ var Zap = createLucideIcon("zap", [["path", {
 	key: "1xq2db"
 }]]);
 //#endregion
-export { Clock as $, Package as A, HeartPulse as B, Send as C, Activity as Ct, RefreshCw as D, Ruler as E, Menu as F, Flame as G, Globe as H, Mail as I, Database as J, FileText as K, Lock as L, MessageSquare as M, MessageCircle as N, Plus as O, MessageCircleQuestionMark as P, Cookie as Q, Lightbulb as R, Share2 as S, ArrowLeft as St, Salad as T, Gem as U, Headphones as V, Gavel as W, CreditCard as X, Crown as Y, Copyright as Z, Sparkles as _, Building2 as _t, Wallet as a, ChevronsLeft as at, Shield as b, BadgeCheck as bt, Users as c, ChevronLeft as ct, Trophy as d, ChartLine as dt, Clock3 as et, TrendingUp as f, ChartColumn as ft, Star as g, CalendarCheck as gt, Target as h, CalendarClock as ht, Wifi as i, CircleCheck as it, MonitorSmartphone as j, PersonStanding as k, User as l, ChevronDown as lt, TrendingDown as m, CalendarX as mt, X as n, ClipboardCheck as nt, Utensils as o, ChevronUp as ot, TriangleAlert as p, Calendar as pt, Dumbbell as q, Workflow as r, CircleX as rt, UtensilsCrossed as s, ChevronRight as st, Zap as t, ClipboardList as tt, UserCheck as u, Check as ut, Smartphone as v, BatteryFull as vt, Scale as w, ShieldCheck as x, Award as xt, Signal as y, Ban as yt, Heart as z };
+export { Clock3 as $, MonitorSmartphone as A, Headphones as B, Scale as C, Plus as D, RefreshCw as E, Mail as F, FileText as G, Gem as H, Lock as I, Crown as J, Dumbbell as K, Lightbulb as L, MessageCircle as M, MessageCircleQuestionMark as N, PersonStanding as O, Menu as P, Clock as Q, Heart as R, Send as S, Activity as St, Ruler as T, Gavel as U, Globe as V, Flame as W, Copyright as X, CreditCard as Y, Cookie as Z, Sparkles as _, BatteryFull as _t, Wallet as a, ChevronUp as at, ShieldCheck as b, Award as bt, Users as c, ChevronDown as ct, Trophy as d, ChartColumn as dt, ClipboardList as et, TrendingUp as f, Calendar as ft, Star as g, Building2 as gt, Target as h, CalendarCheck as ht, Wifi as i, ChevronsLeft as it, MessageSquare as j, Package as k, User as l, Check as lt, TrendingDown as m, CalendarClock as mt, X as n, CircleX as nt, Utensils as o, ChevronRight as ot, TriangleAlert as p, CalendarX as pt, Database as q, Workflow as r, CircleCheck as rt, UtensilsCrossed as s, ChevronLeft as st, Zap as t, ClipboardCheck as tt, UserCheck as u, ChartLine as ut, Signal as v, Ban as vt, Salad as w, Share2 as x, ArrowLeft as xt, Shield as y, BadgeCheck as yt, HeartPulse as z };
