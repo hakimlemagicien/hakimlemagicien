@@ -113,14 +113,18 @@ export const Route = createFileRoute("/quiz")({
   head: () => ({
     meta: [
       { title: "ابدأ تقييمك المجاني — Hakim Coaching" },
-      { name: "description", content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة." },
+      {
+        name: "description",
+        content:
+          "احصل على برنامج تدريب وتغذية رقمي مخصص — تحليل مجاني ثم اشتراك رقمي يُسلَّم عبر واتساب والبريد.",
+      },
     ],
   }),
   component: QuizPage,
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "pricing" | "payment";
 
 function QuizPage() {
   const {
@@ -133,9 +137,7 @@ function QuizPage() {
     setGender,
     userName,
     setUserName,
-    userPhone,
     setUserPhone,
-    userCity,
     setUserCity,
     goalId,
     setGoalId,
@@ -153,8 +155,6 @@ function QuizPage() {
     setInvestment,
     bodyType,
     setBodyType,
-    userLocation,
-    setUserLocation,
     selectedTierId,
     setSelectedTierId,
   } = useQuizProgress();
@@ -171,9 +171,8 @@ function QuizPage() {
     bodyType,
   };
 
-  const totalSteps = userLocation === "dubai" ? 15 : 14;
-  const afterReveal = () =>
-    selectAndGo(userLocation === "dubai" ? "trainingType" : "pricing");
+  const totalSteps = 14;
+  const afterReveal = () => selectAndGo("pricing");
 
   return (
     <div
@@ -276,12 +275,11 @@ function QuizPage() {
         <ContactScreen
           quizAnswers={quizAnswers}
           onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
-          onDone={(name, isDubai, phone, city) =>
+          onDone={(name, phone, city) =>
             selectAndGo("congrats", () => {
               setUserName(name);
               setUserPhone(phone);
               setUserCity(city);
-              setUserLocation(isDubai ? "dubai" : "remote");
             })
           }
         />
@@ -299,38 +297,12 @@ function QuizPage() {
           onNext={afterReveal}
         />
       )}
-      {step === "trainingType" && (
-        <TrainingTypeScreen
-          onBack={() => goBack("reveal")}
-          onSelect={(t) => transitionTo(t === "inperson" ? "offlinePackages" : "pricing")}
-        />
-      )}
       {step === "pricing" && (
         <PricingScreen
           name={userName}
           total={totalSteps}
-          onBack={() => goBack(userLocation === "dubai" ? "trainingType" : "reveal")}
+          onBack={() => goBack("reveal")}
           onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
-        />
-      )}
-      {step === "pricingDubai" && (
-        <PricingScreen
-          name={userName}
-          total={totalSteps}
-          onBack={() => goBack("trainingType")}
-          dubai
-          onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
-        />
-      )}
-      {step === "offlinePackages" && (
-        <OfflinePackagesScreen
-          name={userName}
-          phone={userPhone}
-          city={userCity}
-          goalId={goalId}
-          challengeId={challengeId}
-          total={totalSteps}
-          onBack={() => goBack("trainingType")}
         />
       )}
       {step === "payment" && (
@@ -338,7 +310,7 @@ function QuizPage() {
           name={userName}
           tierId={selectedTierId}
           total={totalSteps}
-          onBack={() => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")}
+          onBack={() => goBack("pricing")}
         />
       )}
       </MotionStepView>
@@ -2133,290 +2105,6 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
 }
 
 
-function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: "dubai" | "remote") => void }) {
-  const [selected, setSelected] = useState<"dubai" | "remote" | null>(null);
-  const ORANGE = "#FF6B00";
-
-  const Check2 = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" stroke={ORANGE} strokeWidth="1.8" />
-      <path d="M8 12.5l2.8 2.8L16.5 9.5" />
-    </svg>
-  );
-
-  const PinIcon = ({ size = 22, color = ORANGE }: { size?: number; color?: string }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z" />
-      <circle cx="12" cy="9" r="2.6" />
-    </svg>
-  );
-
-  const DubaiArt = () => (
-    <svg viewBox="0 0 130 150" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
-      <defs>
-        <linearGradient id="sky1" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="#FFE7D1" />
-          <stop offset="1" stopColor="#FFD0A8" />
-        </linearGradient>
-        <linearGradient id="burj" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="#C9613B" />
-          <stop offset="1" stopColor="#7A3318" />
-        </linearGradient>
-      </defs>
-      <rect width="130" height="150" fill="url(#sky1)" />
-      <circle cx="95" cy="42" r="14" fill="#FFB07A" opacity="0.55" />
-      {/* Burj Khalifa */}
-      <polygon points="62,20 66,140 58,140" fill="url(#burj)" />
-      <polygon points="62,20 60,55 64,55" fill="#3A1608" opacity="0.4" />
-      {/* side towers */}
-      <rect x="40" y="70" width="10" height="70" fill="#A04A28" />
-      <polygon points="40,70 50,70 45,58" fill="#A04A28" />
-      <rect x="75" y="80" width="9" height="60" fill="#8E3E22" />
-      <polygon points="75,80 84,80 79.5,68" fill="#8E3E22" />
-      <rect x="88" y="90" width="14" height="50" fill="#B65733" />
-      <rect x="22" y="95" width="12" height="45" fill="#9E4628" />
-      {/* palms */}
-      <g stroke="#5C2810" strokeWidth="1.6">
-        <line x1="20" y1="140" x2="22" y2="120" />
-        <line x1="106" y1="140" x2="108" y2="118" />
-      </g>
-      <g fill="#7A3D1C">
-        <ellipse cx="22" cy="118" rx="9" ry="3" />
-        <ellipse cx="108" cy="116" rx="10" ry="3" />
-      </g>
-      {/* water */}
-      <rect y="138" width="130" height="12" fill="#E89870" opacity="0.55" />
-    </svg>
-  );
-
-  const GlobeArt = () => (
-    <svg viewBox="0 0 130 130" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <radialGradient id="g1" cx="0.35" cy="0.35" r="0.8">
-          <stop offset="0" stopColor="#FFD9B8" />
-          <stop offset="1" stopColor="#E58348" />
-        </radialGradient>
-      </defs>
-      <circle cx="65" cy="68" r="42" fill="url(#g1)" />
-      <g fill="#A0451E" opacity="0.85">
-        <path d="M40 55 q8 -6 18 -3 q6 2 4 9 q-2 6 -10 6 q-8 0 -12 -12z" />
-        <path d="M68 78 q10 -2 16 4 q4 5 -2 9 q-8 4 -14 -3z" />
-        <path d="M50 82 q6 1 8 6 q1 4 -4 5 q-7 1 -6 -8z" />
-      </g>
-      <g fill="none" stroke="#7A3318" strokeWidth="1" opacity="0.5">
-        <ellipse cx="65" cy="68" rx="42" ry="14" />
-        <ellipse cx="65" cy="68" rx="42" ry="28" />
-        <line x1="65" y1="26" x2="65" y2="110" />
-      </g>
-      {/* flight path */}
-      <path d="M18 60 Q 65 0 112 60" fill="none" stroke="#5C2810" strokeWidth="1.4" strokeDasharray="3 3" />
-      <path d="M18 60 Q 65 120 112 60" fill="none" stroke="#5C2810" strokeWidth="1.2" strokeDasharray="2 3" opacity="0.6" />
-      {/* plane */}
-      <g transform="translate(100 36) rotate(35)" fill="#3A1608">
-        <path d="M0 0 L14 4 L18 2 L20 6 L18 10 L14 8 L0 12 L4 6 Z" />
-      </g>
-    </svg>
-  );
-
-  const Card = ({
-    id,
-    title,
-    subtitle,
-    benefits,
-    art,
-    watermark,
-  }: {
-    id: "dubai" | "remote";
-    title: string;
-    subtitle: string;
-    benefits: string[];
-    art: React.ReactNode;
-    watermark: React.ReactNode;
-  }) => {
-    const active = selected === id;
-    return (
-      <button
-        onClick={() => {
-          triggerSelectionHaptic();
-          setSelected(id);
-        }}
-        className="relative w-full rounded-[26px] bg-white text-right overflow-hidden transition-all duration-250"
-        style={{
-          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
-          boxShadow: active
-            ? "0 18px 40px -16px rgba(255,107,0,0.45), 0 6px 16px -8px rgba(0,0,0,0.08)"
-            : "0 10px 26px -16px rgba(0,0,0,0.18), 0 2px 6px -2px rgba(0,0,0,0.06)",
-          transform: active ? "scale(1.02)" : "scale(1)",
-        }}
-      >
-        {/* watermark right */}
-        <div className="absolute right-2 bottom-2 w-16 h-16 opacity-15 pointer-events-none">
-          {watermark}
-        </div>
-
-        <div className="flex flex-row-reverse items-stretch min-h-[150px]">
-          {/* art left */}
-          <div className="w-[130px] shrink-0 self-stretch overflow-hidden rounded-l-[24px]">
-            {art}
-          </div>
-          {/* text */}
-          <div className="flex-1 px-4 py-3 flex flex-col justify-center gap-1.5">
-            <h3 className="text-[19px] font-extrabold text-[#2A2A2A] leading-tight">{title}</h3>
-            <p className="text-[13px] font-bold" style={{ color: ORANGE }}>{subtitle}</p>
-            <ul className="mt-1 space-y-1.5">
-              {benefits.map((b, i) => (
-                <li key={i} className="flex flex-row-reverse items-center gap-1.5 text-[11.5px] text-[#4A4A4A] font-medium">
-                  <Check2 />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </button>
-    );
-  };
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        backgroundColor: "#FAF8F5",
-        backgroundImage: `url(${gymBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        animation: "fadeIn .35s ease-out",
-      }}
-    >
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)" }} />
-
-      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md"
-            aria-label="رجوع"
-          >
-            <ChevronLeft size={20} className="text-gray-700" />
-          </button>
-          <div className="text-[15px] font-bold text-gray-700">
-            <span style={{ color: ORANGE }}>8</span> من 10
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Progress */}
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: i < 7 ? "100%" : i === 7 ? "55%" : "0%",
-                  background: ORANGE,
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
-          <div className="inline-flex items-center justify-center gap-2">
-            <PinIcon size={22} />
-            <span className="text-[22px] font-extrabold" style={{ color: ORANGE }}>ممتاز</span>
-          </div>
-          <h1 className="mt-1 text-[26px] font-extrabold text-[#1F1F1F] leading-tight">أين تتواجد حالياً؟</h1>
-          <p className="mt-1.5 text-[13px] text-gray-500 font-medium leading-relaxed px-6">
-            ساعدنا في تحديد أفضل خطة تدريب تناسب موقعك.
-          </p>
-        </div>
-
-        {/* Cards */}
-        <div className="mt-4 flex flex-col gap-3">
-          <div style={{ animation: "fadeUp .5s ease-out .1s both" }}>
-            <Card
-              id="dubai"
-              title="أعيش في دبي"
-              subtitle="تدريب شخصي مباشر"
-              benefits={["جلسات تدريبية في أفضل الأندية", "متابعة مباشرة مع مدربك"]}
-              art={<DubaiArt />}
-              watermark={
-                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.5">
-                  <path d="M12 2 L8 8 L10 8 L8 14 L11 14 L9 22 L15 22 L13 14 L16 14 L14 8 L16 8 Z" />
-                </svg>
-              }
-            />
-          </div>
-          <div style={{ animation: "fadeUp .5s ease-out .2s both" }}>
-            <Card
-              id="remote"
-              title="خارج دبي"
-              subtitle="تدريب أونلاين مخصص لك"
-              benefits={["خطة تدريب وغذائية مخصصة", "متابعة أونلاين أينما كنت"]}
-              art={<GlobeArt />}
-              watermark={
-                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.4">
-                  <circle cx="12" cy="12" r="10" />
-                  <ellipse cx="12" cy="12" rx="10" ry="4" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <line x1="12" y1="2" x2="12" y2="22" />
-                </svg>
-              }
-            />
-          </div>
-        </div>
-
-        {/* Info card */}
-        <div
-          className="mt-3 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3"
-          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)" }}
-        >
-          <div
-            className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"
-            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-          >
-            <PinIcon size={22} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-[13px] font-extrabold" style={{ color: ORANGE }}>معلومة مهمة</div>
-            <div className="text-[12.5px] text-[#3D3D3D] font-medium leading-snug">
-              ✨ نقدم أفضل تجربة سواء كنت في دبي أو خارجها.
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="mt-auto pt-3">
-          <button
-            disabled={!selected}
-            onClick={() => selected && onNext(selected)}
-            className="w-full h-[58px] rounded-[20px] flex items-center justify-center gap-3 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
-            style={{
-              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
-              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
-              opacity: selected ? 1 : 0.7,
-            }}
-          >
-            <span>متابعة</span>
-            <ArrowLeft size={20} />
-          </button>
-          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
-            <Lock size={12} />
-            <span>معلوماتك تبقى خاصة وآمنة</span>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-      `}</style>
-    </div>
-  );
-}
-
 /* ===================== INVESTMENT SCREEN ===================== */
 
 function TrophyIcon({ size = 48 }: { size?: number }) {
@@ -3333,7 +3021,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, isDubai: boolean, phone: string, city: string) => void }) {
+function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
@@ -3501,9 +3189,8 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
             setSubmitting(true);
           
             const selectedCountry = COUNTRIES.find((c) => c.code === form.country);
-            const isDubai = form.country === "ae" && form.city === "دبي";
             const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
-          
+
             try {
               await createLead(buildLeadInsertFromQuiz(quizAnswers, {
                 fullName: form.name.trim(),
@@ -3511,10 +3198,10 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
                 phone: fullPhone,
                 city: form.city,
                 country: selectedCountry?.name ?? form.country,
-                locationPreference: isDubai ? "dubai" : "remote",
+                locationPreference: "remote",
               }));
-          
-              onDone(form.name.trim(), isDubai, fullPhone, form.city);
+
+              onDone(form.name.trim(), fullPhone, form.city);
             } catch (error) {
               console.error("Failed to save lead:", error);
               alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
@@ -4676,7 +4363,7 @@ function PricingFeaturesList({
   );
 }
 
-function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }: { name: string; total?: number; onBack: () => void; dubai?: boolean; onSelectTier: (id: PricingTier["id"]) => void }) {
+function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: string; total?: number; onBack: () => void; onSelectTier: (id: PricingTier["id"]) => void }) {
   const ORANGE = "#FF6B00";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
@@ -5026,9 +4713,9 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
           </h1>
         </div>
         <p className="pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed" style={{ animationDelay: ".08s" }}>
-          {dubai
-            ? "باقات التدريب الحضوري + الأونلاين قادمة قريباً. في الوقت الحالي يمكنك اختيار باقات المتابعة عن بُعد."
-            : <>تم تصميم جميع الباقات لتحقيق هدفك خلال <span className="font-extrabold" style={{ color: ORANGE }}>90 يوماً</span>.</>}
+          برنامج رقمي بالكامل — خطة تدريب وتغذية تُسلَّم إلكترونياً مع متابعة عبر واتساب. تم تصميم جميع
+          الباقات لتحقيق هدفك خلال{" "}
+          <span className="font-extrabold" style={{ color: ORANGE }}>90 يوماً</span>.
         </p>
 
         {/* Tier switcher */}
@@ -5177,868 +4864,6 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
     </div>
   );
 }
-
-// ============================================================
-// Training Type Screen — Dubai-only choice (Online vs In-Person)
-// ============================================================
-function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect: (type: "online" | "inperson") => void }) {
-  const ORANGE = "#FF6B00";
-  const TEXT = "#0F172A";
-  const [selected, setSelected] = useState<"online" | "inperson" | null>(null);
-  const TOTAL = 14;
-  const CURRENT = 13;
-
-  const pick = (id: "online" | "inperson") => {
-    if (selected) return;
-    setSelected(id);
-    triggerSelectionHaptic();
-    window.setTimeout(() => onSelect(id), HAPTIC_NAV_DELAY_MS);
-  };
-
-  const Card = ({
-    id,
-    emoji,
-    title,
-    subtitle1,
-    subtitle2,
-    chips,
-  }: {
-    id: "online" | "inperson";
-    emoji: string;
-    title: string;
-    subtitle1: string;
-    subtitle2: string;
-    chips: [string, string];
-  }) => {
-    const active = selected === id;
-    return (
-      <button
-        type="button"
-        onClick={() => pick(id)}
-        disabled={!!selected && !active}
-        className="relative w-full text-right rounded-[26px] bg-white p-5 transition-all duration-300 active:scale-[0.99]"
-        style={{
-          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
-          boxShadow: active
-            ? `0 22px 48px -18px ${ORANGE}66, 0 0 0 6px ${ORANGE}1A`
-            : "0 10px 26px -16px rgba(0,0,0,0.14)",
-          transform: active ? "scale(1.03)" : "scale(1)",
-          animation: active ? "tt-bounce .55s cubic-bezier(.34,1.56,.64,1)" : undefined,
-        }}
-      >
-        {/* Selection mark */}
-        <div className="absolute top-4 left-4 z-10">
-          {active ? (
-            <div className="relative h-8 w-8 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-              <Check size={18} strokeWidth={3} className="text-white" />
-              <Sparkles className="absolute -top-2 -right-2 h-3.5 w-3.5" style={{ color: "#FBBF24", animation: "tt-spark 1s ease-in-out infinite" }} />
-              <Sparkles className="absolute -bottom-2 -left-2 h-3 w-3" style={{ color: ORANGE, animation: "tt-spark 1s ease-in-out infinite .2s" }} />
-            </div>
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-white border-2 border-gray-200" />
-          )}
-        </div>
-
-        <div className="flex items-start gap-4">
-          <div className="flex-1">
-            <h3 className="text-[22px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{title}</h3>
-            <p className="mt-2 text-[13px] leading-6 text-neutral-600">{subtitle1}</p>
-            <p className="text-[13px] leading-6 text-neutral-600">{subtitle2}</p>
-            <div className="mt-4 flex gap-2 flex-wrap">
-              {chips.map((c) => (
-                <span key={c} className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11.5px] font-bold"
-                  style={{ background: active ? `${ORANGE}15` : "#FFF6EE", color: ORANGE }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ORANGE }} />
-                  {c}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div
-            className="shrink-0 h-20 w-20 rounded-2xl grid place-items-center text-[40px] leading-none"
-            style={{
-              background: active ? `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` : "#FFF1E5",
-              boxShadow: active ? `0 12px 24px -10px ${ORANGE}80` : "none",
-              transition: "all .3s",
-            }}
-          >
-            <span style={{ filter: active ? "grayscale(0) brightness(1.05)" : "none" }}>{emoji}</span>
-          </div>
-        </div>
-      </button>
-    );
-  };
-
-  return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
-      <style>{`
-        @keyframes tt-bounce { 0%{ transform: scale(1);} 35%{ transform: scale(1.06);} 70%{ transform: scale(1.01);} 100%{ transform: scale(1.03);} }
-        @keyframes tt-spark { 0%,100%{ opacity:.5; transform: scale(.85);} 50%{ opacity:1; transform: scale(1.15);} }
-        @keyframes tt-in { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }
-        .tt-in { animation: tt-in .5s ease-out both; }
-      `}</style>
-
-      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
-            <ChevronLeft className="h-5 w-5 text-neutral-700" />
-          </button>
-          <div className="text-sm font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>{CURRENT}</span> من {TOTAL}
-          </div>
-          <div className="w-10" />
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: TOTAL }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="tt-in mt-7 text-center">
-          <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
-            اختر ما <span style={{ color: ORANGE }}>يناسبك</span>
-          </h1>
-          <p className="mt-2 text-[14px] text-neutral-700 font-bold">حتى نساعدك بطريقة أفضل</p>
-          <p className="mt-1 text-[12.5px] text-neutral-500 leading-relaxed px-4">
-            اختر طريقة التدريب الأنسب لك
-          </p>
-        </div>
-
-        {/* Cards */}
-        <div className="mt-6 space-y-4">
-          <div className="tt-in" style={{ animationDelay: ".08s" }}>
-            <Card
-              id="online"
-              emoji="🌍"
-              title="أونلاين"
-              subtitle1="تدريب ومتابعة عن بعد"
-              subtitle2="عبر التطبيق وواتساب"
-              chips={["مرونة أكبر", "سعر أقل"]}
-            />
-          </div>
-          <div className="tt-in" style={{ animationDelay: ".18s" }}>
-            <Card
-              id="inperson"
-              emoji="🏋️"
-              title="تدريب شخصي"
-              subtitle1="جلسات تدريب مباشرة"
-              subtitle2="في النادي مع المدرب"
-              chips={["نتائج أسرع", "إشراف مباشر"]}
-            />
-          </div>
-        </div>
-
-        {/* Trust note */}
-        <div className="mt-6 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2 tt-in" style={{ animationDelay: ".28s" }}>
-          <ShieldCheck className="h-4 w-4" style={{ color: ORANGE }} />
-          <span className="text-[12px] text-neutral-700">كلا الخيارين يضمن لك متابعة احترافية ونتائج حقيقية</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============= OFFLINE PACKAGES (Dubai in-person) =============
-const OFFLINE_GOAL_LABELS: Record<string, string> = {
-  muscle: "بناء العضلات",
-  lose: "خسارة الوزن",
-  strength: "زيادة القوة",
-  fitness: "تحسين اللياقة",
-  tone: "شد الجسم",
-  weight_loss: "خسارة الوزن",
-  toning: "شد وتنسيق الجسم",
-};
-const OFFLINE_CHALLENGE_LABELS: Record<string, string> = {
-  muscle: "صعوبة بناء العضلات",
-  fat: "تراكم الدهون",
-  motivation: "ضعف الالتزام",
-  time: "ضيق الوقت",
-  plan: "عدم وجود خطة واضحة",
-  diet: "صعوبة في التغذية",
-};
-
-type OfflinePkgId = "p12" | "p20" | "custom";
-
-function OfflinePackagesScreen({
-  name,
-  phone,
-  city,
-  goalId,
-  challengeId,
-  total,
-  onBack,
-}: {
-  name: string;
-  phone: string;
-  city: string;
-  goalId: string;
-  challengeId: string;
-  total: number;
-  onBack: () => void;
-}) {
-  const ORANGE = "#FF6B00";
-  const GREEN = "#22C55E";
-  const TEXT = "#111827";
-  const CURRENT = total; // last step
-
-  const [selected, setSelected] = useState<OfflinePkgId | null>(null);
-  const [customSessions, setCustomSessions] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState({ h: 23, m: 59, s: 59 });
-
-  // Countdown
-  useEffect(() => {
-    const t = setInterval(() => {
-      setTimeLeft((p) => {
-        let { h, m, s } = p;
-        s--;
-        if (s < 0) { s = 59; m--; }
-        if (m < 0) { m = 59; h--; }
-        if (h < 0) { h = 23; m = 59; s = 59; }
-        return { h, m, s };
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  const pickPackage = (id: OfflinePkgId) => {
-    if (selected) return;
-    setSelected(id);
-    triggerSelectionHaptic();
-  };
-
-  const packageLabel = (id: OfflinePkgId): string => {
-    if (id === "p12") return "باقة 12 حصة (3 مرات أسبوعياً) — 3,600 درهم شهرياً";
-    if (id === "p20") return "باقة 20 حصة (5 مرات أسبوعياً) — 5,500 درهم شهرياً";
-    const s = customSessions || "حسب اقتراح المدرب";
-    return `باقة مخصصة — ${s}`;
-  };
-
-  const buildWhatsapp = () => {
-    if (!selected) return "#";
-    const goal = OFFLINE_GOAL_LABELS[goalId] || goalId || "—";
-    const ch = OFFLINE_CHALLENGE_LABELS[challengeId] || challengeId || "—";
-    const msg =
-      `مرحباً كابتن حكيم،\nأريد حجز باقة التدريب الشخصي في دبي.\n\n` +
-      `الاسم: ${name || "—"}\n` +
-      `الهاتف: ${phone || "—"}\n` +
-      `المدينة: ${city || "دبي"}\n` +
-      `الهدف: ${goal}\n` +
-      `المشكلة الأساسية: ${ch}\n` +
-      `الباقة المختارة: ${packageLabel(selected)}\n\n` +
-      `أريد البدء في رحلتي نحو أفضل نسخة مني.`;
-    return `https://wa.me/971505129019?text=${encodeURIComponent(msg)}`;
-  };
-
-  // Package data
-  const pkg12 = {
-    id: "p12" as const,
-    name: "باقة 12 حصة",
-    badge: "الأكثر توازناً",
-    badgeColor: ORANGE,
-    freq: "3 مرات أسبوعياً",
-    price: "3,600",
-    oldPrice: "4,500",
-    save: "وفر 900 درهم",
-    desc: "مناسبة لمن يريد نتائج قوية مع جدول مرن ومتوازن.",
-    icon: "🏆",
-    iconBg: "#FFF6E6",
-    features: [
-      "12 حصة تدريب شخصية شهرياً",
-      "3 حصص أسبوعياً",
-      "خطة تدريب مخصصة لهدفك",
-      "متابعة تقدمك أسبوعياً",
-      "تعديل التمارين حسب مستواك",
-      "دعم عبر واتساب",
-    ],
-    guaranteeTitle: "ضمان 90 يوم:",
-    guaranteeText: "إذا التزمت بالخطة ولم تحقق تقدماً حقيقياً، تسترجع أموالك.",
-    guaranteeBg: "#FFF1E6",
-    guaranteeColor: ORANGE,
-  };
-  const pkg20 = {
-    id: "p20" as const,
-    name: "باقة 20 حصة",
-    badge: "أسرع نتائج",
-    badgeColor: "#A855F7",
-    freq: "5 مرات أسبوعياً",
-    price: "5,500",
-    oldPrice: "7,000",
-    save: "وفر 1,500 درهم",
-    desc: "لمن يريد أفضل نتيجة في أقل وقت مع التزام أعلى ومتابعة أقوى.",
-    icon: "⚡",
-    iconBg: "#F3E8FF",
-    features: [
-      "20 حصة تدريب شخصية شهرياً",
-      "5 حصص أسبوعياً",
-      "تسريع النتائج بشكل واضح",
-      "متابعة أدق لتقدمك",
-      "تعديل مستمر للبرنامج",
-      "خطة تدريب مكثفة حسب هدفك",
-      "دعم مباشر عبر واتساب",
-      "أولوية في المواعيد",
-    ],
-    guaranteeTitle: "ضمان نتائج أسرع:",
-    guaranteeText: "إذا التزمت ولم تشعر بتغيير حقيقي، سنعالج الأمر أو تسترجع أموالك.",
-    guaranteeBg: "#F5EBFF",
-    guaranteeColor: "#9333EA",
-  };
-
-  const PackageCard = ({ p }: { p: Omit<typeof pkg12, "id"> & { id: OfflinePkgId } }) => {
-    const active = selected === p.id;
-    const hidden = selected !== null && selected !== p.id;
-    return (
-      <div
-        className="off-card transition-all duration-400"
-        style={{
-          opacity: hidden ? 0 : 1,
-          maxHeight: hidden ? 0 : 2000,
-          transform: active ? "scale(1.02)" : "scale(1)",
-          marginBottom: hidden ? 0 : 16,
-          overflow: "hidden",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => pickPackage(p.id)}
-          disabled={!!selected}
-          className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
-          style={{
-            border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.06)"}`,
-            boxShadow: active
-              ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
-              : "0 10px 26px -16px rgba(0,0,0,0.12)",
-          }}
-        >
-          {/* radio */}
-          <div className="absolute top-4 right-4">
-            {active ? (
-              <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-                <Check size={16} strokeWidth={3} className="text-white" />
-              </div>
-            ) : (
-              <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
-            )}
-          </div>
-
-          {/* header row */}
-          <div className="flex items-start gap-3 pr-9">
-            <div
-              className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center text-[34px] leading-none"
-              style={{ background: p.iconBg }}
-            >
-              {p.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{p.name}</h3>
-                <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: p.badgeColor }}>
-                  {p.badge}
-                </span>
-              </div>
-              <p className="mt-1 text-[12.5px] font-bold" style={{ color: ORANGE }}>{p.freq}</p>
-              <div className="mt-2 flex items-end gap-2 flex-wrap">
-                <span className="text-[26px] font-black leading-none" style={{ color: ORANGE, fontFamily: "'Cairo',sans-serif" }}>{p.price}</span>
-                <span className="text-[12px] text-neutral-600 mb-0.5">درهم شهرياً</span>
-                <span className="text-[13px] text-neutral-400 line-through mb-0.5">{p.oldPrice}</span>
-              </div>
-              <span className="mt-2 inline-block rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-[11px] font-bold">
-                {p.save}
-              </span>
-            </div>
-          </div>
-
-          <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">{p.desc}</p>
-
-          {/* features */}
-          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
-            {p.features.map((f) => (
-              <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
-                <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
-                  <Check size={10} strokeWidth={3} className="text-green-600" />
-                </span>
-                <span>{f}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* guarantee */}
-          <div className="mt-4 rounded-2xl p-3 flex items-start gap-2.5" style={{ background: p.guaranteeBg }}>
-            <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0" style={{ color: p.guaranteeColor }} />
-            <div className="text-right">
-              <p className="text-[12.5px] font-black" style={{ color: p.guaranteeColor }}>{p.guaranteeTitle}</p>
-              <p className="text-[11.5px] text-neutral-700 leading-5">{p.guaranteeText}</p>
-            </div>
-          </div>
-        </button>
-      </div>
-    );
-  };
-
-  // Custom card
-  const customActive = selected === "custom";
-  const customHidden = selected !== null && selected !== "custom";
-  const sessionOptions = ["8 حصص", "12 حصة", "16 حصة", "20 حصة", "أريد اقتراح المدرب"];
-
-  return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
-      <style>{`
-        @keyframes off-in { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
-        .off-in { animation: off-in .5s ease-out both; }
-        @keyframes off-pulse { 0%,100%{ transform: scale(1); box-shadow: 0 14px 30px -10px rgba(34,197,94,0.55);} 50%{ transform: scale(1.015); box-shadow: 0 18px 40px -10px rgba(34,197,94,0.7);} }
-        .off-pulse { animation: off-pulse 2.2s ease-in-out infinite; }
-        @keyframes off-glow { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,107,0,0.35);} 50%{ box-shadow: 0 0 0 10px rgba(255,107,0,0);} }
-        .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
-      `}</style>
-
-      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>{CURRENT}</span> من {total}
-          </div>
-          <button onClick={onBack} className="flex items-center gap-1 text-sm font-bold text-neutral-700">
-            <span>رجوع</span>
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: total }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="off-in mt-6">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <h1 className="text-[24px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
-                اختر باقة <span style={{ color: ORANGE }}>التدريب الشخصي</span> المناسبة لك
-              </h1>
-              <p className="mt-2 text-[12.5px] leading-6 text-neutral-600">
-                جلسات حضورية مباشرة في دبي مع متابعة مخصصة لتحقيق أفضل نتيجة خلال 90 يوم.
-              </p>
-            </div>
-            <div className="shrink-0 h-14 w-14 rounded-2xl grid place-items-center text-[28px]" style={{ background: "#FFF1E5" }}>
-              <Dumbbell className="h-7 w-7" style={{ color: ORANGE }} />
-            </div>
-          </div>
-          <div className="mt-3 flex justify-center">
-            <span
-              className="off-urgent-glow inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-black text-white"
-              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` }}
-            >
-              <Flame className="h-4 w-4" /> عرض محدود لعملاء دبي فقط
-            </span>
-          </div>
-        </div>
-
-        {/* Urgency bar */}
-        <div className="off-in mt-5 rounded-[22px] p-4" style={{ background: "linear-gradient(135deg,#FFF6EC 0%, #FFEAD2 100%)", border: "1px solid #FFD1A8" }}>
-          <div className="flex items-start gap-3">
-            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
-              <Clock className="h-6 w-6" style={{ color: ORANGE }} />
-            </div>
-            <div className="flex-1 text-right">
-              <p className="text-[13.5px] font-black flex items-center gap-1 justify-start" style={{ color: ORANGE }}>
-                <span>⚠️</span> الأماكن محدودة هذا الأسبوع
-              </p>
-              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">
-                عدد المقاعد المتاحة للتدريب الشخصي محدود بسبب عدد الحصص اليومية. سارع بحجز مكانك قبل أن يسبقك شخص آخر.
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 rounded-2xl bg-white/70 p-3">
-            <p className="text-[11.5px] font-bold text-neutral-700 text-center">ينتهي العرض خلال:</p>
-            <div className="mt-2 flex items-center justify-center gap-2" dir="ltr">
-              {[
-                { v: pad(timeLeft.h), l: "ساعة" },
-                { v: pad(timeLeft.m), l: "دقيقة" },
-                { v: pad(timeLeft.s), l: "ثانية" },
-              ].map((u, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  {i > 0 && <span className="text-[20px] font-black" style={{ color: ORANGE }}>:</span>}
-                  <div className="text-center">
-                    <div className="rounded-xl px-3 py-1.5 text-[20px] font-black text-white min-w-[52px]" style={{ background: `linear-gradient(180deg, ${ORANGE}, #E85F00)` }}>
-                      {u.v}
-                    </div>
-                    <div className="mt-1 text-[10px] text-neutral-600" dir="rtl">{u.l}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Packages */}
-        <div className="mt-6">
-          <PackageCard p={pkg12} />
-          <PackageCard p={pkg20} />
-
-          {/* Custom package */}
-          <div
-            className="off-card transition-all duration-400"
-            style={{
-              opacity: customHidden ? 0 : 1,
-              maxHeight: customHidden ? 0 : 2000,
-              transform: customActive ? "scale(1.02)" : "scale(1)",
-              marginBottom: customHidden ? 0 : 16,
-              overflow: "hidden",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => pickPackage("custom")}
-              disabled={!!selected && !customActive}
-              className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
-              style={{
-                border: `2px solid ${customActive ? ORANGE : "rgba(0,0,0,0.06)"}`,
-                boxShadow: customActive
-                  ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
-                  : "0 10px 26px -16px rgba(0,0,0,0.12)",
-              }}
-            >
-              <div className="absolute top-4 right-4">
-                {customActive ? (
-                  <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-                    <Check size={16} strokeWidth={3} className="text-white" />
-                  </div>
-                ) : (
-                  <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
-                )}
-              </div>
-
-              <div className="flex items-start gap-3 pr-9">
-                <div className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center" style={{ background: "#E0F2FE" }}>
-                  <Calendar className="h-8 w-8" style={{ color: "#0EA5E9" }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>خصص باقتك</h3>
-                    <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: "#0EA5E9" }}>
-                      مرونة كاملة
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[12.5px] font-bold text-neutral-700">حسب عدد الحصص</p>
-                </div>
-              </div>
-
-              <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">
-                اختر عدد الحصص التي تناسب وقتك وهدفك، وسنصمم لك باقة شخصية بالكامل.
-              </p>
-
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
-                {[
-                  "اختر عدد الحصص المناسب لك",
-                  "جدول مرن حسب وقتك",
-                  "مناسب للمبتدئين والمشغولين",
-                  "خطة تدريب مخصصة",
-                  "متابعة مباشرة",
-                  "إمكانية ترقية الباقة لاحقاً",
-                ].map((f) => (
-                  <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
-                    <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
-                      <Check size={10} strokeWidth={3} className="text-green-600" />
-                    </span>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* sessions selector */}
-              <div className="mt-4 rounded-2xl bg-[#F8FAFC] p-3">
-                <p className="text-[12px] font-bold text-neutral-700 text-right mb-2">عدد الحصص المطلوبة شهرياً</p>
-                <div className="flex flex-wrap gap-2">
-                  {sessionOptions.map((opt) => {
-                    const on = customSessions === opt;
-                    return (
-                      <span
-                        key={opt}
-                        onClick={(e) => { e.stopPropagation(); if (!selected || customActive) setCustomSessions(opt); }}
-                        className="cursor-pointer rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all"
-                        style={{
-                          background: on ? ORANGE : "#fff",
-                          color: on ? "#fff" : "#334155",
-                          border: `1.5px solid ${on ? ORANGE : "#E2E8F0"}`,
-                        }}
-                      >
-                        {opt}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Scarcity */}
-        {!selected && (
-          <div className="off-in mt-2 rounded-[22px] p-4 flex items-start gap-3" style={{ background: "#FFF6EC", border: "1px solid #FFD1A8" }}>
-            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
-              <Flame className="h-6 w-6" style={{ color: ORANGE }} />
-            </div>
-            <div className="flex-1 text-right">
-              <p className="text-[13px] font-black" style={{ color: ORANGE }}>المقاعد محدودة جداً لهذا الأسبوع!</p>
-              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">لا تنتظر حتى يسرق شخص آخر حلمك ويحقق ما تتمناه.</p>
-            </div>
-          </div>
-        )}
-
-        {/* WhatsApp CTA */}
-        {selected && (
-          <div className="mt-6 off-in">
-            <p className="text-center text-[12px] text-neutral-700 mb-2 font-bold">
-              <Lock className="inline h-3 w-3 mb-0.5 ml-1" />
-              تدريب شخصي + متابعة احترافية + نتائج مضمونة
-            </p>
-            <a
-              href={buildWhatsapp()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="off-pulse w-full h-14 rounded-[22px] font-black text-white text-[15px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
-              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)` }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 fill-white"><path d="M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.32-1.66a11.9 11.9 0 0 0 5.73 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.17-3.44-8.42zM12.06 21.5h-.01a9.6 9.6 0 0 1-4.89-1.34l-.35-.21-3.75.99 1-3.65-.23-.37a9.58 9.58 0 0 1-1.47-5.02c0-5.3 4.31-9.6 9.61-9.6 2.57 0 4.98 1 6.8 2.81a9.55 9.55 0 0 1 2.81 6.8c0 5.3-4.31 9.6-9.62 9.6zm5.55-7.18c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.69.15s-.79.98-.97 1.18c-.18.2-.36.22-.66.07-.3-.15-1.28-.47-2.43-1.5-.9-.8-1.51-1.79-1.69-2.09-.18-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.51.07-.78.38-.27.3-1.02 1-1.02 2.44s1.05 2.83 1.2 3.03c.15.2 2.06 3.14 5 4.4.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.79-.73 2.04-1.43.25-.7.25-1.3.18-1.43-.07-.13-.27-.2-.57-.35z"/></svg>
-              <span>أرسل حجزك على الواتساب الآن وابدأ رحلتك نحو الأفضل</span>
-            </a>
-            <p className="mt-3 text-center text-[11.5px] text-neutral-600 leading-5">
-              سيتم إرسال اختيارك وبياناتك للمدرب لتأكيد الحجز والبدء في رحلتك.
-            </p>
-          </div>
-        )}
-
-        {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-neutral-600">
-          <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" style={{ color: GREEN }} /> بياناتك محمية</span>
-          <span className="inline-flex items-center gap-1"><Lock className="h-3.5 w-3.5" style={{ color: GREEN }} /> دفع آمن</span>
-          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5" style={{ color: "#F59E0B" }} /> +500 عميل</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// Payment Screen — Online tiers only
-// ============================================================
-type BankId = "uae" | "morocco" | "brazil";
-
-const BANK_DETAILS: Record<BankId, { country: string; flag: string; banks: { name: string; holder: string; account: string; iban: string; swift: string }[] }> = {
-  uae: {
-    country: "الإمارات العربية المتحدة",
-    flag: "🇦🇪",
-    banks: [
-      { name: "Emirates NBD", holder: "Hakim Coaching FZ-LLC", account: "1015432109876", iban: "AE070260001015432109876", swift: "EBILAEAD" },
-    ],
-  },
-  morocco: {
-    country: "المغرب",
-    flag: "🇲🇦",
-    banks: [
-      { name: "CIH BANK", holder: "Hakim Coaching", account: "230 810 2113217221016000 12", iban: "MA64 2308 1021 1321 7221 0160 0012", swift: "CIHMMAMC" },
-      { name: "BMCE BANK", holder: "Hakim Coaching", account: "011 810 0000123456789012 34", iban: "MA64 0118 1000 0001 2345 6789 0134", swift: "BMCEMAMC" },
-    ],
-  },
-  brazil: {
-    country: "البرازيل",
-    flag: "🇧🇷",
-    banks: [
-      { name: "PIX", holder: "Hakim Coaching", account: "hakim@coaching.br", iban: "—", swift: "—" },
-      { name: "Nubank", holder: "Hakim Coaching", account: "0001 / 1234567-8", iban: "—", swift: "NUBKBRSP" },
-    ],
-  },
-};
-
-// --- Inline brand logos (clean SVG) ---
-function BinanceLogo({ size = 38 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 126 126" width={size} height={size} aria-label="Binance">
-      <path fill="#F3BA2F" d="M38.7 53.6 63 29.3l24.3 24.3 14.1-14.1L63 1.1 24.6 39.5zM1.1 63l14.1-14.1L29.3 63 15.2 77.1zM38.7 72.4 63 96.7l24.3-24.3 14.1 14.1L63 124.9 24.6 86.5zm58.1-9.4 14.1-14.1 14.1 14.1-14.1 14.1zM77.3 63 63 48.7 52.4 59.3l-1.2 1.2-2.5 2.5L63 77.3z"/>
-    </svg>
-  );
-}
-function PayPalLogo({ size = 38 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 124 33" width={size * 3} height={size} aria-label="PayPal">
-      <path fill="#253B80" d="M46.2 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.1c.5 0 .9-.3.9-.8l.7-4.5c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm21-6.2h-3.1c-.3 0-.6.2-.7.4l-4.3 6.3-1.8-6.1c-.1-.4-.5-.6-.8-.6h-3c-.4 0-.6.4-.5.7l3.4 10.1-3.2 4.5c-.3.4 0 .9.4.9h3.1c.3 0 .6-.1.7-.4l10.3-14.9c.3-.4.1-.9-.5-.9z"/>
-      <path fill="#179BD7" d="M94.4 6.7h-6.5c-.5 0-.9.3-.9.8l-2.6 16.6c0 .3.2.6.5.6h3.3c.3 0 .6-.2.7-.6l.7-4.7c.1-.5.5-.8.9-.8h2c4.3 0 6.7-2.1 7.3-6.2.3-1.8 0-3.2-.8-4.2-.9-1.1-2.5-1.5-4.6-1.5zm.8 6.1c-.4 2.4-2.2 2.4-3.9 2.4h-1l.7-4.4c0-.3.3-.5.5-.5h.5c1.2 0 2.3 0 2.8.7.4.4.5 1 .4 1.8zm17.8-.1h-3.1c-.3 0-.5.2-.5.5l-.1.9-.2-.3c-.7-1-2.2-1.4-3.7-1.4-3.5 0-6.6 2.7-7.2 6.5-.3 1.9.1 3.7 1.2 5 1 1.1 2.5 1.6 4.2 1.6 2.9 0 4.5-1.9 4.5-1.9l-.1.9c0 .3.2.6.5.6h2.8c.5 0 .9-.3.9-.8l1.7-10.9c.1-.4-.2-.7-.5-.7zm-4.3 6.2c-.3 1.8-1.8 3.1-3.7 3.1-1 0-1.7-.3-2.2-.9-.5-.6-.7-1.4-.5-2.3.3-1.8 1.8-3.1 3.6-3.1 1 0 1.7.3 2.2.9.5.6.7 1.5.6 2.3zm8.1-12.1L116.1 24c0 .3.2.6.5.6h2.7c.5 0 .9-.3.9-.8l2.6-16.6c0-.3-.2-.6-.5-.6h-3c-.3 0-.5.2-.6.5z"/>
-      <path fill="#253B80" d="M7.3 27.9 7.8 25h-4l3-19h8.4c2.8 0 4.7.6 5.7 1.7.5.5.8 1.1.9 1.7.2.6.2 1.4 0 2.3v.7l.5.3c.4.2.7.5.9.8.4.5.7 1.1.8 1.8.1.8.1 1.6-.1 2.6-.3 1.2-.7 2.3-1.3 3.1-.6.8-1.3 1.5-2.1 2-.8.5-1.7.9-2.7 1.1-1 .2-2.1.3-3.3.3h-.8c-.6 0-1.1.2-1.5.6-.4.4-.7.9-.8 1.4v.4L11.5 28v.2c0 .1 0 .1-.1.1H7.3z"/>
-      <path fill="#179BD7" d="M22.8 8.7v.5c-.8 4.3-3.7 5.8-7.3 5.8h-1.9c-.4 0-.8.3-.9.8L11.7 23l-.3 1.7c-.1.3.2.6.5.6h3.3c.4 0 .7-.3.8-.6v-.2l.6-3.9.1-.2c.1-.4.4-.6.8-.6h.5c3.2 0 5.7-1.3 6.4-5 .3-1.6.2-2.9-.7-3.8-.2-.2-.5-.4-.9-.6z"/>
-    </svg>
-  );
-}
-function SkrillLogo({ size = 38 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 100 32" width={size * 3} height={size} aria-label="Skrill">
-      <text x="0" y="24" fontFamily="Arial, sans-serif" fontSize="28" fontWeight="900" fill="#862165" letterSpacing="-1">Skrill</text>
-    </svg>
-  );
-}
-function WiseLogo({ size = 38 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 110 32" width={size * 3} height={size} aria-label="Wise">
-      <path fill="#9FE870" d="M3 4l10 12L3 28h7l10-12L10 4z"/>
-      <text x="22" y="24" fontFamily="Arial, sans-serif" fontSize="22" fontWeight="900" fill="#163300">wise</text>
-    </svg>
-  );
-}
-function TetherIcon() {
-  return (
-    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#26A17B"/><path fill="#fff" d="M17.9 14.6v-2h4.6V9.5H9.5v3.1H14v2c-3.7.2-6.5.9-6.5 1.8s2.8 1.6 6.5 1.8v6.4h3.9v-6.4c3.7-.2 6.5-.9 6.5-1.8 0-.9-2.8-1.6-6.5-1.8zm0 3v-.1c-.1 0-.7.1-2 .1-1.1 0-1.8 0-2.1-.1v.1c-3.2-.1-5.6-.7-5.6-1.4s2.4-1.2 5.6-1.4v2.3c.3 0 1 .1 2.1.1 1.3 0 1.9-.1 2-.1v-2.3c3.2.1 5.6.7 5.6 1.4 0 .6-2.4 1.3-5.6 1.4z"/></svg>
-  );
-}
-function PayPalIcon() {
-  return (
-    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#EAF4FB"/><path fill="#253B80" d="M11.5 9.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5l1.7-10.9c.1-.4.4-.6.8-.6z"/><path fill="#179BD7" d="M13 11.5h5.6c2.4 0 4.2 1.1 3.7 4-.5 3-2.7 4.4-5.3 4.4h-1.7c-.4 0-.7.2-.8.7l-.7 4.6c0 .2-.1.3-.3.3h-2.6c-.3 0-.4-.2-.4-.5L13 11.5z" opacity=".6"/></svg>
-  );
-}
-function SkrillIcon() {
-  return (
-    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#862165"/><text x="16" y="22" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="18" fontWeight="900" fill="#fff">S</text></svg>
-  );
-}
-function WiseIcon() {
-  return (
-    <svg viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="16" fill="#9FE870"/><path fill="#163300" d="M8 9l5 7-5 7h4l5-7-4-7zm6 0h4l-5 7 4 7h-4l-4-7z"/></svg>
-  );
-}
-function TrophySvg() {
-  return (
-    <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden>
-      <defs>
-        <linearGradient id="trg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFD56B"/><stop offset="1" stopColor="#E69300"/>
-        </linearGradient>
-      </defs>
-      <path fill="url(#trg)" d="M20 8h24v6c0 9-5.4 16-12 16S20 23 20 14V8z"/>
-      <rect x="26" y="30" width="12" height="10" rx="2" fill="#E69300"/>
-      <rect x="18" y="40" width="28" height="6" rx="2" fill="#B36A00"/>
-      <path d="M20 12H12v4c0 5 4 9 9 9" fill="none" stroke="#E69300" strokeWidth="3"/>
-      <path d="M44 12h8v4c0 5-4 9-9 9" fill="none" stroke="#E69300" strokeWidth="3"/>
-      <g fill="#FFF3B0"><path d="M32 14l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3-2.2-2.1 3-.4z"/></g>
-    </svg>
-  );
-}
-
-function BankDetailsModal({ bank, onClose }: { bank: BankId | null; onClose: () => void }) {
-  const [copied, setCopied] = useState<string | null>(null);
-  if (!bank) return null;
-  const info = BANK_DETAILS[bank];
-  const copy = (key: string, val: string) => {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      navigator.clipboard.writeText(val).then(() => {
-        setCopied(key);
-        window.setTimeout(() => setCopied(null), 1500);
-      });
-    }
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(15,23,42,.55)" }}>
-      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ animation: "pay-slide-up .25s ease-out both" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
-          <button onClick={onClose} className="text-neutral-400 active:scale-90"><ChevronRight className="h-5 w-5 rotate-90" /></button>
-          <div className="font-extrabold text-[15px] text-neutral-900">{info.flag} {info.country}</div>
-          <div className="w-5" />
-        </div>
-        <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
-          {info.banks.map((b, i) => (
-            <div key={i} className="rounded-2xl border border-neutral-200 p-4 bg-neutral-50">
-              <div className="font-extrabold text-[15px] text-neutral-900 mb-3 text-right">{b.name}</div>
-              {[
-                { k: "holder", label: "اسم المستفيد", val: b.holder },
-                { k: "account", label: "رقم الحساب", val: b.account },
-                { k: "iban", label: "IBAN", val: b.iban },
-                { k: "swift", label: "SWIFT", val: b.swift },
-              ].map((row) => (
-                <div key={row.k} className="flex items-center justify-between gap-2 py-2 border-t border-neutral-200 first:border-t-0">
-                  <button
-                    onClick={() => copy(`${i}-${row.k}`, row.val)}
-                    className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg active:scale-95"
-                    style={{ background: copied === `${i}-${row.k}` ? "#16A34A" : "#FF6B00", color: "#fff" }}
-                  >
-                    {copied === `${i}-${row.k}` ? "تم النسخ ✓" : "نسخ"}
-                  </button>
-                  <div className="flex-1 text-right min-w-0">
-                    <div className="text-[10.5px] text-neutral-500 font-bold">{row.label}</div>
-                    <div className="text-[12.5px] font-extrabold text-neutral-900 truncate" dir="ltr" style={{ direction: "ltr", textAlign: "right" }}>{row.val}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
-          <div className="text-center text-[11px] text-neutral-500">بعد التحويل اضغط "لقد قمت بالدفع" وأرفق إثبات التحويل.</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PaymentProofModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: () => void }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const onPick = (f: File | null) => {
-    setFile(f);
-    if (f && f.type.startsWith("image/")) {
-      const url = URL.createObjectURL(f);
-      setPreview(url);
-    } else {
-      setPreview(null);
-    }
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(15,23,42,.55)" }}>
-      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ animation: "pay-slide-up .25s ease-out both" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
-          <button onClick={onClose} className="text-neutral-400 active:scale-90"><ChevronRight className="h-5 w-5 rotate-90" /></button>
-          <div className="font-extrabold text-[15px] text-neutral-900">رفع إثبات الدفع</div>
-          <div className="w-5" />
-        </div>
-        <div className="p-5 space-y-4">
-          <p className="text-[12.5px] text-neutral-500 text-right leading-relaxed">أرفق صورة أو ملف PDF أو لقطة شاشة للتحويل لتفعيل اشتراكك بشكل أسرع.</p>
-          <button
-            onClick={() => inputRef.current?.click()}
-            className="w-full rounded-2xl border-2 border-dashed p-6 flex flex-col items-center gap-2 active:scale-[0.99] transition"
-            style={{ borderColor: file ? "#16A34A" : "#FF6B00", background: file ? "#F0FAF4" : "#FFF6EE" }}
-          >
-            {preview ? (
-              <img src={preview} alt="proof" className="h-32 rounded-xl object-cover" />
-            ) : (
-              <div className="h-14 w-14 rounded-2xl grid place-items-center" style={{ background: "#fff" }}>
-                <ClipboardList className="h-7 w-7" style={{ color: "#FF6B00" }} />
-              </div>
-            )}
-            <div className="font-extrabold text-[14px]" style={{ color: file ? "#16A34A" : "#FF6B00" }}>
-              {file ? `✓ ${file.name}` : "اضغط لاختيار الملف"}
-            </div>
-            <div className="text-[11px] text-neutral-500">PNG · JPG · PDF · Screenshot</div>
-          </button>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*,application/pdf"
-            className="hidden"
-            onChange={(e) => onPick(e.target.files?.[0] ?? null)}
-          />
-          <button
-            disabled={!file}
-            onClick={onSubmit}
-            className="w-full h-14 rounded-2xl font-black text-white text-[15px] active:scale-[0.98] transition disabled:opacity-50"
-            style={{ background: "#FF6B00", boxShadow: "0 12px 28px -12px rgba(255,107,0,.7)" }}
-          >
-            إرسال الإثبات
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tierId: PricingTier["id"]; total?: number; onBack: () => void }) {
   const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
   return (

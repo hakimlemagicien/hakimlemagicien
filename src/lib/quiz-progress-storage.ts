@@ -16,7 +16,6 @@ export type QuizProgressSnapshot = {
   activityLevel?: string;
   investment?: string;
   bodyType?: string;
-  userLocation: "dubai" | "remote" | null;
   selectedTierId: "transform" | "pro" | "vip";
   savedAt: number;
 };

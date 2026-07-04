@@ -10,8 +10,8 @@ export type QuizAnswersInput = {
   activityLevel?: string;
   investment?: string;
   bodyType?: string;
-  trainingType?: "online" | "inperson" | null;
-  userLocation?: "dubai" | "remote" | null;
+  trainingType?: "online" | null;
+  userLocation?: "remote" | null;
   selectedTierId?: "transform" | "pro" | "vip";
   lastStep?: string;
 };

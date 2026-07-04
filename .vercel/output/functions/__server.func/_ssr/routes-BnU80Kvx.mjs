@@ -3,7 +3,8 @@ import { n as require_react, t as useComposedRefs } from "../_libs/@radix-ui/rea
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime, t as createContextScope } from "../_libs/radix-ui__react-context+react.mjs";
 import { a as createSlot, i as Primitive, n as useDismissableLayerSurface, t as DismissableLayer } from "../_libs/@radix-ui/react-dismissable-layer+[...].mjs";
-import { B as Headphones, C as Scale, D as Plus, E as RefreshCw, K as Dumbbell, N as MessageCircleQuestionMark, Q as Clock, St as Activity, T as Ruler, V as Globe, W as Flame, _t as BatteryFull, b as ShieldCheck, bt as Award, c as Users, d as Trophy, dt as ChartColumn, et as ClipboardList, f as TrendingUp, ft as Calendar, g as Star, h as Target, ht as CalendarCheck, i as Wifi, it as ChevronsLeft, j as MessageSquare, l as User, lt as Check, m as TrendingDown, n as X, o as Utensils, p as TriangleAlert, pt as CalendarX, rt as CircleCheck, s as UtensilsCrossed, t as Zap, ut as ChartLine, v as Signal, w as Salad, xt as ArrowLeft, y as Shield, yt as BadgeCheck } from "../_libs/lucide-react.mjs";
+import { i as PRODUCT_SUMMARY } from "./site-legal-3UhVOjyr.mjs";
+import { $ as Clock, Ct as Activity, D as RefreshCw, E as Ruler, G as Flame, H as Globe, M as MessageSquare, O as Plus, P as MessageCircleQuestionMark, St as ArrowLeft, T as Salad, V as Headphones, at as ChevronsLeft, b as Shield, bt as BadgeCheck, c as Users, d as Trophy, dt as ChartLine, f as TrendingUp, ft as ChartColumn, g as Star, gt as CalendarCheck, h as Target, i as Wifi, it as CircleCheck, l as User, m as TrendingDown, mt as CalendarX, n as X, o as Utensils, p as TriangleAlert, pt as Calendar, q as Dumbbell, s as UtensilsCrossed, t as Zap, tt as ClipboardList, ut as Check, v as Smartphone, vt as BatteryFull, w as Scale, x as ShieldCheck, xt as Award, y as Signal } from "../_libs/lucide-react.mjs";
 import { n as SiteFooter, t as Header } from "./SiteFooter-CSS0r33x.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
@@ -17,7 +18,7 @@ import { t as Presence } from "../_libs/radix-ui__react-presence.mjs";
 import { t as useFocusGuards } from "../_libs/radix-ui__react-focus-guards.mjs";
 import { t as ReactRemoveScroll } from "../_libs/react-remove-scroll+[...].mjs";
 import { t as hideOthers } from "../_libs/aria-hidden.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-90LbgeU7.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-BnU80Kvx.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /** Unified client social-proof count shown across the landing page. */
@@ -3715,9 +3716,17 @@ function PricingTransparency() {
 								className: "relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden sm:max-w-sm lg:max-w-md",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" }), head.inView && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent" })]
 							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 								className: "mx-auto mt-6 max-w-2xl text-base leading-loose text-neutral-500 md:text-lg",
-								children: "عملية واضحة وبسيطة — تعرف ما ستدفعه قبل أي التزام."
+								children: [
+									"عملية واضحة وبسيطة — تعرف ما ستدفعه قبل أي التزام. جميع الباقات",
+									" ",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "font-bold text-neutral-700",
+										children: "رقمية بالكامل"
+									}),
+									" ولا تشمل شحن منتجات مادية."
+								]
 							})
 						]
 					}),
@@ -3783,6 +3792,50 @@ function PricingTransparency() {
 									})]
 								})]
 							})]
+						})
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: `mx-auto mt-8 max-w-4xl transition-all duration-700 ease-out md:mt-10 ${trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`,
+						style: { transitionDelay: "120ms" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "relative overflow-hidden rounded-[28px] border border-neutral-200 bg-white p-6 shadow-[0_10px_32px_-18px_rgba(15,23,42,0.12)] md:p-8",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:gap-5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "grid h-14 w-14 shrink-0 place-items-center self-center rounded-2xl bg-orange-50 text-primary ring-1 ring-orange-100 sm:self-start",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Smartphone, {
+										className: "h-7 w-7",
+										strokeWidth: 2.2
+									})
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "min-w-0 flex-1 text-center sm:text-right",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+											className: "font-[Tajawal] text-[20px] font-black text-neutral-900 md:text-[22px]",
+											children: "منتج رقمي — كيف تستلم برنامجك؟"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "mt-2.5 text-[13.5px] leading-[1.85] text-neutral-600 md:text-[15px]",
+											children: [
+												PRODUCT_SUMMARY.type,
+												". ",
+												PRODUCT_SUMMARY.delivery,
+												" لا جلسات حضورية ولا شحن عبر الموقع."
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+											className: "mt-4 space-y-2 text-[13px] leading-relaxed text-neutral-600 md:text-[14px]",
+											children: PRODUCT_SUMMARY.includes.slice(0, 4).map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+												className: "flex items-start justify-end gap-2",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary",
+													"aria-hidden": true
+												})]
+											}, item))
+										})
+									]
+								})]
+							})
 						})
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -4097,8 +4150,12 @@ function useInView$1(threshold = .12) {
 }
 var FAQS = [
 	{
+		q: "هل البرنامج رقمي أم حضوري؟",
+		a: "البرنامج رقمي بالكامل: خطة تدريب وتغذية مخصصة تصلك إلكترونياً عبر واتساب والبريد خلال 24–48 ساعة من تأكيد الدفع، مع متابعة دورية حسب الباقة. لا يتم شحن أي منتجات مادية ولا حجز جلسات حضورية عبر الموقع."
+	},
+	{
 		q: "كيف يعمل برنامج التدريب الأونلاين؟",
-		a: "تبدأ بتقييم شامل لحالتك وأهدافك، ثم نصمم لك خطة تدريب وغذاء مخصصة بالكامل تصلك عبر التطبيق مع متابعة دورية من المدرب."
+		a: "تبدأ بتقييم شامل لحالتك وأهدافك، ثم نصمم لك خطة تدريب وغذاء مخصصة تصلك إلكترونياً مع متابعة دورية من المدرب عبر واتساب."
 	},
 	{
 		q: "هل أحتاج إلى معدات رياضية خاصة؟",
@@ -4126,7 +4183,7 @@ var FAQS = [
 	},
 	{
 		q: "كيف يمكنني التواصل مع المدرب؟",
-		a: "يمكنك التواصل مع المدرب مباشرة عبر التطبيق أو واتساب طوال أيام الأسبوع للحصول على دعم سريع."
+		a: "يمكنك التواصل مع المدرب مباشرة عبر واتساب طوال أيام الأسبوع للحصول على دعم سريع ومتابعة برنامجك الرقمي."
 	}
 ];
 function FaqItem({ item, index, onOpen }) {

@@ -4,15 +4,15 @@ import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].
 import { _ as Link, c as HeadContent, f as createRouter, g as createRootRouteWithContext, h as createFileRoute, j as redirect, m as lazyRouteComponent, p as Outlet, s as Scripts, u as useRouterState, y as useRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
 import { t as WhatsAppIcon } from "./WhatsAppIcon-BIM0XFiZ.mjs";
-import { at as ChevronUp } from "../_libs/lucide-react.mjs";
-import { r as premiumTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
+import { ot as ChevronUp } from "../_libs/lucide-react.mjs";
+import { r as premiumTransition } from "./motion-C5gqCalS.mjs";
 import { r as MotionConfig, t as useReducedMotion } from "../_libs/framer-motion.mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
 import { t as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-zamW1q-5.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-Dtdou40c.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-CxTCzYNv.css";
+var styles_default = "/assets/styles-Dx5Xj42q.css";
 var WHATSAPP_URL = "https://wa.me/971505129019";
 var HERO_INLINE_CTA_ID$1 = "hero-inline-quiz-cta";
 var STICKY_QUIZ_BAR_ID$1 = "hero-sticky-quiz-bar";
@@ -406,11 +406,11 @@ var $$splitComponentImporter$7 = () => import("./terms-BNT-dcs9.mjs");
 var Route$8 = createFileRoute("/terms")({ component: lazyRouteComponent($$splitComponentImporter$7, "component") });
 var $$splitComponentImporter$6 = () => import("./refund-D0igSGbK.mjs");
 var Route$7 = createFileRoute("/refund")({ component: lazyRouteComponent($$splitComponentImporter$6, "component") });
-var $$splitComponentImporter$5 = () => import("./quiz-yPWS4pD4.mjs");
+var $$splitComponentImporter$5 = () => import("./quiz-B9cV5lGZ.mjs");
 var Route$6 = createFileRoute("/quiz")({
 	head: () => ({ meta: [{ title: "ابدأ تقييمك المجاني — Hakim Coaching" }, {
 		name: "description",
-		content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة."
+		content: "احصل على برنامج تدريب وتغذية رقمي مخصص — تحليل مجاني ثم اشتراك رقمي يُسلَّم عبر واتساب والبريد."
 	}] }),
 	component: lazyRouteComponent($$splitComponentImporter$5, "component")
 });
@@ -443,13 +443,13 @@ var Route$2 = createFileRoute("/_authenticated")({
 	},
 	component: lazyRouteComponent($$splitComponentImporter$2, "component")
 });
-var $$splitComponentImporter$1 = () => import("./routes-90LbgeU7.mjs");
+var $$splitComponentImporter$1 = () => import("./routes-BnU80Kvx.mjs");
 var Route$1 = createFileRoute("/")({
 	head: () => ({ meta: [
 		{ title: "Hakim Coaching — برنامج تدريبي وغذائي مخصص لهدفك" },
 		{
 			name: "description",
-			content: "احصل على برنامج تدريبي وغذائي مخصص 100% لهدفك. تحليل شخصي مجاني خلال دقائق مع متابعة دورية ونتائج قابلة للقياس."
+			content: "برنامج تدريب وتغذية رقمي مخصص — تحليل مجاني، تسليم إلكتروني عبر واتساب والبريد، بدون شحن أو جلسات حضورية."
 		},
 		{
 			property: "og:title",
