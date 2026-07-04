@@ -1,28 +1,82 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Bitcoin,
   ChevronRight,
+  Clock,
+  CreditCard,
   Headphones,
+  Info,
+  Landmark,
   Lock,
   Shield,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
-import { isPaddleConfigured, openPaddleCheckout } from "@/lib/paddle-checkout";
+import type { BankId } from "@/lib/bank-details";
+import {
+  savePaymentMethod,
+  saveSelectedPlan,
+  submitPaymentProof,
+} from "@/lib/lead-api";
+import { getLeadCredentials } from "@/lib/lead-storage";
+import { mapBankToPaymentMethod } from "@/lib/payment-method-map";
 import { AgreementCheckbox } from "./AgreementCheckbox";
+import { BankTransferModal } from "./BankTransferModal";
 import { CheckoutFooter } from "./CheckoutFooter";
 import { CheckoutSummaryCard } from "./CheckoutSummaryCard";
-import { PaymentCard, type CheckoutPayMethod } from "./PaymentCard";
+import {
+  PaymentMethodOption,
+  type CheckoutMethodId,
+} from "./PaymentMethodOption";
+import { ReceiptUploadSection } from "./ReceiptUploadSection";
 import { SecurityBanner } from "./SecurityBanner";
 import { TrustFeatures } from "./TrustCard";
-import {
-  ApplePayLogo,
-  CardBrandsRow,
-  GooglePayLogo,
-  PaddleLogo,
-} from "./payment-logos";
-
 import type { CheckoutTier } from "./types";
+
+const PAYMENT_METHODS: {
+  id: CheckoutMethodId;
+  name: string;
+  description: string;
+  disabled?: boolean;
+  badge?: { label: string; tone: "available" | "soon" };
+  icon: React.ReactNode;
+}[] = [
+  {
+    id: "bank",
+    name: "تحويل بنكي",
+    description: "حوّل المبلغ إلى حسابنا البنكي وارفع إيصال التحويل لتأكيد طلبك.",
+    badge: { label: "متاح الآن", tone: "available" },
+    icon: <Landmark className="h-5 w-5 text-[#64748B]" />,
+  },
+  {
+    id: "card",
+    name: "بطاقة بنكية",
+    description: "الدفع بالبطاقات الائتمانية قريباً",
+    disabled: true,
+    badge: { label: "قريباً", tone: "soon" },
+    icon: <CreditCard className="h-5 w-5 text-[#64748B]" />,
+  },
+  {
+    id: "paypal",
+    name: "PayPal",
+    description: "الدفع عبر PayPal قريباً",
+    disabled: true,
+    badge: { label: "قريباً", tone: "soon" },
+    icon: (
+      <span className="text-[11px] font-black tracking-tight text-[#003087]">
+        Pay<span className="text-[#009CDE]">Pal</span>
+      </span>
+    ),
+  },
+  {
+    id: "crypto",
+    name: "العملات الرقمية",
+    description: "دعم العملات الرقمية قريباً",
+    disabled: true,
+    badge: { label: "قريباً", tone: "soon" },
+    icon: <Bitcoin className="h-5 w-5 text-[#F7931A]" />,
+  },
+];
 
 type CheckoutScreenProps = {
   name: string;
@@ -31,54 +85,77 @@ type CheckoutScreenProps = {
   onBack: () => void;
 };
 
-export function CheckoutScreen({ name, tier, total = 17, onBack }: CheckoutScreenProps) {
-  const [method, setMethod] = useState<CheckoutPayMethod>("card");
+export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps) {
+  const [method, setMethod] = useState<CheckoutMethodId>("bank");
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [transferConfirmed, setTransferConfirmed] = useState(false);
+  const [receiptSubmitted, setReceiptSubmitted] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const paddleReady = isPaddleConfigured();
+  const [transferSaving, setTransferSaving] = useState(false);
+  const [receiptSaving, setReceiptSaving] = useState(false);
 
-  const handlePay = async () => {
-    if (!legalAccepted || loading) return;
-    setLoading(true);
+  const amount = Number(tier.totalPrice);
+  const credentials = getLeadCredentials();
+
+  const handleTransferDone = async (bankId: BankId) => {
+    setBankModalOpen(false);
+    setTransferConfirmed(true);
+
+    if (!credentials) return;
+
+    setTransferSaving(true);
     try {
-      await openPaddleCheckout({
+      await saveSelectedPlan(credentials, {
         tierId: tier.id,
-        customData: { tierId: tier.id, customerName: name, payMethod: method },
+        tierName: tier.name,
+        planPrice: amount,
+        trainingMode: "online",
       });
-    } catch {
-      // Paddle not configured or checkout failed
+      await savePaymentMethod(credentials, {
+        method: mapBankToPaymentMethod(bankId),
+        amount,
+        currency: "USD",
+      });
+    } catch (error) {
+      console.error(error);
     } finally {
-      setLoading(false);
+      setTransferSaving(false);
     }
   };
 
-  const paymentMethods: {
-    id: CheckoutPayMethod;
-    name: string;
-    description: string;
-    logo: React.ReactNode;
-  }[] = [
-    {
-      id: "card",
-      name: "بطاقة بنكية",
-      description: "ادفع باستخدام بطاقة فيزا، ماستركارد أو أمريكان إكسبريس",
-      logo: <CardBrandsRow />,
-    },
-    {
-      id: "apple_pay",
-      name: "Apple Pay",
-      description: "ادفع بسهولة وأمان باستخدام Apple Pay",
-      logo: <ApplePayLogo className="h-[42px] text-[#0F172A]" />,
-    },
-    {
-      id: "google_pay",
-      name: "Google Pay",
-      description: "ادفع بسهولة وأمان باستخدام Google Pay",
-      logo: <GooglePayLogo className="h-[42px]" />,
-    },
-  ];
+  const handleProofSubmit = async (file: File) => {
+    if (!credentials) {
+      alert("تعذر العثور على بيانات طلبك. ارجع خطوة وأكمل النموذج مرة أخرى.");
+      return;
+    }
+    setReceiptSaving(true);
+    try {
+      await submitPaymentProof(credentials, file);
+      setReceiptSubmitted(true);
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ أثناء إرسال الإيصال. حاول مرة أخرى.");
+    } finally {
+      setReceiptSaving(false);
+    }
+  };
 
-  const ctaDisabled = !legalAccepted || loading;
+  const handlePayClick = () => {
+    if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving) return;
+    if (method === "bank") {
+      setBankModalOpen(true);
+    }
+  };
+
+  const ctaDisabled =
+    !legalAccepted || transferSaving || receiptSaving || receiptSubmitted || transferConfirmed;
+  const ctaLabel = receiptSubmitted
+    ? "قيد مراجعة الدفع"
+    : transferSaving
+      ? "جاري التسجيل..."
+      : receiptSaving
+        ? "جاري الإرسال..."
+        : "إتمام الدفع";
 
   return (
     <div
@@ -87,7 +164,6 @@ export function CheckoutScreen({ name, tier, total = 17, onBack }: CheckoutScree
       className="h-full w-full overflow-y-auto bg-[#FAFAFA] font-[Cairo,Tajawal,sans-serif]"
     >
       <div className="mx-auto w-full max-w-md px-5 pb-[34px]">
-        {/* Top bar — matches other quiz screens */}
         <div className="pb-3 pt-5">
           <div className="flex items-center justify-between">
             <button
@@ -104,7 +180,7 @@ export function CheckoutScreen({ name, tier, total = 17, onBack }: CheckoutScree
             </div>
             <div className="flex w-12 items-center justify-end gap-1.5 text-[10.5px] font-extrabold text-[#16A34A]">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-              آمن 100%
+              آمن
             </div>
           </div>
           <div className="mt-3 flex gap-1.5">
@@ -114,91 +190,101 @@ export function CheckoutScreen({ name, tier, total = 17, onBack }: CheckoutScree
           </div>
         </div>
 
-        {/* Title — original layout */}
         <div className="mt-4 text-center font-[Tajawal]">
           <h1 className="text-[24px] font-black tracking-tight text-[#0F172A]">
             أكمل <span className="text-[#FF6B00]">طلبك</span> الآن
           </h1>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-neutral-500">
-            اختر طريقة الدفع المناسبة لك لبدء برنامجك الرقمي المخصص
+            اختر طريقة الدفع المناسبة وأكمل خطوات التحويل
           </p>
         </div>
 
-        {/* Summary card — original layout */}
         <CheckoutSummaryCard tier={tier} />
 
-        {/* Payment methods */}
         <section className="mt-6" aria-labelledby="payment-methods-title">
           <div className="mb-3 flex items-center justify-center gap-2">
-            <Wallet className="h-5 w-5 text-[#FF5A1F]" aria-hidden />
-            <h2 id="payment-methods-title" className="text-[18px] font-bold leading-tight text-[#0F172A]">
+            <Lock className="h-4 w-4 text-[#FF5A1F]" aria-hidden />
+            <h2 id="payment-methods-title" className="text-[17px] font-bold leading-tight text-[#0F172A]">
               اختر طريقة الدفع
             </h2>
           </div>
 
           <div className="space-y-2" role="radiogroup" aria-label="طرق الدفع">
-            {paymentMethods.map((m, i) => (
-              <PaymentCard
-                key={m.id}
-                {...m}
-                selected={method === m.id}
-                onSelect={setMethod}
+            {PAYMENT_METHODS.map((option, i) => (
+              <PaymentMethodOption
+                key={option.id}
+                id={option.id}
+                name={option.name}
+                description={option.description}
+                selected={method === option.id}
+                disabled={option.disabled}
+                badge={option.badge}
+                icon={option.icon}
                 index={i}
+                onSelect={setMethod}
               />
             ))}
           </div>
         </section>
 
-        {/* Security */}
+        <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-3.5 py-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#16A34A]" aria-hidden />
+          <p className="text-[11.5px] leading-[1.65] text-neutral-600">
+            بعد رفع إيصال التحويل سيتم مراجعته وتفعيل اشتراكك وإرسال رسالة تأكيد عبر البريد الإلكتروني.
+          </p>
+        </div>
+
         <div className="mt-2.5">
           <SecurityBanner />
         </div>
 
-        {/* Agreement */}
         <div className="mt-3 rounded-2xl border border-[#ECECEC] bg-white p-3.5">
           <AgreementCheckbox checked={legalAccepted} onChange={setLegalAccepted} />
         </div>
 
-        {/* CTA */}
         <div className="mt-4">
-          <p className="mb-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-[1.45] text-[#6B7280]">
-            <Lock className="h-3 w-3 shrink-0" aria-hidden />
-            لن يتم تحصيل أي مبلغ حتى تُكمل عملية الدفع بأمان.
-          </p>
-
           <motion.button
             type="button"
             disabled={ctaDisabled}
             whileTap={{ scale: ctaDisabled ? 1 : 0.98 }}
-            onClick={() => void handlePay()}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF5A1F] text-[18px] font-bold text-white checkout-cta-shadow transition disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="إتمام الدفع الآمن"
+            onClick={handlePayClick}
+            className={`flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[17px] font-bold transition checkout-cta-shadow disabled:cursor-not-allowed disabled:opacity-60 ${
+              receiptSubmitted
+                ? "bg-[#16A34A] text-white"
+                : "bg-[#FF5A1F] text-white"
+            }`}
           >
             <Lock className="h-5 w-5" aria-hidden />
-            {loading ? "جاري التحضير..." : "إتمام الدفع الآمن"}
+            {ctaLabel}
           </motion.button>
 
-          {paddleReady ? (
-            <div className="mt-3 flex flex-col items-center gap-1 text-center">
-              <PaddleLogo />
-              <p className="text-[11px] leading-[1.45] text-[#9CA3AF]">
-                سيتم فتح صفحة دفع آمنة عبر Paddle لإكمال العملية
-              </p>
-            </div>
+          {transferConfirmed ? (
+            <ReceiptUploadSection
+              onSubmit={handleProofSubmit}
+              submitted={receiptSubmitted}
+              loading={receiptSaving}
+            />
           ) : null}
         </div>
 
-        {/* Trust features */}
         <TrustFeatures
           items={[
             { icon: Headphones, title: "دعم مباشر", description: "نرد خلال 24 ساعة", tone: "orange" },
-            { icon: Lock, title: "دفع آمن", description: "تشفير على مستوى البنوك", tone: "green" },
-            { icon: Shield, title: "خصوصية كاملة", description: "لا نخزّن بيانات البطاقة", tone: "blue" },
+            { icon: Shield, title: "تحويل آمن", description: "حسابات رسمية للشركة", tone: "green" },
+            { icon: Clock, title: "تفعيل سريع", description: "بعد تأكيد الدفع", tone: "blue" },
           ]}
         />
 
         <CheckoutFooter />
       </div>
+
+      {bankModalOpen ? (
+        <BankTransferModal
+          tierPriceUsd={tier.totalPrice}
+          onClose={() => setBankModalOpen(false)}
+          onTransferDone={(bankId) => void handleTransferDone(bankId)}
+        />
+      ) : null}
     </div>
   );
 }

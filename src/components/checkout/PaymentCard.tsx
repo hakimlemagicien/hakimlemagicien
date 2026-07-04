@@ -1,15 +1,14 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-export type CheckoutPayMethod = "card" | "apple_pay" | "google_pay";
+import type { BankId } from "@/lib/bank-details";
 
 type PaymentCardProps = {
-  id: CheckoutPayMethod;
+  id: BankId;
   name: string;
   description: string;
   selected: boolean;
   disabled?: boolean;
-  onSelect: (id: CheckoutPayMethod) => void;
+  onSelect: (id: BankId) => void;
   logo: React.ReactNode;
   index?: number;
 };

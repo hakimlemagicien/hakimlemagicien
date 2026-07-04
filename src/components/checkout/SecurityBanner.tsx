@@ -9,8 +9,8 @@ type SecurityBannerProps = {
 };
 
 export function SecurityBanner({
-  title = "100% دفع آمن",
-  description = "معاملاتك مشفرة ومحمية عبر Paddle بمعايير مصرفية.",
+  title = "تحويل بنكي آمن",
+  description = "ادفع إلى حساباتنا الرسمية فقط — لا نشارك بياناتك مع أطراف ثالثة.",
   className,
 }: SecurityBannerProps) {
   return (

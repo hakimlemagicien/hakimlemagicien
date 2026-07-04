@@ -1,7 +1,7 @@
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, n as PAYMENT_PADDLE_DISCLOSURE, r as PAYMENT_PROCESSING_SUMMARY, u as SITE_WHATSAPP } from "./site-legal-3UhVOjyr.mjs";
-import { t as LegalPageShell } from "./LegalPageShell-wmqxhSEx.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/refund-D0igSGbK.js
+import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, n as PAYMENT_MANUAL_DISCLOSURE, r as PAYMENT_PROCESSING_SUMMARY, u as SITE_WHATSAPP } from "./site-legal-BJWCSk8k.mjs";
+import { t as LegalPageShell } from "./LegalPageShell-0zA0qG9n.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/refund-CyYc0_CV.js
 var import_jsx_runtime = require_jsx_runtime();
 function RefundPage() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegalPageShell, {
@@ -57,8 +57,8 @@ function RefundPage() {
 				body: ["يمكنك إلغاء طلبك قبل تسليم الخطة والحصول على استرجاع كامل ضمن فترة 7 أيام."]
 			},
 			{
-				title: "8. معالجة المدفوعات الآمنة",
-				body: [PAYMENT_PROCESSING_SUMMARY, PAYMENT_PADDLE_DISCLOSURE]
+				title: "8. التحويل البنكي وتفعيل الطلب",
+				body: [PAYMENT_PROCESSING_SUMMARY, PAYMENT_MANUAL_DISCLOSURE]
 			}
 		]
 	});

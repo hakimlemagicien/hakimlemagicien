@@ -7,7 +7,7 @@ import {
   SITE_SUPPORT_EMAIL,
   SITE_WHATSAPP,
   PAYMENT_PROCESSING_SUMMARY,
-  PAYMENT_PADDLE_DISCLOSURE,
+  PAYMENT_MANUAL_DISCLOSURE,
 } from "@/lib/site-legal";
 
 export const Route = createFileRoute("/refund")({
@@ -77,8 +77,8 @@ function RefundPage() {
           ],
         },
         {
-          title: "8. معالجة المدفوعات الآمنة",
-          body: [PAYMENT_PROCESSING_SUMMARY, PAYMENT_PADDLE_DISCLOSURE],
+          title: "8. التحويل البنكي وتفعيل الطلب",
+          body: [PAYMENT_PROCESSING_SUMMARY, PAYMENT_MANUAL_DISCLOSURE],
         },
       ]}
     />

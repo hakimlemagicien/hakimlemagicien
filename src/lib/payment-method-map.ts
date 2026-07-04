@@ -1,7 +1,7 @@
 import type { Enums } from "@/integrations/supabase/types";
+import type { BankId } from "@/lib/bank-details";
 
 export type PayMethodId = "binance" | "paypal" | "skrill" | "wise";
-export type BankId = "uae" | "morocco" | "brazil";
 
 export type PaymentMethod = Enums<"payment_method">;
 
@@ -15,7 +15,7 @@ const PAY_METHOD_MAP: Record<PayMethodId, PaymentMethod> = {
 const BANK_METHOD_MAP: Record<BankId, PaymentMethod> = {
   uae: "bank_nbd_uae",
   morocco: "bank_cih_morocco",
-  brazil: "pix_brazil",
+  bmce: "bank_bmce_morocco",
 };
 
 export function mapPayMethodToEnum(method: PayMethodId): PaymentMethod {

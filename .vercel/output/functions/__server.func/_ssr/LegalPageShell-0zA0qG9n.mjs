@@ -1,9 +1,9 @@
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { d as SITE_WHATSAPP_URL, l as SITE_SUPPORT_EMAIL, s as SITE_LAST_UPDATED, t as LEGAL_ROUTES } from "./site-legal-3UhVOjyr.mjs";
-import { $ as Clock3, A as MonitorSmartphone, C as Scale, E as RefreshCw, F as Mail, G as FileText, S as Send, U as Gavel, X as Copyright, Y as CreditCard, Z as Cookie, _ as Sparkles, a as Wallet, b as ShieldCheck, gt as Building2, k as Package, mt as CalendarClock, nt as CircleX, p as TriangleAlert, q as Database, r as Workflow, tt as ClipboardCheck, u as UserCheck, vt as Ban, x as Share2, y as Shield, z as HeartPulse } from "../_libs/lucide-react.mjs";
-import { n as SiteFooter, t as Header } from "./SiteFooter-CSS0r33x.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/LegalPageShell-wmqxhSEx.js
+import { d as SITE_WHATSAPP_URL, l as SITE_SUPPORT_EMAIL, s as SITE_LAST_UPDATED, t as LEGAL_ROUTES } from "./site-legal-BJWCSk8k.mjs";
+import { $ as CreditCard, A as Package, C as Send, D as RefreshCw, H as HeartPulse, I as Mail, K as Gavel, S as Share2, St as Building2, Tt as Ban, Y as FileText, Z as Database, a as Wallet, b as Shield, bt as CalendarClock, d as UserCheck, et as Copyright, it as Clock3, j as MonitorSmartphone, m as TriangleAlert, nt as Cookie, ot as ClipboardCheck, r as Workflow, st as CircleX, v as Sparkles, w as Scale, x as ShieldCheck } from "../_libs/lucide-react.mjs";
+import { n as SiteFooter, t as Header } from "./SiteFooter-CRYx4hkF.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/LegalPageShell-0zA0qG9n.js
 var import_jsx_runtime = require_jsx_runtime();
 var ORANGE = "#FF6B00";
 var TEXT = "#0F172A";

@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LEGAL_ROUTES, SITE_SUPPORT_EMAIL } from "@/lib/site-legal";
-import { PaddleLogo } from "./payment-logos";
 
 type CheckoutFooterProps = {
   className?: string;
@@ -47,12 +46,9 @@ export function CheckoutFooter({ className }: CheckoutFooterProps) {
         </nav>
       </div>
 
-      <div className="flex items-center justify-center gap-2 px-1 text-center">
-        <PaddleLogo />
-        <p className="text-[10px] leading-[1.4] text-[#9CA3AF]">
-          دفع آمن عبر Paddle · SSL
-        </p>
-      </div>
+      <p className="px-1 text-center text-[10px] leading-[1.4] text-[#9CA3AF]">
+        الدفع بالتحويل البنكي · تفعيل بعد المراجعة اليدوية
+      </p>
     </footer>
   );
 }

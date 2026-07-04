@@ -1,7 +1,7 @@
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, o as SITE_JURISDICTION } from "./site-legal-3UhVOjyr.mjs";
-import { t as LegalPageShell } from "./LegalPageShell-wmqxhSEx.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/terms-BNT-dcs9.js
+import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, o as SITE_JURISDICTION } from "./site-legal-BJWCSk8k.mjs";
+import { t as LegalPageShell } from "./LegalPageShell-0zA0qG9n.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/terms-CiUU3Ddu.js
 var import_jsx_runtime = require_jsx_runtime();
 function TermsPage() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegalPageShell, {
@@ -38,8 +38,9 @@ function TermsPage() {
 				title: "4. الدفع والأسعار",
 				body: [
 					"الأسعار معروضة بالدولار الأمريكي (USD) ما لم يُذكر غير ذلك.",
-					"الدفع دفعة واحدة مقابل فترة 90 يوماً — لا يوجد تجديد تلقائي أو اشتراك متكرر ما لم يُعلَن صراحةً.",
-					"قد تُعالَج المدفوعات عبر مزود دفع عالمي معتمد (بما في ذلك Paddle كوسيط) أو وسائل أخرى معروضة وقت الدفع."
+					"الدفع حالياً عبر تحويل بنكي مباشر إلى حسابات الشركة المعروضة عند إتمام الطلب.",
+					"بعد التحويل، يرفع العميل إثبات الدفع. يبدأ تجهيز البرنامج بعد تأكيدنا استلام المبلغ (عادة خلال 24–48 ساعة).",
+					"لا يوجد تجديد تلقائي — الدفع دفعة واحدة مقابل 90 يوماً."
 				]
 			},
 			{

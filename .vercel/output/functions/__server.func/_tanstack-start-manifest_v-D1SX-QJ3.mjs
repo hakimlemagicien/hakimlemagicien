@@ -1,4 +1,4 @@
-//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-WiOvMlZc.js
+//#region node_modules/.nitro/vite/services/ssr/assets/_tanstack-start-manifest_v-D1SX-QJ3.js
 var tsrStartManifest = () => ({ routes: {
 	__root__: {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/__root.tsx",
@@ -12,11 +12,11 @@ var tsrStartManifest = () => ({ routes: {
 			"/refund",
 			"/terms"
 		],
-		preloads: ["/assets/index-DxBSr2GA.js", "/assets/useRouter-C7pTCAcE.js"],
+		preloads: ["/assets/index-CGuZeXrJ.js", "/assets/useRouter-C7pTCAcE.js"],
 		scripts: [{ attrs: {
 			type: "module",
 			async: !0,
-			src: "/assets/index-DxBSr2GA.js"
+			src: "/assets/index-CGuZeXrJ.js"
 		} }]
 	},
 	"/": {
@@ -24,63 +24,63 @@ var tsrStartManifest = () => ({ routes: {
 		children: void 0,
 		css: ["/assets/routes-D-CQQIgx.css"],
 		preloads: [
-			"/assets/routes-CErZc0Zy.js",
-			"/assets/SiteFooter-B-tuMehV.js",
-			"/assets/utils-BYFANbK-.js",
-			"/assets/site-legal-CAsXBZtK.js"
+			"/assets/routes-De3jWirM.js",
+			"/assets/SiteFooter-Dneso7pE.js",
+			"/assets/utils-C4PmZHlg.js",
+			"/assets/site-legal-BHd0yEZo.js"
 		]
 	},
 	"/_authenticated": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/_authenticated/route.tsx",
 		children: ["/_authenticated/dashboard"],
-		preloads: ["/assets/route-DGNLvJPw.js"]
+		preloads: ["/assets/route-BHMGRskg.js"]
 	},
 	"/auth": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/auth.tsx",
 		children: void 0,
-		preloads: ["/assets/auth-CRncMOjK.js"]
+		preloads: ["/assets/auth-ByLcEU1B.js"]
 	},
 	"/privacy": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/privacy.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/privacy-q5DcMNzV.js",
-			"/assets/LegalPageShell-CDKl9rWM.js",
-			"/assets/site-legal-CAsXBZtK.js"
+			"/assets/privacy-BUHrNOOo.js",
+			"/assets/LegalPageShell-C7Z1nQTn.js",
+			"/assets/site-legal-BHd0yEZo.js"
 		]
 	},
 	"/quiz": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/quiz.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/quiz-fTQuJvdN.js",
-			"/assets/utils-BYFANbK-.js",
-			"/assets/wallet-DXBl9xKZ.js",
-			"/assets/site-legal-CAsXBZtK.js"
+			"/assets/quiz-BNaNuxVh.js",
+			"/assets/utils-C4PmZHlg.js",
+			"/assets/sparkles-DvRpEyI-.js",
+			"/assets/site-legal-BHd0yEZo.js"
 		]
 	},
 	"/refund": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/refund.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/refund-CgSv_xKh.js",
-			"/assets/LegalPageShell-CDKl9rWM.js",
-			"/assets/site-legal-CAsXBZtK.js"
+			"/assets/refund-B1oZgzDP.js",
+			"/assets/LegalPageShell-C7Z1nQTn.js",
+			"/assets/site-legal-BHd0yEZo.js"
 		]
 	},
 	"/terms": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/terms.tsx",
 		children: void 0,
 		preloads: [
-			"/assets/terms-Do0ezKX6.js",
-			"/assets/LegalPageShell-CDKl9rWM.js",
-			"/assets/site-legal-CAsXBZtK.js"
+			"/assets/terms-ChoajBXB.js",
+			"/assets/LegalPageShell-C7Z1nQTn.js",
+			"/assets/site-legal-BHd0yEZo.js"
 		]
 	},
 	"/_authenticated/dashboard": {
 		filePath: "/Users/hakimlemagicien/Documents/GitHub/hakimlemagicien/src/routes/_authenticated/dashboard.tsx",
 		children: void 0,
-		preloads: ["/assets/dashboard-D-1h_lOs.js"]
+		preloads: ["/assets/dashboard-CxVq3usS.js"]
 	}
 } });
 //#endregion

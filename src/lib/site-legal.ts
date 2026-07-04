@@ -6,9 +6,11 @@ export const SITE_WHATSAPP = "+971505129019";
 export const SITE_WHATSAPP_URL = "https://wa.me/971505129019";
 export const SITE_LAST_UPDATED = "3 يوليو 2026";
 
-export const PAYMENT_PROCESSING_SUMMARY = `تعالج جميع المدفوعات على موقع ${SITE_BRAND} عبر مزود دفع عالمي معتمد يضمن حماية معلومات الدفع والامتثال للمعايير الدولية.`;
+export const PAYMENT_PROCESSING_SUMMARY = `تعالج ${SITE_BRAND} المدفوعات حالياً عبر التحويل البنكي المباشر إلى حسابات الشركة الرسمية. بعد استلام إثبات الدفع، نراجع التحويل يدوياً ونفعّل برنامجك.`;
 
-export const PAYMENT_PADDLE_DISCLOSURE = `وفي الحالات التي تتم فيها معالجة الدفع عبر Paddle، قد تنطبق سياسات Paddle باعتبارها مزود خدمة الدفع الرسمي. أما سياسة الاسترجاع المنشورة على موقع ${SITE_BRAND} فهي المرجع الأساسي لعملائنا.`;
+export const PAYMENT_MANUAL_DISCLOSURE = `مدة مراجعة التحويل البنكي عادة 24–48 ساعة في أيام العمل. لن يبدأ تجهيز برنامجك قبل تأكيد استلام المبلغ. للاستفسار: ${SITE_SUPPORT_EMAIL} أو واتساب ${SITE_WHATSAPP}.`;
+
+export const PAYMENT_PADDLE_DISCLOSURE = PAYMENT_MANUAL_DISCLOSURE;
 
 export const LEGAL_ROUTES = {
   privacy: "/privacy",
@@ -21,7 +23,7 @@ export const PRODUCT_SUMMARY = {
   duration: "90 يوماً",
   billing: "دفعة واحدة — بدون تجديد تلقائي",
   delivery:
-    "خلال 24–48 ساعة من تأكيد الدفع، تصلك خطة العمل والبرنامج عبر الواتساب والبريد الإلكتروني مع متابعة دورية حسب الباقة المختارة.",
+    "خلال 24–48 ساعة من تأكيد استلام التحويل البنكي، تصلك خطة العمل والبرنامج عبر الواتساب والبريد الإلكتروني مع متابعة دورية حسب الباقة المختارة.",
   includes: [
     "خطة تدريب مخصصة وفق هدفك وجسمك",
     "خطة تغذية مخصصة",

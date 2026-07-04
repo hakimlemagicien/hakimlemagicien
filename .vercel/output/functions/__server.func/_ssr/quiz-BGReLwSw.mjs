@@ -3,13 +3,12 @@ import { t as supabase } from "./client-DaoHZWri.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from "./site-legal-3UhVOjyr.mjs";
-import { B as Headphones, C as Scale, F as Mail, H as Gem, I as Lock, J as Crown, K as Dumbbell, L as Lightbulb, M as MessageCircle, O as PersonStanding, Q as Clock, R as Heart, T as Ruler, W as Flame, _ as Sparkles, a as Wallet, b as ShieldCheck, ct as ChevronDown, d as Trophy, ft as Calendar, g as Star, h as Target, lt as Check, ot as ChevronRight, st as ChevronLeft, t as Zap, xt as ArrowLeft, y as Shield } from "../_libs/lucide-react.mjs";
+import { i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from "./site-legal-BJWCSk8k.mjs";
+import { $ as CreditCard, B as Info, Ct as Bitcoin, E as Ruler, G as Gem, I as Mail, J as FileUp, L as Lock, N as MessageCircle, Ot as ArrowLeft, Q as Crown, R as Lightbulb, U as Headphones, V as Heart, X as Dumbbell, _ as Star, _t as Camera, b as Shield, dt as ChevronRight, f as Trophy, ft as ChevronLeft, g as Target, k as PersonStanding, mt as Check, n as X, pt as ChevronDown, q as Flame, rt as Clock, t as Zap, tt as Copy, u as Upload, v as Sparkles, vt as Calendar, w as Scale, x as ShieldCheck, z as Landmark } from "../_libs/lucide-react.mjs";
 import { a as triggerSelectionHaptic, i as quiz_gym_bg_default, n as pageVariants, t as pageTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
-import { t as initializePaddle } from "../_libs/paddle__paddle-js.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/quiz-yPWS4pD4.js
+//#region node_modules/.nitro/vite/services/ssr/assets/quiz-BGReLwSw.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var LEAD_ID_KEY = "hakim_lead_id";
@@ -17,15 +16,37 @@ var LEAD_TOKEN_KEY = "hakim_lead_token";
 function canUseStorage$1() {
 	return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
+function getLeadCredentials() {
+	if (!canUseStorage$1()) return null;
+	const leadId = window.localStorage.getItem(LEAD_ID_KEY);
+	const accessToken = window.localStorage.getItem(LEAD_TOKEN_KEY);
+	if (!leadId || !accessToken) return null;
+	return {
+		leadId,
+		accessToken
+	};
+}
 function setLeadCredentials(credentials) {
 	if (!canUseStorage$1()) return;
 	window.localStorage.setItem(LEAD_ID_KEY, credentials.leadId);
 	window.localStorage.setItem(LEAD_TOKEN_KEY, credentials.accessToken);
 }
+var PAYMENT_PROOFS_BUCKET = "payment-proofs";
 function isCreateLeadRpcResponse(value) {
 	if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
 	const record = value;
 	return typeof record.lead_id === "string" && typeof record.access_token === "string";
+}
+function getFileExtension(file) {
+	const fromName = file.name.split(".").pop()?.toLowerCase();
+	if (fromName) return fromName;
+	if (file.type === "application/pdf") return "pdf";
+	if (file.type === "image/png") return "png";
+	if (file.type === "image/webp") return "webp";
+	return "jpg";
+}
+function toRpcPayload(payload) {
+	return payload;
 }
 async function createLead(payload) {
 	const { data, error } = await supabase.rpc("create_lead", { p_payload: payload });
@@ -37,6 +58,59 @@ async function createLead(payload) {
 	};
 	setLeadCredentials(credentials);
 	return credentials;
+}
+async function updateLead(credentials, payload) {
+	const { error } = await supabase.rpc("update_lead", {
+		p_lead_id: credentials.leadId,
+		p_access_token: credentials.accessToken,
+		p_payload: toRpcPayload(payload)
+	});
+	if (error) throw error;
+}
+async function saveSelectedPlan(credentials, plan) {
+	await updateLead(credentials, {
+		tier_id: plan.tierId,
+		tier_name: plan.tierName,
+		plan_price: plan.planPrice,
+		training_mode: plan.trainingMode,
+		status: "plan_selected"
+	});
+}
+async function savePaymentMethod(credentials, payment) {
+	await updateLead(credentials, {
+		payment_method: payment.method,
+		payment_amount: payment.amount,
+		payment_currency: payment.currency ?? "USD"
+	});
+}
+async function reserveProofUpload(credentials, file) {
+	const { data, error } = await supabase.rpc("reserve_proof_upload", {
+		p_lead_id: credentials.leadId,
+		p_access_token: credentials.accessToken,
+		p_file_ext: getFileExtension(file)
+	});
+	if (error) throw error;
+	if (typeof data !== "string" || data.length === 0) throw new Error("Proof upload path was not reserved.");
+	return data;
+}
+async function uploadPaymentProof(credentials, file) {
+	const path = await reserveProofUpload(credentials, file);
+	const { error: uploadError } = await supabase.storage.from(PAYMENT_PROOFS_BUCKET).upload(path, file, { upsert: false });
+	if (uploadError) throw uploadError;
+	return path;
+}
+async function markPaymentSubmitted(credentials, proofPath) {
+	const { error } = await supabase.rpc("submit_payment_proof_metadata", {
+		p_lead_id: credentials.leadId,
+		p_access_token: credentials.accessToken,
+		p_proof_path: proofPath
+	});
+	if (error) throw error;
+}
+async function submitPaymentProof(credentials, file) {
+	const proofPath = await uploadPaymentProof(credentials, file);
+	await markPaymentSubmitted(credentials, proofPath);
+	return proofPath;
 }
 function buildQuizAnswersPayload(input) {
 	return {
@@ -276,43 +350,13 @@ function MotionStepView({ phase, children, className = "" }) {
 		children
 	});
 }
-var paddlePromise = null;
-var PADDLE_TOKEN = void 0;
-function isPaddleConfigured() {
-	return Boolean(void 0);
-}
-function getPaddlePriceId(tierId) {
-	return {
-		transform: void 0,
-		pro: void 0,
-		vip: void 0
-	}[tierId]?.trim() || void 0;
-}
-async function getPaddle() {
-	if (!isPaddleConfigured()) return void 0;
-	if (!paddlePromise) paddlePromise = initializePaddle({
-		token: PADDLE_TOKEN,
-		checkout: { settings: {
-			displayMode: "overlay",
-			theme: "light",
-			locale: "ar"
-		} }
-	});
-	return paddlePromise;
-}
-async function openPaddleCheckout(opts) {
-	const priceId = getPaddlePriceId(opts.tierId);
-	if (!priceId) throw new Error("Paddle price ID not configured for this tier.");
-	const paddle = await getPaddle();
-	if (!paddle) throw new Error("Paddle is not configured.");
-	paddle.Checkout.open({
-		items: [{
-			priceId,
-			quantity: 1
-		}],
-		customer: opts.customerEmail ? { email: opts.customerEmail } : void 0,
-		customData: opts.customData
-	});
+var BANK_METHOD_MAP = {
+	uae: "bank_nbd_uae",
+	morocco: "bank_cih_morocco",
+	bmce: "bank_bmce_morocco"
+};
+function mapBankToPaymentMethod(bank) {
+	return BANK_METHOD_MAP[bank];
 }
 function AgreementCheckbox({ checked, onChange, className }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
@@ -357,114 +401,209 @@ function AgreementCheckbox({ checked, onChange, className }) {
 		})]
 	});
 }
-var apple_pay_logo_default = "/assets/apple%20pay%20logo-CQvyN4ut.png";
-var google_pay_logo_default = "/assets/google%20pay%20logo-ClZsmCPb.png";
-function VisaLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
-		viewBox: "0 0 48 32",
-		className: cn("h-8 w-auto", className),
-		"aria-label": "Visa",
-		role: "img",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			width: "48",
-			height: "32",
-			rx: "4",
-			fill: "#1A1F71"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-			fill: "#fff",
-			d: "M19.5 21h-3.2l2-12.4h3.2l-2 12.4zm11.2-12.1c-.6-.2-1.6-.4-2.8-.4-3.1 0-5.3 1.6-5.3 3.9 0 1.7 1.5 2.6 2.7 3.2 1.2.6 1.6 1 1.6 1.5 0 .8-1 1.2-1.9 1.2-1.3 0-2-.2-3-.7l-.4-.2-.5 2.9c.8.4 2.3.7 3.8.7 3.3 0 5.4-1.6 5.5-4.1.1-1.4-.8-2.4-2.5-3.2-1-.5-1.7-.9-1.7-1.4 0-.5.5-1 1.6-1 1 0 1.7.2 2.3.5l.3.1.4-2.6zm8.3-.3h-2.5c-.8 0-1.3.2-1.7 1l-4.7 11.4h3.4l.7-1.8 4.1-.1.4 1.9h3l-3.7-12.4zm-6.4 8.1l1.7-4.5.9 4.5h-2.6zM15.8 8.6l-3.1 12.4h-3.3L9.3 12c-.3-1.2-.6-1.6-1.5-2.2-1.5-1-3.2-1.9-5-2.6l.1-.2h4.8c.6 0 1.2.4 1.4 1.1l1.6 8.1 4-9.6h3.1z"
-		})]
-	});
+var BANK_TRANSFER_ACCOUNTS = [
+	{
+		id: "uae",
+		bankName: "Emirates NBD",
+		countryLabel: "الإمارات",
+		countryBadgeClass: "bg-[#FF6B00] text-white",
+		currency: "USD",
+		holder: "Hakim Coaching FZ-LLC",
+		iban: "AE07 0260 0010 1543 2109 876",
+		account: "1015432109876",
+		swift: "EBILAEAD"
+	},
+	{
+		id: "morocco",
+		bankName: "CIH Bank",
+		countryLabel: "المغرب",
+		countryBadgeClass: "bg-[#2563EB] text-white",
+		currency: "MAD",
+		holder: "Hakim Coaching",
+		iban: "MA64 2308 1021 1321 7221 0160 0012",
+		account: "230 810 2113217221016000 12",
+		swift: "CIHMMAMC"
+	},
+	{
+		id: "bmce",
+		bankName: "BMCE Bank",
+		countryLabel: "المغرب",
+		countryBadgeClass: "bg-[#2563EB] text-white",
+		currency: "MAD",
+		holder: "Hakim Coaching",
+		iban: "MA64 0118 1000 0001 2345 6789 0134",
+		account: "011 810 0000123456789012 34",
+		swift: "BMCEMAMC"
+	}
+];
+/** Approximate MAD equivalent for display on Moroccan account */
+function getMadAmount(usdPrice) {
+	return Math.round(Number(usdPrice) * 9.7);
 }
-function MastercardLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
-		viewBox: "0 0 48 32",
-		className: cn("h-8 w-auto", className),
-		"aria-label": "Mastercard",
-		role: "img",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-				width: "48",
-				height: "32",
-				rx: "4",
-				fill: "#fff",
-				stroke: "#E8E8E8"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "19",
-				cy: "16",
-				r: "8",
-				fill: "#EB001B"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "29",
-				cy: "16",
-				r: "8",
-				fill: "#F79E1B",
-				fillOpacity: "0.95"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-				fill: "#FF5F00",
-				d: "M24 10.2a8 8 0 0 1 0 11.6 8 8 0 0 1 0-11.6z"
-			})
-		]
-	});
+function formatTransferAmount(account, usdTierPrice) {
+	if (account.currency === "USD") return `${usdTierPrice} USD`;
+	return `${getMadAmount(usdTierPrice).toLocaleString("ar-EG")} MAD`;
 }
-function AmexLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
-		viewBox: "0 0 48 32",
-		className: cn("h-8 w-auto", className),
-		"aria-label": "American Express",
-		role: "img",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			width: "48",
-			height: "32",
-			rx: "4",
-			fill: "#006FCF"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-			fill: "#fff",
-			d: "M8.5 20.5V11.5h4.2l1.3 2.8 1.3-2.8h4.2v9h-2.6v-5.8l-1.8 3.8h-1.4l-1.8-3.8v5.8H8.5zm14.2-4.5 1.5-3.6 1.5 3.6h-3zm-2.2 4.5 2.2-9h3.1l2.2 9h-2.5l-.4-1.6h-2.7l-.4 1.6h-2.5zm8.8 0V11.5h5.8v1.8h-3.2v1.4h3v1.8h-3v1.7h3.2v2.3h-5.8z"
-		})]
-	});
-}
-function CardBrandsRow({ className }) {
+function CopyRow({ label, value, highlight }) {
+	const [copied, setCopied] = (0, import_react.useState)(false);
+	const copy = () => {
+		if (value === "—" || typeof navigator === "undefined" || !navigator.clipboard) return;
+		navigator.clipboard.writeText(value.replace(/\s/g, "")).then(() => {
+			setCopied(true);
+			window.setTimeout(() => setCopied(false), 1500);
+		});
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: cn("flex items-center gap-1", className),
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VisaLogo, { className: "h-[23px]" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MastercardLogo, { className: "h-[23px]" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AmexLogo, { className: "h-[23px]" })
-		]
+		className: "flex items-center justify-between gap-2 border-t border-[#F1F3F5] py-2.5 first:border-t-0",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+			type: "button",
+			onClick: copy,
+			disabled: value === "—",
+			className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#FFF6EE] text-[#FF6B00] active:scale-95 disabled:opacity-40",
+			"aria-label": `نسخ ${label}`,
+			children: copied ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-3.5 w-3.5 text-[#16A34A]" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "h-3.5 w-3.5" })
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "min-w-0 flex-1 text-right",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "text-[10.5px] font-bold text-neutral-500",
+				children: label
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: `truncate text-[12.5px] font-extrabold ${highlight ? "text-[#FF6B00]" : "text-[#0F172A]"}`,
+				dir: "ltr",
+				style: {
+					direction: "ltr",
+					textAlign: "right"
+				},
+				children: value
+			})]
+		})]
 	});
 }
-function ApplePayLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-		src: apple_pay_logo_default,
-		alt: "Apple Pay",
-		className: cn("h-[42px] w-auto object-contain text-[#0F172A]", className)
-	});
-}
-function GooglePayLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-		src: google_pay_logo_default,
-		alt: "Google Pay",
-		className: cn("h-[42px] w-auto object-contain", className)
-	});
-}
-function PaddleLogo({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-		viewBox: "0 0 80 20",
-		className: cn("h-4 w-auto", className),
-		"aria-label": "Paddle",
-		role: "img",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
-			x: "0",
-			y: "15",
-			fontFamily: "Arial, sans-serif",
-			fontSize: "14",
-			fontWeight: "700",
-			fill: "#314152",
-			children: "paddle"
+function BankTransferModal({ tierPriceUsd, onClose, onTransferDone }) {
+	const [selectedBank, setSelectedBank] = (0, import_react.useState)("uae");
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "fixed inset-0 z-50 flex items-end justify-center sm:items-center",
+		style: { background: "rgba(15,23,42,.55)" },
+		role: "dialog",
+		"aria-modal": true,
+		"aria-labelledby": "bank-transfer-title",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mx-auto mt-2 h-1 w-10 rounded-full bg-[#E5E7EB] sm:hidden",
+					"aria-hidden": true
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-start justify-between gap-3 border-b border-[#F1F3F5] px-5 py-4",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: onClose,
+							className: "grid h-9 w-9 place-items-center rounded-full bg-[#F3F4F6] text-neutral-500",
+							"aria-label": "إغلاق",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-4 w-4" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex-1 text-center",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+								id: "bank-transfer-title",
+								className: "font-[Tajawal] text-[18px] font-black text-[#0F172A]",
+								children: "تفاصيل التحويل البنكي"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "mt-1 text-[11.5px] leading-relaxed text-neutral-500",
+								children: "اختر الحساب البنكي المناسب لك وقم بإجراء التحويل للمبلغ المحدد"
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "w-9" })
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "space-y-3 overflow-y-auto px-5 py-4",
+					children: [BANK_TRANSFER_ACCOUNTS.map((account) => {
+						const active = selectedBank === account.id;
+						const amount = formatTransferAmount(account, tierPriceUsd);
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							onClick: () => setSelectedBank(account.id),
+							className: `w-full rounded-2xl border p-4 text-right transition-all ${active ? "border-[#FF6B00] bg-[#FFF8F4] shadow-[0_8px_24px_-12px_rgba(255,107,0,0.35)]" : "border-[#ECECEC] bg-white"}`,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-start justify-between gap-3",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: `mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${active ? "border-[#FF6B00]" : "border-[#D1D5DB]"}`,
+									children: active ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "h-2 w-2 rounded-full bg-[#FF6B00]" }) : null
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex flex-1 items-start justify-end gap-3",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "min-w-0",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex flex-wrap items-center justify-end gap-2",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[15px] font-black text-[#0F172A]",
+												children: account.bankName
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: `rounded-md px-2 py-0.5 text-[10px] font-extrabold ${account.countryBadgeClass}`,
+												children: account.countryLabel
+											})]
+										}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "mt-1 text-[11px] text-neutral-500",
+											children: ["العملة: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "font-bold text-[#FF6B00]",
+												children: account.currency
+											})]
+										})]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#F3F4F6]",
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Landmark, { className: "h-6 w-6 text-[#64748B]" })
+									})]
+								})]
+							}), active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "mt-3 rounded-xl bg-white/80 px-1",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CopyRow, {
+										label: "اسم صاحب الحساب",
+										value: account.holder
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CopyRow, {
+										label: "IBAN",
+										value: account.iban
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CopyRow, {
+										label: "رقم الحساب",
+										value: account.account
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CopyRow, {
+										label: "المبلغ المطلوب",
+										value: amount,
+										highlight: true
+									})
+								]
+							}) : null]
+						}, account.id);
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-start gap-2.5 rounded-2xl border border-[#FFEDD5] bg-[#FFF7ED] px-3.5 py-3",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#FF6B00] text-[12px] font-black text-white",
+							children: "i"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[11.5px] leading-[1.65] text-neutral-600",
+							children: "بعد إتمام التحويل، يرجى رفع إيصال التحويل في الأسفل. سيتم تفعيل اشتراكك بعد التحقق من الدفع."
+						})]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "border-t border-[#F1F3F5] p-5",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						onClick: () => onTransferDone(selectedBank),
+						className: "flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF6B00] text-[16px] font-black text-white shadow-[0_12px_28px_-12px_rgba(255,107,0,0.65)] active:scale-[0.98]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+							className: "h-5 w-5",
+							strokeWidth: 3
+						}), "تم التحويل"]
+					})
+				})
+			]
 		})
 	});
 }
@@ -530,12 +669,9 @@ function CheckoutFooter({ className }) {
 					})]
 				}, link.to))
 			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-center justify-center gap-2 px-1 text-center",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaddleLogo, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "text-[10px] leading-[1.4] text-[#9CA3AF]",
-				children: "دفع آمن عبر Paddle · SSL"
-			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "px-1 text-center text-[10px] leading-[1.4] text-[#9CA3AF]",
+			children: "الدفع بالتحويل البنكي · تفعيل بعد المراجعة اليدوية"
 		})]
 	});
 }
@@ -669,7 +805,7 @@ function CheckoutSummaryCard({ tier }) {
 		]
 	});
 }
-function PaymentCard({ id, name, description, selected, disabled, onSelect, logo, index = 0 }) {
+function PaymentMethodOption({ id, name, description, selected, disabled, badge, icon, index = 0, onSelect }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.button, {
 		type: "button",
 		initial: {
@@ -687,33 +823,163 @@ function PaymentCard({ id, name, description, selected, disabled, onSelect, logo
 		whileTap: { scale: disabled ? 1 : .99 },
 		disabled,
 		"aria-pressed": selected,
-		"aria-label": `${name}${selected ? " — محدد" : ""}`,
-		onClick: () => onSelect(id),
-		className: cn("flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-start transition-colors duration-200", "disabled:cursor-not-allowed disabled:opacity-50", selected ? "border-2 border-[#FF5A1F] bg-[#FFF8F4]" : "border border-[#E8E8E8] bg-white"),
+		"aria-disabled": disabled,
+		onClick: () => !disabled && onSelect(id),
+		className: cn("flex w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-start transition-all", disabled && "cursor-not-allowed opacity-55", selected && !disabled ? "border-2 border-[#FF5A1F] bg-[#FFF8F4] shadow-[0_4px_14px_-8px_rgba(255,90,31,0.35)]" : "border border-[#E8E8E8] bg-white"),
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200", selected ? "border-[#FF5A1F]" : "border-[#D1D5DB]"),
-				"aria-hidden": true,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: cn("h-2 w-2 rounded-full transition-all duration-200", selected ? "scale-100 bg-[#FF5A1F]" : "scale-0 bg-transparent") })
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChevronLeft, {
+				className: "h-4 w-4 shrink-0 text-[#C4C4C4]",
+				"aria-hidden": true
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "min-w-0 flex-1 pe-1",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "text-[15px] font-bold leading-tight text-[#0F172A]",
-					children: name
+				className: "min-w-0 flex-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-wrap items-center justify-end gap-2",
+					children: [badge ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: cn("rounded-md px-2 py-0.5 text-[10px] font-extrabold", badge.tone === "available" ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-[#FFF1E6] text-[#FF6B00]"),
+						children: badge.label
+					}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[15px] font-bold text-[#0F172A]",
+						children: name
+					})]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-					className: "mt-0.5 line-clamp-2 text-[11px] leading-[1.45] text-[#6B7280]",
+					className: "mt-1 text-right text-[11.5px] leading-[1.5] text-[#6B7280]",
 					children: description
 				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "flex w-[76px] shrink-0 items-center justify-end",
-				children: logo
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex shrink-0 items-center gap-2.5",
+				children: [!disabled ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: cn("flex h-5 w-5 items-center justify-center rounded-full border-2", selected ? "border-[#FF5A1F]" : "border-[#D1D5DB]"),
+					"aria-hidden": true,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: cn("h-2 w-2 rounded-full transition-all", selected ? "scale-100 bg-[#FF5A1F]" : "scale-0") })
+				}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "grid h-11 w-11 place-items-center rounded-xl bg-[#F3F4F6]",
+					children: icon
+				})]
 			})
 		]
 	});
 }
-function SecurityBanner({ title = "100% دفع آمن", description = "معاملاتك مشفرة ومحمية عبر Paddle بمعايير مصرفية.", className }) {
+function ReceiptUploadSection({ onSubmit, submitted, loading }) {
+	const [file, setFile] = (0, import_react.useState)(null);
+	const sectionRef = (0, import_react.useRef)(null);
+	const fileInputRef = (0, import_react.useRef)(null);
+	const cameraInputRef = (0, import_react.useRef)(null);
+	(0, import_react.useEffect)(() => {
+		sectionRef.current?.scrollIntoView({
+			behavior: "smooth",
+			block: "nearest"
+		});
+	}, []);
+	const pickFile = (f) => setFile(f);
+	const handleSubmit = async () => {
+		if (!file || loading || submitted) return;
+		await onSubmit(file);
+	};
+	if (submitted) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		ref: sectionRef,
+		className: "mt-4 rounded-2xl border border-[#BBF7D0] bg-[#F0FDF4] p-5 text-center",
+		"aria-live": "polite",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#16A34A] text-white",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, {
+					className: "h-6 w-6",
+					strokeWidth: 3
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+				className: "mt-3 font-[Tajawal] text-[16px] font-black text-[#14532D]",
+				children: "تم استلام إيصال التحويل"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				className: "mt-3 text-[12.5px] leading-[1.75] text-[#166534]",
+				children: [
+					"سيتم التحقق من عملية الدفع خلال أقل من 24 ساعة.",
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+					"ستصلك رسالة عبر البريد الإلكتروني عند تفعيل اشتراكك."
+				]
+			})
+		]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		ref: sectionRef,
+		className: "mt-4 rounded-2xl border border-[#ECECEC] bg-white p-4",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-end gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+					className: "font-[Tajawal] text-[16px] font-black text-[#0F172A]",
+					children: "📤 رفع إيصال التحويل"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, {
+					className: "h-5 w-5 text-[#FF6B00]",
+					"aria-hidden": true
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-2 text-right text-[12px] font-bold text-[#16A34A]",
+				children: "تم تسجيل طلب الدفع."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-1 text-right text-[11.5px] leading-relaxed text-neutral-500",
+				children: "الخطوة الأخيرة هي رفع إيصال التحويل البنكي حتى نتمكن من مراجعة العملية."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "my-4 border-t border-[#ECECEC]" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => fileInputRef.current?.click(),
+				disabled: loading,
+				className: "flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FF6B00] text-[14px] font-bold text-white active:scale-[0.99] disabled:opacity-50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileUp, { className: "h-4 w-4" }), "اختر صورة أو PDF"]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "my-3 text-center text-[11px] font-medium text-neutral-400",
+				children: "أو"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => cameraInputRef.current?.click(),
+				disabled: loading,
+				className: "flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#ECECEC] bg-[#FAFAFA] text-[14px] font-bold text-[#0F172A] active:scale-[0.99] disabled:opacity-50",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Camera, { className: "h-4 w-4" }), "📷 التقط صورة للإيصال"]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+				ref: fileInputRef,
+				type: "file",
+				accept: "image/*,application/pdf",
+				className: "hidden",
+				onChange: (e) => pickFile(e.target.files?.[0] ?? null)
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+				ref: cameraInputRef,
+				type: "file",
+				accept: "image/*",
+				capture: "environment",
+				className: "hidden",
+				onChange: (e) => pickFile(e.target.files?.[0] ?? null)
+			}),
+			file ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "my-4 border-t border-[#ECECEC]" }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "rounded-xl border border-[#DCFCE7] bg-[#F0FDF4] px-3 py-2.5 text-right",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "flex items-center justify-end gap-1.5 text-[12px] font-bold text-[#16A34A]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Check, { className: "h-4 w-4 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: file.name })]
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					disabled: loading,
+					onClick: () => void handleSubmit(),
+					className: "mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#FF6B00] text-[14px] font-bold text-white disabled:opacity-50",
+					children: loading ? "جاري الإرسال..." : "إرسال الإيصال"
+				})
+			] }) : null
+		]
+	});
+}
+function SecurityBanner({ title = "تحويل بنكي آمن", description = "ادفع إلى حساباتنا الرسمية فقط — لا نشارك بياناتك مع أطراف ثالثة.", className }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
 		initial: {
 			opacity: 0,
@@ -813,53 +1079,117 @@ function TrustFeatures({ items, className }) {
 		})
 	});
 }
-function CheckoutScreen({ name, tier, total = 17, onBack }) {
-	const [method, setMethod] = (0, import_react.useState)("card");
+var PAYMENT_METHODS = [
+	{
+		id: "bank",
+		name: "تحويل بنكي",
+		description: "حوّل المبلغ إلى حسابنا البنكي وارفع إيصال التحويل لتأكيد طلبك.",
+		badge: {
+			label: "متاح الآن",
+			tone: "available"
+		},
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Landmark, { className: "h-5 w-5 text-[#64748B]" })
+	},
+	{
+		id: "card",
+		name: "بطاقة بنكية",
+		description: "الدفع بالبطاقات الائتمانية قريباً",
+		disabled: true,
+		badge: {
+			label: "قريباً",
+			tone: "soon"
+		},
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CreditCard, { className: "h-5 w-5 text-[#64748B]" })
+	},
+	{
+		id: "paypal",
+		name: "PayPal",
+		description: "الدفع عبر PayPal قريباً",
+		disabled: true,
+		badge: {
+			label: "قريباً",
+			tone: "soon"
+		},
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+			className: "text-[11px] font-black tracking-tight text-[#003087]",
+			children: ["Pay", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "text-[#009CDE]",
+				children: "Pal"
+			})]
+		})
+	},
+	{
+		id: "crypto",
+		name: "العملات الرقمية",
+		description: "دعم العملات الرقمية قريباً",
+		disabled: true,
+		badge: {
+			label: "قريباً",
+			tone: "soon"
+		},
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bitcoin, { className: "h-5 w-5 text-[#F7931A]" })
+	}
+];
+function CheckoutScreen({ tier, total = 17, onBack }) {
+	const [method, setMethod] = (0, import_react.useState)("bank");
+	const [bankModalOpen, setBankModalOpen] = (0, import_react.useState)(false);
+	const [transferConfirmed, setTransferConfirmed] = (0, import_react.useState)(false);
+	const [receiptSubmitted, setReceiptSubmitted] = (0, import_react.useState)(false);
 	const [legalAccepted, setLegalAccepted] = (0, import_react.useState)(false);
-	const [loading, setLoading] = (0, import_react.useState)(false);
-	const paddleReady = isPaddleConfigured();
-	const handlePay = async () => {
-		if (!legalAccepted || loading) return;
-		setLoading(true);
+	const [transferSaving, setTransferSaving] = (0, import_react.useState)(false);
+	const [receiptSaving, setReceiptSaving] = (0, import_react.useState)(false);
+	const amount = Number(tier.totalPrice);
+	const credentials = getLeadCredentials();
+	const handleTransferDone = async (bankId) => {
+		setBankModalOpen(false);
+		setTransferConfirmed(true);
+		if (!credentials) return;
+		setTransferSaving(true);
 		try {
-			await openPaddleCheckout({
+			await saveSelectedPlan(credentials, {
 				tierId: tier.id,
-				customData: {
-					tierId: tier.id,
-					customerName: name,
-					payMethod: method
-				}
+				tierName: tier.name,
+				planPrice: amount,
+				trainingMode: "online"
 			});
-		} catch {} finally {
-			setLoading(false);
+			await savePaymentMethod(credentials, {
+				method: mapBankToPaymentMethod(bankId),
+				amount,
+				currency: "USD"
+			});
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setTransferSaving(false);
 		}
 	};
-	const paymentMethods = [
-		{
-			id: "card",
-			name: "بطاقة بنكية",
-			description: "ادفع باستخدام بطاقة فيزا، ماستركارد أو أمريكان إكسبريس",
-			logo: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardBrandsRow, {})
-		},
-		{
-			id: "apple_pay",
-			name: "Apple Pay",
-			description: "ادفع بسهولة وأمان باستخدام Apple Pay",
-			logo: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ApplePayLogo, { className: "h-[42px] text-[#0F172A]" })
-		},
-		{
-			id: "google_pay",
-			name: "Google Pay",
-			description: "ادفع بسهولة وأمان باستخدام Google Pay",
-			logo: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GooglePayLogo, { className: "h-[42px]" })
+	const handleProofSubmit = async (file) => {
+		if (!credentials) {
+			alert("تعذر العثور على بيانات طلبك. ارجع خطوة وأكمل النموذج مرة أخرى.");
+			return;
 		}
-	];
-	const ctaDisabled = !legalAccepted || loading;
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		setReceiptSaving(true);
+		try {
+			await submitPaymentProof(credentials, file);
+			setReceiptSubmitted(true);
+		} catch (error) {
+			console.error(error);
+			alert("حدث خطأ أثناء إرسال الإيصال. حاول مرة أخرى.");
+		} finally {
+			setReceiptSaving(false);
+		}
+	};
+	const handlePayClick = () => {
+		if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving) return;
+		if (method === "bank") setBankModalOpen(true);
+	};
+	const ctaDisabled = !legalAccepted || transferSaving || receiptSaving || receiptSubmitted || transferConfirmed;
+	const ctaLabel = receiptSubmitted ? "قيد مراجعة الدفع" : transferSaving ? "جاري التسجيل..." : receiptSaving ? "جاري الإرسال..." : "إتمام الدفع";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		dir: "rtl",
 		lang: "ar",
 		className: "h-full w-full overflow-y-auto bg-[#FAFAFA] font-[Cairo,Tajawal,sans-serif]",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "mx-auto w-full max-w-md px-5 pb-[34px]",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -890,7 +1220,7 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldCheck, {
 									className: "h-3.5 w-3.5",
 									"aria-hidden": true
-								}), "آمن 100%"]
+								}), "آمن"]
 							})
 						]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -912,7 +1242,7 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 						]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "mt-1.5 text-[12.5px] leading-relaxed text-neutral-500",
-						children: "اختر طريقة الدفع المناسبة لك لبدء برنامجك الرقمي المخصص"
+						children: "اختر طريقة الدفع المناسبة وأكمل خطوات التحويل"
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CheckoutSummaryCard, { tier }),
@@ -921,24 +1251,39 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 					"aria-labelledby": "payment-methods-title",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "mb-3 flex items-center justify-center gap-2",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wallet, {
-							className: "h-5 w-5 text-[#FF5A1F]",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-4 w-4 text-[#FF5A1F]",
 							"aria-hidden": true
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
 							id: "payment-methods-title",
-							className: "text-[18px] font-bold leading-tight text-[#0F172A]",
+							className: "text-[17px] font-bold leading-tight text-[#0F172A]",
 							children: "اختر طريقة الدفع"
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "space-y-2",
 						role: "radiogroup",
 						"aria-label": "طرق الدفع",
-						children: paymentMethods.map((m, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentCard, {
-							...m,
-							selected: method === m.id,
-							onSelect: setMethod,
-							index: i
-						}, m.id))
+						children: PAYMENT_METHODS.map((option, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaymentMethodOption, {
+							id: option.id,
+							name: option.name,
+							description: option.description,
+							selected: method === option.id,
+							disabled: option.disabled,
+							badge: option.badge,
+							icon: option.icon,
+							index: i,
+							onSelect: setMethod
+						}, option.id))
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "mt-3 flex items-start gap-2.5 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-3.5 py-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Info, {
+						className: "mt-0.5 h-4 w-4 shrink-0 text-[#16A34A]",
+						"aria-hidden": true
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-[11.5px] leading-[1.65] text-neutral-600",
+						children: "بعد رفع إيصال التحويل سيتم مراجعته وتفعيل اشتراكك وإرسال رسالة تأكيد عبر البريد الإلكتروني."
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -954,34 +1299,21 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "mt-4",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "mb-3 flex items-center justify-center gap-1.5 text-center text-[11px] leading-[1.45] text-[#6B7280]",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
-								className: "h-3 w-3 shrink-0",
-								"aria-hidden": true
-							}), "لن يتم تحصيل أي مبلغ حتى تُكمل عملية الدفع بأمان."]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.button, {
-							type: "button",
-							disabled: ctaDisabled,
-							whileTap: { scale: ctaDisabled ? 1 : .98 },
-							onClick: () => void handlePay(),
-							className: "flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#FF5A1F] text-[18px] font-bold text-white checkout-cta-shadow transition disabled:cursor-not-allowed disabled:opacity-50",
-							"aria-label": "إتمام الدفع الآمن",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
-								className: "h-5 w-5",
-								"aria-hidden": true
-							}), loading ? "جاري التحضير..." : "إتمام الدفع الآمن"]
-						}),
-						paddleReady ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "mt-3 flex flex-col items-center gap-1 text-center",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PaddleLogo, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-								className: "text-[11px] leading-[1.45] text-[#9CA3AF]",
-								children: "سيتم فتح صفحة دفع آمنة عبر Paddle لإكمال العملية"
-							})]
-						}) : null
-					]
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.button, {
+						type: "button",
+						disabled: ctaDisabled,
+						whileTap: { scale: ctaDisabled ? 1 : .98 },
+						onClick: handlePayClick,
+						className: `flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[17px] font-bold transition checkout-cta-shadow disabled:cursor-not-allowed disabled:opacity-60 ${receiptSubmitted ? "bg-[#16A34A] text-white" : "bg-[#FF5A1F] text-white"}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
+							className: "h-5 w-5",
+							"aria-hidden": true
+						}), ctaLabel]
+					}), transferConfirmed ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReceiptUploadSection, {
+						onSubmit: handleProofSubmit,
+						submitted: receiptSubmitted,
+						loading: receiptSaving
+					}) : null]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TrustFeatures, { items: [
 					{
@@ -991,21 +1323,25 @@ function CheckoutScreen({ name, tier, total = 17, onBack }) {
 						tone: "orange"
 					},
 					{
-						icon: Lock,
-						title: "دفع آمن",
-						description: "تشفير على مستوى البنوك",
+						icon: Shield,
+						title: "تحويل آمن",
+						description: "حسابات رسمية للشركة",
 						tone: "green"
 					},
 					{
-						icon: Shield,
-						title: "خصوصية كاملة",
-						description: "لا نخزّن بيانات البطاقة",
+						icon: Clock,
+						title: "تفعيل سريع",
+						description: "بعد تأكيد الدفع",
 						tone: "blue"
 					}
 				] }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CheckoutFooter, {})
 			]
-		})
+		}), bankModalOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BankTransferModal, {
+			tierPriceUsd: tier.totalPrice,
+			onClose: () => setBankModalOpen(false),
+			onTransferDone: (bankId) => void handleTransferDone(bankId)
+		}) : null]
 	});
 }
 var ذكر_default = "/assets/%D8%B0%D9%83%D8%B1-BKVowxgR.png";
@@ -1040,16 +1376,16 @@ var خصر_انحف_ومشدود_default = "/assets/%D8%AE%D8%B5%D8%B1%20%D8%A7%
 var feminine_toned_body_default = "/assets/feminine-toned-body-ULTMdfL-.png";
 var جسم_صحي_ورياضي_للبنات_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B5%D8%AD%D9%8A%20%D9%88%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-D1R1oUOx.png";
 var تحسين_شكل_الصدر_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%B5%D8%AF%D8%B1-BNPobXQ4.jpg";
-var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
-var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_3_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_4_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
+var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%201-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%201-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%201-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%201-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%201-BswI5UL8.jpg";
+var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_3_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_4_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
 var سندويش_المقارنة_default = "/assets/%D8%B3%D9%86%D8%AF%D9%88%D9%8A%D8%B4%20%D8%A7%D9%84%D9%85%D9%82%D8%A7%D8%B1%D9%86%D8%A9-C4pwHzne.png";
 var body_very_skinny_default = "/assets/body-very-skinny-DfHgEwJL.jpg";
 var body_lean_default = "/assets/body-lean-CqHp6z19.jpg";
