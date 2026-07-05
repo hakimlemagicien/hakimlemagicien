@@ -1,6 +1,6 @@
 import { t as supabase } from "./client-DaoHZWri.mjs";
-import { t as invokeAdminAcceptPayment } from "./payment-notifications-api-DlI38M1Y.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-payments-api-CG8xUNC7.js
+import { n as invokeAdminResendAccess, t as invokeAdminAcceptPayment } from "./payment-notifications-api-JPc3GVD3.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-payments-api-D-HC663Y.js
 var PAYMENT_PROOFS_BUCKET = "payment-proofs";
 var PROOF_SIGNED_URL_TTL_SECONDS = 3600;
 async function checkAdminAccess() {
@@ -19,6 +19,14 @@ async function fetchSubmittedLeads() {
 	const { data, error } = await supabase.rpc("admin_list_submitted_leads");
 	if (error) throw error;
 	return data ?? [];
+}
+async function fetchApprovedLeads() {
+	const { data, error } = await supabase.rpc("admin_list_approved_leads");
+	if (error) throw error;
+	return data ?? [];
+}
+async function resendClientAccessLink(leadId) {
+	return invokeAdminResendAccess(leadId);
 }
 async function updateLeadPaymentStatus(leadId, status) {
 	const { error } = await supabase.rpc("admin_update_lead_payment_status", {
@@ -105,4 +113,4 @@ function formatDate(value) {
 	});
 }
 //#endregion
-export { formatPaymentMethod as a, formatDate as i, checkAdminAccess as n, openProofInNewTab as o, fetchSubmittedLeads as r, updateLeadPaymentStatus as s, acceptLeadPayment as t };
+export { formatDate as a, resendClientAccessLink as c, fetchSubmittedLeads as i, updateLeadPaymentStatus as l, checkAdminAccess as n, formatPaymentMethod as o, fetchApprovedLeads as r, openProofInNewTab as s, acceptLeadPayment as t };

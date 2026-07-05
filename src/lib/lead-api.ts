@@ -149,6 +149,18 @@ export async function submitPaymentProof(
 ): Promise<string> {
   const proofPath = await uploadPaymentProof(credentials, file);
   await markPaymentSubmitted(credentials, proofPath);
-  void notifyAdminReceiptUpload(credentials.leadId, credentials.accessToken);
+
+  console.log("[submitPaymentProof] before notifyAdminReceiptUpload", {
+    leadId: credentials.leadId,
+  });
+  try {
+    await notifyAdminReceiptUpload(credentials.leadId, credentials.accessToken);
+    console.log("[submitPaymentProof] after notifyAdminReceiptUpload", {
+      leadId: credentials.leadId,
+    });
+  } catch (err) {
+    console.warn("[submitPaymentProof] notifyAdminReceiptUpload failed", err);
+  }
+
   return proofPath;
 }

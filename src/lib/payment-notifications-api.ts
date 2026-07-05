@@ -60,36 +60,99 @@ export async function invokeAdminAcceptPayment(
   return payload;
 }
 
-export async function notifyAdminReceiptUpload(
-  leadId: string,
-  accessToken: string,
-): Promise<void> {
+export type ResendAccessResult = {
+  ok: boolean;
+  method?: string;
+  message?: string;
+  error?: string;
+  detail?: string;
+};
+
+export async function invokeAdminResendAccess(leadId: string): Promise<ResendAccessResult> {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError || !session?.access_token) {
+    throw new Error("unauthenticated");
+  }
+
   const supabaseUrl = getSupabaseUrl();
   const anonKey = getSupabaseAnonKey();
 
   if (!supabaseUrl || !anonKey) {
-    // TODO(email): Supabase URL/key missing — admin won't be notified.
-    console.warn("[notifyAdminReceiptUpload] Missing Supabase configuration.");
+    throw new Error("Missing Supabase configuration");
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/admin-resend-access`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: anonKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ leadId }),
+  });
+
+  const payload = (await response.json()) as ResendAccessResult & { detail?: string };
+
+  if (!response.ok) {
+    throw new Error(payload.error ?? payload.detail ?? "resend_access_failed");
+  }
+
+  return payload;
+}
+
+export async function notifyAdminReceiptUpload(
+  leadId: string,
+  accessToken: string,
+): Promise<void> {
+  console.log("[notifyAdminReceiptUpload] start", { leadId });
+
+  const supabaseUrl = getSupabaseUrl();
+  const anonKey = getSupabaseAnonKey();
+
+  if (!supabaseUrl || !anonKey) {
+    console.warn("[notifyAdminReceiptUpload] Missing Supabase configuration.", {
+      hasUrl: Boolean(supabaseUrl),
+      hasKey: Boolean(anonKey),
+    });
     return;
   }
 
+  const headers: Record<string, string> = {
+    apikey: anonKey,
+    "Content-Type": "application/json",
+  };
+  // New publishable keys are not JWTs — match supabase client header behavior.
+  if (!anonKey.startsWith("sb_publishable_") && !anonKey.startsWith("sb_secret_")) {
+    headers.Authorization = `Bearer ${anonKey}`;
+  }
+
   try {
+    console.log("[notifyAdminReceiptUpload] calling edge function", {
+      leadId,
+      url: `${supabaseUrl}/functions/v1/notify-receipt-upload`,
+    });
+
     const response = await fetch(`${supabaseUrl}/functions/v1/notify-receipt-upload`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${anonKey}`,
-        apikey: anonKey,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({ leadId, accessToken }),
     });
 
+    const body = await response.text();
+    console.log("[notifyAdminReceiptUpload] response", {
+      leadId,
+      status: response.status,
+      body,
+    });
+
     if (!response.ok) {
-      const detail = await response.text();
-      console.warn("[notifyAdminReceiptUpload] failed:", response.status, detail);
+      console.warn("[notifyAdminReceiptUpload] failed:", response.status, body);
     }
   } catch (err) {
-    // Never block client UX on notification failure.
-    console.warn("[notifyAdminReceiptUpload]", err);
+    console.warn("[notifyAdminReceiptUpload] error", err);
   }
 }

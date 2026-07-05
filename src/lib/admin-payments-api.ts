@@ -2,16 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import {
   invokeAdminAcceptPayment,
+  invokeAdminResendAccess,
   type AcceptPaymentOnboardingResult,
+  type ResendAccessResult,
 } from "@/lib/payment-notifications-api";
 
-export type { AcceptPaymentOnboardingResult };
+export type { AcceptPaymentOnboardingResult, ResendAccessResult };
 
 const PAYMENT_PROOFS_BUCKET = "payment-proofs";
 const PROOF_SIGNED_URL_TTL_SECONDS = 3600;
 
 export type AdminSubmittedLead =
   Database["public"]["Functions"]["admin_list_submitted_leads"]["Returns"][number];
+
+export type AdminApprovedLead =
+  Database["public"]["Functions"]["admin_list_approved_leads"]["Returns"][number];
 
 export type AdminPaymentDecision = "approved" | "rejected";
 
@@ -49,6 +54,16 @@ export async function fetchSubmittedLeads(): Promise<AdminSubmittedLead[]> {
   const { data, error } = await supabase.rpc("admin_list_submitted_leads");
   if (error) throw error;
   return data ?? [];
+}
+
+export async function fetchApprovedLeads(): Promise<AdminApprovedLead[]> {
+  const { data, error } = await supabase.rpc("admin_list_approved_leads");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function resendClientAccessLink(leadId: string): Promise<ResendAccessResult> {
+  return invokeAdminResendAccess(leadId);
 }
 
 export async function updateLeadPaymentStatus(

@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   const { data: lead, error: leadError } = await admin
     .from("leads")
-    .select("id, email, full_name, phone, payment_status, status, user_id")
+    .select("id, email, full_name, payment_status")
     .eq("id", leadId)
     .maybeSingle();
 
@@ -67,12 +67,7 @@ Deno.serve(async (req) => {
 
   const email = lead.email?.trim();
   if (!email) {
-    return jsonResponse({
-      ok: true,
-      linked: false,
-      invited: false,
-      warning: "lead_has_no_email",
-    });
+    return jsonResponse({ error: "lead_has_no_email" }, 422);
   }
 
   const authUser = await findAuthUserByEmail(admin, email);
@@ -89,25 +84,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "email_not_sent", reason: emailResult.reason }, 500);
     }
 
-    const userId = authUser?.id ?? (await findAuthUserByEmail(admin, email))?.id;
-    if (userId) {
-      await admin
-        .from("leads")
-        .update({ user_id: userId, updated_at: new Date().toISOString() })
-        .eq("id", leadId);
-    }
-
     return jsonResponse({
       ok: true,
-      linked: Boolean(userId),
-      invited: true,
-      userId,
       method: emailResult.method,
       message: emailResult.message,
     });
   } catch (err) {
-    const detail = err instanceof Error ? err.message : "invite_failed";
-    console.error("[admin-accept-payment]", detail);
-    return jsonResponse({ error: "invite_failed", detail }, 500);
+    const detail = err instanceof Error ? err.message : "resend_failed";
+    console.error("[admin-resend-access]", detail);
+    return jsonResponse({ error: "resend_failed", detail }, 500);
   }
 });

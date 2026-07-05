@@ -323,6 +323,20 @@ export type Database = {
           created_at: string
         }[]
       }
+      admin_list_approved_leads: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string | null
+          email: string | null
+          phone: string | null
+          payment_amount: number | null
+          payment_currency: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          proof_path: string | null
+          created_at: string
+        }[]
+      }
       admin_update_lead_payment_status: {
         Args: {
           p_lead_id: string

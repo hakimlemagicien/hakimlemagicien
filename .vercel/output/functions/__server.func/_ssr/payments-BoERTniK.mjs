@@ -1,13 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as formatPaymentMethod, i as formatDate, o as openProofInNewTab, r as fetchSubmittedLeads, s as updateLeadPaymentStatus, t as acceptLeadPayment } from "./admin-payments-api-CG8xUNC7.mjs";
-import { D as RefreshCw, R as LoaderCircle, Z as ExternalLink, gt as Check, n as X } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/payments-BuunPszx.js
+import { a as formatDate, c as resendClientAccessLink, i as fetchSubmittedLeads, l as updateLeadPaymentStatus, o as formatPaymentMethod, r as fetchApprovedLeads, s as openProofInNewTab, t as acceptLeadPayment } from "./admin-payments-api-D-HC663Y.mjs";
+import { D as RefreshCw, I as Mail, R as LoaderCircle, Z as ExternalLink, gt as Check, n as X } from "../_libs/lucide-react.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/payments-BoERTniK.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AdminPaymentsPage() {
+	const [tab, setTab] = (0, import_react.useState)("pending");
 	const [leads, setLeads] = (0, import_react.useState)([]);
+	const [approvedLeads, setApprovedLeads] = (0, import_react.useState)([]);
 	const [loading, setLoading] = (0, import_react.useState)(true);
 	const [error, setError] = (0, import_react.useState)(null);
 	const [actionId, setActionId] = (0, import_react.useState)(null);
@@ -15,11 +17,14 @@ function AdminPaymentsPage() {
 		setLoading(true);
 		setError(null);
 		try {
-			setLeads(await fetchSubmittedLeads());
+			const [pendingRows, approvedRows] = await Promise.all([fetchSubmittedLeads(), fetchApprovedLeads()]);
+			setLeads(pendingRows);
+			setApprovedLeads(approvedRows);
 		} catch (err) {
 			console.error(err);
 			setError(err instanceof Error && /forbidden|42501/i.test(err.message) ? "ليس لديك صلاحية الوصول." : "تعذر جلب الطلبات. تأكد من تطبيق migration الإدارة على Supabase.");
 			setLeads([]);
+			setApprovedLeads([]);
 		} finally {
 			setLoading(false);
 		}
@@ -65,28 +70,58 @@ function AdminPaymentsPage() {
 			setActionId(null);
 		}
 	};
+	const handleResendAccess = async (leadId) => {
+		if (!window.confirm("هل تريد إعادة إرسال رابط الدخول لهذا العميل؟")) return;
+		setActionId(`resend:${leadId}`);
+		try {
+			const result = await resendClientAccessLink(leadId);
+			alert(result.message ?? "تم إرسال الرابط.");
+		} catch (err) {
+			console.error(err);
+			const detail = err && typeof err === "object" && "message" in err ? String(err.message) : err instanceof Error ? err.message : "";
+			alert(detail ? `تعذر إرسال الرابط.\n\n${detail}` : "تعذر إرسال الرابط.");
+		} finally {
+			setActionId(null);
+		}
+	};
+	const activeLeads = tab === "pending" ? leads : approvedLeads;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(PageShell, { children: [
 		/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
 				className: "font-[Tajawal] text-2xl font-black text-[#0F172A] md:text-3xl",
 				children: "مراجعة مدفوعات التحويل"
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "mt-1 text-sm text-neutral-500",
-				children: [
-					"الطلبات ذات الحالة ",
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						className: "font-bold text-[#FF6B00]",
-						children: "submitted"
-					}),
-					" فقط"
-				]
+				children: tab === "pending" ? "الطلبات ذات الحالة submitted بانتظار المراجعة" : "العملاء المقبولون — يمكن إعادة إرسال رابط الدخول"
 			})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 				type: "button",
 				onClick: () => void loadLeads(),
 				disabled: loading,
 				className: "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#0F172A] disabled:opacity-50",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RefreshCw, { className: `h-4 w-4 ${loading ? "animate-spin" : ""}` }), "تحديث"]
+			})]
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "mb-6 flex gap-2 rounded-xl border border-[#E5E7EB] bg-white p-1",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => setTab("pending"),
+				className: `flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${tab === "pending" ? "bg-[#FF6B00] text-white" : "text-neutral-600"}`,
+				children: [
+					"بانتظار المراجعة (",
+					leads.length,
+					")"
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				onClick: () => setTab("approved"),
+				className: `flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${tab === "approved" ? "bg-[#16A34A] text-white" : "text-neutral-600"}`,
+				children: [
+					"عملاء مفعّلون (",
+					approvedLeads.length,
+					")"
+				]
 			})]
 		}),
 		error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -96,10 +131,10 @@ function AdminPaymentsPage() {
 		loading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "flex min-h-[30vh] items-center justify-center text-neutral-500",
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "h-6 w-6 animate-spin" })
-		}) : leads.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		}) : activeLeads.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-12 text-center text-neutral-500",
-			children: "لا توجد طلبات بانتظار المراجعة حالياً."
-		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			children: tab === "pending" ? "لا توجد طلبات بانتظار المراجعة حالياً." : "لا يوجد عملاء مفعّلون حالياً."
+		}) : tab === "pending" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block",
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
 				className: "min-w-full text-right text-sm",
@@ -162,6 +197,54 @@ function AdminPaymentsPage() {
 				onViewProof: () => void handleViewProof(lead.proof_path),
 				onAccept: () => void handleDecision(lead.id, "approved"),
 				onReject: () => void handleDecision(lead.id, "rejected")
+			}, lead.id))
+		})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
+				className: "min-w-full text-right text-sm",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", {
+					className: "bg-[#F9FAFB] text-xs font-bold text-neutral-500",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "الاسم"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "البريد"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "الهاتف"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "المبلغ"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "التاريخ"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+							className: "px-4 py-3",
+							children: "إجراءات"
+						})
+					] })
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", {
+					className: "divide-y divide-[#F1F5F9]",
+					children: approvedLeads.map((lead) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ApprovedTableRow, {
+						lead,
+						busy: actionId === `resend:${lead.id}`,
+						onResend: () => void handleResendAccess(lead.id)
+					}, lead.id))
+				})]
+			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "space-y-4 md:hidden",
+			children: approvedLeads.map((lead) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ApprovedMobileCard, {
+				lead,
+				busy: actionId === `resend:${lead.id}`,
+				onResend: () => void handleResendAccess(lead.id)
 			}, lead.id))
 		})] })
 	] });
@@ -321,6 +404,89 @@ function LeadActions({ busy, onViewProof, onAccept, onReject, stacked }) {
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "h-3.5 w-3.5" }), "رفض الدفع"]
 			})
 		]
+	});
+}
+function ApprovedTableRow({ lead, busy, onResend }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+		className: "text-[#0F172A]",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3 font-medium",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cell, { value: lead.full_name })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cell, { value: lead.email })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3",
+				dir: "ltr",
+				style: { textAlign: "right" },
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cell, { value: lead.phone })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cell, { value: lead.payment_amount != null ? `${lead.payment_amount} ${lead.payment_currency ?? ""}`.trim() : null })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3 whitespace-nowrap text-xs text-neutral-500",
+				children: formatDate(lead.created_at)
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+				className: "px-4 py-3",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ResendAccessButton, {
+					busy,
+					onResend
+				})
+			})
+		]
+	});
+}
+function ApprovedMobileCard({ lead, busy, onResend }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+		className: "rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-2 text-sm",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoRow, {
+					label: "الاسم",
+					value: lead.full_name
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoRow, {
+					label: "البريد",
+					value: lead.email
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoRow, {
+					label: "الهاتف",
+					value: lead.phone,
+					ltr: true
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoRow, {
+					label: "المبلغ",
+					value: lead.payment_amount != null ? `${lead.payment_amount} ${lead.payment_currency ?? ""}`.trim() : null
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InfoRow, {
+					label: "التاريخ",
+					value: formatDate(lead.created_at)
+				})
+			]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "mt-4 border-t border-[#F1F5F9] pt-4",
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ResendAccessButton, {
+				busy,
+				onResend,
+				stacked: true
+			})
+		})]
+	});
+}
+function ResendAccessButton({ busy, onResend, stacked }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		disabled: busy,
+		onClick: onResend,
+		className: `inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#FF6B00] px-3 text-xs font-bold text-white disabled:opacity-50 ${stacked ? "w-full" : ""}`,
+		children: [busy ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "h-3.5 w-3.5 animate-spin" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "h-3.5 w-3.5" }), "إعادة إرسال رابط الدخول"]
 	});
 }
 //#endregion

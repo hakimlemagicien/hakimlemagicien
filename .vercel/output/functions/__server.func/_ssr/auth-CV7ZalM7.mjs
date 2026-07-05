@@ -3,9 +3,16 @@ import { t as supabase } from "./client-DaoHZWri.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { _ as Link, v as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/auth-TqRkXc50.js
+//#region node_modules/.nitro/vite/services/ssr/assets/auth-CV7ZalM7.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
+function getAuthCallbackType() {
+	const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+	const searchParams = new URLSearchParams(window.location.search);
+	const type = hashParams.get("type") ?? searchParams.get("type");
+	if (type === "invite" || type === "recovery") return type;
+	return null;
+}
 function AuthPage() {
 	const navigate = useNavigate();
 	const [mode, setMode] = (0, import_react.useState)("signin");
@@ -20,9 +27,12 @@ function AuthPage() {
 	(0, import_react.useEffect)(() => {
 		let cancelled = false;
 		async function bootstrap() {
-			const hash = window.location.hash.replace(/^#/, "");
-			const hashType = new URLSearchParams(hash).get("type");
-			if (hashType === "invite" || hashType === "recovery") {
+			const code = new URLSearchParams(window.location.search).get("code");
+			if (code) {
+				const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+				if (exchangeError && !cancelled) setError(exchangeError.message);
+			}
+			if (getAuthCallbackType()) {
 				const { error: sessionError } = await supabase.auth.getSession();
 				if (sessionError) {
 					if (!cancelled) setError(sessionError.message);
@@ -36,9 +46,9 @@ function AuthPage() {
 		}
 		bootstrap();
 		const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-			if (event === "PASSWORD_RECOVERY" || event === "INITIAL_SESSION") {
-				const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type");
-				if (hashType === "invite" || hashType === "recovery" || event === "PASSWORD_RECOVERY") {
+			const callbackType = getAuthCallbackType();
+			if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION" && callbackType) {
+				if (callbackType === "invite" || callbackType === "recovery" || event === "PASSWORD_RECOVERY") {
 					setMode("set-password");
 					return;
 				}

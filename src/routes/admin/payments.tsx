@@ -4,17 +4,21 @@ import {
   Check,
   ExternalLink,
   Loader2,
+  Mail,
   RefreshCw,
   X,
 } from "lucide-react";
 import {
   checkAdminAccess,
+  fetchApprovedLeads,
   fetchSubmittedLeads,
   formatDate,
   formatPaymentMethod,
   openProofInNewTab,
   acceptLeadPayment,
+  resendClientAccessLink,
   updateLeadPaymentStatus,
+  type AdminApprovedLead,
   type AdminSubmittedLead,
 } from "@/lib/admin-payments-api";
 
@@ -33,7 +37,9 @@ export const Route = createFileRoute("/admin/payments")({
 });
 
 function AdminPaymentsPage() {
+  const [tab, setTab] = useState<"pending" | "approved">("pending");
   const [leads, setLeads] = useState<AdminSubmittedLead[]>([]);
+  const [approvedLeads, setApprovedLeads] = useState<AdminApprovedLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -42,8 +48,12 @@ function AdminPaymentsPage() {
     setLoading(true);
     setError(null);
     try {
-      const rows = await fetchSubmittedLeads();
-      setLeads(rows);
+      const [pendingRows, approvedRows] = await Promise.all([
+        fetchSubmittedLeads(),
+        fetchApprovedLeads(),
+      ]);
+      setLeads(pendingRows);
+      setApprovedLeads(approvedRows);
     } catch (err) {
       console.error(err);
       const message =
@@ -52,6 +62,7 @@ function AdminPaymentsPage() {
           : "تعذر جلب الطلبات. تأكد من تطبيق migration الإدارة على Supabase.";
       setError(message);
       setLeads([]);
+      setApprovedLeads([]);
     } finally {
       setLoading(false);
     }
@@ -115,6 +126,29 @@ function AdminPaymentsPage() {
     }
   };
 
+  const handleResendAccess = async (leadId: string) => {
+    if (!window.confirm("هل تريد إعادة إرسال رابط الدخول لهذا العميل؟")) return;
+
+    setActionId(`resend:${leadId}`);
+    try {
+      const result = await resendClientAccessLink(leadId);
+      alert(result.message ?? "تم إرسال الرابط.");
+    } catch (err) {
+      console.error(err);
+      const detail =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : err instanceof Error
+            ? err.message
+            : "";
+      alert(detail ? `تعذر إرسال الرابط.\n\n${detail}` : "تعذر إرسال الرابط.");
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const activeLeads = tab === "pending" ? leads : approvedLeads;
+
   return (
     <PageShell>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -123,7 +157,9 @@ function AdminPaymentsPage() {
             مراجعة مدفوعات التحويل
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
-            الطلبات ذات الحالة <span className="font-bold text-[#FF6B00]">submitted</span> فقط
+            {tab === "pending"
+              ? "الطلبات ذات الحالة submitted بانتظار المراجعة"
+              : "العملاء المقبولون — يمكن إعادة إرسال رابط الدخول"}
           </p>
         </div>
         <button
@@ -137,6 +173,27 @@ function AdminPaymentsPage() {
         </button>
       </div>
 
+      <div className="mb-6 flex gap-2 rounded-xl border border-[#E5E7EB] bg-white p-1">
+        <button
+          type="button"
+          onClick={() => setTab("pending")}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
+            tab === "pending" ? "bg-[#FF6B00] text-white" : "text-neutral-600"
+          }`}
+        >
+          بانتظار المراجعة ({leads.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("approved")}
+          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
+            tab === "approved" ? "bg-[#16A34A] text-white" : "text-neutral-600"
+          }`}
+        >
+          عملاء مفعّلون ({approvedLeads.length})
+        </button>
+      </div>
+
       {error ? (
         <div className="mb-6 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
           {error}
@@ -147,11 +204,13 @@ function AdminPaymentsPage() {
         <div className="flex min-h-[30vh] items-center justify-center text-neutral-500">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
-      ) : leads.length === 0 ? (
+      ) : activeLeads.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-12 text-center text-neutral-500">
-          لا توجد طلبات بانتظار المراجعة حالياً.
+          {tab === "pending"
+            ? "لا توجد طلبات بانتظار المراجعة حالياً."
+            : "لا يوجد عملاء مفعّلون حالياً."}
         </div>
-      ) : (
+      ) : tab === "pending" ? (
         <>
           <div className="hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block">
             <table className="min-w-full text-right text-sm">
@@ -192,6 +251,44 @@ function AdminPaymentsPage() {
                 onViewProof={() => void handleViewProof(lead.proof_path)}
                 onAccept={() => void handleDecision(lead.id, "approved")}
                 onReject={() => void handleDecision(lead.id, "rejected")}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block">
+            <table className="min-w-full text-right text-sm">
+              <thead className="bg-[#F9FAFB] text-xs font-bold text-neutral-500">
+                <tr>
+                  <th className="px-4 py-3">الاسم</th>
+                  <th className="px-4 py-3">البريد</th>
+                  <th className="px-4 py-3">الهاتف</th>
+                  <th className="px-4 py-3">المبلغ</th>
+                  <th className="px-4 py-3">التاريخ</th>
+                  <th className="px-4 py-3">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F1F5F9]">
+                {approvedLeads.map((lead) => (
+                  <ApprovedTableRow
+                    key={lead.id}
+                    lead={lead}
+                    busy={actionId === `resend:${lead.id}`}
+                    onResend={() => void handleResendAccess(lead.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="space-y-4 md:hidden">
+            {approvedLeads.map((lead) => (
+              <ApprovedMobileCard
+                key={lead.id}
+                lead={lead}
+                busy={actionId === `resend:${lead.id}`}
+                onResend={() => void handleResendAccess(lead.id)}
               />
             ))}
           </div>
@@ -367,5 +464,100 @@ function LeadActions({
         رفض الدفع
       </button>
     </div>
+  );
+}
+
+function ApprovedTableRow({
+  lead,
+  busy,
+  onResend,
+}: {
+  lead: AdminApprovedLead;
+  busy: boolean;
+  onResend: () => void;
+}) {
+  return (
+    <tr className="text-[#0F172A]">
+      <td className="px-4 py-3 font-medium">
+        <Cell value={lead.full_name} />
+      </td>
+      <td className="px-4 py-3">
+        <Cell value={lead.email} />
+      </td>
+      <td className="px-4 py-3" dir="ltr" style={{ textAlign: "right" }}>
+        <Cell value={lead.phone} />
+      </td>
+      <td className="px-4 py-3">
+        <Cell
+          value={
+            lead.payment_amount != null
+              ? `${lead.payment_amount} ${lead.payment_currency ?? ""}`.trim()
+              : null
+          }
+        />
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-xs text-neutral-500">
+        {formatDate(lead.created_at)}
+      </td>
+      <td className="px-4 py-3">
+        <ResendAccessButton busy={busy} onResend={onResend} />
+      </td>
+    </tr>
+  );
+}
+
+function ApprovedMobileCard({
+  lead,
+  busy,
+  onResend,
+}: {
+  lead: AdminApprovedLead;
+  busy: boolean;
+  onResend: () => void;
+}) {
+  return (
+    <article className="rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
+      <div className="space-y-2 text-sm">
+        <InfoRow label="الاسم" value={lead.full_name} />
+        <InfoRow label="البريد" value={lead.email} />
+        <InfoRow label="الهاتف" value={lead.phone} ltr />
+        <InfoRow
+          label="المبلغ"
+          value={
+            lead.payment_amount != null
+              ? `${lead.payment_amount} ${lead.payment_currency ?? ""}`.trim()
+              : null
+          }
+        />
+        <InfoRow label="التاريخ" value={formatDate(lead.created_at)} />
+      </div>
+      <div className="mt-4 border-t border-[#F1F5F9] pt-4">
+        <ResendAccessButton busy={busy} onResend={onResend} stacked />
+      </div>
+    </article>
+  );
+}
+
+function ResendAccessButton({
+  busy,
+  onResend,
+  stacked,
+}: {
+  busy: boolean;
+  onResend: () => void;
+  stacked?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onResend}
+      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#FF6B00] px-3 text-xs font-bold text-white disabled:opacity-50 ${
+        stacked ? "w-full" : ""
+      }`}
+    >
+      {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+      إعادة إرسال رابط الدخول
+    </button>
   );
 }

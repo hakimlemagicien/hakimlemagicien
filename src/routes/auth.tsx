@@ -9,6 +9,14 @@ export const Route = createFileRoute("/auth")({
 
 type AuthMode = "signin" | "signup" | "set-password";
 
+function getAuthCallbackType(): "invite" | "recovery" | null {
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const searchParams = new URLSearchParams(window.location.search);
+  const type = hashParams.get("type") ?? searchParams.get("type");
+  if (type === "invite" || type === "recovery") return type;
+  return null;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<AuthMode>("signin");
@@ -25,11 +33,17 @@ function AuthPage() {
     let cancelled = false;
 
     async function bootstrap() {
-      const hash = window.location.hash.replace(/^#/, "");
-      const hashParams = new URLSearchParams(hash);
-      const hashType = hashParams.get("type");
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get("code");
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError && !cancelled) {
+          setError(exchangeError.message);
+        }
+      }
 
-      if (hashType === "invite" || hashType === "recovery") {
+      const callbackType = getAuthCallbackType();
+      if (callbackType) {
         const { error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
           if (!cancelled) setError(sessionError.message);
@@ -50,9 +64,13 @@ function AuthPage() {
     void bootstrap();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || event === "INITIAL_SESSION") {
-        const hashType = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type");
-        if (hashType === "invite" || hashType === "recovery" || event === "PASSWORD_RECOVERY") {
+      const callbackType = getAuthCallbackType();
+      if (
+        event === "PASSWORD_RECOVERY" ||
+        event === "SIGNED_IN" ||
+        (event === "INITIAL_SESSION" && callbackType)
+      ) {
+        if (callbackType === "invite" || callbackType === "recovery" || event === "PASSWORD_RECOVERY") {
           setMode("set-password");
           return;
         }

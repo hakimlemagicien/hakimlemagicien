@@ -3,13 +3,13 @@ import { t as supabase } from "./client-DaoHZWri.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { _ as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { n as notifyAdminReceiptUpload } from "./payment-notifications-api-DlI38M1Y.mjs";
+import { r as notifyAdminReceiptUpload } from "./payment-notifications-api-JPc3GVD3.mjs";
 import { At as ArrowLeft, B as Landmark, E as Ruler, H as Heart, I as Mail, J as Flame, K as Gem, L as Lock, N as MessageCircle, Q as Dumbbell, Tt as Bitcoin, V as Info, W as Headphones, Y as FileUp, _ as Star, at as Clock, b as Shield, bt as Calendar, et as Crown, f as Trophy, g as Target, gt as Check, ht as ChevronDown, k as PersonStanding, mt as ChevronLeft, n as X, pt as ChevronRight, rt as Copy, t as Zap, tt as CreditCard, u as Upload, v as Sparkles, w as Scale, x as ShieldCheck, yt as Camera, z as Lightbulb } from "../_libs/lucide-react.mjs";
 import { i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from "./site-legal-BJWCSk8k.mjs";
 import { a as triggerSelectionHaptic, i as quiz_gym_bg_default, n as pageVariants, t as pageTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/quiz-g9VKLdDk.js
+//#region node_modules/.nitro/vite/services/ssr/assets/quiz-3jvxdu4e.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var LEAD_ID_KEY = "hakim_lead_id";
@@ -111,7 +111,13 @@ async function markPaymentSubmitted(credentials, proofPath) {
 async function submitPaymentProof(credentials, file) {
 	const proofPath = await uploadPaymentProof(credentials, file);
 	await markPaymentSubmitted(credentials, proofPath);
-	notifyAdminReceiptUpload(credentials.leadId, credentials.accessToken);
+	console.log("[submitPaymentProof] before notifyAdminReceiptUpload", { leadId: credentials.leadId });
+	try {
+		await notifyAdminReceiptUpload(credentials.leadId, credentials.accessToken);
+		console.log("[submitPaymentProof] after notifyAdminReceiptUpload", { leadId: credentials.leadId });
+	} catch (err) {
+		console.warn("[submitPaymentProof] notifyAdminReceiptUpload failed", err);
+	}
 	return proofPath;
 }
 function buildQuizAnswersPayload(input) {
@@ -1378,16 +1384,16 @@ var خصر_انحف_ومشدود_default = "/assets/%D8%AE%D8%B5%D8%B1%20%D8%A7%
 var feminine_toned_body_default = "/assets/feminine-toned-body-ULTMdfL-.png";
 var جسم_صحي_ورياضي_للبنات_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B5%D8%AD%D9%8A%20%D9%88%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-D1R1oUOx.png";
 var تحسين_شكل_الصدر_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%B5%D8%AF%D8%B1-BNPobXQ4.jpg";
-var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
-var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_3_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
-var بعد_شاشة_12_المؤخرة_4_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
+var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-BswI5UL8.jpg";
+var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_3_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
+var بعد_شاشة_12_المؤخرة_4_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%202-wpBAPdbL.jpg";
 var سندويش_المقارنة_default = "/assets/%D8%B3%D9%86%D8%AF%D9%88%D9%8A%D8%B4%20%D8%A7%D9%84%D9%85%D9%82%D8%A7%D8%B1%D9%86%D8%A9-C4pwHzne.png";
 var body_very_skinny_default = "/assets/body-very-skinny-DfHgEwJL.jpg";
 var body_lean_default = "/assets/body-lean-CqHp6z19.jpg";
