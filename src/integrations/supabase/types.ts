@@ -389,9 +389,8 @@ export type Database = {
       payment_status:
         | "pending"
         | "submitted"
-        | "confirmed"
+        | "approved"
         | "rejected"
-        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -535,13 +534,7 @@ export const Constants = {
         "google_pay",
         "other",
       ],
-      payment_status: [
-        "pending",
-        "submitted",
-        "confirmed",
-        "rejected",
-        "refunded",
-      ],
+      payment_status: ["pending", "submitted", "approved", "rejected"],
     },
   },
 } as const

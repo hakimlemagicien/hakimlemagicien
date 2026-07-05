@@ -2,6 +2,9 @@ import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
 import { sendAdminNotificationEmail } from "../_shared/send-email.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
 
+const DEFAULT_ADMIN_EMAIL = "support@hakimlemagicien.com";
+const DEFAULT_SITE_URL = "https://hakimlemagicien.com";
+
 type RequestBody = {
   leadId?: string;
   accessToken?: string;
@@ -52,19 +55,8 @@ Deno.serve(async (req) => {
     return jsonResponse({ ok: true, emailSent: false, skipped: "not_submitted" });
   }
 
-  const adminEmail = Deno.env.get("ADMIN_NOTIFICATION_EMAIL");
-  const siteUrl = (Deno.env.get("SITE_URL") ?? "https://hakimlemagicien.com").replace(
-    /\/$/,
-    "",
-  );
-
-  if (!adminEmail) {
-    // TODO(email): Set ADMIN_NOTIFICATION_EMAIL in Supabase Edge Function secrets.
-    console.warn(
-      "[notify-receipt-upload] TODO: Set ADMIN_NOTIFICATION_EMAIL to notify admin on receipt upload.",
-    );
-    return jsonResponse({ ok: true, emailSent: false, reason: "admin_email_not_configured" });
-  }
+  const adminEmail = Deno.env.get("ADMIN_NOTIFICATION_EMAIL") ?? DEFAULT_ADMIN_EMAIL;
+  const siteUrl = (Deno.env.get("SITE_URL") ?? DEFAULT_SITE_URL).replace(/\/$/, "");
 
   const amount =
     lead.payment_amount != null

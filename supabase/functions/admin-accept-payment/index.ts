@@ -74,8 +74,8 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "lead_not_found" }, 404);
   }
 
-  if (lead.payment_status !== "confirmed") {
-    return jsonResponse({ error: "payment_not_confirmed" }, 409);
+  if (lead.payment_status !== "approved") {
+    return jsonResponse({ error: "payment_not_approved" }, 409);
   }
 
   const email = lead.email?.trim();

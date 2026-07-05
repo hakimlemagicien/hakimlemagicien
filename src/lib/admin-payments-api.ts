@@ -13,7 +13,7 @@ const PROOF_SIGNED_URL_TTL_SECONDS = 3600;
 export type AdminSubmittedLead =
   Database["public"]["Functions"]["admin_list_submitted_leads"]["Returns"][number];
 
-export type AdminPaymentDecision = "confirmed" | "rejected";
+export type AdminPaymentDecision = "approved" | "rejected";
 
 export async function checkAdminAccess(): Promise<{ userId: string }> {
   const {
@@ -62,12 +62,26 @@ export async function updateLeadPaymentStatus(
   if (error) throw error;
 }
 
+const INVITE_PENDING_MESSAGE = "تم قبول الدفع، لكن لم يتم إرسال دعوة العميل بعد";
+
 /** Confirm payment in DB, then invite/link client auth account (server edge function). */
 export async function acceptLeadPayment(
   leadId: string,
 ): Promise<AcceptPaymentOnboardingResult> {
-  await updateLeadPaymentStatus(leadId, "confirmed");
-  return invokeAdminAcceptPayment(leadId);
+  await updateLeadPaymentStatus(leadId, "approved");
+
+  try {
+    return await invokeAdminAcceptPayment(leadId);
+  } catch (err) {
+    console.warn("[acceptLeadPayment] edge function unavailable:", err);
+    return {
+      ok: true,
+      linked: false,
+      invited: false,
+      warning: "invite_not_sent",
+      message: INVITE_PENDING_MESSAGE,
+    };
+  }
 }
 
 export function normalizeProofPath(proofPath: string): string {

@@ -52,7 +52,7 @@ BEGIN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;
 
-  IF p_payment_status NOT IN ('confirmed', 'rejected') THEN
+  IF p_payment_status NOT IN ('approved', 'rejected') THEN
     RAISE EXCEPTION 'invalid_payment_status' USING ERRCODE = '22023';
   END IF;
 

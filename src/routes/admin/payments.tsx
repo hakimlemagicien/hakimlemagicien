@@ -79,13 +79,13 @@ function AdminPaymentsPage() {
     }
   };
 
-  const handleDecision = async (leadId: string, status: "confirmed" | "rejected") => {
-    const label = status === "confirmed" ? "قبول" : "رفض";
+  const handleDecision = async (leadId: string, status: "approved" | "rejected") => {
+    const label = status === "approved" ? "قبول" : "رفض";
     if (!window.confirm(`هل تريد ${label} هذا الطلب؟`)) return;
 
     setActionId(leadId);
     try {
-      if (status === "confirmed") {
+      if (status === "approved") {
         const result = await acceptLeadPayment(leadId);
         setLeads((prev) => prev.filter((row) => row.id !== leadId));
         if (result.warning === "lead_has_no_email") {
@@ -99,7 +99,17 @@ function AdminPaymentsPage() {
       }
     } catch (err) {
       console.error(err);
-      alert(`تعذر ${label} الطلب.`);
+      const detail =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : err instanceof Error
+            ? err.message
+            : "";
+      alert(
+        detail
+          ? `تعذر ${label} الطلب.\n\n${detail}`
+          : `تعذر ${label} الطلب.`,
+      );
     } finally {
       setActionId(null);
     }
@@ -165,7 +175,7 @@ function AdminPaymentsPage() {
                     lead={lead}
                     busy={actionId === lead.id || actionId === `proof:${lead.proof_path}`}
                     onViewProof={() => void handleViewProof(lead.proof_path)}
-                    onAccept={() => void handleDecision(lead.id, "confirmed")}
+                    onAccept={() => void handleDecision(lead.id, "approved")}
                     onReject={() => void handleDecision(lead.id, "rejected")}
                   />
                 ))}
@@ -180,7 +190,7 @@ function AdminPaymentsPage() {
                 lead={lead}
                 busy={actionId === lead.id || actionId === `proof:${lead.proof_path}`}
                 onViewProof={() => void handleViewProof(lead.proof_path)}
-                onAccept={() => void handleDecision(lead.id, "confirmed")}
+                onAccept={() => void handleDecision(lead.id, "approved")}
                 onReject={() => void handleDecision(lead.id, "rejected")}
               />
             ))}

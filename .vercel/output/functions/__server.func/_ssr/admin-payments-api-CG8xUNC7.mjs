@@ -1,6 +1,6 @@
 import { t as supabase } from "./client-DaoHZWri.mjs";
 import { t as invokeAdminAcceptPayment } from "./payment-notifications-api-DlI38M1Y.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/admin-payments-api-DvAtcEsN.js
+//#region node_modules/.nitro/vite/services/ssr/assets/admin-payments-api-CG8xUNC7.js
 var PAYMENT_PROOFS_BUCKET = "payment-proofs";
 var PROOF_SIGNED_URL_TTL_SECONDS = 3600;
 async function checkAdminAccess() {
@@ -27,10 +27,22 @@ async function updateLeadPaymentStatus(leadId, status) {
 	});
 	if (error) throw error;
 }
+var INVITE_PENDING_MESSAGE = "تم قبول الدفع، لكن لم يتم إرسال دعوة العميل بعد";
 /** Confirm payment in DB, then invite/link client auth account (server edge function). */
 async function acceptLeadPayment(leadId) {
-	await updateLeadPaymentStatus(leadId, "confirmed");
-	return invokeAdminAcceptPayment(leadId);
+	await updateLeadPaymentStatus(leadId, "approved");
+	try {
+		return await invokeAdminAcceptPayment(leadId);
+	} catch (err) {
+		console.warn("[acceptLeadPayment] edge function unavailable:", err);
+		return {
+			ok: true,
+			linked: false,
+			invited: false,
+			warning: "invite_not_sent",
+			message: INVITE_PENDING_MESSAGE
+		};
+	}
 }
 function normalizeProofPath(proofPath) {
 	let path = proofPath.trim();

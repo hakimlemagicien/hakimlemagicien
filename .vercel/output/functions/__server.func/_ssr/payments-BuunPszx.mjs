@@ -1,9 +1,9 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
-import { a as formatPaymentMethod, i as formatDate, o as openProofInNewTab, r as fetchSubmittedLeads, s as updateLeadPaymentStatus, t as acceptLeadPayment } from "./admin-payments-api-DvAtcEsN.mjs";
+import { a as formatPaymentMethod, i as formatDate, o as openProofInNewTab, r as fetchSubmittedLeads, s as updateLeadPaymentStatus, t as acceptLeadPayment } from "./admin-payments-api-CG8xUNC7.mjs";
 import { D as RefreshCw, R as LoaderCircle, Z as ExternalLink, gt as Check, n as X } from "../_libs/lucide-react.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/payments-BNA_BVph.js
+//#region node_modules/.nitro/vite/services/ssr/assets/payments-BuunPszx.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function AdminPaymentsPage() {
@@ -44,11 +44,11 @@ function AdminPaymentsPage() {
 		}
 	};
 	const handleDecision = async (leadId, status) => {
-		const label = status === "confirmed" ? "قبول" : "رفض";
+		const label = status === "approved" ? "قبول" : "رفض";
 		if (!window.confirm(`هل تريد ${label} هذا الطلب؟`)) return;
 		setActionId(leadId);
 		try {
-			if (status === "confirmed") {
+			if (status === "approved") {
 				const result = await acceptLeadPayment(leadId);
 				setLeads((prev) => prev.filter((row) => row.id !== leadId));
 				if (result.warning === "lead_has_no_email") alert("تم قبول الدفع، لكن لا يوجد بريد للعميل — لم يُرسل دعوة حساب.");
@@ -59,7 +59,8 @@ function AdminPaymentsPage() {
 			}
 		} catch (err) {
 			console.error(err);
-			alert(`تعذر ${label} الطلب.`);
+			const detail = err && typeof err === "object" && "message" in err ? String(err.message) : err instanceof Error ? err.message : "";
+			alert(detail ? `تعذر ${label} الطلب.\n\n${detail}` : `تعذر ${label} الطلب.`);
 		} finally {
 			setActionId(null);
 		}
@@ -148,7 +149,7 @@ function AdminPaymentsPage() {
 						lead,
 						busy: actionId === lead.id || actionId === `proof:${lead.proof_path}`,
 						onViewProof: () => void handleViewProof(lead.proof_path),
-						onAccept: () => void handleDecision(lead.id, "confirmed"),
+						onAccept: () => void handleDecision(lead.id, "approved"),
 						onReject: () => void handleDecision(lead.id, "rejected")
 					}, lead.id))
 				})]
@@ -159,7 +160,7 @@ function AdminPaymentsPage() {
 				lead,
 				busy: actionId === lead.id || actionId === `proof:${lead.proof_path}`,
 				onViewProof: () => void handleViewProof(lead.proof_path),
-				onAccept: () => void handleDecision(lead.id, "confirmed"),
+				onAccept: () => void handleDecision(lead.id, "approved"),
 				onReject: () => void handleDecision(lead.id, "rejected")
 			}, lead.id))
 		})] })

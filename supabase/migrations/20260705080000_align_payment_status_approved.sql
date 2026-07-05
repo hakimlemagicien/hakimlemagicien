@@ -1,4 +1,4 @@
--- On admin payment confirm: activate lead (status = active). Reject leaves status unchanged.
+-- Align admin payment RPC with production enum: approved (not confirmed)
 
 ALTER TYPE public.lead_status ADD VALUE IF NOT EXISTS 'active';
 
@@ -36,3 +36,6 @@ BEGIN
   END IF;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION public.admin_update_lead_payment_status(UUID, public.payment_status) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_lead_payment_status(UUID, public.payment_status) TO authenticated;

@@ -1,22 +1,24 @@
 /**
  * Sends transactional email via Resend when configured.
  *
- * TODO(email): Configure RESEND_API_KEY + EMAIL_FROM + ADMIN_NOTIFICATION_EMAIL
- * in Supabase Edge Function secrets to enable admin receipt notifications.
- * Client invite emails use Supabase Auth (inviteUserByEmail) — configure SMTP
- * in Supabase Dashboard → Project Settings → Authentication → SMTP.
+ * Secrets (Supabase → Edge Functions → Secrets):
+ * - RESEND_API_KEY — required to send
+ * - EMAIL_FROM — optional, defaults to support@hakimlemagicien.com
+ * - ADMIN_NOTIFICATION_EMAIL — optional, defaults to support@hakimlemagicien.com
  */
+const DEFAULT_FROM = "Hakim Coaching <support@hakimlemagicien.com>";
+
 export async function sendAdminNotificationEmail(options: {
   to: string;
   subject: string;
   html: string;
 }): Promise<{ sent: boolean; reason?: string }> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
-  const from = Deno.env.get("EMAIL_FROM");
+  const from = Deno.env.get("EMAIL_FROM") ?? DEFAULT_FROM;
 
-  if (!apiKey || !from) {
+  if (!apiKey) {
     console.warn(
-      "[sendAdminNotificationEmail] TODO: Set RESEND_API_KEY and EMAIL_FROM in edge function secrets.",
+      "[sendAdminNotificationEmail] Set RESEND_API_KEY in edge function secrets to enable admin emails.",
     );
     return { sent: false, reason: "email_not_configured" };
   }

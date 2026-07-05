@@ -9,7 +9,7 @@ import { i as PRODUCT_SUMMARY, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from
 import { a as triggerSelectionHaptic, i as quiz_gym_bg_default, n as pageVariants, t as pageTransition } from "./quiz-gym-bg-YHrisbSo.mjs";
 import { a as cn, i as avatar4_default, n as avatar2_default, o as سمير_بعد_default, r as avatar3_default, s as سمير_قبل_default, t as avatar1_default } from "./utils-PO22zh49.mjs";
 import { n as motion } from "../_libs/framer-motion.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/quiz-B5XwtDv6.js
+//#region node_modules/.nitro/vite/services/ssr/assets/quiz-g9VKLdDk.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var LEAD_ID_KEY = "hakim_lead_id";
@@ -1378,11 +1378,11 @@ var خصر_انحف_ومشدود_default = "/assets/%D8%AE%D8%B5%D8%B1%20%D8%A7%
 var feminine_toned_body_default = "/assets/feminine-toned-body-ULTMdfL-.png";
 var جسم_صحي_ورياضي_للبنات_default = "/assets/%D8%AC%D8%B3%D9%85%20%D8%B5%D8%AD%D9%8A%20%D9%88%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%20%D9%84%D9%84%D8%A8%D9%86%D8%A7%D8%AA-D1R1oUOx.png";
 var تحسين_شكل_الصدر_default = "/assets/%D8%AA%D8%AD%D8%B3%D9%8A%D9%86%20%D8%B4%D9%83%D9%84%20%D8%A7%D9%84%D8%B5%D8%AF%D8%B1-BNPobXQ4.jpg";
-var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%203-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%203-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%203-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%203-BswI5UL8.jpg";
-var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%203-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_1_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_2_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_3_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
+var قبل_شاشة_12_المؤخرة_4_default = "/assets/%D9%82%D8%A8%D9%84%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9%204-BswI5UL8.jpg";
 var بعد_شاشة_12_المؤخرة_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
 var بعد_شاشة_12_المؤخرة_1_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
 var بعد_شاشة_12_المؤخرة_2_default = "/assets/%D8%A8%D8%B9%D8%AF%20%D8%B4%D8%A7%D8%B4%D8%A9%2012%20%D8%A7%D9%84%D9%85%D8%A4%D8%AE%D8%B1%D8%A9-wpBAPdbL.jpg";
