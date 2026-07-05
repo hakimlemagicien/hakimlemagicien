@@ -67,7 +67,7 @@ export function BankTransferModal({ tierPriceUsd, onClose, onTransferDone }: Ban
       aria-modal
       aria-labelledby="bank-transfer-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
+      <div className="flex max-h-[92vh] w-full max-w-md md:max-w-lg lg:max-w-xl flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
         <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-[#E5E7EB] sm:hidden" aria-hidden />
 
         <div className="flex items-start justify-between gap-3 border-b border-[#F1F3F5] px-5 py-4">

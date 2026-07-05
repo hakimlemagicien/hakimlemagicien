@@ -2,9 +2,9 @@ import { o as __toESM } from "../_runtime.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { _ as Link, l as useLocation } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/radix-ui__react-context+react.mjs";
+import { F as Menu } from "../_libs/lucide-react.mjs";
 import { a as SITE_BRAND, c as SITE_LEGAL_ENTITY, d as SITE_WHATSAPP_URL, l as SITE_SUPPORT_EMAIL, t as LEGAL_ROUTES } from "./site-legal-BJWCSk8k.mjs";
 import { t as WhatsAppIcon } from "./WhatsAppIcon-BIM0XFiZ.mjs";
-import { F as Menu } from "../_libs/lucide-react.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/SiteFooter-CRYx4hkF.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();

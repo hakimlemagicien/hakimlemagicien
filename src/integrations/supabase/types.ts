@@ -306,6 +306,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_submitted_leads: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string | null
+          email: string | null
+          phone: string | null
+          payment_amount: number | null
+          payment_currency: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          proof_path: string | null
+          created_at: string
+        }[]
+      }
+      admin_update_lead_payment_status: {
+        Args: {
+          p_lead_id: string
+          p_payment_status: Database["public"]["Enums"]["payment_status"]
+        }
+        Returns: undefined
+      }
       create_lead: {
         Args: { p_payload: Json }
         Returns: Json

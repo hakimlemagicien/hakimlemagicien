@@ -17,6 +17,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
 const TermsRoute = TermsRouteImport.update({
@@ -58,6 +59,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/admin/payments',
+  path: '/admin/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/dashboard'
+    | '/admin/payments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/dashboard'
+    | '/admin/payments'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/_authenticated/dashboard'
+    | '/admin/payments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   RefundRoute: typeof RefundRoute
   TermsRoute: typeof TermsRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -229,6 +249,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   RefundRoute: RefundRoute,
   TermsRoute: TermsRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

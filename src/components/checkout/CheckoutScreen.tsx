@@ -163,7 +163,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
       lang="ar"
       className="h-full w-full overflow-y-auto bg-[#FAFAFA] font-[Cairo,Tajawal,sans-serif]"
     >
-      <div className="mx-auto w-full max-w-md px-5 pb-[34px]">
+      <div className="mx-auto w-full max-w-md md:max-w-lg lg:max-w-xl px-5 md:px-8 pb-[34px]">
         <div className="pb-3 pt-5">
           <div className="flex items-center justify-between">
             <button

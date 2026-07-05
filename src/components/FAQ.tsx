@@ -151,7 +151,7 @@ export default function FAQ() {
         >
           <DialogContent
             dir="rtl"
-            className="max-w-md gap-0 overflow-hidden rounded-[24px] border-orange-100 p-0 sm:max-w-lg [&>button]:left-4 [&>button]:right-auto"
+            className="max-w-md gap-0 overflow-hidden rounded-[24px] border-orange-100 p-0 sm:max-w-lg lg:max-w-xl [&>button]:left-4 [&>button]:right-auto"
           >
             {activeFaq && (
               <>

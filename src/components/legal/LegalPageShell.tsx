@@ -121,7 +121,7 @@ export function LegalPageShell({
     >
       <Header />
 
-      <main className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <main className="mx-auto max-w-3xl lg:max-w-4xl xl:max-w-5xl px-5 py-10 sm:px-8">
         {/* Breadcrumb — يقرأ من اليمين */}
         <nav className="mb-5 flex flex-wrap items-center justify-start gap-1.5 text-[11.5px] font-bold text-neutral-500">
           <span className="rounded-full bg-white/80 px-2.5 py-1 text-neutral-600 shadow-sm">

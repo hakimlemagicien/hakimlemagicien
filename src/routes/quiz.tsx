@@ -179,13 +179,16 @@ function QuizPage() {
     <div
       dir="rtl"
       lang="ar"
-      style={{ fontFamily: FONT, backgroundColor: "#FAF8F5" }}
-      className="fixed inset-0 w-full h-[100dvh] overflow-hidden"
+      className="fixed inset-0 w-full h-[100dvh] overflow-hidden md:flex md:justify-center md:bg-[#E8E4DE]"
     >
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Cairo:wght@700;800;900&display=swap"
       />
+      <div
+        style={{ fontFamily: FONT, backgroundColor: "#FAF8F5" }}
+        className="relative h-full w-full overflow-hidden md:max-w-lg lg:max-w-xl md:shadow-2xl md:ring-1 md:ring-black/5"
+      >
       <MotionStepView phase={phase}>
       {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
       {step === "gender" && (
@@ -342,6 +345,7 @@ function QuizPage() {
         />
       )}
       </MotionStepView>
+      </div>
     </div>
   );
 }
@@ -3670,7 +3674,7 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
       <div
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl animate-slide-in-right"
+        className="relative w-full max-w-md md:max-w-lg lg:max-w-xl bg-white rounded-t-3xl shadow-2xl animate-slide-in-right"
         style={{ animation: "slideUp .3s ease-out both" }}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-neutral-100">
@@ -3915,7 +3919,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
       `}</style>
 
       {/* Top progress chip */}
-      <div className="px-5 pt-5 max-w-md mx-auto">
+      <div className="px-5 pt-5 max-w-md mx-auto md:max-w-none">
         <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">12 من {total}</div>
         <div className="flex gap-1.5">
           {Array.from({ length: total }).map((_, i) => (
@@ -3924,7 +3928,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
         </div>
       </div>
 
-      <div className="px-5 pt-6 pb-32 max-w-md mx-auto">
+      <div className="px-5 pt-6 pb-32 max-w-md mx-auto md:max-w-none">
         {/* HEADER */}
         <div className="pr-fade text-right">
           <div>
@@ -4134,10 +4138,10 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
       {/* CTA — shown only after all stages have appeared */}
       {showCTA && (
         <div
-          className="fixed bottom-0 left-0 right-0 px-5 pt-4 pb-6"
+          className="fixed bottom-0 left-0 right-0 px-5 pt-4 pb-6 md:left-1/2 md:right-auto md:w-full md:max-w-lg md:-translate-x-1/2 lg:max-w-xl"
           style={{ background: "linear-gradient(180deg, rgba(250,248,245,0) 0%, #FAF8F5 35%)" }}
         >
-          <div className="max-w-md mx-auto" style={{ animation: "pr-cta-in .6s cubic-bezier(.34,1.56,.64,1) both" }}>
+          <div className="max-w-md mx-auto md:max-w-none" style={{ animation: "pr-cta-in .6s cubic-bezier(.34,1.56,.64,1) both" }}>
             <button
               onClick={onNext}
               className="w-full flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
@@ -4302,7 +4306,7 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
         }
       `}</style>
 
-      <div className="min-h-full max-w-md mx-auto px-5 pt-8 pb-10 flex flex-col">
+      <div className="min-h-full max-w-md mx-auto md:max-w-none px-5 pt-8 pb-10 flex flex-col">
         {/* Progress */}
         <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">11 من {total}</div>
         <div className="flex gap-1.5 mb-8">
@@ -4999,7 +5003,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
       `}</style>
 
       {/* Header */}
-      <div className="px-5 pt-5 pb-3 max-w-md mx-auto">
+      <div className="px-5 pt-5 pb-3 max-w-md mx-auto md:max-w-none">
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="flex items-center gap-1 text-neutral-500 text-[13px] font-bold active:scale-95">
             <ChevronRight className="h-4 w-4" />
@@ -5015,7 +5019,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
         </div>
       </div>
 
-      <div className="px-5 pb-28 max-w-md mx-auto">
+      <div className="px-5 pb-28 max-w-md mx-auto md:max-w-none">
         {/* Title */}
         <div className="pri-in mt-4 w-full text-center">
           <h1
@@ -5145,7 +5149,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
 
       {/* Sticky CTA */}
       <div
-        className="pri-sticky-cta fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/88"
+        className="pri-sticky-cta fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.06] bg-white/88 md:inset-x-auto md:left-1/2 md:w-full md:max-w-lg md:-translate-x-1/2 lg:max-w-xl"
         style={{ boxShadow: "0 -12px 32px -16px rgba(15,23,42,0.18)" }}
       >
         <div className="mx-auto max-w-md px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
@@ -5278,7 +5282,7 @@ function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect
         .tt-in { animation: tt-in .5s ease-out both; }
       `}</style>
 
-      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
+      <div className="max-w-md mx-auto md:max-w-none px-5 pt-4 pb-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
@@ -5594,7 +5598,7 @@ function OfflinePackagesScreen({
         .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
       `}</style>
 
-      <div className="max-w-md mx-auto px-5 pt-4 pb-10">
+      <div className="max-w-md mx-auto md:max-w-none px-5 pt-4 pb-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="text-sm font-bold text-neutral-800">

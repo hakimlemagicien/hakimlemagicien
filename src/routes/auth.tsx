@@ -55,7 +55,7 @@ function AuthPage() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md lg:max-w-lg">
         <Link to="/" className="block text-center mb-6">
           <span className="text-2xl font-black text-foreground">HAKIM</span>
           <span className="mx-2 text-primary font-bold">COACHING</span>

@@ -65,7 +65,13 @@ const HERO_WIDTH_HOLDER_PHRASE = HERO_CYCLING_PHRASES.reduce((longest, phrase) =
 const HERO_LINE_FONT_CLASS =
   "font-[Tajawal] text-[clamp(20px,5vw,76px)] sm:text-[clamp(28px,5.5vw,92px)] lg:text-[clamp(48px,6.5vw,118px)] leading-none text-[#FF6B00]";
 
-function CyclingHeroLine({ className = "" }: { className?: string }) {
+function CyclingHeroLine({
+  className = "",
+  variant = "mobile",
+}: {
+  className?: string;
+  variant?: "mobile" | "desktop";
+}) {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [visible, setVisible] = useState(true);
@@ -108,6 +114,34 @@ function CyclingHeroLine({ className = "" }: { className?: string }) {
       if (fadeTimeout) window.clearTimeout(fadeTimeout);
     };
   }, [phraseIndex]);
+
+  if (variant === "desktop") {
+    return (
+      <span
+        dir="rtl"
+        lang="ar"
+        className={[
+          "relative mt-2 block w-full text-right",
+          "font-[Tajawal] text-[38px] lg:text-[40px] xl:text-[40px] font-black leading-[1.15] text-[#FF6B00]",
+          "transition-opacity duration-300",
+          visible ? "opacity-100" : "opacity-0",
+          className,
+        ].join(" ")}
+        aria-live="polite"
+      >
+        <span className="invisible block whitespace-nowrap select-none lg:text-[40px]" aria-hidden>
+          {HERO_WIDTH_HOLDER_PHRASE}
+        </span>
+        <span className="absolute right-0 top-0 inline-flex items-center gap-0.5 whitespace-nowrap lg:text-[40px] lg:leading-[1.15]">
+          {displayed}
+          <span
+            className="inline-block h-[0.85em] w-[2px] shrink-0 animate-cursor-blink bg-[#FF6B00]"
+            aria-hidden
+          />
+        </span>
+      </span>
+    );
+  }
 
   return (
     <div
@@ -288,11 +322,11 @@ function ResultCard({
 }) {
   const bg = tone === "success" ? "bg-success-soft text-success" : "bg-primary-soft text-primary";
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white shadow-soft border border-white px-4 py-3 min-w-[150px]">
-      <span className={`grid h-10 w-10 place-items-center rounded-full ${bg}`}>
+    <div className="flex flex-row-reverse items-center gap-3 rounded-2xl bg-white shadow-soft border border-white px-4 py-3 min-w-[150px]">
+      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${bg}`}>
         <Icon className="h-5 w-5" />
       </span>
-      <div className="text-right">
+      <div className="min-w-0 flex-1 text-right">
         <p className="text-lg font-black text-foreground leading-none">{value}</p>
         <p className="text-xs text-muted-foreground mt-1">{label}</p>
       </div>
@@ -533,7 +567,7 @@ function DesktopHero() {
           <h1 className="mt-5 font-[Tajawal] font-black text-foreground tracking-tight text-[42px] sm:text-5xl lg:text-[68px] leading-[1.1]">
             أحصل على برنامج تدريبي وغذائي
             <br />
-            <CyclingHeroLine />
+            <CyclingHeroLine variant="desktop" />
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 lg:mr-0 leading-relaxed">
@@ -635,17 +669,17 @@ function CoachVisual() {
         className="relative z-10 w-full h-full object-contain object-bottom"
       />
 
-      <div className="absolute z-20 top-[8%] left-[-8px] sm:left-[-20px] animate-float">
+      <div className="absolute z-20 top-[8%] right-[-8px] sm:right-[-20px] animate-float">
         <ResultCard icon={TrendingDown} value="-12kg" label="خسارة دهون" tone="success" />
       </div>
       <div
-        className="absolute z-20 top-[38%] left-[-12px] sm:left-[-28px] animate-float"
+        className="absolute z-20 top-[38%] right-[-12px] sm:right-[-28px] animate-float"
         style={{ animationDelay: "0.8s" }}
       >
         <ResultCard icon={TrendingUp} value="+4.7kg" label="كتلة عضلية" tone="primary" />
       </div>
       <div
-        className="absolute z-20 top-[66%] left-[-6px] sm:left-[-16px] animate-float"
+        className="absolute z-20 top-[66%] right-[-6px] sm:right-[-16px] animate-float"
         style={{ animationDelay: "1.6s" }}
       >
         <ResultCard icon={Zap} value="+85%" label="طاقة ولياقة" tone="success" />
