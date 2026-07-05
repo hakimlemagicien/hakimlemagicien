@@ -40,6 +40,7 @@ export type Database = {
           training_mode: string | null
           updated_at: string
           phone: string | null
+          user_id: string | null
         }
         Insert: {
           access_token?: string
@@ -66,6 +67,7 @@ export type Database = {
           training_mode?: string | null
           updated_at?: string
           phone?: string | null
+          user_id?: string | null
         }
         Update: {
           access_token?: string
@@ -92,6 +94,7 @@ export type Database = {
           training_mode?: string | null
           updated_at?: string
           phone?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -369,7 +372,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      lead_status: "pending_lead" | "plan_selected" | "payment_submitted"
+      lead_status: "pending_lead" | "plan_selected" | "payment_submitted" | "active"
       payment_method:
         | "binance"
         | "paypal"
@@ -517,7 +520,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      lead_status: ["pending_lead", "plan_selected", "payment_submitted"],
+      lead_status: ["pending_lead", "plan_selected", "payment_submitted", "active"],
       payment_method: [
         "binance",
         "paypal",

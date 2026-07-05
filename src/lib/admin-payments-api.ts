@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  invokeAdminAcceptPayment,
+  type AcceptPaymentOnboardingResult,
+} from "@/lib/payment-notifications-api";
+
+export type { AcceptPaymentOnboardingResult };
 
 const PAYMENT_PROOFS_BUCKET = "payment-proofs";
 const PROOF_SIGNED_URL_TTL_SECONDS = 3600;
@@ -54,6 +60,14 @@ export async function updateLeadPaymentStatus(
     p_payment_status: status,
   });
   if (error) throw error;
+}
+
+/** Confirm payment in DB, then invite/link client auth account (server edge function). */
+export async function acceptLeadPayment(
+  leadId: string,
+): Promise<AcceptPaymentOnboardingResult> {
+  await updateLeadPaymentStatus(leadId, "confirmed");
+  return invokeAdminAcceptPayment(leadId);
 }
 
 export function normalizeProofPath(proofPath: string): string {

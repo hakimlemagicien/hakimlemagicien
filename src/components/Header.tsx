@@ -2,7 +2,8 @@ import { Menu } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { LEGAL_ROUTES } from "@/lib/site-legal";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "الرئيسية", hash: undefined },
@@ -56,12 +57,43 @@ function isNavItemActive(pathname: string, currentHash: string, itemHash?: strin
   return currentHash === itemHash;
 }
 
+function AuthNavLink({ className, onNavigate }: { className: string; onNavigate?: () => void }) {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(Boolean(data.session));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(Boolean(session));
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  if (loggedIn) {
+    return (
+      <Link to="/dashboard" onClick={onNavigate} className={className}>
+        حسابي
+      </Link>
+    );
+  }
+
+  return (
+    <Link to="/auth" onClick={onNavigate} className={className}>
+      تسجيل الدخول
+    </Link>
+  );
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const whatsapp = "https://wa.me/971505129019";
   const pathname = useLocation({ select: (l) => l.pathname });
   const currentHash = useLocation({ select: (l) => l.hash.replace(/^#/, "") });
   const closeMenu = () => setOpen(false);
+
+  const authLinkClass =
+    "inline-flex items-center justify-center rounded-full border-2 border-border px-4 py-2 text-sm font-bold text-foreground transition-all hover:border-primary hover:text-primary";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white lg:bg-background/90 border-b border-border/40 lg:border-border/60 lg:backdrop-blur-md">
@@ -88,7 +120,8 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-3">
+          <AuthNavLink className={authLinkClass} />
           <a
             href={whatsapp}
             target="_blank"
@@ -127,6 +160,12 @@ export function Header() {
                 </li>
               );
             })}
+            <li className="pt-2">
+              <AuthNavLink
+                onNavigate={closeMenu}
+                className="block rounded-lg px-4 py-3 text-base font-bold text-foreground hover:bg-muted"
+              />
+            </li>
             <li className="pt-2 mt-2 border-t border-border">
               <div className="px-4 py-2 text-[11px] font-black text-neutral-400">روابط قانونية</div>
             </li>

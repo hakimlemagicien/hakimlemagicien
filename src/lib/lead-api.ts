@@ -3,6 +3,7 @@ import type { Json } from "@/integrations/supabase/types";
 import type { LeadCredentials } from "@/lib/lead-storage";
 import { setLeadCredentials } from "@/lib/lead-storage";
 import type { PaymentMethod } from "@/lib/payment-method-map";
+import { notifyAdminReceiptUpload } from "@/lib/payment-notifications-api";
 
 const PAYMENT_PROOFS_BUCKET = "payment-proofs";
 
@@ -148,5 +149,6 @@ export async function submitPaymentProof(
 ): Promise<string> {
   const proofPath = await uploadPaymentProof(credentials, file);
   await markPaymentSubmitted(credentials, proofPath);
+  void notifyAdminReceiptUpload(credentials.leadId, credentials.accessToken);
   return proofPath;
 }

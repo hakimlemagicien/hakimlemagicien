@@ -13,6 +13,7 @@ import {
   formatDate,
   formatPaymentMethod,
   openProofInNewTab,
+  acceptLeadPayment,
   updateLeadPaymentStatus,
   type AdminSubmittedLead,
 } from "@/lib/admin-payments-api";
@@ -84,8 +85,18 @@ function AdminPaymentsPage() {
 
     setActionId(leadId);
     try {
-      await updateLeadPaymentStatus(leadId, status);
-      setLeads((prev) => prev.filter((row) => row.id !== leadId));
+      if (status === "confirmed") {
+        const result = await acceptLeadPayment(leadId);
+        setLeads((prev) => prev.filter((row) => row.id !== leadId));
+        if (result.warning === "lead_has_no_email") {
+          alert("تم قبول الدفع، لكن لا يوجد بريد للعميل — لم يُرسل دعوة حساب.");
+        } else if (result.message) {
+          alert(result.message);
+        }
+      } else {
+        await updateLeadPaymentStatus(leadId, status);
+        setLeads((prev) => prev.filter((row) => row.id !== leadId));
+      }
     } catch (err) {
       console.error(err);
       alert(`تعذر ${label} الطلب.`);
