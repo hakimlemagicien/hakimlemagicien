@@ -348,6 +348,20 @@ export type Database = {
         Args: { p_payload: Json }
         Returns: Json
       }
+      get_my_membership: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          tier: "free" | "essential" | "premium" | "vip" | "admin"
+          is_free: boolean
+          is_paid: boolean
+          is_active: boolean
+          subscription_id: string | null
+          starts_at: string | null
+          ends_at: string | null
+          days_remaining: number
+          features: Json
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

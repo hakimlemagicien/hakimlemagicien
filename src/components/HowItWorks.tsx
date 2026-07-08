@@ -6,10 +6,6 @@ import {
   ClipboardList,
   CheckCircle2,
   ArrowLeft,
-  Target,
-  ShieldCheck,
-  Zap,
-  Award,
   Wifi,
   BatteryFull,
   Signal,
@@ -60,12 +56,6 @@ const steps = [
   },
 ];
 
-const trustFeatures = [
-  { Icon: Award, title: "فعال", text: "نظام proven لتحقيق النتائج" },
-  { Icon: Zap, title: "سريع", text: "خطة جاهزة خلال دقائق" },
-  { Icon: ShieldCheck, title: "آمن", text: "بياناتك محمية 100%" },
-  { Icon: Target, title: "دقيق", text: "تحليل شامل لبياناتك" },
-];
 
 const ASSESSMENT_CHECKLIST = [
   { label: "المعلومات الأساسية", progress: 25 },
@@ -313,7 +303,7 @@ export function HowItWorks() {
       <div className="container mx-auto px-4 -mt-[30px]">
         <div className="text-center max-w-2xl mx-auto -mt-[30px]">
           <h2 className="origin-top text-[37px] font-[Tajawal] font-extrabold leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[52px] lg:scale-[0.926] lg:text-[71px]">
-            كيف <span className="inline-block translate-y-[2px] text-primary">يعمل</span> التقييم؟
+            كيف <span className="inline-block translate-y-[2px] text-primary">تعمل</span> المنصة
           </h2>
           <div
             aria-hidden
@@ -373,96 +363,6 @@ export function HowItWorks() {
           </div>
         </div>
 
-        <div className="relative mt-10 lg:mt-16">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-3 top-4 bottom-0 rounded-2xl bg-[#1A1816]/20 shadow-[inset_0_3px_10px_rgba(15,23,42,0.12)] lg:inset-x-4 lg:rounded-3xl"
-          />
-
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-2 rounded-2xl bg-[#FF6B00]/20 blur-2xl animate-warning-card-outer-glow lg:-inset-3 lg:rounded-3xl"
-          />
-
-          <div
-            className="relative overflow-hidden rounded-2xl border border-white/[0.10] bg-gradient-to-br from-[#252220] via-[#1A1818] to-[#232019] p-4 shadow-[0_1px_0_rgba(255,255,255,0.07)_inset,0_20px_44px_-16px_rgba(255,107,0,0.24),0_14px_36px_-16px_rgba(15,23,42,0.42)] ring-1 ring-white/[0.06] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:p-5 lg:rounded-3xl lg:p-6"
-            style={{
-              opacity: secIn ? 1 : 0,
-              transform: secIn ? "translateY(-8px) scale(1)" : "translateY(18px) scale(0.97)",
-              boxShadow: secIn
-                ? "0 1px 0 rgba(255,255,255,0.09) inset, 0 24px 52px -18px rgba(255,107,0,0.28), 0 18px 44px -18px rgba(15,23,42,0.52), 0 0 0 1px rgba(255,107,0,0.12)"
-                : undefined,
-              transitionDelay: "400ms",
-            }}
-          >
-            <span
-              className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl lg:rounded-3xl"
-              aria-hidden
-            >
-              <span
-                className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/14 to-transparent"
-              />
-            </span>
-            <span
-              className="pointer-events-none absolute inset-0 rounded-2xl animate-warning-card-inner-glow lg:rounded-3xl"
-              aria-hidden
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 h-px animate-warning-card-border-pulse bg-gradient-to-r from-transparent via-white/25 to-transparent"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#FF6B00]/[0.12] blur-3xl animate-warning-card-outer-glow"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute bottom-4 left-1/4 h-20 w-20 opacity-30"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(255,107,0,0.5) 1px, transparent 1.5px)",
-                backgroundSize: "10px 10px",
-              }}
-            />
-
-            <div className="relative z-10 flex flex-col gap-4 sm:gap-5">
-              <div className="min-w-0 text-center font-[Tajawal]">
-                <h3 className="text-[22px] font-black leading-[1.2] tracking-tight sm:text-[25px] lg:text-[27px]">
-                  <span className="block text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
-                    تقييم دقيق، برنامج مخصص،
-                  </span>
-                  <span className="mt-0.5 block text-[#FF6B00] [text-shadow:0_1px_3px_rgba(0,0,0,0.35)]">
-                    نتائج حقيقية.
-                  </span>
-                </h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-white/80 sm:text-[14px] lg:text-[15px] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-                  كل خطوة تقربك أكثر من أفضل نسخة من نفسك.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-                {trustFeatures.map((f) => (
-                  <div
-                    key={f.title}
-                    className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] p-2.5 backdrop-blur-[2px] sm:gap-3 sm:p-3"
-                  >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/15 bg-white/10 shadow-[0_4px_14px_-6px_rgba(255,107,0,0.35)] ring-1 ring-[#FF6B00]/15 sm:h-10 sm:w-10">
-                      <f.Icon className="h-4 w-4 shrink-0 text-[#FF8A3D] sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
-                    </div>
-                    <div className="min-w-0 text-right">
-                      <p className="text-[12px] font-extrabold text-white sm:text-[13px] [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
-                        {f.title}
-                      </p>
-                      <p className="mt-0.5 text-[10px] leading-snug text-white/75 sm:text-[11px] [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
-                        {f.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

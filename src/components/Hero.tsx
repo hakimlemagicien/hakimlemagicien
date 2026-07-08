@@ -31,14 +31,6 @@ const features = [
   { icon: LineChart, label: "نتائج قابلة للقياس" },
 ];
 
-/** RTL visual order: نتائج → متابعة → تغذية → تدريب (right to left) */
-const mobileFeatures = [
-  { icon: LineChart, label: "نتائج قابلة للقياس" },
-  { icon: CalendarCheck, label: "متابعة دورية" },
-  { icon: Utensils, label: "خطة تغذية مخصصة" },
-  { icon: Dumbbell, label: "خطة تدريب مخصصة" },
-];
-
 const CLIENT_COUNT_LABEL = formatSocialProofClientCount();
 
 const HERO_CYCLING_PHRASES = [
@@ -63,7 +55,7 @@ const HERO_WIDTH_HOLDER_PHRASE = HERO_CYCLING_PHRASES.reduce((longest, phrase) =
 );
 
 const HERO_LINE_FONT_CLASS =
-  "font-[Tajawal] text-[clamp(20px,5vw,76px)] sm:text-[clamp(28px,5.5vw,92px)] lg:text-[clamp(48px,6.5vw,118px)] leading-none text-[#FF6B00]";
+  "font-[Tajawal] text-[clamp(18px,5vw,74px)] sm:text-[clamp(28px,5.5vw,92px)] lg:text-[clamp(48px,6.5vw,118px)] leading-none text-[#FF6B00]";
 
 function CyclingHeroLine({
   className = "",
@@ -277,38 +269,6 @@ function FeatureCard({ icon: Icon, label }: { icon: typeof Dumbbell; label: stri
   );
 }
 
-function MobileFeatureCard({
-  icon: Icon,
-  label,
-  index = 0,
-}: {
-  icon: typeof Dumbbell;
-  label: string;
-  index?: number;
-}) {
-  return (
-    <div className="flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-xl border border-black/[0.04] bg-white px-1 py-1.5 shadow-[0_2px_8px_-3px_rgba(0,0,0,0.07)]">
-      <div
-        className="relative h-[27px] w-[27px] shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#FF6B00]/20 via-[#FF6B00]/10 to-[#FF6B00]/5 animate-feature-icon-glow"
-        style={{ animationDelay: `${index * 0.35}s` }}
-      >
-        <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-          <span
-            className="absolute -inset-y-3 -left-1/2 h-[200%] w-[200%] animate-feature-icon-shine bg-gradient-to-r from-transparent via-white/70 to-transparent"
-            style={{ animationDelay: `${index * 0.35 + 0.5}s` }}
-          />
-        </span>
-        <span className="relative z-10 flex h-full w-full items-center justify-center">
-          <Icon className="h-3.5 w-3.5 text-[#FF6B00]" strokeWidth={2.25} />
-        </span>
-      </div>
-      <span className="max-w-full text-center font-[Tajawal] text-[8px] font-medium leading-tight text-foreground line-clamp-2">
-        {label}
-      </span>
-    </div>
-  );
-}
-
 function ResultCard({
   icon: Icon,
   value,
@@ -486,9 +446,34 @@ function MobileHero({ onCtaOutOfView }: { onCtaOutOfView: (outOfView: boolean) =
 
   return (
     <div className="lg:hidden px-4 pb-8 pt-3">
+      <div className="mt-[18px] flex justify-center">
+        <div className="relative inline-flex rounded-full p-[1.5px] animate-hero-badge-glow-pulse">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-[-1px] overflow-hidden rounded-full"
+          >
+            <span
+              className="absolute inset-[-120%] animate-hero-badge-border-spin"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, transparent 0deg, transparent 220deg, rgba(255,107,0,0.15) 260deg, #FF6B00 300deg, #FFB347 330deg, transparent 360deg)",
+              }}
+            />
+          </span>
+          <div className="relative z-[1] inline-flex items-center gap-1.5 rounded-full border border-[#F4E7D8] bg-white px-3.5 py-[7px] shadow-[0_6px_16px_-10px_rgba(15,23,42,0.15)]">
+            <span className="grid h-6 w-6 place-items-center rounded-full border border-[#F4E7D8] bg-[#FFF8F1] text-primary">
+              <Star className="h-3 w-3 fill-current" />
+            </span>
+            <p className="text-center font-[Tajawal] text-[13px] font-extrabold leading-[1.12] tracking-tight text-black">
+              منصة رقم 1 لبناء افضل نسخة من نفسك
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Headline */}
-      <h1 className="mt-[10px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground">
-        أحصل على برنامج تدريبي وغذائي
+      <h1 className="mt-[30px] text-center font-[Tajawal] text-[28px] font-extrabold leading-[1.12] tracking-tight text-foreground">
+        احصل على برنامجك الخاص
         <CyclingHeroLine className="mt-[30px]" />
       </h1>
 
@@ -496,12 +481,6 @@ function MobileHero({ onCtaOutOfView }: { onCtaOutOfView: (outOfView: boolean) =
       <p className="mx-auto -mt-[69px] max-w-[310px] text-center font-[Tajawal] text-[13px] font-medium leading-[1.55] text-muted-foreground">
         أجب على مجموعة أسئلة قصيرة، واحصل على خطة تدريب وغذاء مصممة خصيصًا لهدفك.
       </p>
-
-      <div className="mt-2 grid grid-cols-4 gap-2.5">
-        {mobileFeatures.map((f, i) => (
-          <MobileFeatureCard key={f.label} {...f} index={i} />
-        ))}
-      </div>
 
       {/* Coach visual */}
       <div className="mt-2">

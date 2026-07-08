@@ -4,9 +4,7 @@ import { Hero } from "@/components/Hero";
 import { HeroProblemTransition } from "@/components/HeroProblemTransition";
 import { TrustStatistics } from "@/components/TrustStatistics";
 import { ProblemSection } from "@/components/ProblemSection";
-import { Results90 } from "@/components/Results90";
 import HowItWorks from "@/components/HowItWorks";
-import WhatYouGet from "@/components/WhatYouGet";
 import SuccessStories from "@/components/SuccessStories";
 import PricingTransparency from "@/components/PricingTransparency";
 import FAQ from "@/components/FAQ";
@@ -44,8 +42,6 @@ function Index() {
           <ProblemSection />
         </div>
         <HowItWorks />
-        <Results90 />
-        <WhatYouGet />
         <SuccessStories />
         <PricingTransparency />
         <FAQ />

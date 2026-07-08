@@ -7,12 +7,19 @@ import type { Swiper as SwiperType } from "swiper";
 import {
   ArrowLeft,
   Calendar,
+  CalendarDays,
+  ChartNoAxesCombined,
   ChevronsLeft,
+  Droplets,
   Dumbbell,
+  Ruler,
+  Salad,
   Scale,
+  Search,
   Star,
   Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import khaledBefore from "@/assets/خالد قبل.jpg";
 import khaledAfter from "@/assets/خالد بعد.jpg";
 import samirBefore from "@/assets/سمير قبل.jpg";
@@ -576,32 +583,27 @@ function StoriesPrimaryBadge({ inView }: { inView: boolean }) {
         aria-hidden
         className="h-px w-7 bg-gradient-to-l from-[#FF6B00]/50 via-[#FF6B00]/18 to-transparent"
       />
-      <div className="relative">
+      <div className="relative inline-flex rounded-full p-[1.5px] animate-hero-badge-glow-pulse">
         <span
           aria-hidden
-          className="pointer-events-none absolute -inset-1 rounded-full bg-[#FF6B00]/18 blur-md"
-        />
-        <span
-          className="relative inline-flex min-h-[29px] min-w-[175px] items-center justify-center gap-1 rounded-full bg-gradient-to-br from-[#FF6B00]/14 via-white to-[#FF6B00]/10 px-3 py-1 shadow-[0_10px_30px_-12px_rgba(255,107,0,0.45)] ring-1 ring-[#FF6B00]/25 transition-all duration-700 [direction:ltr]"
+          className="pointer-events-none absolute inset-[-1px] overflow-hidden rounded-full"
         >
-          <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden>
-            <span
-              className="absolute -inset-y-2 -left-1/2 h-[200%] w-[55%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/55 to-transparent"
-            />
-          </span>
           <span
-            className="relative z-10 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full bg-white shadow-[0_3px_10px_rgba(255,107,0,0.24)] ring-1 ring-[#FF6B00]/20"
-          >
-            <span
-              aria-hidden
-              className="absolute inset-[0.5px] rounded-full bg-[#FF6B00]/18 animate-pulse-soft"
-            />
-            <Star className="relative z-10 h-3 w-3 fill-[#FF6B00] text-[#FF6B00]" strokeWidth={0} />
-          </span>
-          <span className="relative z-10 font-[Tajawal] text-[12px] font-extrabold tracking-[0.02em] text-[#FF6B00] [direction:rtl]">
-            قصص نجاح عملائنا
-          </span>
+            className="absolute inset-[-120%] animate-hero-badge-border-spin"
+            style={{
+              background:
+                "conic-gradient(from 0deg, transparent 0deg, transparent 220deg, rgba(255,107,0,0.15) 260deg, #FF6B00 300deg, #FFB347 330deg, transparent 360deg)",
+            }}
+          />
         </span>
+        <div className="relative z-[1] inline-flex items-center gap-1.5 rounded-full border border-[#F4E7D8] bg-white px-3.5 py-[7px] shadow-[0_6px_16px_-10px_rgba(15,23,42,0.15)]">
+          <span className="grid h-6 w-6 place-items-center rounded-full border border-[#F4E7D8] bg-[#FFF8F1] text-primary">
+            <Star className="h-3 w-3 fill-current" />
+          </span>
+          <p className="text-center font-[Tajawal] text-[13px] font-extrabold leading-[1.12] tracking-tight text-black">
+            قصص نجاح عملائنا
+          </p>
+        </div>
       </div>
       <span
         aria-hidden
@@ -631,7 +633,7 @@ function StoriesPrimaryScreen() {
           }}
         >
           <h2
-            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(14px,6vw,20px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
+            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(19px,6vw,25px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
           >
             <span className="success-stories-primary-title-line text-[#111]">نتائج حقيقية</span>
             <br />
@@ -664,7 +666,7 @@ function StoriesPrimaryScreen() {
         >
           أكثر من 10,000 عميل حول العالم
           <br />
-          غيروا حياتهم مع حكيم .
+          غيروا حياتهم داخل المنصة مع كوتش حكيم .
         </p>
       </div>
 
@@ -678,6 +680,119 @@ function StoriesCloneScreen() {
     <div className="success-stories-clone-screen relative mx-auto max-w-[430px] px-[18px] pb-6 pt-0">
       <StoriesCloneSlider />
       <StoriesCloneCTA />
+    </div>
+  );
+}
+
+const PLATFORM_FEATURES: {
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  iconWrap: string;
+  iconColor: string;
+}[] = [
+  {
+    title: "متابعة الماء",
+    description: "تذكير وشرب كميات كافية",
+    icon: Droplets,
+    iconWrap: "bg-[#E8F3FF]",
+    iconColor: "text-[#3B82F6]",
+  },
+  {
+    title: "خطة غذائية",
+    description: "وجبات شهية ومتوازنة",
+    icon: Salad,
+    iconWrap: "bg-[#E9F9EF]",
+    iconColor: "text-[#22C55E]",
+  },
+  {
+    title: "برنامج يومي",
+    description: "تمارين محددة لكل يوم",
+    icon: CalendarDays,
+    iconWrap: "bg-[#EAF2FF]",
+    iconColor: "text-[#3B82F6]",
+  },
+  {
+    title: "دعم ومتابعة",
+    description: "متابعة مستمرة ودعم عند الحاجة",
+    icon: Search,
+    iconWrap: "bg-[#F3E8FF]",
+    iconColor: "text-[#A855F7]",
+  },
+  {
+    title: "التقدم",
+    description: "رسوم بيانية وتقارير لمتابعة النتائج",
+    icon: ChartNoAxesCombined,
+    iconWrap: "bg-[#E9F9EF]",
+    iconColor: "text-[#22C55E]",
+  },
+  {
+    title: "القياسات",
+    description: "تتبع وزنك وأبعادك وتطورك",
+    icon: Ruler,
+    iconWrap: "bg-[#FFF1E6]",
+    iconColor: "text-[#FF6B00]",
+  },
+];
+
+function PlatformInsideScreen() {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>(0.12);
+
+  return (
+    <div
+      ref={ref}
+      className="platform-inside-screen relative mx-auto max-w-[430px] px-[18px] pb-10 pt-2"
+    >
+      <div className="text-center">
+        <h2
+          className="font-[Tajawal] text-[22px] font-extrabold leading-[1.3] tracking-tight text-[#0F172A] transition-all duration-700 sm:text-[24px]"
+          style={{
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(14px)",
+          }}
+        >
+          ماذا ستحصل داخل المنصة؟
+        </h2>
+        <p
+          className="mt-2 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B] transition-all duration-700"
+          style={{
+            opacity: inView ? 1 : 0,
+            transform: inView ? "translateY(0)" : "translateY(14px)",
+            transitionDelay: "100ms",
+          }}
+        >
+          كل الأدوات التي تحتاجها في رحلة واحدة
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-2.5 sm:gap-3">
+        {PLATFORM_FEATURES.map((feature, index) => {
+          const Icon = feature.icon;
+          return (
+            <article
+              key={feature.title}
+              className="flex flex-col items-center rounded-[18px] border border-[#E8E4DE] bg-white px-2 py-4 text-center shadow-[0_8px_24px_-16px_rgba(15,23,42,0.18)] transition-all duration-700"
+              style={{
+                opacity: inView ? 1 : 0,
+                transform: inView ? "translateY(0)" : "translateY(16px)",
+                transitionDelay: `${140 + index * 60}ms`,
+              }}
+            >
+              <span
+                className={`grid h-11 w-11 place-items-center rounded-full ${feature.iconWrap}`}
+              >
+                <Icon className={`h-5 w-5 ${feature.iconColor}`} strokeWidth={2.1} />
+              </span>
+              <h3 className="mt-3 font-[Tajawal] text-[12px] font-extrabold leading-snug text-[#0F172A]">
+                {feature.title}
+              </h3>
+              <p className="mt-1.5 font-[Tajawal] text-[10px] font-medium leading-[1.45] text-[#64748B]">
+                {feature.description}
+              </p>
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -700,6 +815,7 @@ export default function SuccessStories() {
 
       <StoriesPrimaryScreen />
       <StoriesCloneScreen />
+      <PlatformInsideScreen />
     </section>
   );
 }

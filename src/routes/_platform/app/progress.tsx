@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Ruler, Scale, Target, TrendingDown } from "lucide-react";
 import { PlatformPageHeader, PlatformStack } from "@/components/platform/layout/PlatformLayout";
+import { UpgradeCta } from "@/components/platform/shared/PlaceholderState";
+import { useMembership } from "@/hooks/useMembership";
 import { PROGRESS_SEED } from "@/lib/platform/seed-content";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,9 @@ function StatCard({
 }
 
 function ProgressDashboardPage() {
+  // Weight logging stays available for free users (CEO Home Hub §4.7).
+  // Full advanced analytics can still upsell later without locking the basics.
+  const { features, is_paid } = useMembership();
   const p = PROGRESS_SEED;
   const totalToLose = p.startWeight - p.goalWeight;
   const lostSoFar = p.startWeight - p.currentWeight;
@@ -41,6 +46,7 @@ function ProgressDashboardPage() {
   const maxW = Math.max(...weights);
   const minW = Math.min(...weights, p.goalWeight);
   const range = Math.max(maxW - minW, 1);
+  const showAdvanced = features.progress_tracking || is_paid;
 
   return (
     <PlatformStack>
@@ -107,32 +113,42 @@ function ProgressDashboardPage() {
         </div>
       </section>
 
-      <section className="platform-card p-4">
-        <div className="flex items-center gap-2">
-          <Ruler className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-black text-foreground">القياسات</h2>
-        </div>
-        <ul className="mt-3 flex flex-col gap-2.5">
-          {p.measurements.map((m) => (
-            <li key={m.id} className="flex items-center justify-between text-sm">
-              <span className="text-foreground">{m.label}</span>
-              <span className="flex items-center gap-2">
-                <span className="font-black text-foreground">{m.value}</span>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-[11px] font-bold",
-                    m.change.startsWith("-")
-                      ? "bg-secondary-soft text-success"
-                      : "bg-primary-soft text-primary",
-                  )}
-                >
-                  {m.change}
+      {showAdvanced ? (
+        <section className="platform-card p-4">
+          <div className="flex items-center gap-2">
+            <Ruler className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-black text-foreground">القياسات</h2>
+          </div>
+          <ul className="mt-3 flex flex-col gap-2.5">
+            {p.measurements.map((m) => (
+              <li key={m.id} className="flex items-center justify-between text-sm">
+                <span className="text-foreground">{m.label}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-black text-foreground">{m.value}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[11px] font-bold",
+                      m.change.startsWith("-")
+                        ? "bg-secondary-soft text-success"
+                        : "bg-primary-soft text-primary",
+                    )}
+                  >
+                    {m.change}
+                  </span>
                 </span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <section className="platform-card space-y-3 p-4 text-right">
+          <h2 className="text-sm font-black text-foreground">قياسات الجسم المتقدمة</h2>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            تسجيل الوزن متاح مجاناً. فعّل برنامجك لفتح قياسات الجسم التفصيلية والتقارير المتقدمة.
+          </p>
+          <UpgradeCta />
+        </section>
+      )}
     </PlatformStack>
   );
 }

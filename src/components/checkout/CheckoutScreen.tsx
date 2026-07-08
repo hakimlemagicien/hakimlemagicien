@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Bitcoin,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/lead-api";
 import { getLeadCredentials } from "@/lib/lead-storage";
 import { mapBankToPaymentMethod } from "@/lib/payment-method-map";
+import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
 import { AgreementCheckbox } from "./AgreementCheckbox";
 import { BankTransferModal } from "./BankTransferModal";
 import { CheckoutFooter } from "./CheckoutFooter";
@@ -86,6 +88,7 @@ type CheckoutScreenProps = {
 };
 
 export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps) {
+  const queryClient = useQueryClient();
   const [method, setMethod] = useState<CheckoutMethodId>("bank");
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [transferConfirmed, setTransferConfirmed] = useState(false);
@@ -120,6 +123,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
       console.error(error);
     } finally {
       setTransferSaving(false);
+      await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
     }
   };
 
@@ -132,6 +136,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
     try {
       await submitPaymentProof(credentials, file);
       setReceiptSubmitted(true);
+      await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
     } catch (error) {
       console.error(error);
       alert("حدث خطأ أثناء إرسال الإيصال. حاول مرة أخرى.");

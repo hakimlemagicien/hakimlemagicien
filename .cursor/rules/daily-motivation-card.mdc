@@ -1,0 +1,28 @@
+---
+description: Daily Motivation Card — streak, Hakim Points, next mission; home first card
+globs: src/components/platform/home/**/*.tsx,src/lib/platform/daily-motivation.ts,src/hooks/useStreak.ts,src/routes/_platform/app/index.tsx,src/routes/_platform/app/achievements.tsx
+alwaysApply: false
+---
+
+# Daily Motivation Card (CEO — Official)
+
+First card on `/app` home. Not a stats strip — the daily return engine.
+
+## Required content
+
+1. **سلسلة الإنجاز** (streak) + dynamic motivation copy — never frame as “login days”
+2. **Hakim Points** — official currency label (not «النقاط»)
+3. **المهمة التالية** — one dynamic next action from task state (+ points hint)
+
+## Rules
+
+- Card is tappable → `/app/achievements`
+- Points **never** awarded for login alone (`useStreak` must not grant login points)
+- Points come from workouts, meals, water, measurements, challenges, achievements
+- Keep structure extensible for Level / badges / seasonal rewards later
+
+## Code
+
+- Engine: `src/lib/platform/daily-motivation.ts`
+- UI: `DailyMotivationCard` in `HomeSections.tsx`
+- Policy: Handbook §4.6

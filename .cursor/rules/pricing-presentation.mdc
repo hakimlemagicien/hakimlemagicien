@@ -1,0 +1,61 @@
+---
+description: Official Pricing & Activation Strategy — plans, terms, CTAs, and purchase journey
+globs: src/components/PricingTransparency.tsx,src/components/platform/upgrade/**/*.tsx,src/components/checkout/**/*.tsx,src/routes/quiz.tsx,src/lib/pricing-presentation.ts,src/components/platform/shared/PlaceholderState.tsx,src/components/platform/home/HomeSections.tsx
+alwaysApply: false
+---
+
+# Pricing & Activation Strategy (CEO — Official)
+
+## Philosophy
+
+Do **not** sell a subscription.  
+**Activate a personal program** inside the Arabic digital platform.
+
+Primary CTA (locked features, upgrade, plan cards): **`فعّل برنامجك الآن`**  
+Never prefer «اشترك الآن» / «ادفع الآن» as the main activation CTA.  
+Order summary CTA: **`متابعة الدفع`**
+
+## Official catalog
+
+| Tier | Role |
+|------|------|
+| **Free** | Official entry for every user |
+| **Essential** | Core / main product |
+| **Premium** | Essential + extra services |
+| **VIP** | Highest personal follow-up |
+
+## Terms (paid only)
+
+Only **3 months** or **6 months**.  
+**No monthly** billing on the core product.  
+Mark 6 months as **أفضل قيمة** + show savings vs 2× 3-month.
+
+## Price card fields
+
+1. Official **total**
+2. **Duration**
+3. Illustrative **daily** (framing only)
+4. **Savings** when applicable
+
+Never imply daily cost is the charged amount.
+
+## Official purchase journey
+
+Free use → `فعّل برنامجك الآن` → choose tier → choose term → order summary → payment method → pay → activate membership → personal program.
+
+Screens stay one decision each:
+1. **Plan card** — value/features + **always-visible 3-month official price** (never hide price up front)
+2. Tap **`فعّل برنامجك الآن`** → compact **6-month discount upsell** animates in (checkbox / أفضل قيمة) without reshaping the base card
+3. Confirm CTA with selected term (default remains 3 months unless user marks 6)
+
+Order summary later: **`متابعة الدفع`**
+
+## Payments
+
+- **Instant** (Apple Pay / card / future PSP): activate immediately on success  
+- **Bank transfer**: account details → receipt upload → “قيد التفعيل / جاري المراجعة” → admin confirms → then unlock paid features (never before)
+
+## Code
+
+`src/lib/pricing-presentation.ts` — catalog + CTAs + formatters  
+Handbook §4.5–4.6 — policy source of truth

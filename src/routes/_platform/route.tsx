@@ -14,15 +14,8 @@ export const Route = createFileRoute("/_platform")({
 });
 
 function PlatformLayout() {
-  const { loading } = useMembership();
-
-  if (loading) {
-    return (
-      <div dir="rtl" className="grid min-h-screen place-items-center bg-background text-sm font-bold text-muted-foreground">
-        ...
-      </div>
-    );
-  }
+  // Membership now uses placeholder Free data, so we never blank the whole /app shell.
+  useMembership();
 
   return (
     <PlatformShell>

@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ChevronLeft, Dumbbell, Lock } from "lucide-react";
 import { PlatformPageHeader, PlatformStack } from "@/components/platform/layout/PlatformLayout";
+import { PreviewGate } from "@/components/platform/shared/PreviewGate";
+import { useMembership } from "@/hooks/useMembership";
 import {
   PROGRAM_DAYS_SEED,
   PROGRAM_OVERVIEW_SEED,
@@ -96,33 +98,40 @@ function DayRow({ day }: { day: ProgramDaySeed }) {
 }
 
 function ProgramOverviewPage() {
+  const { features } = useMembership();
   const overview = PROGRAM_OVERVIEW_SEED;
   const pct = Math.round((overview.currentDay / overview.totalDays) * 100);
+  const previewOnly = !features.workout_program;
 
   return (
-    <PlatformStack>
-      <PlatformPageHeader title="برنامجي" subtitle={overview.weekLabel} />
+    <PreviewGate
+      active={previewOnly}
+      reason="هذه معاينة لشكل برنامج التمارين. فعّل برنامجك الآن للاستفادة منه بالكامل."
+    >
+      <PlatformStack>
+        <PlatformPageHeader title="برنامجي" subtitle={overview.weekLabel} />
 
-      <section className="shrink-0 overflow-hidden rounded-2xl cta-gradient p-4 text-white shadow-cta">
-        <p className="text-xs text-white/85">{overview.subtitle}</p>
-        <p className="mt-1 text-lg font-black leading-tight">{overview.name}</p>
-        <div className="mt-4 flex items-center justify-between text-xs font-bold text-white/90">
-          <span>
-            اليوم {overview.currentDay} من {overview.totalDays}
-          </span>
-          <span>{pct}%</span>
-        </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/25">
-          <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
-        </div>
-      </section>
+        <section className="shrink-0 overflow-hidden rounded-2xl cta-gradient p-4 text-white shadow-cta">
+          <p className="text-xs text-white/85">{overview.subtitle}</p>
+          <p className="mt-1 text-lg font-black leading-tight">{overview.name}</p>
+          <div className="mt-4 flex items-center justify-between text-xs font-bold text-white/90">
+            <span>
+              اليوم {overview.currentDay} من {overview.totalDays}
+            </span>
+            <span>{pct}%</span>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/25">
+            <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
+          </div>
+        </section>
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-black text-foreground">أيام الأسبوع</h2>
-        {PROGRAM_DAYS_SEED.map((day) => (
-          <DayRow key={day.id} day={day} />
-        ))}
-      </div>
-    </PlatformStack>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-black text-foreground">أيام الأسبوع</h2>
+          {PROGRAM_DAYS_SEED.map((day) => (
+            <DayRow key={day.id} day={day} />
+          ))}
+        </div>
+      </PlatformStack>
+    </PreviewGate>
   );
 }

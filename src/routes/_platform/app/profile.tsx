@@ -10,14 +10,31 @@ export const Route = createFileRoute("/_platform/app/profile")({
 });
 
 function ProfilePage() {
-  const { tier, isPremium, displayName, loading } = useMembership();
+  const {
+    tier,
+    is_paid,
+    displayName,
+    days_remaining,
+    starts_at,
+    ends_at,
+  } = useMembership();
 
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/auth";
   }
 
-  if (loading) return null;
+  const tierLabel: Record<typeof tier, string> = {
+    visitor: "Visitor",
+    free: "Free",
+    essential: "Essential",
+    premium: "Premium",
+    vip: "VIP",
+    admin: "Admin",
+  }[tier];
+
+  const formatDate = (value: string | null) =>
+    value ? new Date(value).toLocaleDateString("ar-EG") : "—";
 
   return (
     <PlatformStack>
@@ -30,13 +47,16 @@ function ProfilePage() {
 
       <div className="platform-card p-4">
         <h2 className="text-sm font-bold text-muted-foreground">حالة الاشتراك</h2>
-        <p className="mt-2 text-lg font-black capitalize">{tier}</p>
+        <p className="mt-2 text-lg font-black">{tierLabel}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          {isPremium
-            ? "Premium — اشتراك نشط."
-            : "عضو مجاني — ترقية للوصول الكامل."}
+          {is_paid ? "اشتراك مدفوع نشط حسب بيانات العضوية." : "Free Membership"}
         </p>
-        {!isPremium ? (
+        <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+          <p>الأيام المتبقية: <span className="font-bold text-foreground">{days_remaining}</span></p>
+          <p>تاريخ البداية: <span className="font-bold text-foreground">{formatDate(starts_at)}</span></p>
+          <p>تاريخ النهاية: <span className="font-bold text-foreground">{formatDate(ends_at)}</span></p>
+        </div>
+        {!is_paid ? (
           <div className="mt-4">
             <UpgradeCta />
           </div>

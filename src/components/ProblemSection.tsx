@@ -134,30 +134,24 @@ export function ProblemSection() {
         </div>
 
         {/* Cards + Visual */}
-        <div className="relative mt-9 space-y-4 sm:space-y-5 lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:space-y-0">
-          {/* Cards column with timeline */}
+        <div className="relative mt-9 space-y-5 lg:mt-12 lg:grid lg:grid-cols-2 lg:items-center lg:gap-10 lg:space-y-0 xl:gap-12">
+          {/* Cards — 2×2 grid for better space use */}
           <div className="relative order-1">
-            <div className="absolute right-3 sm:right-4 top-6 bottom-6 w-[2px] bg-primary/15" />
-            <div
-              className="absolute right-3 sm:right-4 top-6 w-[2px] bg-primary transition-[height] duration-[1600ms] ease-out"
-              style={{ height: inView ? "calc(100% - 3rem)" : "0%" }}
-            />
-            <ol className="space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {PROBLEMS.map((p, i) => (
-                <li
+                <div
                   key={p.title}
-                  className="relative pr-10 sm:pr-12 transition-all duration-700"
+                  className="transition-all duration-700"
                   style={{
                     opacity: inView ? 1 : 0,
-                    transform: inView ? "translateY(0)" : "translateY(20px)",
-                    transitionDelay: `${i * 1000}ms`,
+                    transform: inView ? "translateY(0)" : "translateY(16px)",
+                    transitionDelay: `${i * 90}ms`,
                   }}
                 >
-                  <span className="absolute right-1.5 sm:right-2.5 top-10 h-3 w-3 rounded-full bg-primary ring-4 ring-[#F7F5F2] shadow-[0_0_0_3px_rgba(249,115,22,0.15)]" />
                   <ProblemCard problem={p} index={i} />
-                </li>
+                </div>
               ))}
-            </ol>
+            </div>
           </div>
 
           {/* Visual composition */}
@@ -176,33 +170,29 @@ export function ProblemSection() {
 function ProblemCard({ problem, index }: { problem: Problem; index: number }) {
   const Icon = problem.icon;
   return (
-    <div className="group rounded-[24px] border border-border/40 bg-white p-5 shadow-card transition-all duration-500 sm:p-6 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)]">
-      <div className="flex items-start gap-4 sm:gap-5">
+    <div className="group flex h-full flex-col rounded-[20px] border border-border/40 bg-white p-3.5 shadow-card transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_16px_40px_-18px_rgba(0,0,0,0.12)] sm:rounded-[24px] sm:p-5">
+      <div
+        className="relative mb-3 shrink-0 self-start animate-float-soft sm:mb-4"
+        style={{ animationDelay: `${index * 0.6}s` }}
+      >
         <div
-          className="relative shrink-0 animate-float-soft"
-          style={{ animationDelay: `${index * 0.6}s` }}
-        >
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-full bg-[#FF6B00]/25 blur-lg scale-90 opacity-60 transition-opacity duration-500 group-hover:opacity-80"
+          aria-hidden
+          className="absolute inset-0 scale-90 rounded-full bg-[#FF6B00]/25 opacity-60 blur-lg transition-opacity duration-500 group-hover:opacity-80"
+        />
+        <div className="relative grid h-11 w-11 place-items-center rounded-full border border-white/70 bg-gradient-to-br from-orange-50/90 via-white/85 to-[#FFF0E3]/90 shadow-[0_8px_22px_-10px_rgba(255,107,0,0.38),inset_0_1px_0_rgba(255,255,255,0.95)] ring-1 ring-[#FF6B00]/10 backdrop-blur-sm transition-all duration-500 group-hover:scale-105 sm:h-14 sm:w-14">
+          <Icon
+            className="h-5 w-5 text-[#FF6B00] sm:h-6 sm:w-6"
+            strokeWidth={2.25}
           />
-          <div
-            className="relative grid h-16 w-16 place-items-center rounded-full border border-white/70 bg-gradient-to-br from-orange-50/90 via-white/85 to-[#FFF0E3]/90 shadow-[0_8px_22px_-10px_rgba(255,107,0,0.38),inset_0_1px_0_rgba(255,255,255,0.95)] ring-1 ring-[#FF6B00]/10 backdrop-blur-sm transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_12px_30px_-10px_rgba(255,107,0,0.48)] sm:h-[72px] sm:w-[72px]"
-          >
-            <Icon
-              className="h-[30px] w-[30px] text-[#FF6B00] sm:h-[34px] sm:w-[34px]"
-              strokeWidth={2.25}
-            />
-          </div>
         </div>
-        <div className="min-w-0 flex-1 text-right">
-          <h3 className="text-lg font-extrabold leading-tight text-foreground sm:text-xl">
-            {problem.title}
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
-            {problem.description}
-          </p>
-        </div>
+      </div>
+      <div className="min-w-0 flex-1 text-right">
+        <h3 className="text-[13px] font-extrabold leading-snug text-foreground sm:text-base">
+          {problem.title}
+        </h3>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground sm:mt-2 sm:text-sm">
+          {problem.description}
+        </p>
       </div>
     </div>
   );
@@ -329,22 +319,17 @@ function ConfusedVisual({ active }: { active: boolean }) {
 
 function WarningBlock({ active }: { active: boolean }) {
   return (
-    <div className="relative mt-10 sm:mt-12 lg:mt-14">
+    <div className="relative mt-8 sm:mt-10 lg:mt-12">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-3 top-4 bottom-0 rounded-2xl bg-[#1A1816]/20 shadow-[inset_0_3px_10px_rgba(15,23,42,0.12)] lg:inset-x-4 lg:rounded-3xl"
+        className="pointer-events-none absolute -inset-1.5 rounded-2xl bg-[#FF6B00]/18 blur-xl animate-warning-card-outer-glow lg:rounded-3xl"
       />
 
       <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-2 rounded-2xl bg-[#FF6B00]/20 blur-2xl animate-warning-card-outer-glow lg:-inset-3 lg:rounded-3xl"
-      />
-
-      <div
-        className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#2A2521] via-[#1F1C18] to-[#2E2824] p-4 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_22px_48px_-14px_rgba(255,107,0,0.28),0_16px_40px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/[0.05] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:p-5 lg:rounded-3xl lg:p-6"
+        className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#2A2521] via-[#1F1C18] to-[#2E2824] px-3.5 py-3.5 shadow-[0_1px_0_rgba(255,255,255,0.06)_inset,0_22px_48px_-14px_rgba(255,107,0,0.28),0_16px_40px_-18px_rgba(15,23,42,0.45)] ring-1 ring-white/[0.05] transition-[transform,opacity,box-shadow] duration-700 ease-out sm:px-4 sm:py-4 lg:rounded-3xl lg:px-5 lg:py-4"
         style={{
           opacity: active ? 1 : 0,
-          transform: active ? "translateY(-8px) scale(1)" : "translateY(18px) scale(0.97)",
+          transform: active ? "translateY(-6px) scale(1)" : "translateY(14px) scale(0.97)",
           boxShadow: active
             ? "0 1px 0 rgba(255,255,255,0.08) inset, 0 28px 56px -16px rgba(255,107,0,0.32), 0 20px 48px -18px rgba(15,23,42,0.55), 0 0 0 1px rgba(255,107,0,0.14)"
             : undefined,
@@ -355,83 +340,53 @@ function WarningBlock({ active }: { active: boolean }) {
           className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl lg:rounded-3xl"
           aria-hidden
         >
-          <span
-            className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/14 to-transparent"
-          />
+          <span className="absolute inset-y-[-30%] left-0 h-[160%] w-[50%] animate-warning-card-shimmer bg-gradient-to-r from-transparent via-white/14 to-transparent" />
         </span>
         <span
           className="pointer-events-none absolute inset-0 rounded-2xl animate-warning-card-inner-glow lg:rounded-3xl"
           aria-hidden
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px animate-warning-card-border-pulse bg-gradient-to-r from-transparent via-white/25 to-transparent"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#FF6B00]/[0.12] blur-3xl animate-warning-card-outer-glow"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-4 left-1/4 h-20 w-20 opacity-30"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(255,107,0,0.5) 1px, transparent 1.5px)",
-            backgroundSize: "10px 10px",
-          }}
-        />
 
-        <div className="relative z-10 flex flex-col items-center gap-5 lg:flex-row lg:items-center lg:gap-8">
-          <div
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-white shadow-[0_8px_24px_-6px_rgba(255,107,0,0.65)] sm:h-14 sm:w-14 sm:rounded-2xl"
-            style={{
-              backgroundImage:
-                "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
-            }}
-          >
-            <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2.2} />
-          </div>
-
-          <div className="min-w-0 flex-1 text-center font-[Tajawal] lg:text-right">
-            <h3 className="text-[25px] font-black leading-[1.15] tracking-tight sm:text-[27px] lg:text-[29px]">
-              <span className="block text-white/95">المشكلة ليست فيك...</span>
-              <span className="block text-[#FF6B00]">المشكلة في الخطة التي تتبعها.</span>
-            </h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-white/60 sm:text-sm">
-              كل جسم مختلف، وكل هدف يحتاج استراتيجية خاصة — نتائج أسرع واستدامة أعلى.
-            </p>
-          </div>
-
-          <div className="w-full shrink-0 sm:w-auto lg:self-center">
-            <a
-              href="/quiz"
-              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-[#FF6B00]/35 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white/95 shadow-[0_8px_24px_-10px_rgba(255,107,0,0.45)] backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-300 sm:w-auto sm:px-6 hover:scale-[1.02] hover:border-[#FF6B00] hover:bg-[#FF6B00]/12 hover:shadow-[0_0_0_5px_rgba(255,107,0,0.18),0_16px_40px_-12px_rgba(255,107,0,0.5)] active:scale-[0.98] lg:py-3.5"
+        <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <div
+              className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white shadow-[0_6px_18px_-6px_rgba(255,107,0,0.65)] sm:h-10 sm:w-10"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, #ff8a3d 0%, #f97316 60%, #ea580c 100%)",
+              }}
             >
-              <span
-                className="pointer-events-none absolute -inset-1 rounded-full bg-[#FF6B00]/25 blur-md animate-warning-cta-glow"
-                aria-hidden
-              />
-              <span
-                className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
-                aria-hidden
-              >
-                <span
-                  className="absolute inset-y-[-20%] left-0 h-[140%] w-[45%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                />
-              </span>
-              <span
-                className="pointer-events-none absolute inset-0 rounded-full animate-warning-cta-inner-glow"
-                aria-hidden
-              />
-              <span className="relative z-10 transition-transform duration-300 group-hover:scale-[1.02]">
-                اكتشف الحل المناسب لك
-              </span>
-              <ArrowLeft
-                className="relative z-10 h-4 w-4 text-[#FF6B00] transition-transform duration-300 animate-warning-cta-arrow group-hover:-translate-x-1"
-                strokeWidth={2.5}
-              />
-            </a>
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.2} />
+            </div>
+
+            <div className="min-w-0 flex-1 text-right font-[Tajawal]">
+              <h3 className="text-[15px] font-black leading-[1.25] tracking-tight sm:text-[17px] lg:text-[18px]">
+                <span className="text-white/95">المشكلة ليست فيك... </span>
+                <span className="text-[#FF6B00]">المشكلة في الخطة التي تتبعها.</span>
+              </h3>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/60 sm:text-[13px]">
+                كل جسم مختلف، وكل هدف يحتاج استراتيجية خاصة — نتائج أسرع واستدامة أعلى.
+              </p>
+            </div>
           </div>
+
+          <a
+            href="/quiz"
+            className="group relative inline-flex w-full shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[#FF6B00]/35 bg-white/[0.06] px-4 py-2.5 text-[13px] font-bold text-white/95 shadow-[0_8px_24px_-10px_rgba(255,107,0,0.45)] backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-300 hover:scale-[1.02] hover:border-[#FF6B00] hover:bg-[#FF6B00]/12 hover:shadow-[0_0_0_5px_rgba(255,107,0,0.18),0_16px_40px_-12px_rgba(255,107,0,0.5)] active:scale-[0.98] sm:w-auto sm:px-5"
+          >
+            <span
+              className="pointer-events-none absolute -inset-1 rounded-full bg-[#FF6B00]/25 blur-md animate-warning-cta-glow"
+              aria-hidden
+            />
+            <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden>
+              <span className="absolute inset-y-[-20%] left-0 h-[140%] w-[45%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            </span>
+            <span className="relative z-10">اكتشف الحل المناسب لك</span>
+            <ArrowLeft
+              className="relative z-10 h-3.5 w-3.5 text-[#FF6B00] transition-transform duration-300 group-hover:-translate-x-1"
+              strokeWidth={2.5}
+            />
+          </a>
         </div>
       </div>
     </div>

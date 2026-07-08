@@ -17,6 +17,7 @@ type QuizStep =
   | "investment"
   | "bodyType"
   | "femaleBodyType"
+  | "trainingEnvironment"
   | "analysis"
   | "contact"
   | "congrats"
@@ -42,6 +43,7 @@ function applySnapshot(
     setActivityLevel: (v: string | undefined) => void;
     setInvestment: (v: string | undefined) => void;
     setBodyType: (v: string | undefined) => void;
+    setTrainingEnvironment: (v: "home" | "gym" | undefined) => void;
     setUserLocation: (v: "dubai" | "remote" | null) => void;
     setSelectedTierId: (v: "transform" | "pro" | "vip") => void;
   },
@@ -58,6 +60,7 @@ function applySnapshot(
   setters.setActivityLevel(saved.activityLevel);
   setters.setInvestment(saved.investment);
   setters.setBodyType(saved.bodyType);
+  setters.setTrainingEnvironment(saved.trainingEnvironment);
   setters.setUserLocation(saved.userLocation);
   setters.setSelectedTierId(saved.selectedTierId);
 }
@@ -86,6 +89,7 @@ export function useQuizProgress() {
   const [activityLevel, setActivityLevel] = useState<string | undefined>();
   const [investment, setInvestment] = useState<string | undefined>();
   const [bodyType, setBodyType] = useState<string | undefined>();
+  const [trainingEnvironment, setTrainingEnvironment] = useState<"home" | "gym" | undefined>();
   const [userLocation, setUserLocation] = useState<"dubai" | "remote" | null>(null);
   const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
 
@@ -105,6 +109,7 @@ export function useQuizProgress() {
         setActivityLevel,
         setInvestment,
         setBodyType,
+        setTrainingEnvironment,
         setUserLocation,
         setSelectedTierId,
       });
@@ -132,6 +137,7 @@ export function useQuizProgress() {
       activityLevel,
       investment,
       bodyType,
+      trainingEnvironment,
       userLocation,
       selectedTierId,
     };
@@ -152,6 +158,7 @@ export function useQuizProgress() {
     activityLevel,
     investment,
     bodyType,
+    trainingEnvironment,
     userLocation,
     selectedTierId,
   ]);
@@ -186,6 +193,8 @@ export function useQuizProgress() {
     setInvestment,
     bodyType,
     setBodyType,
+    trainingEnvironment,
+    setTrainingEnvironment,
     userLocation,
     setUserLocation,
     selectedTierId,

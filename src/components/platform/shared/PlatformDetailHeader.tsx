@@ -20,6 +20,7 @@ export function PlatformDetailHeader({
       <Link
         to={backTo}
         aria-label="رجوع"
+        data-preview-safe
         className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground transition active:scale-95"
       >
         <ChevronRight className="h-5 w-5" />

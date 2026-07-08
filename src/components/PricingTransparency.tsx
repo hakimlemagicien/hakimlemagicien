@@ -1,6 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
+import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
+import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
+import {
+  ACTIVATE_PROGRAM_CTA,
+  FREE_TIER,
+  PAID_TIERS,
+  type PaidTierCatalog,
+} from "@/lib/pricing-presentation";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -23,164 +31,149 @@ function useInView<T extends HTMLElement>(threshold = 0.12) {
   return { ref, inView };
 }
 
-const STEPS = [
-  {
-    emoji: "🎯",
-    step: "الخطوة الأولى",
-    title: "حدد أهدافك",
-    desc: "أجب عن مجموعة قصيرة من الأسئلة حتى نفهم احتياجاتك وأهدافك.",
-  },
-  {
-    emoji: "🧠",
-    step: "الخطوة الثانية",
-    title: "احصل على خطتك المناسبة",
-    desc: "يقوم النظام باقتراح الخطة التدريبية الأنسب بناءً على إجاباتك.",
-  },
-  {
-    emoji: "💳",
-    step: "الخطوة الثالثة",
-    title: "اطلع على السعر قبل الدفع",
-    desc: "سيتم عرض السعر النهائي وجميع تفاصيل الاشتراك قبل إتمام عملية الشراء، ولن يتم تحصيل أي مبلغ قبل موافقتك.",
-  },
-] as const;
+function FeatureCheck({ label }: { label: string }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#5C9E54]">
+        <Check className="h-3 w-3 text-white" strokeWidth={3} />
+      </span>
+      <span className="font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#334155]">
+        {label}
+      </span>
+    </li>
+  );
+}
+
+function PaidPlanCard({
+  plan,
+  index,
+  inView,
+}: {
+  plan: PaidTierCatalog;
+  index: number;
+  inView: boolean;
+}) {
+  const reveal = inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0";
+  const delay = { transitionDelay: `${index * 90}ms` } as const;
+
+  if (plan.id === "vip") {
+    return (
+      <VipGlassShell
+        className={`transition-all duration-700 ${reveal}`}
+        style={delay}
+      >
+        <h3 className="bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text font-[Tajawal] text-[22px] font-extrabold text-transparent">
+          {plan.name}
+        </h3>
+        <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-white/70">{plan.tagline}</p>
+        <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#D4AF78]/80">{plan.role}</p>
+
+        <ul className="mt-5 space-y-3 text-right">
+          {plan.features.map((feature) => (
+            <VipFeatureCheck key={feature} label={feature} />
+          ))}
+        </ul>
+
+        <PlanActivateBlock plan={plan} />
+      </VipGlassShell>
+    );
+  }
+
+  return (
+    <article
+      className={`relative overflow-hidden rounded-[22px] bg-white p-5 text-center shadow-[0_12px_32px_-18px_rgba(15,23,42,0.2)] transition-all duration-700 sm:p-6 ${
+        plan.popular ? "border-2 border-[#5C9E54]" : "border border-[#E8E4DE]"
+      } ${reveal}`}
+      style={delay}
+    >
+      {plan.popular ? (
+        <span className="absolute left-0 top-4 rounded-l-none rounded-r-md bg-[#5C9E54] px-3 py-1 font-[Tajawal] text-[11px] font-bold text-white shadow-sm">
+          المنتج الرئيسي
+        </span>
+      ) : null}
+
+      <h3 className="font-[Tajawal] text-[22px] font-extrabold text-[#0F172A]">{plan.name}</h3>
+      <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-[#64748B]">{plan.tagline}</p>
+      <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">{plan.role}</p>
+
+      <ul className="mt-5 space-y-3 text-right">
+        {plan.features.map((feature) => (
+          <FeatureCheck key={feature} label={feature} />
+        ))}
+      </ul>
+
+      <PlanActivateBlock plan={plan} />
+    </article>
+  );
+}
 
 export default function PricingTransparency() {
+  const free = useInView<HTMLDivElement>();
   const head = useInView<HTMLDivElement>();
   const cards = useInView<HTMLDivElement>();
-  const trust = useInView<HTMLDivElement>();
 
   return (
     <section
       id="pricing"
       dir="rtl"
-      className="relative w-full overflow-hidden bg-[linear-gradient(180deg,#FAF8F5_0%,#FFFFFF_55%,#FFFFFF_100%)] py-20 md:py-28 font-[Tajawal,Cairo,sans-serif]"
+      className="relative w-full overflow-hidden bg-[#FAF8F5] py-12 font-[Tajawal,Cairo,sans-serif] sm:py-16 lg:py-20"
     >
-      <div
-        className="pointer-events-none absolute right-8 top-24 hidden h-24 w-24 opacity-30 md:block"
-        style={{
-          backgroundImage: "radial-gradient(#F97316 1.2px, transparent 1.2px)",
-          backgroundSize: "12px 12px",
-        }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute left-8 top-24 hidden h-24 w-24 opacity-30 md:block"
-        style={{
-          backgroundImage: "radial-gradient(#F97316 1.2px, transparent 1.2px)",
-          backgroundSize: "12px 12px",
-        }}
-        aria-hidden
-      />
-
-      <div className="mx-auto max-w-7xl px-5 md:px-8">
-        {/* Header */}
+      <div className="relative mx-auto max-w-[430px] px-[18px] lg:max-w-5xl lg:px-8">
         <div
           ref={head.ref}
-          className={`text-center transition-all duration-700 ease-out ${
-            head.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          className={`text-center transition-all duration-700 ${
+            head.inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h2 className="text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
-            كيف يتم{" "}
-            <span className="inline-block translate-y-[2px] text-primary">تحديد السعر؟</span>
+          <h2 className="font-[Tajawal] text-[26px] font-extrabold leading-tight tracking-tight text-[#0F172A] sm:text-[30px]">
+            اختر الباقة المناسبة لك
           </h2>
-          <div
-            aria-hidden
-            className="relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden sm:max-w-sm lg:max-w-md"
-          >
-            <div className="h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" />
-            {head.inView && (
-              <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent" />
-            )}
-          </div>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-loose text-neutral-500 md:text-lg">
-            عملية واضحة وبسيطة — تعرف ما ستدفعه قبل أي التزام.
+          <p className="mt-2 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B] sm:text-[14px]">
+            نبني الثقة أولاً — ثم نفعّل برنامجك الشخصي داخل المنصة
           </p>
         </div>
 
-        {/* Step cards */}
         <div
-          ref={cards.ref}
-          className="mx-auto mt-12 grid max-w-6xl grid-cols-1 gap-4 md:mt-16 md:grid-cols-3 md:gap-5"
-        >
-          {STEPS.map((item, index) => (
-            <article
-              key={item.step}
-              className={`group relative overflow-hidden rounded-[24px] bg-white p-5 ring-1 ring-neutral-100 shadow-[0_8px_28px_-12px_rgba(15,23,42,0.12)] transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_16px_40px_-12px_rgba(249,115,22,0.28)] hover:ring-orange-100 md:p-6 ${
-                cards.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-              }`}
-              style={{ transitionDelay: `${index * 90}ms` }}
-            >
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full bg-[#FF6B00]/[0.06] blur-2xl transition-opacity group-hover:opacity-100"
-              />
-              <div className="relative text-right">
-                <div className="flex items-center justify-end gap-3">
-                  <span className="text-[11px] font-extrabold text-primary">{item.step}</span>
-                  <span
-                    className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] ring-1 ring-orange-100"
-                    aria-hidden
-                  >
-                    {item.emoji}
-                  </span>
-                </div>
-                <h3 className="mt-4 text-[18px] font-black leading-snug text-neutral-900 md:text-[19px]">
-                  {item.title}
-                </h3>
-                <p className="mt-2.5 text-[13.5px] leading-[1.75] text-neutral-600 md:text-[14px]">
-                  {item.desc}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {/* Trust box */}
-        <div
-          ref={trust.ref}
-          className={`mx-auto mt-8 max-w-4xl transition-all duration-700 ease-out md:mt-10 ${
-            trust.inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+          ref={free.ref}
+          className={`mt-8 rounded-[22px] border border-[#E8E4DE] bg-white p-5 shadow-[0_14px_36px_-20px_rgba(15,23,42,0.22)] transition-all duration-700 sm:mt-10 sm:p-6 ${
+            free.inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <div className="relative overflow-hidden rounded-[28px] border border-[#FF6B00]/15 bg-gradient-to-br from-[#FFF8F2] via-white to-[#FFF6EE] p-6 shadow-[0_14px_40px_-20px_rgba(255,107,0,0.35)] md:p-8">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[#FF6B00]/10 blur-3xl"
-            />
-            <div className="relative flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:gap-5">
-              <div className="grid h-14 w-14 shrink-0 place-items-center self-center rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF8A3D] shadow-[0_12px_28px_-12px_rgba(255,107,0,0.55)] sm:self-start">
-                <ShieldCheck className="h-7 w-7 text-white" strokeWidth={2.2} />
-              </div>
-              <div className="min-w-0 flex-1 text-center sm:text-right">
-                <h3 className="font-[Tajawal] text-[20px] font-black text-neutral-900 md:text-[22px]">
-                  شفافية كاملة في التسعير
-                </h3>
-                <p className="mt-2.5 text-[13.5px] leading-[1.8] text-neutral-600 md:text-[15px]">
-                  نؤمن بالشفافية الكاملة. سيتم عرض سعر اشتراكك النهائي وجميع المزايا المشمولة وتفاصيل
-                  الفوترة قبل أي عملية دفع، دون أي رسوم مخفية.
-                </p>
-              </div>
-            </div>
+          <div className="text-right">
+            <p className="font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">{FREE_TIER.role}</p>
+            <h3 className="mt-1 font-[Tajawal] text-[26px] font-extrabold leading-tight text-[#5C9E54] sm:text-[28px]">
+              {FREE_TIER.name}
+            </h3>
+            <p className="mt-1.5 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B]">
+              {FREE_TIER.tagline}
+            </p>
           </div>
-        </div>
 
-        {/* CTA */}
-        <div className="mt-10 flex justify-center md:mt-12">
+          <ul className="mt-5 space-y-3">
+            {FREE_TIER.features.map((item) => (
+              <FeatureCheck key={item} label={item} />
+            ))}
+          </ul>
+
           <Link
             to="/quiz"
-            className="group inline-flex items-center justify-center gap-3 rounded-full bg-primary px-8 py-4 text-[15px] font-black text-primary-foreground shadow-[0_16px_36px_-14px_rgba(255,107,0,0.65)] transition-all hover:-translate-y-0.5 active:scale-[0.98] md:px-10 md:py-[18px] md:text-base"
+            className="mt-6 flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#5C9E54] px-4 py-3.5 font-[Tajawal] text-[15px] font-extrabold text-white shadow-[0_10px_24px_-12px_rgba(92,158,84,0.7)] transition hover:bg-[#528F4B]"
           >
-            <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
-            ابدأ التقييم
+            {ACTIVATE_PROGRAM_CTA}
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-white">
+              <ArrowLeft className="h-3.5 w-3.5 text-[#5C9E54]" strokeWidth={2.6} />
+            </span>
           </Link>
         </div>
 
-        {/* Footer note */}
-        <p className="mx-auto mt-6 max-w-3xl text-center text-[11.5px] leading-relaxed text-neutral-500 md:mt-8 md:text-[12.5px]">
-          جميع الأسعار تُعرض بوضوح قبل الدفع، ويمكنك مراجعة تفاصيل الاشتراك كاملة قبل تأكيد عملية
-          الشراء.
-        </p>
+        <div
+          ref={cards.ref}
+          className="mt-8 grid grid-cols-1 gap-4 lg:mt-10 lg:grid-cols-3 lg:gap-5"
+        >
+          {PAID_TIERS.map((plan, index) => (
+            <PaidPlanCard key={plan.id} plan={plan} index={index} inView={cards.inView} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ChevronLeft, Clock, Dumbbell, Flame } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
+import { PreviewGate } from "@/components/platform/shared/PreviewGate";
+import { useMembership } from "@/hooks/useMembership";
 import {
   WORKOUT_DAY_SEED,
   WORKOUT_EXERCISES_SEED,
@@ -60,31 +62,38 @@ function ExerciseRow({ exercise, index }: { exercise: WorkoutExerciseSeed; index
 }
 
 function WorkoutDayPage() {
+  const { features } = useMembership();
   const day = WORKOUT_DAY_SEED;
+  const previewOnly = !features.workout_program;
 
   return (
-    <PlatformStack>
-      <PlatformDetailHeader title={day.title} subtitle={day.meta} backTo="/app/program" />
+    <PreviewGate
+      active={previewOnly}
+      reason="هذه معاينة لشكل شاشة التمرين. فعّل برنامجك الآن لبدء التمرين فعلياً."
+    >
+      <PlatformStack>
+        <PlatformDetailHeader title={day.title} subtitle={day.meta} backTo="/app/program" />
 
-      <div className="flex items-stretch gap-2">
-        <StatCard icon={Dumbbell} value={`${day.exercisesCount}`} label="تمارين" />
-        <StatCard icon={Clock} value={`${day.durationMin} د`} label="المدة" />
-        <StatCard icon={Flame} value={`${day.calories}`} label="سعرة" />
-      </div>
+        <div className="flex items-stretch gap-2">
+          <StatCard icon={Dumbbell} value={`${day.exercisesCount}`} label="تمارين" />
+          <StatCard icon={Clock} value={`${day.durationMin} د`} label="المدة" />
+          <StatCard icon={Flame} value={`${day.calories}`} label="سعرة" />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-black text-foreground">قائمة التمارين</h2>
-        {WORKOUT_EXERCISES_SEED.map((exercise, index) => (
-          <ExerciseRow key={exercise.id} exercise={exercise} index={index} />
-        ))}
-      </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-black text-foreground">قائمة التمارين</h2>
+          {WORKOUT_EXERCISES_SEED.map((exercise, index) => (
+            <ExerciseRow key={exercise.id} exercise={exercise} index={index} />
+          ))}
+        </div>
 
-      <Link
-        to="/app/program/workout/exercise"
-        className="flex h-12 shrink-0 items-center justify-center rounded-xl cta-gradient text-sm font-black text-white shadow-cta transition active:scale-[0.99]"
-      >
-        ابدأ التمرين
-      </Link>
-    </PlatformStack>
+        <Link
+          to="/app/program/workout/exercise"
+          className="flex h-12 shrink-0 items-center justify-center rounded-xl cta-gradient text-sm font-black text-white shadow-cta transition active:scale-[0.99]"
+        >
+          ابدأ التمرين
+        </Link>
+      </PlatformStack>
+    </PreviewGate>
   );
 }

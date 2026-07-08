@@ -1,5 +1,6 @@
 import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ExternalLink,
@@ -21,6 +22,7 @@ import {
   type AdminApprovedLead,
   type AdminSubmittedLead,
 } from "@/lib/admin-payments-api";
+import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
 
 export const Route = createFileRoute("/admin/payments")({
   ssr: false,
@@ -37,6 +39,7 @@ export const Route = createFileRoute("/admin/payments")({
 });
 
 function AdminPaymentsPage() {
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"pending" | "approved">("pending");
   const [leads, setLeads] = useState<AdminSubmittedLead[]>([]);
   const [approvedLeads, setApprovedLeads] = useState<AdminApprovedLead[]>([]);
@@ -99,6 +102,7 @@ function AdminPaymentsPage() {
       if (status === "approved") {
         const result = await acceptLeadPayment(leadId);
         setLeads((prev) => prev.filter((row) => row.id !== leadId));
+        await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
         if (result.warning === "lead_has_no_email") {
           alert("تم قبول الدفع، لكن لا يوجد بريد للعميل — لم يُرسل دعوة حساب.");
         } else if (result.message) {

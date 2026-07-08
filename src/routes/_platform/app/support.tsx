@@ -10,7 +10,8 @@ export const Route = createFileRoute("/_platform/app/support")({
 });
 
 function SupportPage() {
-  const { isPremium } = useMembership();
+  const { features } = useMembership();
+  const canContactCoach = features.limited_coach_contact || features.personal_followup;
 
   return (
     <PlatformStack>
@@ -19,7 +20,7 @@ function SupportPage() {
         title="الأسئلة الشائعة والتواصل — Phase 2"
         description="Placeholder للأسئلة الشائعة ونموذج التواصل."
       />
-      {isPremium ? (
+      {canContactCoach ? (
         <a
           href={WHATSAPP_COACH_URL}
           target="_blank"
@@ -30,7 +31,7 @@ function SupportPage() {
         </a>
       ) : (
         <div className="platform-card p-4 text-center">
-          <p className="text-sm text-muted-foreground">الدردشة مع الكوتش متاحة لـ Premium فقط.</p>
+          <p className="text-sm text-muted-foreground">الدردشة مع الكوتش متاحة حسب صلاحيات عضويتك.</p>
           <div className="mt-4">
             <UpgradeCta />
           </div>

@@ -1,0 +1,30 @@
+---
+description: Home Hub Strategy — daily return engine, free value, message of day, activate CTA, goal content
+globs: src/components/platform/home/**/*.tsx,src/lib/platform/home-hub.ts,src/lib/platform/seed-content.ts,src/routes/_platform/app/index.tsx,src/routes/_platform/app/water.tsx,src/routes/_platform/app/progress.tsx,src/routes/_platform/app/tools/**/*.tsx,src/components/platform/shared/DailyHubOverlay.tsx
+alwaysApply: false
+---
+
+# Home Hub Strategy (CEO — Official)
+
+`/app` home is a daily digital coach — not a generic dashboard.
+
+## Page order
+
+1. `DailyMotivationCard` (streak / Hakim Points / next mission)
+2. **رسالة اليوم** (personal)
+3. **مهامك اليوم** (dynamic)
+4. **فعّل برنامجك الآن** CTA — free users only, right after tasks
+5. Quick glance / progress summary (decision metrics)
+6. **محتوى يناسب هدفك** (goal-filtered — never title «محتوى مميز»)
+
+## Daily tasks rules
+
+- Mix changes by day / user state / tier — not a fixed 4-card wall
+- Free always unlocks: water · weight logging · calorie calculator
+- Never show a free home full of locks
+- Paid workout/nutrition appear when entitled; do not dominate free UX with locks
+
+## Code
+
+- Engine: `src/lib/platform/home-hub.ts`
+- Policy: Handbook §4.7

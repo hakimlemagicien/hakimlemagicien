@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Check,
   Lock,
+  Home,
   Dumbbell,
   Flame,
   PersonStanding,
@@ -120,7 +121,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "trainingEnvironment" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
 function QuizPage() {
   const {
@@ -153,6 +154,8 @@ function QuizPage() {
     setInvestment,
     bodyType,
     setBodyType,
+    trainingEnvironment,
+    setTrainingEnvironment,
     userLocation,
     setUserLocation,
     selectedTierId,
@@ -260,25 +263,32 @@ function QuizPage() {
       {step === "bodyType" && (
         <BodyTypeScreen
           onBack={() => goBack("investment")}
-          onNext={(value) => selectAndGo("analysis", () => setBodyType(value))}
+          onNext={(value) => selectAndGo("trainingEnvironment", () => setBodyType(value))}
         />
       )}
       {step === "femaleBodyType" && (
         <FemaleBodyTypeScreen
           onBack={() => goBack("investment")}
-          onNext={(value) => selectAndGo("analysis", () => setBodyType(value))}
+          onNext={(value) => selectAndGo("trainingEnvironment", () => setBodyType(value))}
+        />
+      )}
+      {step === "trainingEnvironment" && (
+        <TrainingEnvironmentScreen
+          initialValue={trainingEnvironment}
+          onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
+          onNext={(value) => selectAndGo("analysis", () => setTrainingEnvironment(value))}
         />
       )}
       {step === "analysis" && (
         <AnalysisScreen
-          onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
+          onBack={() => goBack("trainingEnvironment")}
           onDone={() => transitionTo("contact")}
         />
       )}
       {step === "contact" && (
         <ContactScreen
           quizAnswers={quizAnswers}
-          onBack={() => goBack(gender === "female" ? "femaleBodyType" : "bodyType")}
+          onBack={() => goBack("trainingEnvironment")}
           onDone={(name, isDubai, phone, city) =>
             selectAndGo("congrats", () => {
               setUserName(name);
@@ -486,7 +496,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
         <ProgressHeader current={1} />
         <div className="mt-5 text-center">
           <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 leading-tight">
-            لنبدأ رحلتك مع <span style={{ color: "#FF6B00" }}>حكيم</span>
+            لنبدأ رحلتك مع كوتش <span style={{ color: "#FF6B00" }}>حكيم</span>
           </h1>
           <h2 className="mt-3 text-xl sm:text-2xl font-bold text-neutral-900 leading-snug">
             ما هو جنسك؟
@@ -3102,6 +3112,185 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
   );
 }
 
+const TRAINING_ENVIRONMENTS = [
+  {
+    id: "home" as const,
+    title: "المنزل",
+    icon: Home,
+    desc: "تمارين باستخدام وزن الجسم أو المعدات المنزلية مع مرونة في الوقت والمكان.",
+    features: [
+      "لا يحتاج إلى نادي رياضي",
+      "مناسب للمبتدئين",
+      "مرونة في أوقات التدريب",
+      "يعتمد على المعدات المنزلية المتوفرة",
+    ],
+  },
+  {
+    id: "gym" as const,
+    title: "النادي الرياضي",
+    icon: Dumbbell,
+    desc: "برنامج يعتمد على أجهزة النادي والأوزان الحرة لتحقيق أفضل النتائج.",
+    features: [
+      "الاستفادة من جميع الأجهزة",
+      "تمارين احترافية",
+      "تنوع أكبر في التمارين",
+      "مناسب لمن يتدرب داخل الجيم",
+    ],
+  },
+];
+
+function TrainingEnvironmentScreen({
+  initialValue,
+  onBack,
+  onNext,
+}: {
+  initialValue?: "home" | "gym";
+  onBack: () => void;
+  onNext: (value: "home" | "gym") => void;
+}) {
+  const ORANGE = "#FF6B00";
+  const GREEN = "#22C55E";
+  const [selected, setSelected] = useState<"home" | "gym" | null>(initialValue ?? null);
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
+    >
+      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
+        <ProgressHeader current={9} onBack={onBack} />
+
+        {/* Title */}
+        <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
+          <h1 className="text-[22px] font-extrabold text-[#1F1F1F] leading-tight">
+            أين ستتدرب؟
+          </h1>
+          <p className="mt-1.5 text-[12.5px] text-gray-500 font-medium leading-snug">
+            اختر المكان الذي ستلتزم فيه بالتدريب حتى نصمم لك البرنامج الأنسب.
+          </p>
+          <div className="mx-auto mt-1.5 h-[3px] w-10 rounded-full" style={{ background: ORANGE }} />
+        </div>
+
+        {/* Cards */}
+        <div className="mt-3 flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-1">
+          {TRAINING_ENVIRONMENTS.map((env, i) => {
+            const active = selected === env.id;
+            const Icon = env.icon;
+            return (
+              <button
+                key={env.id}
+                type="button"
+                onClick={() => {
+                  triggerSelectionHaptic();
+                  setSelected(env.id);
+                }}
+                aria-pressed={active}
+                className="relative w-full text-right rounded-[22px] bg-white p-4 transition-all duration-200 active:scale-[0.99]"
+                style={{
+                  border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
+                  boxShadow: active
+                    ? "0 16px 34px -14px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)"
+                    : "0 8px 20px -12px rgba(0,0,0,0.16), 0 2px 5px -3px rgba(0,0,0,0.05)",
+                  transform: active ? "scale(1.02)" : "scale(1)",
+                  animation: `fadeUp .5s ease-out ${i * 70}ms both`,
+                }}
+              >
+                {/* Selected checkmark */}
+                <div
+                  className="absolute top-3.5 left-3.5 grid h-7 w-7 place-items-center rounded-full text-white"
+                  style={{
+                    background: ORANGE,
+                    opacity: active ? 1 : 0,
+                    transform: active ? "scale(1)" : "scale(0.6)",
+                    transition: "opacity .2s ease, transform .2s ease",
+                    boxShadow: "0 6px 14px -6px rgba(255,107,0,0.6)",
+                  }}
+                >
+                  <Check size={16} strokeWidth={3} />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div
+                    className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-2xl transition-all duration-200"
+                    style={{
+                      background: active
+                        ? "linear-gradient(135deg, #FFE8D6 0%, #FFD3AE 100%)"
+                        : "linear-gradient(135deg, #F4F1EC 0%, #ECE7DF 100%)",
+                    }}
+                  >
+                    <Icon
+                      size={32}
+                      strokeWidth={2.2}
+                      style={{ color: active ? ORANGE : "#9AA0A6", transition: "color .2s ease" }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[17px] font-extrabold text-[#1F1F1F] leading-tight">
+                      {env.title}
+                    </div>
+                    <p className="mt-1 text-[12px] text-gray-500 font-medium leading-snug">
+                      {env.desc}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1.5">
+                  {env.features.map((f) => (
+                    <div key={f} className="flex flex-row-reverse items-center gap-1.5 text-right">
+                      <Check size={13} strokeWidth={3} style={{ color: GREEN }} className="shrink-0" />
+                      <span className="text-[11px] text-gray-600 font-medium leading-tight">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
+
+          {/* Info card */}
+          <div
+            className="rounded-[18px] p-3.5 flex flex-row-reverse items-start gap-3 text-right"
+            style={{ background: "#FFF6EF", border: "1px solid #FDE7D3" }}
+          >
+            <div
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white"
+              style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
+            >
+              <Lightbulb size={18} style={{ color: ORANGE }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13.5px] font-extrabold text-[#1F1F1F]">
+                لماذا نسألك هذا السؤال؟
+              </div>
+              <p className="mt-1 text-[12px] text-gray-600 leading-relaxed">
+                يساعدنا اختيار مكان التدريب على إنشاء برنامج تدريبي يناسب الأدوات والمعدات المتوفرة
+                لديك، مما يمنحك تجربة أكثر دقة وفعالية.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="pt-3">
+          <button
+            type="button"
+            disabled={!selected}
+            onClick={() => selected && onNext(selected)}
+            className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
+            style={{
+              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
+              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
+              opacity: selected ? 1 : 0.7,
+            }}
+          >
+            <span>التالي</span>
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
   const [pct, setPct] = useState(0);
   const DURATION = 10000;
@@ -4558,10 +4747,13 @@ function PricingPriceRing({ tier, mounted, className = "" }: { tier: PricingTier
       <div className="relative h-full grid place-items-center text-center">
         <div>
           <div className="flex items-baseline justify-center gap-0.5" dir="ltr">
-            <span className="pri-heading text-[24px] leading-none" style={{ color: tier.primary }}>{tier.pricePerDay}</span>
             <span className="pri-heading text-[13px]" style={{ color: tier.primary }}>$</span>
+            <span className="pri-heading text-[22px] leading-none" style={{ color: tier.primary }}>{tier.totalPrice}</span>
           </div>
-          <div className="text-[9px] text-neutral-500 font-bold mt-0.5">في اليوم فقط</div>
+          <div className="text-[9px] text-neutral-500 font-bold mt-0.5">الإجمالي · 90 يوم</div>
+          <div className="mt-0.5 text-[8px] font-medium text-neutral-400">
+            حوالي {tier.pricePerDay}$ يومياً
+          </div>
         </div>
       </div>
     </div>
@@ -4605,7 +4797,7 @@ function PricingValueCompare({ tier }: { tier: PricingTier }) {
 
           <div className="flex-1 text-right min-w-0 flex flex-col justify-center">
             <div className="pri-heading text-[11px] leading-snug" style={{ color: tier.primary }}>
-              {tier.pricePerDay}$ في اليوم...
+              حوالي {tier.pricePerDay}$ يومياً...
             </div>
             <p className="mt-1 text-[9px] text-neutral-600 leading-[1.55]">
               أقل من ثمن كوب قهوة ووجبة خفيفة، لكنه استثمار حقيقي في صحتك ولياقتك خلال{" "}
@@ -5070,7 +5262,10 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
                     <span>{tab.label}</span>
                   </div>
                   <div className="mt-0.5 text-[10px] font-bold text-neutral-500">
-                    {tierMeta.pricePerDay}$ / يوم
+                    ${tierMeta.totalPrice} · 90 يوم
+                  </div>
+                  <div className="text-[9px] font-medium text-neutral-400">
+                    ≈ ${tierMeta.pricePerDay}/يوم
                   </div>
                 </button>
               );
@@ -5126,7 +5321,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
                         ["--rate-glow-soft" as string]: `${tier.primary}22`,
                       }}
                     >
-                      <span className="relative z-[1]">بمعدل ${tier.totalPrice} لمدة 90 يوم</span>
+                      <span className="relative z-[1]">السعر الرسمي ${tier.totalPrice} لمدة 90 يوم</span>
                     </div>
                   </div>
 

@@ -44,7 +44,7 @@ export type DailyTaskSeed = {
   title: string;
   subtitle: string;
   href: string;
-  icon: "workout" | "nutrition" | "water" | "measurements";
+  icon: "workout" | "nutrition" | "water" | "measurements" | "calories" | "recipe" | "challenge";
   iconBg: string;
   iconColor: string;
   status: "done" | "arrow" | "progress";

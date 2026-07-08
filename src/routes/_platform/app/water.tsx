@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_platform/app/water")({
 });
 
 function WaterTrackerPage() {
+  // Free always: water tracking is unlocked for all members (CEO Home Hub §4.7).
   const { goal, glassMl } = WATER_SEED;
   const [current, setCurrent] = useState(WATER_SEED.current);
 
@@ -25,7 +26,7 @@ function WaterTrackerPage() {
       <PlatformDetailHeader
         title="شرب الماء"
         subtitle={`الهدف ${goal} أكواب يومياً`}
-        backTo="/app/nutrition"
+        backTo="/app"
       />
 
       <section className="platform-card flex flex-col items-center p-6">

@@ -6,10 +6,6 @@ import {
   Check,
   Star,
   Zap,
-  ShieldCheck,
-  Headphones,
-  Trophy,
-  Target,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -67,13 +63,6 @@ function useCount(target: number, active: boolean, duration = 1600) {
   }, [active, target, duration]);
   return v;
 }
-
-const TRUST_STRIP = [
-  { Icon: ShieldCheck, title: "آمن وموثوق", desc: "بياناتك محفية 100%" },
-  { Icon: Headphones, title: "دعم مستمر", desc: "فريق الدعم معك طوال رحلتك" },
-  { Icon: Trophy, title: "نتائج حقيقية", desc: "برامج مثبتة ونتائج مضمونة" },
-  { Icon: Target, title: "خطط مخصصة", desc: "كل برنامج مصمم خصيصاً لك" },
-];
 
 const CARD_SHADOW = "0 10px 40px rgba(0,0,0,0.08)";
 
@@ -369,16 +358,15 @@ export default function FinalCTA() {
           }}
         >
           <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
-            جاهز تحول حقيقي
-            <br />
-            <span className="inline-block translate-y-[2px] text-primary">في 90 يوماً؟</span>
+            رحلتك{" "}
+            <span className="inline-block translate-y-[2px] text-primary">تبدأ اليوم</span>
           </h2>
 
           <p
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed sm:text-lg"
             style={{ color: "#6B7280" }}
           >
-            انضم إلى آلاف العملاء الذين حققوا نتائج حقيقية ومستدامة مع برنامج حكيم كوتشينج.
+            انضم إلى آلاف العملاء الذين حققوا نتائج حقيقية داخل المنصة مع كوتش حكيم.
           </p>
         </div>
 
@@ -460,52 +448,6 @@ export default function FinalCTA() {
           </Link>
 
           <FinalCtaSocialProof active={inView} count={count} />
-        </div>
-
-        {/* Bottom trust strip — closing section */}
-        <div
-          className={[
-            "mt-10 rounded-3xl border border-orange-100/80 bg-gradient-to-br from-white via-[#FFF8F1] to-white p-6 shadow-[0_20px_50px_-24px_rgba(15,23,42,0.14)] ring-1 ring-orange-100/50 sm:mt-12 sm:p-8",
-            "transition-all duration-700 ease-out delay-300",
-            inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5",
-          ].join(" ")}
-        >
-          <p className="mb-6 text-center font-[Tajawal] text-sm font-extrabold tracking-tight text-foreground sm:text-base">
-            قبل أن تبدأ — <span className="text-primary">هذا ما تحصل عليه</span>
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-3">
-            {TRUST_STRIP.map(({ Icon, title, desc }, i) => (
-              <div
-                key={title}
-                className="group flex flex-col items-center gap-2.5 rounded-2xl border border-orange-50/90 bg-white/90 p-3 text-center shadow-[0_4px_18px_-10px_rgba(15,23,42,0.1)] transition-transform duration-300 hover:-translate-y-0.5 sm:gap-3 sm:p-4 lg:items-center"
-                style={{
-                  opacity: inView ? 1 : 0,
-                  transition: `opacity 600ms ease-out ${400 + i * 100}ms, transform 300ms ease-out`,
-                }}
-              >
-                <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#FFF6EE] via-white to-orange-50/90 text-primary ring-1 ring-orange-200/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_24px_-8px_rgba(249,115,22,0.38)] transition-transform duration-300 group-hover:scale-105 sm:h-14 sm:w-14">
-                  <span
-                    aria-hidden
-                    className="absolute inset-0 rounded-2xl bg-[#FF6B00]/15 blur-md opacity-80"
-                  />
-                  <Icon className="relative h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} />
-                </span>
-                <div className="min-w-0">
-                  <div className="font-[Tajawal] text-xs font-extrabold text-foreground sm:text-sm">
-                    {title}
-                  </div>
-                  <div className="mt-1 text-[10px] font-medium leading-snug text-muted-foreground sm:text-xs">
-                    {desc}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-6 text-center font-[Tajawal] text-xs font-medium text-muted-foreground sm:text-sm">
-            خطوتك الأولى مجانية — ابدأ التقييم واكتشف برنامجك المخصص
-          </p>
         </div>
       </div>
     </section>

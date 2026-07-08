@@ -57,6 +57,11 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
         <div className="text-[10px] font-bold text-neutral-500">السعر الإجمالي</div>
         <div className="mt-1 text-[26px] font-extrabold leading-none text-[#FF6B00]">{tier.totalPrice}</div>
         <div className="mt-1 text-[10px] font-bold text-neutral-500">USD · دفعة واحدة</div>
+        {tier.pricePerDay ? (
+          <div className="mt-1 text-[9px] font-medium text-neutral-400">
+            حوالي ${tier.pricePerDay} يومياً
+          </div>
+        ) : null}
       </div>
     </motion.div>
   );

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
+import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
+import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
 
 type PlaceholderStateProps = {
   title: string;
@@ -21,13 +22,22 @@ export function PlaceholderState({ title, description, action }: PlaceholderStat
   );
 }
 
-export function UpgradeCta({ className = "" }: { className?: string }) {
+export function UpgradeCta({
+  className = "",
+  reason = "فعّل برنامجك الشخصي للوصول إلى هذه الميزة وجميع أدوات المنصة.",
+}: {
+  className?: string;
+  reason?: string;
+}) {
+  const { openUpgrade } = useUpgradeFlow();
+
   return (
-    <Link
-      to="/quiz"
+    <button
+      type="button"
+      onClick={() => openUpgrade(reason)}
       className={`inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-cta transition hover:opacity-90 ${className}`}
     >
-      Upgrade — ابدأ التحليل المجاني
-    </Link>
+      {ACTIVATE_PROGRAM_CTA}
+    </button>
   );
 }

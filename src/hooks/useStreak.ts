@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "hakim_platform_streak_v1";
 const POINTS_KEY = "hakim_platform_points_v1";
+/** Seed until activity-based awards are wired (login never grants points). */
 const DEFAULT_POINTS = 230;
-const DAILY_POINTS = 10;
 
 type StreakState = {
   count: number;
@@ -51,6 +51,11 @@ function yesterdayKey() {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Daily streak + Hakim Points store.
+ * Opening the app continues the streak counter, but NEVER awards points for login.
+ * Points must come from workouts, meals, water, measurements, challenges, achievements.
+ */
 export function useStreak() {
   const [count, setCount] = useState(0);
   const [points, setPoints] = useState(DEFAULT_POINTS);
@@ -68,13 +73,12 @@ export function useStreak() {
     }
 
     const nextCount = current.lastVisit === yesterday ? current.count + 1 : 1;
-    const nextPoints = currentPoints + DAILY_POINTS;
-
     writeStreak({ count: nextCount, lastVisit: today });
-    writePoints(nextPoints);
+    // Persist points as-is — no login bonus.
+    writePoints(currentPoints);
     setCount(nextCount);
-    setPoints(nextPoints);
+    setPoints(currentPoints);
   }, []);
 
-  return { count, points };
+  return { count, points, hakimPoints: points };
 }

@@ -536,6 +536,34 @@
   transform-origin: center;
 }
 
+@keyframes hero-badge-border-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hero-badge-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 107, 0, 0.18),
+      0 6px 18px -10px rgba(255, 107, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 107, 0, 0.32),
+      0 10px 24px -8px rgba(255, 107, 0, 0.5);
+  }
+}
+
+@utility animate-hero-badge-border-spin {
+  animation: hero-badge-border-spin 3.2s linear infinite;
+}
+
+@utility animate-hero-badge-glow-pulse {
+  animation: hero-badge-glow-pulse 2.4s ease-in-out infinite;
+}
+
 @keyframes trust-stat-shadow-float {
   0%,
   100% {
@@ -837,3 +865,73 @@
   );
   animation: checkout-summary-shine 3.2s ease-in-out infinite;
 }
+
+@keyframes footer-bubble-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes footer-atmosphere {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.footer-bubble {
+  animation: footer-bubble-float 4.8s ease-in-out infinite;
+}
+
+.footer-atmosphere-dot {
+  animation: footer-atmosphere 5.2s ease-in-out infinite;
+}
+
+@keyframes vip-glass-shine {
+  0% {
+    transform: translateX(-130%) skewX(-16deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.55;
+  }
+  42% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateX(220%) skewX(-16deg);
+    opacity: 0;
+  }
+}
+
+.vip-glass-card {
+  border: 1px solid rgba(212, 175, 120, 0.38);
+  background:
+    linear-gradient(
+      155deg,
+      rgba(42, 30, 58, 0.92) 0%,
+      rgba(24, 18, 36, 0.88) 48%,
+      rgba(18, 14, 28, 0.94) 100%
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(212, 175, 120, 0.08) inset,
+    0 22px 48px -18px rgba(88, 28, 135, 0.55),
+    0 16px 36px -16px rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.vip-glass-shine {
+  animation: vip-glass-shine 5.5s ease-in-out infinite;
+}
+
