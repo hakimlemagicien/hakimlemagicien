@@ -3,14 +3,15 @@ name: Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production
   cancel-in-progress: true
 
 env:
-  VERCEL_ORG_ID: team_eyX81hAN1YDIzAamV6sDqB2v
-  VERCEL_PROJECT_ID: prj_LFPPUILSV8Iidd100J9EBcHThy7k
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   deploy:
@@ -26,6 +27,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate required Vercel secrets
+        run: |
+          missing=0
+          for key in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
       - name: Pull Vercel production env
         run: npx vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
         env:
@@ -35,6 +53,18 @@ jobs:
         run: npm run build
 
       - name: Deploy prebuilt output
-        run: npx vercel deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN"
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(npx vercel deploy --prebuilt --prod --yes --token "$VERCEL_TOKEN")
+          echo "deployment_url=$DEPLOYMENT_URL" >> "$GITHUB_OUTPUT"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Publish deployment summary
+        run: |
+          {
+            echo "## Production Deployment"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- URL: ${{ steps.deploy.outputs.deployment_url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
