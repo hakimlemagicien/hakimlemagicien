@@ -56,7 +56,7 @@ function AuthPage() {
 
       const { data } = await supabase.auth.getSession();
       if (!cancelled && data.session && mode !== "set-password") {
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/app" });
       }
       if (!cancelled) setReady(true);
     }
@@ -76,7 +76,7 @@ function AuthPage() {
         }
       }
       if (session && mode !== "set-password") {
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/app" });
       }
     });
 
@@ -101,7 +101,7 @@ function AuthPage() {
         const { error: updateError } = await supabase.auth.updateUser({ password });
         if (updateError) throw updateError;
         window.history.replaceState(null, "", window.location.pathname);
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/app" });
         return;
       }
 
@@ -110,7 +110,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/app`,
             data: { full_name: fullName, phone },
           },
         });

@@ -177,6 +177,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isQuiz = pathname.startsWith("/quiz");
+  const isPlatform = pathname.startsWith("/app");
 
   return (
     <MotionProvider>
@@ -185,8 +186,8 @@ function RootComponent() {
         <HashScrollHandler />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        {!isQuiz && <FloatingWhatsApp />}
-        {!isQuiz && <ScrollToTopButton />}
+        {!isQuiz && !isPlatform && <FloatingWhatsApp />}
+        {!isQuiz && !isPlatform && <ScrollToTopButton />}
       </QueryClientProvider>
     </MotionProvider>
   );

@@ -72,7 +72,7 @@ function AuthNavLink({ className, onNavigate }: { className: string; onNavigate?
 
   if (loggedIn) {
     return (
-      <Link to="/dashboard" onClick={onNavigate} className={className}>
+      <Link to="/app" onClick={onNavigate} className={className}>
         حسابي
       </Link>
     );

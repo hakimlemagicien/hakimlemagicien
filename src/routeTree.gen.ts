@@ -15,10 +15,22 @@ import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PlatformRouteRouteImport } from './routes/_platform/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
+import { Route as PlatformAppWaterRouteImport } from './routes/_platform/app/water'
+import { Route as PlatformAppSupportRouteImport } from './routes/_platform/app/support'
+import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
+import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
+import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/discover'
+import { Route as PlatformAppProgramIndexRouteImport } from './routes/_platform/app/program/index'
+import { Route as PlatformAppNutritionIndexRouteImport } from './routes/_platform/app/nutrition/index'
+import { Route as PlatformAppNutritionMealRouteImport } from './routes/_platform/app/nutrition/meal'
+import { Route as PlatformAppProgramWorkoutIndexRouteImport } from './routes/_platform/app/program/workout/index'
+import { Route as PlatformAppProgramWorkoutExerciseRouteImport } from './routes/_platform/app/program/workout/exercise'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -50,6 +62,10 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlatformRouteRoute = PlatformRouteRouteImport.update({
+  id: '/_platform',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -69,6 +85,65 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const PlatformAppIndexRoute = PlatformAppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppWaterRoute = PlatformAppWaterRouteImport.update({
+  id: '/app/water',
+  path: '/app/water',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppSupportRoute = PlatformAppSupportRouteImport.update({
+  id: '/app/support',
+  path: '/app/support',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppProgressRoute = PlatformAppProgressRouteImport.update({
+  id: '/app/progress',
+  path: '/app/progress',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppProfileRoute = PlatformAppProfileRouteImport.update({
+  id: '/app/profile',
+  path: '/app/profile',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppDiscoverRoute = PlatformAppDiscoverRouteImport.update({
+  id: '/app/discover',
+  path: '/app/discover',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppProgramIndexRoute = PlatformAppProgramIndexRouteImport.update({
+  id: '/app/program/',
+  path: '/app/program/',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppNutritionIndexRoute =
+  PlatformAppNutritionIndexRouteImport.update({
+    id: '/app/nutrition/',
+    path: '/app/nutrition/',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
+const PlatformAppNutritionMealRoute =
+  PlatformAppNutritionMealRouteImport.update({
+    id: '/app/nutrition/meal',
+    path: '/app/nutrition/meal',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
+const PlatformAppProgramWorkoutIndexRoute =
+  PlatformAppProgramWorkoutIndexRouteImport.update({
+    id: '/app/program/workout/',
+    path: '/app/program/workout/',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
+const PlatformAppProgramWorkoutExerciseRoute =
+  PlatformAppProgramWorkoutExerciseRouteImport.update({
+    id: '/app/program/workout/exercise',
+    path: '/app/program/workout/exercise',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +155,17 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/app/discover': typeof PlatformAppDiscoverRoute
+  '/app/profile': typeof PlatformAppProfileRoute
+  '/app/progress': typeof PlatformAppProgressRoute
+  '/app/support': typeof PlatformAppSupportRoute
+  '/app/water': typeof PlatformAppWaterRoute
+  '/app/': typeof PlatformAppIndexRoute
+  '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
+  '/app/nutrition/': typeof PlatformAppNutritionIndexRoute
+  '/app/program/': typeof PlatformAppProgramIndexRoute
+  '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
+  '/app/program/workout/': typeof PlatformAppProgramWorkoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,11 +177,23 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/app/discover': typeof PlatformAppDiscoverRoute
+  '/app/profile': typeof PlatformAppProfileRoute
+  '/app/progress': typeof PlatformAppProgressRoute
+  '/app/support': typeof PlatformAppSupportRoute
+  '/app/water': typeof PlatformAppWaterRoute
+  '/app': typeof PlatformAppIndexRoute
+  '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
+  '/app/nutrition': typeof PlatformAppNutritionIndexRoute
+  '/app/program': typeof PlatformAppProgramIndexRoute
+  '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
+  '/app/program/workout': typeof PlatformAppProgramWorkoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_platform': typeof PlatformRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -104,6 +202,17 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/_platform/app/discover': typeof PlatformAppDiscoverRoute
+  '/_platform/app/profile': typeof PlatformAppProfileRoute
+  '/_platform/app/progress': typeof PlatformAppProgressRoute
+  '/_platform/app/support': typeof PlatformAppSupportRoute
+  '/_platform/app/water': typeof PlatformAppWaterRoute
+  '/_platform/app/': typeof PlatformAppIndexRoute
+  '/_platform/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
+  '/_platform/app/nutrition/': typeof PlatformAppNutritionIndexRoute
+  '/_platform/app/program/': typeof PlatformAppProgramIndexRoute
+  '/_platform/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
+  '/_platform/app/program/workout/': typeof PlatformAppProgramWorkoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +226,17 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/admin/payments'
+    | '/app/discover'
+    | '/app/profile'
+    | '/app/progress'
+    | '/app/support'
+    | '/app/water'
+    | '/app/'
+    | '/app/nutrition/meal'
+    | '/app/nutrition/'
+    | '/app/program/'
+    | '/app/program/workout/exercise'
+    | '/app/program/workout/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,10 +248,22 @@ export interface FileRouteTypes {
     | '/terms'
     | '/dashboard'
     | '/admin/payments'
+    | '/app/discover'
+    | '/app/profile'
+    | '/app/progress'
+    | '/app/support'
+    | '/app/water'
+    | '/app'
+    | '/app/nutrition/meal'
+    | '/app/nutrition'
+    | '/app/program'
+    | '/app/program/workout/exercise'
+    | '/app/program/workout'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_platform'
     | '/auth'
     | '/pricing'
     | '/privacy'
@@ -140,11 +272,23 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/dashboard'
     | '/admin/payments'
+    | '/_platform/app/discover'
+    | '/_platform/app/profile'
+    | '/_platform/app/progress'
+    | '/_platform/app/support'
+    | '/_platform/app/water'
+    | '/_platform/app/'
+    | '/_platform/app/nutrition/meal'
+    | '/_platform/app/nutrition/'
+    | '/_platform/app/program/'
+    | '/_platform/app/program/workout/exercise'
+    | '/_platform/app/program/workout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  PlatformRouteRoute: typeof PlatformRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -198,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_platform': {
+      id: '/_platform'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PlatformRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -226,6 +377,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_platform/app/': {
+      id: '/_platform/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof PlatformAppIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/water': {
+      id: '/_platform/app/water'
+      path: '/app/water'
+      fullPath: '/app/water'
+      preLoaderRoute: typeof PlatformAppWaterRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/support': {
+      id: '/_platform/app/support'
+      path: '/app/support'
+      fullPath: '/app/support'
+      preLoaderRoute: typeof PlatformAppSupportRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/progress': {
+      id: '/_platform/app/progress'
+      path: '/app/progress'
+      fullPath: '/app/progress'
+      preLoaderRoute: typeof PlatformAppProgressRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/profile': {
+      id: '/_platform/app/profile'
+      path: '/app/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof PlatformAppProfileRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/discover': {
+      id: '/_platform/app/discover'
+      path: '/app/discover'
+      fullPath: '/app/discover'
+      preLoaderRoute: typeof PlatformAppDiscoverRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/program/': {
+      id: '/_platform/app/program/'
+      path: '/app/program'
+      fullPath: '/app/program/'
+      preLoaderRoute: typeof PlatformAppProgramIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/nutrition/': {
+      id: '/_platform/app/nutrition/'
+      path: '/app/nutrition'
+      fullPath: '/app/nutrition/'
+      preLoaderRoute: typeof PlatformAppNutritionIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/nutrition/meal': {
+      id: '/_platform/app/nutrition/meal'
+      path: '/app/nutrition/meal'
+      fullPath: '/app/nutrition/meal'
+      preLoaderRoute: typeof PlatformAppNutritionMealRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/program/workout/': {
+      id: '/_platform/app/program/workout/'
+      path: '/app/program/workout'
+      fullPath: '/app/program/workout/'
+      preLoaderRoute: typeof PlatformAppProgramWorkoutIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/program/workout/exercise': {
+      id: '/_platform/app/program/workout/exercise'
+      path: '/app/program/workout/exercise'
+      fullPath: '/app/program/workout/exercise'
+      preLoaderRoute: typeof PlatformAppProgramWorkoutExerciseRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
   }
 }
 
@@ -240,9 +468,43 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface PlatformRouteRouteChildren {
+  PlatformAppDiscoverRoute: typeof PlatformAppDiscoverRoute
+  PlatformAppProfileRoute: typeof PlatformAppProfileRoute
+  PlatformAppProgressRoute: typeof PlatformAppProgressRoute
+  PlatformAppSupportRoute: typeof PlatformAppSupportRoute
+  PlatformAppWaterRoute: typeof PlatformAppWaterRoute
+  PlatformAppIndexRoute: typeof PlatformAppIndexRoute
+  PlatformAppNutritionMealRoute: typeof PlatformAppNutritionMealRoute
+  PlatformAppNutritionIndexRoute: typeof PlatformAppNutritionIndexRoute
+  PlatformAppProgramIndexRoute: typeof PlatformAppProgramIndexRoute
+  PlatformAppProgramWorkoutExerciseRoute: typeof PlatformAppProgramWorkoutExerciseRoute
+  PlatformAppProgramWorkoutIndexRoute: typeof PlatformAppProgramWorkoutIndexRoute
+}
+
+const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
+  PlatformAppDiscoverRoute: PlatformAppDiscoverRoute,
+  PlatformAppProfileRoute: PlatformAppProfileRoute,
+  PlatformAppProgressRoute: PlatformAppProgressRoute,
+  PlatformAppSupportRoute: PlatformAppSupportRoute,
+  PlatformAppWaterRoute: PlatformAppWaterRoute,
+  PlatformAppIndexRoute: PlatformAppIndexRoute,
+  PlatformAppNutritionMealRoute: PlatformAppNutritionMealRoute,
+  PlatformAppNutritionIndexRoute: PlatformAppNutritionIndexRoute,
+  PlatformAppProgramIndexRoute: PlatformAppProgramIndexRoute,
+  PlatformAppProgramWorkoutExerciseRoute:
+    PlatformAppProgramWorkoutExerciseRoute,
+  PlatformAppProgramWorkoutIndexRoute: PlatformAppProgramWorkoutIndexRoute,
+}
+
+const PlatformRouteRouteWithChildren = PlatformRouteRoute._addFileChildren(
+  PlatformRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  PlatformRouteRoute: PlatformRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
