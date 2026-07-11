@@ -173,6 +173,137 @@
   }
 }
 
+.platform-main--studio {
+  height: 100dvh;
+  overflow: hidden;
+  padding: 10px 12px;
+}
+
+@media (min-width: 768px) {
+  .platform-main--studio {
+    padding-bottom: 10px;
+  }
+}
+
+.hakim-studio {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hakim-studio__workspace {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.reference-workspace {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+}
+
+.reference-workspace--side {
+  flex-wrap: wrap;
+}
+
+.reference-workspace--split {
+  display: grid;
+  grid-template-columns: 1fr 4px 1fr;
+  align-items: start;
+  gap: 0;
+  width: 100%;
+}
+
+.reference-workspace__split-ref,
+.reference-workspace__split-live {
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+}
+
+.reference-workspace__split-divider {
+  width: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 70%, var(--primary) 30%);
+}
+
+.reference-workspace--overlay {
+  position: relative;
+  display: inline-block;
+}
+
+.reference-workspace__overlay-layer {
+  position: absolute;
+  left: 8px;
+  top: 18px;
+  z-index: 5;
+  pointer-events: auto;
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.reference-workspace__pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.reference-workspace__label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted-foreground);
+}
+
+.reference-canvas {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: #0f172a;
+  touch-action: none;
+}
+
+.reference-canvas--empty {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+
+.reference-canvas--interactive {
+  cursor: crosshair;
+}
+
+.reference-canvas__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
+}
+
+.reference-canvas__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(148, 163, 184, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.35) 1px, transparent 1px);
+  opacity: 0.45;
+}
+
+.reference-canvas__overlay {
+  position: absolute;
+  inset: 0;
+}
+
 .platform-stack {
   display: flex;
   flex-direction: column;
@@ -933,5 +1064,27 @@
 
 .vip-glass-shine {
   animation: vip-glass-shine 5.5s ease-in-out infinite;
+}
+
+@keyframes hakim-studio-button-shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-1.5px) rotate(-0.5deg); }
+  50% { transform: translateX(1.5px) rotate(0.5deg); }
+  75% { transform: translateX(-1px) rotate(-0.25deg); }
+  100% { transform: translateX(0); }
+}
+
+.hakim-studio button {
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.hakim-studio button:active {
+  animation: hakim-studio-button-shake 180ms ease-in-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hakim-studio button:active {
+    animation: none;
+  }
 }
 

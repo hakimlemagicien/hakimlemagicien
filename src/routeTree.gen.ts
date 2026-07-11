@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
 import { Route as PlatformAppWaterRouteImport } from './routes/_platform/app/water'
 import { Route as PlatformAppSupportRouteImport } from './routes/_platform/app/support'
+import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
 import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/discover'
@@ -102,6 +103,11 @@ const PlatformAppSupportRoute = PlatformAppSupportRouteImport.update({
   path: '/app/support',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
+const PlatformAppStudioRoute = PlatformAppStudioRouteImport.update({
+  id: '/app/studio',
+  path: '/app/studio',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
 const PlatformAppProgressRoute = PlatformAppProgressRouteImport.update({
   id: '/app/progress',
   path: '/app/progress',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/app/discover': typeof PlatformAppDiscoverRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
+  '/app/studio': typeof PlatformAppStudioRoute
   '/app/support': typeof PlatformAppSupportRoute
   '/app/water': typeof PlatformAppWaterRoute
   '/app/': typeof PlatformAppIndexRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/app/discover': typeof PlatformAppDiscoverRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
+  '/app/studio': typeof PlatformAppStudioRoute
   '/app/support': typeof PlatformAppSupportRoute
   '/app/water': typeof PlatformAppWaterRoute
   '/app': typeof PlatformAppIndexRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_platform/app/discover': typeof PlatformAppDiscoverRoute
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
+  '/_platform/app/studio': typeof PlatformAppStudioRoute
   '/_platform/app/support': typeof PlatformAppSupportRoute
   '/_platform/app/water': typeof PlatformAppWaterRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
+    | '/app/studio'
     | '/app/support'
     | '/app/water'
     | '/app/'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
+    | '/app/studio'
     | '/app/support'
     | '/app/water'
     | '/app'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/_platform/app/discover'
     | '/_platform/app/profile'
     | '/_platform/app/progress'
+    | '/_platform/app/studio'
     | '/_platform/app/support'
     | '/_platform/app/water'
     | '/_platform/app/'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppSupportRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/studio': {
+      id: '/_platform/app/studio'
+      path: '/app/studio'
+      fullPath: '/app/studio'
+      preLoaderRoute: typeof PlatformAppStudioRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
     '/_platform/app/progress': {
       id: '/_platform/app/progress'
       path: '/app/progress'
@@ -512,6 +531,7 @@ interface PlatformRouteRouteChildren {
   PlatformAppDiscoverRoute: typeof PlatformAppDiscoverRoute
   PlatformAppProfileRoute: typeof PlatformAppProfileRoute
   PlatformAppProgressRoute: typeof PlatformAppProgressRoute
+  PlatformAppStudioRoute: typeof PlatformAppStudioRoute
   PlatformAppSupportRoute: typeof PlatformAppSupportRoute
   PlatformAppWaterRoute: typeof PlatformAppWaterRoute
   PlatformAppIndexRoute: typeof PlatformAppIndexRoute
@@ -528,6 +548,7 @@ const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
   PlatformAppDiscoverRoute: PlatformAppDiscoverRoute,
   PlatformAppProfileRoute: PlatformAppProfileRoute,
   PlatformAppProgressRoute: PlatformAppProgressRoute,
+  PlatformAppStudioRoute: PlatformAppStudioRoute,
   PlatformAppSupportRoute: PlatformAppSupportRoute,
   PlatformAppWaterRoute: PlatformAppWaterRoute,
   PlatformAppIndexRoute: PlatformAppIndexRoute,

@@ -61,6 +61,39 @@ export const FREE_MEMBERSHIP_STATE: MembershipState = {
   isVisitor: false,
 };
 
+const LOCAL_PREMIUM_FEATURES: MembershipFeatures = {
+  platform_access: true,
+  workout_program: true,
+  nutrition_plan: true,
+  progress_tracking: true,
+  free_content: true,
+  periodic_reviews: true,
+  limited_coach_contact: true,
+  personal_followup: true,
+  program_adjustments: true,
+  priority_contact: true,
+};
+
+function isLocalAppRuntime() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  const isLocalHost = host === "127.0.0.1" || host === "localhost";
+  const isAppPath = window.location.pathname.startsWith("/app");
+  return isLocalHost && isAppPath;
+}
+
+function withLocalPremiumOverride(state: MembershipState): MembershipState {
+  if (!isLocalAppRuntime()) return state;
+  return {
+    ...state,
+    tier: state.tier === "admin" ? "admin" : "premium",
+    is_free: false,
+    is_paid: true,
+    is_active: true,
+    features: LOCAL_PREMIUM_FEATURES,
+  };
+}
+
 function normalizeMembershipResponse(data: unknown): MembershipResponse {
   const source = (data ?? {}) as Partial<MembershipResponse>;
   const rawFeatures = (source.features ?? {}) as Partial<MembershipFeatures>;
@@ -114,7 +147,7 @@ export async function resolveDisplayName(userId: string): Promise<string> {
 export async function fetchMembershipState(): Promise<MembershipState> {
   const { data } = await supabase.auth.getUser();
   if (!data.user) {
-    return { ...FREE_MEMBERSHIP_STATE, tier: "visitor", isVisitor: true };
+    return withLocalPremiumOverride({ ...FREE_MEMBERSHIP_STATE, tier: "visitor", isVisitor: true });
   }
 
   try {
@@ -123,19 +156,19 @@ export async function fetchMembershipState(): Promise<MembershipState> {
       resolveDisplayName(data.user.id),
     ]);
 
-    return {
+    return withLocalPremiumOverride({
       ...membership,
       displayName,
       isVisitor: false,
-    };
+    });
   } catch (err) {
     // Keep the app usable: never crash / hang the platform home on RPC failure.
     console.error("[fetchMembershipState]", err);
     const displayName = await resolveDisplayName(data.user.id).catch(() => "بطل");
-    return {
+    return withLocalPremiumOverride({
       ...FREE_MEMBERSHIP_STATE,
       displayName,
       isVisitor: false,
-    };
+    });
   }
 }
