@@ -15,13 +15,17 @@ import {
 } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
+import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
 import { PreviewGate } from "@/components/platform/shared/PreviewGate";
+import { useTodayWorkout } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
+import { TODAY_WORKOUT_BRIEF } from "@/lib/platform/today-workout";
+import {
+  formatExerciseVolume,
+  type WorkoutSessionExercise,
+} from "@/lib/platform/workout-session";
+import { loadWorkoutProgress } from "@/lib/platform/workout-progress-storage";
 import { cn } from "@/lib/utils";
-import bodyMuscularImg from "@/assets/body-muscular.jpg";
-import coachGymImg from "@/assets/coach-gym.jpg";
-import coachHeroImg from "@/assets/coach-hero.jpeg";
-import coachOnlineImg from "@/assets/coach-online.jpg";
 import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
 import workoutGoalHeroTrainerImg from "@/assets/workout-goal-hero-trainer.png";
 
@@ -100,16 +104,16 @@ const WEEKLY_SCHEDULE: WeekDay[] = [
   },
 ];
 
-const TODAY_WORKOUT_BRIEF = {
-  linkedDayId: "mon",
-  dateLabel: "الإثنين 3 يوليو",
-  muscleTitle: "صدر + بايسبس",
+const TODAY_WORKOUT_BRIEF_UI = {
+  linkedDayId: TODAY_WORKOUT_BRIEF.linkedDayId,
+  dateLabel: TODAY_WORKOUT_BRIEF.dateLabel,
+  muscleTitle: TODAY_WORKOUT_BRIEF.muscleTitle,
   anatomyImage: muscleAnatomyChestBicepsImg,
   stats: {
-    exercises: 6,
-    minutes: 45,
-    calories: 450,
-    points: 120,
+    exercises: TODAY_WORKOUT_BRIEF.points,
+    minutes: TODAY_WORKOUT_BRIEF.durationMin,
+    calories: TODAY_WORKOUT_BRIEF.calories,
+    points: TODAY_WORKOUT_BRIEF.points,
   },
 };
 
@@ -119,74 +123,24 @@ function getDayConnectorRight(index: number, total: number) {
 
 type SessionExerciseStatus = "active" | "done" | "pending";
 
-type SessionExercise = {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  rest?: string;
-  thumbnail: string;
+type SessionExerciseView = WorkoutSessionExercise & {
   status: SessionExerciseStatus;
-  completedSets?: number;
+  completedSets: number;
 };
 
-const SESSION_EXERCISES: SessionExercise[] = [
-  {
-    id: "bench-press",
-    name: "بنش برس بالبار",
-    sets: 4,
-    reps: "10 - 12",
-    rest: "60 - 90 ثانية",
-    thumbnail: coachGymImg,
-    status: "active",
-    completedSets: 1,
-  },
-  {
-    id: "incline-db-press",
-    name: "بنش مائل بالدمبل",
-    sets: 3,
-    reps: "12 - 15",
-    thumbnail: coachHeroImg,
-    status: "done",
-    completedSets: 3,
-  },
-  {
-    id: "cable-fly",
-    name: "تفتيح كابل",
-    sets: 3,
-    reps: "15",
-    thumbnail: coachOnlineImg,
-    status: "pending",
-    completedSets: 0,
-  },
-  {
-    id: "db-curl",
-    name: "بايسبس كيرل بالدمبل",
-    sets: 3,
-    reps: "12",
-    thumbnail: bodyMuscularImg,
-    status: "pending",
-    completedSets: 0,
-  },
-  {
-    id: "triceps-pushdown",
-    name: "ترايسبس كابل",
-    sets: 3,
-    reps: "12 - 15",
-    thumbnail: coachGymImg,
-    status: "pending",
-    completedSets: 0,
-  },
-  {
-    id: "hammer-curl",
-    name: "هامر كيرل",
-    sets: 3,
-    reps: "12",
-    thumbnail: coachOnlineImg,
-    status: "pending",
-    completedSets: 0,
-  },
-];
+function buildSessionExerciseViews(
+  exercises: WorkoutSessionExercise[],
+): SessionExerciseView[] {
+  const stored = loadWorkoutProgress(exercises.length);
+  return exercises.map((exercise, index) => {
+    const saved = stored?.[index];
+    return {
+      ...exercise,
+      completedSets: saved?.completedSets ?? 0,
+      status: saved?.status ?? (index === 0 ? "active" : "pending"),
+    };
+  });
+}
 
 const WORKOUT_CARD_BLEED =
   "-mx-[var(--platform-gutter)] w-[calc(100%+2*var(--platform-gutter))]";
@@ -269,8 +223,14 @@ function TodayWorkoutStatCell({
   );
 }
 
-function TodayWorkoutBriefCard({ connectorRight }: { connectorRight?: string }) {
-  const { dateLabel, muscleTitle, anatomyImage, stats } = TODAY_WORKOUT_BRIEF;
+function TodayWorkoutBriefCard({
+  connectorRight,
+  brief,
+}: {
+  connectorRight?: string;
+  brief: typeof TODAY_WORKOUT_BRIEF_UI;
+}) {
+  const { dateLabel, muscleTitle, anatomyImage, stats } = brief;
   const isLinked = Boolean(connectorRight);
 
   return (
@@ -359,7 +319,7 @@ function SessionExerciseStatusBadge({
   featured = false,
 }: {
   index: number;
-  exercise: SessionExercise;
+  exercise: SessionExerciseView;
   featured?: boolean;
 }) {
   if (exercise.status === "active") {
@@ -398,23 +358,29 @@ function SessionExerciseStatusBadge({
 function SessionExerciseFeaturedRow({
   index,
   exercise,
+  orderIndex,
 }: {
   index: number;
-  exercise: SessionExercise;
+  exercise: SessionExerciseView;
+  orderIndex: number;
 }) {
+  const volume = formatExerciseVolume(exercise);
+
   return (
     <Link
       to="/app/program/workout/exercise"
+      search={{ exerciseId: exercise.id, index: orderIndex }}
       className="flex items-center gap-2.5 border-b border-border/50 px-3 py-3 transition active:bg-muted/25"
       dir="rtl"
     >
       <SessionExerciseStatusBadge index={index} exercise={exercise} featured />
 
       <div className="h-[54px] w-[78px] shrink-0 overflow-hidden rounded-xl border border-border/45 bg-muted">
-        <img
-          src={exercise.thumbnail}
+        <ExerciseThumbnail
+          signedUrl={exercise.thumbnailUrl}
+          mediaPath={exercise.videoPath}
           alt={exercise.name}
-          className="h-full w-full object-cover object-center"
+          className="h-full w-full"
         />
       </div>
 
@@ -423,13 +389,11 @@ function SessionExerciseFeaturedRow({
           {index}. {exercise.name}
         </p>
         <p className="mt-0.5 text-[9px] font-medium leading-snug text-muted-foreground">
-          {exercise.sets} مجموعات × {exercise.reps} تكرار
+          {exercise.sets} مجموعات × {volume}
         </p>
-        {exercise.rest ? (
-          <p className="mt-0.5 text-[9px] font-bold leading-snug text-primary">
-            راحة {exercise.rest}
-          </p>
-        ) : null}
+        <p className="mt-0.5 text-[9px] font-bold leading-snug text-primary">
+          راحة {exercise.restLabel}
+        </p>
       </div>
 
       <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/70" />
@@ -440,23 +404,29 @@ function SessionExerciseFeaturedRow({
 function SessionExerciseRow({
   index,
   exercise,
+  orderIndex,
 }: {
   index: number;
-  exercise: SessionExercise;
+  exercise: SessionExerciseView;
+  orderIndex: number;
 }) {
+  const volume = formatExerciseVolume(exercise);
+
   return (
     <Link
       to="/app/program/workout/exercise"
+      search={{ exerciseId: exercise.id, index: orderIndex }}
       className="flex items-center gap-2.5 border-b border-border/50 px-3 py-2.5 last:border-b-0 transition active:bg-muted/25"
       dir="rtl"
     >
       <SessionExerciseStatusBadge index={index} exercise={exercise} />
 
       <div className="h-10 w-14 shrink-0 overflow-hidden rounded-lg border border-border/45 bg-muted">
-        <img
-          src={exercise.thumbnail}
+        <ExerciseThumbnail
+          signedUrl={exercise.thumbnailUrl}
+          mediaPath={exercise.videoPath}
           alt={exercise.name}
-          className="h-full w-full object-cover object-center"
+          className="h-full w-full"
         />
       </div>
 
@@ -465,7 +435,7 @@ function SessionExerciseRow({
           {index}. {exercise.name}
         </p>
         <p className="mt-0.5 text-[8px] font-medium leading-snug text-muted-foreground">
-          {exercise.sets} مجموعات × {exercise.reps} تكرار
+          {exercise.sets} مجموعات × {volume}
         </p>
       </div>
 
@@ -480,8 +450,26 @@ function SessionExerciseRow({
   );
 }
 
-function SessionExercisesSection() {
-  const [featured, ...rest] = SESSION_EXERCISES;
+const WORKOUT_PREVIEW_EXERCISE_COUNT = 4;
+
+function SessionExercisesSection({ exercises }: { exercises: SessionExerciseView[] }) {
+  if (exercises.length === 0) {
+    return (
+      <div className="space-y-2.5 border-t border-border/45 pt-3.5">
+        <h2 className={cn("inline-flex items-center gap-1.5", workoutType.cardTitle)}>
+          <Dumbbell className="h-3.5 w-3.5 text-primary" />
+          تمارين الحصة
+        </h2>
+        <p className="text-[10px] font-medium text-muted-foreground">
+          لا توجد تمارين متاحة في حصة اليوم حالياً.
+        </p>
+      </div>
+    );
+  }
+
+  const previewExercises = exercises.slice(0, WORKOUT_PREVIEW_EXERCISE_COUNT);
+  const [featured, ...rest] = previewExercises;
+  const hasMoreExercises = exercises.length > WORKOUT_PREVIEW_EXERCISE_COUNT;
 
   return (
     <div className="space-y-2.5 border-t border-border/45 pt-3.5">
@@ -490,21 +478,35 @@ function SessionExercisesSection() {
           <Dumbbell className="h-3.5 w-3.5 text-primary" />
           تمارين الحصة
         </h2>
-        <Link
-          to="/app/program/workout/exercise"
-          className={cn("inline-flex items-center gap-0.5", workoutType.cardAction)}
-        >
-          عرض الكل
-          <ChevronLeft className="h-3 w-3" />
-        </Link>
+        {hasMoreExercises ? (
+          <Link
+            to="/app/program/workout/exercise"
+            search={{ exerciseId: featured.id, index: 0 }}
+            className={cn("inline-flex items-center gap-0.5", workoutType.cardAction)}
+          >
+            عرض الكل
+            <ChevronLeft className="h-3 w-3" />
+          </Link>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_8px_24px_-14px_rgba(15,23,42,0.14)]">
-        <SessionExerciseFeaturedRow index={1} exercise={featured} />
+        <SessionExerciseFeaturedRow index={1} exercise={featured} orderIndex={0} />
         {rest.map((exercise, exerciseIndex) => (
-          <SessionExerciseRow key={exercise.id} index={exerciseIndex + 2} exercise={exercise} />
+          <SessionExerciseRow
+            key={exercise.id}
+            index={exerciseIndex + 2}
+            exercise={exercise}
+            orderIndex={exerciseIndex + 1}
+          />
         ))}
       </div>
+
+      {hasMoreExercises ? (
+        <p className="text-center text-[10px] font-medium text-muted-foreground">
+          +{exercises.length - WORKOUT_PREVIEW_EXERCISE_COUNT} تمارين إضافية داخل حصة التمرين
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -513,7 +515,21 @@ function WorkoutDayPage() {
   const { features, is_paid } = useMembership();
   const previewOnly = !features.workout_program;
   const showPremiumBadge = !is_paid;
-  const linkedDayIndex = WEEKLY_SCHEDULE.findIndex((entry) => entry.id === TODAY_WORKOUT_BRIEF.linkedDayId);
+  const sessionQuery = useTodayWorkout();
+  const sessionExercises = sessionQuery.data?.exercises ?? [];
+  const sessionViews = buildSessionExerciseViews(sessionExercises);
+  const workoutBrief = {
+    ...TODAY_WORKOUT_BRIEF_UI,
+    stats: {
+      exercises: sessionExercises.length,
+      minutes: TODAY_WORKOUT_BRIEF.durationMin,
+      calories: TODAY_WORKOUT_BRIEF.calories,
+      points: TODAY_WORKOUT_BRIEF.points,
+    },
+  };
+  const linkedDayIndex = WEEKLY_SCHEDULE.findIndex(
+    (entry) => entry.id === workoutBrief.linkedDayId,
+  );
   const linkedDayConnectorRight =
     linkedDayIndex >= 0 ? getDayConnectorRight(linkedDayIndex, WEEKLY_SCHEDULE.length) : undefined;
 
@@ -645,7 +661,7 @@ function WorkoutDayPage() {
               <WeekDayButton
                 key={entry.id}
                 entry={entry}
-                isLinkedToWorkout={entry.id === TODAY_WORKOUT_BRIEF.linkedDayId}
+                isLinkedToWorkout={entry.id === workoutBrief.linkedDayId}
               />
             ))}
           </div>
@@ -665,11 +681,21 @@ function WorkoutDayPage() {
             <div className="h-1" />
           )}
 
-          <TodayWorkoutBriefCard connectorRight={linkedDayConnectorRight} />
+          <TodayWorkoutBriefCard connectorRight={linkedDayConnectorRight} brief={workoutBrief} />
 
-          <SessionExercisesSection />
+          {sessionQuery.isLoading ? (
+            <p className="border-t border-border/45 pt-3.5 text-center text-[10px] font-bold text-muted-foreground">
+              جاري تحميل تمارين الحصة…
+            </p>
+          ) : sessionQuery.isError ? (
+            <p className="border-t border-border/45 pt-3.5 text-center text-[10px] font-bold text-destructive">
+              تعذّر تحميل تمارين اليوم. حاول مرة أخرى.
+            </p>
+          ) : (
+            <SessionExercisesSection exercises={sessionViews} />
+          )}
 
-          <WorkoutMotivationCta points={TODAY_WORKOUT_BRIEF.stats.points} />
+          <WorkoutMotivationCta points={workoutBrief.stats.points} />
         </section>
       </PlatformStack>
     </PreviewGate>

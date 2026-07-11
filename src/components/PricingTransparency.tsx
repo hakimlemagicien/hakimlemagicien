@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
+import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
 import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
 import {
   ACTIVATE_PROGRAM_CTA,
@@ -29,19 +29,6 @@ function useInView<T extends HTMLElement>(threshold = 0.12) {
     return () => io.disconnect();
   }, [inView, threshold]);
   return { ref, inView };
-}
-
-function FeatureCheck({ label }: { label: string }) {
-  return (
-    <li className="flex items-start gap-2.5">
-      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#5C9E54]">
-        <Check className="h-3 w-3 text-white" strokeWidth={3} />
-      </span>
-      <span className="font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#334155]">
-        {label}
-      </span>
-    </li>
-  );
 }
 
 function PaidPlanCard({
@@ -98,7 +85,7 @@ function PaidPlanCard({
 
       <ul className="mt-5 space-y-3 text-right">
         {plan.features.map((feature) => (
-          <FeatureCheck key={feature} label={feature} />
+          <FeatureCheck key={feature} label={feature} tone={featureCheckToneForPlan(plan.id)} />
         ))}
       </ul>
 
@@ -135,34 +122,25 @@ export default function PricingTransparency() {
 
         <div
           ref={free.ref}
-          className={`mt-8 rounded-[22px] border border-[#E8E4DE] bg-white p-5 shadow-[0_14px_36px_-20px_rgba(15,23,42,0.22)] transition-all duration-700 sm:mt-10 sm:p-6 ${
+          className={`mt-8 rounded-[22px] border border-[#E8E4DE] bg-white p-5 text-center shadow-[0_14px_36px_-20px_rgba(15,23,42,0.22)] transition-all duration-700 sm:mt-10 sm:p-6 ${
             free.inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <div className="text-right">
-            <p className="font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">{FREE_TIER.role}</p>
-            <h3 className="mt-1 font-[Tajawal] text-[26px] font-extrabold leading-tight text-[#5C9E54] sm:text-[28px]">
-              {FREE_TIER.name}
-            </h3>
-            <p className="mt-1.5 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B]">
-              {FREE_TIER.tagline}
-            </p>
-          </div>
+          <h3 className="font-[Tajawal] text-[22px] font-extrabold text-[#0F172A]">{FREE_TIER.name}</h3>
+          <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-[#64748B]">{FREE_TIER.tagline}</p>
+          <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">{FREE_TIER.role}</p>
 
-          <ul className="mt-5 space-y-3">
+          <ul className="mt-5 space-y-3 text-right">
             {FREE_TIER.features.map((item) => (
-              <FeatureCheck key={item} label={item} />
+              <FeatureCheck key={item} label={item} tone="neutral" />
             ))}
           </ul>
 
           <Link
             to="/quiz"
-            className="mt-6 flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#5C9E54] px-4 py-3.5 font-[Tajawal] text-[15px] font-extrabold text-white shadow-[0_10px_24px_-12px_rgba(92,158,84,0.7)] transition hover:bg-[#528F4B]"
+            className="mt-5 flex w-full items-center justify-center rounded-xl border border-[#D6D3CD] bg-white px-4 py-3 font-[Tajawal] text-[14px] font-extrabold text-[#0F172A] transition hover:bg-[#FAF8F5]"
           >
             {ACTIVATE_PROGRAM_CTA}
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-white">
-              <ArrowLeft className="h-3.5 w-3.5 text-[#5C9E54]" strokeWidth={2.6} />
-            </span>
           </Link>
         </div>
 

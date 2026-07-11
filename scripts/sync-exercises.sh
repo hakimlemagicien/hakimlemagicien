@@ -31,6 +31,7 @@ DEFAULT_JSON="${SCRIPT_DIR}/exercise-library.json"
 
 JSON_PATH="${DEFAULT_JSON}"
 DRY_RUN=0
+SYNC_LIMIT=0
 SYNC_BACKEND=""
 
 usage() {
@@ -40,6 +41,7 @@ Usage: sync-exercises.sh [options]
 Options:
   --json PATH     Path to exercise-library.json (default: scripts/exercise-library.json)
   --dry-run       Resolve changes without writing to the database
+  --limit N       Process only the first N exercises from JSON (for testing)
   -h, --help      Show this help
 
 Environment (loaded from .env then .env.local):
@@ -87,6 +89,9 @@ resolve_database_url() {
   [[ -n "$password" ]] || return 0
 
   local project_ref="${SUPABASE_PROJECT_ID:-${VITE_SUPABASE_PROJECT_ID:-}}"
+  if [[ -z "$project_ref" && -f "${ROOT_DIR}/supabase/.temp/project-ref" ]]; then
+    project_ref="$(tr -d '[:space:]' < "${ROOT_DIR}/supabase/.temp/project-ref")"
+  fi
   if [[ -z "$project_ref" && -n "${SUPABASE_URL:-${VITE_SUPABASE_URL:-}}" ]]; then
     project_ref="$(printf '%s' "${SUPABASE_URL:-${VITE_SUPABASE_URL:-}}" | sed -n 's|https://\([^.]*\)\.supabase\.co.*|\1|p')"
   fi
@@ -162,6 +167,11 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN=1
       shift
       ;;
+    --limit)
+      [[ $# -ge 2 ]] || die "--limit requires a number"
+      SYNC_LIMIT="$2"
+      shift 2
+      ;;
     -h | --help)
       usage
       exit 0
@@ -181,10 +191,13 @@ command -v python3 >/dev/null 2>&1 || die "python3 is required but not found in 
 
 resolve_sync_backend
 
-export ROOT_DIR SYNC_BACKEND DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY
+export ROOT_DIR SYNC_BACKEND DATABASE_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY SYNC_LIMIT
 
 log "JSON:     ${JSON_PATH}"
 log "Dry-run:  $([[ "$DRY_RUN" -eq 1 ]] && echo yes || echo no)"
+if [[ "$SYNC_LIMIT" -gt 0 ]]; then
+  log "Limit:    ${SYNC_LIMIT} exercise(s)"
+fi
 case "$SYNC_BACKEND" in
   postgres) log "Backend:  Postgres (DATABASE_URL via psql/psycopg)" ;;
   supabase-db-url) log "Backend:  Supabase CLI (--db-url, csv)" ;;
@@ -475,6 +488,8 @@ class PostgresClient:
                 continue
             if lowered.startswith("initialising login role"):
                 continue
+            if lowered.startswith("connecting to remote database"):
+                continue
             if line.startswith("{") and line.endswith("}"):
                 continue
             csv_lines.append(line)
@@ -559,42 +574,105 @@ class PostgresClient:
 
     def _query_rows_direct(self, sql: str) -> list[dict[str, str]]:
         if self.mode == "postgres" and self.database_url:
+            if self._has_psycopg():
+                return self._query_rows_psycopg(sql)
             if self._has_psql():
                 return self._query_rows_psql(sql)
-            conn = self._connect()
-            with conn.cursor() as cur:
-                cur.execute(sql)
-                if cur.description is None:
-                    conn.commit()
-                    return []
-                columns = [desc.name for desc in cur.description]
-                rows = cur.fetchall()
-                conn.commit()
-                return [
-                    {col: ("" if val is None else str(val)) for col, val in zip(columns, row)}
-                    for row in rows
-                ]
+            raise RuntimeError(
+                "DATABASE_URL is set but neither psycopg nor psql is available. "
+                "Install with: pip3 install 'psycopg[binary]'"
+            )
 
         return self._query_rows_supabase_cli(sql)
 
     def _has_psql(self) -> bool:
-        return subprocess.run(
-            ["psql", "--version"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=False,
-        ).returncode == 0
+        try:
+            proc = subprocess.run(
+                ["psql", "--version"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        except (FileNotFoundError, OSError):
+            return False
+        return proc.returncode == 0
+
+    def _has_psycopg(self) -> bool:
+        try:
+            import psycopg  # type: ignore  # noqa: F401
+        except ImportError:
+            return False
+        return True
+
+    @staticmethod
+    def _format_db_error(exc: Exception) -> str:
+        parts: list[str] = [str(exc).strip() or exc.__class__.__name__]
+        diag = getattr(exc, "diag", None)
+        if diag is not None:
+            for attr in ("message_primary", "detail", "hint", "schema_name", "table_name", "constraint_name"):
+                value = getattr(diag, attr, None)
+                if value:
+                    parts.append(f"{attr}={value}")
+        sqlstate = getattr(exc, "sqlstate", None)
+        if sqlstate:
+            parts.append(f"sqlstate={sqlstate}")
+        return " | ".join(part for part in parts if part)
+
+    def _rows_from_cursor(self, cur: Any, conn: Any) -> list[dict[str, str]]:
+        if cur.description is None:
+            conn.commit()
+            return []
+        columns = [desc.name for desc in cur.description]
+        rows = cur.fetchall()
+        conn.commit()
+        return [
+            {col: ("" if val is None else str(val)) for col, val in zip(columns, row)}
+            for row in rows
+        ]
+
+    def _query_rows_psycopg(self, sql: str) -> list[dict[str, str]]:
+        self._ensure_psycopg()
+        conn = self._connect()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(sql)
+                return self._rows_from_cursor(cur, conn)
+        except Exception as exc:  # noqa: BLE001
+            conn.rollback()
+            raise RuntimeError(self._format_db_error(exc)) from exc
 
     def _query_rows_psql(self, sql: str) -> list[dict[str, str]]:
-        proc = subprocess.run(
-            ["psql", self.database_url, "-v", "ON_ERROR_STOP=1", "--csv", "-c", sql],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            proc = subprocess.run(
+                [
+                    "psql",
+                    self.database_url,
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                    "--no-psqlrc",
+                    "-q",
+                    "--csv",
+                    "-c",
+                    sql,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except (FileNotFoundError, OSError) as exc:
+            raise RuntimeError(f"psql not available: {exc}") from exc
+
         if proc.returncode != 0:
-            raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "psql failed")
-        return self._parse_csv(proc.stdout)
+            detail = (proc.stderr or proc.stdout or "psql failed").strip()
+            raise RuntimeError(detail)
+
+        rows = self._parse_csv(proc.stdout)
+        if not rows and proc.stdout.strip():
+            raise RuntimeError(
+                "psql returned output but no CSV rows could be parsed:\n"
+                f"stdout={proc.stdout.strip()}\nstderr={(proc.stderr or '').strip()}"
+            )
+        return rows
 
     def _query_rows_supabase_cli(self, sql: str) -> list[dict[str, str]]:
         with tempfile.NamedTemporaryFile("w", suffix=".sql", delete=False, encoding="utf-8") as handle:
@@ -663,9 +741,12 @@ class PostgresClient:
 
     def insert_exercise(self, payload: dict[str, Any]) -> dict[str, Any]:
         if self.dry_run:
-            return {"id": "00000000-0000-0000-0000-000000000000"}
+            return {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "external_id": payload["external_id"],
+            }
 
-        rows = self._query_rows_direct(
+        sql = (
             "INSERT INTO public.exercises ("
             "external_id, slug, muscle_group_id, name_en, name_ar, equipment, "
             "difficulty, primary_muscle, video_status, sort_order"
@@ -680,11 +761,20 @@ class PostgresClient:
             f"{self._literal(payload['primary_muscle'])}, "
             f"{self._literal(payload['video_status'])}::public.exercise_media_status, "
             f"{int(payload['sort_order'])}"
-            ") RETURNING id::text AS id;"
+            ") RETURNING id::text AS id, external_id;"
         )
+        rows = self._query_rows_direct(sql)
         if not rows:
-            raise RuntimeError("insert exercise returned no rows")
-        return rows[0]
+            raise RuntimeError(
+                "insert exercise returned no rows (expected RETURNING id, external_id)"
+            )
+        row = rows[0]
+        if not row.get("id") or not row.get("external_id"):
+            raise RuntimeError(
+                "insert exercise RETURNING row is missing id or external_id: "
+                + json.dumps(row, ensure_ascii=False)
+            )
+        return row
 
     def update_exercise(self, exercise_id: str, payload: dict[str, Any]) -> None:
         self._execute(
@@ -741,9 +831,12 @@ def sync_one(client: Any, row: dict[str, Any], counters: Counters) -> None:
     existing = client.get_exercise(row["external_id"])
 
     if existing is None:
-        client.insert_exercise(payload)
+        created = client.insert_exercise(payload)
         counters.created += 1
-        print(f"CREATE {row['external_id']} ({row['name_en']})")
+        print(
+            f"CREATE {row['external_id']} ({row['name_en']}) "
+            f"id={created.get('id')} external_id={created.get('external_id')}"
+        )
         return
 
     if not exercise_changed(existing, payload):
@@ -790,12 +883,13 @@ def make_client(dry_run: bool) -> Any:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("usage: python <json_path> <dry_run:0|1>", file=sys.stderr)
+    if len(sys.argv) not in {3, 4}:
+        print("usage: python <json_path> <dry_run:0|1> [limit:0]", file=sys.stderr)
         return 2
 
     json_path = sys.argv[1]
     dry_run = sys.argv[2] == "1"
+    limit = int(sys.argv[3]) if len(sys.argv) == 4 else 0
     counters = Counters()
 
     try:
@@ -817,6 +911,9 @@ def main() -> int:
 
     print(f"Loaded {len(rows)} exercises from JSON")
     print(f"Loaded {len(client.muscle_groups)} muscle groups from database")
+    if limit > 0:
+        rows = rows[:limit]
+        print(f"Processing first {len(rows)} exercise(s) due to --limit")
 
     for row in rows:
         try:
@@ -837,7 +934,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 PY
 
-python3 -c "$PYTHON_SYNC" "$JSON_PATH" "$DRY_RUN"
+python3 -c "$PYTHON_SYNC" "$JSON_PATH" "$DRY_RUN" "$SYNC_LIMIT"
 exit_code=$?
 
 log "Done."

@@ -208,6 +208,7 @@ export function PlanActivateBlock({
     selectedMonths === 6 && term6 ? term6 : term3;
 
   const isVip = plan.id === "vip";
+  const isPremium = plan.id === "premium";
 
   const ctaClass = cn(
     "flex w-full items-center justify-center rounded-xl px-4 font-[Tajawal] font-extrabold transition",
@@ -216,7 +217,9 @@ export function PlanActivateBlock({
       ? "border border-[#D4AF78]/45 bg-gradient-to-l from-[#D4AF78] via-[#F0D9A8] to-[#D4AF78] text-[#1A140C] shadow-[0_12px_28px_-12px_rgba(212,175,120,0.65)] hover:brightness-105"
       : popularStyle
         ? "bg-[#5C9E54] text-white shadow-[0_10px_24px_-12px_rgba(92,158,84,0.7)] hover:bg-[#528F4B]"
-        : "border border-[#D6D3CD] bg-white text-[#0F172A] hover:bg-[#FAF8F5]",
+        : isPremium
+          ? "cta-gradient text-white shadow-cta hover:opacity-95"
+          : "border border-[#D6D3CD] bg-white text-[#0F172A] hover:bg-[#FAF8F5]",
   );
 
   return (

@@ -1,11 +1,12 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Droplets, Dumbbell, TrendingUp, UtensilsCrossed } from "lucide-react";
+import { BookOpen, Droplets, Dumbbell, TrendingUp, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type HubRoute =
   | "/app/program/workout"
+  | "/app/exercises"
   | "/app/nutrition"
   | "/app/water"
   | "/app/progress";
@@ -21,10 +22,17 @@ type HubCard = {
 const HUB_CARDS: HubCard[] = [
   {
     id: "workout",
-    title: "التمارين",
+    title: "تمرين اليوم",
     to: "/app/program/workout",
     icon: Dumbbell,
     tone: "bg-[#FFF1E6] text-[#FF6B00]",
+  },
+  {
+    id: "exercise-library",
+    title: "مكتبة التمارين",
+    to: "/app/exercises",
+    icon: BookOpen,
+    tone: "bg-[#F3E8FF] text-[#9333EA]",
   },
   {
     id: "nutrition",
@@ -52,6 +60,7 @@ const HUB_CARDS: HubCard[] = [
 type DailyHubOverlayProps = {
   open: boolean;
   onClose: () => void;
+  showExerciseLibrary?: boolean;
 };
 
 function FloatingHubOrb({
@@ -93,8 +102,15 @@ function FloatingHubOrb({
   );
 }
 
-export function DailyHubOverlay({ open, onClose }: DailyHubOverlayProps) {
+export function DailyHubOverlay({
+  open,
+  onClose,
+  showExerciseLibrary = false,
+}: DailyHubOverlayProps) {
   const navigate = useNavigate();
+  const hubCards = HUB_CARDS.filter(
+    (card) => card.id !== "exercise-library" || showExerciseLibrary,
+  );
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const pendingNav = useRef<HubRoute | null>(null);
@@ -174,7 +190,7 @@ export function DailyHubOverlay({ open, onClose }: DailyHubOverlayProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-                {HUB_CARDS.map((card, index) => {
+                {hubCards.map((card, index) => {
                   const Icon = card.icon;
                   return (
                     <button
