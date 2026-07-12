@@ -1,8 +1,19 @@
 import { createLead } from "@/lib/lead-api";
-import { buildLeadInsertFromQuiz, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
+import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
+import { createOnboardingDraft } from "@/lib/quiz-onboarding-api";
+import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
+import { QuizProgressHeader, QuizProgressStrip } from "@/components/quiz/QuizProgressHeader";
 import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
 import { useQuizProgress } from "@/hooks/use-quiz-progress";
 import { MotionStepView } from "@/components/motion/MotionStepView";
+import { QuizImportantInfoNote } from "@/components/quiz/QuizImportantInfoNote";
+import { InjuriesScreen, type InjuryId } from "@/components/quiz/InjuriesScreen";
+import {
+  CreatePasswordScreen,
+  PlatformWelcomeScreen,
+  ProfilePhotoScreen,
+  VerifyEmailScreen,
+} from "@/components/quiz/QuizOnboardingScreens";
 import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
@@ -12,7 +23,6 @@ import {
   ChevronDown,
   Check,
   Lock,
-  Home,
   Dumbbell,
   Flame,
   PersonStanding,
@@ -31,6 +41,7 @@ import {
   BarChart3,
   MessageCircle,
   ShieldCheck,
+  BadgeCheck,
   PartyPopper,
   Crown,
   Star,
@@ -77,6 +88,9 @@ import fbodyAthletic from "@/assets/fbody-athletic.jpg";
 import fbodyOverweight from "@/assets/fbody-overweight.jpg";
 import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
 import gluteGrowth from "@/assets/glute-growth.png";
+import trainingEnvHomeImg from "@/assets/training-env-home.png";
+import trainingEnvGymImg from "@/assets/training-env-gym.png";
+import trainingEnvAnywhereImg from "@/assets/training-env-anywhere.png";
 import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
 import feminineTonedBody from "@/assets/feminine-toned-body.png";
 import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
@@ -111,6 +125,9 @@ const REVEAL_GLUTES_AFTER = [
 ];
 
 export const Route = createFileRoute("/quiz")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    step: typeof search.step === "string" ? search.step : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "ابدأ تقييمك المجاني — Hakim Coaching" },
@@ -121,7 +138,7 @@ export const Route = createFileRoute("/quiz")({
 });
 
 const FONT = "'Tajawal', sans-serif";
-type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "investment" | "bodyType" | "femaleBodyType" | "trainingEnvironment" | "analysis" | "contact" | "congrats" | "reveal" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
+type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "injuries" | "investment" | "bodyType" | "femaleBodyType" | "trainingEnvironment" | "analysis" | "contact" | "congrats" | "reveal" | "verifyEmail" | "createPassword" | "profilePhoto" | "platformWelcome" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
 function QuizPage() {
   const {
@@ -134,6 +151,8 @@ function QuizPage() {
     setGender,
     userName,
     setUserName,
+    userEmail,
+    setUserEmail,
     userPhone,
     setUserPhone,
     userCity,
@@ -142,6 +161,8 @@ function QuizPage() {
     setGoalId,
     challengeId,
     setChallengeId,
+    injuryIds,
+    setInjuryIds,
     age,
     setAge,
     heightCm,
@@ -166,6 +187,7 @@ function QuizPage() {
     gender,
     goalId,
     challengeId,
+    injuryIds,
     age,
     heightCm,
     weightKg,
@@ -174,9 +196,8 @@ function QuizPage() {
     bodyType,
   };
 
-  const totalSteps = userLocation === "dubai" ? 15 : 14;
-  const afterReveal = () =>
-    selectAndGo(userLocation === "dubai" ? "trainingType" : "pricing");
+  const totalSteps = QUIZ_PROGRESS_TOTAL;
+  const afterReveal = () => selectAndGo("verifyEmail");
 
   return (
     <div
@@ -241,20 +262,27 @@ function QuizPage() {
       {step === "challenge" && (
         <ChallengeScreen
           onBack={() => goBack("activity")}
-          onNext={() => selectAndGo("investment")}
+          onNext={() => selectAndGo("injuries")}
           onSelect={setChallengeId}
         />
       )}
       {step === "femaleChallenge" && (
         <FemaleChallengeScreen
           onBack={() => goBack("activity")}
-          onNext={() => selectAndGo("investment")}
+          onNext={() => selectAndGo("injuries")}
           onSelect={setChallengeId}
+        />
+      )}
+      {step === "injuries" && (
+        <InjuriesScreen
+          initialValue={injuryIds as InjuryId[]}
+          onBack={() => goBack(gender === "female" ? "femaleChallenge" : "challenge")}
+          onNext={(value) => selectAndGo("investment", () => setInjuryIds(value))}
         />
       )}
       {step === "investment" && (
         <InvestmentScreen
-          onBack={() => goBack(gender === "female" ? "femaleChallenge" : "challenge")}
+          onBack={() => goBack("injuries")}
           onNext={(value) =>
             selectAndGo(gender === "female" ? "femaleBodyType" : "bodyType", () => setInvestment(value))
           }
@@ -289,9 +317,10 @@ function QuizPage() {
         <ContactScreen
           quizAnswers={quizAnswers}
           onBack={() => goBack("trainingEnvironment")}
-          onDone={(name, isDubai, phone, city) =>
+          onDone={(name, email, isDubai, phone, city) =>
             selectAndGo("congrats", () => {
               setUserName(name);
+              setUserEmail(email);
               setUserPhone(phone);
               setUserCity(city);
               setUserLocation(isDubai ? "dubai" : "remote");
@@ -310,6 +339,38 @@ function QuizPage() {
           challengeId={challengeId}
           total={totalSteps}
           onNext={afterReveal}
+        />
+      )}
+      {step === "verifyEmail" && (
+        <VerifyEmailScreen
+          email={userEmail}
+          name={userName}
+          step="verifyEmail"
+          onBack={() => goBack("reveal")}
+          onVerified={() => selectAndGo("createPassword")}
+          onEmailChange={setUserEmail}
+        />
+      )}
+      {step === "createPassword" && (
+        <CreatePasswordScreen
+          name={userName}
+          step="createPassword"
+          onBack={() => goBack("verifyEmail")}
+          onDone={() => selectAndGo("profilePhoto")}
+        />
+      )}
+      {step === "profilePhoto" && (
+        <ProfilePhotoScreen
+          name={userName}
+          step="profilePhoto"
+          onBack={() => goBack("createPassword")}
+          onDone={() => selectAndGo("platformWelcome")}
+        />
+      )}
+      {step === "platformWelcome" && (
+        <PlatformWelcomeScreen
+          name={userName}
+          step="platformWelcome"
         />
       )}
       {step === "trainingType" && (
@@ -431,32 +492,8 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
   );
 }
 
-function ProgressHeader({ current, total = 13, onBack }: { current: number; total?: number; onBack?: () => void }) {
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
-        >
-          <ChevronLeft className="h-5 w-5 text-neutral-700" />
-        </button>
-        <div className="text-sm font-bold text-neutral-800">
-          <span style={{ color: "#FF6B00" }}>{current}</span> من {total}
-        </div>
-        <div className="w-10" />
-      </div>
-      <div className="mt-3 flex gap-1.5">
-        {Array.from({ length: total }).map((_, i) => (
-          <div
-            key={i}
-            className="flex-1 h-1.5 rounded-full"
-            style={{ background: i < current ? "#FF6B00" : "rgba(0,0,0,0.1)" }}
-          />
-        ))}
-      </div>
-    </>
-  );
+function ProgressHeader({ step, onBack }: { step: string; onBack?: () => void }) {
+  return <QuizProgressHeader step={step} onBack={onBack} />;
 }
 
 function GymBackdrop() {
@@ -493,7 +530,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={1} />
+        <ProgressHeader step="gender" />
         <div className="mt-5 text-center">
           <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 leading-tight">
             لنبدأ رحلتك مع كوتش <span style={{ color: "#FF6B00" }}>حكيم</span>
@@ -845,7 +882,7 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
       <GymBackdrop />
 
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={2} onBack={onBack} />
+        <ProgressHeader step="goals" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-4 text-center">
@@ -1021,7 +1058,7 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <FeminineBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={2} onBack={onBack} />
+        <ProgressHeader step="femaleGoals" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1118,7 +1155,7 @@ function AgeScreen({
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={3} onBack={onBack} />
+        <ProgressHeader step="age" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1351,7 +1388,7 @@ function MeasureScreen({
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={4} onBack={onBack} />
+        <ProgressHeader step="measure" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-2 text-center">
@@ -1564,7 +1601,7 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={5} onBack={onBack} />
+        <ProgressHeader step="activity" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1622,26 +1659,7 @@ function ActivityScreen({ onBack, onNext }: { onBack: () => void; onNext: (activ
           })}
         </div>
 
-        {/* Bottom info card */}
-        <div
-          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
-          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
-        >
-          <span
-            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
-            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
-          >
-            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
-          </span>
-          <div className="flex-1 text-right">
-            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
-              معلومة مهمة
-            </p>
-            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
-              اختيارك الصحيح يساعدنا في تصميم خطة فعالة وآمنة لك.
-            </p>
-          </div>
-        </div>
+        <QuizImportantInfoNote text="اختيارك الصحيح يساعدنا في تصميم خطة فعالة وآمنة لك." />
 
         {/* CTA */}
         <button
@@ -1839,7 +1857,7 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={6} onBack={onBack} />
+        <ProgressHeader step="challenge" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -1871,26 +1889,7 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
           ))}
         </div>
 
-        {/* Bottom info card */}
-        <div
-          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
-          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
-        >
-          <span
-            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
-            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
-          >
-            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
-          </span>
-          <div className="flex-1 text-right">
-            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
-              معلومة مهمة
-            </p>
-            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
-              معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي.
-            </p>
-          </div>
-        </div>
+        <QuizImportantInfoNote text="معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي." />
 
         {/* CTA */}
         <button
@@ -2063,7 +2062,7 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
     <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
       <FeminineBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
-        <ProgressHeader current={6} onBack={onBack} />
+        <ProgressHeader step="femaleChallenge" onBack={onBack} />
 
         {/* Hero */}
         <div className="mt-3 text-center">
@@ -2095,26 +2094,7 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
           ))}
         </div>
 
-        {/* Bottom info card */}
-        <div
-          className="mt-2.5 rounded-2xl bg-white/80 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center gap-3"
-          style={{ boxShadow: "0 8px 20px -12px rgba(0,0,0,0.1)" }}
-        >
-          <span
-            className="grid h-10 w-10 place-items-center rounded-full bg-white shrink-0"
-            style={{ boxShadow: "0 6px 14px -6px rgba(255,107,0,0.4)" }}
-          >
-            <Lightbulb className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
-          </span>
-          <div className="flex-1 text-right">
-            <p className="text-[13px] font-extrabold" style={{ color: "#FF6B00" }}>
-              معلومة مهمة
-            </p>
-            <p className="text-[11.5px] text-neutral-700 font-medium mt-0.5 leading-relaxed">
-              معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي.
-            </p>
-          </div>
-        </div>
+        <QuizImportantInfoNote text="معرفة أكبر تحدي لديك هي الخطوة الأولى للتغيير الحقيقي." />
 
         {/* CTA */}
         <button
@@ -2382,24 +2362,10 @@ function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: 
           </div>
         </div>
 
-        {/* Info card */}
-        <div
-          className="mt-3 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3"
-          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)" }}
-        >
-          <div
-            className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0"
-            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-          >
-            <PinIcon size={22} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-[13px] font-extrabold" style={{ color: ORANGE }}>معلومة مهمة</div>
-            <div className="text-[12.5px] text-[#3D3D3D] font-medium leading-snug">
-              ✨ نقدم أفضل تجربة سواء كنت في دبي أو خارجها.
-            </div>
-          </div>
-        </div>
+        <QuizImportantInfoNote
+          text="نقدم أفضل تجربة سواء كنت في دبي أو خارجها."
+          icon={<PinIcon />}
+        />
 
         {/* CTA */}
         <div className="mt-auto pt-3">
@@ -2544,13 +2510,9 @@ function MagnifyingGlassIcon({ size = 48 }: { size?: number }) {
           <stop offset="100%" stopColor="#555" />
         </linearGradient>
       </defs>
-      {/* Handle */}
       <rect x="42" y="42" width="8" height="20" rx="4" fill="url(#handleGrad)" transform="rotate(45 46 52)" />
-      {/* Rim */}
       <circle cx="28" cy="28" r="18" fill="none" stroke="url(#handleGrad)" strokeWidth="4" />
-      {/* Glass */}
       <circle cx="28" cy="28" r="15" fill="url(#glassGrad)" />
-      {/* Reflection */}
       <ellipse cx="22" cy="20" rx="6" ry="4" fill="white" opacity="0.5" transform="rotate(-45 22 20)" />
       <ellipse cx="24" cy="22" rx="3" ry="2" fill="white" opacity="0.7" transform="rotate(-45 24 22)" />
     </svg>
@@ -2630,35 +2592,7 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
       />
 
       <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
-            aria-label="رجوع"
-          >
-            <ChevronLeft size={20} className="text-neutral-700" />
-          </button>
-          <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>7</span> من 13
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Progress */}
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: i < 6 ? "100%" : i === 6 ? "55%" : "0%",
-                  background: ORANGE,
-                }}
-              />
-            </div>
-          ))}
-        </div>
+        <ProgressHeader step="investment" onBack={onBack} />
 
         {/* Title */}
         <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
@@ -2716,24 +2650,7 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
           })}
         </div>
 
-        {/* Info card */}
-        <div
-          className="mt-2.5 rounded-[20px] bg-white/85 backdrop-blur px-4 py-3 flex flex-row-reverse items-center gap-3"
-          style={{ boxShadow: "0 6px 18px -10px rgba(0,0,0,0.12)", animation: "fadeUp .5s ease-out .35s both" }}
-        >
-          <div
-            className="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0"
-            style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-          >
-            <Lightbulb size={20} style={{ color: ORANGE }} />
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-[13px] font-extrabold" style={{ color: ORANGE }}>معلومة مهمة</div>
-            <div className="text-[11.5px] text-[#3D3D3D] font-medium leading-snug">
-              كلما كان استثمارك أعلى، كانت نتائجك أسرع وأفضل. أنا هنا لمساعدتك على تحقيق أفضل نسخة منك.
-            </div>
-          </div>
-        </div>
+        <QuizImportantInfoNote text="كلما كان استثمارك أعلى، كانت نتائجك أسرع وأفضل." />
 
         {/* CTA */}
         <div className="mt-auto pt-2.5">
@@ -2883,29 +2800,7 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
       style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
     >
       <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
-            aria-label="رجوع"
-          >
-            <ChevronLeft size={20} className="text-neutral-700" />
-          </button>
-          <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>8</span> من 13
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Progress */}
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div className="h-full rounded-full" style={{ width: i < 8 ? "100%" : "0%", background: ORANGE }} />
-            </div>
-          ))}
-        </div>
+        <ProgressHeader step="bodyType" onBack={onBack} />
 
         {/* Title */}
         <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
@@ -3007,29 +2902,7 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
       style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
     >
       <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
-            aria-label="رجوع"
-          >
-            <ChevronLeft size={20} className="text-neutral-700" />
-          </button>
-          <div className="text-[15px] font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>8</span> من 13
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Progress */}
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div className="h-full rounded-full" style={{ width: i < 8 ? "100%" : "0%", background: ORANGE }} />
-            </div>
-          ))}
-        </div>
+        <ProgressHeader step="femaleBodyType" onBack={onBack} />
 
         {/* Title */}
         <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
@@ -3112,30 +2985,31 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
   );
 }
 
-const TRAINING_ENVIRONMENTS = [
+type TrainingEnvironmentValue = "home" | "gym" | "anywhere";
+
+const TRAINING_ENVIRONMENTS: {
+  id: TrainingEnvironmentValue;
+  title: string;
+  desc: string;
+  image: string;
+}[] = [
   {
-    id: "home" as const,
+    id: "home",
     title: "المنزل",
-    icon: Home,
-    desc: "تمارين باستخدام وزن الجسم أو المعدات المنزلية مع مرونة في الوقت والمكان.",
-    features: [
-      "لا يحتاج إلى نادي رياضي",
-      "مناسب للمبتدئين",
-      "مرونة في أوقات التدريب",
-      "يعتمد على المعدات المنزلية المتوفرة",
-    ],
+    desc: "تمارين باستخدام وزن الجسم أو المعدات المنزلية المتوفرة.",
+    image: trainingEnvHomeImg,
   },
   {
-    id: "gym" as const,
+    id: "gym",
     title: "النادي الرياضي",
-    icon: Dumbbell,
     desc: "برنامج يعتمد على أجهزة النادي والأوزان الحرة لتحقيق أفضل النتائج.",
-    features: [
-      "الاستفادة من جميع الأجهزة",
-      "تمارين احترافية",
-      "تنوع أكبر في التمارين",
-      "مناسب لمن يتدرب داخل الجيم",
-    ],
+    image: trainingEnvGymImg,
+  },
+  {
+    id: "anywhere",
+    title: "في أي مكان",
+    desc: "أحب التنوع وأريد برنامجاً يمكنني تنفيذه في المنزل أو النادي.",
+    image: trainingEnvAnywhereImg,
   },
 ];
 
@@ -3144,38 +3018,48 @@ function TrainingEnvironmentScreen({
   onBack,
   onNext,
 }: {
-  initialValue?: "home" | "gym";
+  initialValue?: TrainingEnvironmentValue;
   onBack: () => void;
-  onNext: (value: "home" | "gym") => void;
+  onNext: (value: TrainingEnvironmentValue) => void;
 }) {
   const ORANGE = "#FF6B00";
-  const GREEN = "#22C55E";
-  const [selected, setSelected] = useState<"home" | "gym" | null>(initialValue ?? null);
+  const [selected, setSelected] = useState<TrainingEnvironmentValue | null>(initialValue ?? null);
 
   return (
     <div
       className="relative w-full h-full overflow-hidden"
-      style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
+      style={{
+        backgroundColor: "#FAF8F5",
+        backgroundImage: `url(${gymBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        animation: "fadeIn .35s ease-out",
+      }}
     >
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)",
+        }}
+      />
+
       <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        <ProgressHeader current={9} onBack={onBack} />
+        <ProgressHeader step="trainingEnvironment" onBack={onBack} />
 
         {/* Title */}
-        <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
-          <h1 className="text-[22px] font-extrabold text-[#1F1F1F] leading-tight">
-            أين ستتدرب؟
-          </h1>
-          <p className="mt-1.5 text-[12.5px] text-gray-500 font-medium leading-snug">
-            اختر المكان الذي ستلتزم فيه بالتدريب حتى نصمم لك البرنامج الأنسب.
+        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
+          <h1 className="text-[24px] font-extrabold leading-tight text-[#1F1F1F]">أين ستتدرب؟</h1>
+          <p className="mt-2 px-3 text-[13px] font-medium leading-relaxed text-gray-500">
+            اختر المكان الذي يناسبك وسنجهز لك برنامج مثالي.
           </p>
-          <div className="mx-auto mt-1.5 h-[3px] w-10 rounded-full" style={{ background: ORANGE }} />
+          <div className="mx-auto mt-2 h-[3px] w-10 rounded-full" style={{ background: ORANGE }} />
         </div>
 
-        {/* Cards */}
-        <div className="mt-3 flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pb-1">
+        {/* Options */}
+        <div className="mt-3.5 flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto pb-1">
           {TRAINING_ENVIRONMENTS.map((env, i) => {
             const active = selected === env.id;
-            const Icon = env.icon;
             return (
               <button
                 key={env.id}
@@ -3185,97 +3069,65 @@ function TrainingEnvironmentScreen({
                   setSelected(env.id);
                 }}
                 aria-pressed={active}
-                className="relative w-full text-right rounded-[22px] bg-white p-4 transition-all duration-200 active:scale-[0.99]"
+                className="relative w-full overflow-hidden rounded-[20px] p-3 text-right transition-all duration-200 active:scale-[0.99]"
                 style={{
+                  background: active ? "rgba(255,245,235,0.95)" : "#FFFFFF",
                   border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
                   boxShadow: active
-                    ? "0 16px 34px -14px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)"
-                    : "0 8px 20px -12px rgba(0,0,0,0.16), 0 2px 5px -3px rgba(0,0,0,0.05)",
-                  transform: active ? "scale(1.02)" : "scale(1)",
+                    ? "0 14px 32px -14px rgba(255,107,0,0.35), 0 4px 10px -6px rgba(0,0,0,0.06)"
+                    : "0 8px 20px -14px rgba(0,0,0,0.12), 0 2px 5px -3px rgba(0,0,0,0.04)",
                   animation: `fadeUp .5s ease-out ${i * 70}ms both`,
                 }}
               >
-                {/* Selected checkmark */}
                 <div
-                  className="absolute top-3.5 left-3.5 grid h-7 w-7 place-items-center rounded-full text-white"
+                  className="absolute left-3 top-3 grid place-items-center rounded-full transition-all duration-200"
                   style={{
-                    background: ORANGE,
-                    opacity: active ? 1 : 0,
-                    transform: active ? "scale(1)" : "scale(0.6)",
-                    transition: "opacity .2s ease, transform .2s ease",
-                    boxShadow: "0 6px 14px -6px rgba(255,107,0,0.6)",
+                    width: 22,
+                    height: 22,
+                    background: active ? ORANGE : "transparent",
+                    border: active ? "none" : "1.5px solid #D1D5DB",
+                    boxShadow: active ? "0 4px 10px -4px rgba(255,107,0,0.55)" : "none",
                   }}
                 >
-                  <Check size={16} strokeWidth={3} />
+                  {active ? <Check size={13} className="text-white" strokeWidth={3} /> : null}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div
-                    className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-2xl transition-all duration-200"
-                    style={{
-                      background: active
-                        ? "linear-gradient(135deg, #FFE8D6 0%, #FFD3AE 100%)"
-                        : "linear-gradient(135deg, #F4F1EC 0%, #ECE7DF 100%)",
-                    }}
-                  >
-                    <Icon
-                      size={32}
-                      strokeWidth={2.2}
-                      style={{ color: active ? ORANGE : "#9AA0A6", transition: "color .2s ease" }}
+                <div className="flex flex-row-reverse items-center gap-3 pr-1">
+                  <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-2xl bg-[#F4F1EC]">
+                    <img
+                      src={env.image}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      draggable={false}
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[17px] font-extrabold text-[#1F1F1F] leading-tight">
+                  <div className="min-w-0 flex-1 text-right">
+                    <div className="text-[16px] font-extrabold leading-tight text-[#1F1F1F]">
                       {env.title}
                     </div>
-                    <p className="mt-1 text-[12px] text-gray-500 font-medium leading-snug">
+                    <p className="mt-1 text-[11.5px] font-medium leading-snug text-gray-500">
                       {env.desc}
                     </p>
                   </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1.5">
-                  {env.features.map((f) => (
-                    <div key={f} className="flex flex-row-reverse items-center gap-1.5 text-right">
-                      <Check size={13} strokeWidth={3} style={{ color: GREEN }} className="shrink-0" />
-                      <span className="text-[11px] text-gray-600 font-medium leading-tight">{f}</span>
-                    </div>
-                  ))}
                 </div>
               </button>
             );
           })}
 
-          {/* Info card */}
-          <div
-            className="rounded-[18px] p-3.5 flex flex-row-reverse items-start gap-3 text-right"
-            style={{ background: "#FFF6EF", border: "1px solid #FDE7D3" }}
-          >
-            <div
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white"
-              style={{ boxShadow: "0 4px 12px rgba(255,107,0,0.18)", border: "1px solid #F5E6D6" }}
-            >
-              <Lightbulb size={18} style={{ color: ORANGE }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[13.5px] font-extrabold text-[#1F1F1F]">
-                لماذا نسألك هذا السؤال؟
-              </div>
-              <p className="mt-1 text-[12px] text-gray-600 leading-relaxed">
-                يساعدنا اختيار مكان التدريب على إنشاء برنامج تدريبي يناسب الأدوات والمعدات المتوفرة
-                لديك، مما يمنحك تجربة أكثر دقة وفعالية.
-              </p>
-            </div>
-          </div>
+          <QuizImportantInfoNote
+            layout="stacked"
+            label="لماذا نحتاج هذه المعلومة؟"
+            text="لمساعدتنا على اختيار التمارين والمعدات المناسبة وتصميم برنامج يتوافق مع مكان تدريبك."
+          />
         </div>
 
         {/* CTA */}
-        <div className="pt-3">
+        <div className="mt-auto pt-2.5">
           <button
             type="button"
             disabled={!selected}
             onClick={() => selected && onNext(selected)}
-            className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
+            className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[18px] text-[17px] font-extrabold text-white transition-all duration-200 active:scale-[0.98]"
             style={{
               background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
               boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
@@ -3287,6 +3139,11 @@ function TrainingEnvironmentScreen({
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </div>
   );
 }
@@ -3336,20 +3193,7 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
     <div className="absolute inset-0 flex flex-col" style={{ backgroundColor: "#FAF8F5", fontFamily: FONT }}>
       {/* Header */}
       <div className="px-4 pt-3 pb-2 shrink-0">
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} aria-label="رجوع" className="w-9 h-9 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-center justify-center">
-            <ChevronLeft size={20} className="text-gray-700 rotate-180" />
-          </button>
-          <div className="text-[15px] font-bold text-gray-800">
-            <span className="text-[#FF6B00]">9</span> من 13
-          </div>
-          <div className="w-9" />
-        </div>
-        <div className="mt-2 flex gap-1">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div key={i} className="h-[3px] flex-1 rounded-full" style={{ backgroundColor: i < 9 ? "#FF6B00" : "#F0E6DC" }} />
-          ))}
-        </div>
+        <ProgressHeader step="analysis" onBack={onBack} />
       </div>
 
       <div className="flex-1 overflow-hidden px-4 flex flex-col">
@@ -3526,7 +3370,7 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
-function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, isDubai: boolean, phone: string, city: string) => void }) {
+function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, email: string, isDubai: boolean, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
@@ -3569,8 +3413,14 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
             <Check className="h-10 w-10" style={{ color: ORANGE }} strokeWidth={3} />
           </div>
           <h1 className="text-2xl font-black text-neutral-900 leading-snug animate-fade-in">تهانينا! 🎉 تم تحليل بياناتك بنجاح</h1>
+          <p
+            className="mt-4 max-w-sm font-[Tajawal] text-[14px] font-bold leading-7 animate-fade-in"
+            style={{ color: ORANGE }}
+          >
+            نقوم الآن بتحليل بياناتك بعناية لبناء برنامج يوافق أهدافك ونمط حياتك.
+          </p>
           <p className="mt-4 max-w-sm text-[14px] leading-7 text-neutral-600 animate-fade-in">
-            لقد وجدت الخطة المثالية التي تضمن لك الوصول لنتائجك المرغوبة خلال 90 يوماً بدقة. خطوتك الأخيرة هي تزويدي بمعلومات التواصل الأساسية لتأكيد استلام برنامجك الخاص.
+            خطط ذكية، تمارين مناسبة، وتغذية متوازنة... كل ذلك سيتم تصميمه خصيصاً من أجلك.
           </p>
           <div className="mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,107,0,0.15)" }}>
             <div className="h-full rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${overlayProgress}%`, background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)` }} />
@@ -3581,22 +3431,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
 
       {/* Header */}
       <div className="px-5 pt-5">
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className="flex items-center gap-1 text-neutral-700">
-            <ChevronRight className="h-5 w-5" />
-            <span className="text-sm">رجوع</span>
-          </button>
-          <div className="text-sm font-bold">
-            <span style={{ color: ORANGE }}>10</span>
-            <span className="text-neutral-700"> من 13</span>
-          </div>
-          <div className="w-12" />
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div key={i} className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: i < 10 ? ORANGE : "#E5E5E5" }} />
-          ))}
-        </div>
+        <ProgressHeader step="contact" onBack={onBack} />
       </div>
 
       {/* Title */}
@@ -3698,16 +3533,39 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
             const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
           
             try {
-              await createLead(buildLeadInsertFromQuiz(quizAnswers, {
+              const contactPayload = {
                 fullName: form.name.trim(),
                 email: form.email.trim(),
                 phone: fullPhone,
                 city: form.city,
                 country: selectedCountry?.name ?? form.country,
-                locationPreference: isDubai ? "dubai" : "remote",
-              }));
-          
-              onDone(form.name.trim(), isDubai, fullPhone, form.city);
+                locationPreference: isDubai ? "dubai" as const : "remote" as const,
+              };
+
+              await createLead(buildLeadInsertFromQuiz(quizAnswers, contactPayload));
+
+              await createOnboardingDraft({
+                email: contactPayload.email,
+                full_name: contactPayload.fullName,
+                phone: contactPayload.phone,
+                country: contactPayload.country,
+                city: contactPayload.city,
+                goal: quizAnswers.goalId ?? undefined,
+                location_preference: contactPayload.locationPreference,
+                answers: buildQuizAnswersPayload({
+                  ...quizAnswers,
+                  userLocation: contactPayload.locationPreference,
+                  lastStep: "contact",
+                }),
+              });
+
+              onDone(
+                contactPayload.fullName,
+                contactPayload.email,
+                isDubai,
+                fullPhone,
+                form.city,
+              );
             } catch (error) {
               console.error("Failed to save lead:", error);
               alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
@@ -4044,7 +3902,7 @@ const TIMELINE_STAGES = [
   { week: "الأسبوع 13+", title: "الشكل المثالي", desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"], color: "#3B82F6", bg: "#DBEAFE", Icon: Trophy },
 ];
 
-function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; total?: number; onNext: () => void }) {
+function ProgramRevealScreen({ name, gender, goalId, challengeId, total = QUIZ_PROGRESS_TOTAL, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; total?: number; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
@@ -4109,25 +3967,15 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
 
       {/* Top progress chip */}
       <div className="px-5 pt-5 max-w-md mx-auto md:max-w-none">
-        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">12 من {total}</div>
-        <div className="flex gap-1.5">
-          {Array.from({ length: total }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 12 ? ORANGE : "#ECE8E1" }} />
-          ))}
-        </div>
+        <QuizProgressStrip step="reveal" />
       </div>
 
       <div className="px-5 pt-6 pb-32 max-w-md mx-auto md:max-w-none">
         {/* HEADER */}
         <div className="pr-fade text-right">
-          <div>
-            <h1 className="font-[Tajawal] text-[24px] font-black leading-tight" style={{ color: TEXT }}>
-              هذا ما يمكنك تحقيقه خلال
-            </h1>
-            <div className="font-[Tajawal] text-[34px] font-black leading-none mt-1" style={{ color: ORANGE }}>
-              90 يوم
-            </div>
-          </div>
+          <h1 className="font-[Tajawal] text-[24px] font-black leading-tight whitespace-nowrap" style={{ color: TEXT }}>
+            هذا ما يمكنك <span style={{ color: ORANGE }}>تحقيقه</span> في المنصة
+          </h1>
         </div>
 
         <p className="pr-fade mt-3 text-[13px] text-neutral-600 leading-relaxed text-center px-2" style={{ animationDelay: ".15s" }}>
@@ -4300,24 +4148,24 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
           </div>
         )}
 
-        {/* STAGE 6: Success card */}
+        {/* STAGE 6: Next-step card */}
         {showSuccess && (
           <div
             className="pr-pop pr-glow mt-6 rounded-3xl p-4 flex items-start gap-3"
             style={{
-              background: "linear-gradient(135deg, #EAFBEF 0%, #FFFFFF 100%)",
-              border: `1.5px solid ${GREEN}55`,
+              background: "linear-gradient(135deg, #FFF7F0 0%, #FFFFFF 100%)",
+              border: `1.5px solid ${ORANGE}44`,
             }}
           >
-            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center bg-white" style={{ boxShadow: "0 6px 16px -8px rgba(34,197,94,.5)" }}>
-              <ShieldCheck className="h-7 w-7" style={{ color: GREEN }} strokeWidth={2.2} />
+            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center bg-white" style={{ boxShadow: "0 6px 16px -8px rgba(255,107,0,.45)" }}>
+              <BadgeCheck className="h-7 w-7" style={{ color: ORANGE }} strokeWidth={2.2} />
             </div>
             <div className="flex-1 text-right">
-              <div className="pr-heading text-[15px]" style={{ color: TEXT }}>
-                أنت على بعد 90 يوم فقط من أفضل نسخة منك!
+              <div className="pr-heading font-[Tajawal] text-[16px] font-black leading-snug" style={{ color: TEXT }}>
+                بقيت <span style={{ color: ORANGE }}>خطوة واحدة</span>
               </div>
-              <p className="mt-1 text-[12px] text-neutral-600 leading-relaxed">
-                التزم بالخطة، ثق بالعملية، والنتيجة ستكون مذهلة <span>👍</span>
+              <p className="mt-1.5 text-[12px] text-neutral-600 leading-relaxed">
+                تحقق من بريدك الإلكتروني وأنشئ كلمة المرور لبدء رحلتك داخل المنصة
               </p>
             </div>
           </div>
@@ -4346,7 +4194,7 @@ function ProgramRevealScreen({ name, gender, goalId, challengeId, total = 13, on
                 letterSpacing: "-0.01em",
               }}
             >
-              <span>ممتاز 💪 أريد رؤية الخطة المناسبة لي</span>
+              <span>متابعة تفعيل حسابي في المنصة</span>
               <ArrowLeft className="h-5 w-5" strokeWidth={2.8} />
             </button>
           </div>
@@ -4418,7 +4266,7 @@ function BeforeAfterTile({
 
 const GREEN_BADGE_COLOR = "#22C55E";
 
-function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; gender: "male" | "female" | null; total?: number; onNext: () => void }) {
+function CongratsScreen({ name, gender, total = QUIZ_PROGRESS_TOTAL, onNext }: { name: string; gender: "male" | "female" | null; total?: number; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
@@ -4497,11 +4345,8 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
 
       <div className="min-h-full max-w-md mx-auto md:max-w-none px-5 pt-8 pb-10 flex flex-col">
         {/* Progress */}
-        <div className="text-center text-[12px] font-bold text-neutral-500 mb-2">11 من {total}</div>
-        <div className="flex gap-1.5 mb-8">
-          {Array.from({ length: total }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < 11 ? ORANGE : "#ECE8E1" }} />
-          ))}
+        <div className="mb-8">
+          <QuizProgressStrip step="congrats" />
         </div>
 
         {/* Success badge with rings */}
@@ -4552,16 +4397,16 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {[
-                { Icon: Calendar, label: "90 يوم" },
-                { Icon: Target, label: "هدف مخصص" },
-                { Icon: ShieldCheck, label: "متابعة" },
-              ].map(({ Icon, label }, i) => (
+                { emoji: "👤", label: "برنامج شخصي" },
+                { emoji: "🥗", label: "خطة متكاملة" },
+                { emoji: "📈", label: "متابعة مستمرة" },
+              ].map(({ emoji, label }, i) => (
                 <div
                   key={i}
                   className="cg-feature-card rounded-2xl bg-white p-2.5 text-center"
                   style={{ border: "1px solid #ECE8E1", animationDelay: `${i * 350}ms` }}
                 >
-                  <Icon className="h-5 w-5 mx-auto" style={{ color: ORANGE }} strokeWidth={2.4} />
+                  <div className="text-[20px] leading-none">{emoji}</div>
                   <div className="text-[10.5px] font-bold mt-1" style={{ color: TEXT }}>{label}</div>
                 </div>
               ))}
@@ -4580,7 +4425,7 @@ function CongratsScreen({ name, gender, total = 13, onNext }: { name: string; ge
               className="cg-pulse-btn w-full rounded-2xl py-4 px-5 font-[Tajawal] text-white flex items-center justify-center gap-2 active:scale-[.98] transition-transform"
               style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)`, fontWeight: 900, fontSize: 16 }}
             >
-              <span>اكتشف ما يمكنك تحقيقه خلال 90 يوم</span>
+              <span>مبروك انت مؤهل للمنصة من اجل برنامجك</span>
               <ChevronLeft className="h-5 w-5" strokeWidth={3} />
             </button>
             <p className="text-center text-[11.5px] text-neutral-500 mt-3 leading-relaxed">
