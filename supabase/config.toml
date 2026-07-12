@@ -1,5 +1,22 @@
 project_id = "ufgrbpakuemamggwypdh"
 
+[auth]
+site_url = "https://hakimlemagicien.com"
+additional_redirect_urls = [
+  "https://hakimlemagicien.com/**",
+  "http://localhost:5173/**",
+  "http://localhost:5176/**",
+  "http://localhost:5177/**",
+  "http://127.0.0.1:5173/**",
+]
+
+[auth.email]
+enable_signup = true
+
+[auth.email.template.magic_link]
+subject = "الكوتش حكيم — رمز التحقق من بريدك"
+content_path = "./supabase/email-templates/magic-link.html"
+
 [functions.admin-accept-payment]
 verify_jwt = true
 

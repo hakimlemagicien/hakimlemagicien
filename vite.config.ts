@@ -1,41 +1,83 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { createRequire } from "node:module";
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import { defineConfig, loadEnv } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
 const require = createRequire(import.meta.url);
 
-export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
-  },
+export default defineConfig(({ command, mode }) => {
+  const envDefine: Record<string, string> = {};
+  const loadedEnv = loadEnv(mode, process.cwd(), "VITE_");
+  for (const [key, value] of Object.entries(loadedEnv)) {
+    envDefine[`import.meta.env.${key}`] = JSON.stringify(value);
+  }
 
-  vite: {
+  const plugins = [
+    tailwindcss(),
+    tsconfigPaths({ projects: ["./tsconfig.json"] }),
+    tanstackStart({
+      server: { entry: "server" },
+      importProtection: {
+        behavior: "error",
+        client: {
+          files: ["**/server/**"],
+          specifiers: ["server-only"],
+        },
+      },
+    }),
+    ...(command === "build"
+      ? [
+          nitro({
+            preset: "vercel",
+            output: {
+              dir: ".vercel/output",
+              serverDir: ".vercel/output/functions/__server.func",
+              publicDir: ".vercel/output/static",
+            },
+            noExternals: ["tslib", "@radix-ui/react-dialog"],
+            traceDeps: ["tslib"],
+            externals: {
+              inline: ["tslib", "@radix-ui/react-dialog"],
+            },
+          }),
+        ]
+      : []),
+    viteReact(),
+  ];
+
+  return {
+    define: envDefine,
+    css: { transformer: "lightningcss" as const },
     resolve: {
       alias: {
+        "@": `${process.cwd()}/src`,
         tslib: require.resolve("tslib/tslib.es6.mjs"),
       },
+      dedupe: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@tanstack/react-query",
+        "@tanstack/query-core",
+      ],
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+      ],
+      ignoreOutdatedRequests: true,
     },
     ssr: {
       noExternal: ["tslib", "@radix-ui/react-dialog"],
     },
-  },
-
-  nitro: {
-    preset: "vercel",
-    output: {
-      dir: ".vercel/output",
-      serverDir: ".vercel/output/functions/__server.func",
-      publicDir: ".vercel/output/static",
-    },
-    noExternals: ["tslib", "@radix-ui/react-dialog"],
-    traceDeps: ["tslib"],
-    externals: {
-      inline: ["tslib", "@radix-ui/react-dialog"],
-    },
-  },
+    plugins,
+  };
 });

@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { FloatingWhatsApp } from "../components/FloatingWhatsApp";
 import { ScrollToTopButton } from "../components/ScrollToTopButton";
 import { MotionProvider } from "../components/motion/MotionProvider";
+import { startVisualPropertiesEngine } from "../lib/design-lab/visual-editor";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/pwa";
 
@@ -178,6 +179,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isQuiz = pathname.startsWith("/quiz");
   const isPlatform = pathname.startsWith("/app");
+
+  useEffect(() => {
+    return startVisualPropertiesEngine(pathname);
+  }, [pathname]);
 
   return (
     <MotionProvider>

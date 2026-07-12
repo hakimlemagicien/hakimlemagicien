@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Crown, Lock, X } from "lucide-react";
+import { Crown, Lock, X } from "lucide-react";
+import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
 import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
 import { ACTIVATE_PROGRAM_CTA, PAID_TIERS } from "@/lib/pricing-presentation";
@@ -121,14 +122,12 @@ export function MembershipUpgradeSheet() {
 
                       <ul className="mt-3 space-y-2 text-right">
                         {plan.features.map((feature) => (
-                          <li key={feature} className="flex items-start gap-2">
-                            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#5C9E54]">
-                              <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
-                            </span>
-                            <span className="font-[Tajawal] text-[12px] font-medium leading-relaxed text-[#334155]">
-                              {feature}
-                            </span>
-                          </li>
+                          <FeatureCheck
+                            key={feature}
+                            label={feature}
+                            tone={featureCheckToneForPlan(plan.id)}
+                            compact
+                          />
                         ))}
                       </ul>
 

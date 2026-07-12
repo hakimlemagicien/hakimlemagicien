@@ -4,6 +4,7 @@ export type QuizAnswersInput = {
   gender?: "male" | "female" | null;
   goalId?: string;
   challengeId?: string;
+  injuryIds?: string[];
   age?: number;
   heightCm?: number;
   weightKg?: number;
@@ -30,6 +31,7 @@ export function buildQuizAnswersPayload(input: QuizAnswersInput): Json {
     gender: input.gender ?? null,
     goalId: input.goalId ?? null,
     challengeId: input.challengeId ?? null,
+    injuryIds: input.injuryIds ?? null,
     age: input.age ?? null,
     heightCm: input.heightCm ?? null,
     weightKg: input.weightKg ?? null,

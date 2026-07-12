@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   CalendarDays,
+  Dumbbell,
   Home,
   LineChart,
   LogOut,
@@ -12,6 +14,7 @@ import {
 } from "lucide-react";
 import { DailyHubOverlay } from "@/components/platform/shared/DailyHubOverlay";
 import { supabase } from "@/integrations/supabase/client";
+import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV_ITEMS = [
@@ -25,6 +28,7 @@ const MOBILE_NAV_ITEMS = [
 const DESKTOP_NAV_ITEMS = [
   { to: "/app", label: "الرئيسية", icon: Home, exact: true },
   { to: "/app/program", label: "برنامجي", icon: CalendarDays },
+  { to: "/app/exercises", label: "مكتبة التمارين", icon: Dumbbell },
   { to: "/app/discover", label: "اكتشف", icon: BookOpen },
   { to: "/app/nutrition", label: "التغذية", icon: Salad },
   { to: "/app/progress", label: "التقدم", icon: LineChart },
@@ -135,6 +139,15 @@ function NavItem({
 }
 
 export function PlatformSidebar() {
+  const libraryAccessQuery = useQuery({
+    queryKey: ["exercise-library-access"],
+    queryFn: canAccessExerciseLibrary,
+    staleTime: 5 * 60 * 1000,
+  });
+  const navItems = DESKTOP_NAV_ITEMS.filter(
+    (item) => item.to !== "/app/exercises" || libraryAccessQuery.data,
+  );
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/auth";
@@ -147,7 +160,7 @@ export function PlatformSidebar() {
         <p className="text-lg font-black text-foreground">Platform</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1">
-        {DESKTOP_NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavItem key={item.to} {...item} />
         ))}
       </nav>
@@ -165,6 +178,11 @@ export function PlatformSidebar() {
 
 export function PlatformMobileNav() {
   const [hubOpen, setHubOpen] = useState(false);
+  const libraryAccessQuery = useQuery({
+    queryKey: ["exercise-library-access"],
+    queryFn: canAccessExerciseLibrary,
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <>
@@ -190,7 +208,11 @@ export function PlatformMobileNav() {
           )}
         </div>
       </nav>
-      <DailyHubOverlay open={hubOpen} onClose={() => setHubOpen(false)} />
+      <DailyHubOverlay
+        open={hubOpen}
+        onClose={() => setHubOpen(false)}
+        showExerciseLibrary={Boolean(libraryAccessQuery.data)}
+      />
     </>
   );
 }

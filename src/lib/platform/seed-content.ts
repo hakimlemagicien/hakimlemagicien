@@ -254,7 +254,7 @@ export const FEATURE_GRID_SEED: FeatureGridItem[] = [
     id: "exercises",
     title: "التمارين",
     subtitle: "تمارين مخصصة",
-    href: "/app/program",
+    href: "/app/exercises",
     icon: "exercises",
     bg: "bg-[#DBEAFE]",
   },

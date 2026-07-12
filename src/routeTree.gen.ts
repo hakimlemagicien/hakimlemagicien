@@ -23,14 +23,17 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
 import { Route as PlatformAppWaterRouteImport } from './routes/_platform/app/water'
 import { Route as PlatformAppSupportRouteImport } from './routes/_platform/app/support'
+import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
 import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/discover'
 import { Route as PlatformAppAchievementsRouteImport } from './routes/_platform/app/achievements'
 import { Route as PlatformAppProgramIndexRouteImport } from './routes/_platform/app/program/index'
 import { Route as PlatformAppNutritionIndexRouteImport } from './routes/_platform/app/nutrition/index'
+import { Route as PlatformAppExercisesIndexRouteImport } from './routes/_platform/app/exercises/index'
 import { Route as PlatformAppToolsCaloriesRouteImport } from './routes/_platform/app/tools/calories'
 import { Route as PlatformAppNutritionMealRouteImport } from './routes/_platform/app/nutrition/meal'
+import { Route as PlatformAppExercisesExerciseIdRouteImport } from './routes/_platform/app/exercises/$exerciseId'
 import { Route as PlatformAppProgramWorkoutIndexRouteImport } from './routes/_platform/app/program/workout/index'
 import { Route as PlatformAppProgramWorkoutExerciseRouteImport } from './routes/_platform/app/program/workout/exercise'
 
@@ -102,6 +105,11 @@ const PlatformAppSupportRoute = PlatformAppSupportRouteImport.update({
   path: '/app/support',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
+const PlatformAppStudioRoute = PlatformAppStudioRouteImport.update({
+  id: '/app/studio',
+  path: '/app/studio',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
 const PlatformAppProgressRoute = PlatformAppProgressRouteImport.update({
   id: '/app/progress',
   path: '/app/progress',
@@ -133,6 +141,12 @@ const PlatformAppNutritionIndexRoute =
     path: '/app/nutrition/',
     getParentRoute: () => PlatformRouteRoute,
   } as any)
+const PlatformAppExercisesIndexRoute =
+  PlatformAppExercisesIndexRouteImport.update({
+    id: '/app/exercises/',
+    path: '/app/exercises/',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
 const PlatformAppToolsCaloriesRoute =
   PlatformAppToolsCaloriesRouteImport.update({
     id: '/app/tools/calories',
@@ -143,6 +157,12 @@ const PlatformAppNutritionMealRoute =
   PlatformAppNutritionMealRouteImport.update({
     id: '/app/nutrition/meal',
     path: '/app/nutrition/meal',
+    getParentRoute: () => PlatformRouteRoute,
+  } as any)
+const PlatformAppExercisesExerciseIdRoute =
+  PlatformAppExercisesExerciseIdRouteImport.update({
+    id: '/app/exercises/$exerciseId',
+    path: '/app/exercises/$exerciseId',
     getParentRoute: () => PlatformRouteRoute,
   } as any)
 const PlatformAppProgramWorkoutIndexRoute =
@@ -172,11 +192,14 @@ export interface FileRoutesByFullPath {
   '/app/discover': typeof PlatformAppDiscoverRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
+  '/app/studio': typeof PlatformAppStudioRoute
   '/app/support': typeof PlatformAppSupportRoute
   '/app/water': typeof PlatformAppWaterRoute
   '/app/': typeof PlatformAppIndexRoute
+  '/app/exercises/$exerciseId': typeof PlatformAppExercisesExerciseIdRoute
   '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
+  '/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/app/program/': typeof PlatformAppProgramIndexRoute
   '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
@@ -196,11 +219,14 @@ export interface FileRoutesByTo {
   '/app/discover': typeof PlatformAppDiscoverRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
+  '/app/studio': typeof PlatformAppStudioRoute
   '/app/support': typeof PlatformAppSupportRoute
   '/app/water': typeof PlatformAppWaterRoute
   '/app': typeof PlatformAppIndexRoute
+  '/app/exercises/$exerciseId': typeof PlatformAppExercisesExerciseIdRoute
   '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
+  '/app/exercises': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition': typeof PlatformAppNutritionIndexRoute
   '/app/program': typeof PlatformAppProgramIndexRoute
   '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
@@ -223,11 +249,14 @@ export interface FileRoutesById {
   '/_platform/app/discover': typeof PlatformAppDiscoverRoute
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
+  '/_platform/app/studio': typeof PlatformAppStudioRoute
   '/_platform/app/support': typeof PlatformAppSupportRoute
   '/_platform/app/water': typeof PlatformAppWaterRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
+  '/_platform/app/exercises/$exerciseId': typeof PlatformAppExercisesExerciseIdRoute
   '/_platform/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/_platform/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
+  '/_platform/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/_platform/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/_platform/app/program/': typeof PlatformAppProgramIndexRoute
   '/_platform/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
@@ -249,11 +278,14 @@ export interface FileRouteTypes {
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
+    | '/app/studio'
     | '/app/support'
     | '/app/water'
     | '/app/'
+    | '/app/exercises/$exerciseId'
     | '/app/nutrition/meal'
     | '/app/tools/calories'
+    | '/app/exercises/'
     | '/app/nutrition/'
     | '/app/program/'
     | '/app/program/workout/exercise'
@@ -273,11 +305,14 @@ export interface FileRouteTypes {
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
+    | '/app/studio'
     | '/app/support'
     | '/app/water'
     | '/app'
+    | '/app/exercises/$exerciseId'
     | '/app/nutrition/meal'
     | '/app/tools/calories'
+    | '/app/exercises'
     | '/app/nutrition'
     | '/app/program'
     | '/app/program/workout/exercise'
@@ -299,11 +334,14 @@ export interface FileRouteTypes {
     | '/_platform/app/discover'
     | '/_platform/app/profile'
     | '/_platform/app/progress'
+    | '/_platform/app/studio'
     | '/_platform/app/support'
     | '/_platform/app/water'
     | '/_platform/app/'
+    | '/_platform/app/exercises/$exerciseId'
     | '/_platform/app/nutrition/meal'
     | '/_platform/app/tools/calories'
+    | '/_platform/app/exercises/'
     | '/_platform/app/nutrition/'
     | '/_platform/app/program/'
     | '/_platform/app/program/workout/exercise'
@@ -423,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppSupportRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/studio': {
+      id: '/_platform/app/studio'
+      path: '/app/studio'
+      fullPath: '/app/studio'
+      preLoaderRoute: typeof PlatformAppStudioRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
     '/_platform/app/progress': {
       id: '/_platform/app/progress'
       path: '/app/progress'
@@ -465,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppNutritionIndexRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/exercises/': {
+      id: '/_platform/app/exercises/'
+      path: '/app/exercises'
+      fullPath: '/app/exercises/'
+      preLoaderRoute: typeof PlatformAppExercisesIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
     '/_platform/app/tools/calories': {
       id: '/_platform/app/tools/calories'
       path: '/app/tools/calories'
@@ -477,6 +529,13 @@ declare module '@tanstack/react-router' {
       path: '/app/nutrition/meal'
       fullPath: '/app/nutrition/meal'
       preLoaderRoute: typeof PlatformAppNutritionMealRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/exercises/$exerciseId': {
+      id: '/_platform/app/exercises/$exerciseId'
+      path: '/app/exercises/$exerciseId'
+      fullPath: '/app/exercises/$exerciseId'
+      preLoaderRoute: typeof PlatformAppExercisesExerciseIdRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
     '/_platform/app/program/workout/': {
@@ -512,11 +571,14 @@ interface PlatformRouteRouteChildren {
   PlatformAppDiscoverRoute: typeof PlatformAppDiscoverRoute
   PlatformAppProfileRoute: typeof PlatformAppProfileRoute
   PlatformAppProgressRoute: typeof PlatformAppProgressRoute
+  PlatformAppStudioRoute: typeof PlatformAppStudioRoute
   PlatformAppSupportRoute: typeof PlatformAppSupportRoute
   PlatformAppWaterRoute: typeof PlatformAppWaterRoute
   PlatformAppIndexRoute: typeof PlatformAppIndexRoute
+  PlatformAppExercisesExerciseIdRoute: typeof PlatformAppExercisesExerciseIdRoute
   PlatformAppNutritionMealRoute: typeof PlatformAppNutritionMealRoute
   PlatformAppToolsCaloriesRoute: typeof PlatformAppToolsCaloriesRoute
+  PlatformAppExercisesIndexRoute: typeof PlatformAppExercisesIndexRoute
   PlatformAppNutritionIndexRoute: typeof PlatformAppNutritionIndexRoute
   PlatformAppProgramIndexRoute: typeof PlatformAppProgramIndexRoute
   PlatformAppProgramWorkoutExerciseRoute: typeof PlatformAppProgramWorkoutExerciseRoute
@@ -528,11 +590,14 @@ const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
   PlatformAppDiscoverRoute: PlatformAppDiscoverRoute,
   PlatformAppProfileRoute: PlatformAppProfileRoute,
   PlatformAppProgressRoute: PlatformAppProgressRoute,
+  PlatformAppStudioRoute: PlatformAppStudioRoute,
   PlatformAppSupportRoute: PlatformAppSupportRoute,
   PlatformAppWaterRoute: PlatformAppWaterRoute,
   PlatformAppIndexRoute: PlatformAppIndexRoute,
+  PlatformAppExercisesExerciseIdRoute: PlatformAppExercisesExerciseIdRoute,
   PlatformAppNutritionMealRoute: PlatformAppNutritionMealRoute,
   PlatformAppToolsCaloriesRoute: PlatformAppToolsCaloriesRoute,
+  PlatformAppExercisesIndexRoute: PlatformAppExercisesIndexRoute,
   PlatformAppNutritionIndexRoute: PlatformAppNutritionIndexRoute,
   PlatformAppProgramIndexRoute: PlatformAppProgramIndexRoute,
   PlatformAppProgramWorkoutExerciseRoute:
