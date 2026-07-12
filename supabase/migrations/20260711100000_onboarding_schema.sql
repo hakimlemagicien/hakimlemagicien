@@ -189,7 +189,7 @@ BEGIN
 
   INSERT INTO public.user_roles (user_id, role)
   VALUES (NEW.id, 'user')
-  ON CONFLICT (user_id, role) DO NOTHING;
+  ON CONFLICT (user_id) DO NOTHING;
 
   RETURN NEW;
 END;

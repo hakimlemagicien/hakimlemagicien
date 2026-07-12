@@ -36,8 +36,8 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.user_roles (user_id, role)
-  VALUES (v_admin, 'admin'::public.app_role)
-  ON CONFLICT DO NOTHING;
+  VALUES (v_admin, 'admin')
+  ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
   PERFORM set_config('role', 'anon', true);
   v_draft := public.create_onboarding_draft('{"email":"onboarding-a@example.test","full_name":"Client A","goal":"fat_loss","answers":{"height":180}}'::jsonb);
@@ -116,9 +116,12 @@ BEGIN
     RAISE EXCEPTION 'RLS/state isolation failed for other user: %', v_state;
   END IF;
 
-  -- Cleanup test users and drafts.
-  DELETE FROM auth.users WHERE id IN (v_user_a, v_user_b, v_admin);
-  DELETE FROM public.onboarding_drafts WHERE email IN ('onboarding-a@example.test', 'expired@example.test');
+  -- Cleanup is best-effort; auth.users is managed by Supabase Auth.
+  BEGIN
+    DELETE FROM public.onboarding_drafts WHERE email IN ('onboarding-a@example.test', 'expired@example.test');
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
 
   RAISE NOTICE 'onboarding_sql_rls_test_plan passed';
 END $$;
