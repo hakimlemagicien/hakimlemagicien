@@ -18,6 +18,19 @@ for (const relativePath of requiredPaths) {
   }
 }
 
+const ssrEntry = join(outputRoot, "functions", "__server.func", "_ssr", "ssr.mjs");
+if (existsSync(ssrEntry)) {
+  const ssrSource = readFileSync(ssrEntry, "utf8");
+  const serverChunkMatch = ssrSource.match(/import\("\.\/(server-[^"]+\.mjs)"\)/);
+  if (serverChunkMatch) {
+    const chunkPath = join(outputRoot, "functions", "__server.func", "_ssr", serverChunkMatch[1]);
+    if (!existsSync(chunkPath)) {
+      console.error(`[verify-vercel-build] Missing SSR chunk ${serverChunkMatch[1]}`);
+      process.exit(1);
+    }
+  }
+}
+
 const externalTslibPattern = /from\s+["']tslib["']|import\s+["']tslib["']/;
 
 function scanForExternalTslib(directory) {
