@@ -15,6 +15,8 @@ import {
   finalizeOnboarding,
   getStoredDraftToken,
   consumeQuizAuthCallback,
+  isQuizEmailOtpComplete,
+  QUIZ_EMAIL_OTP_LENGTH,
   sendEmailVerificationOtp,
   setUserPassword,
   updateDraftAvatar,
@@ -170,6 +172,8 @@ export function VerifyEmailScreen({
   const [replacementEmail, setReplacementEmail] = useState(email);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [authenticating, setAuthenticating] = useState(true);
   const [resending, setResending] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   const [sent, setSent] = useState(false);
@@ -183,11 +187,19 @@ export function VerifyEmailScreen({
     void (async () => {
       try {
         const verified = await consumeQuizAuthCallback();
-        if (!cancelled && verified) onVerified();
+        if (!cancelled && verified) {
+          onVerified();
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (!cancelled && data.session) onVerified();
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "تعذّر إكمال التحقق عبر الرابط.");
         }
+      } finally {
+        if (!cancelled) setAuthenticating(false);
       }
     })();
 
@@ -209,12 +221,15 @@ export function VerifyEmailScreen({
     void (async () => {
       try {
         setError(null);
+        setSending(true);
         await sendEmailVerificationOtp(activeEmail);
         setSent(true);
         setCooldown(60);
       } catch (err) {
         lastOtpEmailRef.current = null;
         setError(err instanceof Error ? err.message : "تعذّر إرسال رمز التحقق.");
+      } finally {
+        setSending(false);
       }
     })();
   }, [activeEmail]);
@@ -272,7 +287,7 @@ export function VerifyEmailScreen({
   }
 
   async function handleVerify() {
-    if (otp.trim().length < 6 || loading) return;
+    if (!isQuizEmailOtpComplete(otp) || loading) return;
     setError(null);
     setLoading(true);
     try {
@@ -294,15 +309,19 @@ export function VerifyEmailScreen({
         </>
       }
       subtitle={
-        name
-          ? `مرحباً ${name}، أرسلنا رمز تحقق إلى بريدك لإكمال دخولك إلى المنصة.`
-          : "أرسلنا رمز تحقق إلى بريدك لإكمال دخولك إلى المنصة."
+        authenticating
+          ? "جاري التحقق من الرابط..."
+          : sending
+            ? "جاري إرسال رمز التحقق إلى بريدك..."
+            : name
+              ? `مرحباً ${name}، أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك.`
+              : `أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك لإكمال التسجيل.`
       }
       onBack={onBack}
       footer={
         <OnboardingCta
           label="تأكيد الرمز"
-          disabled={otp.trim().length < 6 || editingEmail}
+          disabled={!isQuizEmailOtpComplete(otp) || editingEmail || sending || authenticating}
           loading={loading}
           onClick={handleVerify}
         />
@@ -387,33 +406,43 @@ export function VerifyEmailScreen({
               </div>
             )}
 
-            {sent && !editingEmail ? (
+            {sending && !editingEmail ? (
+              <p className="mt-2 text-[11.5px] font-bold text-neutral-500 leading-relaxed">
+                جاري إرسال رمز التحقق المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام...
+              </p>
+            ) : null}
+
+            {sent && !sending && !editingEmail ? (
               <p className="mt-2 text-[11.5px] text-neutral-600 leading-relaxed">
-                افتح بريدك وأدخل الرمز المكوّن من 6 أرقام، أو اضغط رابط «تأكيد البريد والمتابعة» في نفس البريد.
+                افتح بريدك من Hakim Coaching، أدخل الرمز المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام هنا، أو استخدم «متابعة عبر رابط التحقق» للانتقال مباشرة إلى إنشاء كلمة المرور.
               </p>
             ) : null}
           </div>
         </div>
 
         <label className="mt-5 block">
-          <span className="mb-2 block text-[12px] font-bold text-neutral-700">رمز التحقق</span>
+          <span className="mb-2 block text-[12px] font-bold text-neutral-700">
+            رمز التحقق ({QUIZ_EMAIL_OTP_LENGTH} أرقام)
+          </span>
           <input
             type="text"
             inputMode="numeric"
-            maxLength={6}
+            maxLength={QUIZ_EMAIL_OTP_LENGTH}
             value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="• • • • • •"
+            onChange={(e) =>
+              setOtp(e.target.value.replace(/\D/g, "").slice(0, QUIZ_EMAIL_OTP_LENGTH))
+            }
+            placeholder={"• ".repeat(QUIZ_EMAIL_OTP_LENGTH).trim()}
             dir="ltr"
-            disabled={editingEmail}
-            className="w-full h-14 rounded-2xl border border-[#ECE8E1] bg-white px-4 text-center text-[22px] font-black tracking-[0.35em] outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/15 disabled:opacity-50"
+            disabled={editingEmail || sending || authenticating}
+            className="w-full h-14 rounded-2xl border border-[#ECE8E1] bg-white px-3 text-center text-[20px] font-black tracking-[0.22em] outline-none focus:border-[#FF6B00] focus:ring-2 focus:ring-[#FF6B00]/15 disabled:opacity-50"
           />
         </label>
 
         <button
           type="button"
           onClick={handleResend}
-          disabled={cooldown > 0 || resending || editingEmail}
+          disabled={cooldown > 0 || resending || editingEmail || sending || authenticating}
           className="mt-4 w-full text-[12px] font-bold disabled:text-neutral-400"
           style={{ color: cooldown > 0 ? undefined : ORANGE }}
         >

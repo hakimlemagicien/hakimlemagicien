@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
+/** OTP length sent by Supabase Auth (production currently uses 8). */
+export const QUIZ_EMAIL_OTP_LENGTH = 8;
+
 const AVATARS_BUCKET = "avatars";
 const DRAFT_TOKEN_KEY = "hakim_onboarding_draft_token_v1";
 
@@ -68,9 +71,18 @@ export async function createOnboardingDraft(payload: OnboardingDraftPayload): Pr
 
 export function getQuizVerifyEmailRedirectUrl(): string {
   if (typeof window !== "undefined") {
-    return `${window.location.origin}/quiz?step=verifyEmail`;
+    return `${window.location.origin}/quiz?step=createPassword`;
   }
-  return "https://hakimlemagicien.com/quiz?step=verifyEmail";
+  return "https://hakimlemagicien.com/quiz?step=createPassword";
+}
+
+function hasAuthCallbackParams(searchParams: URLSearchParams, hashParams: URLSearchParams): boolean {
+  return (
+    searchParams.has("code") ||
+    searchParams.has("token_hash") ||
+    hashParams.has("access_token") ||
+    hashParams.has("token_hash")
+  );
 }
 
 function cleanAuthCallbackParams(): void {
@@ -79,6 +91,7 @@ function cleanAuthCallbackParams(): void {
   url.searchParams.delete("code");
   url.searchParams.delete("token_hash");
   url.searchParams.delete("type");
+  url.hash = "";
   window.history.replaceState(null, "", url.toString());
 }
 
@@ -87,6 +100,9 @@ export async function consumeQuizAuthCallback(): Promise<boolean> {
   if (typeof window === "undefined") return false;
 
   const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const hadAuthParams = hasAuthCallbackParams(searchParams, hashParams);
+
   const code = searchParams.get("code");
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -95,8 +111,8 @@ export async function consumeQuizAuthCallback(): Promise<boolean> {
     return true;
   }
 
-  const tokenHash = searchParams.get("token_hash");
-  const type = searchParams.get("type");
+  const tokenHash = searchParams.get("token_hash") ?? hashParams.get("token_hash");
+  const type = searchParams.get("type") ?? hashParams.get("type");
   if (tokenHash && type === "email") {
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
@@ -107,7 +123,30 @@ export async function consumeQuizAuthCallback(): Promise<boolean> {
     return true;
   }
 
+  if (hashParams.has("access_token")) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (data.session) {
+      cleanAuthCallbackParams();
+      return true;
+    }
+  }
+
+  if (hadAuthParams) {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (data.session) {
+      cleanAuthCallbackParams();
+      return true;
+    }
+  }
+
   return false;
+}
+
+export function isQuizEmailOtpComplete(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  return digits.length === QUIZ_EMAIL_OTP_LENGTH;
 }
 
 export async function sendEmailVerificationOtp(email: string): Promise<void> {
