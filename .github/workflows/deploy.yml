@@ -60,6 +60,18 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
+      - name: Smoke test deployment
+        run: |
+          URL="${{ steps.deploy.outputs.deployment_url }}"
+          for path in "/" "/quiz"; do
+            status=$(curl -sS -o /dev/null -w "%{http_code}" "${URL}${path}")
+            if [ "$status" != "200" ]; then
+              echo "::error::Smoke test failed for ${path} (HTTP ${status})"
+              exit 1
+            fi
+            echo "OK ${path} → ${status}"
+          done
+
       - name: Publish deployment summary
         run: |
           {
