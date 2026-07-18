@@ -5,10 +5,10 @@ import {
   AlertCircle,
   ChevronLeft,
   Dumbbell,
-  LoaderCircle,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
+import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import {
   PlatformPageHeader,
   PlatformSection,
@@ -139,10 +139,7 @@ function ExerciseLibraryPage() {
       </label>
 
       {exercisesQuery.isLoading ? (
-        <div className="platform-card flex min-h-52 flex-col items-center justify-center p-6 text-center">
-          <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-3 text-sm font-bold text-muted-foreground">جاري تحميل التمارين…</p>
-        </div>
+        <SectionSkeleton variant="list" />
       ) : null}
 
       {exercisesQuery.isError ? (

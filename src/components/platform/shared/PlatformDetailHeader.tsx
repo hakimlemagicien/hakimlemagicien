@@ -7,6 +7,7 @@ type PlatformDetailHeaderProps = {
   subtitle?: string;
   backTo: string;
   action?: ReactNode;
+  onBack?: () => void;
 };
 
 export function PlatformDetailHeader({
@@ -14,17 +15,29 @@ export function PlatformDetailHeader({
   subtitle,
   backTo,
   action,
+  onBack,
 }: PlatformDetailHeaderProps) {
   return (
     <header className="flex items-center gap-3">
-      <Link
-        to={backTo}
-        aria-label="رجوع"
-        data-preview-safe
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground transition active:scale-95"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </Link>
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="رجوع"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground transition active:scale-95"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      ) : (
+        <Link
+          to={backTo}
+          aria-label="رجوع"
+          data-preview-safe
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground transition active:scale-95"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Link>
+      )}
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-lg font-black text-foreground">{title}</h1>
         {subtitle ? (

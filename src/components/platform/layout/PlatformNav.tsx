@@ -1,29 +1,45 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
+  Calculator,
   CalendarDays,
   Dumbbell,
   Home,
   LineChart,
   LogOut,
-  MessageCircleQuestion,
   Salad,
+  Timer,
   User,
+  Wrench,
 } from "lucide-react";
 import { DailyHubOverlay } from "@/components/platform/shared/DailyHubOverlay";
+import { isToolsHubRoute, ToolsHubOverlay } from "@/components/platform/shared/ToolsHubOverlay";
+import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV_ITEMS = [
-  { to: "/app/program", label: "برنامجي", icon: CalendarDays, hub: true },
+  { to: "/app/program", label: "برنامجي", icon: CalendarDays, hub: "program" as const },
   { to: "/app/discover", label: "اكتشف", icon: BookOpen },
   { to: "/app", label: "الرئيسية", icon: Home, exact: true, center: true },
-  { to: "/app/support", label: "الدعم", icon: MessageCircleQuestion },
+  { to: "/app/tools/calories", label: "الأدوات", icon: Wrench, hub: "tools" as const },
   { to: "/app/profile", label: "الملف الشخصي", icon: User },
 ] as const;
+
+function isProgramHubRoute(pathname: string) {
+  return (
+    pathname === "/app/nutrition" ||
+    pathname.startsWith("/app/nutrition/") ||
+    pathname === "/app/progress" ||
+    pathname === "/app/exercises" ||
+    pathname.startsWith("/app/exercises/") ||
+    pathname === "/app/program" ||
+    pathname.startsWith("/app/program/")
+  );
+}
 
 const DESKTOP_NAV_ITEMS = [
   { to: "/app", label: "الرئيسية", icon: Home, exact: true },
@@ -32,7 +48,8 @@ const DESKTOP_NAV_ITEMS = [
   { to: "/app/discover", label: "اكتشف", icon: BookOpen },
   { to: "/app/nutrition", label: "التغذية", icon: Salad },
   { to: "/app/progress", label: "التقدم", icon: LineChart },
-  { to: "/app/support", label: "الدعم", icon: MessageCircleQuestion },
+  { to: "/app/tools/calories", label: "حاسبة السعرات", icon: Calculator, action: "calories" as const },
+  { to: "/app/tools/timer", label: "المؤقت", icon: Timer },
   { to: "/app/profile", label: "الملف الشخصي", icon: User },
 ] as const;
 
@@ -58,7 +75,7 @@ function NavItem({
   activeOverride?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const active = activeOverride ?? (exact ? pathname === to : pathname.startsWith(to));
+  const active = activeOverride ?? (exact ? pathname === to : pathname === to || pathname.startsWith(`${to}/`));
 
   if (mobile && center) {
     return (
@@ -105,6 +122,7 @@ function NavItem({
           className="platform-nav__link"
           aria-haspopup="dialog"
           aria-expanded={active}
+          aria-label={label}
         >
           {content}
         </button>
@@ -117,6 +135,7 @@ function NavItem({
         onClick={onNavigate}
         className="platform-nav__link"
         aria-current={active ? "page" : undefined}
+        aria-label={label}
       >
         {content}
       </Link>
@@ -139,6 +158,7 @@ function NavItem({
 }
 
 export function PlatformSidebar() {
+  const tools = useToolsOptional();
   const libraryAccessQuery = useQuery({
     queryKey: ["exercise-library-access"],
     queryFn: canAccessExerciseLibrary,
@@ -160,9 +180,26 @@ export function PlatformSidebar() {
         <p className="text-lg font-black text-foreground">Platform</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1">
-        {navItems.map((item) => (
-          <NavItem key={item.to} {...item} />
-        ))}
+        {navItems.map((item) =>
+          "action" in item && item.action === "calories" ? (
+            <button
+              key={item.to}
+              type="button"
+              onClick={() => tools?.openCalorieCalculator()}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition text-start",
+                tools?.calorieSheetOpen
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-foreground hover:bg-muted",
+              )}
+            >
+              <Calculator className="h-4 w-4 shrink-0" />
+              <span>{item.label}</span>
+            </button>
+          ) : (
+            <NavItem key={item.to} {...item} />
+          ),
+        )}
       </nav>
       <button
         type="button"
@@ -177,25 +214,54 @@ export function PlatformSidebar() {
 }
 
 export function PlatformMobileNav() {
-  const [hubOpen, setHubOpen] = useState(false);
-  const libraryAccessQuery = useQuery({
-    queryKey: ["exercise-library-access"],
-    queryFn: canAccessExerciseLibrary,
-    staleTime: 5 * 60 * 1000,
-  });
+  const tools = useToolsOptional();
+  const [programHubOpen, setProgramHubOpen] = useState(false);
+  const [toolsHubOpen, setToolsHubOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const prevPathname = useRef(pathname);
+  const programHubActive = programHubOpen || isProgramHubRoute(pathname);
+  const toolsHubActive =
+    toolsHubOpen || isToolsHubRoute(pathname) || Boolean(tools?.calorieSheetOpen);
+
+  useEffect(() => {
+    if (prevPathname.current !== pathname) {
+      setProgramHubOpen(false);
+      setToolsHubOpen(false);
+      prevPathname.current = pathname;
+    }
+  }, [pathname]);
+
+  const closeHubs = () => {
+    setProgramHubOpen(false);
+    setToolsHubOpen(false);
+  };
 
   return (
     <>
       <nav className="platform-nav md:hidden" aria-label="التنقل الرئيسي">
         <div className="platform-nav__inner">
           {MOBILE_NAV_ITEMS.map((item) =>
-            "hub" in item && item.hub ? (
+            "hub" in item && item.hub === "program" ? (
               <NavItem
                 key={item.to}
                 {...item}
                 mobile
-                onSelect={() => setHubOpen(true)}
-                activeOverride={hubOpen}
+                onSelect={() => {
+                  setToolsHubOpen(false);
+                  setProgramHubOpen((open) => !open);
+                }}
+                activeOverride={programHubActive}
+              />
+            ) : "hub" in item && item.hub === "tools" ? (
+              <NavItem
+                key={item.to}
+                {...item}
+                mobile
+                onSelect={() => {
+                  setProgramHubOpen(false);
+                  setToolsHubOpen((open) => !open);
+                }}
+                activeOverride={toolsHubActive}
               />
             ) : (
               <NavItem
@@ -203,15 +269,17 @@ export function PlatformMobileNav() {
                 {...item}
                 mobile
                 center={"center" in item ? item.center : false}
+                onNavigate={closeHubs}
               />
             ),
           )}
         </div>
       </nav>
-      <DailyHubOverlay
-        open={hubOpen}
-        onClose={() => setHubOpen(false)}
-        showExerciseLibrary={Boolean(libraryAccessQuery.data)}
+      <DailyHubOverlay open={programHubOpen} onClose={() => setProgramHubOpen(false)} />
+      <ToolsHubOverlay
+        open={toolsHubOpen}
+        onClose={() => setToolsHubOpen(false)}
+        onOpenCalories={() => tools?.openCalorieCalculator()}
       />
     </>
   );

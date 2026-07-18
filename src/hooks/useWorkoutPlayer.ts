@@ -5,6 +5,8 @@ import {
   type WorkoutSessionExercise,
   type WorkoutSessionMeta,
 } from "@/lib/platform/workout-session";
+import { markWorkoutCompleted } from "@/lib/platform/platform-activity";
+import { supabase } from "@/integrations/supabase/client";
 import {
   clearWorkoutSession,
   getTodayWorkoutSessionKey,
@@ -205,6 +207,9 @@ export function useWorkoutPlayer(
     setSetInProgress(false);
     setVideoOpen(false);
     setVideoAutoPlay(false);
+    void supabase.auth.getUser().then(({ data }) => {
+      markWorkoutCompleted(data.user?.id ?? "guest");
+    });
   }, [currentProgress.completedSets, exerciseIndex, exercises, startRest]);
 
   const saveSet = useCallback(

@@ -11,6 +11,7 @@ import {
   Salad,
 } from "lucide-react";
 import bodyMuscular from "@/assets/body-muscular.jpg";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   FEATURE_GRID_SEED,
   PROGRAM_CAROUSEL_SEED,
@@ -52,7 +53,12 @@ function ProgramCarouselCard({
   return (
     <article className="flex h-[6.5rem] overflow-hidden rounded-2xl bg-foreground shadow-card md:h-52 md:rounded-3xl">
       <div className="relative w-[36%] shrink-0 md:w-[42%]">
-        <img src={bodyMuscular} alt="" className="h-full w-full object-cover object-top" />
+        <OptimizedImage
+          src={bodyMuscular}
+          alt=""
+          className="h-full w-full"
+          objectFit="cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-l from-foreground/20 to-transparent" />
       </div>
 
