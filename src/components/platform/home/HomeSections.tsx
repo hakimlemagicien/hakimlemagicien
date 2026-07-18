@@ -267,7 +267,8 @@ function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
       <img
         src={image.src}
         alt={image.alt}
-        loading="lazy"
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         onLoad={() => setLoaded(true)}
         className={cn("platform-home-hero__coach", loaded ? "is-loaded" : null)}
