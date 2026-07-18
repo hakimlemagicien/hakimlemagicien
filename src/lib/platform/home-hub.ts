@@ -3,7 +3,11 @@ import {
   HAKIM_POINTS_REWARDS,
   type NextMission,
 } from "@/lib/platform/daily-motivation";
-import { PROGRESS_SEED, WATER_SEED } from "@/lib/platform/seed-content";
+import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
+import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
+import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
+import { DAILY_GREETING_NAME_FALLBACK, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
+import { readQuizProgress } from "@/lib/quiz-progress-storage";
 
 /** User training goal used to personalize home content. */
 export type UserGoal = "cut" | "bulk" | "fitness";
@@ -69,7 +73,7 @@ export type HealthScore = {
 const FREE_ALWAYS_TASK_DEFS: Omit<DailyTask, "status" | "progress" | "subtitle" | "title">[] = [
   {
     id: "water",
-    href: "/app/water",
+    href: "#water",
     icon: "water",
     iconBg: "bg-[#DBEAFE]",
     iconColor: "text-[#2563EB]",
@@ -245,7 +249,28 @@ function greetingPrefix(date = new Date()): string {
   const hour = date.getHours();
   if (hour < 12) return "صباح الخير";
   if (hour < 18) return "مساء الخير";
-  return "أهلاً";
+  return "مساء الخير";
+}
+
+/** Client first name — profile first, then quiz onboarding, then fallback. */
+export function resolveClientFirstName(displayName?: string | null): string {
+  const membershipFirst = displayName?.trim().split(/\s+/)[0];
+  const isGeneric =
+    !membershipFirst ||
+    membershipFirst === DAILY_GREETING_NAME_FALLBACK ||
+    membershipFirst.toLowerCase() === "batal";
+
+  if (!isGeneric) return membershipFirst;
+
+  const quizFirst = readQuizProgress()?.userName?.trim().split(/\s+/)[0];
+  if (quizFirst) return quizFirst;
+
+  return membershipFirst || DAILY_GREETING_NAME_FALLBACK;
+}
+
+export function buildTimeGreeting(displayName: string, date = new Date()): string {
+  const firstName = resolveClientFirstName(displayName);
+  return `${greetingPrefix(date)} ${firstName} 👋`;
 }
 
 export function resolveUserGoal(raw?: string | null): UserGoal {
@@ -263,24 +288,36 @@ export function goalLabel(goal: UserGoal): string {
 
 function hydrateFreeTask(
   def: (typeof FREE_ALWAYS_TASK_DEFS)[number],
-  dayIndex: number,
+  activity: PlatformActivitySnapshot,
 ): DailyTask {
   if (def.id === "water") {
-    const done = WATER_SEED.current >= WATER_SEED.goal;
+    const done = activity.waterMl >= activity.waterGoalMl;
+    const currentLiters = (activity.waterMl / 1000).toFixed(1);
+    const goalLiters = (activity.waterGoalMl / 1000).toFixed(0);
     return {
       ...def,
       title: "شرب الماء",
-      subtitle: done ? "أحسنت — هدفت اليوم مكتمل" : "أكمل 2 لتر اليوم",
-      status: done ? "done" : "progress",
-      progress: { current: WATER_SEED.current, total: WATER_SEED.goal },
+      subtitle: done
+        ? "أحسنت — هدفت اليوم مكتمل"
+        : activity.waterMl > 0
+          ? `${currentLiters} / ${goalLiters} لتر`
+          : "ابدأ بكوب واحد اليوم",
+      status: done ? "done" : activity.waterMl > 0 ? "progress" : "arrow",
+      progress: {
+        current: Math.round(activity.waterMl / activity.waterGlassMl),
+        total: Math.ceil(activity.waterGoalMl / activity.waterGlassMl),
+      },
     };
   }
   if (def.id === "weight") {
     return {
       ...def,
       title: "تسجيل الوزن",
-      subtitle: `آخر وزن: ${PROGRESS_SEED.currentWeight} كجم`,
-      status: dayIndex % 3 === 0 ? "done" : "arrow",
+      subtitle:
+        activity.currentWeight != null
+          ? `آخر وزن: ${activity.currentWeight} كجم`
+          : "سجّل وزنك للبدء بتتبع التقدم",
+      status: activity.currentWeight != null ? "done" : "arrow",
     };
   }
   return {
@@ -297,12 +334,14 @@ function hydrateFreeTask(
  */
 export function buildDailyTasks(input: {
   features: MembershipFeatures;
+  activity?: PlatformActivitySnapshot;
   date?: Date;
 }): DailyTask[] {
+  const activity = input.activity ?? getEmptyActivitySnapshot();
   const dayIndex = dayOfYear(input.date);
   const rotation = dayIndex % 3;
 
-  const freeCore = FREE_ALWAYS_TASK_DEFS.map((def) => hydrateFreeTask(def, dayIndex));
+  const freeCore = FREE_ALWAYS_TASK_DEFS.map((def) => hydrateFreeTask(def, activity));
 
   const water = freeCore.find((t) => t.id === "water")!;
   const weight = freeCore.find((t) => t.id === "weight")!;
@@ -315,7 +354,12 @@ export function buildDailyTasks(input: {
 
   if (canWorkout || canNutrition) {
     const paid: DailyTask[] = [];
-    if (canWorkout) paid.push({ ...workout, status: rotation === 1 ? "done" : "arrow" });
+    if (canWorkout) {
+      paid.push({
+        ...workout,
+        status: activity.workoutDone >= activity.workoutTotal ? "done" : "arrow",
+      });
+    }
     if (canNutrition && rotation !== 2) paid.push(nutrition);
 
     const freePick =
@@ -356,20 +400,28 @@ export function buildMessageOfDay(input: {
   displayName: string;
   streak: number;
   goal: UserGoal;
+  activity?: PlatformActivitySnapshot;
   date?: Date;
 }): MessageOfDay {
-  const firstName = input.displayName.trim().split(/\s+/)[0] || "بطل";
-  const greeting = `${greetingPrefix(input.date)} ${firstName} 👋`;
-  const remaining = Math.max(
-    0,
-    Math.round((PROGRESS_SEED.currentWeight - PROGRESS_SEED.goalWeight) * 10) / 10,
-  );
+  const activity = input.activity ?? getEmptyActivitySnapshot();
+  const greeting = buildTimeGreeting(input.displayName, input.date);
+  const remaining =
+    activity.startWeight != null &&
+    activity.goalWeight != null &&
+    activity.currentWeight != null
+      ? Math.max(
+          0,
+          Math.round((activity.currentWeight - activity.goalWeight) * 10) / 10,
+        )
+      : 0;
   const dayIndex = dayOfYear(input.date);
 
   const bodies = [
-    remaining > 0
-      ? `بقي ${remaining} كجم للوصول لهدفك — خطوة اليوم تقربك أكثر.`
-      : "لقد وصلت قرب هدفك — حافظ على الإيقاع اليوم.",
+    activity.currentWeight == null
+      ? "سجّل وزنك لبدء تتبع التقدم نحو هدفك."
+      : remaining > 0
+        ? `بقي ${remaining} كجم للوصول لهدفك — خطوة اليوم تقربك أكثر.`
+        : "لقد وصلت قرب هدفك — حافظ على الإيقاع اليوم.",
     input.streak > 0
       ? `سلسلتك ${input.streak} ${input.streak === 1 ? "يوم" : "أيام"} — لا تكسرها اليوم.`
       : "اليوم فرصة جديدة لبدء سلسلة إنجازك.",
@@ -388,20 +440,34 @@ export function buildMessageOfDay(input: {
 
 export function buildQuickGlance(input: {
   streak: number;
+  activity?: PlatformActivitySnapshot;
 }): QuickGlanceItem[] {
-  const remaining = Math.max(
-    0,
-    Math.round((PROGRESS_SEED.currentWeight - PROGRESS_SEED.goalWeight) * 10) / 10,
-  );
-  const totalToLose = Math.max(PROGRESS_SEED.startWeight - PROGRESS_SEED.goalWeight, 0.1);
-  const lostSoFar = PROGRESS_SEED.startWeight - PROGRESS_SEED.currentWeight;
-  const progressPct = Math.min(Math.max(Math.round((lostSoFar / totalToLose) * 100), 0), 100);
+  const activity = input.activity ?? getEmptyActivitySnapshot();
+  const remaining =
+    activity.startWeight != null &&
+    activity.goalWeight != null &&
+    activity.currentWeight != null
+      ? Math.max(
+          0,
+          Math.round((activity.currentWeight - activity.goalWeight) * 10) / 10,
+        )
+      : 0;
+  const totalToLose =
+    activity.startWeight != null && activity.goalWeight != null
+      ? Math.max(Math.abs(activity.startWeight - activity.goalWeight), 0.1)
+      : 0;
+  const lostSoFar =
+    activity.startWeight != null && activity.currentWeight != null
+      ? Math.abs(activity.startWeight - activity.currentWeight)
+      : 0;
+  const progressPct =
+    totalToLose > 0 ? Math.min(Math.max(Math.round((lostSoFar / totalToLose) * 100), 0), 100) : 0;
 
   return [
     {
       id: "weight",
       label: "الوزن الحالي",
-      value: `${PROGRESS_SEED.currentWeight} كجم`,
+      value: activity.currentWeight != null ? `${activity.currentWeight} كجم` : "—",
       icon: "scale",
       iconBg: "bg-secondary-soft",
       iconColor: "text-success",
@@ -409,7 +475,12 @@ export function buildQuickGlance(input: {
     {
       id: "remaining",
       label: "المتبقي للهدف",
-      value: remaining > 0 ? `${remaining} كجم` : "وصلت!",
+      value:
+        activity.goalWeight == null
+          ? "حدّد هدفك"
+          : remaining > 0
+            ? `${remaining} كجم`
+            : "وصلت!",
       icon: "target",
       iconBg: "bg-[#FEF9C3]",
       iconColor: "text-[#CA8A04]",
@@ -424,7 +495,7 @@ export function buildQuickGlance(input: {
     },
     {
       id: "day",
-      label: `اليوم رقم ${PROGRESS_SEED.daysIn}`,
+      label: activity.daysIn > 0 ? `اليوم رقم ${activity.daysIn}` : "بداية الرحلة",
       value: `${progressPct}%`,
       icon: "calendar",
       iconBg: "bg-[#DBEAFE]",
@@ -536,4 +607,384 @@ export function resolveNextMissionFromTasks(tasks: DailyTask[]): NextMission {
 /** Whether home should show the primary Activate CTA after tasks. */
 export function shouldShowActivateCta(tier: MembershipTier, isPaid: boolean): boolean {
   return !isPaid && tier !== "admin";
+}
+
+/* ── Home Dashboard v2 (CEO-approved layout) ───────────────────────────── */
+
+export type DailySnapshotItem = {
+  id: "workout" | "nutrition" | "water" | "progress";
+  title: string;
+  value: string;
+  subtitle: string;
+  progress: number;
+  href?: string;
+  action?: "open-water-sheet";
+  icon: "workout" | "nutrition" | "water" | "progress";
+  iconBg: string;
+  iconColor: string;
+  valueColor: string;
+  progressColor: string;
+  showProgressBar: boolean;
+};
+
+export type HeroState = {
+  greeting: string;
+  subtext: string;
+  goalTitle: string;
+  overallProgress: number;
+  motivation: string;
+  isFirstVisit: boolean;
+  streak: number;
+  hakimPoints: number;
+  heroImage: HeroGoalImage;
+};
+
+export type TodaysMissionState = {
+  title: string;
+  description: string;
+  pointsReward: number;
+  href: string;
+  isRestDay: boolean;
+  isEmpty: boolean;
+};
+
+export type StreakWeekDay = {
+  key: string;
+  label: string;
+  state: "done" | "today" | "future";
+};
+
+export type LastAchievementState = {
+  title: string;
+  subtitle: string;
+  hasAchievement: boolean;
+};
+
+export type DiscoverState = {
+  id: string;
+  type: "article" | "video" | "tip";
+  badge: string;
+  title: string;
+  description: string;
+  href: string;
+  showPlay: boolean;
+};
+
+export type DiscoverPreviewItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  image: FeaturedContentItem["image"];
+  badge?: string;
+  showPlay?: boolean;
+  showSparkle?: boolean;
+};
+
+/** Home discover row — starts with 3 cards; add items to enable smooth horizontal scroll. */
+export function buildDiscoverPreviewItems(goal: UserGoal, date = new Date()): DiscoverPreviewItem[] {
+  const featured = buildFeaturedForGoal(goal, date);
+  const defaults: DiscoverPreviewItem[] = [
+    {
+      id: "discover-recipes",
+      title: "وصفات صحية",
+      description: "5 وصفات جديدة",
+      href: "/app/discover",
+      image: "recipe",
+      badge: "جديد",
+      showSparkle: true,
+    },
+    {
+      id: "discover-home-workout",
+      title: "تمارين المنزل",
+      description: "10 تمارين",
+      href: "/app/discover",
+      image: "workout",
+      showPlay: true,
+    },
+    {
+      id: "discover-flexibility",
+      title: "جلسة مرونة",
+      description: "20 دقيقة",
+      href: "/app/discover",
+      image: "flexibility",
+      showSparkle: true,
+    },
+  ];
+
+  const extras = featured
+    .filter((item) => !defaults.some((entry) => entry.id === item.id))
+    .slice(0, 3)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.subtitle,
+      href: item.href,
+      image: item.image,
+      badge: item.badge,
+      showPlay: item.showPlay,
+      showSparkle: !item.showPlay && !item.badge,
+    }));
+
+  return extras.length > 0 ? [...defaults, ...extras] : defaults;
+}
+
+const WEEKDAY_FULL_AR = [
+  "الأحد",
+  "الاثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+] as const;
+
+export function buildStreakWeek(streak: number, date = new Date()): StreakWeekDay[] {
+  const days: StreakWeekDay[] = [];
+
+  for (let offset = 0; offset >= -6; offset -= 1) {
+    const dayDate = new Date(date);
+    dayDate.setHours(12, 0, 0, 0);
+    dayDate.setDate(dayDate.getDate() + offset);
+    const dayIndex = dayDate.getDay();
+    const isToday = offset === 0;
+
+    let state: StreakWeekDay["state"] = "future";
+    if (isToday) {
+      state = streak > 0 ? "today" : "future";
+    } else if (streak > Math.abs(offset)) {
+      state = "done";
+    }
+
+    days.push({
+      key: dayDate.toISOString().slice(0, 10),
+      label: isToday ? "اليوم" : WEEKDAY_FULL_AR[dayIndex]!,
+      state,
+    });
+  }
+
+  return days;
+}
+
+const ACHIEVEMENT_SEED = {
+  title: "أحسنت!",
+  subtitle: "أكملت أول تمرين بنجاح",
+};
+
+function readFirstVisit(): boolean {
+  if (typeof window === "undefined") return false;
+  const key = "hakim_platform_home_seen_v1";
+  if (localStorage.getItem(key)) return false;
+  localStorage.setItem(key, "1");
+  return true;
+}
+
+export function goalTitle(goal: UserGoal): string {
+  if (goal === "bulk") return "تضخيم العضلات";
+  if (goal === "fitness") return "تحسين اللياقة";
+  return "خسارة الدهون";
+}
+
+export function buildHeroState(input: {
+  displayName: string;
+  goal: UserGoal;
+  streak: number;
+  hakimPoints: number;
+  heroImage: HeroGoalImage;
+  activity?: PlatformActivitySnapshot;
+  date?: Date;
+}): HeroState {
+  const activity = input.activity ?? getEmptyActivitySnapshot();
+  const isFirstVisit = readFirstVisit();
+
+  return {
+    greeting: buildTimeGreeting(input.displayName, input.date),
+    subtext: isFirstVisit
+      ? "مرحباً بك في منصتك الشخصية — لنبدأ رحلتك اليوم."
+      : activity.hasAnyActivity
+        ? "اليوم خطوة جديدة نحو هدفك."
+        : "ابدأ أول نشاط اليوم — المنصة تتفاعل مع تقدمك.",
+    goalTitle: goalTitle(input.goal),
+    overallProgress: activity.overallProgressPct,
+    motivation: activity.hasAnyActivity
+      ? isFirstVisit
+        ? "كل يوم تقرّبك أكثر من النسخة الأفضل منك."
+        : "أنت على الطريق الصحيح! استمر 💪"
+      : "سجّل ماء، تمرين، أو وزن — وسترى أرقامك تتحرك فوراً.",
+    isFirstVisit,
+    streak: input.streak,
+    hakimPoints: input.hakimPoints,
+    heroImage: input.heroImage,
+  };
+}
+
+export function buildDailySnapshot(input: {
+  features: MembershipFeatures;
+  activity?: PlatformActivitySnapshot;
+  date?: Date;
+}): DailySnapshotItem[] {
+  const activity = input.activity ?? getEmptyActivitySnapshot();
+  const tasks = buildDailyTasks(input);
+  const workoutTask = tasks.find((t) => t.id === "workout");
+  const waterTask = tasks.find((t) => t.id === "water");
+
+  const mealsDone = activity.mealsDone;
+  const mealsTotal = activity.mealsTotal;
+  const workoutDone = activity.workoutDone;
+  const workoutTotal = activity.workoutTotal;
+  const waterLiters = (activity.waterMl / 1000).toFixed(1);
+  const waterGoalLiters = (activity.waterGoalMl / 1000).toFixed(0);
+  const nutritionProgress = mealsTotal ? Math.round((mealsDone / mealsTotal) * 100) : 0;
+  const workoutProgress = workoutTotal ? Math.round((workoutDone / workoutTotal) * 100) : 0;
+  const waterProgress = activity.waterGoalMl
+    ? Math.round((activity.waterMl / activity.waterGoalMl) * 100)
+    : 0;
+
+  const progressValue =
+    activity.weightChange != null
+      ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
+      : "0 كغ";
+  const progressSubtitle =
+    activity.daysIn > 0 ? `منذ ${activity.daysIn} ${activity.daysIn === 1 ? "يوم" : "أيام"}` : "لم تسجّل بعد";
+
+  /* RTL: first item = right — التمارين → التغذية → الماء → التقدم (يسار) */
+  return [
+    {
+      id: "workout",
+      title: "التمارين",
+      value: `${workoutDone} / ${workoutTotal} تمرين`,
+      subtitle: workoutTask?.subtitle ?? WORKOUT_DAY_SEED.title,
+      progress: workoutProgress,
+      href: "/app/program",
+      icon: "workout",
+      iconBg: "bg-[#FFEDD5]",
+      iconColor: "text-[#FF6B00]",
+      valueColor: "#FF6B00",
+      progressColor: "#FF6B00",
+      showProgressBar: true,
+    },
+    {
+      id: "nutrition",
+      title: "التغذية",
+      value: `${mealsDone} / ${mealsTotal} وجبات`,
+      subtitle: mealsDone > 0 ? "استمر في تسجيل وجباتك" : "سجّل وجباتك اليوم",
+      progress: nutritionProgress,
+      href: "/app/nutrition",
+      icon: "nutrition",
+      iconBg: "bg-[#DCFCE7]",
+      iconColor: "text-[#22C55E]",
+      valueColor: "#22C55E",
+      progressColor: "#22C55E",
+      showProgressBar: true,
+    },
+    {
+      id: "water",
+      title: "الماء",
+      value: `${waterLiters} / ${waterGoalLiters} لتر`,
+      subtitle: activity.waterMl > 0 ? `${waterGoalLiters} لتر يومياً` : "ابدأ بكوب واحد",
+      progress: waterProgress,
+      action: "open-water-sheet",
+      icon: "water",
+      iconBg: "bg-[#DBEAFE]",
+      iconColor: "text-[#3B82F6]",
+      valueColor: "#3B82F6",
+      progressColor: "#3B82F6",
+      showProgressBar: true,
+    },
+    {
+      id: "progress",
+      title: "التقدم",
+      value: progressValue,
+      subtitle: progressSubtitle,
+      progress: activity.overallProgressPct,
+      href: "/app/progress",
+      icon: "progress",
+      iconBg: "bg-[#F3E8FF]",
+      iconColor: "text-[#8B5CF6]",
+      valueColor: "#8B5CF6",
+      progressColor: "#8B5CF6",
+      showProgressBar: false,
+    },
+  ];
+}
+
+export function buildTodaysMission(input: {
+  features: MembershipFeatures;
+  activity?: PlatformActivitySnapshot;
+  date?: Date;
+}): TodaysMissionState {
+  const tasks = buildDailyTasks(input);
+  const dayIndex = dayOfYear(input.date);
+  const isRestDay = dayIndex % 7 === 6;
+
+  if (isRestDay) {
+    return {
+      title: "اليوم يوم راحة",
+      description: "استشفِ عضلاتك — المشي الخفيف أو التمدد كافيان اليوم.",
+      pointsReward: 0,
+      href: "/app/program",
+      isRestDay: true,
+      isEmpty: false,
+    };
+  }
+
+  const mission = resolveNextMissionFromTasks(
+    tasks.filter((t) => !isDailyTaskLocked(t, input.features)),
+  );
+
+  if (mission.id === "done") {
+    return {
+      title: "أحسنت — أنجزت مهام اليوم",
+      description: "حافظ على سلسلتك غداً واستمر في التقدم.",
+      pointsReward: 0,
+      href: mission.href,
+      isRestDay: false,
+      isEmpty: true,
+    };
+  }
+
+  const isWorkout = mission.id === "workout";
+  return {
+    title: isWorkout ? "أكمل تمرين اليوم" : mission.title.replace("الخطوة التالية: ", ""),
+    description: isWorkout
+      ? "أنت على بُعد تمرين واحد من إكمال مهمة اليوم."
+      : "خطوة صغيرة اليوم تصنع فرقاً كبيراً غداً.",
+    pointsReward: mission.pointsReward,
+    href: mission.href,
+    isRestDay: false,
+    isEmpty: false,
+  };
+}
+
+export function buildLastAchievement(activity: PlatformActivitySnapshot): LastAchievementState {
+  if (!activity.hasAchievement) {
+    return {
+      title: "ابدأ سلسلتك",
+      subtitle: "أكمل أول مهمة اليوم لفتح أول إنجاز لك.",
+      hasAchievement: false,
+    };
+  }
+  return {
+    title: activity.lastAchievementTitle || ACHIEVEMENT_SEED.title,
+    subtitle: activity.lastAchievementSubtitle || ACHIEVEMENT_SEED.subtitle,
+    hasAchievement: true,
+  };
+}
+
+export function buildDiscoverItem(goal: UserGoal, date = new Date()): DiscoverState | null {
+  const featured = buildFeaturedForGoal(goal, date);
+  const item = featured[0];
+  if (!item) return null;
+
+  const type: DiscoverState["type"] = item.showPlay ? "video" : item.category.includes("معلومة") ? "tip" : "article";
+
+  return {
+    id: item.id,
+    type,
+    badge: item.badge ?? (type === "video" ? "فيديو" : type === "tip" ? "نصيحة" : "مقال جديد"),
+    title: item.title,
+    description: item.subtitle,
+    href: item.href,
+    showPlay: Boolean(item.showPlay),
+  };
 }

@@ -353,12 +353,14 @@ function MobileCoachVisual() {
         <div className="h-[320px] w-[320px] rounded-full bg-beige" />
       </div>
 
-      {/* coach */}
+      {/* coach — LCP candidate */}
       <img
         src={coachImg}
         alt="مدرب لياقة بدنية"
         width={1024}
         height={1024}
+        decoding="async"
+        fetchPriority="high"
         className="absolute inset-x-6 bottom-[140px] z-10 h-[400px] w-auto max-w-none object-contain object-bottom"
       />
 
@@ -645,6 +647,8 @@ function CoachVisual() {
         alt="مدرب لياقة بدنية"
         width={1024}
         height={1024}
+        decoding="async"
+        fetchPriority="high"
         className="relative z-10 w-full h-full object-contain object-bottom"
       />
 

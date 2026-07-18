@@ -14,11 +14,19 @@ import {
   type WorkoutSessionExercise,
   type WorkoutSessionMeta,
 } from "@/lib/platform/workout-session";
+import {
+  getWeekdayIdFromDate,
+  resolveWeekdayPlan,
+  type WeekdayId,
+  type WeekdayWorkoutPlan,
+} from "@/lib/platform/weekly-workout-schedule";
 
 export type TodayWorkoutSession = {
   meta: WorkoutSessionMeta;
   exercises: WorkoutSessionExercise[];
   missingExternalIds: string[];
+  isRestDay: boolean;
+  dayId: WeekdayId;
 };
 
 async function buildSessionExercise(
@@ -46,15 +54,31 @@ async function buildSessionExercise(
   };
 }
 
-async function fetchTodayWorkoutSession(): Promise<TodayWorkoutSession> {
-  const externalIds = TODAY_WORKOUT_PRESCRIPTIONS.map((item) => item.external_id);
+async function fetchWorkoutDaySession(plan: WeekdayWorkoutPlan): Promise<TodayWorkoutSession> {
+  if (plan.isRestDay) {
+    return {
+      meta: {
+        points: 0,
+        durationMin: 0,
+        calories: 0,
+        streakDays: 0,
+        totalExercises: 0,
+      },
+      exercises: [],
+      missingExternalIds: [],
+      isRestDay: true,
+      dayId: plan.id,
+    };
+  }
+
+  const externalIds = plan.prescriptions.map((item) => item.external_id);
   const rows = await fetchExercisesByExternalIds(externalIds);
   const byExternalId = new Map(rows.map((row) => [row.external_id, row]));
 
   const missingExternalIds = externalIds.filter((id) => !byExternalId.has(id));
   const exercises: WorkoutSessionExercise[] = [];
 
-  for (const prescription of TODAY_WORKOUT_PRESCRIPTIONS) {
+  for (const prescription of plan.prescriptions) {
     const details = byExternalId.get(prescription.external_id);
     if (!details) continue;
     exercises.push(await buildSessionExercise(prescription, details));
@@ -62,22 +86,33 @@ async function fetchTodayWorkoutSession(): Promise<TodayWorkoutSession> {
 
   return {
     meta: {
-      points: TODAY_WORKOUT_BRIEF.points,
-      durationMin: TODAY_WORKOUT_BRIEF.durationMin,
-      calories: TODAY_WORKOUT_BRIEF.calories,
-      streakDays: 5,
+      points: plan.points,
+      durationMin: plan.durationMin,
+      calories: plan.calories,
+      streakDays: 0,
       totalExercises: exercises.length,
     },
     exercises,
     missingExternalIds,
+    isRestDay: false,
+    dayId: plan.id,
   };
 }
 
-export function useTodayWorkout() {
+export function useWorkoutDaySession(dayId: WeekdayId, hasWorkoutProgram = true) {
+  const plan = resolveWeekdayPlan(dayId, hasWorkoutProgram);
+
   return useQuery({
-    queryKey: ["today-workout-session"],
-    queryFn: fetchTodayWorkoutSession,
+    queryKey: ["workout-day-session", dayId, hasWorkoutProgram],
+    queryFn: () => fetchWorkoutDaySession(plan),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
+
+/** @deprecated use useWorkoutDaySession(getWeekdayIdFromDate(), hasWorkoutProgram) */
+export function useTodayWorkout(hasWorkoutProgram = true) {
+  return useWorkoutDaySession(getWeekdayIdFromDate(), hasWorkoutProgram);
+}
+
+export { TODAY_WORKOUT_BRIEF, TODAY_WORKOUT_PRESCRIPTIONS };

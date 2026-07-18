@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { consumeQuizAuthCallback } from "@/lib/quiz-onboarding-api";
 import { readQuizProgress, writeQuizProgress, type QuizProgressSnapshot } from "@/lib/quiz-progress-storage";
 import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
 
@@ -118,39 +119,63 @@ export function useQuizProgress() {
   const [selectedTierId, setSelectedTierId] = useState<"transform" | "pro" | "vip">("transform");
 
   useEffect(() => {
-    const previewStep = readPreviewStepFromUrl();
-    if (previewStep) {
-      replaceStep(previewStep);
-      hydratedRef.current = true;
-      return;
-    }
+    let cancelled = false;
 
-    const saved = readQuizProgress();
-    if (saved) {
-      applySnapshot(saved, {
-        setGender,
-        setUserName,
-        setUserEmail,
-        setUserPhone,
-        setUserCity,
-        setGoalId,
-        setChallengeId,
-        setInjuryIds,
-        setAge,
-        setHeightCm,
-        setWeightKg,
-        setActivityLevel,
-        setInvestment,
-        setBodyType,
-        setTrainingEnvironment,
-        setUserLocation,
-        setSelectedTierId,
-      });
-      if (saved.step && saved.step !== "loading") {
-        replaceStep(saved.step as QuizStep);
+    void (async () => {
+      let verifiedViaLink = false;
+      try {
+        verifiedViaLink = await consumeQuizAuthCallback();
+      } catch (error) {
+        console.error("[quiz] auth callback failed:", error);
       }
-    }
-    hydratedRef.current = true;
+      if (cancelled) return;
+
+      const previewStep = readPreviewStepFromUrl();
+      if (previewStep) {
+        const nextStep =
+          verifiedViaLink && previewStep === "verifyEmail" ? "createPassword" : previewStep;
+        replaceStep(nextStep);
+        hydratedRef.current = true;
+        return;
+      }
+
+      const saved = readQuizProgress();
+      if (saved) {
+        applySnapshot(saved, {
+          setGender,
+          setUserName,
+          setUserEmail,
+          setUserPhone,
+          setUserCity,
+          setGoalId,
+          setChallengeId,
+          setInjuryIds,
+          setAge,
+          setHeightCm,
+          setWeightKg,
+          setActivityLevel,
+          setInvestment,
+          setBodyType,
+          setTrainingEnvironment,
+          setUserLocation,
+          setSelectedTierId,
+        });
+        if (saved.step && saved.step !== "loading") {
+          const nextStep =
+            verifiedViaLink && saved.step === "verifyEmail" ? "createPassword" : saved.step;
+          replaceStep(nextStep as QuizStep);
+        } else if (verifiedViaLink) {
+          replaceStep("createPassword");
+        }
+      } else if (verifiedViaLink) {
+        replaceStep("createPassword");
+      }
+      hydratedRef.current = true;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [replaceStep]);
 
   useEffect(() => {

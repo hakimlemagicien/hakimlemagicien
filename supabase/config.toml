@@ -12,10 +12,17 @@ additional_redirect_urls = [
 
 [auth.email]
 enable_signup = true
+# OTP: 8 digits on production auth; expires in 10 minutes (matches email copy)
+otp_length = 8
+otp_expiry = 600
 
 [auth.email.template.magic_link]
-subject = "الكوتش حكيم — رمز التحقق من بريدك"
+subject = "تحقق من بريدك الإلكتروني"
 content_path = "./supabase/email-templates/magic-link.html"
+
+[auth.email.template.invite]
+subject = "دعوة من Hakim Coaching — أكمل إنشاء حسابك"
+content_path = "./supabase/email-templates/invite-user.html"
 
 [functions.admin-accept-payment]
 verify_jwt = true

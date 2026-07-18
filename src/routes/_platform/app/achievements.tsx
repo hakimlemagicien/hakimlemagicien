@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight, Flame, Star, Trophy } from "lucide-react";
 import { PlatformPageHeader } from "@/components/platform/layout/PlatformLayout";
+import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useStreak } from "@/hooks/useStreak";
 import {
   HAKIM_POINTS_LABEL,
@@ -25,8 +26,9 @@ const HOW_TO_EARN = [
 
 function AchievementsPage() {
   const { count, hakimPoints } = useStreak();
+  const { snapshot } = usePlatformActivity();
   const streakCopy = resolveStreakMotivation(count);
-  const bestStreak = Math.max(count, 7);
+  const bestStreak = snapshot.bestStreak;
 
   return (
     <div className="flex flex-col gap-4 pb-4">

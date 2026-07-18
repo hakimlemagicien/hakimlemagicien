@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAvatarDisplayUrl } from "@/lib/platform/profile-api";
 
 export type MembershipTier = "visitor" | "free" | "essential" | "premium" | "vip" | "admin";
 
@@ -29,10 +30,29 @@ export type MembershipResponse = {
 
 export type MembershipState = MembershipResponse & {
   displayName: string;
+  avatarPath: string | null;
+  avatarUrl: string | null;
   isVisitor: boolean;
 };
 
 export const MEMBERSHIP_QUERY_KEY = ["membership", "current"] as const;
+
+const MEMBERSHIP_TIER_LABELS_AR: Record<MembershipTier, string> = {
+  visitor: "زائر",
+  free: "مجاني",
+  essential: "أساسي",
+  premium: "بريميوم",
+  vip: "VIP",
+  admin: "أدمن",
+};
+
+export function getMembershipTierLabel(tier: MembershipTier): string {
+  return MEMBERSHIP_TIER_LABELS_AR[tier];
+}
+
+export function isPaidMembershipTier(tier: MembershipTier): boolean {
+  return tier === "essential" || tier === "premium" || tier === "vip" || tier === "admin";
+}
 
 const DEFAULT_FEATURES: MembershipFeatures = {
   platform_access: true,
@@ -58,20 +78,22 @@ export const FREE_MEMBERSHIP_STATE: MembershipState = {
   days_remaining: 0,
   features: DEFAULT_FEATURES,
   displayName: "بطل",
+  avatarPath: null,
+  avatarUrl: null,
   isVisitor: false,
 };
 
-const LOCAL_PREMIUM_FEATURES: MembershipFeatures = {
+const LOCAL_FREE_FEATURES: MembershipFeatures = {
   platform_access: true,
-  workout_program: true,
-  nutrition_plan: true,
-  progress_tracking: true,
+  workout_program: false,
+  nutrition_plan: false,
+  progress_tracking: false,
   free_content: true,
-  periodic_reviews: true,
-  limited_coach_contact: true,
-  personal_followup: true,
-  program_adjustments: true,
-  priority_contact: true,
+  periodic_reviews: false,
+  limited_coach_contact: false,
+  personal_followup: false,
+  program_adjustments: false,
+  priority_contact: false,
 };
 
 function isLocalAppRuntime() {
@@ -82,15 +104,16 @@ function isLocalAppRuntime() {
   return isLocalHost && isAppPath;
 }
 
-function withLocalPremiumOverride(state: MembershipState): MembershipState {
+/** Localhost preview: always show free-member UI (ignores paid DB tiers). */
+function withLocalFreeOverride(state: MembershipState): MembershipState {
   if (!isLocalAppRuntime()) return state;
   return {
     ...state,
-    tier: state.tier === "admin" ? "admin" : "premium",
-    is_free: false,
-    is_paid: true,
+    tier: "free",
+    is_free: true,
+    is_paid: false,
     is_active: true,
-    features: LOCAL_PREMIUM_FEATURES,
+    features: LOCAL_FREE_FEATURES,
   };
 }
 
@@ -144,30 +167,59 @@ export async function resolveDisplayName(userId: string): Promise<string> {
   return data?.full_name?.trim() || data?.email?.split("@")[0] || "بطل";
 }
 
+export async function resolveProfileSnapshot(userId: string): Promise<{
+  displayName: string;
+  avatarPath: string | null;
+}> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("full_name, email, avatar_path")
+    .eq("id", userId)
+    .maybeSingle();
+
+  return {
+    displayName: data?.full_name?.trim() || data?.email?.split("@")[0] || "بطل",
+    avatarPath: data?.avatar_path ?? null,
+  };
+}
+
+function resolveAvatarUrl(avatarPath: string | null): Promise<string | null> {
+  return resolveAvatarDisplayUrl(avatarPath);
+}
+
 export async function fetchMembershipState(): Promise<MembershipState> {
   const { data } = await supabase.auth.getUser();
   if (!data.user) {
-    return withLocalPremiumOverride({ ...FREE_MEMBERSHIP_STATE, tier: "visitor", isVisitor: true });
+    return withLocalFreeOverride({ ...FREE_MEMBERSHIP_STATE, tier: "visitor", isVisitor: true });
   }
 
   try {
-    const [membership, displayName] = await Promise.all([
+    const [membership, profile] = await Promise.all([
       getMyMembership(),
-      resolveDisplayName(data.user.id),
+      resolveProfileSnapshot(data.user.id),
     ]);
+    const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
 
-    return withLocalPremiumOverride({
+    return withLocalFreeOverride({
       ...membership,
-      displayName,
+      displayName: profile.displayName,
+      avatarPath: profile.avatarPath,
+      avatarUrl,
       isVisitor: false,
     });
   } catch (err) {
     // Keep the app usable: never crash / hang the platform home on RPC failure.
     console.error("[fetchMembershipState]", err);
-    const displayName = await resolveDisplayName(data.user.id).catch(() => "بطل");
-    return withLocalPremiumOverride({
+    const profile = await resolveProfileSnapshot(data.user.id).catch(() => ({
+      displayName: "بطل",
+      avatarPath: null,
+    }));
+    const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
+    return withLocalFreeOverride({
       ...FREE_MEMBERSHIP_STATE,
-      displayName,
+      displayName: profile.displayName,
+      avatarPath: profile.avatarPath,
+      avatarUrl,
       isVisitor: false,
     });
   }

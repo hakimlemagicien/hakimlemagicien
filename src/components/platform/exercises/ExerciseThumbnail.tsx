@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Dumbbell, LoaderCircle } from "lucide-react";
+import { Dumbbell } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { fetchExerciseMediaUrl } from "@/lib/platform/exercise-library";
 import { cn } from "@/lib/utils";
 
@@ -28,14 +29,10 @@ export function ExerciseThumbnail({
 
   if (mediaQuery.isLoading && !signedUrl) {
     return (
-      <div
-        className={cn(
-          "flex items-center justify-center bg-muted",
-          className,
-        )}
-      >
-        <LoaderCircle className="h-4 w-4 animate-spin text-primary" aria-hidden />
-      </div>
+      <Skeleton
+        className={cn("rounded-none", className)}
+        aria-label="جاري تحميل الوسائط"
+      />
     );
   }
 

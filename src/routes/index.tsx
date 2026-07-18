@@ -1,15 +1,21 @@
+import { lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { HeroProblemTransition } from "@/components/HeroProblemTransition";
 import { TrustStatistics } from "@/components/TrustStatistics";
-import { ProblemSection } from "@/components/ProblemSection";
-import HowItWorks from "@/components/HowItWorks";
-import SuccessStories from "@/components/SuccessStories";
-import PricingTransparency from "@/components/PricingTransparency";
-import FAQ from "@/components/FAQ";
-import FinalCTA from "@/components/FinalCTA";
+import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import { SiteFooter } from "@/components/SiteFooter";
+import coachImg from "@/assets/coach-photo.png";
+
+const ProblemSection = lazy(() =>
+  import("@/components/ProblemSection").then((m) => ({ default: m.ProblemSection })),
+);
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const SuccessStories = lazy(() => import("@/components/SuccessStories"));
+const PricingTransparency = lazy(() => import("@/components/PricingTransparency"));
+const FAQ = lazy(() => import("@/components/FAQ"));
+const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,6 +32,9 @@ export const Route = createFileRoute("/")({
         content: "اكتشف الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.",
       },
     ],
+    links: [
+      { rel: "preload", href: coachImg, as: "image", fetchPriority: "high" },
+    ],
   }),
   component: Index,
 });
@@ -39,13 +48,25 @@ function Index() {
         <TrustStatistics className="hidden lg:block" />
         <HeroProblemTransition />
         <div className="bg-[linear-gradient(180deg,#F3EFE8_0%,#F7F5F2_30%,#FAF8F5_55%,#FFFFFF_92%)]">
-          <ProblemSection />
+          <Suspense fallback={<SectionSkeleton variant="cards" />}>
+            <ProblemSection />
+          </Suspense>
         </div>
-        <HowItWorks />
-        <SuccessStories />
-        <PricingTransparency />
-        <FAQ />
-        <FinalCTA />
+        <Suspense fallback={<SectionSkeleton variant="text" />}>
+          <HowItWorks />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton variant="cards" />}>
+          <SuccessStories />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton variant="text" />}>
+          <PricingTransparency />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton variant="text" />}>
+          <FAQ />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton variant="hero" />}>
+          <FinalCTA />
+        </Suspense>
       </main>
       <SiteFooter />
     </div>

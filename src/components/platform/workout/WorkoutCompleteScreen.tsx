@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { Flame, Star, Timer } from "lucide-react";
+import { Droplets, Flame, Star, Timer } from "lucide-react";
+import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 
 type WorkoutCompleteScreenProps = {
@@ -9,6 +10,7 @@ type WorkoutCompleteScreenProps = {
 
 export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
   const { phase, meta, resetSession } = player;
+  const water = useWaterOptional();
   const open = phase === "complete";
 
   return (
@@ -55,6 +57,29 @@ export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
               </p>
               <p className="text-[11px] font-medium text-[#2E7D32]/85">التحدي اليومي مكتمل ✓</p>
             </div>
+
+            {water ? (
+              <div className="mt-4 rounded-2xl border border-[#BFDBFE]/70 bg-[#EFF6FF] p-3 text-right">
+                <p className="text-xs font-bold text-[#1E3A8A]">هل شربت الماء بعد التمرين؟</p>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void water.registerWater(250)}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] px-3 text-xs font-black text-white transition active:scale-[0.98]"
+                  >
+                    <Droplets className="h-4 w-4" />
+                    +250 مل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={water.openWaterSheet}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-[#BFDBFE] bg-white px-3 text-xs font-bold text-[#1E3A8A] transition active:scale-[0.98]"
+                  >
+                    خيارات الماء
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <Link
               to="/app/program/workout"
