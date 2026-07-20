@@ -1,8 +1,28 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  type ExerciseMediaKind,
+  type ExerciseMediaStatus,
+  fetchExerciseMediaUrl,
+  fetchResolvedExerciseMediaUrl,
+  resolveExerciseListMediaPath,
+  resolveExerciseMediaSource,
+} from "@/lib/platform/exercise-media";
 
-const EXERCISE_MEDIA_BUCKET = "exercise-media";
-const SIGNED_MEDIA_URL_TTL_SECONDS = 60 * 60;
+export {
+  EXERCISE_MEDIA_BUCKET,
+  SHARED_EXERCISE_PLACEHOLDER_PATH,
+  SHARED_INSTRUCTIONS_PLACEHOLDER_PATH,
+  buildRealExerciseVideoPath,
+  buildRealInstructionsVideoPath,
+  exerciseMediaQueryKey,
+  fetchExerciseMediaUrl,
+  fetchResolvedExerciseMediaUrl,
+  resolveExerciseListMediaPath,
+  resolveExerciseMediaSource,
+  type ExerciseMediaKind,
+  type ExerciseMediaStatus,
+} from "@/lib/platform/exercise-media";
 
 type MuscleGroupRelation = {
   id: string;
@@ -21,7 +41,7 @@ export type ExerciseLibraryItem = {
   equipment: string | null;
   difficulty: "beginner" | "intermediate" | "advanced" | null;
   primary_muscle: string | null;
-  video_status: "placeholder" | "ready" | "missing";
+  video_status: ExerciseMediaStatus;
   thumbnail_path: string | null;
   sort_order: number;
   muscle_group: MuscleGroupRelation;
@@ -33,7 +53,7 @@ export type ExerciseDetails = ExerciseLibraryItem & {
   coach_notes: string | null;
   duration_seconds: number;
   youtube_url: string | null;
-  instructions_status: "placeholder" | "ready" | "missing";
+  instructions_status: ExerciseMediaStatus;
   video_path: string | null;
   instructions_video_path: string | null;
 };
@@ -147,23 +167,6 @@ export async function fetchExercisesByExternalIds(
   return rows.sort(
     (left, right) => (order.get(left.external_id) ?? 0) - (order.get(right.external_id) ?? 0),
   );
-}
-
-export async function fetchExerciseMediaUrl(path: string | null): Promise<string | null> {
-  const value = path?.trim();
-  if (!value) return null;
-  if (/^https?:\/\//i.test(value)) return value;
-
-  const objectPath = value
-    .replace(/^\/+/, "")
-    .replace(new RegExp(`^${EXERCISE_MEDIA_BUCKET}/`), "");
-
-  const { data, error } = await supabase.storage
-    .from(EXERCISE_MEDIA_BUCKET)
-    .createSignedUrl(objectPath, SIGNED_MEDIA_URL_TTL_SECONDS);
-
-  if (error) throw error;
-  return data.signedUrl;
 }
 
 export function formatExerciseDifficulty(

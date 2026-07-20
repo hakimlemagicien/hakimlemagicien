@@ -1,21 +1,34 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CirclePlay, Dumbbell, LoaderCircle } from "lucide-react";
-import { fetchExerciseMediaUrl } from "@/lib/platform/exercise-library";
+import {
+  exerciseMediaQueryKey,
+  fetchResolvedExerciseMediaUrl,
+  type ExerciseMediaKind,
+  type ExerciseMediaStatus,
+} from "@/lib/platform/exercise-media";
 
 type ExerciseMediaProps = {
+  status: ExerciseMediaStatus;
   path: string | null;
+  kind: ExerciseMediaKind;
   title: string;
   label: string;
   autoPlay?: boolean;
 };
 
-export function ExerciseMedia({ path, title, label, autoPlay = false }: ExerciseMediaProps) {
+export function ExerciseMedia({
+  status,
+  path,
+  kind,
+  title,
+  label,
+  autoPlay = false,
+}: ExerciseMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaQuery = useQuery({
-    queryKey: ["exercise-media", path],
-    queryFn: () => fetchExerciseMediaUrl(path),
-    enabled: Boolean(path),
+    queryKey: ["exercise-media", exerciseMediaQueryKey({ status, path, kind })],
+    queryFn: () => fetchResolvedExerciseMediaUrl({ status, path, kind }),
     staleTime: 50 * 60 * 1000,
     retry: 1,
   });
@@ -44,8 +57,12 @@ export function ExerciseMedia({ path, title, label, autoPlay = false }: Exercise
         <span className="grid h-14 w-14 place-items-center rounded-full bg-card text-primary shadow-sm">
           <Dumbbell className="h-6 w-6" />
         </span>
-        <p className="mt-3 text-sm font-black text-foreground">الفيديو غير متوفر حالياً</p>
-        <p className="mt-1 text-xs text-muted-foreground">سيتم إضافة {label} قريباً.</p>
+        <p className="mt-3 text-sm font-black text-foreground">{title}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {status === "review_required"
+            ? `${label} قيد المراجعة — سيُعرض بعد الاعتماد.`
+            : `سيتم إضافة ${label} قريباً.`}
+        </p>
       </div>
     );
   }

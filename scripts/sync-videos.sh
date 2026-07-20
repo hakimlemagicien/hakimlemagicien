@@ -178,6 +178,10 @@ from pathlib import Path
 from typing import Any
 
 BUCKET = "exercise-media"
+SHARED_PLACEHOLDER_PATHS = {
+    "exercise": "exercises/placeholders/default-exercise.mp4",
+    "instructions": "exercises/placeholders/default-instructions.mp4",
+}
 EXTERNAL_ID_RE = re.compile(r"^([A-Z]{2}-\d{3})")
 MEDIA_FILES = {
     "exercise": {
@@ -352,11 +356,16 @@ class PostgresClient:
         )
         return {row["external_id"]: row for row in rows if row.get("external_id")}
 
-    def update_exercise(self, external_id: str, payload: dict[str, str]) -> None:
-        sets = ", ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in payload.items())
+    def update_exercise(self, external_id: str, payload: dict[str, str | None]) -> None:
+        sets: list[str] = []
+        for column, value in payload.items():
+            if value is None:
+                sets.append(f"{column} = NULL")
+            else:
+                sets.append(f"{column} = '{value.replace(chr(39), chr(39) * 2)}'")
         sql = (
-            f"UPDATE public.exercises SET {sets} "
-            f"WHERE external_id = '{external_id.replace(chr(39), chr(39)*2)}';"
+            f"UPDATE public.exercises SET {', '.join(sets)} "
+            f"WHERE external_id = '{external_id.replace(chr(39), chr(39) * 2)}';"
         )
         self._query_rows(sql)
 
@@ -460,21 +469,77 @@ def remote_object_path(external_id: str, remote_name: str) -> str:
     return f"exercises/{external_id}/{remote_name}"
 
 
-def desired_db_values(object_path: str) -> tuple[str, str]:
+def load_placeholder_hashes() -> set[str]:
+    hashes: set[str] = set()
+    default_asset = os.environ.get(
+        "EXERCISE_PLACEHOLDER_ASSET",
+        str(Path.home() / "Documents/Hakim Coaching Platform/Assets/placeholder-exercise.mp4"),
+    )
+    asset_path = Path(default_asset)
+    if asset_path.is_file():
+        hashes.add(sha256_file(asset_path))
+    extra = os.environ.get("EXERCISE_PLACEHOLDER_HASHES", "")
+    for token in extra.split(","):
+        token = token.strip().lower()
+        if token:
+            hashes.add(token)
+    return hashes
+
+
+def ensure_shared_placeholders(
+    storage: StorageClient | None,
+    *,
+    dry_run: bool,
+    placeholder_asset: Path,
+) -> int:
+    uploaded = 0
+    instructions_asset = Path(
+        os.environ.get(
+            "EXERCISE_INSTRUCTIONS_PLACEHOLDER_ASSET",
+            str(placeholder_asset),
+        )
+    )
+    sources = {
+        "exercise": placeholder_asset,
+        "instructions": instructions_asset,
+    }
+    for kind, object_path in SHARED_PLACEHOLDER_PATHS.items():
+        source = sources[kind]
+        if not source.is_file():
+            raise RuntimeError(f"shared placeholder source missing for {kind}: {source}")
+        if dry_run:
+            print(f"WOULD_UPLOAD shared {object_path}")
+            uploaded += 1
+            continue
+        if storage is None:
+            raise RuntimeError("Storage client unavailable")
+        if storage.object_exists(object_path):
+            print(f"SKIP shared {object_path} (exists)")
+            continue
+        content_hash = sha256_file(source)
+        print(f"UPLOAD shared {object_path} …")
+        storage.upload(object_path, source, content_hash)
+        storage.verify_objects_exist([object_path])
+        uploaded += 1
+    return uploaded
+
+
+def desired_db_values_for_media(*, is_placeholder: bool, object_path: str) -> tuple[str | None, str]:
+    if is_placeholder:
+        return None, "placeholder"
     return object_path, "ready"
 
 
-def verify_db_paths(db: PostgresClient, external_id: str, expected_paths: dict[str, str]) -> None:
+def verify_db_paths(db: PostgresClient, external_id: str, expected_paths: dict[str, str | None]) -> None:
     row = db.fetch_exercise(external_id)
     if not row:
         raise RuntimeError(f"DB verification failed: exercise {external_id} not found after update")
     for column, expected in expected_paths.items():
         actual = (row.get(column) or "").strip()
-        if not actual:
-            raise RuntimeError(f"DB verification failed: {column} is NULL for {external_id}")
-        if actual != expected:
+        expected_value = (expected or "").strip()
+        if actual != expected_value:
             raise RuntimeError(
-                f"DB verification failed: {column}={actual!r} expected {expected!r} for {external_id}"
+                f"DB verification failed: {column}={actual!r} expected {expected_value!r} for {external_id}"
             )
 
 
@@ -499,14 +564,16 @@ def sync_one_exercise(
     *,
     dry_run: bool,
     verify_mode: bool,
+    placeholder_hashes: set[str],
 ) -> tuple[int, int, int]:
     """Returns (uploaded, would_upload, updated). Raises on verify failure."""
 
     uploaded = 0
     would_upload = 0
     upload_actions: list[tuple[str, Path, str]] = []
-    db_updates: dict[str, str] = {}
+    db_updates: dict[str, str | None] = {}
     uploaded_paths: list[str] = []
+    expected_paths: dict[str, str | None] = {}
 
     for kind, spec in MEDIA_FILES.items():
         local_path = item.exercise_file if kind == "exercise" else item.instructions_file
@@ -515,25 +582,32 @@ def sync_one_exercise(
                 raise RuntimeError(f"local file missing for {item.external_id}: {spec['local_name']}")
             continue
 
-        object_path = remote_object_path(item.external_id, spec["remote_name"])
         local_hash = sha256_file(local_path)
-        desired_path, desired_status = desired_db_values(object_path)
+        is_placeholder = local_hash in placeholder_hashes
+        object_path = remote_object_path(item.external_id, spec["remote_name"])
+        desired_path, desired_status = desired_db_values_for_media(
+            is_placeholder=is_placeholder,
+            object_path=object_path,
+        )
 
-        current_path = db_row.get(spec["path_column"]) or ""
+        current_path = (db_row.get(spec["path_column"]) or "").strip()
         current_status = db_row.get(spec["status_column"]) or ""
 
-        needs_upload = True
-        if not dry_run and storage is not None and storage.object_exists(object_path):
-            # Skip re-upload when object already present (hash not stored in API metadata reliably)
-            needs_upload = False
+        needs_upload = False
+        if not is_placeholder:
+            needs_upload = True
+            if not dry_run and storage is not None and storage.object_exists(object_path):
+                needs_upload = False
 
-        needs_db_update = current_path != desired_path or current_status != desired_status
+        desired_path_norm = (desired_path or "").strip()
+        needs_db_update = current_path != desired_path_norm or current_status != desired_status
 
         if needs_upload:
             upload_actions.append((object_path, local_path, local_hash))
         if needs_db_update:
             db_updates[spec["path_column"]] = desired_path
             db_updates[spec["status_column"]] = desired_status
+            expected_paths[spec["path_column"]] = desired_path
 
     if not upload_actions and not db_updates:
         print(f"SKIP {item.external_id}")
@@ -559,25 +633,23 @@ def sync_one_exercise(
     if db_updates:
         if dry_run:
             print(f"WOULD_UPDATE DB {item.external_id} {json.dumps(db_updates, ensure_ascii=False)}")
+            updated = 1
         else:
             db.update_exercise(item.external_id, db_updates)
-            expected_paths = {
-                "video_path": remote_object_path(item.external_id, MEDIA_FILES["exercise"]["remote_name"]),
-                "instructions_video_path": remote_object_path(
-                    item.external_id, MEDIA_FILES["instructions"]["remote_name"]
-                ),
-            }
             verify_db_paths(db, item.external_id, expected_paths)
             row = db.fetch_exercise(item.external_id)
             print(
                 f"VERIFY db OK {item.external_id} "
                 f"video_path={row.get('video_path')} "
-                f"instructions_video_path={row.get('instructions_video_path')}"
+                f"instructions_video_path={row.get('instructions_video_path')} "
+                f"video_status={row.get('video_status')} "
+                f"instructions_status={row.get('instructions_status')}"
             )
             updated = 1
 
     if verify_mode and not dry_run and storage is not None:
-        exercise_path = remote_object_path(item.external_id, MEDIA_FILES["exercise"]["remote_name"])
+        row = db.fetch_exercise(item.external_id)
+        exercise_path = (row.get("video_path") or "").strip() or SHARED_PLACEHOLDER_PATHS["exercise"]
         signed = storage.create_signed_url(exercise_path)
         verify_signed_url_fetchable(signed)
         print(f"VERIFY signed URL OK for {exercise_path}")
@@ -589,6 +661,9 @@ def sync_videos(library_root: Path, dry_run: bool, exercise_filter: str) -> int:
     counters = Counters()
     local_rows = discover_local_exercises(library_root, exercise_filter)
     verify_mode = bool(exercise_filter) and not dry_run
+    placeholder_hashes = load_placeholder_hashes()
+    if not placeholder_hashes:
+        print("WARN no placeholder reference hash configured; all local files treated as real videos", file=sys.stderr)
 
     print(f"Discovered {len(local_rows)} local exercise folder(s)")
     if exercise_filter and not local_rows:
@@ -615,6 +690,27 @@ def sync_videos(library_root: Path, dry_run: bool, exercise_filter: str) -> int:
     if not dry_run:
         storage = StorageClient(supabase_url, service_key)
 
+    placeholder_asset = Path(
+        os.environ.get(
+            "EXERCISE_PLACEHOLDER_ASSET",
+            str(Path.home() / "Documents/Hakim Coaching Platform/Assets/placeholder-exercise.mp4"),
+        )
+    )
+    try:
+        shared_uploaded = ensure_shared_placeholders(
+            storage,
+            dry_run=dry_run,
+            placeholder_asset=placeholder_asset,
+        )
+        counters.uploaded += shared_uploaded
+        if dry_run:
+            counters.would_upload += shared_uploaded
+    except Exception as exc:  # noqa: BLE001
+        counters.errors += 1
+        print(f"ERROR shared placeholder: {exc}", file=sys.stderr)
+        if verify_mode:
+            return 1
+
     for item in local_rows:
         try:
             db_row = exercises.get(item.external_id)
@@ -628,6 +724,7 @@ def sync_videos(library_root: Path, dry_run: bool, exercise_filter: str) -> int:
                 db,
                 dry_run=dry_run,
                 verify_mode=verify_mode,
+                placeholder_hashes=placeholder_hashes,
             )
             counters.uploaded += up
             counters.would_upload += would

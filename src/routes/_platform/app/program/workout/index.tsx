@@ -410,6 +410,7 @@ function SessionExerciseFeaturedRow({
       <div className="relative h-[54px] w-[78px] shrink-0 overflow-hidden rounded-xl border border-border/45 bg-muted">
         <ExerciseThumbnail
           signedUrl={exercise.thumbnailUrl}
+          status={exercise.videoStatus}
           mediaPath={exercise.videoPath}
           alt={exercise.name}
           className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}
@@ -494,6 +495,7 @@ function SessionExerciseRow({
       <div className="relative h-10 w-14 shrink-0 overflow-hidden rounded-lg border border-border/45 bg-muted">
         <ExerciseThumbnail
           signedUrl={exercise.thumbnailUrl}
+          status={exercise.videoStatus}
           mediaPath={exercise.videoPath}
           alt={exercise.name}
           className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}

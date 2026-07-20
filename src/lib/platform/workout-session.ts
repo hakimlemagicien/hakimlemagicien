@@ -1,3 +1,5 @@
+import type { ExerciseMediaStatus } from "@/lib/platform/exercise-media";
+
 export type EffortLevel = "easy" | "medium" | "hard";
 
 export type WorkoutSessionMeta = {
@@ -20,7 +22,9 @@ export type WorkoutSessionExercise = {
   restLabel: string;
   suggestedWeightKg: number;
   thumbnailUrl: string | null;
+  videoStatus: ExerciseMediaStatus;
   videoPath: string | null;
+  instructionsStatus: ExerciseMediaStatus;
   instructionsVideoPath: string | null;
   coachNotes: string | null;
 };

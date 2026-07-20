@@ -1053,7 +1053,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       exercise_difficulty: "beginner" | "intermediate" | "advanced"
-      exercise_media_status: "placeholder" | "ready" | "missing"
+      exercise_media_status: "placeholder" | "ready" | "missing" | "review_required" | "rejected"
       exercise_type: "strength" | "cardio" | "mobility" | "warmup" | "other"
       lead_status:
         | "pending_lead"
@@ -1198,7 +1198,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       exercise_difficulty: ["beginner", "intermediate", "advanced"],
-      exercise_media_status: ["placeholder", "ready", "missing"],
+      exercise_media_status: ["placeholder", "ready", "missing", "review_required", "rejected"],
       exercise_type: ["strength", "cardio", "mobility", "warmup", "other"],
       lead_status: [
         "pending_lead",

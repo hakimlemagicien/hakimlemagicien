@@ -136,6 +136,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
               >
                 <ExerciseThumbnail
                   signedUrl={currentExercise.thumbnailUrl}
+                  status={currentExercise.videoStatus}
                   mediaPath={currentExercise.videoPath}
                   alt={currentExercise.name}
                   className="absolute inset-0 h-full w-full"
@@ -177,7 +178,9 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                   {showDetails && currentExercise.instructionsVideoPath ? (
                     <div className="mt-3 border-t border-border/50 pt-3">
                       <ExerciseMedia
+                        status={currentExercise.instructionsStatus}
                         path={currentExercise.instructionsVideoPath}
+                        kind="instructions"
                         title={currentExercise.name}
                         label="فيديو التعليمات"
                       />
@@ -221,6 +224,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     <div className="h-9 w-12 shrink-0 overflow-hidden rounded-lg border border-border/50">
                       <ExerciseThumbnail
                         signedUrl={exercise.thumbnailUrl}
+                        status={exercise.videoStatus}
                         mediaPath={exercise.videoPath}
                         alt={exercise.name}
                         className="h-full w-full"
@@ -285,7 +289,9 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     <div className="flex h-full items-center justify-center px-3 pb-8 pt-16">
                       <div className="w-full max-w-3xl">
                         <ExerciseMedia
+                          status={currentExercise.videoStatus}
                           path={currentExercise.videoPath}
+                          kind="exercise"
                           title={currentExercise.name}
                           label="فيديو التمرين"
                           autoPlay={videoAutoPlay}

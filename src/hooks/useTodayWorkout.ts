@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  fetchExerciseMediaUrl,
   fetchExercisesByExternalIds,
+  resolveExerciseListMediaPath,
   type ExerciseDetails,
 } from "@/lib/platform/exercise-library";
+import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
 import {
   TODAY_WORKOUT_BRIEF,
   TODAY_WORKOUT_PRESCRIPTIONS,
@@ -33,8 +34,16 @@ async function buildSessionExercise(
   prescription: TodayWorkoutPrescription,
   details: ExerciseDetails,
 ): Promise<WorkoutSessionExercise> {
-  const mediaPath = details.thumbnail_path ?? details.video_path;
-  const thumbnailUrl = await fetchExerciseMediaUrl(mediaPath);
+  const listMedia = resolveExerciseListMediaPath({
+    status: details.video_status,
+    thumbnailPath: details.thumbnail_path,
+    videoPath: details.video_path,
+  });
+  const thumbnailUrl = await fetchResolvedExerciseMediaUrl({
+    status: listMedia.status,
+    path: listMedia.path,
+    kind: listMedia.kind,
+  });
 
   return {
     id: details.id,
@@ -48,7 +57,9 @@ async function buildSessionExercise(
     restLabel: formatRestLabel(prescription.rest_seconds),
     suggestedWeightKg: prescription.suggested_weight_kg ?? 0,
     thumbnailUrl,
+    videoStatus: details.video_status,
     videoPath: details.video_path,
+    instructionsStatus: details.instructions_status,
     instructionsVideoPath: details.instructions_video_path,
     coachNotes: details.coach_notes,
   };

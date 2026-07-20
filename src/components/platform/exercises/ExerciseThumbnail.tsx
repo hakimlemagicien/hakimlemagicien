@@ -1,26 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
 import { Dumbbell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchExerciseMediaUrl } from "@/lib/platform/exercise-library";
+import {
+  exerciseMediaQueryKey,
+  fetchResolvedExerciseMediaUrl,
+  type ExerciseMediaKind,
+  type ExerciseMediaStatus,
+} from "@/lib/platform/exercise-media";
 import { cn } from "@/lib/utils";
 
 type ExerciseThumbnailProps = {
   signedUrl: string | null;
+  status: ExerciseMediaStatus;
   mediaPath: string | null;
+  kind?: ExerciseMediaKind;
   alt: string;
   className?: string;
 };
 
 export function ExerciseThumbnail({
   signedUrl,
+  status,
   mediaPath,
+  kind = "exercise",
   alt,
   className,
 }: ExerciseThumbnailProps) {
   const mediaQuery = useQuery({
-    queryKey: ["exercise-media", mediaPath],
-    queryFn: () => fetchExerciseMediaUrl(mediaPath),
-    enabled: Boolean(mediaPath) && !signedUrl,
+    queryKey: ["exercise-media", exerciseMediaQueryKey({ status, path: mediaPath, kind })],
+    queryFn: () => fetchResolvedExerciseMediaUrl({ status, path: mediaPath, kind }),
+    enabled: !signedUrl,
     staleTime: 50 * 60 * 1000,
     retry: 1,
   });
