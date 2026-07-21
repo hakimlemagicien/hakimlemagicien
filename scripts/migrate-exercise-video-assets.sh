@@ -41,10 +41,86 @@ load_env_file() {
   set +a
 }
 
+die() {
+  printf '[migrate-exercise-video-assets] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+resolve_database_url() {
+  if [[ -n "${DATABASE_URL:-}" ]]; then
+    return 0
+  fi
+
+  DATABASE_URL="${SUPABASE_DB_URL:-}"
+  [[ -n "${DATABASE_URL:-}" ]] && return 0
+
+  local password="${SUPABASE_DB_PASSWORD:-${DB_PASSWORD:-${POSTGRES_PASSWORD:-}}}"
+  [[ -n "$password" ]] || return 0
+
+  local project_ref="${SUPABASE_PROJECT_ID:-${VITE_SUPABASE_PROJECT_ID:-}}"
+  if [[ -z "$project_ref" && -f "${ROOT_DIR}/supabase/.temp/project-ref" ]]; then
+    project_ref="$(tr -d '[:space:]' < "${ROOT_DIR}/supabase/.temp/project-ref")"
+  fi
+  if [[ -z "$project_ref" && -n "${SUPABASE_URL:-${VITE_SUPABASE_URL:-}}" ]]; then
+    project_ref="$(printf '%s' "${SUPABASE_URL:-${VITE_SUPABASE_URL:-}}" | sed -n 's|https://\([^.]*\)\.supabase\.co.*|\1|p')"
+  fi
+  [[ -n "$project_ref" ]] || return 0
+
+  local pooler_url=""
+  if [[ -f "${ROOT_DIR}/supabase/.temp/pooler-url" ]]; then
+    pooler_url="$(tr -d '[:space:]' < "${ROOT_DIR}/supabase/.temp/pooler-url")"
+  else
+    pooler_url="postgresql://postgres.${project_ref}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"
+  fi
+
+  DATABASE_URL="$(
+    SUPABASE_DB_PASSWORD="$password" POOLER_URL="$pooler_url" python3 - <<'PY'
+import os
+from urllib.parse import quote, urlparse, urlunparse
+
+password = os.environ["SUPABASE_DB_PASSWORD"]
+parsed = urlparse(os.environ["POOLER_URL"])
+username = parsed.username or "postgres"
+host = parsed.hostname or ""
+port = parsed.port or 5432
+database = (parsed.path or "/postgres").lstrip("/") or "postgres"
+netloc = f"{quote(username, safe='')}:{quote(password, safe='')}@{host}:{port}"
+print(urlunparse(("postgresql", netloc, f"/{database}", "", "", "")))
+PY
+  )"
+  export DATABASE_URL
+}
+
+require_database_url_for_apply() {
+  resolve_database_url
+  if [[ -n "${DATABASE_URL:-}" ]]; then
+    return 0
+  fi
+
+  if [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${DB_PASSWORD:-}" && -z "${POSTGRES_PASSWORD:-}" && -z "${SUPABASE_DB_URL:-}" ]]; then
+    die "Database credentials missing for --apply. Add SUPABASE_DB_PASSWORD (or DATABASE_URL / SUPABASE_DB_URL) to .env.local."
+  fi
+
+  if [[ -z "${SUPABASE_URL:-${VITE_SUPABASE_URL:-}}" && -z "${SUPABASE_PROJECT_ID:-${VITE_SUPABASE_PROJECT_ID:-}}" ]]; then
+    die "Cannot build DATABASE_URL: missing SUPABASE_URL or SUPABASE_PROJECT_ID to resolve the project ref."
+  fi
+
+  die "Cannot build DATABASE_URL. Check SUPABASE_DB_PASSWORD and Supabase project settings in .env.local."
+}
+
 load_env_file "${ROOT_DIR}/.env"
 load_env_file "${ROOT_DIR}/.env.local"
 
-export ROOT_DIR APPLY MANIFEST
+: "${SUPABASE_URL:=${VITE_SUPABASE_URL:-}}"
+: "${SUPABASE_SERVICE_ROLE_KEY:=${SUPABASE_SECRET_KEY:-}}"
+
+if [[ "$APPLY" -eq 1 ]]; then
+  require_database_url_for_apply
+else
+  resolve_database_url
+fi
+
+export ROOT_DIR APPLY MANIFEST DATABASE_URL
 python3 - <<'PY'
 import hashlib
 import json
@@ -437,12 +513,16 @@ def main() -> int:
         print("DRY-RUN only. Re-run with --apply after QA approval.")
         return 0
 
-    if not pre_apply_checks["apply_safe"]:
-        print("ERROR: pre-apply validation failed — aborting delete", file=sys.stderr)
+    if not DB:
+        print(
+            "ERROR: database connection unavailable for --apply. "
+            "Set SUPABASE_DB_PASSWORD or DATABASE_URL in .env.local.",
+            file=sys.stderr,
+        )
         return 1
 
-    if not DB:
-        print("ERROR: DATABASE_URL required for --apply", file=sys.stderr)
+    if not pre_apply_checks["apply_safe"]:
+        print("ERROR: pre-apply validation failed — aborting delete", file=sys.stderr)
         return 1
 
     allowed_paths = {entry["path"] for entry in deletion_candidates}
@@ -485,11 +565,23 @@ def main() -> int:
         except urllib.error.HTTPError as exc:
             print(f"WARN delete failed {path}: HTTP {exc.code}", file=sys.stderr)
 
+    deleted_bytes = sum(
+        int(entry["size"]) for entry in deletion_candidates if entry["path"] in deleted
+    )
+    apply_summary = {
+        "deleted_count": len(deleted),
+        "deleted_bytes": deleted_bytes,
+        "deleted_gib": round(deleted_bytes / 1024**3, 2),
+        "failed_count": len(duplicate_paths) - len(deleted),
+        "expected_deleted_count": len(duplicate_paths),
+    }
     manifest["deleted_paths"] = deleted
     manifest["deleted_at"] = datetime.now(timezone.utc).isoformat()
+    manifest["apply_summary"] = apply_summary
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Deleted {len(deleted)} duplicate placeholder object(s)")
-    return 0
+    print("APPLY_SUMMARY")
+    print(json.dumps(apply_summary, indent=2))
+    return 0 if apply_summary["failed_count"] == 0 else 1
 
 
 if __name__ == "__main__":
