@@ -17,5 +17,17 @@ Read in this order:
 3. [`docs/MASTER_PROJECT_DOCUMENTATION.md`](docs/MASTER_PROJECT_DOCUMENTATION.md) — full technical reference
 4. [`README.md`](README.md) — quick entry point
 
-**Protected areas (do not modify without explicit owner approval):** Landing Page design, Quiz UI, Admin flows. Onboarding runs **inside `/quiz`** — there is no `/onboarding` route yet.
+
+## App-First Entry (2026-08-14)
+
+| Route | Role |
+|-------|------|
+| `/` | Product entry — Quiz if anonymous; redirect to `/app` if session |
+| `/coaching` | Marketing Landing (protected design) |
+| `/quiz` | Legacy — keep for deep links, `?step=`, OTP callbacks |
+| `/app` | Authenticated platform |
+
+**Do not** assume `/` is the Landing page.
+
+**Protected areas (do not modify without explicit owner approval):** Landing Page design (`/coaching`), Quiz UI, Admin flows. Onboarding runs **inside Quiz** (`/` and `/quiz` share `QuizPage`) — there is no `/onboarding` route yet.
 <!-- PROJECT:END -->

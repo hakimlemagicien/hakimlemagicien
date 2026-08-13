@@ -1,6 +1,6 @@
 # Hakim Coaching Platform
 
-منصة عربية (RTL) لتقديم برامج تدريب وتغذية مخصصة — Landing، Quiz، Onboarding (داخل Quiz)، ومنصة أعضاء `/app`.
+منصة عربية (RTL) — **App-First:** `/` = Quiz/Evaluation، `/coaching` = Landing، `/app` = المنصة.
 
 **الإنتاج:** [hakimlemagicien.com](https://hakimlemagicien.com)  
 **Supabase:** `ufgrbpakuemamggwypdh`  
@@ -26,7 +26,7 @@
 
 ```
 src/
-├── routes/           # TanStack Router — Landing, Quiz, Auth, /app/*
+├── routes/           # TanStack Router — /, /coaching, /quiz, Auth, /app/*
 ├── components/       # landing · quiz · platform · checkout · ui
 ├── lib/              # business logic + platform/*
 ├── hooks/            # useMembership, useWorkoutPlayer, …
@@ -46,7 +46,8 @@ scripts/              # build verify, exercise video migration, …
 
 | المسار | الوظيفة |
 |--------|---------|
-| `/` | Landing Page (CTAs → `/quiz`) |
+| `/` | **App-First Entry** — Quiz (session → `/app`) |
+| `/coaching` | Landing Page التسويقية (CTAs → `/`) |
 | `/quiz` | فانل تحليل + Onboarding (email, password, avatar)؛ Checkout legacy (لا يُفتح بعد reveal في المسار الأمامي) |
 | `/auth` | تسجيل دخول / كلمة مرور |
 | `/app` | منصة الأعضاء (Home, Program, Discover, Profile, Tools, …) |
@@ -80,4 +81,4 @@ npm run lint     # ESLint
 
 ---
 
-**آخر تحديث للتوثيق:** 2026-08-13
+**آخر تحديث للتوثيق:** 2026-08-14 (App-First Entry)

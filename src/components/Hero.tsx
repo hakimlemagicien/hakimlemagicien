@@ -388,7 +388,7 @@ function MobileCoachVisual() {
 function HeroQuizCTA({ className = "" }: { className?: string }) {
   return (
     <Link
-      to="/quiz"
+      to="/"
       className={[
         "relative flex h-[52px] w-full items-center overflow-hidden rounded-full cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse",
         className,
@@ -563,7 +563,7 @@ function DesktopHero() {
 
           <div className="mt-8">
             <Link
-              to="/quiz"
+              to="/"
               className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 cta-gradient text-white font-bold text-lg rounded-full px-6 py-4 shadow-cta transition-all hover:scale-[1.02] hover:brightness-110"
             >
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-primary shrink-0 transition-transform group-hover:-translate-x-1">

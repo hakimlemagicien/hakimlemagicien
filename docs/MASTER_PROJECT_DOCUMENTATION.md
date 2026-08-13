@@ -1,6 +1,7 @@
 # Hakim Coaching — Master Project Documentation
 
-**الإصدار:** 1.4  
+**الإصدار:** 1.5
+**App-First Entry:** 2026-08-14 — `/` = Quiz gateway؛ `/coaching` = Landing  
 **التاريخ:** 2026-08-13  
 **النطاق:** وثيقة هندسية رسمية للمشروع بالكامل  
 **المستودع:** `hakimlemagicien`  
@@ -24,7 +25,7 @@
 
 ## ما هو المشروع؟
 
-**Hakim Coaching** منصة رقمية عربية (RTL) لتقديم **برامج تدريب وتغذية مخصصة** تحت إشراف الكوتش حكيم. المنتج **رقمي بالكامل** — ليس تدريباً حضورياً. يبدأ المستخدم برحلة تسويقية (Landing + Quiz تحليل شخصي)، ثم **Onboarding مدمج داخل Quiz** (email → password → avatar) ويدخل **منصة الأعضاء** (`/app`). مسار **Checkout legacy** (تحويل بنكي + موافقة أدمن) موجود في الكود لكن **لا يُفتح** بعد `reveal` في المسار الأمامي.
+**Hakim Coaching** منصة رقمية عربية (RTL). **App-First (2026-08-14):** `/` = App/Quiz Entry (session → `/app`)； `/coaching` = Landing التسويقية؛ `/app` = المنصة؛ `/quiz` = legacy backward-compatible. Onboarding داخل Quiz. Checkout legacy موجود لكن لا يُفتح من `reveal` في المسار الأمامي.
 
 ## الهدف
 
@@ -40,8 +41,9 @@
 
 | الطبقة | الحالة |
 |--------|--------|
-| موقع تسويقي (Landing) | ✅ مكتمل — CTAs → `/quiz` |
-| كويز + Onboarding مدمج | ✅ verifyEmail → password → avatar → `/app` |
+| App-First Entry (`/`) | ✅ Quiz مباشرة؛ session → `/app` |
+| Marketing Landing (`/coaching`) | ✅ Landing منقولة — CTAs → `/` |
+| Quiz legacy (`/quiz`) | ✅ backward-compatible — `?step=` + resume |
 | Checkout (تحويل بنكي) | ⚠️ legacy — خطوات في Quiz؛ **لا تُستدعى** بعد `reveal` في المسار الأمامي |
 | لوحة أدمن للمدفوعات | ✅ مكتمل |
 | مصادقة + OTP/magic-link | ✅ مكتمل |
@@ -64,7 +66,9 @@
 ## 2.1 ما تم إنجازه ويعمل فعلاً
 
 ### التسويق والتحويل
-- **Landing Page** (`/`) — Hero، Problem، HowItWorks، SuccessStories، Pricing، FAQ، FinalCTA — **CTAs → `/quiz`**
+- **App-First Entry** (`/`) — `beforeLoad`: session → `/app`؛ بدون session → `QuizPage` + `QuizLoginEntry`
+- **Marketing Landing** (`/coaching`) — Hero، Problem، … — **CTAs → `/`**
+- **Quiz legacy** (`/quiz`) — نفس `QuizPage` — deep links + OTP
 - **Quiz** (`/quiz`) — فانل متعدد الخطوات + **Onboarding مدمج** (verifyEmail → createPassword → profilePhoto → platformWelcome → `/app`)
 - **Onboarding API:** `src/lib/quiz-onboarding-api.ts` — RPCs Phase A + OTP + avatar
 - **Onboarding UI:** `src/components/quiz/QuizOnboardingScreens.tsx`
@@ -254,11 +258,12 @@ hakimlemagicien/
 
 | المسار | الحماية | الحالة | الوصف |
 |--------|---------|--------|--------|
-| `/` | عام | ✅ | Landing — CTAs → `/quiz` |
-| `/quiz` | عام | ✅ | فانل + Onboarding مدمج + Checkout legacy |
+| `/` | عام | ✅ | **App-First Entry** — Quiz أو redirect `/app` |
+| `/coaching` | عام | ✅ | **Marketing Landing** — CTAs → `/` |
+| `/quiz` | عام | ✅ | Legacy — نفس Quiz + `?step=` + OTP callbacks |
 | `/onboarding` | — | ❌ | **غير موجود** — Onboarding داخل `/quiz` |
 | `/auth` | عام | ✅ | مصادقة + OTP callback |
-| `/pricing` | عام | ✅ | Redirect إلى `/#pricing` |
+| `/pricing` | عام | ✅ | Redirect إلى `/coaching#pricing` |
 | `/privacy`, `/terms`, `/refund` | عام | ✅ | صفحات قانونية |
 | `/dashboard` | auth | ↪️ | Redirect → `/app` |
 | `/admin/payments` | admin | ✅ | مراجعة مدفوعات |
@@ -282,7 +287,7 @@ hakimlemagicien/
 
 ## 5.2 Layout Routes
 
-- `__root.tsx` — Shell عام، PWA، FloatingWhatsApp (مخفي على `/quiz`)
+- `__root.tsx` — Shell عام، PWA، FloatingWhatsApp (مخفي على `/` و`/quiz`)
 - `_platform/route.tsx` — `beforeLoad`: لا session → `/auth`؛ `ssr: false`
 - `_authenticated/route.tsx` — auth guard (legacy)
 
@@ -299,11 +304,18 @@ hakimlemagicien/
 
 ## 6.1 Visitor (زائر)
 
-**المسار الأساسي (Onboarding — داخل Quiz):**
+**App-First Entry (`/`):**
 
-1. يدخل `/` — Landing عربي RTL
-2. يضغط CTA → `/quiz`
-3. يكمل أسئلة الكويز → **contact** (يستدعي `createLead` + `createOnboardingDraft`) → congrats → reveal
+| Session | السلوك |
+|---------|--------|
+| لا | Quiz مباشرة + «لديك حساب؟ تسجيل الدخول» → `/auth` |
+| نعم | Redirect → `/app` |
+
+**من Landing (`/coaching`):** CTA → `/`
+
+**المسار داخل Quiz (Onboarding — `/` أو `/quiz`):**
+
+1. يكمل أسئلة الكويز → **contact** (يستدعي `createLead` + `createOnboardingDraft`) → congrats → reveal
 4. **`afterReveal()` → `verifyEmail`** (دائماً — `src/routes/quiz.tsx`)
 5. Onboarding: createPassword → profilePhoto → platformWelcome
 6. يدخل `/app` (tier من RPC `get_my_membership` — غالباً `free` بعد finalize)
@@ -321,7 +333,7 @@ hakimlemagicien/
 
 1. `/auth` → `/app`
 2. يرى Home: Daily Feed مجاني، Streak محلي
-3. ميزات مدفوعة **مقفلة** حسب `features` في استجابة RPC — Upgrade → `/quiz`
+3. ميزات مدفوعة **مقفلة** حسب `features` — Upgrade → `/` أو `/quiz` (legacy)
 4. `/app/support` — لا WhatsApp coach (Upgrade فقط)
 5. صفحات nutrition/progress — UX مبني؛ محتوى/بيانات جزئية
 
@@ -564,7 +576,7 @@ leads ──1:N── lead_proof_uploads
 | `ProblemSection`, `HowItWorks`, `WhatYouGet` | شرح المشكلة والحل |
 | `Results90`, `SuccessStories` | إثبات اجتماعي |
 | `PricingTransparency`, `FAQ`, `FinalCTA` | تسعير وأسئلة وإغلاق |
-| `FloatingWhatsApp` | واتساب عائم (مخفي على `/quiz`) |
+| `FloatingWhatsApp` | واتساب عائم (مخفي على `/` و`/quiz` و`/app`) |
 | `SiteFooter.tsx` | تذييل + روابط قانونية |
 
 ## 11.2 Checkout (`src/components/checkout/`)

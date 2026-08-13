@@ -71,7 +71,7 @@ const navItems: {
 
 function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 shrink-0">
+    <Link to="/coaching" className="flex items-center gap-2 shrink-0">
       <span className="grid h-11 w-11 max-lg:h-10 max-lg:w-10 place-items-center rounded-xl max-lg:rounded-full bg-primary text-primary-foreground font-black text-2xl max-lg:text-xl">
         H
       </span>
@@ -206,7 +206,7 @@ export function Header() {
             return (
               <div key={item.label} className="relative">
                 <Link
-                  to="/"
+                  to="/coaching"
                   hash={item.hash}
                   className={`text-[15px] font-bold transition-colors hover:text-primary ${
                     active ? "text-primary" : "text-foreground"
@@ -291,7 +291,7 @@ export function Header() {
                     return (
                       <Link
                         key={item.label}
-                        to="/"
+                        to="/coaching"
                         hash={item.hash}
                         onClick={closeMenu}
                         className="outline-none"

@@ -163,7 +163,7 @@ function HashScrollHandler() {
   const hash = useRouterState({ select: (s) => s.location.hash });
 
   useEffect(() => {
-    if (pathname !== "/" || !hash) return;
+    if (pathname !== "/coaching" || !hash) return;
     const id = hash.replace(/^#/, "");
     const timer = window.setTimeout(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -177,7 +177,7 @@ function HashScrollHandler() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isQuiz = pathname.startsWith("/quiz");
+  const isQuizEntry = pathname === "/" || pathname.startsWith("/quiz");
   const isPlatform = pathname.startsWith("/app");
 
   useEffect(() => {
@@ -191,8 +191,8 @@ function RootComponent() {
         <HashScrollHandler />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        {!isQuiz && !isPlatform && <FloatingWhatsApp />}
-        {!isQuiz && !isPlatform && <ScrollToTopButton />}
+        {!isQuizEntry && !isPlatform && <FloatingWhatsApp />}
+        {!isQuizEntry && !isPlatform && <ScrollToTopButton />}
       </QueryClientProvider>
     </MotionProvider>
   );

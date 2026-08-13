@@ -11,6 +11,6 @@ export const Route = createFileRoute("/pricing")({
     ],
   }),
   beforeLoad: () => {
-    throw redirect({ to: "/", hash: "pricing" });
+    throw redirect({ to: "/coaching", hash: "pricing" });
   },
 });

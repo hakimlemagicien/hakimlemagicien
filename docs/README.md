@@ -1,6 +1,6 @@
 # Hakim Coaching — Documentation Index
 
-**آخر تحديث:** 2026-08-13
+**آخر تحديث:** 2026-08-14 — App-First Entry documented
 
 ---
 
