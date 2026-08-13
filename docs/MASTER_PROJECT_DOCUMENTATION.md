@@ -1,17 +1,19 @@
 # Hakim Coaching — Master Project Documentation
 
-**الإصدار:** 1.2  
-**التاريخ:** 2026-07-08  
+**الإصدار:** 1.4  
+**التاريخ:** 2026-08-13  
 **النطاق:** وثيقة هندسية رسمية للمشروع بالكامل  
 **المستودع:** `hakimlemagicien`  
 **النطاق الإنتاجي:** `https://hakimlemagicien.com`  
-**مشروع Supabase:** `ufgrbpakuemamggwypdh`
+**مشروع Supabase:** `ufgrbpakuemamggwypdh`  
+**حالة المشروع الحية:** [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) — يُحدَّث عند كل milestone
 
 ---
 
 > **تعليمات القراءة:**  
-> - **موظف جديد؟** اقرأ أولاً [`PROJECT_HANDBOOK.md`](./PROJECT_HANDBOOK.md) — دستور الشركة الرسمي.  
-> - **تفاصيل تقنية؟** هذه الوثيقة (Master Documentation) هي مصدر الحقيقة التقنية.  
+> - **أين وصلنا الآن؟** اقرأ أولاً [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) — ملخص حي محدّث.  
+> - **موظف جديد؟** [`PROJECT_HANDBOOK.md`](./PROJECT_HANDBOOK.md) — دستور الشركة الرسمي.  
+> - **تفاصيل تقنية عميقة؟** هذه الوثيقة (Master Documentation).  
 > - مبنية على قراءة الكود الفعلي، migrations، Edge Functions، Routes، Components، وscripts.  
 > - عند غياب ميزة في الكود يُذكر صراحةً: **«غير موجود حالياً»**.  
 > - يُفرَّق دائماً بين **الموجود** و**الرؤية المستقبلية**.
@@ -22,7 +24,7 @@
 
 ## ما هو المشروع؟
 
-**Hakim Coaching** منصة رقمية عربية (RTL) لتقديم **برامج تدريب وتغذية مخصصة** تحت إشراف الكوتش حكيم. المنتج **رقمي بالكامل** — ليس تدريباً حضورياً. يبدأ المستخدم برحلة تسويقية (Landing + Quiz تحليل شخصي)، ثم يختار باقة ويدفع عبر **تحويل بنكي يدوي**، وبعد موافقة الأدمن يحصل على حساب ويدخل **منصة الأعضاء** (`/app`).
+**Hakim Coaching** منصة رقمية عربية (RTL) لتقديم **برامج تدريب وتغذية مخصصة** تحت إشراف الكوتش حكيم. المنتج **رقمي بالكامل** — ليس تدريباً حضورياً. يبدأ المستخدم برحلة تسويقية (Landing + Quiz تحليل شخصي)، ثم **Onboarding مدمج داخل Quiz** (email → password → avatar) ويدخل **منصة الأعضاء** (`/app`). مسار **Checkout legacy** (تحويل بنكي + موافقة أدمن) موجود في الكود لكن **لا يُفتح** بعد `reveal` في المسار الأمامي.
 
 ## الهدف
 
@@ -38,13 +40,15 @@
 
 | الطبقة | الحالة |
 |--------|--------|
-| موقع تسويقي (Landing) | ✅ مكتمل |
-| كويز تحليل شخصي + Checkout | ✅ مكتمل (تحويل بنكي فقط) |
+| موقع تسويقي (Landing) | ✅ مكتمل — CTAs → `/quiz` |
+| كويز + Onboarding مدمج | ✅ verifyEmail → password → avatar → `/app` |
+| Checkout (تحويل بنكي) | ⚠️ legacy — خطوات في Quiz؛ **لا تُستدعى** بعد `reveal` في المسار الأمامي |
 | لوحة أدمن للمدفوعات | ✅ مكتمل |
-| مصادقة + دعوة بالبريد (Resend) | ✅ مكتمل |
-| منصة `/app` — Shell + Home | ✅ Phase 1 |
-| برنامج / تغذية / تقدم حقيقي | 🚧 Placeholder |
-| مكتبة تمارين داخل التطبيق | 🚧 JSON + Script خارجي فقط |
+| مصادقة + OTP/magic-link | ✅ مكتمل |
+| منصة `/app` | ✅ Home, Workout, Discover, Profile, Tools |
+| مكتبة تمارين (DB + UI) | ✅ جزئي — video placeholder |
+| برنامج / تغذية كامل | 🚧 جزئي |
+| `/onboarding` route مستقل | ❌ غير موجود |
 | دفع إلكتروني (بطاقة/PayPal) | 🚧 معطّل في UI |
 
 ## رؤية المشروع
@@ -55,65 +59,81 @@
 
 # 2. Current Project Status
 
+> **تحديث 2026-08-13:** للملخص الحي الكامل راجع [`PROJECT_STATUS.md`](./PROJECT_STATUS.md). هذا الفصل يلخّص الحقائق التقنية الأساسية.
+
 ## 2.1 ما تم إنجازه ويعمل فعلاً
 
 ### التسويق والتحويل
-- **Landing Page** (`/`) — أقسام كاملة: Hero، مشاكل/حلول، نتائج 90 يوم، قصص نجاح، تسعير، FAQ، CTA
-- **Quiz** (`/quiz`) — فانل متعدد الخطوات (~5800 سطر): جنس، أهداف، قياسات، تحديات، تسعير، دفع
-- حفظ تقدم الكويز في `localStorage`
-- إنشاء Lead عبر RPC `create_lead`
-- **Checkout** — تحويل بنكي (NBD الإمارات، CIH/BMCE المغرب)، رفع إيصال، إشعار أدمن
+- **Landing Page** (`/`) — Hero، Problem، HowItWorks، SuccessStories، Pricing، FAQ، FinalCTA — **CTAs → `/quiz`**
+- **Quiz** (`/quiz`) — فانل متعدد الخطوات + **Onboarding مدمج** (verifyEmail → createPassword → profilePhoto → platformWelcome → `/app`)
+- **Onboarding API:** `src/lib/quiz-onboarding-api.ts` — RPCs Phase A + OTP + avatar
+- **Onboarding UI:** `src/components/quiz/QuizOnboardingScreens.tsx`
+- حفظ تقدم الكويز في `localStorage` + milestones (`quiz-step-progress.ts`)
+- **Checkout legacy** — خطوات `trainingType` → `pricing` → `payment` موجودة؛ **`afterReveal()` يذهب دائماً إلى `verifyEmail`** — Checkout يُفتح فقط عبر استئناف localStorage أو `?step=`
+- عند **contact:** `create_lead` **+** `create_onboarding_draft` (استدعاء متوازٍ)
 
 ### الدفع والأدمن
-- `/admin/payments` — مراجعة إيصالات، قبول/رفض، إعادة إرسال رابط الدخول
+- `/admin/payments` — مراجعة، قبول، إعادة إرسال دعوة
 - Edge Functions: `admin-accept-payment`, `admin-resend-access`, `notify-receipt-upload`
-- إيميلات عبر **Resend** (ليس إيميل Supabase الافتراضي)
 
 ### المصادقة
-- `/auth` — تسجيل دخول، تسجيل، تعيين كلمة مرور (invite/recovery)
-- توجيه بعد Auth → `/app`
-- `/dashboard` → redirect إلى `/app`
+- `/auth` — signin/signup/set-password + OTP/magic-link callback من Quiz
+- `/dashboard` → redirect `/app`
 
-### المنصة (Phase 1)
-- `/app` — واجهة موبايل متقدمة: ترحيب، Streak/Points (localStorage)، Daily Feed (seed)، Premium Preview، Upgrade → `/quiz`
-- Coach Chat مؤقتاً: **WhatsApp** (`https://wa.me/971505129019`) للـ Premium في `/app/support`
-- Gating: Free يرى قفل + Upgrade؛ Premium يفتح الروابط
+### Onboarding Database (Phase A)
+- Migrations `202607111*.sql` — drafts, profiles, memberships, RPCs, RLS, avatars bucket
+- **لا يوجد** route `/onboarding` — Onboarding يعمل **داخل `/quiz`**
+
+### المنصة `/app`
+- **Home hub** — DailyMotivation, tasks, hero goal images, performance (OptimizedImage, skeletons)
+- **Workout** — `/app/program/workout` — player + set logs
+- **Exercise library** — `/app/exercises` — DB + video placeholder strategy
+- **Discover** — CMS seed + categories + search/saved
+- **Profile** — account center + avatar upload
+- **Tools** — calories calculator, interval timer
+- **Nutrition** — hub + sub-routes (`/meal`, `/shopping`, `/progress`, `/alternatives`) — محتوى جزئي
+- **Progress** — dashboard UX مبني؛ بيانات محلية/جزئية
+- **Support** — FAQ + WhatsApp Premium
+- Gating: tiers عبر RPC `get_my_membership` (`membership.ts`)
 
 ### البنية التحتية
-- TanStack Start + Vite + Nitro → Vercel
-- Supabase: Auth, DB, Storage, Edge Functions, RLS
-- CI: `.github/workflows/deploy.yml` — نشر على `main`
+- TanStack Start + Vite 8 + Nitro → Vercel
+- CI: `.github/workflows/deploy.yml` + smoke tests `/`, `/quiz`
+- 23 migrations + Edge Functions + Resend emails
 
-### مكتبة التمارين (خارج التطبيق)
-- `scripts/exercise-library.json` — **320 تمرين** في 13 مجموعة
-- `scripts/create-exercise-library.sh` — إنشاء هيكل مجلدات على الجهاز المحلي
-- نسخة احتياطية: `scripts/backup/` بتاريخ 2026-07-06
-
-## 2.2 Placeholder (واجهة موجودة، محتوى غير حقيقي)
+## 2.2 Placeholder أو جزئي
 
 | المسار | الوصف |
 |--------|--------|
-| `/app/discover` | «Phase 4» — مكتبة محتوى مجاني |
-| `/app/program` | «Phase 2» — أيام البرنامج الكامل |
-| `/app/nutrition` | «Phase 2» — خطة غذائية |
-| `/app/progress` | «Phase 2» — رسوم وقياسات |
-| `/app/support` | FAQ/نموذج تواصل «Phase 2» (WhatsApp فقط حقيقي للـ Premium) |
-| `/app/profile` | Payment History «Phase 2» |
-| Daily Feed في Home | `seed-content.ts` — نصوص ثابتة |
-| Streak / Points | `localStorage` فقط — غير متزامن مع DB |
-| إشعارات Home (badge 3) | UI ثابت — غير مرتبط بنظام إشعارات |
+| `/app/nutrition` | UX hub — محتوى غذائي جزئي |
+| `/app/nutrition/meal` | وجبة اليوم — جزئي |
+| `/app/nutrition/shopping` | قائمة تسوق — جزئي |
+| `/app/nutrition/progress` | تقدم التغذية — جزئي |
+| `/app/nutrition/alternatives` | بدائل وجبات — جزئي |
+| `/app/progress` | **Dashboard UX مبني** — بيانات محلية/جزئية (`progress-storage.ts`) |
+| `/app/support` | FAQ + WhatsApp Premium |
+| `/app/water` | **محذوف** — الماء عبر `WaterProvider` (Sheet في `PlatformShell`) |
+| Checkout Paddle/Stripe | معطّل («قريباً») |
+| `/onboarding` | **غير موجود** — Onboarding عبر `/quiz` |
+| In-app Coach Chat | **غير موجود** — WhatsApp مؤقت |
 
-## 2.3 لم يبدأ بعد / غير موجود
+## 2.3 لم يبدأ / غير موجود
 
-- مكتبة تغذية (`nutrition-library.json` أو ما شابه) — **غير موجودة**
-- ربط مكتبة التمارين (`exercise-library.json`) بالتطبيق — **غير موجود**
-- In-app Coach Chat — **غير موجود**
-- Paddle / Stripe في Checkout UI — **معطّل** («قريباً»)
-- جداول `payments` و`quiz_answers` — موجودة في Schema **لكن التطبيق لا يستعلم عنها** حالياً
-- صفحات عامة `/programs`, `/blog` — **غير موجودة**
-- RPC لقراءة `leads` للمستخدم العادي — **غير موجود** (RLS يمنع SELECT المباشر)
-- PWA كامل / Push notifications — Service Worker مسجّل؛ إشعارات Push **غير موجودة**
-- `README.md` — **فارغ**
+- Landing V2 / إعادة تصميم Landing — **تراجع صريح — غير معتمد**
+- مسار `/onboarding` مستقل — **غير موجود في main**
+- Paddle / Stripe فعّال — **غير موجود**
+- `/programs`, `/blog` — **غير موجودة**
+- Push notifications — **غير موجودة**
+
+## 2.4 قرارات UI/UX الموقوفة (2026-07/08)
+
+| المحاولة | النتيجة |
+|----------|---------|
+| Landing V2 + `/onboarding` CTAs | تراجع — حفظ التصميم الأصلي |
+| تحديث نصوص الهوية (Phase 1) | تراجع |
+| تحويل CTAs → `/onboarding` | تراجع — المسار غير جاهز |
+
+**القاعدة السارية:** أي تغيير Landing/Quiz/UI يحتاج اعتماد المالك خطوة بخطوة — راجع `PROJECT_STATUS.md` §2.
 
 ---
 
@@ -147,7 +167,7 @@ hakimlemagicien/
 ├── .vercel/output/          # مخرجات البناء (Nitro)
 ├── vite.config.ts
 ├── vercel.json
-├── AGENTS.md                # قواعد Lovable
+├── AGENTS.md                # قواعد AI/CI + Git safety
 └── package.json
 ```
 
@@ -203,7 +223,7 @@ hakimlemagicien/
 | Radix UI + shadcn | `src/components/ui/` (~48 مكوّن) |
 | Lucide React | أيقونات |
 
-**ملاحظة Lovable:** `vite.config.ts` يستخدم `@lovable.dev/vite-tanstack-config` — المشروع متصل بـ Lovable.dev.
+**ملاحظة Lovable (تاريخية):** بعض الوثائق القديمة تشير إلى Lovable.dev. **`vite.config.ts` الحالي** يستخدم TanStack Start + Nitro مباشرة — **لا** `@lovable.dev/vite-tanstack-config`. **Needs Verification (D3):** هل Lovable ما زال في سير العمل؟
 
 ## 4.3 Backend
 
@@ -234,20 +254,31 @@ hakimlemagicien/
 
 | المسار | الحماية | الحالة | الوصف |
 |--------|---------|--------|--------|
-| `/` | عام | ✅ | Landing |
-| `/quiz` | عام | ✅ | فانل الكويز + Checkout |
-| `/auth` | عام | ✅ | مصادقة |
+| `/` | عام | ✅ | Landing — CTAs → `/quiz` |
+| `/quiz` | عام | ✅ | فانل + Onboarding مدمج + Checkout legacy |
+| `/onboarding` | — | ❌ | **غير موجود** — Onboarding داخل `/quiz` |
+| `/auth` | عام | ✅ | مصادقة + OTP callback |
 | `/pricing` | عام | ✅ | Redirect إلى `/#pricing` |
 | `/privacy`, `/terms`, `/refund` | عام | ✅ | صفحات قانونية |
 | `/dashboard` | auth | ↪️ | Redirect → `/app` |
 | `/admin/payments` | admin | ✅ | مراجعة مدفوعات |
-| `/app` | auth | ✅ | Home المنصة |
-| `/app/discover` | auth | 🚧 | Placeholder |
-| `/app/program` | auth | 🚧 | Placeholder |
-| `/app/nutrition` | auth | 🚧 | Placeholder |
-| `/app/progress` | auth | 🚧 | Placeholder |
-| `/app/support` | auth | 🚧/جزئي | FAQ placeholder + WhatsApp Premium |
-| `/app/profile` | auth | 🚧/جزئي | معلومات + tier؛ history placeholder |
+| `/app` | auth | ✅ | Home hub — DailyMotivation, tasks |
+| `/app/discover` | auth | ✅ | CMS + categories + search |
+| `/app/program/workout` | auth | ✅ | Workout player + set logs |
+| `/app/exercises` | auth | ✅ | مكتبة تمارين (gated) |
+| `/app/profile` | auth | ✅ | Account center + avatar |
+| `/app/tools/calories` | auth | ✅ | حاسبة سعرات |
+| `/app/tools/timer` | auth | ✅ | Interval timer |
+| `/app/nutrition` | auth | 🚧 | Hub + sub-routes — محتوى جزئي |
+| `/app/nutrition/meal` | auth | 🚧 | وجبة اليوم |
+| `/app/nutrition/shopping` | auth | 🚧 | قائمة تسوق |
+| `/app/nutrition/progress` | auth | 🚧 | تقدم التغذية |
+| `/app/nutrition/alternatives` | auth | 🚧 | بدائل وجبات |
+| `/app/progress` | auth | 🚧 | Dashboard UX — بيانات محلية/جزئية |
+| `/app/support` | auth | 🚧/جزئي | FAQ + WhatsApp Premium |
+| `/app/studio` | auth | 🔧 | Design lab (داخلي) |
+
+**ملاحظة:** `/app/water` **غير موجود** — الماء عبر `WaterProvider` في `PlatformShell.tsx`
 
 ## 5.2 Layout Routes
 
@@ -257,6 +288,7 @@ hakimlemagicien/
 
 ## 5.3 صفحات ناقصة (مخططة / غير موجودة)
 
+- `/onboarding` — **غير موجود** (Onboarding عبر `/quiz`)
 - `/programs`, `/blog` — **غير موجودة**
 - لوحة أدمن أوسع (مستخدمين، محتوى، تمارين) — **غير موجودة**
 - In-app chat — **غير موجود**
@@ -267,32 +299,42 @@ hakimlemagicien/
 
 ## 6.1 Visitor (زائر)
 
+**المسار الأساسي (Onboarding — داخل Quiz):**
+
 1. يدخل `/` — Landing عربي RTL
 2. يضغط CTA → `/quiz`
-3. يكمل الكويز (أو يغادر — التقدم يُحفظ محلياً)
-4. يختار باقة → Checkout
-5. يحوّل بنكياً ويرفع إيصالاً
-6. ينتظر موافقة الأدمن
-7. يستلم إيميل دعوة → `/auth` → كلمة مرور → `/app`
+3. يكمل أسئلة الكويز → **contact** (يستدعي `createLead` + `createOnboardingDraft`) → congrats → reveal
+4. **`afterReveal()` → `verifyEmail`** (دائماً — `src/routes/quiz.tsx`)
+5. Onboarding: createPassword → profilePhoto → platformWelcome
+6. يدخل `/app` (tier من RPC `get_my_membership` — غالباً `free` بعد finalize)
+
+**مسار Checkout legacy (لا يُفتح من reveal في المسار الأمامي):**
+
+- خطوات: `trainingType` → `pricing` → `payment` → تحويل بنكي + إيصال
+- **الوصول:** استئناف `localStorage`، deep-link `?step=`، أو رجوع يدوي داخل Quiz
+- موافقة أدمن → إيميل دعوة → `/auth` → `/app`
+- **Needs Verification (D1):** هل هذا المسار ما زال يُستخدم في الإنتاج؟
 
 ## 6.2 Free Member (مسجل بدون Premium)
 
-**التعريف في الكود:** مسجل في Auth **بدون** lead مفعّل أو plan نشط.
+**التعريف في الكود:** Auth session + RPC `get_my_membership` يُرجع tier `free` (أو `essential` / `premium` / `vip` / `admin` حسب `memberships` + `membership_tiers`).
 
 1. `/auth` → `/app`
 2. يرى Home: Daily Feed مجاني، Streak محلي
-3. ميزات Premium **مقفلة** — Upgrade → `/quiz`
+3. ميزات مدفوعة **مقفلة** حسب `features` في استجابة RPC — Upgrade → `/quiz`
 4. `/app/support` — لا WhatsApp coach (Upgrade فقط)
-5. صفحات program/nutrition/progress — Placeholder + Upgrade
+5. صفحات nutrition/progress — UX مبني؛ محتوى/بيانات جزئية
 
-## 6.3 Premium Member
+## 6.3 Premium / Paid Member
 
-**التعريف:** `leads.user_id` + `status=active` + `payment_status` ∈ (`approved`, `confirmed`) **أو** `plans.is_active=true` **أو** admin.
+**التعريف في الكود:** `get_my_membership` → tier مدفوع (`essential` / `premium` / `vip` / `admin`) مع `is_paid: true` و`features` من `membership_tiers`.
 
 1. `/app` — بطاقات Premium **مفتوحة**
-2. روابط إلى `/app/program`, `/app/nutrition`, إلخ (المحتوى داخل الصفحات ما زال Placeholder)
-3. `/app/support` — زر WhatsApp للكوتش
-4. `/app/profile` — يعرض `tier: premium`
+2. روابط إلى `/app/program/workout`, `/app/nutrition`, `/app/progress`, إلخ
+3. `/app/support` — زر WhatsApp للكوتش (حسب tier)
+4. `/app/profile` — يعرض tier من RPC
+
+**ملاحظة:** مسار Lead القديم (`leads.payment_status`) ما زال موجوداً لـ Checkout legacy — **ليس** مصدر العضوية الأساسي في `/app`.
 
 ## 6.4 Admin
 
@@ -341,40 +383,43 @@ hakimlemagicien/
 
 # 8. Membership System
 
-## 8.1 المصدر الوحيد للمنطق
+## 8.1 المصدر الوحيد للمنطق (Frontend)
 
-`src/lib/platform/membership.ts` → `resolveMembership(userId)`
+| الملف | الدور |
+|-------|--------|
+| `src/lib/platform/membership.ts` | `fetchMembershipState()` → RPC `get_my_membership` + profile snapshot |
+| `src/hooks/useMembership.ts` | React Query wrapper — يستدعي `fetchMembershipState` |
 
-`src/hooks/useMembership.ts` — يستدعيه عند mount وتغيّر Auth.
+**لا يوجد** `resolveMembership()` في الكود الحالي.
 
-## 8.2 قواعد التصنيف
+## 8.2 RPC `get_my_membership`
 
-```text
-isAdmin     = user_roles يحتوي role === "admin"
-isPremiumLead = leads.status === "active"
-                AND payment_status IN ("approved", "confirmed")
-isPremium   = isAdmin OR isPremiumLead OR plans.is_active === true
+- يُستدعى عبر `supabase.rpc("get_my_membership")` في `getMyMembership()`
+- يُرجع JSON يُ normalizه إلى: `tier`, `is_free`, `is_paid`, `is_active`, `features`, `subscription_id`, `starts_at`, `ends_at`, `days_remaining`
+- **Tiers:** `free`, `essential`, `premium`, `vip`, `admin` (+ `visitor` محلياً عند عدم وجود session)
+- **Fallback:** عند فشل RPC — `FREE_MEMBERSHIP_STATE` + profile (لا crash)
+- **Localhost override:** على `127.0.0.1`/`localhost` + `/app` — يُجبر tier `free` للمعاينة
 
-tier:
-  admin   → "admin"
-  premium → "premium" (إذا isPremium)
-  else    → "free"
+## 8.3 مصادر البيانات (DB)
 
-visitor   → يُعيَّن في useMembership عند عدم وجود user (لا يُحسب داخل resolveMembership)
-```
-
-## 8.3 مصادر البيانات
-
-| الجدول | الاستعلام | ملاحظة |
-|--------|-----------|--------|
-| `user_roles` | SELECT مباشر | RLS: قراءة الذات فقط |
-| `profiles` | SELECT مباشر | للاسم المعروض |
-| `leads` | SELECT بـ `user_id` | **قد يفشل بصمت** بسبب RLS — الكود لا يعالج الخطأ صراحة |
-| `plans` | SELECT `is_active` | Fallback للـ Premium |
+| الجدول / RPC | الدور |
+|--------------|--------|
+| `memberships` | اشتراك المستخدم النشط |
+| `membership_tiers` | تعريف tiers + `features` JSON |
+| `profiles` | الاسم + `avatar_path` (SELECT مباشر من Frontend) |
+| `get_my_membership` | **مصدر tier/features في `/app`** |
+| `leads` / `plans` | **legacy** — مرتبط بمسار Checkout القديم؛ **ليس** مصدر العضوية في `membership.ts` |
 
 ## 8.4 Upgrade CTA
 
 `PlaceholderState.tsx` → `UpgradeCta` → رابط `/quiz`
+
+## 8.5 Pricing catalogs (لا تخلط)
+
+| المصدر | الملف | الاستخدام |
+|--------|-------|-----------|
+| رسمي (CEO) | `src/lib/pricing-presentation.ts` | Free / Essential / Premium / VIP — 3 و6 أشهر |
+| داخلي legacy | `PRICING_TIERS` في `src/routes/quiz.tsx` | شاشات pricing/payment داخل Quiz فقط |
 
 ---
 
@@ -427,7 +472,8 @@ sequenceDiagram
 
 ## 9.5 Plans و Payments (جداول)
 
-- **`plans`:** يُفترض ربطه بالمستخدم عند التفعيل — **التطبيق يقرأ `is_active` فقط للعضوية**؛ لا يوجد sync تلقائي واضح في الكود عند القبول
+- **`memberships` / `membership_tiers`:** مصدر tier في `/app` عبر `get_my_membership`
+- **`plans` / `leads`:** legacy لمسار Checkout — **ليس** مصدر العضوية في `membership.ts`
 - **`payments`:** Schema كامل — **لا استعلامات في `src/`** حالياً
 
 ## 9.6 طرق الدفع في UI
@@ -706,10 +752,11 @@ Free → فعّل برنامجك الآن → باقة → مدة → ملخص �
 
 # 14. Nutrition Library
 
-## الوضع الحالي: **غير موجود**
+## الوضع الحالي: **UX جزئي**
 
-- لا يوجد `nutrition-library.json` أو ما شابه
-- `/app/nutrition` — Placeholder فقط (`src/routes/_platform/app/nutrition.tsx`)
+- `/app/nutrition` — hub (`src/routes/_platform/app/nutrition/index.tsx`)
+- Sub-routes: `/meal`, `/shopping`, `/progress`, `/alternatives`
+- لا يوجد `nutrition-library.json` مركزي — محتوى seed/جزئي
 - `seed-content.ts` يحتوي بطاقة «وصفة اليوم» نصية في Daily Feed — **ليست مكتبة**
 - الرؤية المستقبلية: مكتبة وجبات + macros + ربط ببرنامج المستخدم (Phase 2)
 
@@ -719,7 +766,8 @@ Free → فعّل برنامجك الآن → باقة → مدة → ملخص �
 
 ## الوضع الحالي
 
-- `/app/program` — Placeholder «Phase 2»
+- `/app/program/workout` — **Workout player + set logs** (يعمل)
+- لا route `/app/program` index منفصل في `routeTree.gen.ts`
 - `PROGRAM_CAROUSEL_SEED` في `seed-content.ts` — 4 شرائح نصية للعرض في Home
 - لا يوجد جدول `programs` أو `workout_days` في DB
 - لا ربط بين `leads.answers` وبرنامج يومي معروض
@@ -728,7 +776,7 @@ Free → فعّل برنامجك الآن → باقة → مدة → ملخص �
 
 - برنامج 90 يوم مخصص حسب إجابات الكويز
 - أيام/تمارين/sets/reps من مكتبة التمارين
-- تتبع إنجاز اليوم في `/app/program`
+- تتبع إنجاز اليوم في `/app/program/workout`
 - مزامنة Premium gating مع `membership`
 
 ---
@@ -741,7 +789,7 @@ Free → فعّل برنامجك الآن → باقة → مدة → ملخص �
 |--------|-------|--------|
 | Landing | تسويق | ✅ |
 | Daily Feed | seed ثابت | ✅ UI فقط |
-| `/app/discover` | مكتبة مجانية | 🚧 Placeholder |
+| `/app/discover` | مكتبة مجانية | ✅ CMS seed + categories |
 
 ## 16.2 Premium
 
@@ -830,13 +878,13 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 
 | # | المشكلة | التأثير |
 |---|---------|---------|
-| 1 | `leads` SELECT محجوب بـ RLS — `resolveMembership` قد لا يقرأ lead | Premium قد لا يُكتشف؛ fallback `plans` فقط |
+| 1 | RPC `get_my_membership` — **Needs Verification (D5)** على تطبيق migrations في الإنتاج | فشل RPC → fallback `free` في Frontend |
 | 2 | `lead_proof_uploads` غير موجود في `types.ts` | Type-safety ناقص |
 | 3 | `payments` / `quiz_answers` غير مستخدمين | Schema ميت جزئياً |
 | 4 | `plans` لا يُحدَّث تلقائياً عند قبول الدفع | اعتماد على `leads` للعضوية |
 | 5 | Streak/Points في localStorage فقط | لا مزامنة بين أجهزة |
 | 6 | Paddle موجود لكن غير موصول | التباس للمطورين |
-| 7 | `README.md` فارغ | صعوبة onboarding |
+| 7 | — | (تمت إضافة `README.md`) |
 | 8 | مكتبة التمارين خارج التطبيق | لا قيمة للمستخدم النهائي بعد |
 | 9 | Platform بنفسجي vs Landing برتقالي | هوية بصرية مزدوجة |
 | 10 | `notify-receipt-upload` بدون JWT | يعتمد على معرفة leadId+token — مقبول لكن يحتاج rate limiting |
@@ -846,7 +894,7 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 - Migrations يجب تطبيقها يدوياً على Supabase (خصوصاً `20260705090000`)
 - Edge Functions يجب نشرها يدوياً
 - Auth URL config في Supabase Dashboard (Site URL, Redirect URLs)
-- Lovable sync — تجنب force-push
+- تجنب force-push على `main` (راجع `AGENTS.md`)
 
 ## 19.3 أجزاء ناقصة حرجة للمنتج
 
@@ -861,7 +909,7 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 
 ## Critical
 
-1. **RPC `get_my_membership`** — قراءة حالة Premium من lead/plan بشكل موثوق
+1. **تطبيق migrations + التحقق من RPC `get_my_membership` في الإنتاج** — Needs Verification (D5)
 2. **تطبيق migrations + نشر Edge Functions** على الإنتاج
 3. **ربط `plans` عند قبول الأدمن** — sync مع lead
 4. **إزالة/تأمين `.env`** من التتبع إن كان مكشوفاً
@@ -926,10 +974,10 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 | الملف | السبب |
 |-------|--------|
 | `src/routeTree.gen.ts` | مُولَّد بواسطة TanStack Router — يُستبدل عند build |
-| `src/integrations/supabase/client.ts` | مُولَّد — Lovable/Supabase |
+| `src/integrations/supabase/client.ts` | مُولَّد — Supabase CLI |
 | `.vercel/output/**` | مخرجات build — تُعاد توليدها |
-| `AGENTS.md` | قواعد Lovable — force-push يكسر التزامن |
-| Git history على branch المتصل | Lovable يتزامن معه |
+| `AGENTS.md` | قواعد AI/CI — لا force-push على `main` |
+| Git history على `main` | لا force-push |
 
 **يُعدَّل بحذر:**
 - `src/routes/quiz.tsx` — ملف ضخم؛ أي تغيير يحتاج اختبار الفانل كاملاً
@@ -942,7 +990,7 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 
 ## 23.1 من AGENTS.md
 
-- المشروع متصل بـ **Lovable**
+- **لا force-push** على `main` (راجع `AGENTS.md`)
 - **لا** force-push أو rebase/amend/squash لcommits مدفوعة
 - أبقِ الفرع في حالة عمل
 
@@ -998,39 +1046,39 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 
 ## نقاط القوة
 
-1. **فانل تحويل مكتمل** من Landing إلى دفع وإدارة
-2. **أمان leads** عبر RPC + RLS صارم
-3. **تجربة كويز غنية** — محتوى مرئي عربي ضخم
+1. **فانل تحويل + Onboarding** — Landing → Quiz → email/password/avatar → `/app`
+2. **أمان leads + onboarding** عبر RPC + RLS
+3. **تجربة كويز غنية** — محتوى مرئي عربي + injuries + progress UX
 4. **بنية حديثة** — TanStack Start, React 19, Supabase
-5. **مكتبة تمارين JSON** جاهزة للتوسع (320 تمرين)
-6. **منصة Phase 1** — UI موبايل احترافي مع gating
+5. **مكتبة تمارين DB** — 320 تمرين + workout player + video strategy
+6. **منصة متقدمة** — Discover, Profile, Tools, Home hub, performance
 
 ## نقاط الضعف
 
-1. **فجوة المحتوى** — المنصة shell بدون برنامج حقيقي
+1. **فجوة المحتوى** — nutrition/progress جزئيان
 2. **عضوية غير موثوقة 100%** بسبب RLS على leads
 3. **ازدواجية هوية بصرية** Landing vs Platform
-4. **Schema غير مستغل** (payments, quiz_answers)
-5. **اعتماد على عمليات يدوية** (Supabase deploy, فيديوهات تمارين)
-6. **README فارغ** — onboarding ضعيف
+4. **لا مسار `/onboarding` مستقل** — Onboarding داخل Quiz
+5. **Landing V2 / نصوص الهوية** — موقوف بقرار المالك
+6. **اعتماد على عمليات يدوية** (deploy, فيديوهات)
 
 ## الفرص
 
+- Onboarding DB جاهز — فصل `/onboarding` لاحقاً
+- Workout player + exercise library يعملان
+- Discover CMS + Profile + Tools للتوسع
 - سوق عربي كبير للتدريب الرقمي
-- مكتبة 320 تمرين قابلة للتحويل لمنتج Premium
-- توسع لاحق: تغذية، تطبيق، اشتراكات متكررة
-- YouTube كقناة اكتساب مجانية
 
 ## المخاطر
 
-- تأخر Phase 2 يقلل قيمة Premium للمشترك
-- فشل sync Lovable/Git إن لم تُحترم قواعد AGENTS.md
+- تأخر برنامج/تغذية كامل يقلل قيمة Premium
+- تعديل Landing/Quiz دون اعتماد يخالف DS1
+- فشل sync Git إن لم تُحترم AGENTS.md
 - إيميلات Auth خاطئة إن لم يُضبط `SITE_URL`
-- تسرب secrets عبر `.env`
 
-## تقييم CTO (ملخص)
+## تقييم CTO (ملخص — 2026-08-13)
 
-المشروع في مرحلة **«MVP تشغيلي للفانل + هيكل منصة»** — جاهز لاستقبال عملاء مدفوعين عبر تحويل بنكي، **غير جاهز** كمنصة تدريب يومية كاملة. الأولوية القصوى: **membership موثوق + برنامج حقيقي من مكتبة التمارين**. التقييم الفني للبنية: **7/10** — أساس قوي. تقييم المنتج للمستخدم النهائي: **5/10** — حتى اكتمال Phase 2.
+المشروع في مرحلة **«MVP تشغيلي + منصة يومية جزئية»**. الأولوية: **membership موثوق + محتوى برنامج/تغذية كامل**. Landing **محمية** — لا تغيير UI دون اعتماد. التقييم الفني: **7.5/10**. تقييم المنتج: **6/10**.
 
 ---
 
@@ -1056,8 +1104,11 @@ supabase functions deploy notify-receipt-upload
 |---------|-------|
 | Membership | `src/lib/platform/membership.ts` |
 | Lead API | `src/lib/lead-api.ts` |
+| Onboarding API | `src/lib/quiz-onboarding-api.ts` |
+| Onboarding UI | `src/components/quiz/QuizOnboardingScreens.tsx` |
 | Admin API | `src/lib/admin-payments-api.ts` |
 | Platform Home | `src/routes/_platform/app/index.tsx` |
+| Project Status | `docs/PROJECT_STATUS.md` |
 | Quiz | `src/routes/quiz.tsx` |
 | Types | `src/integrations/supabase/types.ts` |
 | Exercise JSON | `scripts/exercise-library.json` |

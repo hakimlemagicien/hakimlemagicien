@@ -1,10 +1,10 @@
 # Hakim Coaching Platform — Employee Manual
 ## دليل عمل الموظفين الرسمي
 
-**الإصدار:** 1.0  
-**التاريخ:** 2026-07-07  
+**الإصدار:** 1.1  
+**التاريخ:** 2026-08-13  
 **الحالة:** دليل تشغيل داخلي — ملزم لجميع الموظفين  
-**المراجع الإلزامية:** [`PROJECT_HANDBOOK.md`](./PROJECT_HANDBOOK.md) · [`MASTER_PROJECT_DOCUMENTATION.md`](./MASTER_PROJECT_DOCUMENTATION.md)
+**المراجع الإلزامية:** [`PROJECT_HANDBOOK.md`](./PROJECT_HANDBOOK.md) · [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) · [`MASTER_PROJECT_DOCUMENTATION.md`](./MASTER_PROJECT_DOCUMENTATION.md)
 
 ---
 
@@ -13,6 +13,7 @@
 > هذا الدليل يشرح **كيف يعمل الموظف** — لا **ماذا يفعل المشروع** ولا **كيف يُكتب الكود** ولا **كيف تُبنى قاعدة البيانات**.
 >
 > للسياق الإداري: `PROJECT_HANDBOOK.md`  
+> **لحالة المشروع الحالية:** `PROJECT_STATUS.md` ← **اقرأ هذا عند الانضمام أو تسليم مهمة**  
 > للحقائق التقنية: `MASTER_PROJECT_DOCUMENTATION.md`  
 > للتخصص الفردي: `docs/employees/` (أدلة مستقلة — قيد الإنشاء)
 
@@ -39,7 +40,7 @@
 
 | # | القاعدة |
 |---|---------|
-| E1 | لا يبدأ أي موظف العمل قبل قراءة `PROJECT_HANDBOOK.md` بالكامل |
+| E1 | لا يبدأ أي موظف العمل قبل قراءة `PROJECT_HANDBOOK.md` + `PROJECT_STATUS.md` |
 | E2 | كل مهمة لها **مالك واحد** — المسؤولية لا تُقسّم ضبابياً |
 | E3 | إن لم تفهم المهمة — **اسأل قبل التنفيذ** |
 | E4 | **التوثيق جزء من العمل** — ليس خطوة اختيارية بعد الانتهاء |
@@ -69,7 +70,9 @@ Idea → Architecture → Documentation → Design → Database
 - **Placeholder** مقبول مؤقتاً — **ادعاء الاكتمال** غير مقبول
 - **الأخطاء** تُعالج: توثيق → إصلاح → تحديث الوثائق إن لزم
 
-## 1.5 العمل مع أدوات AI (Lovable / Cursor)
+## 1.5 العمل مع أدوات AI (Cursor وغيرها)
+
+> **Needs Verification (D3):** بعض الوثائق القديمة تذكر Lovable — `vite.config.ts` الحالي لا يستخدمه.
 
 | القاعدة | التطبيق |
 |---------|---------|
@@ -218,7 +221,7 @@ Idea → Architecture → Documentation → Design → Database
 | القناة | الاستخدام الداخلي | المالك |
 |--------|-------------------|--------|
 | **الوثائق `docs/`** | قرارات، حالة مشروع، تسليم | الجميع |
-| **Git / Lovable** | تغييرات كود | التطوير |
+| **Git / CI** | تغييرات كود | التطوير |
 | **لوحة الأدمن** | مراجعة مدفوعات | الأدمن التشغيلي |
 | **البريد (Resend)** | دعوات، إشعارات نظام | النظام + Edge Functions |
 | **WhatsApp** | دعم Premium — Coach Chat | المؤسس / الدعم |
@@ -468,7 +471,7 @@ Codebase                     ← تنفيذ — لا يغيّر القرارات
 | دستور الشركة | `PROJECT_HANDBOOK.md` |
 | حقائق تقنية | `MASTER_PROJECT_DOCUMENTATION.md` |
 | دليل تخصصي | `docs/employees/` |
-| قواعد Git / Lovable | `AGENTS.md` |
+| قواعد Git / CI | `AGENTS.md` |
 | مهام حالية | `PROJECT_TASKS/` |
 
 ---
