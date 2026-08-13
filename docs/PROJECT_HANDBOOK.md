@@ -1,10 +1,11 @@
 # Hakim Coaching — دستور الشركة الرسمي
 ## Company Constitution
 
-**الإصدار:** 2.2  
-**التاريخ:** 2026-07-08  
+**الإصدار:** 2.4  
+**التاريخ:** 2026-08-13  
 **الحالة:** وثيقة إدارية واستراتيجية ملزمة  
-**الوثيقة التقنية المرجعية:** [`MASTER_PROJECT_DOCUMENTATION.md`](./MASTER_PROJECT_DOCUMENTATION.md)
+**الوثيقة التقنية المرجعية:** [`MASTER_PROJECT_DOCUMENTATION.md`](./MASTER_PROJECT_DOCUMENTATION.md)  
+**حالة المشروع الحية:** [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
 
 ---
 
@@ -21,19 +22,19 @@
 ```
 PROJECT_HANDBOOK.md
 ↓
+PROJECT_STATUS.md          ← حالة المشروع الحية (يُحدَّث أولاً)
+↓
 MASTER_PROJECT_DOCUMENTATION.md
 ↓
-EMPLOYEE_MANUALS/
-↓
-PROJECT_TASKS/
+EMPLOYEE_MANUAL.md + تقارير docs/*
 ↓
 Codebase
 ```
 
 - **PROJECT_HANDBOOK** هو المرجع الإداري الأعلى.
-- **MASTER_PROJECT_DOCUMENTATION** هو المرجع التقني الأعلى.
-- **Employee Manuals** هي أدلة الموظفين.
-- **Project Tasks** هي المهام الحالية.
+- **PROJECT_STATUS** هو المرجع السريع لـ «أين وصلنا» — للموظفين وAI Agents.
+- **MASTER_PROJECT_DOCUMENTATION** هو المرجع التقني الشامل.
+- **Employee Manual + Reports** — أدلة تشغيل وتسليم.
 - **الكود** هو آخر مستوى ولا يغيّر القرارات المعتمدة.
 
 ---
@@ -108,7 +109,7 @@ Codebase
 
 | الطبقة | الدور | المبدأ |
 |--------|-------|--------|
-| **التسويق** | Landing + Quiz | تحليل شخصي عميق يبني الثقة قبل الدفع |
+| **التسويق** | `/coaching` Landing → `/` Quiz | تحليل شخصي عميق يبني الثقة قبل الدفع |
 | **التحويل** | Checkout + Admin | دفع بنكي يدوي مناسب للسوق العربي — شفافية كاملة |
 | **العضوية** | Free vs Premium | محتوى مجاني يجذب؛ Premium يُفتح بقيمة حقيقية لا بقفل فقط |
 | **المنصة اليومية** | `/app` | التمرين، التغذية، التقدم، الدعم — في مكان واحد |
@@ -303,10 +304,10 @@ Codebase
 
 | # | الهدف |
 |---|-------|
-| O1 | الحفاظ على الفانل التشغيلي: Landing → Quiz → دفع → Admin → Auth → `/app` |
+| O1 | الحفاظ على App-First: `/` Quiz · `/coaching` Landing · `/app` Platform · legacy checkout عبر `/quiz` |
 | O2 | عدم كسر المسارات المحمية (Landing، Quiz، Admin) دون موافقة صريحة |
 | O3 | توثيق كل تغيير جوهري في Master Documentation |
-| O4 | الحفاظ على تزامن Lovable/Git دون force-push |
+| O4 | الحفاظ على Git history على `main` دون force-push |
 
 ## 5.3 ما ليس هدفاً الآن
 
@@ -363,7 +364,7 @@ Codebase
 
 | المنطقة | المالك | حالة التعديل |
 |---------|--------|--------------|
-| Landing `/` | المؤسس + تسويق | 🔒 محمية — تعديل بطلب صريح فقط |
+| Landing `/coaching` | المؤسس + تسويق | 🔒 محمية — تعديل بطلب صريح فقط |
 | Quiz `/quiz` | المؤسس + منتج | 🔒 محمية — تعديل بطلب صريح فقط |
 | Admin `/admin/*` | عمليات | 🔒 محمية — تعديل بطلب صريح فقط |
 | المنصة `/app/*` | تطوير + منتج | ✅ مفتوحة ضمن المرحلة الحالية |
@@ -415,7 +416,7 @@ docs/employees/
 - **الالتزام بالمرحلة** أهم من «إنجاز سريع» — Placeholder مقبول مؤقتاً؛ ادعاء الاكتمال غير مقبول
 - **الأخطاء** تُعالج بالشفافية: توثيق المشكلة → إصلاح → تحديث Master Documentation إن لزم
 
-## 7.4 العمل مع أدوات AI (Lovable / Cursor)
+## 7.4 العمل مع أدوات AI (Cursor وغيرها)
 
 - AI **ينفّذ** ضمن قواعد الدستور — لا يقرّر استراتيجياً
 - لا force-push أو تعديل Git history المدفوع
@@ -498,7 +499,7 @@ XXXXXXXX
 |---------|---------|-------|---------|
 | **1 — دستور** | `PROJECT_HANDBOOK.md` (هذه الوثيقة) | رؤية، قيم، قواعد، هيكل | كل موظف جديد — إلزامي |
 | **2 — مرجع تقني** | `MASTER_PROJECT_DOCUMENTATION.md` | حقائق الكود، DB، مسارات، أمان | مطورون، منتج، AI Agents |
-| **3 — تشغيلي** | `AGENTS.md` | قواعد Lovable/Git | مطورون |
+| **3 — تشغيلي** | `AGENTS.md` | قواعد Git/CI | مطورون |
 | **4 — محلي** | `scripts/`, تعليقات الكود | تفاصيل تنفيذية | المنفّذ فقط |
 
 ## 9.2 متى تُحدَّث الوثائق
@@ -507,7 +508,7 @@ XXXXXXXX
 |-------|------------------------|
 | تغيير استراتيجي أو قيمة | الدستور (هذه الوثيقة) |
 | إضافة/حذف ميزة، route، جدول DB | Master Documentation |
-| تغيير قواعد Git/Lovable | AGENTS.md |
+| تغيير قواعد Git/CI | AGENTS.md |
 | إضافة تمارين أو تغيير هيكل المكتبة | `exercise-library.json` + Master §13 |
 
 ## 9.3 قواعد الكتابة
@@ -521,7 +522,7 @@ XXXXXXXX
 ## 9.4 ممنوع
 
 - وثائق متعارضة دون تحديد أيهما أعلى
-- README فارغ كبديل عن التوثيق الرسمي
+- README فارغ كبديل عن التوثيق الرسمي — **تم إصلاحه 2026-08-13** (`README.md` + `PROJECT_STATUS.md`)
 - قرارات شفهية دون تسجيل في الوثيقة المناسبة
 
 ---
@@ -554,21 +555,21 @@ XXXXXXXX
 | `payment_status` الإنتاجي | `approved` |
 | المنتج | رقمي بالكامل — ليس حضورياً |
 | Commit | فقط عند طلب صريح |
-| Git history | لا force-push (Lovable) |
+| Git history | لا force-push على `main` |
 
 ## 10.3 نطاق العمل حسب المرحلة
 
 | المرحلة | مسموح | ممنوع |
 |---------|-------|-------|
-| **Phase 1** (حالية) | `/app` shell، seed content، gating | برنامج حقيقي، تغذية، DB محتوى |
-| **Phase 2** (قادمة) | برنامج، تغذية، progress، membership RPC | admin محتوى، متجر، Paddle |
-| **Phase 3+** | جداول محتوى، discover، مدفوعات متقدمة | — يُفتح بقرار استراتيجي |
+| **Phase 1** (مكتمل) | `/app` shell، Home hub، Workout، Discover، Profile، Tools | — |
+| **Phase 1.5** (جاري) | Onboarding داخل Quiz، exercise library DB، video strategy | Landing V2، `/onboarding` route |
+| **Phase 2** (قادمة) | برنامج/تغذية كامل، التحقق من membership RPC في الإنتاج | admin محتوى، Paddle |
+| **Phase 3+** | `/onboarding` مستقل (إن اعتُمد)، دفع فوري | — يُفتح بقرار استراتيجي |
 
-## 10.4 التزامن مع Lovable
+## 10.4 Git وتاريخ المشروع
 
-- المشروع متصل بـ Lovable — الفرع يجب أن يبقى قابلاً للعمل
-- لا force-push، rebase، amend، أو squash لcommits مدفوعة
-- راجع `AGENTS.md` قبل أي عملية Git غير اعتيادية
+- **لا force-push** على `main` — راجع `AGENTS.md`
+- **Lovable (تاريخي):** بعض الوثائق القديمة تشير إلى Lovable.dev — **`vite.config.ts` الحالي لا يستخدمه**. **Needs Verification (D3):** هل Lovable ما زال في سير العمل؟
 
 ---
 
@@ -594,7 +595,7 @@ XXXXXXXX
 
 | # | القاعدة |
 |---|---------|
-| DS1 | لا تغيير هوية Landing دون موافقة المؤسس + مصمم |
+| DS1 | لا تغيير هوية Landing (`/coaching`) دون موافقة — **App-First 2026-08-14** |
 | DS2 | ألوان المنصة تُضاف كـ **design tokens** عند التوحيد — لا inline عشوائي جديد |
 | DS3 | الصور العربية في `src/assets/` — محتوى مرئي يعكس الجمهور المستهدف |
 | DS4 | مكوّنات UI من `src/components/ui/` (shadcn/Radix) — لا مكتبات UI جديدة دون قرار |
@@ -617,7 +618,7 @@ XXXXXXXX
 | **البريد (Resend)** | دعوات Auth، إشعارات أدمن، تأكيدات | النظام الآلي + Edge Functions |
 | **لوحة الأدمن** `/admin/payments` | مراجعة مدفوعات | الأدمن التشغيلي |
 | **الوثائق `docs/`** | قرارات، حالة مشروع، تسليم | الجميع |
-| **Git / Lovable** | تغييرات كود | التطوير |
+| **Git / CI** | تغييرات كود | التطوير |
 
 ## 12.2 قواعد التواصل الداخلي
 
@@ -703,7 +704,7 @@ XXXXXXXX
 | **قفل بقيمة** | Premium يُفتح لمحتوى موجود — لا قفل على Placeholder طويل الأمد |
 | **البيانات تسبق الواجهة** | مكتبة JSON/DB قبل صفحة عرض |
 | **مرحلة واحدة نشطة** | لا نشتغل Phase 3 و Phase 2 معاً بنفس الأولوية |
-| **الفانل مقدّس** | Landing → Quiz → دفع → Admin لا يتوقف أثناء أي مرحلة |
+| **الفانل مقدّس** | `/coaching` → `/` → Onboarding → `/app` (+ legacy checkout via `/quiz`) |
 
 ## 14.2 المراحل المعتمدة
 
@@ -775,7 +776,7 @@ Maintenance
 | الأمان | RLS + RPC — لا SELECT مباشر على `leads` |
 | الأسرار | لا commit لـ `.env` بقيم حقيقية |
 | التوثيق | Master Doc محدّث عند تغيير حقيقة تقنية |
-| Git | لا force-push؛ فرع قابل للعمل على Lovable |
+| Git | لا force-push على `main` |
 
 ## 15.3 معايير المحتوى
 
@@ -823,7 +824,7 @@ Maintenance
        · الفصل 21 — Future Roadmap
 
 الخطوة 3 (15 دقيقة)
-  └─ راجع AGENTS.md — قواعد Lovable/Git
+  └─ راجع AGENTS.md — قواعد Git/CI
 
 الخطوة 4 (حسب الدور)
   └─ مطور: الفصول 3–5, 8–10, 18, 22–23 في Master Doc
@@ -837,7 +838,7 @@ Maintenance
 - [ ] فهم أنواع المستخدمين: Visitor · Free · Premium · Admin
 - [ ] معرفة المناطق المحمية والمفتوحة (§6.3)
 - [ ] تشغيل المشروع محلياً (`npm run dev`) — للمطورين
-- [ ] مراجعة فانل كامل: Landing → Quiz → (اختبار) → `/app`
+- [ ] مراجعة فانل: `/coaching` → `/` → Quiz → `/app`
 - [ ] التعرف على قنوات التواصل (§12.1)
 
 ## قبل أول مهمة مستقلة

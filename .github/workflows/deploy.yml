@@ -63,7 +63,7 @@ jobs:
       - name: Smoke test deployment
         run: |
           URL="${{ steps.deploy.outputs.deployment_url }}"
-          for path in "/" "/quiz"; do
+          for path in "/" "/coaching" "/quiz" "/auth"; do
             status=$(curl -sS -o /dev/null -w "%{http_code}" "${URL}${path}")
             if [ "$status" != "200" ]; then
               echo "::error::Smoke test failed for ${path} (HTTP ${status})"

@@ -14,6 +14,7 @@ import { Route as RefundRouteImport } from './routes/refund'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as CoachingRouteImport } from './routes/coaching'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PlatformRouteRouteImport } from './routes/_platform/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -67,6 +68,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachingRoute = CoachingRouteImport.update({
+  id: '/coaching',
+  path: '/coaching',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -229,6 +235,7 @@ const PlatformAppDiscoverCategorySlugRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coaching': typeof CoachingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coaching': typeof CoachingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_platform': typeof PlatformRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/coaching': typeof CoachingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/coaching'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -370,6 +380,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/coaching'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_platform'
     | '/auth'
+    | '/coaching'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -443,6 +455,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   PlatformRouteRoute: typeof PlatformRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CoachingRoute: typeof CoachingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   QuizRoute: typeof QuizRoute
@@ -486,6 +499,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coaching': {
+      id: '/coaching'
+      path: '/coaching'
+      fullPath: '/coaching'
+      preLoaderRoute: typeof CoachingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -776,6 +796,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   PlatformRouteRoute: PlatformRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CoachingRoute: CoachingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   QuizRoute: QuizRoute,

@@ -14,7 +14,7 @@ import {
   ProfilePhotoScreen,
   VerifyEmailScreen,
 } from "@/components/quiz/QuizOnboardingScreens";
-import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
+import { QuizLoginEntry } from "@/components/quiz/QuizLoginEntry";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
@@ -140,7 +140,7 @@ export const Route = createFileRoute("/quiz")({
 const FONT = "'Tajawal', sans-serif";
 type Step = "loading" | "gender" | "goals" | "femaleGoals" | "age" | "measure" | "activity" | "challenge" | "femaleChallenge" | "injuries" | "investment" | "bodyType" | "femaleBodyType" | "trainingEnvironment" | "analysis" | "contact" | "congrats" | "reveal" | "verifyEmail" | "createPassword" | "profilePhoto" | "platformWelcome" | "trainingType" | "pricing" | "pricingDubai" | "offlinePackages" | "payment";
 
-function QuizPage() {
+export function QuizPage() {
   const {
     step,
     phase,
@@ -213,6 +213,7 @@ function QuizPage() {
         style={{ fontFamily: FONT, backgroundColor: "#FAF8F5" }}
         className="relative h-full w-full overflow-hidden md:max-w-lg lg:max-w-xl md:shadow-2xl md:ring-1 md:ring-black/5"
       >
+      <QuizLoginEntry />
       <MotionStepView phase={phase}>
       {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
       {step === "gender" && (

@@ -182,7 +182,7 @@ function PhoneMockup({
             </ul>
 
             <Link
-              to="/quiz"
+              to="/"
               className="mt-3 flex w-full items-center justify-center rounded-2xl bg-primary py-2.5 text-[11px] font-bold text-white shadow-cta sm:mt-4 sm:py-3 sm:text-[12px]"
             >
               متابعة التقييم

@@ -371,7 +371,7 @@ function WarningBlock({ active }: { active: boolean }) {
           </div>
 
           <a
-            href="/quiz"
+            href="/"
             className="group relative inline-flex w-full shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-full border border-[#FF6B00]/35 bg-white/[0.06] px-4 py-2.5 text-[13px] font-bold text-white/95 shadow-[0_8px_24px_-10px_rgba(255,107,0,0.45)] backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow] duration-300 hover:scale-[1.02] hover:border-[#FF6B00] hover:bg-[#FF6B00]/12 hover:shadow-[0_0_0_5px_rgba(255,107,0,0.18),0_16px_40px_-12px_rgba(255,107,0,0.5)] active:scale-[0.98] sm:w-auto sm:px-5"
           >
             <span
