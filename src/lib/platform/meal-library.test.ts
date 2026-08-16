@@ -7,8 +7,10 @@ import {
   listMealLibrary,
   mealDeliveryPath,
   mealStorageObjectPath,
-  MEAL_LIBRARY_PILOT_END,
   MEAL_LIBRARY_PILOT_START,
+  MEAL_LIBRARY_EXTENDED_END,
+  listMealsByGoal,
+  listMealsByType,
 } from "./meal-library";
 import { NUTRITION_MEAL_SLOTS } from "./nutrition-experience";
 
@@ -31,10 +33,15 @@ export function runMealLibraryTests() {
   const audit = auditMealLibrary(meals);
   const publicRoot = join(process.cwd(), "public/nutrition/meals");
 
-  assertEqual(meals.length, 20, "pilot meal count");
+  assertEqual(meals.length, 300, "full library MEAL-001–MEAL-300 catalog count");
   assertEqual(ids[0], MEAL_LIBRARY_PILOT_START, "first external_id");
-  assertEqual(ids[ids.length - 1], MEAL_LIBRARY_PILOT_END, "last external_id");
-  assertEqual(new Set(ids).size, 20, "unique external_id");
+  assertEqual(ids[ids.length - 1], MEAL_LIBRARY_EXTENDED_END, "last external_id");
+  assertEqual(new Set(ids).size, 300, "unique external_id");
+  assertEqual(
+    ids,
+    Array.from({ length: 300 }, (_, index) => `MEAL-${String(index + 1).padStart(3, "0")}`),
+    "continuous external_id sequence",
+  );
   assertEqual(audit.duplicateExternalIds, [], "no duplicate meals");
   assertEqual(audit.brokenImageRefs, [], "image refs match external_id");
   assertEqual(audit.duplicateImageRefs, [], "no duplicate image assignment");
@@ -97,7 +104,42 @@ export function runMealLibraryTests() {
   const snack = getMealByExternalId("MEAL-015");
   assert(snack, "MEAL-015 exists");
   const snackAlts = findContractAlternatives(snack);
-  assertEqual(snackAlts.length, 0, "MEAL-015 has no in-band snack alternative in the pilot");
+  assert(
+    snackAlts.every((item) => item.meal_type === "snack"),
+    "snack alternatives stay on snack",
+  );
+
+  const meal021 = getMealByExternalId("MEAL-021");
+  assert(meal021, "MEAL-021 exists");
+  assertEqual(meal021.meal_type, "breakfast", "MEAL-021 is breakfast");
+  const meal061 = getMealByExternalId("MEAL-061");
+  assert(meal061, "MEAL-061 exists");
+  const meal098 = getMealByExternalId("MEAL-098");
+  assert(meal098, "MEAL-098 exists");
+  assertEqual(meal098.meal_type, "drinks", "MEAL-098 is drinks");
+  const meal101 = getMealByExternalId("MEAL-101");
+  assert(meal101, "MEAL-101 exists");
+  assertEqual(meal101.meal_type, "breakfast", "MEAL-101 is breakfast");
+  const meal300 = getMealByExternalId("MEAL-300");
+  assert(meal300, "MEAL-300 exists");
+  assertEqual(meal300.meal_type, "drinks", "MEAL-300 is drinks");
+
+  const fatLossBreakfast = listMealsByType("breakfast").filter((meal) =>
+    meal.suitable_goals.includes("fat_loss"),
+  );
+  const muscleGainLunch = listMealsByType("lunch").filter((meal) =>
+    meal.suitable_goals.includes("muscle_gain"),
+  );
+  assert(fatLossBreakfast.length > 0, "breakfasts are ranked for fat_loss");
+  assert(muscleGainLunch.length > 0, "lunches are ranked for muscle_gain");
+  const fatLossOrdered = listMealsByGoal("fat_loss");
+  assert(
+    fatLossOrdered.every((meal, index) => {
+      if (index === 0) return true;
+      return fatLossOrdered[index - 1].calories <= meal.calories;
+    }),
+    "fat_loss list is ordered by calories",
+  );
 
   const beefBowl = getMealByExternalId("MEAL-007");
   assert(beefBowl, "MEAL-007 exists");

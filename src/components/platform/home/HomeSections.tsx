@@ -33,6 +33,7 @@ import {
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
+import { formatWaterLiters } from "@/lib/platform/water-storage";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
 import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
@@ -404,6 +405,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
   return (
     <section className="platform-home-hero platform-home-enter platform-home-enter--d1" aria-label="بطاقة الترحيب">
+      <div className="platform-home-hero__aura" aria-hidden />
       <div className="platform-home-hero__top">
         <div className="platform-home-hero__content">
           <p className="platform-home-hero__greeting">{hero.greeting}</p>
@@ -491,7 +493,57 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
 /* ── Daily Snapshot ────────────────────────────────────────────────────── */
 
+function WaterSnapshotCard() {
+  const water = useWaterOptional();
+  if (!water) return null;
+
+  const { state, openWaterSheet, reminderPulse } = water;
+  const done = state.goalReached;
+  const current = formatWaterLiters(state.totalMl);
+  const goal = formatWaterLiters(state.goalMl, 0);
+
+  return (
+    <button
+      type="button"
+      onClick={openWaterSheet}
+      className={cn(
+        "platform-home-day-card platform-touch is-progress",
+        done && "is-water-done",
+      )}
+      aria-label={
+        done ? `اكتمل هدف الماء ${goal} لتر` : `الماء ${current} من ${goal} لتر`
+      }
+    >
+      <span
+        className={cn(
+          "platform-home-day-card__icon water-header-orb",
+          reminderPulse && !done ? "is-reminding" : null,
+        )}
+      >
+        <Droplets
+          className={cn("h-5 w-5", reminderPulse && !done ? "water-header-orb__icon" : null)}
+          aria-hidden
+          strokeWidth={2}
+        />
+      </span>
+      <p className="platform-home-day-card__title">الماء</p>
+      <p className="platform-home-day-card__value">
+        {current} / {goal} لتر
+      </p>
+      <AnimatedProgressBar
+        value={state.pct}
+        color="var(--card-accent)"
+        className="platform-home-day-card__bar"
+      />
+    </button>
+  );
+}
+
 function SnapshotCard({ item }: { item: DailySnapshotItem }) {
+  if (item.id === "progress") {
+    return <WaterSnapshotCard />;
+  }
+
   const Icon = SNAPSHOT_ICONS[item.icon];
 
   return (

@@ -9,6 +9,7 @@ import {
   Droplets,
   Flame,
   Heart,
+  MessageCircle,
   Moon,
   RefreshCw,
   Salad,
@@ -16,7 +17,6 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
-import { WaterHeaderButton } from "@/components/platform/water/WaterHeaderButton";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { cn } from "@/lib/utils";
@@ -71,7 +71,13 @@ export function DiscoverHeader({
       <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
       <div className="flex items-center gap-0.5">
         {backTo ? (
-          <WaterHeaderButton className="grid h-11 w-11 place-items-center text-foreground" />
+          <Link
+            to="/app/support/chat"
+            aria-label="دردشة الكوتش"
+            className="grid h-11 w-11 place-items-center text-foreground"
+          >
+            <MessageCircle className="h-6 w-6" strokeWidth={1.8} />
+          </Link>
         ) : null}
         <Link
           to="/app/profile"

@@ -1,14 +1,18 @@
 import nutritionPilotPackage from "./data/nutrition-pilot-20.json";
+import nutritionLibrary021100 from "./data/nutrition-library-021-100.json";
+import nutritionLibrary101300 from "./data/nutrition-library-101-300.json";
 
 /**
  * Meal Library — managed catalog keyed by external_id.
- * Source of truth for this Pilot: Nutrition Data Contract v1.1 (nutrition-pilot-20.json).
+ * Source of truth: Nutrition Data Contract v1.1 plus approved library batches.
  * User plan state (completed / skipped / current) must never live on these records.
  */
 export const MEAL_MEDIA_BUCKET = "meal-media";
 export const MEAL_LIBRARY_SCHEMA_VERSION = "1.1.0";
 export const MEAL_LIBRARY_PILOT_START = "MEAL-001";
 export const MEAL_LIBRARY_PILOT_END = "MEAL-020";
+export const MEAL_LIBRARY_EXTENDED_START = "MEAL-021";
+export const MEAL_LIBRARY_EXTENDED_END = "MEAL-300";
 
 export type MealType =
   | "breakfast"
@@ -16,7 +20,8 @@ export type MealType =
   | "dinner"
   | "snack"
   | "pre_workout"
-  | "post_workout";
+  | "post_workout"
+  | "drinks";
 
 export type MealImageVariant = "cover" | "thumb";
 
@@ -114,14 +119,23 @@ export const MEAL_TYPE_LABELS_AR: Record<MealType, string> = {
   snack: "سناك",
   pre_workout: "قبل التمرين",
   post_workout: "بعد التمرين",
+  drinks: "مشروبات",
 };
 
 /** Display-only unit labels. Source values stay in the contract unit. */
 export const UNIT_LABELS_AR: Record<string, string> = {
   g: "غ",
+  ml: "مل",
 };
 
-const seedCatalog = nutritionPilotPackage as MealLibraryPackage;
+const seedCatalog = {
+  ...(nutritionPilotPackage as MealLibraryPackage),
+  meals: [
+    ...(nutritionPilotPackage as MealLibraryPackage).meals,
+    ...(nutritionLibrary021100 as MealLibraryPackage).meals,
+    ...(nutritionLibrary101300 as MealLibraryPackage).meals,
+  ],
+};
 let runtimeCatalog: MealLibraryRecord[] | null = null;
 
 export function getMealLibraryCatalog(): MealLibraryRecord[] {
@@ -145,7 +159,31 @@ export function getMealLibraryByExternalId(): Map<string, MealLibraryRecord> {
 }
 
 export function listMealsByType(mealType: MealType): MealLibraryRecord[] {
-  return getMealLibraryCatalog().filter((meal) => meal.meal_type === mealType);
+  return getMealLibraryCatalog()
+    .filter((meal) => meal.meal_type === mealType)
+    .sort((a, b) => a.external_id.localeCompare(b.external_id));
+}
+
+export function listMealsByGoal(goal: string): MealLibraryRecord[] {
+  return getMealLibraryCatalog()
+    .filter((meal) => meal.suitable_goals.includes(goal))
+    .sort((a, b) => {
+      if (goal === "fat_loss") return a.calories - b.calories;
+      if (goal === "muscle_gain") return b.protein_g - a.protein_g;
+      return a.external_id.localeCompare(b.external_id);
+    });
+}
+
+export function listMealsByTypeAndGoal(mealType: MealType, goal?: string): MealLibraryRecord[] {
+  const typed = listMealsByType(mealType);
+  if (!goal) return typed;
+  return typed
+    .filter((meal) => meal.suitable_goals.includes(goal))
+    .sort((a, b) => {
+      if (goal === "fat_loss") return a.calories - b.calories;
+      if (goal === "muscle_gain") return b.protein_g - a.protein_g;
+      return a.external_id.localeCompare(b.external_id);
+    });
 }
 
 export function mealDeliveryPath(

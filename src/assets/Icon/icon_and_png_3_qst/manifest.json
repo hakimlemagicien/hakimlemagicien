@@ -1,0 +1,18 @@
+{
+  "format": "WebP lossless with alpha",
+  "colors": {
+    "orange": "#F97316",
+    "orangeSoft": "#FFF1E8",
+    "green": "#22C55E",
+    "blue": "#1683F3",
+    "blueSoft": "#EAF4FF",
+    "dark": "#1F1B18",
+    "gray": "#D8D8DC"
+  },
+  "main_assets": [
+    "readiness_sleep_moon.webp",
+    "readiness_energy_bolt.webp",
+    "readiness_muscle_arm.webp"
+  ],
+  "animation_note_ar": "حرّك طبقات motion فوق الرسمة الرئيسية بشكل مستقل: دوران بطيء للمدار، تلاشي للنجوم، نبض للخيار المحدد، واهتزاز خفيف للبرق."
+}

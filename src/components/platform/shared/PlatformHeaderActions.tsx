@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
-import { WaterHeaderButton } from "@/components/platform/water/WaterHeaderButton";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Bell, MessageCircle } from "lucide-react";
 import {
   fetchCoachingUnreadCount,
   fetchMyCoachingNotifications,
@@ -57,10 +56,17 @@ export function PlatformHeaderActions({
 
   return (
     <div ref={rootRef} className={cn("relative flex shrink-0 items-center", className)}>
-      <WaterHeaderButton className={actionClassName} iconClassName={iconClassName} />
+      <Link
+        to="/app/support/chat"
+        aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
+        className={cn(actionClassName, "relative")}
+      >
+        <MessageCircle className={iconClassName} strokeWidth={bellStrokeWidth} />
+        {count > 0 ? <span className="platform-bell-dot" /> : null}
+      </Link>
       <button
         type="button"
-        aria-label={count > 0 ? `الإشعارات، ${count} غير مقروء` : "الإشعارات"}
+        aria-label="الإشعارات"
         className={cn(actionClassName, "relative")}
         onClick={() => {
           setOpen((value) => !value);
@@ -68,7 +74,6 @@ export function PlatformHeaderActions({
         }}
       >
         <Bell className={iconClassName} strokeWidth={bellStrokeWidth} />
-        {count > 0 ? <span className="platform-bell-dot" /> : null}
       </button>
       {open ? (
         <div className="platform-bell-panel" role="dialog" aria-label="الإشعارات">

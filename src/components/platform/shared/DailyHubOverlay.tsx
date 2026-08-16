@@ -1,8 +1,7 @@
-import { useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
 import { Dumbbell, TrendingUp, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HubOverlayShell, type HubOrigin } from "@/components/platform/shared/HubOverlayShell";
 
 type HubRoute = "/app/program/workout" | "/app/nutrition" | "/app/progress";
 
@@ -41,87 +40,51 @@ const HUB_CARDS: HubCard[] = [
 type DailyHubOverlayProps = {
   open: boolean;
   onClose: () => void;
+  origin: HubOrigin | null;
 };
 
-export function DailyHubOverlay({ open, onClose }: DailyHubOverlayProps) {
+export function DailyHubOverlay({ open, onClose, origin }: DailyHubOverlayProps) {
   const navigate = useNavigate();
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!open) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCloseRef.current();
-    };
-
-    window.addEventListener("keydown", handleKey);
-
-    return () => {
-      window.removeEventListener("keydown", handleKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open]);
-
-  if (!open || typeof document === "undefined") return null;
 
   const handleCard = (to: HubRoute) => {
     onClose();
     void navigate({ to });
   };
 
-  return createPortal(
-    <div className="daily-hub-overlay md:hidden" role="presentation">
-      <button
-        type="button"
-        aria-label="إغلاق برنامجي"
-        className="daily-hub-overlay__backdrop"
-        onClick={onClose}
-      />
-
-      <div
-        dir="rtl"
-        role="dialog"
-        aria-modal="true"
-        aria-label="برنامجي"
-        className="daily-hub-overlay__panel"
-      >
-        <div className="mb-4 text-center">
-          <p className="font-[Tajawal] text-[15px] font-extrabold text-[#0F172A]">برنامجي</p>
-          <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-[#64748B]">
-            اختر ما تريد متابعته الآن
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-          {HUB_CARDS.map((card, index) => {
-            const Icon = card.icon;
-            return (
-              <button
-                key={card.id}
-                type="button"
-                onClick={() => handleCard(card.to)}
-                className="daily-hub-overlay__item outline-none"
-                style={{ animationDelay: `${50 + index * 50}ms` }}
-              >
-                <span
-                  className={cn(
-                    "daily-hub-overlay__orb",
-                    card.tone,
-                  )}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={2.2} />
-                </span>
-                <span className="daily-hub-overlay__label">{card.title}</span>
-              </button>
-            );
-          })}
-        </div>
+  return (
+    <HubOverlayShell
+      open={open}
+      onClose={onClose}
+      origin={origin}
+      label="برنامجي"
+      closeLabel="إغلاق برنامجي"
+    >
+      <div className="mb-4 text-center">
+        <p className="font-[Tajawal] text-[15px] font-extrabold text-[#0F172A]">برنامجي</p>
+        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-[#64748B]">
+          اختر ما تريد متابعته الآن
+        </p>
       </div>
-    </div>,
-    document.body,
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+        {HUB_CARDS.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.id}
+              type="button"
+              onClick={() => handleCard(card.to)}
+              className="daily-hub-overlay__item outline-none"
+              style={{ animationDelay: `${90 + index * 45}ms` }}
+            >
+              <span className={cn("daily-hub-overlay__orb", card.tone)}>
+                <Icon className="h-5 w-5" strokeWidth={2.2} />
+              </span>
+              <span className="daily-hub-overlay__label">{card.title}</span>
+            </button>
+          );
+        })}
+      </div>
+    </HubOverlayShell>
   );
 }

@@ -833,20 +833,7 @@ export function buildDailySnapshot(input: {
   const caloriesUsed = mealsTotal ? Math.round((mealsDone / mealsTotal) * caloriesGoal) : 0;
   const caloriesLeft = Math.max(0, caloriesGoal - caloriesUsed);
 
-  const progressValue =
-    activity.currentWeight != null
-      ? `${activity.currentWeight} كغ`
-      : activity.weightChange != null
-        ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
-        : "سجّل وزنك";
-  const progressSubtitle =
-    activity.weightChange != null
-      ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
-      : activity.daysIn > 0
-        ? `منذ ${activity.daysIn} ${activity.daysIn === 1 ? "يوم" : "أيام"}`
-        : "لم تسجّل بعد";
-
-  /* RTL: first item = right — التغذية → التمرين → الوزن */
+  /* RTL: first item = right — التغذية → التمرين → الماء */
   return [
     {
       id: "nutrition",
@@ -880,17 +867,17 @@ export function buildDailySnapshot(input: {
     },
     {
       id: "progress",
-      title: "الوزن",
-      value: progressValue,
-      subtitle: progressSubtitle,
-      progress: activity.overallProgressPct,
-      href: "/app/progress",
-      actionLabel: "عرض النشاط",
+      title: "الماء",
+      value: "هدف اليوم",
+      subtitle: "اضغط للتسجيل",
+      progress: 0,
+      href: "/app",
+      actionLabel: "تسجيل الماء",
       icon: "progress",
-      iconBg: "bg-[#FFEDD5]",
-      iconColor: "text-[#FF6B00]",
-      valueColor: "#FF6B00",
-      progressColor: "#FF6B00",
+      iconBg: "bg-[#EFF6FF]",
+      iconColor: "text-[#2563EB]",
+      valueColor: "#2563EB",
+      progressColor: "#2563EB",
       showProgressBar: true,
     },
   ];
