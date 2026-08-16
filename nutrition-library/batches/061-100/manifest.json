@@ -32,8 +32,8 @@
     },
     {
       "path": "image_prompts.json",
-      "size_bytes": 36950,
-      "sha256": "28461bcfb8b026978846663e503b7e548556a1cedbadcb40ee0ffba9d00ebba6"
+      "size_bytes": 36986,
+      "sha256": "7dfedcc8bcf95513b9cd26ae99895f90533533e614fd5fdb26d4bbcab5c40714"
     },
     {
       "path": "NUTRITION_DATA_CONTRACT.md",
@@ -182,18 +182,18 @@
     },
     {
       "path": "images/MEAL-070.png",
-      "size_bytes": 1949924,
-      "sha256": "9f6a09e469af7dba4e2d3d7dd950904575c78d5babfc30b1c1c9810903306552"
+      "size_bytes": 1743198,
+      "sha256": "0fab4f2881cef9f2748f684d20041945fd86d5e185f8537fc96fc25bd4902f2b"
     },
     {
       "path": "delivery/MEAL-070/cover.webp",
-      "size_bytes": 122666,
-      "sha256": "1e76f19c557563d8657cc194e7c65c161448bb3a02e0c10498211c45dc271956"
+      "size_bytes": 57842,
+      "sha256": "289891105c5fe0adbcf57a90090283cb557f646c59435e486f41ff11a4eb125e"
     },
     {
       "path": "thumbnail/MEAL-070/cover-thumb.webp",
-      "size_bytes": 15914,
-      "sha256": "ee1ee1066d72734109ebd2d6528f39af5e7c5c6acdb612fcac96d14ff2678829"
+      "size_bytes": 6924,
+      "sha256": "712c30b3b963c1232fc5910b5ab1cdbf0b7fec0f47386df6ec43dd08e4de519a"
     },
     {
       "path": "images/MEAL-071.png",

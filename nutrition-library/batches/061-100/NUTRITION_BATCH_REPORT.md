@@ -10,6 +10,7 @@
 - Duplicate image assignments: 0
 - Missing/orphan/broken mappings: 0
 - Nutrition review: PASS
-- Image review: PASS with residual garnish notes
+- Image review: PASS after MEAL-070 regeneration (089 / 093 / 100 approved as-is)
 - Meal-type distribution: {"Breakfast":8,"Lunch":9,"Dinner":7,"Snack":6,"Pre-workout":3,"Post-workout":4,"Drinks":3}
-- Ready for Nutrition Library Manager next batch (MEAL-101 → MEAL-140): YES after this package is stored
+- Contract consistency: DECISION REQUIRED — `Drinks` is present on MEAL-098 / MEAL-099 / MEAL-100 and is not in Pilot 1.1 meal_type
+- Ready for Nutrition Library Manager next batch (MEAL-101 → MEAL-140): NO until drinks meal_type is decided. Do not recode the three beverages as Snack / Pre-workout / Post-workout.

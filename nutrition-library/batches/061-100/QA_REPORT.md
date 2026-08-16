@@ -28,7 +28,17 @@ Overall result: **PASS**
 Same meal_type, calories ±10%, protein ±8 g. NO_VALID_SUBSTITUTE is accepted for: MEAL-065, MEAL-070, MEAL-079, MEAL-080, MEAL-089, MEAL-094, MEAL-095, MEAL-096, MEAL-099.
 
 ## Visual review
-40 master images were generated from ingredient lists, not meal names alone. Several images were regenerated when extra foods appeared (notably bread, seafood mix-ups, or side cookies). Residual extra garnish may remain on a minority of frames; mapping and uniqueness hashes pass.
+40 master images were generated from ingredient lists, not meal names alone. Several images were regenerated when extra foods appeared (notably bread, seafood mix-ups, or side cookies).
+
+### Image accuracy correction (2026-08-16)
+CEO visual hold on MEAL-070 / MEAL-089 / MEAL-093 / MEAL-100:
+
+- MEAL-070 Chicken Shawarma Salad Bowl: extra lettuce/bread in the original master was **not** in the meal record (ingredients: grilled chicken, Greek yogurt, cucumber, tomato, olive oil). Master PNG + cover.webp + cover-thumb.webp regenerated. Meal JSON unchanged.
+- MEAL-089 Roasted Chickpeas and Grapes: chickpeas + grapes only. APPROVED.
+- MEAL-093 Banana and Dates: banana slices + dates only. APPROVED.
+- MEAL-100 Date Cocoa Milk Drink: blended cocoa milk with one whole date beside the glass. Date is an actual ingredient (blended). APPROVED as a small ingredient cue.
+
+Image QA after correction: expected 40, approved 40, mismatch 0, missing 0, duplicate 0. Manifest hashes refreshed.
 
 ## Gate
 Data/media integrity PASS for library content. Professional nutrition sign-off remains a production prerequisite. Database import is out of scope for this batch.
