@@ -2,7 +2,9 @@
 
 **Date:** 2026-07-13  
 **Decision:** CEO Performance & Loading Strategy — approved for execution  
-**Phase:** 1 (Infrastructure + Landing Page)
+**Phase:** 1 (Infrastructure + Landing Page on `/coaching`)
+
+> **Route update (2026-08-14 — App-First):** Landing moved from `/` to `/coaching`. `/` is now Quiz entry. Metrics below that say «Landing `/`» refer to the pre-App-First route; equivalent page is now `/coaching`.
 
 ---
 
@@ -28,7 +30,8 @@ Phase 1 establishes the mandatory performance infrastructure and applies it to t
 
 | Screen | Risk |
 |--------|------|
-| `/` Landing | 40+ eager image imports, all sections bundled together |
+| `/coaching` Landing | 40+ eager image imports, all sections bundled together |
+| `/` Quiz entry | Shared `QuizPage` — large funnel chunk (see `/quiz`) |
 | `/quiz` | 5,886 lines, 59 asset imports — largest single chunk |
 | `/app/exercises` | Full catalog fetch, spinner-only loading |
 | `/app` home | Featured images without lazy loading |
@@ -56,7 +59,9 @@ Phase 1 establishes the mandatory performance infrastructure and applies it to t
 - `vendor-radix`, `vendor-supabase`, `vendor-tanstack`
 - Generic `vendor` fallback
 
-### 3. Landing Page (`/`)
+### 3. Marketing Landing Page (`/coaching`)
+
+> **Historical:** Phase 1 work targeted `/` before App-First (2026-08-14). Same components now serve `/coaching`.
 
 | Optimization | Detail |
 |-------------|--------|
@@ -93,7 +98,7 @@ Phase 1 establishes the mandatory performance infrastructure and applies it to t
 | **TTI** | ↓ Vendor chunks cached independently |
 | **Perceived speed** | ↑ Content visible while images load |
 
-> **Note:** Exact Lighthouse scores require a production deployment measurement. Run Lighthouse on `/` and `/app` after deploy to capture before/after numbers.
+> **Note:** Exact Lighthouse scores require a production deployment measurement. Run Lighthouse on `/`, `/coaching`, and `/app` after deploy.
 
 ---
 

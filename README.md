@@ -81,4 +81,4 @@ npm run lint     # ESLint
 
 ---
 
-**آخر تحديث للتوثيق:** 2026-08-14 (App-First Entry)
+**آخر تحديث للتوثيق:** 2026-08-16 (Coaching Messaging V1 — Needs Verification على production)

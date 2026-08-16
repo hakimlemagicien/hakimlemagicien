@@ -89,23 +89,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "author", content: "Hakim Coaching" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
-      { property: "og:title", content: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
-      { name: "twitter:title", content: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
+      { title: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
+      { property: "og:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
+      { name: "twitter:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
       {
         name: "description",
         content:
-          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:description",
         content:
-          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         name: "twitter:description",
         content:
-          "Hakim Coaching Landing Page: A responsive Arabic RTL hero section for premium fitness coaching.",
+          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:image",
@@ -121,8 +121,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "icon", href: "/icon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/icon.svg" },
+      { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "32x32" },
+      { rel: "icon", href: "/app-icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

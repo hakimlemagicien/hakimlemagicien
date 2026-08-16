@@ -1,12 +1,14 @@
 import type { MembershipFeatures, MembershipTier } from "@/lib/platform/membership";
 import {
   HAKIM_POINTS_REWARDS,
+  formatHakimPoints,
   type NextMission,
 } from "@/lib/platform/daily-motivation";
 import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
 import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
 import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
-import { DAILY_GREETING_NAME_FALLBACK, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
+import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
+import { getWeekdayIdFromDate, resolveWeekdayPlan } from "@/lib/platform/weekly-workout-schedule";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 
 /** User training goal used to personalize home content. */
@@ -102,7 +104,7 @@ const PAID_TASK_POOL: DailyTask[] = [
     id: "workout",
     title: "تمرين اليوم",
     subtitle: "اليوم 3 — الجزء العلوي",
-    href: "/app/program",
+    href: "/app/program/workout",
     icon: "workout",
     iconBg: "bg-secondary-soft",
     iconColor: "text-success",
@@ -612,14 +614,14 @@ export function shouldShowActivateCta(tier: MembershipTier, isPaid: boolean): bo
 /* ── Home Dashboard v2 (CEO-approved layout) ───────────────────────────── */
 
 export type DailySnapshotItem = {
-  id: "workout" | "nutrition" | "water" | "progress";
+  id: "workout" | "nutrition" | "progress";
   title: string;
   value: string;
   subtitle: string;
   progress: number;
   href?: string;
-  action?: "open-water-sheet";
-  icon: "workout" | "nutrition" | "water" | "progress";
+  actionLabel: string;
+  icon: "workout" | "nutrition" | "progress";
   iconBg: string;
   iconColor: string;
   valueColor: string;
@@ -636,16 +638,19 @@ export type HeroState = {
   isFirstVisit: boolean;
   streak: number;
   hakimPoints: number;
+  remainingKg: number | null;
   heroImage: HeroGoalImage;
 };
 
-export type TodaysMissionState = {
+export type NextSessionKind = "workout" | "meal" | "rest" | "done";
+
+export type NextSessionState = {
+  kind: NextSessionKind;
+  eyebrow: string;
   title: string;
-  description: string;
-  pointsReward: number;
+  meta: string;
   href: string;
-  isRestDay: boolean;
-  isEmpty: boolean;
+  cta: string | null;
 };
 
 export type StreakWeekDay = {
@@ -677,56 +682,45 @@ export type DiscoverPreviewItem = {
   href: string;
   image: FeaturedContentItem["image"];
   badge?: string;
+  badgeTone?: "article" | "recipe" | "workout";
   showPlay?: boolean;
   showSparkle?: boolean;
 };
 
 /** Home discover row — starts with 3 cards; add items to enable smooth horizontal scroll. */
-export function buildDiscoverPreviewItems(goal: UserGoal, date = new Date()): DiscoverPreviewItem[] {
-  const featured = buildFeaturedForGoal(goal, date);
+export function buildDiscoverPreviewItems(_goal: UserGoal, _date = new Date()): DiscoverPreviewItem[] {
   const defaults: DiscoverPreviewItem[] = [
     {
+      id: "discover-article",
+      title: "كيف تحافظ على التزامك؟",
+      description: "7 دقائق",
+      href: "/app/discover",
+      image: "tip",
+      badge: "مقال",
+      badgeTone: "article",
+    },
+    {
       id: "discover-recipes",
-      title: "وصفات صحية",
-      description: "5 وصفات جديدة",
+      title: "سلطة بروتين الدجاج",
+      description: "5 دقائق",
       href: "/app/discover",
       image: "recipe",
-      badge: "جديد",
-      showSparkle: true,
+      badge: "وصفة",
+      badgeTone: "recipe",
     },
     {
       id: "discover-home-workout",
-      title: "تمارين المنزل",
-      description: "10 تمارين",
-      href: "/app/discover",
-      image: "workout",
-      showPlay: true,
-    },
-    {
-      id: "discover-flexibility",
-      title: "جلسة مرونة",
+      title: "تمرين ظهر كامل",
       description: "20 دقيقة",
       href: "/app/discover",
-      image: "flexibility",
-      showSparkle: true,
+      image: "workout",
+      badge: "تمرين",
+      badgeTone: "workout",
+      showPlay: true,
     },
   ];
 
-  const extras = featured
-    .filter((item) => !defaults.some((entry) => entry.id === item.id))
-    .slice(0, 3)
-    .map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.subtitle,
-      href: item.href,
-      image: item.image,
-      badge: item.badge,
-      showPlay: item.showPlay,
-      showSparkle: !item.showPlay && !item.badge,
-    }));
-
-  return extras.length > 0 ? [...defaults, ...extras] : defaults;
+  return defaults;
 }
 
 const WEEKDAY_FULL_AR = [
@@ -796,24 +790,26 @@ export function buildHeroState(input: {
 }): HeroState {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const isFirstVisit = readFirstVisit();
+  const remainingKg =
+    activity.currentWeight != null && activity.goalWeight != null
+      ? Math.max(
+          0,
+          Math.round(Math.abs(activity.currentWeight - activity.goalWeight) * 10) / 10,
+        )
+      : null;
 
   return {
     greeting: buildTimeGreeting(input.displayName, input.date),
     subtext: isFirstVisit
       ? "مرحباً بك في منصتك الشخصية — لنبدأ رحلتك اليوم."
-      : activity.hasAnyActivity
-        ? "اليوم خطوة جديدة نحو هدفك."
-        : "ابدأ أول نشاط اليوم — المنصة تتفاعل مع تقدمك.",
+      : "خطتك اليومية جاهزة",
     goalTitle: goalTitle(input.goal),
     overallProgress: activity.overallProgressPct,
-    motivation: activity.hasAnyActivity
-      ? isFirstVisit
-        ? "كل يوم تقرّبك أكثر من النسخة الأفضل منك."
-        : "أنت على الطريق الصحيح! استمر 💪"
-      : "سجّل ماء، تمرين، أو وزن — وسترى أرقامك تتحرك فوراً.",
+    motivation: "كل خطوة اليوم تقربك من هدفك",
     isFirstVisit,
     streak: input.streak,
     hakimPoints: input.hakimPoints,
+    remainingKg,
     heroImage: input.heroImage,
   };
 }
@@ -826,36 +822,55 @@ export function buildDailySnapshot(input: {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const tasks = buildDailyTasks(input);
   const workoutTask = tasks.find((t) => t.id === "workout");
-  const waterTask = tasks.find((t) => t.id === "water");
 
   const mealsDone = activity.mealsDone;
   const mealsTotal = activity.mealsTotal;
   const workoutDone = activity.workoutDone;
   const workoutTotal = activity.workoutTotal;
-  const waterLiters = (activity.waterMl / 1000).toFixed(1);
-  const waterGoalLiters = (activity.waterGoalMl / 1000).toFixed(0);
   const nutritionProgress = mealsTotal ? Math.round((mealsDone / mealsTotal) * 100) : 0;
   const workoutProgress = workoutTotal ? Math.round((workoutDone / workoutTotal) * 100) : 0;
-  const waterProgress = activity.waterGoalMl
-    ? Math.round((activity.waterMl / activity.waterGoalMl) * 100)
-    : 0;
+  const caloriesGoal = 2200;
+  const caloriesUsed = mealsTotal ? Math.round((mealsDone / mealsTotal) * caloriesGoal) : 0;
+  const caloriesLeft = Math.max(0, caloriesGoal - caloriesUsed);
 
   const progressValue =
+    activity.currentWeight != null
+      ? `${activity.currentWeight} كغ`
+      : activity.weightChange != null
+        ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
+        : "سجّل وزنك";
+  const progressSubtitle =
     activity.weightChange != null
       ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
-      : "0 كغ";
-  const progressSubtitle =
-    activity.daysIn > 0 ? `منذ ${activity.daysIn} ${activity.daysIn === 1 ? "يوم" : "أيام"}` : "لم تسجّل بعد";
+      : activity.daysIn > 0
+        ? `منذ ${activity.daysIn} ${activity.daysIn === 1 ? "يوم" : "أيام"}`
+        : "لم تسجّل بعد";
 
-  /* RTL: first item = right — التمارين → التغذية → الماء → التقدم (يسار) */
+  /* RTL: first item = right — التغذية → التمرين → الوزن */
   return [
     {
+      id: "nutrition",
+      title: "التغذية",
+      value: `${caloriesLeft} سعرة`,
+      subtitle: "متبقية اليوم",
+      progress: nutritionProgress,
+      href: "/app/nutrition",
+      actionLabel: "سجّل وجبة",
+      icon: "nutrition",
+      iconBg: "bg-[#DCFCE7]",
+      iconColor: "text-[#22C55E]",
+      valueColor: "#16A34A",
+      progressColor: "#22C55E",
+      showProgressBar: true,
+    },
+    {
       id: "workout",
-      title: "التمارين",
-      value: `${workoutDone} / ${workoutTotal} تمرين`,
+      title: "التمرين",
+      value: `${workoutDone} من ${workoutTotal}`,
       subtitle: workoutTask?.subtitle ?? WORKOUT_DAY_SEED.title,
       progress: workoutProgress,
-      href: "/app/program",
+      href: "/app/program/workout",
+      actionLabel: "متابعة",
       icon: "workout",
       iconBg: "bg-[#FFEDD5]",
       iconColor: "text-[#FF6B00]",
@@ -864,95 +879,76 @@ export function buildDailySnapshot(input: {
       showProgressBar: true,
     },
     {
-      id: "nutrition",
-      title: "التغذية",
-      value: `${mealsDone} / ${mealsTotal} وجبات`,
-      subtitle: mealsDone > 0 ? "استمر في تسجيل وجباتك" : "سجّل وجباتك اليوم",
-      progress: nutritionProgress,
-      href: "/app/nutrition",
-      icon: "nutrition",
-      iconBg: "bg-[#DCFCE7]",
-      iconColor: "text-[#22C55E]",
-      valueColor: "#22C55E",
-      progressColor: "#22C55E",
-      showProgressBar: true,
-    },
-    {
-      id: "water",
-      title: "الماء",
-      value: `${waterLiters} / ${waterGoalLiters} لتر`,
-      subtitle: activity.waterMl > 0 ? `${waterGoalLiters} لتر يومياً` : "ابدأ بكوب واحد",
-      progress: waterProgress,
-      action: "open-water-sheet",
-      icon: "water",
-      iconBg: "bg-[#DBEAFE]",
-      iconColor: "text-[#3B82F6]",
-      valueColor: "#3B82F6",
-      progressColor: "#3B82F6",
-      showProgressBar: true,
-    },
-    {
       id: "progress",
-      title: "التقدم",
+      title: "الوزن",
       value: progressValue,
       subtitle: progressSubtitle,
       progress: activity.overallProgressPct,
       href: "/app/progress",
+      actionLabel: "عرض النشاط",
       icon: "progress",
-      iconBg: "bg-[#F3E8FF]",
-      iconColor: "text-[#8B5CF6]",
-      valueColor: "#8B5CF6",
-      progressColor: "#8B5CF6",
-      showProgressBar: false,
+      iconBg: "bg-[#FFEDD5]",
+      iconColor: "text-[#FF6B00]",
+      valueColor: "#FF6B00",
+      progressColor: "#FF6B00",
+      showProgressBar: true,
     },
   ];
 }
 
-export function buildTodaysMission(input: {
+export function buildNextSession(input: {
   features: MembershipFeatures;
   activity?: PlatformActivitySnapshot;
   date?: Date;
-}): TodaysMissionState {
-  const tasks = buildDailyTasks(input);
-  const dayIndex = dayOfYear(input.date);
-  const isRestDay = dayIndex % 7 === 6;
+}): NextSessionState {
+  const activity = input.activity ?? getEmptyActivitySnapshot();
+  const date = input.date ?? new Date();
+  const plan = resolveWeekdayPlan(getWeekdayIdFromDate(date), input.features.workout_program);
+  const workoutDone = activity.workoutDone >= activity.workoutTotal && activity.workoutTotal > 0;
+  const nextMeal = MEALS_SEED[activity.mealsDone];
 
-  if (isRestDay) {
+  if (input.features.workout_program && !plan.isRestDay && !workoutDone) {
+    const exerciseCount = plan.prescriptions.length;
     return {
-      title: "اليوم يوم راحة",
-      description: "استشفِ عضلاتك — المشي الخفيف أو التمدد كافيان اليوم.",
-      pointsReward: 0,
-      href: "/app/program",
-      isRestDay: true,
-      isEmpty: false,
+      kind: "workout",
+      eyebrow: "تمرين اليوم",
+      title: plan.muscleTitle,
+      meta: `${plan.durationMin} دقيقة · ${exerciseCount} ${exerciseCount === 1 ? "تمرين" : "تمارين"}`,
+      href: "/app/program/workout",
+      cta: "ابدأ الآن",
     };
   }
 
-  const mission = resolveNextMissionFromTasks(
-    tasks.filter((t) => !isDailyTaskLocked(t, input.features)),
-  );
-
-  if (mission.id === "done") {
+  if (nextMeal && activity.mealsDone < activity.mealsTotal) {
+    const hasDish = Boolean(nextMeal.meta) && nextMeal.meta !== "لم يُسجّل بعد";
     return {
-      title: "أحسنت — أنجزت مهام اليوم",
-      description: "حافظ على سلسلتك غداً واستمر في التقدم.",
-      pointsReward: 0,
-      href: mission.href,
-      isRestDay: false,
-      isEmpty: true,
+      kind: "meal",
+      eyebrow: "وجبتك التالية",
+      title: hasDish ? `${nextMeal.name} — ${nextMeal.meta}` : nextMeal.name,
+      meta: nextMeal.kcal > 0 ? `${nextMeal.kcal} سعرة` : nextMeal.meta,
+      href: "/app/nutrition",
+      cta: "ابدأ الآن",
     };
   }
 
-  const isWorkout = mission.id === "workout";
+  if (plan.isRestDay && input.features.workout_program) {
+    return {
+      kind: "rest",
+      eyebrow: "اليوم",
+      title: "يوم راحة",
+      meta: "استشفِ عضلاتك — عُد أقوى غداً",
+      href: "/app/program/workout",
+      cta: null,
+    };
+  }
+
   return {
-    title: isWorkout ? "أكمل تمرين اليوم" : mission.title.replace("الخطوة التالية: ", ""),
-    description: isWorkout
-      ? "أنت على بُعد تمرين واحد من إكمال مهمة اليوم."
-      : "خطوة صغيرة اليوم تصنع فرقاً كبيراً غداً.",
-    pointsReward: mission.pointsReward,
-    href: mission.href,
-    isRestDay: false,
-    isEmpty: false,
+    kind: "done",
+    eyebrow: "اليوم",
+    title: "أحسنت — اكتملت خطتك",
+    meta: "حافظ على سلسلتك غداً",
+    href: "/app/progress",
+    cta: null,
   };
 }
 

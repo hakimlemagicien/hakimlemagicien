@@ -10,6 +10,7 @@ import { WaterProvider } from "@/components/platform/water/WaterContext";
 import { cn } from "@/lib/utils";
 import { PlatformFrame } from "./PlatformLayout";
 import { PlatformMobileNav, PlatformSidebar } from "./PlatformNav";
+import { PlatformPageTransition } from "./PlatformPageTransition";
 
 type PlatformShellProps = {
   children: ReactNode;
@@ -23,6 +24,7 @@ function CalorieCalculatorHost() {
 export function PlatformShell({ children }: PlatformShellProps) {
   const location = useLocation();
   const isStudioRoute = location.pathname.startsWith("/app/studio");
+  const isCoachChatRoute = location.pathname.startsWith("/app/support/chat");
 
   return (
     <UpgradeProvider>
@@ -36,13 +38,30 @@ export function PlatformShell({ children }: PlatformShellProps) {
               )}
             >
               <PlatformSidebar />
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                <main className={cn("platform-main", isStudioRoute && "platform-main--studio")}>
-                  {isStudioRoute ? children : <PlatformFrame>{children}</PlatformFrame>}
+              <div
+                className={cn(
+                  "flex min-h-0 min-w-0 flex-1 flex-col",
+                  isCoachChatRoute && "h-full overflow-hidden",
+                )}
+              >
+                <main
+                  className={cn(
+                    "platform-main",
+                    isStudioRoute && "platform-main--studio",
+                    isCoachChatRoute && "platform-main--coach-chat",
+                  )}
+                >
+                  {isStudioRoute || isCoachChatRoute ? (
+                    children
+                  ) : (
+                    <PlatformFrame>
+                      <PlatformPageTransition>{children}</PlatformPageTransition>
+                    </PlatformFrame>
+                  )}
                 </main>
               </div>
             </div>
-            <PlatformMobileNav />
+            {isCoachChatRoute ? null : <PlatformMobileNav />}
             <MembershipUpgradeSheet />
             <CalorieCalculatorHost />
             <WaterBottomSheet />

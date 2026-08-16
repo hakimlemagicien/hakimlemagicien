@@ -45,7 +45,6 @@ import type {
   ProfileNotificationPrefs,
 } from "@/lib/platform/profile-settings-storage";
 import { LEGAL_ROUTES, SITE_SUPPORT_EMAIL, SITE_WHATSAPP_URL } from "@/lib/site-legal";
-import { WHATSAPP_COACH_URL } from "@/lib/platform/seed-content";
 import {
   ProfileField,
   ProfileFieldGrid,
@@ -550,8 +549,8 @@ export function ProfileSupportSection({ canContactCoach }: { canContactCoach: bo
           <ProfileRowButton
             icon={<MessageCircle className="h-4 w-4" />}
             title="التواصل مع الكوتش"
-            description="WhatsApp"
-            href={WHATSAPP_COACH_URL}
+            description="دردشة مباشرة"
+            to="/app/support/chat"
           />
         ) : null}
         <ProfileRowButton

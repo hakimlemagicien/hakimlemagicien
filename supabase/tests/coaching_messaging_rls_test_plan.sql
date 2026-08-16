@@ -1,0 +1,14 @@
+-- Coaching Messaging V1 RLS plan (non-production).
+-- Member A must not read Member B conversation/messages/attachments/notifications.
+-- Admin may list inbox and reply.
+
+-- 1. Create users A, B, Admin.
+-- 2. Grant A essential membership (limited_coach_contact).
+-- 3. SET request.jwt.claim.sub = A; SELECT ensure_my_coaching_conversation(); send text.
+-- 4. SET sub = B; SELECT from coaching_conversations where member_id = A → 0 rows.
+-- 5. SET sub = B; list_coaching_messages(A_conversation) → forbidden.
+-- 6. SET sub = Admin; admin_list_coaching_inbox() includes A.
+-- 7. Admin send_coaching_message actor=coach.
+-- 8. SET sub = A; sees coach reply; unread then mark_coaching_conversation_read.
+-- 9. Storage object in B's conversation path: A select must fail.
+-- 10. Invalid conversation_id spoof on send_coaching_message → forbidden.

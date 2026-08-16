@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Activity,
-  Bell,
   Brain,
   ChevronLeft,
   Dumbbell,
@@ -16,6 +15,8 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
+import { WaterHeaderButton } from "@/components/platform/water/WaterHeaderButton";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { cn } from "@/lib/utils";
@@ -65,21 +66,19 @@ export function DiscoverHeader({
           <ChevronLeft className="h-6 w-6" />
         </Link>
       ) : (
-        <button
-          type="button"
-          aria-label="الإشعارات"
-          className="grid h-11 w-11 place-items-center text-foreground"
-        >
-          <Bell className="h-6 w-6" strokeWidth={1.8} />
-        </button>
+        <PlatformHeaderActions />
       )}
       <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
-      <Link
-        to="/app/profile"
-        data-preview-safe
-        aria-label="الملف الشخصي"
-        className="grid h-11 w-11 place-items-center"
-      >
+      <div className="flex items-center gap-0.5">
+        {backTo ? (
+          <WaterHeaderButton className="grid h-11 w-11 place-items-center text-foreground" />
+        ) : null}
+        <Link
+          to="/app/profile"
+          data-preview-safe
+          aria-label="الملف الشخصي"
+          className="grid h-11 w-11 place-items-center"
+        >
         <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-border/70 bg-muted">
           {avatarUrl ? (
             <OptimizedImage src={avatarUrl} alt="" width={40} height={40} className="h-full w-full" />
@@ -87,7 +86,8 @@ export function DiscoverHeader({
             <span className="text-xs font-black text-muted-foreground">أنت</span>
           )}
         </span>
-      </Link>
+        </Link>
+      </div>
     </header>
   );
 }

@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Bell, RefreshCw, Share2, Trophy } from "lucide-react";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
+import { RefreshCw, Share2, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -43,13 +44,10 @@ export function ProgressHeader() {
         <Trophy className="h-4 w-4 text-primary" aria-hidden />
         <h1 className="truncate text-sm font-black text-foreground">التقدم</h1>
       </div>
-      <button
-        type="button"
-        aria-label="الإشعارات"
-        className="relative grid h-10 w-10 place-items-center rounded-2xl text-foreground"
-      >
-        <Bell className="h-5 w-5" />
-      </button>
+      <PlatformHeaderActions
+        actionClassName="grid h-10 w-10 place-items-center rounded-2xl text-foreground"
+        iconClassName="h-5 w-5"
+      />
     </header>
   );
 }

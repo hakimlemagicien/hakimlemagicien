@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { applyHostPreviewIfNeeded } from "@/lib/platform/host-preview-seed";
+import { resolveAuthEmail } from "@/lib/platform/membership";
 import {
   PLATFORM_ACTIVITY_CHANGE_EVENT,
   buildPlatformActivitySnapshot,
@@ -27,17 +29,24 @@ export function usePlatformActivity() {
   useEffect(() => {
     let mounted = true;
 
-    void supabase.auth.getUser().then(({ data }) => {
+    const applyFromUser = (user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> | null; identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null } | null) => {
       if (!mounted) return;
-      const id = data.user?.id ?? "guest";
+      const id = user?.id ?? "guest";
+      applyHostPreviewIfNeeded(id, resolveAuthEmail(user), user);
       setUserId(id);
       setSnapshot(buildPlatformActivitySnapshot(id));
+    };
+
+    void supabase.auth.getSession().then(({ data }) => {
+      applyFromUser(data.session?.user ?? null);
+    });
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data.user) applyFromUser(data.user);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const id = session?.user?.id ?? "guest";
-      setUserId(id);
-      setSnapshot(buildPlatformActivitySnapshot(id));
+      applyFromUser(session?.user ?? null);
     });
 
     return () => {

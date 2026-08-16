@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Bell,
   CalendarDays,
   CalendarRange,
   Check,
@@ -15,9 +14,9 @@ import {
   Star,
   Target,
 } from "lucide-react";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
-import { WaterCompactWidget } from "@/components/platform/water/WaterCompactWidget";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
@@ -715,13 +714,10 @@ function WorkoutDayPage() {
             <CalendarDays className="h-5 w-5" />
           </button>
           <h1 className="text-sm font-black tracking-tight text-foreground">التمارين برنامجك</h1>
-          <button
-            type="button"
-            aria-label="الإشعارات"
-            className="relative grid h-10 w-10 shrink-0 -translate-x-[14px] -translate-y-[7px] place-items-center text-foreground"
-          >
-            <Bell className="h-6 w-6" />
-          </button>
+          <PlatformHeaderActions
+            className="-translate-x-[14px] -translate-y-[7px]"
+            actionClassName="relative grid h-10 w-10 place-items-center text-foreground"
+          />
         </header>
 
         <section
@@ -886,18 +882,13 @@ function WorkoutDayPage() {
           )}
 
           {!selectedPlan.isRestDay ? (
-            <>
-              <div className="flex items-center justify-end border-t border-border/45 pt-3.5">
-                <WaterCompactWidget variant="mini" />
-              </div>
-              <WorkoutMotivationCta
-                points={workoutStats.points}
-                dayId={selectedDayId}
-                freePreview={freePreview}
-                freeTrialAvailable={freePreview && isSelectedToday}
-                onLockedClick={() => openUpgrade(lockedReason)}
-              />
-            </>
+            <WorkoutMotivationCta
+              points={workoutStats.points}
+              dayId={selectedDayId}
+              freePreview={freePreview}
+              freeTrialAvailable={freePreview && isSelectedToday}
+              onLockedClick={() => openUpgrade(lockedReason)}
+            />
           ) : null}
         </section>
       </PlatformStack>
