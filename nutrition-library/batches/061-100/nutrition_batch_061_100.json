@@ -1,0 +1,3787 @@
+{
+  "package": "hakim-nutrition-library",
+  "contract_version": "pilot-1.1",
+  "batch": "MEAL-061..MEAL-100",
+  "generated_on": "2026-08-16",
+  "source_methodology": "Ingredient-level calculation using USDA FoodData Central generic-food reference values; rounded per serving.",
+  "meals": [
+    {
+      "external_id": "MEAL-061",
+      "name_ar": "لبنة بالخيار والخبز العربي",
+      "name_en": "Labneh Cucumber Pita Plate",
+      "description_ar": "وجبة لبنة بالخيار والخبز العربي متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Labneh Cucumber Pita Plate meal.",
+      "meal_type": "Breakfast",
+      "calories": 458,
+      "protein_g": 18.7,
+      "carbs_g": 43.2,
+      "fat_g": 24.7,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 323
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-061-ING-01",
+          "name_ar": "لبنة",
+          "name_en": "labneh",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-061-ING-02",
+          "name_ar": "خيار",
+          "name_en": "cucumber",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-061-ING-03",
+          "name_ar": "خبز عربي بالقمح الكامل",
+          "name_en": "whole-wheat pita",
+          "quantity": 60,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-061-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-061-ING-05",
+          "name_ar": "نعناع",
+          "name_en": "mint",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "افرد اللبنة، أضف الخيار والنعناع، رشّ زيت الزيتون وقدّم مع الخبز العربي."
+      ],
+      "preparation_steps_en": [
+        "Spread labneh, add cucumber and mint, drizzle oil, serve with pita."
+      ],
+      "preparation_time_minutes": 12,
+      "allergens": [
+        "milk",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-061.png",
+        "delivery": "delivery/MEAL-061/cover.webp",
+        "thumbnail": "thumbnail/MEAL-061/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 457.5,
+        "macro_energy_kcal": 469.9,
+        "macro_vs_ingredient_delta_pct": 2.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-062",
+      "name_ar": "عصيدة الحنطة السوداء بالكمثرى",
+      "name_en": "Buckwheat Pear Breakfast Porridge",
+      "description_ar": "وجبة عصيدة الحنطة السوداء بالكمثرى متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Buckwheat Pear Breakfast Porridge meal.",
+      "meal_type": "Breakfast",
+      "calories": 424,
+      "protein_g": 18.3,
+      "carbs_g": 65.2,
+      "fat_g": 13.2,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 385
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-062-ING-01",
+          "name_ar": "حبوب حنطة سوداء جافة",
+          "name_en": "buckwheat groats, dry",
+          "quantity": 50,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-062-ING-02",
+          "name_ar": "حليب قليل الدسم",
+          "name_en": "low-fat milk",
+          "quantity": 200,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-062-ING-03",
+          "name_ar": "كمثرى",
+          "name_en": "pear",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-062-ING-04",
+          "name_ar": "بذور يقطين",
+          "name_en": "pumpkin seeds",
+          "quantity": 15,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ الحنطة السوداء مع الحليب حتى يتماسك القوام، ثم أضف الكمثرى وبذور اليقطين."
+      ],
+      "preparation_steps_en": [
+        "Simmer buckwheat in milk until thick, then top with pear and pumpkin seeds."
+      ],
+      "preparation_time_minutes": 15,
+      "allergens": [
+        "gluten",
+        "milk"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-062.png",
+        "delivery": "delivery/MEAL-062/cover.webp",
+        "thumbnail": "thumbnail/MEAL-062/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 423.8,
+        "macro_energy_kcal": 452.5,
+        "macro_vs_ingredient_delta_pct": 6.8,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-063",
+      "name_ar": "توست الشيلم بالسلمون المدخن",
+      "name_en": "Smoked Salmon Rye Breakfast",
+      "description_ar": "وجبة توست الشيلم بالسلمون المدخن متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Smoked Salmon Rye Breakfast meal.",
+      "meal_type": "Breakfast",
+      "calories": 331,
+      "protein_g": 21.1,
+      "carbs_g": 36.7,
+      "fat_g": 10.8,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 235
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-063-ING-01",
+          "name_ar": "خبز شيلم",
+          "name_en": "rye bread",
+          "quantity": 70,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-063-ING-02",
+          "name_ar": "سلمون مدخن",
+          "name_en": "smoked salmon",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-063-ING-03",
+          "name_ar": "خيار",
+          "name_en": "cucumber",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-063-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "حمّص خبز الشيلم، ضع الخيار والسلمون المدخن، وقدّم فوراً."
+      ],
+      "preparation_steps_en": [
+        "Toast rye bread, layer cucumber and smoked salmon, and serve immediately."
+      ],
+      "preparation_time_minutes": 10,
+      "allergens": [
+        "gluten",
+        "fish"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-063.png",
+        "delivery": "delivery/MEAL-063/cover.webp",
+        "thumbnail": "thumbnail/MEAL-063/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 331.1,
+        "macro_energy_kcal": 328.8,
+        "macro_vs_ingredient_delta_pct": 0.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-064",
+      "name_ar": "شكشوكة البيض والفلفل",
+      "name_en": "Pepper Tomato Shakshuka",
+      "description_ar": "وجبة شكشوكة البيض والفلفل متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Pepper Tomato Shakshuka meal.",
+      "meal_type": "Breakfast",
+      "calories": 342,
+      "protein_g": 26.1,
+      "carbs_g": 14.8,
+      "fat_g": 19.5,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 478
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-064-ING-01",
+          "name_ar": "بيض كامل",
+          "name_en": "whole egg",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-064-ING-02",
+          "name_ar": "بياض بيض",
+          "name_en": "egg whites",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-064-ING-03",
+          "name_ar": "فلفل رومي",
+          "name_en": "bell pepper",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-064-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-064-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ الفلفل والطماطم بالزيت، أضف البيض وغطّ حتى ينضج، وقدّم في الوعاء."
+      ],
+      "preparation_steps_en": [
+        "Stew peppers and tomato in oil, add eggs, cover until set, and serve in the pan."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "eggs"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-064.png",
+        "delivery": "delivery/MEAL-064/cover.webp",
+        "thumbnail": "thumbnail/MEAL-064/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 341.9,
+        "macro_energy_kcal": 338.7,
+        "macro_vs_ingredient_delta_pct": 0.9,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-065",
+      "name_ar": "مقلاة الديك الرومي والبطاطس",
+      "name_en": "Turkey Potato Breakfast Skillet",
+      "description_ar": "وجبة مقلاة الديك الرومي والبطاطس متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Turkey Potato Breakfast Skillet meal.",
+      "meal_type": "Breakfast",
+      "calories": 386,
+      "protein_g": 40.2,
+      "carbs_g": 38.7,
+      "fat_g": 7.3,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 396
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-065-ING-01",
+          "name_ar": "صدر ديك رومي مطبوخ",
+          "name_en": "cooked turkey breast",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-065-ING-02",
+          "name_ar": "بطاطس مسلوقة",
+          "name_en": "boiled potato",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-065-ING-03",
+          "name_ar": "فلفل رومي",
+          "name_en": "bell pepper",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-065-ING-04",
+          "name_ar": "بصل",
+          "name_en": "onion",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-065-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "حمّر الديك الرومي مع البصل والفلفل، أضف مكعبات البطاطس واطبخ حتى تسخن جيداً."
+      ],
+      "preparation_steps_en": [
+        "Brown turkey with onion and pepper, add potato cubes, and cook until hot throughout."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-065.png",
+        "delivery": "delivery/MEAL-065/cover.webp",
+        "thumbnail": "thumbnail/MEAL-065/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 386.3,
+        "macro_energy_kcal": 380.9,
+        "macro_vs_ingredient_delta_pct": 1.4,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-066",
+      "name_ar": "عصيدة الدخن بالتين والفستق",
+      "name_en": "Millet Fig Pistachio Porridge",
+      "description_ar": "وجبة عصيدة الدخن بالتين والفستق متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Millet Fig Pistachio Porridge meal.",
+      "meal_type": "Breakfast",
+      "calories": 463,
+      "protein_g": 15.8,
+      "carbs_g": 74.7,
+      "fat_g": 12.9,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 285
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-066-ING-01",
+          "name_ar": "دخن جاف",
+          "name_en": "millet, dry",
+          "quantity": 50,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-066-ING-02",
+          "name_ar": "حليب قليل الدسم",
+          "name_en": "low-fat milk",
+          "quantity": 180,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-066-ING-03",
+          "name_ar": "تين مجفف",
+          "name_en": "dried figs",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-066-ING-04",
+          "name_ar": "فستق",
+          "name_en": "pistachios",
+          "quantity": 15,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ الدخن مع الحليب، ثم أضف التين المقطع والفستق."
+      ],
+      "preparation_steps_en": [
+        "Cook millet in milk, then fold in chopped figs and pistachios."
+      ],
+      "preparation_time_minutes": 15,
+      "allergens": [
+        "milk",
+        "tree_nuts"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-066.png",
+        "delivery": "delivery/MEAL-066/cover.webp",
+        "thumbnail": "thumbnail/MEAL-066/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 462.6,
+        "macro_energy_kcal": 477.6,
+        "macro_vs_ingredient_delta_pct": 3.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-067",
+      "name_ar": "بولنتا البيض والسبانخ",
+      "name_en": "Polenta Egg Spinach Bowl",
+      "description_ar": "وجبة بولنتا البيض والسبانخ متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Polenta Egg Spinach Bowl meal.",
+      "meal_type": "Breakfast",
+      "calories": 379,
+      "protein_g": 18.2,
+      "carbs_g": 36.9,
+      "fat_g": 17.6,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 366
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-067-ING-01",
+          "name_ar": "بولنتا مطبوخة",
+          "name_en": "cooked polenta",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-067-ING-02",
+          "name_ar": "بيض كامل",
+          "name_en": "whole egg",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-067-ING-03",
+          "name_ar": "سبانخ",
+          "name_en": "spinach",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-067-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "سخّن البولنتا، ذبّل السبانخ بالزيت، أضف البيض وقدّم فوق البولنتا."
+      ],
+      "preparation_steps_en": [
+        "Warm polenta, wilt spinach in oil, add eggs, and spoon over the polenta."
+      ],
+      "preparation_time_minutes": 18,
+      "allergens": [
+        "eggs"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-067.png",
+        "delivery": "delivery/MEAL-067/cover.webp",
+        "thumbnail": "thumbnail/MEAL-067/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 379.4,
+        "macro_energy_kcal": 379.1,
+        "macro_vs_ingredient_delta_pct": 0.1,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-068",
+      "name_ar": "صحن الماكريل والطماطم",
+      "name_en": "Mackerel Tomato Breakfast Plate",
+      "description_ar": "وجبة صحن الماكريل والطماطم متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Mackerel Tomato Breakfast Plate meal.",
+      "meal_type": "Breakfast",
+      "calories": 376,
+      "protein_g": 22.2,
+      "carbs_g": 28.0,
+      "fat_g": 19.4,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 245
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-068-ING-01",
+          "name_ar": "ماكريل مصفى",
+          "name_en": "canned mackerel, drained",
+          "quantity": 90,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-068-ING-02",
+          "name_ar": "خبز شيلم",
+          "name_en": "rye bread",
+          "quantity": 50,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-068-ING-03",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-068-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "ضع الماكريل بجانب خبز الشيلم والطماطم، ثم رشّ زيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Flake mackerel beside rye toast and tomato, then drizzle olive oil."
+      ],
+      "preparation_time_minutes": 10,
+      "allergens": [
+        "fish",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-068.png",
+        "delivery": "delivery/MEAL-068/cover.webp",
+        "thumbnail": "thumbnail/MEAL-068/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 376.2,
+        "macro_energy_kcal": 375.4,
+        "macro_vs_ingredient_delta_pct": 0.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-069",
+      "name_ar": "قاروص مع الفارو والفاصوليا الخضراء",
+      "name_en": "Sea Bass Farro Green Beans",
+      "description_ar": "وجبة قاروص مع الفارو والفاصوليا الخضراء متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Sea Bass Farro Green Beans meal.",
+      "meal_type": "Lunch",
+      "calories": 502,
+      "protein_g": 48.2,
+      "carbs_g": 49.4,
+      "fat_g": 13.5,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 438
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-069-ING-01",
+          "name_ar": "قاروص مطبوخ",
+          "name_en": "cooked sea bass",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-069-ING-02",
+          "name_ar": "فارو مطبوخ",
+          "name_en": "cooked farro",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-069-ING-03",
+          "name_ar": "فاصوليا خضراء مطبوخة",
+          "name_en": "cooked green beans",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-069-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخبز القاروص، سخّن الفارو والفاصوليا الخضراء، وأتمّ بزيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Bake the sea bass, warm farro and green beans, then finish with olive oil."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [
+        "fish",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-069.png",
+        "delivery": "delivery/MEAL-069/cover.webp",
+        "thumbnail": "thumbnail/MEAL-069/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 501.6,
+        "macro_energy_kcal": 511.5,
+        "macro_vs_ingredient_delta_pct": 2.0,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-070",
+      "name_ar": "سلطة شاورما الدجاج بالزبادي",
+      "name_en": "Chicken Shawarma Salad Bowl",
+      "description_ar": "وجبة سلطة شاورما الدجاج بالزبادي متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Chicken Shawarma Salad Bowl meal.",
+      "meal_type": "Lunch",
+      "calories": 408,
+      "protein_g": 59.2,
+      "carbs_g": 10.6,
+      "fat_g": 13.6,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 446
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-070-ING-01",
+          "name_ar": "صدر دجاج مشوي",
+          "name_en": "grilled chicken breast",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-070-ING-02",
+          "name_ar": "زبادي يوناني قليل الدسم",
+          "name_en": "low-fat Greek yogurt",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-070-ING-03",
+          "name_ar": "خيار",
+          "name_en": "cucumber",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-070-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-070-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "وزّع الدجاج المشوي فوق الخيار والطماطم، ثم أضف الزبادي."
+      ],
+      "preparation_steps_en": [
+        "Slice grilled chicken over cucumber and tomato, then dress with yogurt."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-070.png",
+        "delivery": "delivery/MEAL-070/cover.webp",
+        "thumbnail": "thumbnail/MEAL-070/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 408.4,
+        "macro_energy_kcal": 401.5,
+        "macro_vs_ingredient_delta_pct": 1.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-071",
+      "name_ar": "لحم غنم مع الفريكة والباذنجان",
+      "name_en": "Lamb Freekeh Eggplant Plate",
+      "description_ar": "وجبة لحم غنم مع الفريكة والباذنجان متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Lamb Freekeh Eggplant Plate meal.",
+      "meal_type": "Lunch",
+      "calories": 588,
+      "protein_g": 45.4,
+      "carbs_g": 50.9,
+      "fat_g": 22.8,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 438
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-071-ING-01",
+          "name_ar": "لحم غنم قليل الدهن مطبوخ",
+          "name_en": "cooked lean lamb",
+          "quantity": 130,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-071-ING-02",
+          "name_ar": "فريكة مطبوخة",
+          "name_en": "cooked freekeh",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-071-ING-03",
+          "name_ar": "باذنجان",
+          "name_en": "eggplant",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-071-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اشوِ الباذنجان، سخّن الفريكة، وقدّم مع شرائح لحم الغنم وزيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Roast eggplant, warm freekeh, and serve with sliced cooked lamb and olive oil."
+      ],
+      "preparation_time_minutes": 30,
+      "allergens": [
+        "gluten",
+        "eggs"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-071.png",
+        "delivery": "delivery/MEAL-071/cover.webp",
+        "thumbnail": "thumbnail/MEAL-071/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 587.5,
+        "macro_energy_kcal": 589.8,
+        "macro_vs_ingredient_delta_pct": 0.4,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-072",
+      "name_ar": "كرات الديك الرومي مع البولنتا",
+      "name_en": "Turkey Meatballs with Polenta",
+      "description_ar": "وجبة كرات الديك الرومي مع البولنتا متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Turkey Meatballs with Polenta meal.",
+      "meal_type": "Lunch",
+      "calories": 524,
+      "protein_g": 46.5,
+      "carbs_g": 39.8,
+      "fat_g": 19.5,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 536
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-072-ING-01",
+          "name_ar": "ديك رومي مفروم مطبوخ",
+          "name_en": "cooked turkey, ground",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-072-ING-02",
+          "name_ar": "بولنتا مطبوخة",
+          "name_en": "cooked polenta",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-072-ING-03",
+          "name_ar": "كوسا",
+          "name_en": "zucchini",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-072-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-072-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ كرات الديك الرومي، سخّن البولنتا، وقدّم مع الكوسا."
+      ],
+      "preparation_steps_en": [
+        "Simmer turkey meatballs, warm polenta, and serve with sautéed zucchini."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-072.png",
+        "delivery": "delivery/MEAL-072/cover.webp",
+        "thumbnail": "thumbnail/MEAL-072/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 524.3,
+        "macro_energy_kcal": 521.0,
+        "macro_vs_ingredient_delta_pct": 0.6,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-073",
+      "name_ar": "حلوى الحلوم المشوي مع الشعير",
+      "name_en": "Grilled Halloumi Barley Bowl",
+      "description_ar": "وجبة حلوى الحلوم المشوي مع الشعير متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Grilled Halloumi Barley Bowl meal.",
+      "meal_type": "Lunch",
+      "calories": 551,
+      "protein_g": 22.4,
+      "carbs_g": 55.4,
+      "fat_g": 27.2,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 426
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-073-ING-01",
+          "name_ar": "حلوم",
+          "name_en": "halloumi",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-073-ING-02",
+          "name_ar": "شعير مطبوخ",
+          "name_en": "cooked barley",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-073-ING-03",
+          "name_ar": "فلفل رومي",
+          "name_en": "bell pepper",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-073-ING-04",
+          "name_ar": "كوسا",
+          "name_en": "zucchini",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-073-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اشوِ الحلوم والفلفل، ثم اخلط مع الشعير الدافئ وزيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Grill halloumi and peppers, then toss with warm barley and oil."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "milk",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-073.png",
+        "delivery": "delivery/MEAL-073/cover.webp",
+        "thumbnail": "thumbnail/MEAL-073/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 551.2,
+        "macro_energy_kcal": 555.8,
+        "macro_vs_ingredient_delta_pct": 0.8,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-074",
+      "name_ar": "ماكريل مع البطاطس والسلطة",
+      "name_en": "Mackerel Potato Green Salad",
+      "description_ar": "وجبة ماكريل مع البطاطس والسلطة متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Mackerel Potato Green Salad meal.",
+      "meal_type": "Lunch",
+      "calories": 486,
+      "protein_g": 27.9,
+      "carbs_g": 40.5,
+      "fat_g": 24.1,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 427
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-074-ING-01",
+          "name_ar": "ماكريل مصفى",
+          "name_en": "canned mackerel, drained",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-074-ING-02",
+          "name_ar": "بطاطس مسلوقة",
+          "name_en": "boiled potato",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-074-ING-03",
+          "name_ar": "خيار",
+          "name_en": "cucumber",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-074-ING-04",
+          "name_ar": "سبانخ",
+          "name_en": "spinach",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-074-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 7,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "قدّم الماكريل مع البطاطس المسلوقة والخيار وكمية خفيفة من الزيت."
+      ],
+      "preparation_steps_en": [
+        "Plate mackerel with boiled potato, cucumber, and a light oil dressing."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "fish"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-074.png",
+        "delivery": "delivery/MEAL-074/cover.webp",
+        "thumbnail": "thumbnail/MEAL-074/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 485.7,
+        "macro_energy_kcal": 490.7,
+        "macro_vs_ingredient_delta_pct": 1.0,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-075",
+      "name_ar": "لحم بقري مع الشعير والفاصوليا",
+      "name_en": "Beef Barley Green Bean Plate",
+      "description_ar": "وجبة لحم بقري مع الشعير والفاصوليا متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Beef Barley Green Bean Plate meal.",
+      "meal_type": "Lunch",
+      "calories": 592,
+      "protein_g": 46.6,
+      "carbs_g": 55.5,
+      "fat_g": 20.1,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 456
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-075-ING-01",
+          "name_ar": "لحم بقري قليل الدهن مطبوخ",
+          "name_en": "cooked lean beef",
+          "quantity": 140,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-075-ING-02",
+          "name_ar": "شعير مطبوخ",
+          "name_en": "cooked barley",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-075-ING-03",
+          "name_ar": "فاصوليا خضراء مطبوخة",
+          "name_en": "cooked green beans",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-075-ING-04",
+          "name_ar": "بصل",
+          "name_en": "onion",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-075-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ اللحم مع الشعير، أضف الفاصوليا الخضراء، وأتمّ بزيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Simmer beef with barley juices, add green beans, and finish with olive oil."
+      ],
+      "preparation_time_minutes": 30,
+      "allergens": [
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-075.png",
+        "delivery": "delivery/MEAL-075/cover.webp",
+        "thumbnail": "thumbnail/MEAL-075/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 592.3,
+        "macro_energy_kcal": 589.1,
+        "macro_vs_ingredient_delta_pct": 0.5,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-076",
+      "name_ar": "معكرونة بلح البحر والطماطم",
+      "name_en": "Mussel Tomato Pasta",
+      "description_ar": "وجبة معكرونة بلح البحر والطماطم متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Mussel Tomato Pasta meal.",
+      "meal_type": "Lunch",
+      "calories": 419,
+      "protein_g": 28.8,
+      "carbs_g": 53.0,
+      "fat_g": 11.6,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 447
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-076-ING-01",
+          "name_ar": "بلح بحر مطبوخ",
+          "name_en": "mussels, cooked",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-076-ING-02",
+          "name_ar": "معكرونة قمح كامل مطبوخة",
+          "name_en": "cooked whole-wheat pasta",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-076-ING-03",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-076-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 7,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "سخّن بلح البحر مع الطماطم، اخلط مع المعكرونة، ورشّ زيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Warm mussels in tomato, toss with whole-wheat pasta, and drizzle olive oil."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [
+        "shellfish",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-076.png",
+        "delivery": "delivery/MEAL-076/cover.webp",
+        "thumbnail": "thumbnail/MEAL-076/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 419.5,
+        "macro_energy_kcal": 431.1,
+        "macro_vs_ingredient_delta_pct": 2.8,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-077",
+      "name_ar": "تمبيه مع نودلز الأرز والبوك تشوي",
+      "name_en": "Tempeh Rice Noodle Bowl",
+      "description_ar": "وجبة تمبيه مع نودلز الأرز والبوك تشوي متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Tempeh Rice Noodle Bowl meal.",
+      "meal_type": "Lunch",
+      "calories": 478,
+      "protein_g": 30.3,
+      "carbs_g": 50.7,
+      "fat_g": 19.5,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 382
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-077-ING-01",
+          "name_ar": "تمبيه",
+          "name_en": "tempeh",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-077-ING-02",
+          "name_ar": "نودلز أرز مطبوخة",
+          "name_en": "rice noodles, cooked",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-077-ING-03",
+          "name_ar": "بوك تشوي مطبوخ",
+          "name_en": "bok choy, cooked",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-077-ING-04",
+          "name_ar": "زبدة فول سوداني",
+          "name_en": "peanut butter",
+          "quantity": 12,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "حمّر التمبيه، اخلط نودلز الأرز مع البوك تشوي، وأتمّ بزبدة الفول السوداني المخففة."
+      ],
+      "preparation_steps_en": [
+        "Pan-sear tempeh, toss rice noodles with bok choy, and finish with peanut butter thinned in water."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "soy",
+        "peanuts"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-077.png",
+        "delivery": "delivery/MEAL-077/cover.webp",
+        "thumbnail": "thumbnail/MEAL-077/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 477.7,
+        "macro_energy_kcal": 499.5,
+        "macro_vs_ingredient_delta_pct": 4.6,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-078",
+      "name_ar": "فخذ دجاج مع القرنبيط والفريكة",
+      "name_en": "Chicken Thigh Cauliflower Freekeh",
+      "description_ar": "وجبة فخذ دجاج مع القرنبيط والفريكة متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Chicken Thigh Cauliflower Freekeh meal.",
+      "meal_type": "Dinner",
+      "calories": 607,
+      "protein_g": 48.7,
+      "carbs_g": 45.3,
+      "fat_g": 26.1,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 447
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-078-ING-01",
+          "name_ar": "فخذ دجاج مطبوخ",
+          "name_en": "cooked chicken thigh",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-078-ING-02",
+          "name_ar": "فريكة مطبوخة",
+          "name_en": "cooked freekeh",
+          "quantity": 140,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-078-ING-03",
+          "name_ar": "قرنبيط مطبوخ",
+          "name_en": "cauliflower, cooked",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-078-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 7,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اشوِ فخذ الدجاج والقرنبيط، ثم قدّم فوق الفريكة الدافئة."
+      ],
+      "preparation_steps_en": [
+        "Roast chicken thigh and cauliflower, then serve over warm freekeh."
+      ],
+      "preparation_time_minutes": 30,
+      "allergens": [
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-078.png",
+        "delivery": "delivery/MEAL-078/cover.webp",
+        "thumbnail": "thumbnail/MEAL-078/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 607.3,
+        "macro_energy_kcal": 610.7,
+        "macro_vs_ingredient_delta_pct": 0.6,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-079",
+      "name_ar": "صينية الباذنجان والعدس",
+      "name_en": "Baked Eggplant Lentil Tray",
+      "description_ar": "وجبة صينية الباذنجان والعدس متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Baked Eggplant Lentil Tray meal.",
+      "meal_type": "Dinner",
+      "calories": 366,
+      "protein_g": 19.6,
+      "carbs_g": 56.1,
+      "fat_g": 9.4,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 538
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-079-ING-01",
+          "name_ar": "باذنجان",
+          "name_en": "eggplant",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-079-ING-02",
+          "name_ar": "عدس مطبوخ",
+          "name_en": "cooked lentils",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-079-ING-03",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-079-ING-04",
+          "name_ar": "بصل",
+          "name_en": "onion",
+          "quantity": 50,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-079-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "صفّ الباذنجان مع العدس والطماطم، اخبز حتى ينضج، ورشّ زيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Layer eggplant with lentils and tomato, bake until bubbling, and drizzle olive oil."
+      ],
+      "preparation_time_minutes": 35,
+      "allergens": [
+        "eggs"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-079.png",
+        "delivery": "delivery/MEAL-079/cover.webp",
+        "thumbnail": "thumbnail/MEAL-079/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 366.1,
+        "macro_energy_kcal": 387.4,
+        "macro_vs_ingredient_delta_pct": 5.8,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-080",
+      "name_ar": "دينيس مع هريس القرنبيط",
+      "name_en": "Sea Bream Cauliflower Mash",
+      "description_ar": "وجبة دينيس مع هريس القرنبيط متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Sea Bream Cauliflower Mash meal.",
+      "meal_type": "Dinner",
+      "calories": 370,
+      "protein_g": 44.6,
+      "carbs_g": 10.1,
+      "fat_g": 17.5,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 400
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-080-ING-01",
+          "name_ar": "دينيس مطبوخ",
+          "name_en": "cooked sea bream",
+          "quantity": 170,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-080-ING-02",
+          "name_ar": "قرنبيط مطبوخ",
+          "name_en": "cauliflower, cooked",
+          "quantity": 200,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-080-ING-03",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 10,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-080-ING-04",
+          "name_ar": "ليمون",
+          "name_en": "lemon",
+          "quantity": 20,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخبز الدينيس، اهرس القرنبيط مع الزيت، وقدّم معاً."
+      ],
+      "preparation_steps_en": [
+        "Bake sea bream, mash cauliflower with oil, and serve together."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [
+        "fish"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-080.png",
+        "delivery": "delivery/MEAL-080/cover.webp",
+        "thumbnail": "thumbnail/MEAL-080/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 369.7,
+        "macro_energy_kcal": 376.4,
+        "macro_vs_ingredient_delta_pct": 1.8,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-081",
+      "name_ar": "تشيلي الديك الرومي والفاصوليا",
+      "name_en": "Turkey Kidney Bean Chili",
+      "description_ar": "وجبة تشيلي الديك الرومي والفاصوليا متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Turkey Kidney Bean Chili meal.",
+      "meal_type": "Dinner",
+      "calories": 530,
+      "protein_g": 54.6,
+      "carbs_g": 49.7,
+      "fat_g": 12.8,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 540
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-081-ING-01",
+          "name_ar": "ديك رومي مفروم مطبوخ",
+          "name_en": "cooked turkey, ground",
+          "quantity": 140,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-081-ING-02",
+          "name_ar": "فاصوليا حمراء مطبوخة",
+          "name_en": "kidney beans, cooked",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-081-ING-03",
+          "name_ar": "فلفل رومي",
+          "name_en": "bell pepper",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-081-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-081-ING-05",
+          "name_ar": "بصل",
+          "name_en": "onion",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ الديك الرومي مع الفاصوليا والفلفل والطماطم حتى يتكاثف، وقدّم ساخناً."
+      ],
+      "preparation_steps_en": [
+        "Simmer turkey with beans, pepper, and tomato until thick, then serve hot."
+      ],
+      "preparation_time_minutes": 30,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-081.png",
+        "delivery": "delivery/MEAL-081/cover.webp",
+        "thumbnail": "thumbnail/MEAL-081/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 530.2,
+        "macro_energy_kcal": 532.3,
+        "macro_vs_ingredient_delta_pct": 0.4,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-082",
+      "name_ar": "تروت مع الشعير والكراث",
+      "name_en": "Trout Barley Leek Dinner",
+      "description_ar": "وجبة تروت مع الشعير والكراث متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Trout Barley Leek Dinner meal.",
+      "meal_type": "Dinner",
+      "calories": 528,
+      "protein_g": 41.9,
+      "carbs_g": 45.6,
+      "fat_g": 19.6,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 387
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-082-ING-01",
+          "name_ar": "تروت مطبوخ",
+          "name_en": "cooked trout",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-082-ING-02",
+          "name_ar": "شعير مطبوخ",
+          "name_en": "cooked barley",
+          "quantity": 140,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-082-ING-03",
+          "name_ar": "كراث مطبوخ",
+          "name_en": "leek, cooked",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-082-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 7,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخبز التروت، سخّن الشعير مع الكراث، وأتمّ بزيت الزيتون."
+      ],
+      "preparation_steps_en": [
+        "Bake trout, warm barley with leeks, and finish with olive oil."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [
+        "fish",
+        "gluten"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-082.png",
+        "delivery": "delivery/MEAL-082/cover.webp",
+        "thumbnail": "thumbnail/MEAL-082/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 527.7,
+        "macro_energy_kcal": 526.0,
+        "macro_vs_ingredient_delta_pct": 0.3,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-083",
+      "name_ar": "دجاج بالزيتون والكينوا",
+      "name_en": "Chicken Olive Quinoa Tagine Bowl",
+      "description_ar": "وجبة دجاج بالزيتون والكينوا متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Chicken Olive Quinoa Tagine Bowl meal.",
+      "meal_type": "Dinner",
+      "calories": 530,
+      "protein_g": 54.1,
+      "carbs_g": 36.2,
+      "fat_g": 18.0,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 415
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-083-ING-01",
+          "name_ar": "صدر دجاج مشوي",
+          "name_en": "grilled chicken breast",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-083-ING-02",
+          "name_ar": "كينوا مطبوخة",
+          "name_en": "cooked quinoa",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-083-ING-03",
+          "name_ar": "زيتون أخضر",
+          "name_en": "green olives",
+          "quantity": 30,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-083-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-083-ING-05",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اطهُ الدجاج مع الزيتون والطماطم، ثم قدّم فوق الكينوا."
+      ],
+      "preparation_steps_en": [
+        "Stew chicken with olives and tomato, then spoon over quinoa."
+      ],
+      "preparation_time_minutes": 30,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-083.png",
+        "delivery": "delivery/MEAL-083/cover.webp",
+        "thumbnail": "thumbnail/MEAL-083/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 529.6,
+        "macro_energy_kcal": 523.3,
+        "macro_vs_ingredient_delta_pct": 1.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-084",
+      "name_ar": "ملفوف محشي باللحم والأرز",
+      "name_en": "Beef and Rice Stuffed Cabbage",
+      "description_ar": "وجبة ملفوف محشي باللحم والأرز متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Beef and Rice Stuffed Cabbage meal.",
+      "meal_type": "Dinner",
+      "calories": 503,
+      "protein_g": 41.9,
+      "carbs_g": 55.0,
+      "fat_g": 12.2,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 550
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-084-ING-01",
+          "name_ar": "لحم بقري قليل الدهن مطبوخ",
+          "name_en": "cooked lean beef",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-084-ING-02",
+          "name_ar": "أرز أبيض مطبوخ",
+          "name_en": "cooked white rice",
+          "quantity": 140,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-084-ING-03",
+          "name_ar": "ملفوف مطبوخ",
+          "name_en": "cabbage, cooked",
+          "quantity": 160,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-084-ING-04",
+          "name_ar": "طماطم",
+          "name_en": "tomato",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-084-ING-05",
+          "name_ar": "بصل",
+          "name_en": "onion",
+          "quantity": 30,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "احشُ أوراق الملفوف باللحم والأرز، اطهُ في الطماطم، وقدّم لفتين."
+      ],
+      "preparation_steps_en": [
+        "Fill cabbage leaves with beef and rice, simmer in tomato, and serve two rolls."
+      ],
+      "preparation_time_minutes": 40,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-084.png",
+        "delivery": "delivery/MEAL-084/cover.webp",
+        "thumbnail": "thumbnail/MEAL-084/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 503.2,
+        "macro_energy_kcal": 497.3,
+        "macro_vs_ingredient_delta_pct": 1.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-085",
+      "name_ar": "إدامامي مسلوق",
+      "name_en": "Salted Edamame Snack",
+      "description_ar": "وجبة إدامامي مسلوق متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Salted Edamame Snack meal.",
+      "meal_type": "Snack",
+      "calories": 218,
+      "protein_g": 21.4,
+      "carbs_g": 16.0,
+      "fat_g": 9.4,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 180
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-085-ING-01",
+          "name_ar": "إدامامي مطبوخ",
+          "name_en": "edamame, cooked",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اسلق الإدامامي حتى يطرى وقدّم دافئاً."
+      ],
+      "preparation_steps_en": [
+        "Boil edamame in pods until tender and serve warm."
+      ],
+      "preparation_time_minutes": 8,
+      "allergens": [
+        "soy"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-085.png",
+        "delivery": "delivery/MEAL-085/cover.webp",
+        "thumbnail": "thumbnail/MEAL-085/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 217.8,
+        "macro_energy_kcal": 234.0,
+        "macro_vs_ingredient_delta_pct": 7.4,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-086",
+      "name_ar": "حمص مع الجزر والكرفس",
+      "name_en": "Hummus Carrot Celery Snack",
+      "description_ar": "وجبة حمص مع الجزر والكرفس متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Hummus Carrot Celery Snack meal.",
+      "meal_type": "Snack",
+      "calories": 173,
+      "protein_g": 7.4,
+      "carbs_g": 20.6,
+      "fat_g": 7.9,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 210
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-086-ING-01",
+          "name_ar": "حمص بطحينة",
+          "name_en": "hummus",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-086-ING-02",
+          "name_ar": "جزر",
+          "name_en": "carrot",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-086-ING-03",
+          "name_ar": "كرفس",
+          "name_en": "celery",
+          "quantity": 50,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "ضع الحمص في وعاء وقدّم مع أعواد الجزر والكرفس."
+      ],
+      "preparation_steps_en": [
+        "Spoon hummus into a bowl and serve with carrot and celery sticks."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [
+        "sesame"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-086.png",
+        "delivery": "delivery/MEAL-086/cover.webp",
+        "thumbnail": "thumbnail/MEAL-086/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 172.6,
+        "macro_energy_kcal": 183.5,
+        "macro_vs_ingredient_delta_pct": 6.3,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-087",
+      "name_ar": "سكير بالكيوي والكتان",
+      "name_en": "Skyr Kiwi Flax Cup",
+      "description_ar": "وجبة سكير بالكيوي والكتان متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Skyr Kiwi Flax Cup meal.",
+      "meal_type": "Snack",
+      "calories": 220,
+      "protein_g": 24.3,
+      "carbs_g": 22.1,
+      "fat_g": 4.2,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 288
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-087-ING-01",
+          "name_ar": "سكير",
+          "name_en": "skyr",
+          "quantity": 200,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-087-ING-02",
+          "name_ar": "كيوي",
+          "name_en": "kiwi",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-087-ING-03",
+          "name_ar": "بذور كتان",
+          "name_en": "flaxseed",
+          "quantity": 8,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "ضع السكير في كأس وأضف الكيوي وبذور الكتان."
+      ],
+      "preparation_steps_en": [
+        "Spoon skyr into a cup and top with kiwi and flaxseed."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "fat_loss",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-087.png",
+        "delivery": "delivery/MEAL-087/cover.webp",
+        "thumbnail": "thumbnail/MEAL-087/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 219.5,
+        "macro_energy_kcal": 223.2,
+        "macro_vs_ingredient_delta_pct": 1.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-088",
+      "name_ar": "بيض مسلوق مع الخيار",
+      "name_en": "Boiled Eggs with Cucumber",
+      "description_ar": "وجبة بيض مسلوق مع الخيار متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Boiled Eggs with Cucumber meal.",
+      "meal_type": "Snack",
+      "calories": 173,
+      "protein_g": 13.4,
+      "carbs_g": 5.4,
+      "fat_g": 10.7,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 220
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-088-ING-01",
+          "name_ar": "بيض كامل",
+          "name_en": "whole egg",
+          "quantity": 100,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-088-ING-02",
+          "name_ar": "خيار",
+          "name_en": "cucumber",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اسلق البيض، قشّره، وقدّم مع شرائح الخيار."
+      ],
+      "preparation_steps_en": [
+        "Boil the eggs, peel, and serve with sliced cucumber."
+      ],
+      "preparation_time_minutes": 10,
+      "allergens": [
+        "eggs"
+      ],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-088.png",
+        "delivery": "delivery/MEAL-088/cover.webp",
+        "thumbnail": "thumbnail/MEAL-088/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 173.0,
+        "macro_energy_kcal": 171.9,
+        "macro_vs_ingredient_delta_pct": 0.6,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-089",
+      "name_ar": "حمص محمص مع العنب",
+      "name_en": "Roasted Chickpeas and Grapes",
+      "description_ar": "وجبة حمص محمص مع العنب متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Roasted Chickpeas and Grapes meal.",
+      "meal_type": "Snack",
+      "calories": 214,
+      "protein_g": 8.0,
+      "carbs_g": 43.6,
+      "fat_g": 2.3,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 200
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-089-ING-01",
+          "name_ar": "حمص محمص",
+          "name_en": "chickpeas, roasted",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-089-ING-02",
+          "name_ar": "عنب",
+          "name_en": "grapes",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "حمّص الحمص حتى يقرمش وقدّم مع العنب."
+      ],
+      "preparation_steps_en": [
+        "Roast chickpeas until crisp and serve with grapes."
+      ],
+      "preparation_time_minutes": 15,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-089.png",
+        "delivery": "delivery/MEAL-089/cover.webp",
+        "thumbnail": "thumbnail/MEAL-089/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 214.0,
+        "macro_energy_kcal": 227.3,
+        "macro_vs_ingredient_delta_pct": 6.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-090",
+      "name_ar": "فراولة مع شوكولاتة داكنة",
+      "name_en": "Strawberries and Dark Chocolate",
+      "description_ar": "وجبة فراولة مع شوكولاتة داكنة متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Strawberries and Dark Chocolate meal.",
+      "meal_type": "Snack",
+      "calories": 168,
+      "protein_g": 2.6,
+      "carbs_g": 20.7,
+      "fat_g": 9.0,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 170
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-090-ING-01",
+          "name_ar": "فراولة",
+          "name_en": "strawberries",
+          "quantity": 150,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-090-ING-02",
+          "name_ar": "شوكولاتة داكنة",
+          "name_en": "dark chocolate",
+          "quantity": 20,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "ضع الفراولة مع قطع الشوكولاتة الداكنة وقدّم فوراً."
+      ],
+      "preparation_steps_en": [
+        "Plate strawberries with broken dark chocolate and serve immediately."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-090.png",
+        "delivery": "delivery/MEAL-090/cover.webp",
+        "thumbnail": "thumbnail/MEAL-090/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 167.6,
+        "macro_energy_kcal": 174.1,
+        "macro_vs_ingredient_delta_pct": 3.9,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-091",
+      "name_ar": "بطاطس مسلوقة مع العسل",
+      "name_en": "Boiled Potato with Honey",
+      "description_ar": "وجبة بطاطس مسلوقة مع العسل متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Boiled Potato with Honey meal.",
+      "meal_type": "Pre-workout",
+      "calories": 235,
+      "protein_g": 3.9,
+      "carbs_g": 56.7,
+      "fat_g": 0.2,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 220
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-091-ING-01",
+          "name_ar": "بطاطس مسلوقة",
+          "name_en": "boiled potato",
+          "quantity": 200,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-091-ING-02",
+          "name_ar": "عسل",
+          "name_en": "honey",
+          "quantity": 20,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اسلق البطاطس، اشقّها، وصبّ العسل فوقها وهي ساخنة."
+      ],
+      "preparation_steps_en": [
+        "Boil the potato, split it, and drizzle honey over the hot flesh."
+      ],
+      "preparation_time_minutes": 12,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-091.png",
+        "delivery": "delivery/MEAL-091/cover.webp",
+        "thumbnail": "thumbnail/MEAL-091/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 234.8,
+        "macro_energy_kcal": 244.0,
+        "macro_vs_ingredient_delta_pct": 3.9,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-092",
+      "name_ar": "أرز أبيض مع الزبيب",
+      "name_en": "White Rice with Raisins",
+      "description_ar": "وجبة أرز أبيض مع الزبيب متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving White Rice with Raisins meal.",
+      "meal_type": "Pre-workout",
+      "calories": 324,
+      "protein_g": 5.8,
+      "carbs_g": 74.5,
+      "fat_g": 0.7,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 210
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-092-ING-01",
+          "name_ar": "أرز أبيض مطبوخ",
+          "name_en": "cooked white rice",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-092-ING-02",
+          "name_ar": "زبيب",
+          "name_en": "raisins",
+          "quantity": 30,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "سخّن الأرز واخلط الزبيب حتى يتوزع."
+      ],
+      "preparation_steps_en": [
+        "Warm the rice and mix through raisins until evenly distributed."
+      ],
+      "preparation_time_minutes": 15,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-092.png",
+        "delivery": "delivery/MEAL-092/cover.webp",
+        "thumbnail": "thumbnail/MEAL-092/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 323.7,
+        "macro_energy_kcal": 327.4,
+        "macro_vs_ingredient_delta_pct": 1.2,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-093",
+      "name_ar": "موز مع التمر",
+      "name_en": "Banana and Dates",
+      "description_ar": "وجبة موز مع التمر متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Banana and Dates meal.",
+      "meal_type": "Pre-workout",
+      "calories": 218,
+      "protein_g": 2.0,
+      "carbs_g": 57.4,
+      "fat_g": 0.4,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 160
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-093-ING-01",
+          "name_ar": "موز",
+          "name_en": "banana",
+          "quantity": 120,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-093-ING-02",
+          "name_ar": "تمر مجهول",
+          "name_en": "Medjool dates",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "قطّع الموز وقدّم مع التمر."
+      ],
+      "preparation_steps_en": [
+        "Slice the banana and serve with whole dates."
+      ],
+      "preparation_time_minutes": 3,
+      "allergens": [],
+      "suitable_goals": [
+        "maintenance",
+        "muscle_gain"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "vegan",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-093.png",
+        "delivery": "delivery/MEAL-093/cover.webp",
+        "thumbnail": "thumbnail/MEAL-093/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 217.6,
+        "macro_energy_kcal": 241.6,
+        "macro_vs_ingredient_delta_pct": 11.0,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-094",
+      "name_ar": "أرز بياض البيض والبازلاء",
+      "name_en": "Egg-White Rice and Peas",
+      "description_ar": "وجبة أرز بياض البيض والبازلاء متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Egg-White Rice and Peas meal.",
+      "meal_type": "Post-workout",
+      "calories": 430,
+      "protein_g": 28.8,
+      "carbs_g": 64.5,
+      "fat_g": 5.1,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 444
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-094-ING-01",
+          "name_ar": "بياض بيض",
+          "name_en": "egg whites",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-094-ING-02",
+          "name_ar": "أرز أبيض مطبوخ",
+          "name_en": "cooked white rice",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-094-ING-03",
+          "name_ar": "بازلاء مطبوخة",
+          "name_en": "peas, cooked",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-094-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 4,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "حرّك بياض البيض، اخلطه مع الأرز الساخن والبازلاء، وقدّم فوراً."
+      ],
+      "preparation_steps_en": [
+        "Scramble egg whites, fold into hot rice with peas, and serve immediately."
+      ],
+      "preparation_time_minutes": 15,
+      "allergens": [
+        "eggs"
+      ],
+      "suitable_goals": [
+        "muscle_gain",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-094.png",
+        "delivery": "delivery/MEAL-094/cover.webp",
+        "thumbnail": "thumbnail/MEAL-094/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 430.2,
+        "macro_energy_kcal": 418.7,
+        "macro_vs_ingredient_delta_pct": 2.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-095",
+      "name_ar": "جبن قريش مع البطاطس المشوية",
+      "name_en": "Cottage Cheese Baked Potato",
+      "description_ar": "وجبة جبن قريش مع البطاطس المشوية متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Cottage Cheese Baked Potato meal.",
+      "meal_type": "Post-workout",
+      "calories": 348,
+      "protein_g": 27.2,
+      "carbs_g": 49.0,
+      "fat_g": 4.8,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 400
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-095-ING-01",
+          "name_ar": "جبن قريش قليل الدسم",
+          "name_en": "low-fat cottage cheese",
+          "quantity": 200,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-095-ING-02",
+          "name_ar": "بطاطس مشوية",
+          "name_en": "baked potato",
+          "quantity": 200,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخبز البطاطس، اشقّها، واملأها بالجبن القريش."
+      ],
+      "preparation_steps_en": [
+        "Bake the potato, split it, and fill with cottage cheese."
+      ],
+      "preparation_time_minutes": 25,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "muscle_gain",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-095.png",
+        "delivery": "delivery/MEAL-095/cover.webp",
+        "thumbnail": "thumbnail/MEAL-095/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 348.0,
+        "macro_energy_kcal": 348.0,
+        "macro_vs_ingredient_delta_pct": 0.0,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-096",
+      "name_ar": "مخفوق الواي بالكاكاو والحليب",
+      "name_en": "Cocoa Whey Milk Shake",
+      "description_ar": "وجبة مخفوق الواي بالكاكاو والحليب متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Cocoa Whey Milk Shake meal.",
+      "meal_type": "Post-workout",
+      "calories": 256,
+      "protein_g": 32.9,
+      "carbs_g": 18.0,
+      "fat_g": 7.3,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 286
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-096-ING-01",
+          "name_ar": "حليب قليل الدسم",
+          "name_en": "low-fat milk",
+          "quantity": 250,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-096-ING-02",
+          "name_ar": "مسحوق واي",
+          "name_en": "whey protein powder",
+          "quantity": 30,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-096-ING-03",
+          "name_ar": "كاكاو غير محلى",
+          "name_en": "unsweetened cocoa powder",
+          "quantity": 6,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخفق الحليب والواي والكاكاو حتى يتجانس واشربه فوراً."
+      ],
+      "preparation_steps_en": [
+        "Blend milk, whey, and cocoa until smooth and drink immediately."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "muscle_gain",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-096.png",
+        "delivery": "delivery/MEAL-096/cover.webp",
+        "thumbnail": "thumbnail/MEAL-096/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 256.3,
+        "macro_energy_kcal": 268.9,
+        "macro_vs_ingredient_delta_pct": 4.9,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-097",
+      "name_ar": "قد مع الأرز والليمون",
+      "name_en": "Cod Rice Lemon Plate",
+      "description_ar": "وجبة قد مع الأرز والليمون متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Cod Rice Lemon Plate meal.",
+      "meal_type": "Post-workout",
+      "calories": 462,
+      "protein_g": 43.8,
+      "carbs_g": 52.6,
+      "fat_g": 7.1,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 375
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-097-ING-01",
+          "name_ar": "قد مطبوخ",
+          "name_en": "cooked cod",
+          "quantity": 170,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-097-ING-02",
+          "name_ar": "أرز أبيض مطبوخ",
+          "name_en": "cooked white rice",
+          "quantity": 180,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-097-ING-03",
+          "name_ar": "ليمون",
+          "name_en": "lemon",
+          "quantity": 20,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-097-ING-04",
+          "name_ar": "زيت زيتون",
+          "name_en": "olive oil",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخبز القد، قدّمه مع الأرز الأبيض، وأضف الليمون."
+      ],
+      "preparation_steps_en": [
+        "Bake the cod, plate with white rice, and finish with lemon."
+      ],
+      "preparation_time_minutes": 20,
+      "allergens": [
+        "fish"
+      ],
+      "suitable_goals": [
+        "muscle_gain",
+        "maintenance"
+      ],
+      "dietary_tags": [
+        "gluten_free",
+        "high_protein"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-097.png",
+        "delivery": "delivery/MEAL-097/cover.webp",
+        "thumbnail": "thumbnail/MEAL-097/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 462.5,
+        "macro_energy_kcal": 450.0,
+        "macro_vs_ingredient_delta_pct": 2.7,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-098",
+      "name_ar": "حليب شوكولاتة قليل الدسم",
+      "name_en": "Low-Fat Chocolate Milk",
+      "description_ar": "وجبة حليب شوكولاتة قليل الدسم متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Low-Fat Chocolate Milk meal.",
+      "meal_type": "Drinks",
+      "calories": 228,
+      "protein_g": 10.5,
+      "carbs_g": 36.6,
+      "fat_g": 5.7,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 300
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-098-ING-01",
+          "name_ar": "حليب شوكولاتة قليل الدسم",
+          "name_en": "chocolate milk, low-fat",
+          "quantity": 300,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "صبّ حليب الشوكولاتة البارد في كأس وقدّم."
+      ],
+      "preparation_steps_en": [
+        "Pour chilled low-fat chocolate milk into a glass and serve."
+      ],
+      "preparation_time_minutes": 2,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "fat_loss"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-098.png",
+        "delivery": "delivery/MEAL-098/cover.webp",
+        "thumbnail": "thumbnail/MEAL-098/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 228.0,
+        "macro_energy_kcal": 239.7,
+        "macro_vs_ingredient_delta_pct": 5.1,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-099",
+      "name_ar": "مشروب الكفير والتوت",
+      "name_en": "Berry Kefir Drink",
+      "description_ar": "وجبة مشروب الكفير والتوت متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Berry Kefir Drink meal.",
+      "meal_type": "Drinks",
+      "calories": 148,
+      "protein_g": 10.1,
+      "carbs_g": 22.5,
+      "fat_g": 2.7,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 330
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-099-ING-01",
+          "name_ar": "كفير قليل الدسم",
+          "name_en": "kefir, low-fat",
+          "quantity": 250,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-099-ING-02",
+          "name_ar": "توت مشكل",
+          "name_en": "mixed berries",
+          "quantity": 80,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخفق الكفير مع التوت حتى يصبح سائلاً وصبّه في كأس."
+      ],
+      "preparation_steps_en": [
+        "Blend kefir with berries until drinkable and pour into a glass."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "fat_loss"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-099.png",
+        "delivery": "delivery/MEAL-099/cover.webp",
+        "thumbnail": "thumbnail/MEAL-099/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 148.1,
+        "macro_energy_kcal": 154.7,
+        "macro_vs_ingredient_delta_pct": 4.5,
+        "nutrition_consistency": "passed"
+      }
+    },
+    {
+      "external_id": "MEAL-100",
+      "name_ar": "حليب التمر والكاكاو",
+      "name_en": "Date Cocoa Milk Drink",
+      "description_ar": "وجبة حليب التمر والكاكاو متوازنة بحصة واحدة.",
+      "description_en": "A balanced single-serving Date Cocoa Milk Drink meal.",
+      "meal_type": "Drinks",
+      "calories": 247,
+      "protein_g": 10.0,
+      "carbs_g": 44.9,
+      "fat_g": 5.8,
+      "serving_size": {
+        "servings": 1,
+        "description_ar": "حصة واحدة",
+        "description_en": "1 serving",
+        "total_ingredient_weight_g": 295
+      },
+      "ingredients": [
+        {
+          "ingredient_id": "MEAL-100-ING-01",
+          "name_ar": "حليب قليل الدسم",
+          "name_en": "low-fat milk",
+          "quantity": 250,
+          "unit": "ml",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-100-ING-02",
+          "name_ar": "تمر مجهول",
+          "name_en": "Medjool dates",
+          "quantity": 40,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        },
+        {
+          "ingredient_id": "MEAL-100-ING-03",
+          "name_ar": "كاكاو غير محلى",
+          "name_en": "unsweetened cocoa powder",
+          "quantity": 5,
+          "unit": "g",
+          "nutrition_reference": "USDA FoodData Central generic food; edible portion; preparation state as named"
+        }
+      ],
+      "preparation_steps_ar": [
+        "اخفق الحليب مع التمر والكاكاو حتى يتجانس وقدّم بارداً."
+      ],
+      "preparation_steps_en": [
+        "Blend milk with dates and cocoa until smooth and serve cold."
+      ],
+      "preparation_time_minutes": 5,
+      "allergens": [
+        "milk"
+      ],
+      "suitable_goals": [
+        "maintenance",
+        "fat_loss"
+      ],
+      "dietary_tags": [
+        "vegetarian",
+        "gluten_free"
+      ],
+      "substitution_profile": {
+        "same_meal_type": true,
+        "calorie_tolerance_percent": 10,
+        "protein_tolerance_g": 8,
+        "exclude_user_allergens": true,
+        "no_alternative_allowed": true
+      },
+      "image": {
+        "master": "images/MEAL-100.png",
+        "delivery": "delivery/MEAL-100/cover.webp",
+        "thumbnail": "thumbnail/MEAL-100/cover-thumb.webp",
+        "status": "ready",
+        "review_status": "approved"
+      },
+      "image_status": "ready",
+      "review_status": "approved",
+      "workflow": {
+        "nutrition_review": "passed",
+        "allergen_review": "passed",
+        "image_review": "pending_visual",
+        "final_review": "approved"
+      },
+      "qa": {
+        "ingredient_energy_kcal": 247.2,
+        "macro_energy_kcal": 271.3,
+        "macro_vs_ingredient_delta_pct": 9.7,
+        "nutrition_consistency": "passed"
+      }
+    }
+  ]
+}
