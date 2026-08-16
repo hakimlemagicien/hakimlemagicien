@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   graphql_public: {
     Tables: {
@@ -82,7 +82,13 @@ export type Database = {
           exercise_type: Database["public"]["Enums"]["exercise_type"]
           external_id: string
           id: string
+          instructions_file_size: number | null
+          instructions_mime_type: string | null
+          instructions_reviewed_at: string | null
+          instructions_reviewed_by: string | null
           instructions_status: Database["public"]["Enums"]["exercise_media_status"]
+          instructions_updated_at: string | null
+          instructions_version: number
           instructions_video_path: string | null
           is_active: boolean
           metadata: Json
@@ -95,8 +101,14 @@ export type Database = {
           sort_order: number
           thumbnail_path: string | null
           updated_at: string
+          video_file_size: number | null
+          video_mime_type: string | null
           video_path: string | null
+          video_reviewed_at: string | null
+          video_reviewed_by: string | null
           video_status: Database["public"]["Enums"]["exercise_media_status"]
+          video_updated_at: string | null
+          video_version: number
           youtube_url: string | null
         }
         Insert: {
@@ -108,7 +120,13 @@ export type Database = {
           exercise_type?: Database["public"]["Enums"]["exercise_type"]
           external_id: string
           id?: string
+          instructions_file_size?: number | null
+          instructions_mime_type?: string | null
+          instructions_reviewed_at?: string | null
+          instructions_reviewed_by?: string | null
           instructions_status?: Database["public"]["Enums"]["exercise_media_status"]
+          instructions_updated_at?: string | null
+          instructions_version?: number
           instructions_video_path?: string | null
           is_active?: boolean
           metadata?: Json
@@ -121,8 +139,14 @@ export type Database = {
           sort_order?: number
           thumbnail_path?: string | null
           updated_at?: string
+          video_file_size?: number | null
+          video_mime_type?: string | null
           video_path?: string | null
+          video_reviewed_at?: string | null
+          video_reviewed_by?: string | null
           video_status?: Database["public"]["Enums"]["exercise_media_status"]
+          video_updated_at?: string | null
+          video_version?: number
           youtube_url?: string | null
         }
         Update: {
@@ -134,7 +158,13 @@ export type Database = {
           exercise_type?: Database["public"]["Enums"]["exercise_type"]
           external_id?: string
           id?: string
+          instructions_file_size?: number | null
+          instructions_mime_type?: string | null
+          instructions_reviewed_at?: string | null
+          instructions_reviewed_by?: string | null
           instructions_status?: Database["public"]["Enums"]["exercise_media_status"]
+          instructions_updated_at?: string | null
+          instructions_version?: number
           instructions_video_path?: string | null
           is_active?: boolean
           metadata?: Json
@@ -147,8 +177,14 @@ export type Database = {
           sort_order?: number
           thumbnail_path?: string | null
           updated_at?: string
+          video_file_size?: number | null
+          video_mime_type?: string | null
           video_path?: string | null
+          video_reviewed_at?: string | null
+          video_reviewed_by?: string | null
           video_status?: Database["public"]["Enums"]["exercise_media_status"]
+          video_updated_at?: string | null
+          video_version?: number
           youtube_url?: string | null
         }
         Relationships: [
@@ -277,6 +313,182 @@ export type Database = {
           training_mode?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      meal_ingredients: {
+        Row: {
+          carbs_g: number | null
+          created_at: string
+          fat_g: number | null
+          id: string
+          ingredient_key: string
+          ingredient_order: number
+          kcal: number | null
+          meal_id: string
+          name_ar: string
+          name_en: string
+          protein_g: number | null
+          quantity: number
+          source: string | null
+          source_query_url: string | null
+          unit: string
+        }
+        Insert: {
+          carbs_g?: number | null
+          created_at?: string
+          fat_g?: number | null
+          id?: string
+          ingredient_key: string
+          ingredient_order: number
+          kcal?: number | null
+          meal_id: string
+          name_ar: string
+          name_en: string
+          protein_g?: number | null
+          quantity: number
+          source?: string | null
+          source_query_url?: string | null
+          unit: string
+        }
+        Update: {
+          carbs_g?: number | null
+          created_at?: string
+          fat_g?: number | null
+          id?: string
+          ingredient_key?: string
+          ingredient_order?: number
+          kcal?: number | null
+          meal_id?: string
+          name_ar?: string
+          name_en?: string
+          protein_g?: number | null
+          quantity?: number
+          source?: string | null
+          source_query_url?: string | null
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_ingredients_meal_id_fkey"
+            columns: ["meal_id"]
+            isOneToOne: false
+            referencedRelation: "meals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meals: {
+        Row: {
+          allergens: string[]
+          calories: number
+          carbs_g: number
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          dietary_tags: string[]
+          external_id: string
+          fat_g: number
+          id: string
+          image_alt_ar: string | null
+          image_alt_en: string | null
+          image_master_path: string | null
+          image_path: string | null
+          image_status: Database["public"]["Enums"]["meal_image_status"]
+          image_thumb_path: string | null
+          is_active: boolean
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          name_ar: string
+          name_en: string
+          notes: string | null
+          preparation_steps_ar: string[]
+          preparation_steps_en: string[]
+          preparation_time_minutes: number | null
+          protein_g: number
+          qa: Json
+          review_status: string | null
+          serving_size: number
+          serving_unit: string
+          sort_order: number
+          status: Database["public"]["Enums"]["meal_library_status"]
+          substitution_profile: Json
+          suitable_goals: string[]
+          updated_at: string
+          yield_servings: number
+        }
+        Insert: {
+          allergens?: string[]
+          calories: number
+          carbs_g: number
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          dietary_tags?: string[]
+          external_id: string
+          fat_g: number
+          id?: string
+          image_alt_ar?: string | null
+          image_alt_en?: string | null
+          image_master_path?: string | null
+          image_path?: string | null
+          image_status?: Database["public"]["Enums"]["meal_image_status"]
+          image_thumb_path?: string | null
+          is_active?: boolean
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          name_ar: string
+          name_en: string
+          notes?: string | null
+          preparation_steps_ar?: string[]
+          preparation_steps_en?: string[]
+          preparation_time_minutes?: number | null
+          protein_g: number
+          qa?: Json
+          review_status?: string | null
+          serving_size: number
+          serving_unit?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["meal_library_status"]
+          substitution_profile?: Json
+          suitable_goals?: string[]
+          updated_at?: string
+          yield_servings?: number
+        }
+        Update: {
+          allergens?: string[]
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          dietary_tags?: string[]
+          external_id?: string
+          fat_g?: number
+          id?: string
+          image_alt_ar?: string | null
+          image_alt_en?: string | null
+          image_master_path?: string | null
+          image_path?: string | null
+          image_status?: Database["public"]["Enums"]["meal_image_status"]
+          image_thumb_path?: string | null
+          is_active?: boolean
+          meal_type?: Database["public"]["Enums"]["meal_type"]
+          name_ar?: string
+          name_en?: string
+          notes?: string | null
+          preparation_steps_ar?: string[]
+          preparation_steps_en?: string[]
+          preparation_time_minutes?: number | null
+          protein_g?: number
+          qa?: Json
+          review_status?: string | null
+          serving_size?: number
+          serving_unit?: string
+          sort_order?: number
+          status?: Database["public"]["Enums"]["meal_library_status"]
+          substitution_profile?: Json
+          suitable_goals?: string[]
+          updated_at?: string
+          yield_servings?: number
         }
         Relationships: []
       }
@@ -872,6 +1084,60 @@ export type Database = {
           },
         ]
       }
+      daily_readiness_checks: {
+        Row: {
+          adjustment_choice: string | null
+          adjustment_decision: string | null
+          body: string | null
+          created_at: string
+          energy: string | null
+          id: string
+          level: string | null
+          local_date: string
+          score: number | null
+          sleep: string | null
+          source: string
+          status: string
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adjustment_choice?: string | null
+          adjustment_decision?: string | null
+          body?: string | null
+          created_at?: string
+          energy?: string | null
+          id?: string
+          level?: string | null
+          local_date: string
+          score?: number | null
+          sleep?: string | null
+          source?: string
+          status: string
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adjustment_choice?: string | null
+          adjustment_decision?: string | null
+          body?: string | null
+          created_at?: string
+          energy?: string | null
+          id?: string
+          level?: string | null
+          local_date?: string
+          score?: number | null
+          sleep?: string | null
+          source?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           role: string
@@ -1053,13 +1319,27 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       exercise_difficulty: "beginner" | "intermediate" | "advanced"
-      exercise_media_status: "placeholder" | "ready" | "missing" | "review_required" | "rejected"
+      exercise_media_status:
+        | "placeholder"
+        | "ready"
+        | "missing"
+        | "review_required"
+        | "rejected"
       exercise_type: "strength" | "cardio" | "mobility" | "warmup" | "other"
       lead_status:
         | "pending_lead"
         | "plan_selected"
         | "payment_submitted"
         | "active"
+      meal_image_status: "placeholder" | "ready" | "missing" | "review_required"
+      meal_library_status: "pilot" | "published" | "archived"
+      meal_type:
+        | "breakfast"
+        | "lunch"
+        | "dinner"
+        | "snack"
+        | "pre_workout"
+        | "post_workout"
       payment_method: "stripe" | "bank_transfer" | "cash"
       payment_status: "pending" | "submitted" | "approved" | "rejected"
       program_day_type: "workout" | "rest" | "active_recovery"
@@ -1198,13 +1478,29 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       exercise_difficulty: ["beginner", "intermediate", "advanced"],
-      exercise_media_status: ["placeholder", "ready", "missing", "review_required", "rejected"],
+      exercise_media_status: [
+        "placeholder",
+        "ready",
+        "missing",
+        "review_required",
+        "rejected",
+      ],
       exercise_type: ["strength", "cardio", "mobility", "warmup", "other"],
       lead_status: [
         "pending_lead",
         "plan_selected",
         "payment_submitted",
         "active",
+      ],
+      meal_image_status: ["placeholder", "ready", "missing", "review_required"],
+      meal_library_status: ["pilot", "published", "archived"],
+      meal_type: [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack",
+        "pre_workout",
+        "post_workout",
       ],
       payment_method: ["stripe", "bank_transfer", "cash"],
       payment_status: ["pending", "submitted", "approved", "rejected"],
@@ -1215,3 +1511,4 @@ export const Constants = {
     },
   },
 } as const
+{"_tag":"Error","error":{"code":"UnknownError","message":"Timeout while shutting down PostHog. Some events may not have been sent."}}

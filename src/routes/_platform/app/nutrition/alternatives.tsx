@@ -6,13 +6,13 @@ import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import {
   NUTRITION_LOCKED_REASON,
   NutritionEmptyState,
+  NutritionMealImage,
   NutritionMotionSection,
   NutritionOfflineBanner,
   nutritionCardClass,
 } from "@/components/platform/nutrition/NutritionShared";
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
@@ -21,6 +21,7 @@ import {
   getTodayDateKey,
   isFreeUnlockedMealSlot,
 } from "@/lib/platform/nutrition-experience";
+import { formatNutritionNumber } from "@/lib/platform/meal-library";
 import { cn } from "@/lib/utils";
 
 type AlternativesSearch = {
@@ -141,27 +142,28 @@ function MealAlternativesPage() {
                   {option.name}
                 </p>
                 <p className="mt-0.5 text-[11px] font-bold text-primary">
-                  {option.calories} سعرة
+                  {formatNutritionNumber(option.calories)} سعرة
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[9px] font-bold">
                   <span className="rounded-full bg-[#E8F5E9] px-2 py-0.5 text-[#2E7D32]">
-                    ب {option.protein}
+                    ب {formatNutritionNumber(option.protein)}
                   </span>
                   <span className="rounded-full bg-[#E3F2FD] px-2 py-0.5 text-[#1565C0]">
-                    ك {option.carbs}
+                    ك {formatNutritionNumber(option.carbs)}
                   </span>
                   <span className="rounded-full bg-[#FFF8E1] px-2 py-0.5 text-[#B45309]">
-                    د {option.fat}
+                    د {formatNutritionNumber(option.fat)}
                   </span>
                 </div>
               </div>
 
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
-                <OptimizedImage
+                <NutritionMealImage
                   src={option.image}
                   alt=""
                   width={128}
                   height={128}
+                  sizes="64px"
                   className={cn("h-full w-full", !unlocked && "opacity-50 saturate-50")}
                 />
                 {!unlocked ? (
