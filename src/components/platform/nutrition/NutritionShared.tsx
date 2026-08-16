@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { AlertCircle, Bell, Check, Lock, Minus, RefreshCw, WifiOff, X } from "lucide-react";
+import { AlertCircle, Bell, Check, Lock, Minus, RefreshCw, UtensilsCrossed, WifiOff, X } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMembership } from "@/hooks/useMembership";
@@ -121,6 +121,45 @@ export const NUTRITION_LOCKED_REASON =
 
 export const NUTRITION_DAY_LOCKED_REASON =
   "فعّل برنامجك الآن لفتح وجبات كل أيام الأسبوع — يمكنك معاينة شكل الخطة فقط.";
+
+export function NutritionMealImage({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  priority = false,
+  sizes,
+}: {
+  src?: string;
+  alt: string;
+  width: number;
+  height: number;
+  className?: string;
+  priority?: boolean;
+  sizes?: string;
+}) {
+  const fallback = (
+    <span className="grid h-full w-full place-items-center bg-muted text-muted-foreground">
+      <UtensilsCrossed className="h-5 w-5" />
+    </span>
+  );
+
+  if (!src) return fallback;
+
+  return (
+    <OptimizedImage
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      sizes={sizes}
+      priority={priority}
+      className={className}
+      fallback={fallback}
+    />
+  );
+}
 
 export function MealStatusIcon({ status }: { status: MealStatus }) {
   if (status === "completed") {

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { hydrateMealLibraryFromSupabase } from "@/lib/platform/meal-library-api";
 import {
   NUTRITION_GOALS,
-  NUTRITION_MEAL_SLOTS,
   computeCommitmentPct,
   getMealByAlternativeId,
+  getNutritionMealSlots,
   motivationalMessage,
   sumConsumedMacros,
+  type MealSlot,
   type MealStatus,
 } from "@/lib/platform/nutrition-experience";
 import {
@@ -30,6 +32,7 @@ export function useNutritionPlan(selectedDateKey?: string) {
   const dateKey = selectedDateKey ?? todayKey();
   const isSelectedToday = dateKey === todayKey();
   const [tick, setTick] = useState(0);
+  const [slots, setSlots] = useState<MealSlot[]>(() => getNutritionMealSlots());
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
 
@@ -38,6 +41,12 @@ export function useNutritionPlan(selectedDateKey?: string) {
     window.addEventListener(NUTRITION_PLAN_CHANGE_EVENT, onChange);
     return () => window.removeEventListener(NUTRITION_PLAN_CHANGE_EVENT, onChange);
   }, [refresh]);
+
+  useEffect(() => {
+    void hydrateMealLibraryFromSupabase().then(() => {
+      setSlots(getNutritionMealSlots());
+    });
+  }, []);
 
   const statuses = useMemo(
     () => getMealStatusMap(userId, dateKey, isSelectedToday),
@@ -55,17 +64,17 @@ export function useNutritionPlan(selectedDateKey?: string) {
   );
 
   const consumed = useMemo(
-    () => sumConsumedMacros(NUTRITION_MEAL_SLOTS, statuses, choices),
-    [statuses, choices],
+    () => sumConsumedMacros(slots, statuses, choices),
+    [slots, statuses, choices],
   );
 
   const completedCount = Object.values(statuses).filter((s) => s === "completed").length;
-  const remainingMeals = NUTRITION_MEAL_SLOTS.length - completedCount;
-  const commitmentPct = computeCommitmentPct(completedCount, NUTRITION_MEAL_SLOTS.length);
+  const remainingMeals = slots.length - completedCount;
+  const commitmentPct = computeCommitmentPct(completedCount, slots.length);
 
   const meals = useMemo(
     () =>
-      NUTRITION_MEAL_SLOTS.map((slot) => {
+      slots.map((slot) => {
         const meal = getMealByAlternativeId(slot, choices[slot.id]);
         return {
           slot,
@@ -73,7 +82,7 @@ export function useNutritionPlan(selectedDateKey?: string) {
           status: statuses[slot.id] as MealStatus,
         };
       }),
-    [choices, statuses],
+    [choices, slots, statuses],
   );
 
   return {

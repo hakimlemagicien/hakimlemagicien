@@ -2,20 +2,24 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock, MoreVertical } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import {
-  CountUpNumber,
   NUTRITION_DAY_LOCKED_REASON,
   NUTRITION_LOCKED_REASON,
   NutritionEmptyState,
   NutritionLockedOverlay,
+  NutritionMealImage,
   NutritionMotionSection,
   NutritionOfflineBanner,
   nutritionCardClass,
 } from "@/components/platform/nutrition/NutritionShared";
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
+import {
+  allergenLabel,
+  formatMealAmount,
+  formatNutritionNumber,
+} from "@/lib/platform/meal-library";
 import {
   findMealSlot,
   getTodayDateKey,
@@ -93,11 +97,12 @@ function MealDetailsPage() {
       <NutritionMotionSection>
         <div className={cn(nutritionCardClass, "relative overflow-hidden")}>
           <div className="relative h-[210px] w-full bg-muted">
-            <OptimizedImage
-              src={meal.image}
+            <NutritionMealImage
+              src={meal.coverImage ?? meal.image}
               alt={meal.name}
               width={780}
               height={420}
+              sizes="(max-width: 430px) 100vw, 390px"
               priority
               className={cn("h-full w-full", !unlocked && "opacity-70 saturate-75")}
             />
@@ -125,10 +130,33 @@ function MealDetailsPage() {
               <MacroBox label="كارب" value={meal.carbs} unit="غ" tone="carbs" />
               <MacroBox label="دهون" value={meal.fat} unit="غ" tone="fat" />
             </div>
+
+            {meal.servingSize && meal.servingUnit ? (
+              <p className="text-[11px] font-bold text-muted-foreground">
+                الحصة: {formatMealAmount(meal.servingSize, meal.servingUnit)}
+                {meal.preparationTimeMinutes
+                  ? ` · التحضير ${meal.preparationTimeMinutes} د`
+                  : ""}
+              </p>
+            ) : null}
+
+            {meal.allergens && meal.allergens.length > 0 ? (
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {meal.allergens.map((allergen) => (
+                  <span
+                    key={allergen}
+                    className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground"
+                  >
+                    {allergenLabel(allergen)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </NutritionMotionSection>
 
+      {meal.ingredients.length > 0 ? (
       <NutritionMotionSection delay={0.08}>
         <section className={cn(nutritionCardClass, "relative overflow-hidden p-4 text-right")}>
           <h3 className="text-sm font-black text-foreground">المكونات</h3>
@@ -156,7 +184,9 @@ function MealDetailsPage() {
           ) : null}
         </section>
       </NutritionMotionSection>
+      ) : null}
 
+      {meal.steps.length > 0 ? (
       <NutritionMotionSection delay={0.14}>
         <section className={cn(nutritionCardClass, "relative overflow-hidden p-4 text-right")}>
           <h3 className="text-sm font-black text-foreground">طريقة التحضير</h3>
@@ -180,6 +210,7 @@ function MealDetailsPage() {
           ) : null}
         </section>
       </NutritionMotionSection>
+      ) : null}
 
       <NutritionMotionSection delay={0.2} className="space-y-2.5">
         {unlocked ? (
@@ -258,7 +289,7 @@ function MacroBox({
   return (
     <div className={cn("rounded-2xl px-1.5 py-2.5 text-center", toneClass)}>
       <p className="text-sm font-black leading-none">
-        <CountUpNumber value={value} />
+        {formatNutritionNumber(value)}
         {unit ? <span className="text-[9px]"> {unit}</span> : null}
       </p>
       <p className="mt-1 text-[9px] font-bold opacity-80">{label}</p>

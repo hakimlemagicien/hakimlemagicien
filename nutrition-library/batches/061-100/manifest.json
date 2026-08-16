@@ -1,0 +1,649 @@
+{
+  "package": "nutrition_batch_061_100",
+  "contract_version": "pilot-1.1",
+  "generated_on": "2026-08-16",
+  "qa_status": "passed",
+  "id_start": "MEAL-061",
+  "id_end": "MEAL-100",
+  "record_count": 40,
+  "master_png_count": 40,
+  "delivery_webp_count": 40,
+  "thumbnail_webp_count": 40,
+  "files": [
+    {
+      "path": "nutrition_batch_061_100.json",
+      "size_bytes": 129693,
+      "sha256": "47802b2c6bb18bd7a211d7f44ccc2c09e14f2a4dbcf3de89bfa93309c4a50b97"
+    },
+    {
+      "path": "nutrition_batch_061_100.csv",
+      "size_bytes": 10993,
+      "sha256": "35def2da8488f5e57ee012f1ff8bcbe1d5857ece47c57a8ef242288233964a9c"
+    },
+    {
+      "path": "nutrition_batch_061_100_ingredients.csv",
+      "size_bytes": 23012,
+      "sha256": "7db18300513af2d3eb9bf06c5b247cbd9adb568899c7951595b6d0f6df2a7fdc"
+    },
+    {
+      "path": "meal_image_mapping.json",
+      "size_bytes": 9443,
+      "sha256": "ad8452479dcfb228b0c6da7c5b43515e7f19403334735e1095a2121790a4351a"
+    },
+    {
+      "path": "image_prompts.json",
+      "size_bytes": 36986,
+      "sha256": "7dfedcc8bcf95513b9cd26ae99895f90533533e614fd5fdb26d4bbcab5c40714"
+    },
+    {
+      "path": "NUTRITION_DATA_CONTRACT.md",
+      "size_bytes": 824,
+      "sha256": "e8348924db7ad858c06e45cbb2d3306b5fe81f761347ec644360c3204b20bb01"
+    },
+    {
+      "path": "NUTRITION_CALCULATION_SOURCES.md",
+      "size_bytes": 737,
+      "sha256": "22a7b90f2ab34c2b0908180964200b982e5f2b66a263945a485099499e70a0ed"
+    },
+    {
+      "path": "images/MEAL-061.png",
+      "size_bytes": 1914710,
+      "sha256": "f88d057f84c7708f9db2f7fe081f6bbde663e7e1a70944a91fd8929d0b0eab2b"
+    },
+    {
+      "path": "delivery/MEAL-061/cover.webp",
+      "size_bytes": 96300,
+      "sha256": "d6a83cbd1c8c8fb845d2bdef94b18b65b6c82cac7510c1affe640c114abb4448"
+    },
+    {
+      "path": "thumbnail/MEAL-061/cover-thumb.webp",
+      "size_bytes": 11152,
+      "sha256": "280c2594be94f0dc0df26695c776920bfdb8e6896d1a432cf22a87102c7c7622"
+    },
+    {
+      "path": "images/MEAL-062.png",
+      "size_bytes": 1894446,
+      "sha256": "cef921f41ab115d3cc65618b2baee086528888c11e7d69b90aebf6c07261e93e"
+    },
+    {
+      "path": "delivery/MEAL-062/cover.webp",
+      "size_bytes": 84134,
+      "sha256": "8796e57fdcb231efeed33d6ec947ae0a1562fd9dc7bcf8b941120c554f6e9780"
+    },
+    {
+      "path": "thumbnail/MEAL-062/cover-thumb.webp",
+      "size_bytes": 10244,
+      "sha256": "a2a2a294d72d2728356d097a727eb937e330e017448dfd7b099a1947b1a20ada"
+    },
+    {
+      "path": "images/MEAL-063.png",
+      "size_bytes": 1834885,
+      "sha256": "b855e07bfa11ad3f01b8cc0e99acd521770c5b8f5850321cfdd24c05333d8c51"
+    },
+    {
+      "path": "delivery/MEAL-063/cover.webp",
+      "size_bytes": 79152,
+      "sha256": "e71801767fcfb204881727bd450ef95e568535315dd41c06cfaa886c35c55833"
+    },
+    {
+      "path": "thumbnail/MEAL-063/cover-thumb.webp",
+      "size_bytes": 6462,
+      "sha256": "0be9f7b01e755f3e91a3696078c4c5d3a3f00bd9443aff25910d91dfc45222ad"
+    },
+    {
+      "path": "images/MEAL-064.png",
+      "size_bytes": 1919369,
+      "sha256": "102b04c75c1b23b8f22d5a60ecc7007603dc0fa3ac4410f2007e470945d02003"
+    },
+    {
+      "path": "delivery/MEAL-064/cover.webp",
+      "size_bytes": 114422,
+      "sha256": "776559b781c1801db93525fc0eb1ab7ba5ff03cd080e59237c2af1220f8b57c2"
+    },
+    {
+      "path": "thumbnail/MEAL-064/cover-thumb.webp",
+      "size_bytes": 14388,
+      "sha256": "8705ac0de929be47528f9b17291b3aa9da73e5d69b76f08d6c05e684fddbb50a"
+    },
+    {
+      "path": "images/MEAL-065.png",
+      "size_bytes": 1929316,
+      "sha256": "dc3c6154a38116e51ab1a1973c4db00ddc4e91bc50239f5e121db2df7ea713f4"
+    },
+    {
+      "path": "delivery/MEAL-065/cover.webp",
+      "size_bytes": 115620,
+      "sha256": "50f4498ff845f786f78cd163ff007eaafa2fa4a2d32eb9eb4cff920909a97b0f"
+    },
+    {
+      "path": "thumbnail/MEAL-065/cover-thumb.webp",
+      "size_bytes": 15100,
+      "sha256": "8ac1242c7e2eae8b15effe7a269071786c36ffae4cb888280cb5d91d96326b3c"
+    },
+    {
+      "path": "images/MEAL-066.png",
+      "size_bytes": 1925835,
+      "sha256": "4e0ee5df1572c21bd1dc805be69ef0543c9c4423e1521036f88766ee5c735538"
+    },
+    {
+      "path": "delivery/MEAL-066/cover.webp",
+      "size_bytes": 104806,
+      "sha256": "77a0154407eeef215d41854912e5a8b75ec5e402fa531582eeba5eb9ed3c0d30"
+    },
+    {
+      "path": "thumbnail/MEAL-066/cover-thumb.webp",
+      "size_bytes": 14296,
+      "sha256": "75aa6b5afcfa1a4d586cebea4a71b3393dee1750adbdc68b446adc5e6f07e9f6"
+    },
+    {
+      "path": "images/MEAL-067.png",
+      "size_bytes": 1663289,
+      "sha256": "8ae7414ce51ce71e4f1719d8808107e5d485708b13ee6721e08c3c40f30d06ef"
+    },
+    {
+      "path": "delivery/MEAL-067/cover.webp",
+      "size_bytes": 71232,
+      "sha256": "f0097fe695bc61f194e34c354a9128e5168cff75083e85a659379e3fce569951"
+    },
+    {
+      "path": "thumbnail/MEAL-067/cover-thumb.webp",
+      "size_bytes": 10564,
+      "sha256": "12e4ba24093b9c57c2bbede4b690b6d3a898610db729fb563dc2c8d098aeb4b6"
+    },
+    {
+      "path": "images/MEAL-068.png",
+      "size_bytes": 1647458,
+      "sha256": "0659af316dc8a4e13f86bd13b59bf361110d4a49688f0d6fe00598472672ae71"
+    },
+    {
+      "path": "delivery/MEAL-068/cover.webp",
+      "size_bytes": 58346,
+      "sha256": "5e8d4b7db15bc617ed62a5e707b5cee1b37e0da25b6b11fba749fbfb58812221"
+    },
+    {
+      "path": "thumbnail/MEAL-068/cover-thumb.webp",
+      "size_bytes": 9336,
+      "sha256": "12e13e176a0a762b92c4ca088f5b2c3742d224f6904f9eb8ddc8a48ae0be2295"
+    },
+    {
+      "path": "images/MEAL-069.png",
+      "size_bytes": 2038371,
+      "sha256": "9bcd02429aa2f26c9b24d56121904f4f3a4481ee36b16b7efa6ac8b318983e94"
+    },
+    {
+      "path": "delivery/MEAL-069/cover.webp",
+      "size_bytes": 123528,
+      "sha256": "fcb0b04a31c90e1e31cb8f5d8f77d3d6ad65fc2540b700e01c3691aeccca596e"
+    },
+    {
+      "path": "thumbnail/MEAL-069/cover-thumb.webp",
+      "size_bytes": 14328,
+      "sha256": "7275f994d8df488a6c4f69eeadcdd7579d1571bfd70e194778c0e0174673206e"
+    },
+    {
+      "path": "images/MEAL-070.png",
+      "size_bytes": 1743198,
+      "sha256": "0fab4f2881cef9f2748f684d20041945fd86d5e185f8537fc96fc25bd4902f2b"
+    },
+    {
+      "path": "delivery/MEAL-070/cover.webp",
+      "size_bytes": 57842,
+      "sha256": "289891105c5fe0adbcf57a90090283cb557f646c59435e486f41ff11a4eb125e"
+    },
+    {
+      "path": "thumbnail/MEAL-070/cover-thumb.webp",
+      "size_bytes": 6924,
+      "sha256": "712c30b3b963c1232fc5910b5ab1cdbf0b7fec0f47386df6ec43dd08e4de519a"
+    },
+    {
+      "path": "images/MEAL-071.png",
+      "size_bytes": 2041873,
+      "sha256": "88c455b4ba01652187a923620e5ae5f06c166636cdeb67725332f15d21fbf50b"
+    },
+    {
+      "path": "delivery/MEAL-071/cover.webp",
+      "size_bytes": 122286,
+      "sha256": "368347a388dc581ddc892a5447905b8c1730e86b68aaced3da57caa90fcf9831"
+    },
+    {
+      "path": "thumbnail/MEAL-071/cover-thumb.webp",
+      "size_bytes": 14166,
+      "sha256": "ddfb80183cf4df3879aca742a2dcb264923c73062d122e62b717e78f70365b17"
+    },
+    {
+      "path": "images/MEAL-072.png",
+      "size_bytes": 1897307,
+      "sha256": "d614b3c12a849df65271a44ddb460f78bf8702234bd9faf63e8ff917cab4cb83"
+    },
+    {
+      "path": "delivery/MEAL-072/cover.webp",
+      "size_bytes": 104964,
+      "sha256": "463b2319fa775d9f071575c43abe5aa832ea6cc3723344279d13d1f5e99489b5"
+    },
+    {
+      "path": "thumbnail/MEAL-072/cover-thumb.webp",
+      "size_bytes": 12112,
+      "sha256": "2f0e96a4cd56f09fa719c4bc535084ee741e7542a34ee19da28cda0b772f4189"
+    },
+    {
+      "path": "images/MEAL-073.png",
+      "size_bytes": 1816946,
+      "sha256": "1cb025f1d046d0325c3168f5ac61b630db1f17087590ff7643818f995df5a158"
+    },
+    {
+      "path": "delivery/MEAL-073/cover.webp",
+      "size_bytes": 97488,
+      "sha256": "48c9a222324fc7fac8517758f14039f9105a24ef792afebfc3f3a57adb6e4585"
+    },
+    {
+      "path": "thumbnail/MEAL-073/cover-thumb.webp",
+      "size_bytes": 13062,
+      "sha256": "667717377579ef4abd0cf40fa82e3f5f805560d1ad1a6d7959f35a34766dca27"
+    },
+    {
+      "path": "images/MEAL-074.png",
+      "size_bytes": 1901815,
+      "sha256": "4f7797d8615739eb96ce1594147b4b04ec7f199398e1302965d844ecc6b10f6d"
+    },
+    {
+      "path": "delivery/MEAL-074/cover.webp",
+      "size_bytes": 108162,
+      "sha256": "be658c7e213105eea294769998775094146351c8d76363d59c84c624756b02ac"
+    },
+    {
+      "path": "thumbnail/MEAL-074/cover-thumb.webp",
+      "size_bytes": 14502,
+      "sha256": "25db3b90de2bea482012554f2b8d619654982f9da6990de6e261ada6c90b2b96"
+    },
+    {
+      "path": "images/MEAL-075.png",
+      "size_bytes": 1833393,
+      "sha256": "d730d88bb1031bf2d6c9ccb98253b41788d1dc07cae2372ca7e29be81f6f5588"
+    },
+    {
+      "path": "delivery/MEAL-075/cover.webp",
+      "size_bytes": 94258,
+      "sha256": "f2294847f6c660e141a00a4b8d340bf12bab090513cc69456a74e0f54a697253"
+    },
+    {
+      "path": "thumbnail/MEAL-075/cover-thumb.webp",
+      "size_bytes": 11408,
+      "sha256": "8483445842191ea1323b4fc67db48826d835373da2b4d4ceed5bd1bb494f94f7"
+    },
+    {
+      "path": "images/MEAL-076.png",
+      "size_bytes": 1988168,
+      "sha256": "a6d25cc98fe31783e2289433478feadeb3838a8187c7a8982b319fa07eca4b96"
+    },
+    {
+      "path": "delivery/MEAL-076/cover.webp",
+      "size_bytes": 129598,
+      "sha256": "1c583301308fbfefd1afd2616585d6c255c23c247ac13d28ade3798b3afddc04"
+    },
+    {
+      "path": "thumbnail/MEAL-076/cover-thumb.webp",
+      "size_bytes": 18776,
+      "sha256": "1bd90d03be8b5d8a7495829362ac6415a4737aae686b92f79d5be2d9e12a53db"
+    },
+    {
+      "path": "images/MEAL-077.png",
+      "size_bytes": 1829074,
+      "sha256": "733c1f689e58f0fc3f0288c1c3d41a88eed3d129c4b12a5c0348c4f9c99851eb"
+    },
+    {
+      "path": "delivery/MEAL-077/cover.webp",
+      "size_bytes": 95826,
+      "sha256": "f79a7e8b144fdc557e2f9ddcf650cf817a08d1706d5f908329e85cf2f044fa6e"
+    },
+    {
+      "path": "thumbnail/MEAL-077/cover-thumb.webp",
+      "size_bytes": 14512,
+      "sha256": "9a773b09aaa6dcdaa557663ebdfbd54cc6935a59681f3fa5234c1fe84117f148"
+    },
+    {
+      "path": "images/MEAL-078.png",
+      "size_bytes": 1919576,
+      "sha256": "2a2dd7f7ef6d2a181ac94df4d4a672d640146fa2b5b85baee5ebadd823e79f27"
+    },
+    {
+      "path": "delivery/MEAL-078/cover.webp",
+      "size_bytes": 107174,
+      "sha256": "a344ecbb4071ea32acd875280e2194cb958513673f8e064031ad10dffa336bf8"
+    },
+    {
+      "path": "thumbnail/MEAL-078/cover-thumb.webp",
+      "size_bytes": 13756,
+      "sha256": "4be75ae100b70912f5fe317ef4ddb2110e70d196365fbfb7911edd16c9882130"
+    },
+    {
+      "path": "images/MEAL-079.png",
+      "size_bytes": 2054144,
+      "sha256": "425ef380abfd407d46a07ff0e6e8a85d32e46a6b15e280e07629ec3c25b19ee5"
+    },
+    {
+      "path": "delivery/MEAL-079/cover.webp",
+      "size_bytes": 136600,
+      "sha256": "89ecb66345f09e5340f16b36d8ffa61ca70bf5a887d9f2ac756016f0710279a3"
+    },
+    {
+      "path": "thumbnail/MEAL-079/cover-thumb.webp",
+      "size_bytes": 17250,
+      "sha256": "dc3272f0cd4338a0ef40bbb98218f77024dec89de1f17952d766e5986cb3ffbd"
+    },
+    {
+      "path": "images/MEAL-080.png",
+      "size_bytes": 1732055,
+      "sha256": "a80569af3c3a5e819e1fc2ad9e4c74e7c13a40461a686c8cb015833e2de4c4c3"
+    },
+    {
+      "path": "delivery/MEAL-080/cover.webp",
+      "size_bytes": 79462,
+      "sha256": "4c0e8a26a24e9b8622ccdf04722a15d74108735d6441b44f4032a15d149c55e7"
+    },
+    {
+      "path": "thumbnail/MEAL-080/cover-thumb.webp",
+      "size_bytes": 10420,
+      "sha256": "277bbe7a748728421a83bc3ff7d0e3229033bba543deb3fc1c624e50abdb0d39"
+    },
+    {
+      "path": "images/MEAL-081.png",
+      "size_bytes": 1974163,
+      "sha256": "5d5c9ef788e615998dbd7e143f4a6ba74a4bacde96ccbbe81e75557fe94a3644"
+    },
+    {
+      "path": "delivery/MEAL-081/cover.webp",
+      "size_bytes": 120288,
+      "sha256": "5c89d21d811eec525f57a4c203d6d63b462e3ed160697b4b6077b8018646f7b4"
+    },
+    {
+      "path": "thumbnail/MEAL-081/cover-thumb.webp",
+      "size_bytes": 14312,
+      "sha256": "c679a66ba939c57020a73bda23c1a085f085ac5785f02b6f20b8f0285c47241e"
+    },
+    {
+      "path": "images/MEAL-082.png",
+      "size_bytes": 1800987,
+      "sha256": "d8cfb13ec41f92b15ddf13a300d05f8f2fb0f7e934810bb26f6f1b1f1adc16a1"
+    },
+    {
+      "path": "delivery/MEAL-082/cover.webp",
+      "size_bytes": 86948,
+      "sha256": "da3ec91e44d8c872993b12226c15ba535966f72d4c8e3d202ce9b5c507d53c0a"
+    },
+    {
+      "path": "thumbnail/MEAL-082/cover-thumb.webp",
+      "size_bytes": 11958,
+      "sha256": "dbbf01501b11a2aa6a91ccb8f3372020f1785660afb5a6be7506f20dd1053a5d"
+    },
+    {
+      "path": "images/MEAL-083.png",
+      "size_bytes": 2129914,
+      "sha256": "04c42e0fb35b5ce41c0f053585be9b1612ed7be53e35d2e993a9109d0bd3c597"
+    },
+    {
+      "path": "delivery/MEAL-083/cover.webp",
+      "size_bytes": 146954,
+      "sha256": "a46e74de6cc41e68b7286accea7c75fb640962a3ec4fa713292f4350b8e634ab"
+    },
+    {
+      "path": "thumbnail/MEAL-083/cover-thumb.webp",
+      "size_bytes": 16874,
+      "sha256": "0c166c9947f649b5386ff5396309c2035be8d614ea07a527ed51b8d9324f1b95"
+    },
+    {
+      "path": "images/MEAL-084.png",
+      "size_bytes": 1708597,
+      "sha256": "05cb0df8c412d46629bd5854e73a44ccb293a6dcbe578d71b13f6f202e7a53f6"
+    },
+    {
+      "path": "delivery/MEAL-084/cover.webp",
+      "size_bytes": 78798,
+      "sha256": "edd775a2a8b0c696b81a8daefc4573bdeead4b79542b6d89376bd7be39f29d67"
+    },
+    {
+      "path": "thumbnail/MEAL-084/cover-thumb.webp",
+      "size_bytes": 10660,
+      "sha256": "ef38114dff92bc3e7085fb63676a2db319f4ca7dabbd7825eaa695b641a521e8"
+    },
+    {
+      "path": "images/MEAL-085.png",
+      "size_bytes": 1916014,
+      "sha256": "7471865df3db2c39bb51c52ed4684d87157da6fa1b19002e5e811a7c1da45091"
+    },
+    {
+      "path": "delivery/MEAL-085/cover.webp",
+      "size_bytes": 100246,
+      "sha256": "aa805b722f9884b08434ec085b06f2601bcf70c204c6b09e7dd8bbaf5b4b264e"
+    },
+    {
+      "path": "thumbnail/MEAL-085/cover-thumb.webp",
+      "size_bytes": 10772,
+      "sha256": "814390f106566b77c62e8797b1ece15349d1030346660fc380ce1cc108091f9e"
+    },
+    {
+      "path": "images/MEAL-086.png",
+      "size_bytes": 1555389,
+      "sha256": "3804d52bd009187fcb1a127d045cc5bebaba8fbdcc7384ca03dfbe9479fbf04a"
+    },
+    {
+      "path": "delivery/MEAL-086/cover.webp",
+      "size_bytes": 50448,
+      "sha256": "4ca940e12640a251152a7a36ee47a8f57b9891b57ce8d1dfddbabb1bec629e2d"
+    },
+    {
+      "path": "thumbnail/MEAL-086/cover-thumb.webp",
+      "size_bytes": 7180,
+      "sha256": "0dafaa0eb6aebbf63e8d34ba7f9d3bd6d560e8ebbc92151c54cdfc6cced8fbb6"
+    },
+    {
+      "path": "images/MEAL-087.png",
+      "size_bytes": 1542073,
+      "sha256": "ce816a61c2839e098226c42c359a5ddd55a3d0c0e418ca07430f4402ae9c7bcb"
+    },
+    {
+      "path": "delivery/MEAL-087/cover.webp",
+      "size_bytes": 60096,
+      "sha256": "3bbdfe564d6ee064bc7804d48770621ea21e20e4c2fed0bb2d8a078d2f35c8c1"
+    },
+    {
+      "path": "thumbnail/MEAL-087/cover-thumb.webp",
+      "size_bytes": 9230,
+      "sha256": "c659c0576e495934366d55556b904f966d87262d56cff1d38b26105cde493bbb"
+    },
+    {
+      "path": "images/MEAL-088.png",
+      "size_bytes": 1670061,
+      "sha256": "5dc63b23ab789436bc55a731e1349d56571106315bf86e4f36b11c57a3f4211e"
+    },
+    {
+      "path": "delivery/MEAL-088/cover.webp",
+      "size_bytes": 59854,
+      "sha256": "45b28d7ac880671c7dd032b65b44ec8f9eb6ce4eef96726ebaca15b5dad4ed55"
+    },
+    {
+      "path": "thumbnail/MEAL-088/cover-thumb.webp",
+      "size_bytes": 6488,
+      "sha256": "b84a1d1048aa4b803ab1594d403aabe9ca63f1f32882049170d66df997203d4c"
+    },
+    {
+      "path": "images/MEAL-089.png",
+      "size_bytes": 1404766,
+      "sha256": "51604f1b0441a7a884ff3b1afa2a8fdf0c5d778efdc0b08dcb2edc60678819ee"
+    },
+    {
+      "path": "delivery/MEAL-089/cover.webp",
+      "size_bytes": 31738,
+      "sha256": "a84eb85c88c27bf3395712e7256527345bbaacc848f28dc39e6f7d2a82345aca"
+    },
+    {
+      "path": "thumbnail/MEAL-089/cover-thumb.webp",
+      "size_bytes": 5304,
+      "sha256": "6cab6ecb18ca1927270e97889040017b28dff03439fc3dcc9c7b7345e048e2fd"
+    },
+    {
+      "path": "images/MEAL-090.png",
+      "size_bytes": 1686519,
+      "sha256": "64577cbf030550697326f190fd3c241e6f7c06165102e04959c302649350f9c0"
+    },
+    {
+      "path": "delivery/MEAL-090/cover.webp",
+      "size_bytes": 83944,
+      "sha256": "6f3a5de2b1be9c497b968c5b4dfc30a98b1586ac45b184fec6288f106ccd2669"
+    },
+    {
+      "path": "thumbnail/MEAL-090/cover-thumb.webp",
+      "size_bytes": 11044,
+      "sha256": "0029216584c96cbe8ed5262aead4b1462e810ad191e6ee8e4ddfb3cc6d4fb3c0"
+    },
+    {
+      "path": "images/MEAL-091.png",
+      "size_bytes": 1665588,
+      "sha256": "24847b8c3d96a2338a0bed9d3cec11d66e2be94fbdb692ef0926e80cd00c6827"
+    },
+    {
+      "path": "delivery/MEAL-091/cover.webp",
+      "size_bytes": 67806,
+      "sha256": "8b86c16d71508924a1b557f466b39d3213baabeb2a810475a83cd91db1b33453"
+    },
+    {
+      "path": "thumbnail/MEAL-091/cover-thumb.webp",
+      "size_bytes": 8474,
+      "sha256": "5eb886cfe0bbf1d0a77b2d54579caf5c4e574af587c766ee01e93a4ba2ca7940"
+    },
+    {
+      "path": "images/MEAL-092.png",
+      "size_bytes": 1494193,
+      "sha256": "01d318d49b686b5221502db21bd13e6d898bbf1f24adda06bc851901a4241ddc"
+    },
+    {
+      "path": "delivery/MEAL-092/cover.webp",
+      "size_bytes": 53612,
+      "sha256": "b6f0c6f2586d1acc9db14b614c625341e9b8beb925e172a5cce1556e1a4fd2b4"
+    },
+    {
+      "path": "thumbnail/MEAL-092/cover-thumb.webp",
+      "size_bytes": 9164,
+      "sha256": "eb402727b9738b5d3b484967bb7a1c4a06a04877c8e62d0f0c0d850d732e3932"
+    },
+    {
+      "path": "images/MEAL-093.png",
+      "size_bytes": 1443579,
+      "sha256": "1bbc593699eaaee5f874e58f942a38c71ccbc437b0a630c458be0166101e28e3"
+    },
+    {
+      "path": "delivery/MEAL-093/cover.webp",
+      "size_bytes": 36588,
+      "sha256": "1fcf84439e9acbd674a73c8d1ad56df67240d2bda4e6d07139ac231e09305ac6"
+    },
+    {
+      "path": "thumbnail/MEAL-093/cover-thumb.webp",
+      "size_bytes": 6300,
+      "sha256": "d7a43fc0fc1b314d877bb73ecd50d4171a2639e5e51a6efcb0ee1313a8ed9d85"
+    },
+    {
+      "path": "images/MEAL-094.png",
+      "size_bytes": 1785777,
+      "sha256": "ca696783de0f391a7bcc40c353ceede53fea1f04472c5d4ca096e1ba34080423"
+    },
+    {
+      "path": "delivery/MEAL-094/cover.webp",
+      "size_bytes": 86080,
+      "sha256": "35381427623216561f57d3a57ed6121a961f91d18ee5eb315e6d14022ee88f9a"
+    },
+    {
+      "path": "thumbnail/MEAL-094/cover-thumb.webp",
+      "size_bytes": 12640,
+      "sha256": "e827e6f1a96e5a4c513ad946de6b77d251631703d13d8403933d2296ee77ebb4"
+    },
+    {
+      "path": "images/MEAL-095.png",
+      "size_bytes": 1563983,
+      "sha256": "9f14f4e53ad68d12aaa381e308c9853fca0ed23d900d4c6f4e1b9cb107d6493a"
+    },
+    {
+      "path": "delivery/MEAL-095/cover.webp",
+      "size_bytes": 49930,
+      "sha256": "9576d5a712ad897c86f9428b91885e5fb124055784e4bc772991c0b0e073e5a8"
+    },
+    {
+      "path": "thumbnail/MEAL-095/cover-thumb.webp",
+      "size_bytes": 7048,
+      "sha256": "48de28c8ac946ce2c060b088874bea014b40c55d35e6000943f9c034e2980b4c"
+    },
+    {
+      "path": "images/MEAL-096.png",
+      "size_bytes": 1421888,
+      "sha256": "d446b736ded774047dc4e8fd2df34d4b33e14aa8393b31be80b972847b04e516"
+    },
+    {
+      "path": "delivery/MEAL-096/cover.webp",
+      "size_bytes": 34384,
+      "sha256": "c5c2bd883a08d2297a597c4b3774952cb9f78607887d85501c0791e69b2bfd85"
+    },
+    {
+      "path": "thumbnail/MEAL-096/cover-thumb.webp",
+      "size_bytes": 4694,
+      "sha256": "674462f7e53cafba2a0ddc11db4f31cdefe70eb2ea61188fe828c595a461d484"
+    },
+    {
+      "path": "images/MEAL-097.png",
+      "size_bytes": 1640569,
+      "sha256": "f276081e7b02e4c2ca96fd0fe13a7c9661c1c2865e8441db9c94d1c5f638efcb"
+    },
+    {
+      "path": "delivery/MEAL-097/cover.webp",
+      "size_bytes": 67078,
+      "sha256": "2c160b58924e87c947ec41fa777287b403d829e7c2dc66d1b98a86030a94810f"
+    },
+    {
+      "path": "thumbnail/MEAL-097/cover-thumb.webp",
+      "size_bytes": 9236,
+      "sha256": "3211274530b82b8d81557642670d750dd4372a62386a2fac8185a60b85075fb6"
+    },
+    {
+      "path": "images/MEAL-098.png",
+      "size_bytes": 1155148,
+      "sha256": "55c8c7e7befcddc6be81d47e81960e462f0a6b68052f898fddde9d187ab0e122"
+    },
+    {
+      "path": "delivery/MEAL-098/cover.webp",
+      "size_bytes": 10382,
+      "sha256": "82fae01311e46b572c896009666f795d046838b33d26d881cb52215c98e71f6c"
+    },
+    {
+      "path": "thumbnail/MEAL-098/cover-thumb.webp",
+      "size_bytes": 1922,
+      "sha256": "b1c5c2f650f200dfa510a0f1ba90b0e6b3942ebe04b4771d1747635c011b43fb"
+    },
+    {
+      "path": "images/MEAL-099.png",
+      "size_bytes": 1332852,
+      "sha256": "b4366d6d8addcb2fc45b3f13bb5c7f8045fc000bbacd22777b7fd55ed930ca2e"
+    },
+    {
+      "path": "delivery/MEAL-099/cover.webp",
+      "size_bytes": 28114,
+      "sha256": "78c8bbaa9f4e3699e986e80c28132637c38455101ff6f29c529ae0ea468e4706"
+    },
+    {
+      "path": "thumbnail/MEAL-099/cover-thumb.webp",
+      "size_bytes": 5072,
+      "sha256": "f389fb35d4004bc3fa986119e34885f365fafb48c1433e8cd5b3f0c03b6f44b1"
+    },
+    {
+      "path": "images/MEAL-100.png",
+      "size_bytes": 1449768,
+      "sha256": "82b141be1686ad0ae1fd44e19dee656b0969ae69645a324a5e17a8986a737ef0"
+    },
+    {
+      "path": "delivery/MEAL-100/cover.webp",
+      "size_bytes": 35042,
+      "sha256": "1a655f243c7319cc45a17d4d95db07731e82f7482c578d2a955b194ed4919cd7"
+    },
+    {
+      "path": "thumbnail/MEAL-100/cover-thumb.webp",
+      "size_bytes": 4588,
+      "sha256": "8cb2f04bb0f0389f460a179f3039721456f1a84baabd02b413b5b5d5dfb87c99"
+    }
+  ]
+}
