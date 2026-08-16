@@ -1,0 +1,142 @@
+[
+  {
+    "external_id": "MEAL-001",
+    "image_reference": "images/MEAL-001.png",
+    "image_status": "ready",
+    "name_ar": "شوفان الزبادي بالموز والتوت",
+    "name_en": "Banana Berry Yogurt Oats"
+  },
+  {
+    "external_id": "MEAL-002",
+    "image_reference": "images/MEAL-002.png",
+    "image_status": "ready",
+    "name_ar": "توست الأفوكادو والبيض",
+    "name_en": "Egg & Avocado Toast"
+  },
+  {
+    "external_id": "MEAL-003",
+    "image_reference": "images/MEAL-003.png",
+    "image_status": "ready",
+    "name_ar": "أومليت السبانخ مع الخبز",
+    "name_en": "Spinach Omelet with Toast"
+  },
+  {
+    "external_id": "MEAL-004",
+    "image_reference": "images/MEAL-004.png",
+    "image_status": "ready",
+    "name_ar": "وعاء الكينوا والزبادي والتفاح",
+    "name_en": "Apple Quinoa Yogurt Bowl"
+  },
+  {
+    "external_id": "MEAL-005",
+    "image_reference": "images/MEAL-005.png",
+    "image_status": "ready",
+    "name_ar": "دجاج مشوي مع الأرز والخضار",
+    "name_en": "Grilled Chicken, Rice & Vegetables"
+  },
+  {
+    "external_id": "MEAL-006",
+    "image_reference": "images/MEAL-006.png",
+    "image_status": "ready",
+    "name_ar": "سلمون مع البطاطس والبروكلي",
+    "name_en": "Salmon, Potato & Broccoli"
+  },
+  {
+    "external_id": "MEAL-007",
+    "image_reference": "images/MEAL-007.png",
+    "image_status": "ready",
+    "name_ar": "وعاء اللحم والبرغل",
+    "name_en": "Beef & Bulgur Bowl"
+  },
+  {
+    "external_id": "MEAL-008",
+    "image_reference": "images/MEAL-008.png",
+    "image_status": "ready",
+    "name_ar": "سلطة تونة ومعكرونة",
+    "name_en": "Tuna Pasta Salad"
+  },
+  {
+    "external_id": "MEAL-009",
+    "image_reference": "images/MEAL-009.png",
+    "image_status": "ready",
+    "name_ar": "لفافة ديك رومي وأفوكادو",
+    "name_en": "Turkey Avocado Wrap"
+  },
+  {
+    "external_id": "MEAL-010",
+    "image_reference": "images/MEAL-010.png",
+    "image_status": "ready",
+    "name_ar": "وعاء حمص وكينوا بالطحينة",
+    "name_en": "Chickpea Quinoa Tahini Bowl"
+  },
+  {
+    "external_id": "MEAL-011",
+    "image_reference": "images/MEAL-011.png",
+    "image_status": "ready",
+    "name_ar": "شوربة عدس مع خبز كامل",
+    "name_en": "Lentil Soup with Whole-Wheat Bread"
+  },
+  {
+    "external_id": "MEAL-012",
+    "image_reference": "images/MEAL-012.png",
+    "image_status": "ready",
+    "name_ar": "توفو وبطاطا حلوة وخضار",
+    "name_en": "Tofu, Sweet Potato & Greens"
+  },
+  {
+    "external_id": "MEAL-013",
+    "image_reference": "images/MEAL-013.png",
+    "image_status": "ready",
+    "name_ar": "روبيان مع الكسكس والخضار",
+    "name_en": "Shrimp Couscous Bowl"
+  },
+  {
+    "external_id": "MEAL-014",
+    "image_reference": "images/MEAL-014.png",
+    "image_status": "ready",
+    "name_ar": "سمك القد مع الأرز والسبانخ",
+    "name_en": "Cod, Rice & Spinach"
+  },
+  {
+    "external_id": "MEAL-015",
+    "image_reference": "images/MEAL-015.png",
+    "image_status": "ready",
+    "name_ar": "جبن قريش بالتفاح واللوز",
+    "name_en": "Cottage Cheese, Apple & Almonds"
+  },
+  {
+    "external_id": "MEAL-016",
+    "image_reference": "images/MEAL-016.png",
+    "image_status": "ready",
+    "name_ar": "زبادي بالتوت والشيا",
+    "name_en": "Berry Chia Yogurt"
+  },
+  {
+    "external_id": "MEAL-017",
+    "image_reference": "images/MEAL-017.png",
+    "image_status": "ready",
+    "name_ar": "موز بزبدة الفول السوداني",
+    "name_en": "Banana with Peanut Butter"
+  },
+  {
+    "external_id": "MEAL-018",
+    "image_reference": "images/MEAL-018.png",
+    "image_status": "ready",
+    "name_ar": "شوفان بالحليب والتمر",
+    "name_en": "Date Milk Oats"
+  },
+  {
+    "external_id": "MEAL-019",
+    "image_reference": "images/MEAL-019.png",
+    "image_status": "ready",
+    "name_ar": "مخفوق واي بالموز والحليب",
+    "name_en": "Banana Whey Recovery Shake"
+  },
+  {
+    "external_id": "MEAL-020",
+    "image_reference": "images/MEAL-020.png",
+    "image_status": "ready",
+    "name_ar": "وعاء دجاج وأرز بعد التمرين",
+    "name_en": "Post-Workout Chicken Rice Bowl"
+  }
+]

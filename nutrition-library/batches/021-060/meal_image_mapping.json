@@ -1,0 +1,322 @@
+[
+  {
+    "external_id": "MEAL-021",
+    "master": "images/MEAL-021.png",
+    "delivery": "delivery/MEAL-021/cover.webp",
+    "thumbnail": "thumbnail/MEAL-021/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-022",
+    "master": "images/MEAL-022.png",
+    "delivery": "delivery/MEAL-022/cover.webp",
+    "thumbnail": "thumbnail/MEAL-022/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-023",
+    "master": "images/MEAL-023.png",
+    "delivery": "delivery/MEAL-023/cover.webp",
+    "thumbnail": "thumbnail/MEAL-023/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-024",
+    "master": "images/MEAL-024.png",
+    "delivery": "delivery/MEAL-024/cover.webp",
+    "thumbnail": "thumbnail/MEAL-024/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-025",
+    "master": "images/MEAL-025.png",
+    "delivery": "delivery/MEAL-025/cover.webp",
+    "thumbnail": "thumbnail/MEAL-025/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-026",
+    "master": "images/MEAL-026.png",
+    "delivery": "delivery/MEAL-026/cover.webp",
+    "thumbnail": "thumbnail/MEAL-026/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-027",
+    "master": "images/MEAL-027.png",
+    "delivery": "delivery/MEAL-027/cover.webp",
+    "thumbnail": "thumbnail/MEAL-027/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-028",
+    "master": "images/MEAL-028.png",
+    "delivery": "delivery/MEAL-028/cover.webp",
+    "thumbnail": "thumbnail/MEAL-028/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-029",
+    "master": "images/MEAL-029.png",
+    "delivery": "delivery/MEAL-029/cover.webp",
+    "thumbnail": "thumbnail/MEAL-029/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-030",
+    "master": "images/MEAL-030.png",
+    "delivery": "delivery/MEAL-030/cover.webp",
+    "thumbnail": "thumbnail/MEAL-030/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-031",
+    "master": "images/MEAL-031.png",
+    "delivery": "delivery/MEAL-031/cover.webp",
+    "thumbnail": "thumbnail/MEAL-031/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-032",
+    "master": "images/MEAL-032.png",
+    "delivery": "delivery/MEAL-032/cover.webp",
+    "thumbnail": "thumbnail/MEAL-032/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-033",
+    "master": "images/MEAL-033.png",
+    "delivery": "delivery/MEAL-033/cover.webp",
+    "thumbnail": "thumbnail/MEAL-033/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-034",
+    "master": "images/MEAL-034.png",
+    "delivery": "delivery/MEAL-034/cover.webp",
+    "thumbnail": "thumbnail/MEAL-034/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-035",
+    "master": "images/MEAL-035.png",
+    "delivery": "delivery/MEAL-035/cover.webp",
+    "thumbnail": "thumbnail/MEAL-035/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-036",
+    "master": "images/MEAL-036.png",
+    "delivery": "delivery/MEAL-036/cover.webp",
+    "thumbnail": "thumbnail/MEAL-036/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-037",
+    "master": "images/MEAL-037.png",
+    "delivery": "delivery/MEAL-037/cover.webp",
+    "thumbnail": "thumbnail/MEAL-037/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-038",
+    "master": "images/MEAL-038.png",
+    "delivery": "delivery/MEAL-038/cover.webp",
+    "thumbnail": "thumbnail/MEAL-038/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-039",
+    "master": "images/MEAL-039.png",
+    "delivery": "delivery/MEAL-039/cover.webp",
+    "thumbnail": "thumbnail/MEAL-039/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-040",
+    "master": "images/MEAL-040.png",
+    "delivery": "delivery/MEAL-040/cover.webp",
+    "thumbnail": "thumbnail/MEAL-040/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-041",
+    "master": "images/MEAL-041.png",
+    "delivery": "delivery/MEAL-041/cover.webp",
+    "thumbnail": "thumbnail/MEAL-041/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-042",
+    "master": "images/MEAL-042.png",
+    "delivery": "delivery/MEAL-042/cover.webp",
+    "thumbnail": "thumbnail/MEAL-042/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-043",
+    "master": "images/MEAL-043.png",
+    "delivery": "delivery/MEAL-043/cover.webp",
+    "thumbnail": "thumbnail/MEAL-043/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-044",
+    "master": "images/MEAL-044.png",
+    "delivery": "delivery/MEAL-044/cover.webp",
+    "thumbnail": "thumbnail/MEAL-044/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-045",
+    "master": "images/MEAL-045.png",
+    "delivery": "delivery/MEAL-045/cover.webp",
+    "thumbnail": "thumbnail/MEAL-045/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-046",
+    "master": "images/MEAL-046.png",
+    "delivery": "delivery/MEAL-046/cover.webp",
+    "thumbnail": "thumbnail/MEAL-046/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-047",
+    "master": "images/MEAL-047.png",
+    "delivery": "delivery/MEAL-047/cover.webp",
+    "thumbnail": "thumbnail/MEAL-047/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-048",
+    "master": "images/MEAL-048.png",
+    "delivery": "delivery/MEAL-048/cover.webp",
+    "thumbnail": "thumbnail/MEAL-048/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-049",
+    "master": "images/MEAL-049.png",
+    "delivery": "delivery/MEAL-049/cover.webp",
+    "thumbnail": "thumbnail/MEAL-049/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-050",
+    "master": "images/MEAL-050.png",
+    "delivery": "delivery/MEAL-050/cover.webp",
+    "thumbnail": "thumbnail/MEAL-050/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-051",
+    "master": "images/MEAL-051.png",
+    "delivery": "delivery/MEAL-051/cover.webp",
+    "thumbnail": "thumbnail/MEAL-051/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-052",
+    "master": "images/MEAL-052.png",
+    "delivery": "delivery/MEAL-052/cover.webp",
+    "thumbnail": "thumbnail/MEAL-052/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-053",
+    "master": "images/MEAL-053.png",
+    "delivery": "delivery/MEAL-053/cover.webp",
+    "thumbnail": "thumbnail/MEAL-053/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-054",
+    "master": "images/MEAL-054.png",
+    "delivery": "delivery/MEAL-054/cover.webp",
+    "thumbnail": "thumbnail/MEAL-054/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-055",
+    "master": "images/MEAL-055.png",
+    "delivery": "delivery/MEAL-055/cover.webp",
+    "thumbnail": "thumbnail/MEAL-055/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-056",
+    "master": "images/MEAL-056.png",
+    "delivery": "delivery/MEAL-056/cover.webp",
+    "thumbnail": "thumbnail/MEAL-056/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-057",
+    "master": "images/MEAL-057.png",
+    "delivery": "delivery/MEAL-057/cover.webp",
+    "thumbnail": "thumbnail/MEAL-057/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-058",
+    "master": "images/MEAL-058.png",
+    "delivery": "delivery/MEAL-058/cover.webp",
+    "thumbnail": "thumbnail/MEAL-058/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-059",
+    "master": "images/MEAL-059.png",
+    "delivery": "delivery/MEAL-059/cover.webp",
+    "thumbnail": "thumbnail/MEAL-059/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  },
+  {
+    "external_id": "MEAL-060",
+    "master": "images/MEAL-060.png",
+    "delivery": "delivery/MEAL-060/cover.webp",
+    "thumbnail": "thumbnail/MEAL-060/cover-thumb.webp",
+    "status": "ready",
+    "review_status": "approved"
+  }
+]

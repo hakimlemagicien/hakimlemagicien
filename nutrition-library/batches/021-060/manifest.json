@@ -1,0 +1,664 @@
+{
+  "package": "nutrition_batch_021_060",
+  "contract_version": "pilot-1.1",
+  "generated_on": "2026-08-16",
+  "qa_status": "passed",
+  "id_start": "MEAL-021",
+  "id_end": "MEAL-060",
+  "record_count": 40,
+  "master_png_count": 40,
+  "delivery_webp_count": 40,
+  "thumbnail_webp_count": 40,
+  "files": [
+    {
+      "path": "delivery/MEAL-021/cover.webp",
+      "size_bytes": 64776,
+      "sha256": "6303901c47d412e00f9046497dad57164c36bee9ce4ee287bddeb55dc39d947c"
+    },
+    {
+      "path": "delivery/MEAL-022/cover.webp",
+      "size_bytes": 109160,
+      "sha256": "bfb5e22d56d0907dde31405a3566c21f2ffc56c918398bf9473e36244a8e39c1"
+    },
+    {
+      "path": "delivery/MEAL-023/cover.webp",
+      "size_bytes": 128930,
+      "sha256": "650623ff3ce0c85b40c713ab43d7696a8e815a7e19e7f907d7cf633ae14686b8"
+    },
+    {
+      "path": "delivery/MEAL-024/cover.webp",
+      "size_bytes": 99852,
+      "sha256": "9b7c4d24e79c6a1ba73f6c354156601361e4d3ab93b942ddee21397c49136cfd"
+    },
+    {
+      "path": "delivery/MEAL-025/cover.webp",
+      "size_bytes": 102974,
+      "sha256": "061ced8e613b2a32b7ca100e0a9e2ef720451fc5659f1f847b4ba3fec8db7217"
+    },
+    {
+      "path": "delivery/MEAL-026/cover.webp",
+      "size_bytes": 149284,
+      "sha256": "db9f2d89f61428ed7b9037efff64e218cbc9c128d2191712fc2ec589caf86b27"
+    },
+    {
+      "path": "delivery/MEAL-027/cover.webp",
+      "size_bytes": 158006,
+      "sha256": "525d7d4a8aaac0d63a6f248a002dfafd04802284e3fb76412659cb76c728219e"
+    },
+    {
+      "path": "delivery/MEAL-028/cover.webp",
+      "size_bytes": 68042,
+      "sha256": "e39d2b17b3d9b743e3c27e642d986d3730cfcd53eb23dba8db1377d8a5003814"
+    },
+    {
+      "path": "delivery/MEAL-029/cover.webp",
+      "size_bytes": 168250,
+      "sha256": "4352a5c222af6fef018761d4bdf5f86d059f5f1035d2091ef0c99f2bc74c5d86"
+    },
+    {
+      "path": "delivery/MEAL-030/cover.webp",
+      "size_bytes": 119782,
+      "sha256": "9a453892b3475db7feed89316e50b6c8321fdb976ae1a1a1322fda1cb6393b67"
+    },
+    {
+      "path": "delivery/MEAL-031/cover.webp",
+      "size_bytes": 155730,
+      "sha256": "7ba94b20d92090e46d326b53e060fd295202e51eabdb0f4f8f9998c64b0c1d76"
+    },
+    {
+      "path": "delivery/MEAL-032/cover.webp",
+      "size_bytes": 139316,
+      "sha256": "2048bdc9efc48c7423c4cde073d8fe70f9457154413bbd31228a1d01cb59d97f"
+    },
+    {
+      "path": "delivery/MEAL-033/cover.webp",
+      "size_bytes": 123916,
+      "sha256": "1afc08cdf2d01fcfbc812cd778ae894a2ba374feace8a0e3e1479f2c29d32b94"
+    },
+    {
+      "path": "delivery/MEAL-034/cover.webp",
+      "size_bytes": 148234,
+      "sha256": "ba5c63cea3b8387544dac4d346476622fa11bfb939568de4329629b364af7969"
+    },
+    {
+      "path": "delivery/MEAL-035/cover.webp",
+      "size_bytes": 76696,
+      "sha256": "6a0295f1dbe05b2b096fef533ff4d413e8a8910da4c5f9ea17b31f506fd41a5d"
+    },
+    {
+      "path": "delivery/MEAL-036/cover.webp",
+      "size_bytes": 118168,
+      "sha256": "2814204daa2a1f95b230b15481631af724bc7ddff70e28ccf339a0499bb0bdc4"
+    },
+    {
+      "path": "delivery/MEAL-037/cover.webp",
+      "size_bytes": 93848,
+      "sha256": "2deec0d655f5fbd286cd45d8e31cf54df756120a4dfafb5e0767a8b6a106140e"
+    },
+    {
+      "path": "delivery/MEAL-038/cover.webp",
+      "size_bytes": 139836,
+      "sha256": "89bafdfc7806b781df21550922417bcdabda06b32bf765cafa9012aab69266c4"
+    },
+    {
+      "path": "delivery/MEAL-039/cover.webp",
+      "size_bytes": 155044,
+      "sha256": "40e15d5e64e9cd8411a220279cf2f6c40dc831e3f0efda88c3c6159a2a6403b6"
+    },
+    {
+      "path": "delivery/MEAL-040/cover.webp",
+      "size_bytes": 169800,
+      "sha256": "c16c5747e88b09736c378331ec26c33e5f8b7bf9db893dee3854e652e167e898"
+    },
+    {
+      "path": "delivery/MEAL-041/cover.webp",
+      "size_bytes": 83250,
+      "sha256": "bcddaa91e7e6362b23eba1ad558d3efa3a64af868226388fcf184d71461160eb"
+    },
+    {
+      "path": "delivery/MEAL-042/cover.webp",
+      "size_bytes": 57960,
+      "sha256": "3a05622208cbe0401a650a2adc4585dc301eea150eb3dcc3f4e8920ab392855b"
+    },
+    {
+      "path": "delivery/MEAL-043/cover.webp",
+      "size_bytes": 89594,
+      "sha256": "ac483938c21b44ba47323e0d9c8cf3805ad22539aa64a12e290e65b3f8ada712"
+    },
+    {
+      "path": "delivery/MEAL-044/cover.webp",
+      "size_bytes": 91444,
+      "sha256": "9bb4aa89a221139085718487bfc50f1e888973078b833a00f1b0966e3d81f3dc"
+    },
+    {
+      "path": "delivery/MEAL-045/cover.webp",
+      "size_bytes": 91524,
+      "sha256": "caf3983a11b27e8b3f25f04a408a87c15b59807f382fc51e2b6f39188a9fd1b5"
+    },
+    {
+      "path": "delivery/MEAL-046/cover.webp",
+      "size_bytes": 77818,
+      "sha256": "6527cb9f3985dff899c9bc281e773eccdef4d196b5e5c5e0c02bebdfbcdb469e"
+    },
+    {
+      "path": "delivery/MEAL-047/cover.webp",
+      "size_bytes": 104232,
+      "sha256": "92448aad4fdb1e3b9998909887252f6c47cec454efb7b2785fba7c479b649fe3"
+    },
+    {
+      "path": "delivery/MEAL-048/cover.webp",
+      "size_bytes": 134486,
+      "sha256": "89ffa121098e8682bc0e398306a164e1517ffa9886bf9b3bee478672a82822bb"
+    },
+    {
+      "path": "delivery/MEAL-049/cover.webp",
+      "size_bytes": 47520,
+      "sha256": "4df824f8fae2070e3bae069fbd6fc79b5f0b7b92b1d78ed2f5d01dbf2e37c5a0"
+    },
+    {
+      "path": "delivery/MEAL-050/cover.webp",
+      "size_bytes": 95320,
+      "sha256": "1cb03456308c0def00f2230f58a75ecd104f8b02157a822ba0d7493bda38bd5e"
+    },
+    {
+      "path": "delivery/MEAL-051/cover.webp",
+      "size_bytes": 143240,
+      "sha256": "06f6e3e3eb4876b725f8c2ebfb92806074dbb0b7a10b0fb05f4466620f0b80b6"
+    },
+    {
+      "path": "delivery/MEAL-052/cover.webp",
+      "size_bytes": 96670,
+      "sha256": "7124044f5de6abb1c01cee881f8de4e065a5031d88c6727049c5baf8253aee56"
+    },
+    {
+      "path": "delivery/MEAL-053/cover.webp",
+      "size_bytes": 175656,
+      "sha256": "4f5a5964ec41c9bc7a75aae14fc1a34f13873ffab5dca084995c7ec65fe3a4ae"
+    },
+    {
+      "path": "delivery/MEAL-054/cover.webp",
+      "size_bytes": 117730,
+      "sha256": "0ad742e871ffaf6fcb70b8640e1d2e7d7b4fd94e4e2bd6ada875dfb2ba5d3dac"
+    },
+    {
+      "path": "delivery/MEAL-055/cover.webp",
+      "size_bytes": 94030,
+      "sha256": "b02662e6835eb7bffb064f00b236907c3b2fb4d072e085c09bb5025af112eadf"
+    },
+    {
+      "path": "delivery/MEAL-056/cover.webp",
+      "size_bytes": 118576,
+      "sha256": "e4cb1e925520a7512ada06068d10fdaadedce3fca5becaa6d302922351302d3c"
+    },
+    {
+      "path": "delivery/MEAL-057/cover.webp",
+      "size_bytes": 142330,
+      "sha256": "dd1835281de090ac141f34f4bea1c5f7051c09864873f51973cd9c0dfaa85537"
+    },
+    {
+      "path": "delivery/MEAL-058/cover.webp",
+      "size_bytes": 160096,
+      "sha256": "05d206d6dac43aad74682a8d9272703682b4bfbe0c5c358b6283dd6c50f1a297"
+    },
+    {
+      "path": "delivery/MEAL-059/cover.webp",
+      "size_bytes": 150408,
+      "sha256": "fb95f05f24faadf39b9ebf2ab210e4d5dca31d2b0fd4ce47eda580803cb20dc7"
+    },
+    {
+      "path": "delivery/MEAL-060/cover.webp",
+      "size_bytes": 148232,
+      "sha256": "de4eb3dde776345ae8e196ddf631e238758a2bdd260741ddb2d9a9db6699b896"
+    },
+    {
+      "path": "image_prompts.json",
+      "size_bytes": 37714,
+      "sha256": "a47b73eeb2fdc3b48080530709a2385552421affee647b092589ce1867012495"
+    },
+    {
+      "path": "images/MEAL-021.png",
+      "size_bytes": 1977586,
+      "sha256": "51e460d77068f1d0ca761240c54b5cdf8b73484ccf67e22aa368863bc35d0724"
+    },
+    {
+      "path": "images/MEAL-022.png",
+      "size_bytes": 2342774,
+      "sha256": "be34c35e9052666458edb809fd3d04ecea1574d0a074bebb879ec5e325a54409"
+    },
+    {
+      "path": "images/MEAL-023.png",
+      "size_bytes": 2330246,
+      "sha256": "01cc3992d690c76ae066b3ec4732df33338551b7d528712e4d8e602aaff8ec1c"
+    },
+    {
+      "path": "images/MEAL-024.png",
+      "size_bytes": 2201783,
+      "sha256": "c1621034a526d42ce31844a9e2a1b8e820f7da79b6d1a0c55ae029160c5891cd"
+    },
+    {
+      "path": "images/MEAL-025.png",
+      "size_bytes": 2222740,
+      "sha256": "6b60151eec2e010f66490de04b83eb2deb8f295ca7b655713bcc1acfef724c2c"
+    },
+    {
+      "path": "images/MEAL-026.png",
+      "size_bytes": 2499767,
+      "sha256": "7dadd30a65462dd2e2947c6f91e5722b7ce75374491d4104498e0af07d10b8e1"
+    },
+    {
+      "path": "images/MEAL-027.png",
+      "size_bytes": 2533497,
+      "sha256": "46d87cdeee068630df28930dd8141dbb16f40ab7be0d57d21e0eb162d2cba133"
+    },
+    {
+      "path": "images/MEAL-028.png",
+      "size_bytes": 2035384,
+      "sha256": "451e88df114e86a8eaa275e25e74efd03c0adb35bf8583711b0731bbe82e7405"
+    },
+    {
+      "path": "images/MEAL-029.png",
+      "size_bytes": 2594352,
+      "sha256": "64908fda81f195ef54bb49219b80b2cdbe9e0057119c40d957e9cc03233ce188"
+    },
+    {
+      "path": "images/MEAL-030.png",
+      "size_bytes": 2364241,
+      "sha256": "61a009e1608f55ca9925618a0c9764c63f296d0466abe5028fbe71a69d6c8680"
+    },
+    {
+      "path": "images/MEAL-031.png",
+      "size_bytes": 2568396,
+      "sha256": "b171efdc01157b5339d6e4b572dd8e2fb74b46d8e6c2b891df718c10a00991a6"
+    },
+    {
+      "path": "images/MEAL-032.png",
+      "size_bytes": 2433156,
+      "sha256": "97c31e7be99ac892d092e3d22f4262d61b4ae2e29a179ba5a97d7edd49310897"
+    },
+    {
+      "path": "images/MEAL-033.png",
+      "size_bytes": 2336418,
+      "sha256": "963a3e9b94200ab83d86138996926ec029c245c098b733ba18848c345887423e"
+    },
+    {
+      "path": "images/MEAL-034.png",
+      "size_bytes": 2436079,
+      "sha256": "872a0ee121d433f69a1e74900ee069c6772098fb743e76471e0531da44e84e87"
+    },
+    {
+      "path": "images/MEAL-035.png",
+      "size_bytes": 2059716,
+      "sha256": "b4d0c2645476fcc92e84da6deadd354686e8c0f7746eee5fcc5224a063a6f380"
+    },
+    {
+      "path": "images/MEAL-036.png",
+      "size_bytes": 2315288,
+      "sha256": "be8c1019adba2967a7a230aa0e90f37f7bf6f42aa65fa583bd09302fd1424fcc"
+    },
+    {
+      "path": "images/MEAL-037.png",
+      "size_bytes": 2140543,
+      "sha256": "21f3058ced3436e6e2e64c7369f6b9fa79cb15631dee5512bd6f0365c9975bb7"
+    },
+    {
+      "path": "images/MEAL-038.png",
+      "size_bytes": 2491411,
+      "sha256": "e9580e9ba60a9bd56238f6c8ac569fb0f18e840dcd166a2c598095e4278c0225"
+    },
+    {
+      "path": "images/MEAL-039.png",
+      "size_bytes": 2541956,
+      "sha256": "2abfa55c73148f9ccb3e46b17477a59517f241c37af110507e9ce7e49d2d4a26"
+    },
+    {
+      "path": "images/MEAL-040.png",
+      "size_bytes": 2644491,
+      "sha256": "4200332e45ac2ab3dd9fe7af85c06207c2955814fc8043d695cf4c2aa831c419"
+    },
+    {
+      "path": "images/MEAL-041.png",
+      "size_bytes": 2073796,
+      "sha256": "2b66a42c3612e819511291155c80c984f357fc14a8134d4a28a039079128f1fd"
+    },
+    {
+      "path": "images/MEAL-042.png",
+      "size_bytes": 1932752,
+      "sha256": "76992a6cecbdcc635a62f5e0bf9f83877a68e68f1167b12056f2714d04ecaf2e"
+    },
+    {
+      "path": "images/MEAL-043.png",
+      "size_bytes": 2088671,
+      "sha256": "afc9151c5a353b0806a18e9179c1053e97a96a1f879eee5f0a28159d742a937e"
+    },
+    {
+      "path": "images/MEAL-044.png",
+      "size_bytes": 2245230,
+      "sha256": "70a09afe05978504153d619ac814dff89e30bbe1c601615c82096a9ac2ec3a0d"
+    },
+    {
+      "path": "images/MEAL-045.png",
+      "size_bytes": 2119148,
+      "sha256": "aa88c35bb8568f5e59491ede72cf17c97f1f931ec73c4ea04a295256467e9fb1"
+    },
+    {
+      "path": "images/MEAL-046.png",
+      "size_bytes": 2131545,
+      "sha256": "aadaf4c45c9a5cdb443da0bba9f0500207cda9b8d8b338ab74c78557921dbfcb"
+    },
+    {
+      "path": "images/MEAL-047.png",
+      "size_bytes": 2203774,
+      "sha256": "7222c51574da56de11d0105cb4a350e89d8a74ae749e0f4ef75b814c89f827f4"
+    },
+    {
+      "path": "images/MEAL-048.png",
+      "size_bytes": 2480487,
+      "sha256": "5e08d7165e71fd76faf9f7e54bf06465e24f10efa91dd8a189d943343271a3dd"
+    },
+    {
+      "path": "images/MEAL-049.png",
+      "size_bytes": 1861310,
+      "sha256": "546739d5fafd5af3573c40c5f9b1bd2e382bb83b63185d3485340137dda03a70"
+    },
+    {
+      "path": "images/MEAL-050.png",
+      "size_bytes": 2213576,
+      "sha256": "ec78b38aeb0e6d20db6efac1728debff57446e7a0aa6ac58d8d3d503f6dba4f8"
+    },
+    {
+      "path": "images/MEAL-051.png",
+      "size_bytes": 2408415,
+      "sha256": "4d0d78a7711f7180376d5bb16c1efe43a2da0e3ead5f81af9b9f2d7f27c57903"
+    },
+    {
+      "path": "images/MEAL-052.png",
+      "size_bytes": 2156306,
+      "sha256": "a01569e7b4d628378f5ae5fc1c2750726815b0bb53e09628d5309572b6a50d63"
+    },
+    {
+      "path": "images/MEAL-053.png",
+      "size_bytes": 2629608,
+      "sha256": "eac51a1a931b12f06ba87f33be0787f86e1c7a4f450f4f6cec801007539f8c7f"
+    },
+    {
+      "path": "images/MEAL-054.png",
+      "size_bytes": 2315149,
+      "sha256": "36c38439678a72916031576c3756713cb8f2281feec23296184a89f46b801815"
+    },
+    {
+      "path": "images/MEAL-055.png",
+      "size_bytes": 2233958,
+      "sha256": "9168597b563fe9999f9f7834cafb1144d2f8e9ca0438c8f9d17a9280aef0cb2c"
+    },
+    {
+      "path": "images/MEAL-056.png",
+      "size_bytes": 2304755,
+      "sha256": "b86f25d93de6cb297d8ed5a39b6d19f0fc0aa16feb4082f44a574112f3e934b6"
+    },
+    {
+      "path": "images/MEAL-057.png",
+      "size_bytes": 2482114,
+      "sha256": "5745deffcd142caade75bf951ef1d61527ac9f5a40195901e8b95a7fa01ffeec"
+    },
+    {
+      "path": "images/MEAL-058.png",
+      "size_bytes": 2562262,
+      "sha256": "23f5281c5e7d3468bc5ae2228e6e077bb31edbadef2cee7f61562b3b38896909"
+    },
+    {
+      "path": "images/MEAL-059.png",
+      "size_bytes": 2538935,
+      "sha256": "272cd0a1f848ee1388542d8beb9ac18f6ce0096e70f8d03707298914ff55873d"
+    },
+    {
+      "path": "images/MEAL-060.png",
+      "size_bytes": 2519508,
+      "sha256": "378c2a70e8177c205d2dcc559b9eaeacb7955e0a97f1ea2f724770a920e1fa74"
+    },
+    {
+      "path": "meal_image_mapping.json",
+      "size_bytes": 9442,
+      "sha256": "b06b541b5ed41af9231f08f0466a1688c8b00d3b79c02ecd644efe81b90a7fda"
+    },
+    {
+      "path": "nutrition_batch_021_060_ingredients.csv",
+      "size_bytes": 28679,
+      "sha256": "ac795a1f0013d91a7f8b9f1069899b49226dfa3ac8e4142c126ab769d5ef723f"
+    },
+    {
+      "path": "nutrition_batch_021_060.csv",
+      "size_bytes": 11327,
+      "sha256": "8d00507cba5cc790ffe3b0bc6fb9160ef4446d86f436a933757dfb3314271b1c"
+    },
+    {
+      "path": "nutrition_batch_021_060.json",
+      "size_bytes": 142221,
+      "sha256": "ff8d212955c7228057e370281fe8471a9bcfa8de972915440cfc2b3b9df399ca"
+    },
+    {
+      "path": "NUTRITION_BATCH_REPORT.md",
+      "size_bytes": 633,
+      "sha256": "3ae1ebbff6664557d23f944068594872f1b7d40c92e1286c03db7a085b72b2cd"
+    },
+    {
+      "path": "NUTRITION_CALCULATION_SOURCES.md",
+      "size_bytes": 737,
+      "sha256": "22a7b90f2ab34c2b0908180964200b982e5f2b66a263945a485099499e70a0ed"
+    },
+    {
+      "path": "NUTRITION_DATA_CONTRACT.md",
+      "size_bytes": 824,
+      "sha256": "e8348924db7ad858c06e45cbb2d3306b5fe81f761347ec644360c3204b20bb01"
+    },
+    {
+      "path": "QA_REPORT.md",
+      "size_bytes": 1079,
+      "sha256": "2fc0d9c177a6c6badc41dd391d4ea383a4936bdbc4bf46f8e19add361daff155"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 564,
+      "sha256": "2f0960bcaf84fb55800892108af646da33f470a6f778a2923ea8c470f447dd0f"
+    },
+    {
+      "path": "thumbnail/MEAL-021/cover-thumb.webp",
+      "size_bytes": 9336,
+      "sha256": "e82dda0ad2be94f906a5cae4e9e4dac471079adde441d9cde5d05db91d2b094e"
+    },
+    {
+      "path": "thumbnail/MEAL-022/cover-thumb.webp",
+      "size_bytes": 15386,
+      "sha256": "7934542553588ad6dfbb6e6bca7ceef27eea0ce55e5be8d2ac322ff7f5c18dc5"
+    },
+    {
+      "path": "thumbnail/MEAL-023/cover-thumb.webp",
+      "size_bytes": 20314,
+      "sha256": "9ed13576714e21fe7847c2bc435a5cb1d63674d28456f9978cd5074f6073f9c2"
+    },
+    {
+      "path": "thumbnail/MEAL-024/cover-thumb.webp",
+      "size_bytes": 15204,
+      "sha256": "5655ae9ee6f7d7120d2f3ede21a64128ce9e37ced8260544ef763a28af13d191"
+    },
+    {
+      "path": "thumbnail/MEAL-025/cover-thumb.webp",
+      "size_bytes": 16810,
+      "sha256": "f4d75f84a47e166ab2588005db0c49b464ae6bb21ae41e5bf1a2e9c2e533b844"
+    },
+    {
+      "path": "thumbnail/MEAL-026/cover-thumb.webp",
+      "size_bytes": 21006,
+      "sha256": "d2fc2e9bde36bc5ed1ef9939491ee3cad65961344176d1e06f8b90a2f1616dbb"
+    },
+    {
+      "path": "thumbnail/MEAL-027/cover-thumb.webp",
+      "size_bytes": 22782,
+      "sha256": "6fd72cf70fed3607cd838a22dfa999a6e6fab54979e71ea041b7a2ae5e5c6597"
+    },
+    {
+      "path": "thumbnail/MEAL-028/cover-thumb.webp",
+      "size_bytes": 9844,
+      "sha256": "dbac9d7954517a89d6249df15527d0368607ad6642e5750e0a5ba56042a12dea"
+    },
+    {
+      "path": "thumbnail/MEAL-029/cover-thumb.webp",
+      "size_bytes": 23004,
+      "sha256": "de95e599f3b341b4a158effad0fb3084fde3e7549f7bb9fc9aeffcf4eaded2ee"
+    },
+    {
+      "path": "thumbnail/MEAL-030/cover-thumb.webp",
+      "size_bytes": 18710,
+      "sha256": "f7c4e9962f567d69c9257782e8a85c718afa965548b75c87f494b59d89962ff0"
+    },
+    {
+      "path": "thumbnail/MEAL-031/cover-thumb.webp",
+      "size_bytes": 20904,
+      "sha256": "4a8465c0661dcd3688f65d7adb29543703d9d0fa029c067f77352ed25aa95916"
+    },
+    {
+      "path": "thumbnail/MEAL-032/cover-thumb.webp",
+      "size_bytes": 21084,
+      "sha256": "77346ed81426fcd350ca5fcb7f8010fe305cc29f96ace5e4e0047ad8b8322a1d"
+    },
+    {
+      "path": "thumbnail/MEAL-033/cover-thumb.webp",
+      "size_bytes": 21364,
+      "sha256": "691c5095807f43c3c4c5134320395873df690e70fab7a2957261298341b802ae"
+    },
+    {
+      "path": "thumbnail/MEAL-034/cover-thumb.webp",
+      "size_bytes": 25330,
+      "sha256": "ec9cad0b49a63d2f7c750e2e1c022f7e5e8f51d339d4c073eb58a6e2ac9481a2"
+    },
+    {
+      "path": "thumbnail/MEAL-035/cover-thumb.webp",
+      "size_bytes": 12422,
+      "sha256": "0f0c755f60b8689057bec626afd7936e99064de0524ca8765bb7a07eb5d02d7b"
+    },
+    {
+      "path": "thumbnail/MEAL-036/cover-thumb.webp",
+      "size_bytes": 22864,
+      "sha256": "df38dfcb8aa67b7a7b849465f2e62d442ac90f0fbe61afd9f2dca83c2838c9b2"
+    },
+    {
+      "path": "thumbnail/MEAL-037/cover-thumb.webp",
+      "size_bytes": 16850,
+      "sha256": "697781c5ac12e53e39b65d4bbdcb097f34563e86aba0a81f5ee7e5817c914eec"
+    },
+    {
+      "path": "thumbnail/MEAL-038/cover-thumb.webp",
+      "size_bytes": 19302,
+      "sha256": "81bc047a6e02302e1a2acf505628b1470a685e457000f879ee586ba2b5b140e4"
+    },
+    {
+      "path": "thumbnail/MEAL-039/cover-thumb.webp",
+      "size_bytes": 23764,
+      "sha256": "f71caff72a0b75b8986ce2c768f0be7ccd7bca26de00b42573f0eb528a16c8c0"
+    },
+    {
+      "path": "thumbnail/MEAL-040/cover-thumb.webp",
+      "size_bytes": 23086,
+      "sha256": "c4e6274ec572f9f388c669bcfebffc00a97753494166c901e8fa5bdf334d12ae"
+    },
+    {
+      "path": "thumbnail/MEAL-041/cover-thumb.webp",
+      "size_bytes": 12760,
+      "sha256": "5661aa67e283f827e6f5af37624fc65f2ec98b3578ec7833841fd65083269fdc"
+    },
+    {
+      "path": "thumbnail/MEAL-042/cover-thumb.webp",
+      "size_bytes": 9894,
+      "sha256": "4b1f5673411802b8df5ef75812663b42860a4bfb28954d073c31dd0d7321450f"
+    },
+    {
+      "path": "thumbnail/MEAL-043/cover-thumb.webp",
+      "size_bytes": 15528,
+      "sha256": "069c61d20750b1bcf787f3a047a3eb2d43a65fe7ad95b7f110d841c260cc3011"
+    },
+    {
+      "path": "thumbnail/MEAL-044/cover-thumb.webp",
+      "size_bytes": 14698,
+      "sha256": "94d54c5d3009f643d6a3ebcaff638d7ea757fababc98aa9cf45cb9cec5588bf8"
+    },
+    {
+      "path": "thumbnail/MEAL-045/cover-thumb.webp",
+      "size_bytes": 15640,
+      "sha256": "4c9ebd175e031bdba85ceb3d77b71ef776ce3cfb4b6790cfc6ba274c2d52a035"
+    },
+    {
+      "path": "thumbnail/MEAL-046/cover-thumb.webp",
+      "size_bytes": 9850,
+      "sha256": "ab6fdbd0c533efda6cee94740fcbe2a58d3900a3edb75d4719de1961824f7986"
+    },
+    {
+      "path": "thumbnail/MEAL-047/cover-thumb.webp",
+      "size_bytes": 15656,
+      "sha256": "3f7ca59bc6c45bf846127ebbc1b79ffaf51e41083e118903a0a99822c046a604"
+    },
+    {
+      "path": "thumbnail/MEAL-048/cover-thumb.webp",
+      "size_bytes": 16798,
+      "sha256": "f9d2b9eec02cf55cad98020b9395a7f8f28b1bb7ec661b17bcfc5419d4919249"
+    },
+    {
+      "path": "thumbnail/MEAL-049/cover-thumb.webp",
+      "size_bytes": 8710,
+      "sha256": "7bcaa1a592e599344da1e8dd38b86284ea7479ec879710473102603bc1bcbf13"
+    },
+    {
+      "path": "thumbnail/MEAL-050/cover-thumb.webp",
+      "size_bytes": 15116,
+      "sha256": "b5f0bea6328cb8e9e16b32021ed89f86487921c01988fc46e94c58f3a7932939"
+    },
+    {
+      "path": "thumbnail/MEAL-051/cover-thumb.webp",
+      "size_bytes": 22560,
+      "sha256": "d9c4c5d017c3cf3810bf23ac2d1023a72a5190d60a7bd4e7f4049618efe1fbb5"
+    },
+    {
+      "path": "thumbnail/MEAL-052/cover-thumb.webp",
+      "size_bytes": 18570,
+      "sha256": "122306d13438a33e2fd0c884202718171871cedf9f0727cbbffe4af8894bfa59"
+    },
+    {
+      "path": "thumbnail/MEAL-053/cover-thumb.webp",
+      "size_bytes": 26138,
+      "sha256": "8fe91eec641573e687aaa2c539a2e601eaf3f58b2fe19df9f503a3eddc959d09"
+    },
+    {
+      "path": "thumbnail/MEAL-054/cover-thumb.webp",
+      "size_bytes": 19232,
+      "sha256": "faa5f418b87964fdb8d6d27a8a978acd7a884b6ceec227aa1002be7d228c5723"
+    },
+    {
+      "path": "thumbnail/MEAL-055/cover-thumb.webp",
+      "size_bytes": 14426,
+      "sha256": "b0ce59ae7441b18af5b6b72d5562e79de64b12db37eb6802f54a398a8bd8c8ff"
+    },
+    {
+      "path": "thumbnail/MEAL-056/cover-thumb.webp",
+      "size_bytes": 19040,
+      "sha256": "1bc95a7046467a44f5165f05d523a55dc1fefdbeef9c72acf1b08152b8ad0e5e"
+    },
+    {
+      "path": "thumbnail/MEAL-057/cover-thumb.webp",
+      "size_bytes": 22642,
+      "sha256": "68575d4e7f499a533fa4d1680494af2a42dd267aceeb7a720ae6b047e218c696"
+    },
+    {
+      "path": "thumbnail/MEAL-058/cover-thumb.webp",
+      "size_bytes": 22642,
+      "sha256": "2b416f117abcb7bcbc46069db8146525f853a6689c071efbe103f4ac60ec144e"
+    },
+    {
+      "path": "thumbnail/MEAL-059/cover-thumb.webp",
+      "size_bytes": 19786,
+      "sha256": "f5d765d8a08822475d3462e98bfefbc76a4a3b0b9c0d629593d4613de0a583b2"
+    },
+    {
+      "path": "thumbnail/MEAL-060/cover-thumb.webp",
+      "size_bytes": 21992,
+      "sha256": "16be38e8c85e270fb3cddcd8f6c20ffdbbf04d6c93d8025c8de62f8a82e6b547"
+    }
+  ]
+}
