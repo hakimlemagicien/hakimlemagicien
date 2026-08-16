@@ -6,7 +6,6 @@ import {
   ClipboardList,
   LineChart,
   Lock,
-  UtensilsCrossed,
 } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WaterCompactWidget } from "@/components/platform/water/WaterCompactWidget";
@@ -20,6 +19,7 @@ import {
   NutritionErrorCard,
   NutritionHeader,
   NutritionLockedOverlay,
+  NutritionMealImage,
   NutritionMotionSection,
   NutritionOfflineBanner,
   nutritionCardClass,
@@ -27,9 +27,9 @@ import {
   staggerItem,
 } from "@/components/platform/nutrition/NutritionShared";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
+import { formatNutritionNumber } from "@/lib/platform/meal-library";
 import {
   MEAL_STATUS_LABELS,
   buildCurrentWeekDays,
@@ -404,24 +404,20 @@ function MealTimelineCard({
           {mealName}
         </p>
         <p className="mt-1 text-[9px] font-medium text-muted-foreground">
-          {calories} سعرة · ب {protein} · ك {carbs} · د {fat}
+          {formatNutritionNumber(calories)} سعرة · ب {formatNutritionNumber(protein)} · ك{" "}
+          {formatNutritionNumber(carbs)} · د {formatNutritionNumber(fat)}
         </p>
       </div>
 
       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-muted">
-        {image ? (
-          <OptimizedImage
-            src={image}
-            alt=""
-            width={112}
-            height={112}
-            className={cn("h-full w-full", locked && "opacity-45 saturate-50")}
-          />
-        ) : (
-          <span className="grid h-full w-full place-items-center text-muted-foreground">
-            <UtensilsCrossed className="h-5 w-5" />
-          </span>
-        )}
+        <NutritionMealImage
+          src={image}
+          alt=""
+          width={112}
+          height={112}
+          sizes="56px"
+          className={cn("h-full w-full", locked && "opacity-45 saturate-50")}
+        />
         {locked ? (
           <span className="absolute inset-0 grid place-items-center bg-black/35">
             <Lock className="h-3.5 w-3.5 text-white drop-shadow-sm" strokeWidth={2.4} />

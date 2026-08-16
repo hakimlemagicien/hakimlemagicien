@@ -1,0 +1,153 @@
+{
+  "package": "hakim-nutrition-pilot-20",
+  "version": "1.1.0",
+  "generated_on": "2026-08-16",
+  "qa_status": "passed",
+  "record_count": 20,
+  "id_start": "MEAL-001",
+  "id_end": "MEAL-020",
+  "image_count": 20,
+  "unique_image_hashes": 20,
+  "files": [
+    {
+      "path": "images/MEAL-001.png",
+      "size_bytes": 2166718,
+      "sha256": "e521eb2f0264ec5e31ee1ec299a45cea9ce31543221048f1b5a63928dfcf48e5"
+    },
+    {
+      "path": "images/MEAL-002.png",
+      "size_bytes": 2781701,
+      "sha256": "39f81959516529cc62043078fcf84452df184e2bfac01d77d1f27d131673c6d7"
+    },
+    {
+      "path": "images/MEAL-003.png",
+      "size_bytes": 2593423,
+      "sha256": "bf5e5cfa814f7b470e8adb60a66af9e84b8370275b82afb1fd16fe3b46ec525f"
+    },
+    {
+      "path": "images/MEAL-004.png",
+      "size_bytes": 2246158,
+      "sha256": "4cdab483bb3d8f7e13678772332401653f9901dd530ce235d23086620959382f"
+    },
+    {
+      "path": "images/MEAL-005.png",
+      "size_bytes": 2451303,
+      "sha256": "67e8275108eb03cf8a25a34c3f19a91d15fd45d93ab6e852391b132dcc8781ca"
+    },
+    {
+      "path": "images/MEAL-006.png",
+      "size_bytes": 2819896,
+      "sha256": "a8f7914a9fd5390912731a948efa3865170621f6f47e84a92c5ff646d99706af"
+    },
+    {
+      "path": "images/MEAL-007.png",
+      "size_bytes": 2561718,
+      "sha256": "01e1e0f39e0f94164db34d9b4b3ad9afa1f63339c9b4539c9c6f833069aecdca"
+    },
+    {
+      "path": "images/MEAL-008.png",
+      "size_bytes": 2472167,
+      "sha256": "403dd221a2cba13a74ca7850e01fd960c009d1577ffe74a6d668093d32327003"
+    },
+    {
+      "path": "images/MEAL-009.png",
+      "size_bytes": 2243354,
+      "sha256": "89ac0d15c25434f3190371e32208bf42b39ef9aaeee5dbdb5acd9cfde1fcad1a"
+    },
+    {
+      "path": "images/MEAL-010.png",
+      "size_bytes": 2409376,
+      "sha256": "79517b758785eb1c53149ec826d0e6bacd50048d6f168c52d8da826baa6814e0"
+    },
+    {
+      "path": "images/MEAL-011.png",
+      "size_bytes": 2732818,
+      "sha256": "3e41e4d195f9771e5ddd76efa94bf22ad13029c2aab805ff599b5c50f9d97748"
+    },
+    {
+      "path": "images/MEAL-012.png",
+      "size_bytes": 2775095,
+      "sha256": "baaa037b855f801f21530f911cecb0554b53a4e20e38f2f307c1fac551a8cc7f"
+    },
+    {
+      "path": "images/MEAL-013.png",
+      "size_bytes": 2503022,
+      "sha256": "a44c7a75bce3b536846e80ad3a812ae007667f52fed94d732ed4e070583adcd4"
+    },
+    {
+      "path": "images/MEAL-014.png",
+      "size_bytes": 2390767,
+      "sha256": "39006f7deb598e64fc2bc6c5aa62526a6524516e78e525bfb032cae069c9bb54"
+    },
+    {
+      "path": "images/MEAL-015.png",
+      "size_bytes": 2259879,
+      "sha256": "5eec2760b0f43520b4d4e7b1e2b9e0107f1c935dd756a53311ea18608e105673"
+    },
+    {
+      "path": "images/MEAL-016.png",
+      "size_bytes": 2185162,
+      "sha256": "8773da93f5b730858d578765cf3a81d43fd8a34fbe1ff493fb2aa938be96a24a"
+    },
+    {
+      "path": "images/MEAL-017.png",
+      "size_bytes": 2078309,
+      "sha256": "5f8e362c938f9a626c3668c54f41e4701a9cfc8634359f7506c5afc432fb82ba"
+    },
+    {
+      "path": "images/MEAL-018.png",
+      "size_bytes": 2262501,
+      "sha256": "cacc94f0cd55a2146ebb8816584f4e48e2ddf7f7b1b337a435668b4fd71ec2c5"
+    },
+    {
+      "path": "images/MEAL-019.png",
+      "size_bytes": 1993275,
+      "sha256": "aefcacf9ffbcb3664a4458f3c6c88b238d99cd0e4164fae78649c9f6ac969453"
+    },
+    {
+      "path": "images/MEAL-020.png",
+      "size_bytes": 2610113,
+      "sha256": "83ea8405fdc1c277fb3bd364141ffdffd96a2b484c15b1e1ca806e97a59b54f1"
+    },
+    {
+      "path": "meal_image_mapping.json",
+      "size_bytes": 4385,
+      "sha256": "8b2f74700ea58d1de20e22373dd19c4c7b31b48782e7a38acce35e810707f578"
+    },
+    {
+      "path": "NUTRITION_CALCULATION_SOURCES.md",
+      "size_bytes": 706,
+      "sha256": "260ca7a8500170eb4e1a9a34a5fa314382f8dc80578e2b002fb441b67916ea5c"
+    },
+    {
+      "path": "NUTRITION_DATA_CONTRACT.md",
+      "size_bytes": 797,
+      "sha256": "22b62146bde7de5154cd4c594be9c0e72882ba7b8d467065d4542a4166ab8d28"
+    },
+    {
+      "path": "nutrition_pilot_20_ingredients.csv",
+      "size_bytes": 16316,
+      "sha256": "f91418457f6393a050e52c216f6fa96c34914bdffc5c5b75f62530bab7b20638"
+    },
+    {
+      "path": "nutrition_pilot_20_meals.csv",
+      "size_bytes": 5957,
+      "sha256": "fc8dce42ce36bc2be4256b6f030c32cdbf4759a2e20d25fab1a7a5c7da0bfce0"
+    },
+    {
+      "path": "nutrition_pilot_20.json",
+      "size_bytes": 83937,
+      "sha256": "74a7fec97d9052b011b16a66d7703d2ddef274d0ff47db8573b8ee2b9fb67fc5"
+    },
+    {
+      "path": "QA_REPORT.md",
+      "size_bytes": 1479,
+      "sha256": "f62fcacfe6ece3c7602ec71201041f1f0065fbc6ae6bf0c94735aa35e1df3bc2"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 570,
+      "sha256": "edf2d0b9eddc5f45c3edd934a88e5fb2d7a136ad0bf4ac5a5c1673c50abfad72"
+    }
+  ]
+}

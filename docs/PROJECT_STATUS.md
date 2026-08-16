@@ -127,6 +127,9 @@ loading | gender | goals | … | contact | congrats | reveal
 | `/app/profile` | ✅ Account + avatar |
 | `/app/nutrition/*` | 🚧 جزئي |
 | `/app/progress` | 🚧 UX مبني — بيانات محلية |
+| `/app/support` | ✅ FAQ + محادثة كوتش (Messaging V1 في الكود) |
+| `/app/support/chat` | ✅ دردشة خاصة — **Needs Verification:** migration على production |
+| `/admin/messages` | ✅ صندوق الكوتش — **Needs Verification:** RLS + Realtime + Resend |
 
 ---
 

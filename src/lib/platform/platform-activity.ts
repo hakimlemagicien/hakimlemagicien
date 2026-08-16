@@ -447,3 +447,88 @@ export function isWorkoutCompletedOnDate(userId: string, dateKey: string): boole
   const store = readStore(userId);
   return Boolean(store.daily[dateKey]?.workoutCompleted);
 }
+
+const HOST_PREVIEW_AWARD = "preview:host-v1";
+
+function dateKeyDaysAgo(daysAgo: number) {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
+
+function previewUnit(seed: number) {
+  const value = Math.sin(seed) * 10000;
+  return value - Math.floor(value);
+}
+
+/** Lived-in demo numbers for the founder host. Overwrites local activity for review. */
+export function seedHostPreviewActivity(userId: string): boolean {
+  if (typeof window === "undefined" || !userId || userId === "guest") return false;
+
+  const seed = Array.from(userId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const today = dateKeyDaysAgo(0);
+  const mealsToday = 1 + Math.floor(previewUnit(seed + 3) * 2);
+  const currentWeight = Math.round((81.2 + previewUnit(seed + 7) * 2.4) * 10) / 10;
+  const streakCount = 12 + Math.floor(previewUnit(seed + 11) * 5);
+
+  const daily: Record<string, DailyLog> = {};
+  const awards: Record<string, true> = { [HOST_PREVIEW_AWARD]: true };
+  let points = HAKIM_POINTS_REWARDS.achievement + HAKIM_POINTS_REWARDS.measurements;
+
+  for (let daysAgo = 20; daysAgo >= 1; daysAgo -= 1) {
+    const dateKey = dateKeyDaysAgo(daysAgo);
+    const weekday = new Date(`${dateKey}T12:00:00`).getDay();
+    const isRest = weekday === 0 || weekday === 6;
+    const workoutCompleted = !isRest;
+    const mealsDone = isRest ? 3 : 3 + Math.floor(previewUnit(seed + daysAgo) * 2);
+
+    daily[dateKey] = {
+      waterGlasses: 0,
+      mealsDone,
+      workoutCompleted,
+      weightKg: daysAgo === 1 ? currentWeight : null,
+    };
+
+    if (workoutCompleted) {
+      awards[`${dateKey}:workout`] = true;
+      points += HAKIM_POINTS_REWARDS.workout;
+    }
+    if (mealsDone >= MEALS_SEED.length) {
+      awards[`${dateKey}:nutrition-complete`] = true;
+      points += HAKIM_POINTS_REWARDS.nutrition;
+    }
+  }
+
+  daily[today] = {
+    waterGlasses: 0,
+    mealsDone: mealsToday,
+    workoutCompleted: false,
+    weightKg: currentWeight,
+  };
+
+  const firstActiveDate = dateKeyDaysAgo(28);
+  const next: PlatformActivityStore = {
+    version: 1,
+    userId,
+    points,
+    streak: { count: streakCount, lastActiveDate: today },
+    bestStreak: Math.max(streakCount, 18),
+    progress: {
+      startWeight: 88,
+      goalWeight: 76,
+      currentWeight,
+      firstActiveDate,
+    },
+    daily,
+    awards,
+    lastAchievement: {
+      title: "أحسنت!",
+      subtitle: `حافظت على سلسلة ${streakCount} يوماً متتالياً`,
+      date: dateKeyDaysAgo(1),
+    },
+  };
+
+  writeStore(next);
+  return true;
+}

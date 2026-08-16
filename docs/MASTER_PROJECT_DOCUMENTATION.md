@@ -280,7 +280,9 @@ hakimlemagicien/
 | `/app/nutrition/progress` | auth | 🚧 | تقدم التغذية |
 | `/app/nutrition/alternatives` | auth | 🚧 | بدائل وجبات |
 | `/app/progress` | auth | 🚧 | Dashboard UX — بيانات محلية/جزئية |
-| `/app/support` | auth | 🚧/جزئي | FAQ + WhatsApp Premium |
+| `/app/support` | auth | ✅ | FAQ + Coaching Messaging V1 |
+| `/app/support/chat` | auth | ✅ | محادثة خاصة (text/image/voice) — **Needs Verification:** production migration |
+| `/admin/messages` | admin | ✅ | Coach Inbox — **Needs Verification:** RLS + email |
 | `/app/studio` | auth | 🔧 | Design lab (داخلي) |
 
 **ملاحظة:** `/app/water` **غير موجود** — الماء عبر `WaterProvider` في `PlatformShell.tsx`
@@ -295,8 +297,8 @@ hakimlemagicien/
 
 - `/onboarding` — **غير موجود** (Onboarding عبر `/quiz`)
 - `/programs`, `/blog` — **غير موجودة**
-- لوحة أدمن أوسع (مستخدمين، محتوى، تمارين) — **غير موجودة**
-- In-app chat — **غير موجود**
+- لوحة أدمن أوسع (مستخدمين، محتوى، تمارين) — **جزئية:** المدفوعات + صندوق الرسائل
+- In-app chat — **منفّذ في الكود (Coaching Messaging V1)** — **Needs Verification:** تطبيق migration `20260816210000_coaching_messaging_v1.sql` على المشروع الرسمي، Realtime، وإشعارات Resend
 
 ---
 
@@ -567,12 +569,12 @@ leads ──1:N── lead_proof_uploads
 
 # 11. UI Components
 
-## 11.1 Landing (`src/components/`)
+## 11.1 Marketing Landing components (`src/components/` — route `/coaching`)
 
 | المكوّن | الدور |
 |---------|-------|
-| `Header.tsx` | تنقل + تسجيل دخول / حسابي → `/app` |
-| `Hero.tsx` | القسم الرئيسي + CTA للكويز |
+| `Header.tsx` | تنقل + تسجيل دخول / حسابي → `/app`؛ الرئيسية → `/coaching` |
+| `Hero.tsx` | القسم الرئيسي + CTA → `/` (App-First entry) |
 | `ProblemSection`, `HowItWorks`, `WhatYouGet` | شرح المشكلة والحل |
 | `Results90`, `SuccessStories` | إثبات اجتماعي |
 | `PricingTransparency`, `FAQ`, `FinalCTA` | تسعير وأسئلة وإغلاق |
@@ -1011,8 +1013,8 @@ RPCs الحساسة (`create_lead`, `admin_*`, `update_lead`, ...) تعمل بص
 | القاعدة | التفاصيل |
 |---------|----------|
 | مسار المنصة | `/app` (ليس `/dashboard`) |
-| لا تلمس | Landing, Quiz, Admin إلا بطلب صريح (قرار Phase 1) |
-| Upgrade CTA | دائماً → `/quiz` |
+| لا تلمس | Landing (`/coaching`), Quiz, Admin إلا بطلب صريح (قرار Phase 1) |
+| Upgrade CTA | → `/` (مدخل App-First)؛ `/quiz` legacy |
 | Coach Chat مؤقتاً | WhatsApp URL في `seed-content.ts` |
 | Commit | فقط عند طلب المستخدم |
 | التوجيه | TanStack file-based — لا `src/pages/` |

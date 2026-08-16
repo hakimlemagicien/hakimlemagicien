@@ -43,7 +43,7 @@ Rules:
 
 | Context | Component |
 |---------|-----------|
-| Landing sections | `SectionSkeleton` |
+| Landing (`/coaching`) sections | `SectionSkeleton` |
 | Platform lists | `SectionSkeleton variant="list"` |
 | Media thumbnails | `Skeleton` from `@/components/ui/skeleton` |
 | General images | Shimmer built into `OptimizedImage` |

@@ -1,19 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { HomeDashboardSkeleton } from "@/components/platform/home/HomeDashboardSkeleton";
-import { HomeMemberResults } from "@/components/platform/home/HomeMemberResults";
-import { HomePersonalNutritionCard } from "@/components/platform/home/HomePersonalNutritionCard";
 import { HomeStickyUpgradeFooter } from "@/components/platform/home/HomeStickyUpgradeFooter";
 import {
+  HomeCoachTip,
   HomeDailySnapshot,
   HomeDiscover,
   HomeHeader,
   HomeHeroCard,
+  HomeNextSession,
   HomeOfflineBanner,
   HomePersonalProgramCard,
   HomeSectionError,
-  HomeStreakAchievementRow,
-  HomeTodaysMission,
+  HomeSocialProof,
 } from "@/components/platform/home/HomeSections";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { useMembership } from "@/hooks/useMembership";
@@ -22,9 +21,8 @@ import {
   buildDailySnapshot,
   buildDiscoverPreviewItems,
   buildHeroState,
-  buildLastAchievement,
-  buildStreakWeek,
-  buildTodaysMission,
+  buildMessageOfDay,
+  buildNextSession,
   resolveClientFirstName,
   shouldShowActivateCta,
 } from "@/lib/platform/home-hub";
@@ -77,9 +75,8 @@ function PlatformHomePage() {
         activity,
       }),
       snapshot: buildDailySnapshot({ features, activity }),
-      mission: features.workout_program ? buildTodaysMission({ features, activity }) : null,
-      week: buildStreakWeek(count),
-      achievement: buildLastAchievement(activity),
+      coach: buildMessageOfDay({ displayName, streak: count, goal, activity }),
+      session: buildNextSession({ features, activity }),
       discover: buildDiscoverPreviewItems(goal),
     };
   }, [loading, displayName, goal, goalId, gender, features, count, hakimPoints, activity]);
@@ -105,18 +102,11 @@ function PlatformHomePage() {
           <HomeHeader name={clientName} avatarUrl={avatarUrl} tier={tier} />
           <HomeHeroCard hero={dashboard.hero} />
           <HomeDailySnapshot items={dashboard.snapshot} />
+          <HomeNextSession session={dashboard.session} />
+          <HomeCoachTip message={dashboard.coach} />
           {dashboard.discover.length > 0 ? <HomeDiscover items={dashboard.discover} /> : null}
+          {shouldShowActivateCta(tier, is_paid) ? <HomeSocialProof /> : null}
           {shouldShowActivateCta(tier, is_paid) ? <HomePersonalProgramCard /> : null}
-          {shouldShowActivateCta(tier, is_paid) ? <HomeMemberResults /> : null}
-          {shouldShowActivateCta(tier, is_paid) ? <HomePersonalNutritionCard /> : null}
-          {dashboard.mission ? <HomeTodaysMission mission={dashboard.mission} /> : null}
-          {!shouldShowActivateCta(tier, is_paid) ? (
-            <HomeStreakAchievementRow
-              streak={count}
-              week={dashboard.week}
-              achievement={dashboard.achievement}
-            />
-          ) : null}
         </>
       ) : null}
 

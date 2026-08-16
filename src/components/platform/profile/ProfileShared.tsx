@@ -1,8 +1,9 @@
 import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, RefreshCw } from "lucide-react";
+import { ChevronLeft, MessageSquare, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { cn } from "@/lib/utils";
 
 export const profileCardClass =
@@ -32,8 +33,20 @@ export function ProfileMotionSection({
 
 export function ProfilePageHeader() {
   return (
-    <header className="px-0.5">
+    <header className="flex h-11 items-center justify-between px-0.5">
+      <Link
+        to="/app/support"
+        className="platform-home-header-v2__action platform-touch grid h-11 w-11 place-items-center text-foreground"
+        aria-label="الرسائل"
+      >
+        <MessageSquare strokeWidth={1.75} className="h-6 w-6" />
+      </Link>
       <h1 className="text-base font-black tracking-tight text-foreground">الملف الشخصي</h1>
+      <PlatformHeaderActions
+        actionClassName="platform-home-header-v2__action platform-touch grid h-11 w-11"
+        iconClassName="h-6 w-6"
+        bellStrokeWidth={1.75}
+      />
     </header>
   );
 }

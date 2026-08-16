@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import {
   Award,
-  Bell,
   Check,
   ChevronLeft,
   ClipboardList,
+  Clock3,
   Crown,
   Dumbbell,
   Droplets,
@@ -14,7 +14,6 @@ import {
   Play,
   RefreshCw,
   Scale,
-  ShieldCheck,
   Sparkles,
   Star,
   Target,
@@ -24,16 +23,20 @@ import {
   User,
   UtensilsCrossed,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import appLogo from "@/assets/app-logo.png";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   PlatformScrollRow,
   PlatformSection,
 } from "@/components/platform/layout/PlatformLayout";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
+import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
 import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
+import { MEMBER_RESULT_STORIES } from "@/lib/platform/member-results-stories";
 import type { MembershipTier } from "@/lib/platform/membership";
 import { getMembershipTierLabel } from "@/lib/platform/membership";
 import {
@@ -50,15 +53,17 @@ import type {
   HeroState,
   LastAchievementState,
   MessageOfDay,
+  NextSessionState,
   QuickGlanceItem,
   StreakWeekDay,
-  TodaysMissionState,
 } from "@/lib/platform/home-hub";
+import { READINESS_COPY, hasStartedToday } from "@/lib/platform/readiness";
+import { READINESS_CHANGE_EVENT, getTodayReadinessRecord } from "@/lib/platform/readiness-storage";
 import { HOME_GREETING_SUBTEXT } from "@/lib/platform/seed-content";
 import bodyMuscular from "@/assets/body-muscular.jpg";
 import feminineToned from "@/assets/feminine-toned-body.png";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
-import homePremiumTreasure from "@/assets/home-premium-treasure.webp";
+import coachPhoto from "@/assets/coach-photo.png";
 import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
@@ -77,8 +82,7 @@ const FEATURED_IMAGES = {
 const SNAPSHOT_ICONS = {
   workout: Dumbbell,
   nutrition: UtensilsCrossed,
-  water: Droplets,
-  progress: TrendingUp,
+  progress: Scale,
 } as const;
 
 const GLANCE_ICONS = {
@@ -198,6 +202,90 @@ function StreakRing({
 
 /* ── Header (logo center · avatar · notifications) ─────────────────────── */
 
+const VIP_BADGE_SESSION_KEY = "hakim.home.vip-badge.seen";
+const SESSION_REVEAL_KEY = "hakim.home.next-session.revealed";
+const SESSION_REVEAL_DELAY_MS = 1200;
+
+function prefersReducedMotion() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function wasSessionRevealed() {
+  try {
+    return sessionStorage.getItem(SESSION_REVEAL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markSessionRevealed() {
+  try {
+    sessionStorage.setItem(SESSION_REVEAL_KEY, "1");
+  } catch {
+    // private mode — once for this mount only
+  }
+}
+
+function useNextSessionReveal() {
+  const [visible, setVisible] = useState(() => wasSessionRevealed() || prefersReducedMotion());
+  const [instant, setInstant] = useState(() => wasSessionRevealed() || prefersReducedMotion());
+
+  useEffect(() => {
+    if (visible) {
+      markSessionRevealed();
+      return;
+    }
+
+    let opened = false;
+    const reveal = (withMotion: boolean) => {
+      if (opened) return;
+      opened = true;
+      markSessionRevealed();
+      if (!withMotion) setInstant(true);
+      setVisible(true);
+    };
+
+    const scrollRoot = document.querySelector(".platform-main");
+    const onScroll = () => reveal(false);
+    scrollRoot?.addEventListener("scroll", onScroll, { passive: true });
+    const timer = window.setTimeout(() => reveal(true), SESSION_REVEAL_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      scrollRoot?.removeEventListener("scroll", onScroll);
+    };
+  }, [visible]);
+
+  return { visible, instant };
+}
+
+function useHomeVipBadge(tier: MembershipTier) {
+  const [phase, setPhase] = useState<"idle" | "in" | "out">("idle");
+
+  useEffect(() => {
+    if (tier !== "vip") return;
+
+    try {
+      if (sessionStorage.getItem(VIP_BADGE_SESSION_KEY)) return;
+      sessionStorage.setItem(VIP_BADGE_SESSION_KEY, "1");
+    } catch {
+      // private mode — play once for this mount only
+    }
+
+    setPhase("in");
+    const hideTimer = window.setTimeout(() => setPhase("out"), 3000);
+    const clearTimer = window.setTimeout(() => setPhase("idle"), 3480);
+
+    return () => {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(clearTimer);
+    };
+  }, [tier]);
+
+  return phase;
+}
+
 export function HomeHeader({
   avatarUrl,
   name,
@@ -210,6 +298,7 @@ export function HomeHeader({
   const tierLabel = getMembershipTierLabel(tier);
   const showCrown = tier === "premium" || tier === "vip" || tier === "admin";
   const frameTier = tier === "visitor" ? "free" : tier;
+  const vipBadgePhase = useHomeVipBadge(tier);
 
   return (
     <header className="platform-home-header-v2 platform-home-enter">
@@ -233,25 +322,47 @@ export function HomeHeader({
             </div>
             {tier === "vip" ? <span className="platform-home-header-v2__vip-gem" aria-hidden /> : null}
           </div>
-          <span className={cn("platform-home-header__tier-badge", `is-tier-${frameTier}`)}>
-            {showCrown ? <Crown aria-hidden /> : null}
-            {tierLabel}
-          </span>
+          {tier === "vip" ? (
+            vipBadgePhase !== "idle" ? (
+              <span className="platform-home-header-v2__tier-slot">
+                <span
+                  className={cn(
+                    "platform-home-header__tier-badge is-tier-vip",
+                    vipBadgePhase === "in" ? "is-in" : "is-out",
+                  )}
+                >
+                  <Crown aria-hidden />
+                  {tierLabel}
+                </span>
+              </span>
+            ) : null
+          ) : (
+            <span className={cn("platform-home-header__tier-badge", `is-tier-${frameTier}`)}>
+              {showCrown ? <Crown aria-hidden /> : null}
+              {tierLabel}
+            </span>
+          )}
         </div>
       </Link>
 
-      <div className="platform-home-header-v2__logo" aria-label="Hakim Coaching">
-        <span className="platform-home-header-v2__logo-mark">H</span>
-        <span className="platform-home-header-v2__logo-text">HAKIM COACHING</span>
+      <div className="platform-home-header-v2__logo">
+        <OptimizedImage
+          src={appLogo}
+          alt="Hakim Coaching"
+          className="platform-home-header-v2__logo-img"
+          width={52}
+          height={30}
+          objectFit="contain"
+          priority
+        />
       </div>
 
       <div className="platform-home-header-v2__actions">
-        <Link to="/app/support" className="platform-home-header-v2__action platform-touch" aria-label="الرسائل">
-          <MessageSquare strokeWidth={1.75} className="h-6 w-6" />
-        </Link>
-        <button type="button" className="platform-home-header-v2__action platform-touch" aria-label="الإشعارات">
-          <Bell strokeWidth={1.75} className="h-6 w-6" />
-        </button>
+        <PlatformHeaderActions
+          actionClassName="platform-home-header-v2__action platform-touch"
+          iconClassName="platform-home-header-v2__action-icon"
+          bellStrokeWidth={1.75}
+        />
       </div>
     </header>
   );
@@ -281,6 +392,15 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
   const progress = useCountUp(hero.overallProgress);
   const streak = useCountUp(hero.streak);
   const points = useCountUp(hero.hakimPoints, 700);
+  const { userId } = usePlatformActivity();
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const refresh = () => setStarted(hasStartedToday(getTodayReadinessRecord(userId)));
+    refresh();
+    window.addEventListener(READINESS_CHANGE_EVENT, refresh);
+    return () => window.removeEventListener(READINESS_CHANGE_EVENT, refresh);
+  }, [userId]);
 
   return (
     <section className="platform-home-hero platform-home-enter platform-home-enter--d1" aria-label="بطاقة الترحيب">
@@ -291,7 +411,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
           <div className="platform-home-hero__goal-card">
             <span className="platform-home-hero__goal-icon">
-              <Target className="h-4 w-4 text-white" aria-hidden />
+              <Target className="h-4 w-4 text-[#FF6B00]" aria-hidden />
             </span>
             <div className="platform-home-hero__goal-copy">
               <span className="platform-home-hero__goal-label">هدفك الحالي</span>
@@ -301,7 +421,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
           <div className="platform-home-hero__progress-card">
             <div className="platform-home-hero__progress-labels">
-              <span>التقدم الكلي</span>
+              <span>التقدم نحو هدفك</span>
               <span className="platform-home-hero__progress-value tabular-nums">{progress}%</span>
             </div>
             <AnimatedProgressBar
@@ -311,7 +431,10 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
             />
           </div>
 
-          <p className="platform-home-hero__motivation">{hero.motivation}</p>
+          <p className="platform-home-hero__motivation">
+            <Sparkles className="h-3 w-3 text-[#FF6B00]" aria-hidden />
+            {hero.motivation}
+          </p>
         </div>
 
         <div className="platform-home-hero__visual" aria-hidden>
@@ -322,44 +445,44 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
       <div className="platform-home-hero__panel">
         <div className="platform-home-hero__stats" aria-label="ملخص سريع">
           <div className="platform-home-hero__stat">
-            <span className="platform-home-hero__stat-icon is-goal">
-              <Target className="h-4 w-4" aria-hidden />
-            </span>
-            <span className="platform-home-hero__stat-label">الهدف الحالي</span>
-            <span className="platform-home-hero__stat-value is-text">{hero.goalTitle}</span>
-          </div>
-
-          <div className="platform-home-hero__stat">
             <span className="platform-home-hero__stat-icon is-progress">
-              <TrendingUp className="h-4 w-4" aria-hidden />
+              <Scale className="h-4 w-4" aria-hidden />
             </span>
-            <span className="platform-home-hero__stat-label">نسبة التقدم</span>
-            <span className="platform-home-hero__stat-value tabular-nums">{progress}%</span>
-            <span className="platform-home-hero__stat-sub">من هدفك</span>
+            <span className="platform-home-hero__stat-label">المتبقي</span>
+            <span className="platform-home-hero__stat-value tabular-nums">
+              {hero.remainingKg != null ? hero.remainingKg : "—"}
+            </span>
+            {hero.remainingKg != null ? (
+              <span className="platform-home-hero__stat-sub">كغ</span>
+            ) : null}
           </div>
 
           <div className="platform-home-hero__stat">
             <span className="platform-home-hero__stat-icon is-streak">
               <Flame className="h-4 w-4" aria-hidden />
             </span>
-            <span className="platform-home-hero__stat-label">سلسلة الإنجاز</span>
+            <span className="platform-home-hero__stat-label">السلسلة</span>
             <span className="platform-home-hero__stat-value tabular-nums">{streak}</span>
-            <span className="platform-home-hero__stat-sub">يوماً متتالية</span>
+            <span className="platform-home-hero__stat-sub">أيام</span>
           </div>
 
           <div className="platform-home-hero__stat">
             <span className="platform-home-hero__stat-icon is-points">
               <Trophy className="h-4 w-4" aria-hidden />
             </span>
-            <span className="platform-home-hero__stat-label">نقاط حكيم</span>
+            <span className="platform-home-hero__stat-label">النشاط</span>
             <span className="platform-home-hero__stat-value tabular-nums">{formatHakimPoints(points)}</span>
             <span className="platform-home-hero__stat-sub">نقطة</span>
           </div>
         </div>
 
-        <Link to="/app/program" className="platform-home-hero__cta platform-touch">
+        <Link
+          to="/app/program"
+          search={started ? {} : { from: "start-day" }}
+          className="platform-home-hero__cta platform-touch"
+        >
           <Play className="h-4 w-4 fill-current" aria-hidden />
-          ابدأ يومك
+          {started ? READINESS_COPY.continueCta : READINESS_COPY.startCta}
         </Link>
       </div>
     </section>
@@ -370,54 +493,25 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
 function SnapshotCard({ item }: { item: DailySnapshotItem }) {
   const Icon = SNAPSHOT_ICONS[item.icon];
-  const water = useWaterOptional();
-
-  const inner = (
-    <>
-      <span className={cn("platform-home-snapshot-card__icon", item.iconBg)}>
-        <Icon className={cn("h-[18px] w-[18px]", item.iconColor)} aria-hidden />
-      </span>
-      <p className="platform-home-snapshot-card__title">{item.title}</p>
-      <p className="platform-home-snapshot-card__value" style={{ color: item.valueColor }}>
-        {item.value}
-      </p>
-      {item.showProgressBar ? (
-        <div className="platform-home-snapshot-card__meter">
-          <span className="platform-home-snapshot-card__pct" style={{ color: item.progressColor }}>
-            {item.progress}%
-          </span>
-          <AnimatedProgressBar
-            value={item.progress}
-            color={item.progressColor}
-            className="platform-home-snapshot-card__bar"
-          />
-        </div>
-      ) : (
-        <p className="platform-home-snapshot-card__footer">{item.subtitle}</p>
-      )}
-    </>
-  );
-
-  if (item.action === "open-water-sheet" && water) {
-    return (
-      <button
-        type="button"
-        onClick={() => water.openWaterSheet()}
-        className="platform-home-snapshot-card platform-home-snapshot-card--bounce platform-touch"
-        aria-label={`${item.title}: ${item.value}`}
-      >
-        {inner}
-      </button>
-    );
-  }
 
   return (
     <Link
       to={item.href ?? "/app"}
-      className="platform-home-snapshot-card platform-home-snapshot-card--bounce platform-touch"
+      className={cn("platform-home-day-card platform-touch", `is-${item.id}`)}
       aria-label={`${item.title}: ${item.value}`}
     >
-      {inner}
+      <span className="platform-home-day-card__icon">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <p className="platform-home-day-card__title">{item.title}</p>
+      <p className="platform-home-day-card__value">{item.value}</p>
+      {item.showProgressBar ? (
+        <AnimatedProgressBar
+          value={item.progress}
+          color="var(--card-accent)"
+          className="platform-home-day-card__bar"
+        />
+      ) : null}
     </Link>
   );
 }
@@ -429,12 +523,12 @@ export function HomeDailySnapshot({ items }: { items: DailySnapshotItem[] }) {
         <h2 id="home-snapshot-title" className="platform-home-section-head__title">
           ملخص يومك
         </h2>
-        <Link to="/app" className="platform-home-section-head__action">
+        <Link to="/app/progress" className="platform-home-section-head__action">
           عرض الكل
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
         </Link>
       </div>
-      <div className="platform-home-snapshot-grid">
+      <div className="platform-home-day-grid">
         {items.map((item) => (
           <SnapshotCard key={item.id} item={item} />
         ))}
@@ -443,172 +537,93 @@ export function HomeDailySnapshot({ items }: { items: DailySnapshotItem[] }) {
   );
 }
 
-/* ── Today's Mission ───────────────────────────────────────────────────── */
-
-export function HomeTodaysMission({ mission }: { mission: TodaysMissionState }) {
-  const showPrimaryCta = !mission.isEmpty && !mission.isRestDay;
-
+export function HomeCoachTip({ message }: { message: MessageOfDay }) {
   return (
-    <section
-      className="platform-home-mission platform-home-enter platform-home-enter--d4"
-      aria-labelledby="home-mission-title"
-    >
-      <div className="platform-home-mission__ring">
-        <StreakRing streak={mission.isRestDay ? 0 : 1} size="lg" theme="light" />
+    <section className="platform-home-coach platform-home-enter platform-home-enter--d3" aria-labelledby="home-coach-title">
+      <div className="platform-home-coach__head">
+        <Sparkles className="h-3.5 w-3.5" aria-hidden />
+        <h2 id="home-coach-title">رسالة من الكوتش</h2>
       </div>
-      <div className="platform-home-mission__body">
-        <h2 id="home-mission-title" className="platform-home-mission__title">
-          {mission.title}
-        </h2>
-        <p className="platform-home-mission__desc">{mission.description}</p>
-        {mission.pointsReward > 0 ? (
-          <p className="platform-home-mission__points">
-            <Star className="h-3.5 w-3.5 fill-[#FCD34D] text-[#FCD34D]" aria-hidden />
-            ستحصل على {mission.pointsReward} نقطة
-          </p>
-        ) : null}
-        {showPrimaryCta ? (
-          <Link to={mission.href} className="platform-home-mission__cta platform-touch">
-            ابدأ التمرين الآن
-            <ChevronLeft className="h-4 w-4" aria-hidden />
+      <div className="platform-home-coach__body">
+        <div className="platform-home-coach__person">
+          <span className="platform-home-coach__avatar">
+            <OptimizedImage src={coachPhoto} alt="الكوتش حكيم" className="h-full w-full" objectFit="cover" />
+          </span>
+          <span className="platform-home-coach__name">حكيم</span>
+        </div>
+        <div className="platform-home-coach__bubble">
+          <p className="platform-home-coach__text">{message.body}</p>
+          <Link to="/app/support" className="platform-home-coach__ask">
+            اسأل الكوتش
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
           </Link>
-        ) : mission.isRestDay ? (
-          <p className="platform-home-mission__rest">استمتع بيوم الراحة — عُد أقوى غداً.</p>
-        ) : (
-          <p className="platform-home-mission__rest">لا توجد مهمة اليوم — أحسنت!</p>
-        )}
+        </div>
       </div>
     </section>
   );
 }
 
-/* ── Streak + Achievement row ──────────────────────────────────────────── */
-
-function StreakProgressRing({ streak }: { streak: number }) {
-  const size = 92;
-  const stroke = 7;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = Math.min(streak / 30, 1);
-  const dash = circumference * progress;
+export function HomeSocialProof() {
+  const clientCount = SOCIAL_PROOF_CLIENT_COUNT.toLocaleString("en-US");
 
   return (
-    <div className="platform-home-streak__ring" aria-hidden>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(249, 115, 22, 0.16)"
-          strokeWidth={stroke}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#f97316"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${circumference}`}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-    </div>
+    <section className="platform-home-social platform-home-enter platform-home-enter--d4" aria-label="إثبات اجتماعي">
+      <div className="platform-home-social__avatars" aria-hidden>
+        {PERSONAL_PROGRAM_AVATARS.map((src, index) => (
+          <img key={index} src={src} alt="" className="platform-home-social__avatar" />
+        ))}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="platform-home-social__text">
+          أكثر من {clientCount} عضو بدأوا رحلتهم معنا
+        </p>
+        <p className="platform-home-social__rating">
+          4.8
+          <Star className="h-3.5 w-3.5 fill-[#22C55E] text-[#22C55E]" aria-hidden />
+        </p>
+      </div>
+    </section>
   );
 }
 
-export function HomeStreakCard({ streak, week }: { streak: number; week: StreakWeekDay[] }) {
-  const count = useCountUp(streak);
-  const motivation = resolveStreakMotivation(streak);
+/* ── Next session ticket ───────────────────────────────────────────────── */
+
+export function HomeNextSession({ session }: { session: NextSessionState }) {
+  const { visible, instant } = useNextSessionReveal();
 
   return (
-    <article className="platform-home-streak" aria-labelledby="home-streak-title">
-      <div className="platform-home-streak__head">
-        <h3 id="home-streak-title" className="platform-home-streak__title">
-          سلسلة الإنجاز
-        </h3>
-        <Flame className="platform-home-streak__head-icon" aria-hidden />
-      </div>
-
-      <div className="platform-home-streak__body">
-        <div className="platform-home-streak__gauge">
-          <StreakProgressRing streak={streak} />
-          <div className="platform-home-streak__gauge-center">
-            <span className="platform-home-streak__count tabular-nums">{count}</span>
-            <span className="platform-home-streak__label">يوماً متتالياً</span>
-          </div>
-        </div>
-
-        <div className="platform-home-streak__week" aria-label="أيام الأسبوع">
-          {week.map((day) => (
-            <div key={day.key} className="platform-home-streak__day-col">
-              <span
-                className={cn(
-                  "platform-home-streak__day",
-                  day.state === "today" && "is-today",
-                  day.state === "done" && "is-done",
-                )}
-                aria-label={day.label}
-              >
-                {day.state === "today" || day.state === "done" ? (
-                  <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
-                ) : null}
-              </span>
-              <span className="platform-home-streak__day-label">{day.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <p className="platform-home-streak__motivation">
-        <Flame className="platform-home-streak__motivation-icon" aria-hidden />
-        {streak > 0 ? "لا تكسر السلسلة! أنت مميز" : motivation.message}
-      </p>
-    </article>
-  );
-}
-
-export function HomeLatestAchievement({ achievement }: { achievement: LastAchievementState }) {
-  return (
-    <article
-      className="platform-home-achievement"
-      aria-labelledby="home-achievement-title"
+    <div
+      className={cn(
+        "platform-home-session-slot",
+        visible && "is-open",
+        instant && "is-instant",
+      )}
     >
-      <h3 id="home-achievement-title" className="platform-home-card-title">
-        آخر إنجاز
-      </h3>
-      <div className="platform-home-achievement__center">
-        {achievement.hasAchievement ? (
-          <ShieldCheck className="h-9 w-9 text-success" aria-hidden />
-        ) : (
-          <Sparkles className="h-9 w-9 text-primary" aria-hidden />
-        )}
-        <p className="platform-home-achievement__title">{achievement.title}</p>
-        <p className="platform-home-achievement__subtitle">{achievement.subtitle}</p>
+      <div className="platform-home-session-slot__inner">
+        <section
+          className="platform-home-session"
+          aria-labelledby="home-session-title"
+          aria-hidden={!visible}
+        >
+          <div className="platform-home-session__copy">
+            <p className="platform-home-session__eyebrow">{session.eyebrow}</p>
+            <h2 id="home-session-title" className="platform-home-session__title">
+              {session.title}
+            </h2>
+            {session.meta ? <p className="platform-home-session__meta">{session.meta}</p> : null}
+          </div>
+          {session.cta ? (
+            <Link
+              to={session.href}
+              className="platform-home-session__play platform-touch"
+              aria-label={session.cta}
+              tabIndex={visible ? undefined : -1}
+            >
+              <Play className="h-5 w-5 fill-current" aria-hidden />
+            </Link>
+          ) : null}
+        </section>
       </div>
-      <Link to="/app/achievements" className="platform-home-achievement__link">
-        عرض التفاصيل
-        <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-      </Link>
-    </article>
-  );
-}
-
-export function HomeStreakAchievementRow({
-  streak,
-  week,
-  achievement,
-}: {
-  streak: number;
-  week: StreakWeekDay[];
-  achievement: LastAchievementState;
-}) {
-  return (
-    <div className="platform-home-duo platform-home-enter platform-home-enter--d5">
-      <HomeStreakCard streak={streak} week={week} />
-      <HomeLatestAchievement achievement={achievement} />
     </div>
   );
 }
@@ -628,125 +643,41 @@ function DiscoverPreviewCard({ item }: { item: DiscoverPreviewItem }) {
         <OptimizedImage src={imageSrc} alt="" className="h-full w-full" objectFit="cover" />
         <span className="platform-home-discover-card__shade" aria-hidden />
         {item.badge ? (
-          <span className="platform-home-discover-card__badge">{item.badge}</span>
+          <span
+            className={cn(
+              "platform-home-discover-card__badge",
+              item.badgeTone === "recipe" && "is-recipe",
+              item.badgeTone === "article" && "is-article",
+            )}
+          >
+            {item.badge}
+          </span>
         ) : null}
         {item.showPlay ? (
           <span className="platform-home-discover-card__play" aria-hidden>
-            <Play className="h-4 w-4 fill-current" />
+            <Play className="h-5 w-5 fill-current" />
           </span>
         ) : null}
-        {item.showSparkle ? (
-          <span className="platform-home-discover-card__sparkle" aria-hidden>
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />
-          </span>
-        ) : null}
-      </div>
-      <div className="platform-home-discover-card__body">
-        <p className="platform-home-discover-card__title">{item.title}</p>
-        <p className="platform-home-discover-card__desc">{item.description}</p>
+        <div className="platform-home-discover-card__caption">
+          <p className="platform-home-discover-card__title">{item.title}</p>
+          <p className="platform-home-discover-card__desc">
+            <Clock3 className="h-3.5 w-3.5" aria-hidden />
+            {item.description}
+          </p>
+        </div>
       </div>
     </Link>
   );
 }
 
-function chunkDiscoverPages(items: DiscoverPreviewItem[]): DiscoverPreviewItem[][] {
-  const pages: DiscoverPreviewItem[][] = [];
-  for (let index = 0; index < items.length; index += 3) {
-    pages.push(items.slice(index, index + 3));
-  }
-  return pages;
-}
-
 export function HomeDiscover({ items }: { items: DiscoverPreviewItem[] }) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const pageIndexRef = useRef(0);
-  const isSectionVisibleRef = useRef(false);
-  const pages = chunkDiscoverPages(items);
-  const usePages = pages.length > 1;
-  const [pageIndex, setPageIndex] = useState(0);
-
-  const scrollToPage = useCallback((index: number) => {
-    const root = scrollRef.current;
-    const page = pageRefs.current[index];
-    if (!root || !page) return;
-
-    const nextScrollLeft =
-      root.scrollLeft + (page.getBoundingClientRect().left - root.getBoundingClientRect().left);
-
-    root.scrollTo({
-      left: nextScrollLeft,
-      behavior: "smooth",
-    });
-    pageIndexRef.current = index;
-    setPageIndex(index);
-  }, []);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section || !usePages) return;
-
-    const visibilityObserver = new IntersectionObserver(
-      ([entry]) => {
-        isSectionVisibleRef.current = entry.isIntersecting && entry.intersectionRatio >= 0.2;
-      },
-      { threshold: [0, 0.2, 0.35, 0.5] },
-    );
-
-    visibilityObserver.observe(section);
-    return () => visibilityObserver.disconnect();
-  }, [usePages]);
-
-  useEffect(() => {
-    if (!usePages) return;
-
-    const timer = window.setInterval(() => {
-      if (!isSectionVisibleRef.current) return;
-      const next = (pageIndexRef.current + 1) % pages.length;
-      scrollToPage(next);
-    }, 8000);
-
-    return () => window.clearInterval(timer);
-  }, [usePages, pages.length, scrollToPage]);
-
-  useEffect(() => {
-    const root = scrollRef.current;
-    if (!root || !usePages) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const best = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (!(best?.target instanceof HTMLElement)) return;
-        const index = Number(best.target.dataset.pageIndex);
-        if (Number.isNaN(index)) return;
-        pageIndexRef.current = index;
-        setPageIndex(index);
-      },
-      { root, threshold: 0.55 },
-    );
-
-    pageRefs.current.forEach((page) => {
-      if (page) observer.observe(page);
-    });
-
-    return () => observer.disconnect();
-  }, [usePages, pages.length]);
-
   if (items.length === 0) return null;
 
   return (
-    <section
-      ref={sectionRef}
-      className="platform-home-enter platform-home-enter--d3"
-      aria-labelledby="home-discover-title"
-    >
+    <section className="platform-home-enter platform-home-enter--d3" aria-labelledby="home-discover-title">
       <div className="platform-home-section-head">
         <h2 id="home-discover-title" className="platform-home-section-head__title">
-          اكتشف جديداً
+          مختار لك
         </h2>
         <Link to="/app/discover" className="platform-home-section-head__action">
           عرض الكل
@@ -754,49 +685,11 @@ export function HomeDiscover({ items }: { items: DiscoverPreviewItem[] }) {
         </Link>
       </div>
 
-      <div
-        ref={scrollRef}
-        className={cn(
-          "platform-home-discover-grid",
-          usePages && "platform-home-discover-grid--scroll",
-        )}
-        data-count={items.length}
-      >
-        {usePages ? (
-          pages.map((page, index) => (
-            <div
-              key={`discover-page-${index}`}
-              ref={(node) => {
-                pageRefs.current[index] = node;
-              }}
-              className="platform-home-discover-page"
-              data-page-index={index}
-            >
-              {page.map((item) => (
-                <DiscoverPreviewCard key={item.id} item={item} />
-              ))}
-            </div>
-          ))
-        ) : (
-          items.map((item) => <DiscoverPreviewCard key={item.id} item={item} />)
-        )}
+      <div className="platform-home-discover-grid" data-count={items.length}>
+        {items.map((item) => (
+          <DiscoverPreviewCard key={item.id} item={item} />
+        ))}
       </div>
-
-      {usePages ? (
-        <div className="platform-home-discover-dots" role="tablist" aria-label="صفحات الاكتشاف">
-          {pages.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              role="tab"
-              aria-selected={index === pageIndex}
-              aria-label={`صفحة ${index + 1}`}
-              className={cn(index === pageIndex && "is-active")}
-              onClick={() => scrollToPage(index)}
-            />
-          ))}
-        </div>
-      ) : null}
     </section>
   );
 }
@@ -807,26 +700,22 @@ const PERSONAL_PROGRAM_AVATARS = [avatar1, avatar2, avatar3, avatar4] as const;
 
 const PERSONAL_PROGRAM_BENEFITS = [
   {
-    title: "برنامج مخصص",
-    desc: "وفق هدفك ومستواك",
-    icon: Target,
-    tone: "is-orange",
-  },
-  {
     title: "خطة تغذية",
-    desc: "مناسبة لاحتياجاتك",
     icon: UtensilsCrossed,
     tone: "is-green",
   },
   {
-    title: "تتبع التقدم",
-    desc: "بالقياسات والرسوم",
+    title: "برنامج تدريبي",
+    icon: Dumbbell,
+    tone: "is-orange",
+  },
+  {
+    title: "متابعة التقدم",
     icon: TrendingUp,
-    tone: "is-purple",
+    tone: "is-orange",
   },
   {
     title: "دعم الكوتش",
-    desc: "إرشاد ومتابعة مستمرة",
     icon: MessageSquare,
     tone: "is-blue",
   },
@@ -834,101 +723,70 @@ const PERSONAL_PROGRAM_BENEFITS = [
 
 export function HomePersonalProgramCard() {
   const { openUpgrade } = useUpgradeFlow();
-  const clientCount = SOCIAL_PROOF_CLIENT_COUNT.toLocaleString("en-US");
+  const story = MEMBER_RESULT_STORIES[0];
 
   return (
     <section
-      className="platform-home-program platform-home-enter platform-home-enter--d4"
+      className="platform-home-program platform-home-enter platform-home-enter--d5"
       aria-labelledby="home-program-title"
     >
-      <article className="platform-home-program__card">
-        <span className="platform-home-program__badge">
-          <Lock className="h-3.5 w-3.5" aria-hidden />
-          مميز للمشتركين فقط
-        </span>
-
+      <article className="platform-home-program__card platform-home-program__card--upgrade">
         <h2 id="home-program-title" className="platform-home-program__title">
-          افتح برنامجك <span className="platform-home-program__accent">الشخصي</span>
+          ارتقِ <span className="platform-home-program__accent">بخطتك</span>
         </h2>
-        <p className="platform-home-program__lead">
-          احصل على برنامج تدريبي وتغذية مخصصة لك بناءً على أهدافك واحتياجاتك.
-        </p>
+        <p className="platform-home-program__lead">برنامج شخصي متكامل لتحقيق هدفك</p>
 
-        <div className="platform-home-program__hero">
-          <span className="platform-home-program__hero-glow" aria-hidden />
-          <OptimizedImage
-            src={homePremiumTreasure}
-            alt="صندوق البرنامج الشخصي — تدريب، تغذية، تقدم، ودعم الكوتش"
-            className="platform-home-program__hero-img"
-            width={1024}
-            height={683}
-            objectFit="contain"
-            priority
-          />
-        </div>
-
-        <div className="platform-home-program__benefits-head">
-          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-          <span>ماذا ستحصل عليه؟</span>
-          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-        </div>
-
-        <div className="platform-home-program__benefits">
-          {PERSONAL_PROGRAM_BENEFITS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.title} className="platform-home-program__benefit">
-                <span className={cn("platform-home-program__benefit-icon", item.tone)}>
-                  <Icon className="h-5 w-5" strokeWidth={2.1} aria-hidden />
-                </span>
-                <p className="platform-home-program__benefit-title">{item.title}</p>
-                <p className="platform-home-program__benefit-desc">{item.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="platform-home-program__social">
-          <div className="platform-home-program__avatars" aria-hidden>
-            {PERSONAL_PROGRAM_AVATARS.map((src, index) => (
-              <img
-                key={index}
-                src={src}
-                alt=""
-                className="platform-home-program__avatar"
-                style={{ zIndex: 4 - index }}
-              />
-            ))}
+        <div className="platform-home-program__split">
+          <div className="platform-home-program__benefits">
+            {PERSONAL_PROGRAM_BENEFITS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="platform-home-program__benefit">
+                  <span className={cn("platform-home-program__benefit-icon", item.tone)}>
+                    <Icon className="h-4 w-4" strokeWidth={2.1} aria-hidden />
+                  </span>
+                  <p className="platform-home-program__benefit-title">{item.title}</p>
+                </div>
+              );
+            })}
           </div>
-          <p className="platform-home-program__social-text">
-            أكثر من <strong>{clientCount}</strong> عضو حققوا نتائج مذهلة! ابدأ رحلتك الآن وكن
-            أنت التالي.
-          </p>
-          <span className="platform-home-program__shield" aria-hidden>
-            <ShieldCheck className="h-5 w-5" />
-            <Star className="platform-home-program__shield-star h-2.5 w-2.5" />
-          </span>
+
+          {story ? (
+            <div className="platform-home-program__proof">
+              <div className="platform-home-program__before-after">
+                <span className="platform-home-program__ba">
+                  <OptimizedImage src={story.before} alt="" className="h-full w-full" objectFit="cover" />
+                  <span>قبل</span>
+                </span>
+                <span className="platform-home-program__ba">
+                  <OptimizedImage src={story.after} alt="" className="h-full w-full" objectFit="cover" />
+                  <span className="is-after">بعد</span>
+                </span>
+              </div>
+              <p className="platform-home-program__proof-caption">
+                <Sparkles className="h-3 w-3 text-primary" aria-hidden />
+                نتائج حقيقية من أعضاء الكوتش
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <button
           type="button"
           className="platform-home-program__cta platform-touch"
           onClick={() =>
-            openUpgrade(
-              "افتح برنامجك الشخصي: تدريب، تغذية، تتبع تقدم، ودعم الكوتش داخل المنصة.",
-            )
+            openUpgrade("افتح برنامجك الشخصي: تدريب، تغذية، تتبع تقدم، ودعم الكوتش داخل المنصة.")
           }
         >
-          <Lock className="h-4 w-4" aria-hidden />
-          ترقية الآن وفتح كل المميزات
+          اكتشف العضوية
         </button>
 
         <button
           type="button"
           className="platform-home-program__more"
-          onClick={() => openUpgrade("اعرف المزيد عن باقات Hakim Coaching.")}
+          onClick={() => openUpgrade("قارن باقات Hakim Coaching واختر ما يناسبك.")}
         >
-          اعرف المزيد عن الباقات
+          قارن الباقات
           <ChevronLeft className="h-4 w-4" aria-hidden />
         </button>
       </article>

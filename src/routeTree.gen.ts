@@ -21,18 +21,22 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AdminMessagesRouteRouteImport } from './routes/admin/messages/route'
+import { Route as AdminMessagesIndexRouteImport } from './routes/admin/messages/index'
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
-import { Route as PlatformAppSupportRouteImport } from './routes/_platform/app/support'
+import { Route as AdminMessagesConversationIdRouteImport } from './routes/admin/messages/$conversationId'
 import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
 import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/discover'
 import { Route as PlatformAppAchievementsRouteImport } from './routes/_platform/app/achievements'
+import { Route as PlatformAppSupportIndexRouteImport } from './routes/_platform/app/support/index'
 import { Route as PlatformAppProgramIndexRouteImport } from './routes/_platform/app/program/index'
 import { Route as PlatformAppNutritionIndexRouteImport } from './routes/_platform/app/nutrition/index'
 import { Route as PlatformAppExercisesIndexRouteImport } from './routes/_platform/app/exercises/index'
 import { Route as PlatformAppToolsTimerRouteImport } from './routes/_platform/app/tools/timer'
 import { Route as PlatformAppToolsCaloriesRouteImport } from './routes/_platform/app/tools/calories'
+import { Route as PlatformAppSupportChatRouteImport } from './routes/_platform/app/support/chat'
 import { Route as PlatformAppNutritionShoppingRouteImport } from './routes/_platform/app/nutrition/shopping'
 import { Route as PlatformAppNutritionProgressRouteImport } from './routes/_platform/app/nutrition/progress'
 import { Route as PlatformAppNutritionMealRouteImport } from './routes/_platform/app/nutrition/meal'
@@ -103,16 +107,27 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AdminMessagesRouteRoute = AdminMessagesRouteRouteImport.update({
+  id: '/admin/messages',
+  path: '/admin/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMessagesIndexRoute = AdminMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminMessagesRouteRoute,
+} as any)
 const PlatformAppIndexRoute = PlatformAppIndexRouteImport.update({
   id: '/app/',
   path: '/app/',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
-const PlatformAppSupportRoute = PlatformAppSupportRouteImport.update({
-  id: '/app/support',
-  path: '/app/support',
-  getParentRoute: () => PlatformRouteRoute,
-} as any)
+const AdminMessagesConversationIdRoute =
+  AdminMessagesConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => AdminMessagesRouteRoute,
+  } as any)
 const PlatformAppStudioRoute = PlatformAppStudioRouteImport.update({
   id: '/app/studio',
   path: '/app/studio',
@@ -136,6 +151,11 @@ const PlatformAppDiscoverRoute = PlatformAppDiscoverRouteImport.update({
 const PlatformAppAchievementsRoute = PlatformAppAchievementsRouteImport.update({
   id: '/app/achievements',
   path: '/app/achievements',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppSupportIndexRoute = PlatformAppSupportIndexRouteImport.update({
+  id: '/app/support/',
+  path: '/app/support/',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
 const PlatformAppProgramIndexRoute = PlatformAppProgramIndexRouteImport.update({
@@ -166,6 +186,11 @@ const PlatformAppToolsCaloriesRoute =
     path: '/app/tools/calories',
     getParentRoute: () => PlatformRouteRoute,
   } as any)
+const PlatformAppSupportChatRoute = PlatformAppSupportChatRouteImport.update({
+  id: '/app/support/chat',
+  path: '/app/support/chat',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
 const PlatformAppNutritionShoppingRoute =
   PlatformAppNutritionShoppingRouteImport.update({
     id: '/app/nutrition/shopping',
@@ -241,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/quiz': typeof QuizRoute
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
+  '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
@@ -248,8 +274,9 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
-  '/app/support': typeof PlatformAppSupportRoute
+  '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app/': typeof PlatformAppIndexRoute
+  '/admin/messages/': typeof AdminMessagesIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
   '/app/discover/search': typeof PlatformAppDiscoverSearchRoute
@@ -258,11 +285,13 @@ export interface FileRoutesByFullPath {
   '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/app/nutrition/progress': typeof PlatformAppNutritionProgressRoute
   '/app/nutrition/shopping': typeof PlatformAppNutritionShoppingRoute
+  '/app/support/chat': typeof PlatformAppSupportChatRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/app/tools/timer': typeof PlatformAppToolsTimerRoute
   '/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/app/program/': typeof PlatformAppProgramIndexRoute
+  '/app/support/': typeof PlatformAppSupportIndexRoute
   '/app/discover/category/$slug': typeof PlatformAppDiscoverCategorySlugRoute
   '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
   '/app/program/workout/': typeof PlatformAppProgramWorkoutIndexRoute
@@ -283,8 +312,9 @@ export interface FileRoutesByTo {
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
-  '/app/support': typeof PlatformAppSupportRoute
+  '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app': typeof PlatformAppIndexRoute
+  '/admin/messages': typeof AdminMessagesIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
   '/app/discover/search': typeof PlatformAppDiscoverSearchRoute
@@ -293,11 +323,13 @@ export interface FileRoutesByTo {
   '/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/app/nutrition/progress': typeof PlatformAppNutritionProgressRoute
   '/app/nutrition/shopping': typeof PlatformAppNutritionShoppingRoute
+  '/app/support/chat': typeof PlatformAppSupportChatRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/app/tools/timer': typeof PlatformAppToolsTimerRoute
   '/app/exercises': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition': typeof PlatformAppNutritionIndexRoute
   '/app/program': typeof PlatformAppProgramIndexRoute
+  '/app/support': typeof PlatformAppSupportIndexRoute
   '/app/discover/category/$slug': typeof PlatformAppDiscoverCategorySlugRoute
   '/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
   '/app/program/workout': typeof PlatformAppProgramWorkoutIndexRoute
@@ -314,6 +346,7 @@ export interface FileRoutesById {
   '/quiz': typeof QuizRoute
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
+  '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/_platform/app/achievements': typeof PlatformAppAchievementsRoute
@@ -321,8 +354,9 @@ export interface FileRoutesById {
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
   '/_platform/app/studio': typeof PlatformAppStudioRoute
-  '/_platform/app/support': typeof PlatformAppSupportRoute
+  '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
+  '/admin/messages/': typeof AdminMessagesIndexRoute
   '/_platform/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/_platform/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
   '/_platform/app/discover/search': typeof PlatformAppDiscoverSearchRoute
@@ -331,11 +365,13 @@ export interface FileRoutesById {
   '/_platform/app/nutrition/meal': typeof PlatformAppNutritionMealRoute
   '/_platform/app/nutrition/progress': typeof PlatformAppNutritionProgressRoute
   '/_platform/app/nutrition/shopping': typeof PlatformAppNutritionShoppingRoute
+  '/_platform/app/support/chat': typeof PlatformAppSupportChatRoute
   '/_platform/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/_platform/app/tools/timer': typeof PlatformAppToolsTimerRoute
   '/_platform/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/_platform/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/_platform/app/program/': typeof PlatformAppProgramIndexRoute
+  '/_platform/app/support/': typeof PlatformAppSupportIndexRoute
   '/_platform/app/discover/category/$slug': typeof PlatformAppDiscoverCategorySlugRoute
   '/_platform/app/program/workout/exercise': typeof PlatformAppProgramWorkoutExerciseRoute
   '/_platform/app/program/workout/': typeof PlatformAppProgramWorkoutIndexRoute
@@ -351,6 +387,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/refund'
     | '/terms'
+    | '/admin/messages'
     | '/dashboard'
     | '/admin/payments'
     | '/app/achievements'
@@ -358,8 +395,9 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
-    | '/app/support'
+    | '/admin/messages/$conversationId'
     | '/app/'
+    | '/admin/messages/'
     | '/app/discover/$slug'
     | '/app/discover/saved'
     | '/app/discover/search'
@@ -368,11 +406,13 @@ export interface FileRouteTypes {
     | '/app/nutrition/meal'
     | '/app/nutrition/progress'
     | '/app/nutrition/shopping'
+    | '/app/support/chat'
     | '/app/tools/calories'
     | '/app/tools/timer'
     | '/app/exercises/'
     | '/app/nutrition/'
     | '/app/program/'
+    | '/app/support/'
     | '/app/discover/category/$slug'
     | '/app/program/workout/exercise'
     | '/app/program/workout/'
@@ -393,8 +433,9 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
-    | '/app/support'
+    | '/admin/messages/$conversationId'
     | '/app'
+    | '/admin/messages'
     | '/app/discover/$slug'
     | '/app/discover/saved'
     | '/app/discover/search'
@@ -403,11 +444,13 @@ export interface FileRouteTypes {
     | '/app/nutrition/meal'
     | '/app/nutrition/progress'
     | '/app/nutrition/shopping'
+    | '/app/support/chat'
     | '/app/tools/calories'
     | '/app/tools/timer'
     | '/app/exercises'
     | '/app/nutrition'
     | '/app/program'
+    | '/app/support'
     | '/app/discover/category/$slug'
     | '/app/program/workout/exercise'
     | '/app/program/workout'
@@ -423,6 +466,7 @@ export interface FileRouteTypes {
     | '/quiz'
     | '/refund'
     | '/terms'
+    | '/admin/messages'
     | '/_authenticated/dashboard'
     | '/admin/payments'
     | '/_platform/app/achievements'
@@ -430,8 +474,9 @@ export interface FileRouteTypes {
     | '/_platform/app/profile'
     | '/_platform/app/progress'
     | '/_platform/app/studio'
-    | '/_platform/app/support'
+    | '/admin/messages/$conversationId'
     | '/_platform/app/'
+    | '/admin/messages/'
     | '/_platform/app/discover/$slug'
     | '/_platform/app/discover/saved'
     | '/_platform/app/discover/search'
@@ -440,11 +485,13 @@ export interface FileRouteTypes {
     | '/_platform/app/nutrition/meal'
     | '/_platform/app/nutrition/progress'
     | '/_platform/app/nutrition/shopping'
+    | '/_platform/app/support/chat'
     | '/_platform/app/tools/calories'
     | '/_platform/app/tools/timer'
     | '/_platform/app/exercises/'
     | '/_platform/app/nutrition/'
     | '/_platform/app/program/'
+    | '/_platform/app/support/'
     | '/_platform/app/discover/category/$slug'
     | '/_platform/app/program/workout/exercise'
     | '/_platform/app/program/workout/'
@@ -461,6 +508,7 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   RefundRoute: typeof RefundRoute
   TermsRoute: typeof TermsRoute
+  AdminMessagesRouteRoute: typeof AdminMessagesRouteRouteWithChildren
   AdminPaymentsRoute: typeof AdminPaymentsRoute
 }
 
@@ -550,6 +598,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/admin/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/messages/': {
+      id: '/admin/messages/'
+      path: '/'
+      fullPath: '/admin/messages/'
+      preLoaderRoute: typeof AdminMessagesIndexRouteImport
+      parentRoute: typeof AdminMessagesRouteRoute
+    }
     '/_platform/app/': {
       id: '/_platform/app/'
       path: '/app'
@@ -557,12 +619,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppIndexRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
-    '/_platform/app/support': {
-      id: '/_platform/app/support'
-      path: '/app/support'
-      fullPath: '/app/support'
-      preLoaderRoute: typeof PlatformAppSupportRouteImport
-      parentRoute: typeof PlatformRouteRoute
+    '/admin/messages/$conversationId': {
+      id: '/admin/messages/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/admin/messages/$conversationId'
+      preLoaderRoute: typeof AdminMessagesConversationIdRouteImport
+      parentRoute: typeof AdminMessagesRouteRoute
     }
     '/_platform/app/studio': {
       id: '/_platform/app/studio'
@@ -599,6 +661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppAchievementsRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/support/': {
+      id: '/_platform/app/support/'
+      path: '/app/support'
+      fullPath: '/app/support/'
+      preLoaderRoute: typeof PlatformAppSupportIndexRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
     '/_platform/app/program/': {
       id: '/_platform/app/program/'
       path: '/app/program'
@@ -632,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/app/tools/calories'
       fullPath: '/app/tools/calories'
       preLoaderRoute: typeof PlatformAppToolsCaloriesRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/support/chat': {
+      id: '/_platform/app/support/chat'
+      path: '/app/support/chat'
+      fullPath: '/app/support/chat'
+      preLoaderRoute: typeof PlatformAppSupportChatRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
     '/_platform/app/nutrition/shopping': {
@@ -748,18 +824,19 @@ interface PlatformRouteRouteChildren {
   PlatformAppProfileRoute: typeof PlatformAppProfileRoute
   PlatformAppProgressRoute: typeof PlatformAppProgressRoute
   PlatformAppStudioRoute: typeof PlatformAppStudioRoute
-  PlatformAppSupportRoute: typeof PlatformAppSupportRoute
   PlatformAppIndexRoute: typeof PlatformAppIndexRoute
   PlatformAppExercisesExerciseIdRoute: typeof PlatformAppExercisesExerciseIdRoute
   PlatformAppNutritionAlternativesRoute: typeof PlatformAppNutritionAlternativesRoute
   PlatformAppNutritionMealRoute: typeof PlatformAppNutritionMealRoute
   PlatformAppNutritionProgressRoute: typeof PlatformAppNutritionProgressRoute
   PlatformAppNutritionShoppingRoute: typeof PlatformAppNutritionShoppingRoute
+  PlatformAppSupportChatRoute: typeof PlatformAppSupportChatRoute
   PlatformAppToolsCaloriesRoute: typeof PlatformAppToolsCaloriesRoute
   PlatformAppToolsTimerRoute: typeof PlatformAppToolsTimerRoute
   PlatformAppExercisesIndexRoute: typeof PlatformAppExercisesIndexRoute
   PlatformAppNutritionIndexRoute: typeof PlatformAppNutritionIndexRoute
   PlatformAppProgramIndexRoute: typeof PlatformAppProgramIndexRoute
+  PlatformAppSupportIndexRoute: typeof PlatformAppSupportIndexRoute
   PlatformAppProgramWorkoutExerciseRoute: typeof PlatformAppProgramWorkoutExerciseRoute
   PlatformAppProgramWorkoutIndexRoute: typeof PlatformAppProgramWorkoutIndexRoute
 }
@@ -770,18 +847,19 @@ const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
   PlatformAppProfileRoute: PlatformAppProfileRoute,
   PlatformAppProgressRoute: PlatformAppProgressRoute,
   PlatformAppStudioRoute: PlatformAppStudioRoute,
-  PlatformAppSupportRoute: PlatformAppSupportRoute,
   PlatformAppIndexRoute: PlatformAppIndexRoute,
   PlatformAppExercisesExerciseIdRoute: PlatformAppExercisesExerciseIdRoute,
   PlatformAppNutritionAlternativesRoute: PlatformAppNutritionAlternativesRoute,
   PlatformAppNutritionMealRoute: PlatformAppNutritionMealRoute,
   PlatformAppNutritionProgressRoute: PlatformAppNutritionProgressRoute,
   PlatformAppNutritionShoppingRoute: PlatformAppNutritionShoppingRoute,
+  PlatformAppSupportChatRoute: PlatformAppSupportChatRoute,
   PlatformAppToolsCaloriesRoute: PlatformAppToolsCaloriesRoute,
   PlatformAppToolsTimerRoute: PlatformAppToolsTimerRoute,
   PlatformAppExercisesIndexRoute: PlatformAppExercisesIndexRoute,
   PlatformAppNutritionIndexRoute: PlatformAppNutritionIndexRoute,
   PlatformAppProgramIndexRoute: PlatformAppProgramIndexRoute,
+  PlatformAppSupportIndexRoute: PlatformAppSupportIndexRoute,
   PlatformAppProgramWorkoutExerciseRoute:
     PlatformAppProgramWorkoutExerciseRoute,
   PlatformAppProgramWorkoutIndexRoute: PlatformAppProgramWorkoutIndexRoute,
@@ -790,6 +868,19 @@ const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
 const PlatformRouteRouteWithChildren = PlatformRouteRoute._addFileChildren(
   PlatformRouteRouteChildren,
 )
+
+interface AdminMessagesRouteRouteChildren {
+  AdminMessagesConversationIdRoute: typeof AdminMessagesConversationIdRoute
+  AdminMessagesIndexRoute: typeof AdminMessagesIndexRoute
+}
+
+const AdminMessagesRouteRouteChildren: AdminMessagesRouteRouteChildren = {
+  AdminMessagesConversationIdRoute: AdminMessagesConversationIdRoute,
+  AdminMessagesIndexRoute: AdminMessagesIndexRoute,
+}
+
+const AdminMessagesRouteRouteWithChildren =
+  AdminMessagesRouteRoute._addFileChildren(AdminMessagesRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -802,6 +893,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   RefundRoute: RefundRoute,
   TermsRoute: TermsRoute,
+  AdminMessagesRouteRoute: AdminMessagesRouteRouteWithChildren,
   AdminPaymentsRoute: AdminPaymentsRoute,
 }
 export const routeTree = rootRouteImport

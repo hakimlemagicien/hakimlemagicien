@@ -25,7 +25,7 @@
 | 9 | الرئيسية (Home Dashboard) | ✅ جاهز |
 | 10 | الأداء والبنية التحتية | ✅ جاهز |
 
-**خارج النطاق (لم تُعدَّل):** Landing (ما عدا تحسينات أداء)، Quiz، Admin — إلا ما ذُكر صراحة تحت الأداء.
+**خارج النطاق (لم تُعدَّل):** Landing `/coaching` (ما عدا تحسينات أداء)، Quiz، Admin — إلا ما ذُكر صراحة تحت الأداء.
 
 ---
 
@@ -328,7 +328,8 @@
 **أهداف:** Lighthouse Performance ≥ 90 على الصفحات الرئيسية · FCP < 1.8s · LCP < 2.5s · CLS < 0.1
 
 **اختبار أداء:**
-- [ ] Landing `/` — lazy sections + LCP
+- [ ] `/` App-First Quiz entry — loading + login bar
+- [ ] Landing `/coaching` — lazy sections + LCP
 - [ ] `/app` — skeletons ثم محتوى
 - [ ] `/app/discover` — صور كسولة + لا preload فيديو
 - [ ] `/app/exercises` — list skeleton
@@ -426,7 +427,7 @@ src/components/platform/shared/DailyHubOverlay.tsx
 | Calorie calculator self-checks | ✅ 6/6 |
 | Interval timer self-checks | ✅ 8/8 |
 | تعديل `routeTree.gen.ts` يدوياً | ❌ ممنوع — يُولَّد تلقائياً |
-| Landing / Quiz / Admin | لم تُعدَّل وظيفياً (أداء Landing فقط) |
+| Landing `/coaching` / Quiz / Admin | لم تُعدَّل وظيفياً (أداء Landing فقط) |
 
 ---
 
@@ -515,7 +516,7 @@ Platform Developer  →  QA Manager  →  (Bugfix)  →  Re-test  →  Sign-off
 |-------|--------|
 | Build | ✅ Pass |
 | نطاق `/app` | موسّع وجاهز للاختبار |
-| حماية Landing/Quiz/Admin | محترمة |
+| حماية Landing `/coaching` / Quiz / Admin | محترمة |
 | الأولوية القصوى للاختبار | Tools (Calories + Timer) · Discover · Profile · Nav · Membership |
 
 **➡️ Ready for Full Platform QA**

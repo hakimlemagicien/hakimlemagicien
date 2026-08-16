@@ -37,6 +37,48 @@ export type MembershipState = MembershipResponse & {
 
 export const MEMBERSHIP_QUERY_KEY = ["membership", "current"] as const;
 
+/** App-review founder account — VIP + admin (see supabase migration founder_review). */
+export const FOUNDER_REVIEW_EMAIL = "hakimlemagicien@gmail.com";
+
+export function isFounderReviewEmail(email: string | null | undefined): boolean {
+  return email?.trim().toLowerCase() === FOUNDER_REVIEW_EMAIL;
+}
+
+export function resolveAuthEmail(
+  user:
+    | {
+        email?: string | null;
+        user_metadata?: Record<string, unknown> | null;
+        identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null;
+      }
+    | null
+    | undefined,
+): string | null {
+  if (!user) return null;
+  const metaEmail = user.user_metadata?.email;
+  const identityEmail = user.identities
+    ?.map((identity) => identity.identity_data?.email)
+    .find((value) => typeof value === "string" && value.trim());
+  const raw =
+    user.email ||
+    (typeof metaEmail === "string" ? metaEmail : null) ||
+    (typeof identityEmail === "string" ? identityEmail : null);
+  return raw?.trim() || null;
+}
+
+const VIP_FEATURES: MembershipFeatures = {
+  platform_access: true,
+  workout_program: true,
+  nutrition_plan: true,
+  progress_tracking: true,
+  free_content: true,
+  periodic_reviews: true,
+  limited_coach_contact: true,
+  personal_followup: true,
+  program_adjustments: true,
+  priority_contact: true,
+};
+
 const MEMBERSHIP_TIER_LABELS_AR: Record<MembershipTier, string> = {
   visitor: "زائر",
   free: "مجاني",
@@ -104,9 +146,10 @@ function isLocalAppRuntime() {
   return isLocalHost && isAppPath;
 }
 
-/** Localhost preview: always show free-member UI (ignores paid DB tiers). */
+/** Localhost preview: free-tier UI unless the member is paid (e.g. founder VIP review). */
 function withLocalFreeOverride(state: MembershipState): MembershipState {
   if (!isLocalAppRuntime()) return state;
+  if (state.is_paid || isPaidMembershipTier(state.tier)) return state;
   return {
     ...state,
     tier: "free",
@@ -114,6 +157,24 @@ function withLocalFreeOverride(state: MembershipState): MembershipState {
     is_paid: false,
     is_active: true,
     features: LOCAL_FREE_FEATURES,
+  };
+}
+
+function buildFounderReviewMembership(
+  base: Omit<MembershipState, "tier" | "is_free" | "is_paid" | "is_active" | "features">,
+): MembershipState {
+  return {
+    ...base,
+    tier: "vip",
+    is_free: false,
+    is_paid: true,
+    is_active: true,
+    subscription_id: base.subscription_id ?? null,
+    starts_at: base.starts_at ?? new Date().toISOString(),
+    ends_at: base.ends_at,
+    days_remaining: base.days_remaining ?? 3650,
+    features: VIP_FEATURES,
+    isVisitor: false,
   };
 }
 
@@ -200,13 +261,23 @@ export async function fetchMembershipState(): Promise<MembershipState> {
     ]);
     const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
 
-    return withLocalFreeOverride({
-      ...membership,
-      displayName: profile.displayName,
-      avatarPath: profile.avatarPath,
-      avatarUrl,
-      isVisitor: false,
-    });
+    const email = resolveAuthEmail(data.user);
+      isFounderReviewEmail(email) && membership.tier !== "vip"
+        ? buildFounderReviewMembership({
+            ...membership,
+            displayName: profile.displayName,
+            avatarPath: profile.avatarPath,
+            avatarUrl,
+          })
+        : {
+            ...membership,
+            displayName: profile.displayName,
+            avatarPath: profile.avatarPath,
+            avatarUrl,
+            isVisitor: false as const,
+          };
+
+    return withLocalFreeOverride(resolved);
   } catch (err) {
     // Keep the app usable: never crash / hang the platform home on RPC failure.
     console.error("[fetchMembershipState]", err);
@@ -215,12 +286,21 @@ export async function fetchMembershipState(): Promise<MembershipState> {
       avatarPath: null,
     }));
     const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
-    return withLocalFreeOverride({
-      ...FREE_MEMBERSHIP_STATE,
-      displayName: profile.displayName,
-      avatarPath: profile.avatarPath,
-      avatarUrl,
-      isVisitor: false,
-    });
+    const email = resolveAuthEmail(data.user);
+    const fallback = isFounderReviewEmail(email)
+      ? buildFounderReviewMembership({
+          ...FREE_MEMBERSHIP_STATE,
+          displayName: profile.displayName,
+          avatarPath: profile.avatarPath,
+          avatarUrl,
+        })
+      : {
+          ...FREE_MEMBERSHIP_STATE,
+          displayName: profile.displayName,
+          avatarPath: profile.avatarPath,
+          avatarUrl,
+          isVisitor: false as const,
+        };
+    return withLocalFreeOverride(fallback);
   }
 }

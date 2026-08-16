@@ -1,0 +1,242 @@
+{
+  "library": "hakim-nutrition-library",
+  "scope": "MEAL-001..MEAL-060",
+  "generated_on": "2026-08-16",
+  "source_of_truth": {
+    "repo_root": "nutrition-library/",
+    "runtime_001_020": "src/lib/platform/data/nutrition-pilot-20.json",
+    "original_packages": [
+      "nutrition-library/batches/001-020/",
+      "nutrition-library/batches/021-060/"
+    ],
+    "delivery_public": "public/nutrition/meals/{external_id}/",
+    "primary_key": "external_id",
+    "note": "Meal records were copied as-is. meal_type values were not rewritten. 001-020 runtime JSON is the Nutrition-Library-Manager reviewed copy; original package JSON is also archived."
+  },
+  "records": {
+    "expected": 60,
+    "actual": 60,
+    "missing": [],
+    "duplicates": [],
+    "extra": [],
+    "ids": [
+      "MEAL-001",
+      "MEAL-002",
+      "MEAL-003",
+      "MEAL-004",
+      "MEAL-005",
+      "MEAL-006",
+      "MEAL-007",
+      "MEAL-008",
+      "MEAL-009",
+      "MEAL-010",
+      "MEAL-011",
+      "MEAL-012",
+      "MEAL-013",
+      "MEAL-014",
+      "MEAL-015",
+      "MEAL-016",
+      "MEAL-017",
+      "MEAL-018",
+      "MEAL-019",
+      "MEAL-020",
+      "MEAL-021",
+      "MEAL-022",
+      "MEAL-023",
+      "MEAL-024",
+      "MEAL-025",
+      "MEAL-026",
+      "MEAL-027",
+      "MEAL-028",
+      "MEAL-029",
+      "MEAL-030",
+      "MEAL-031",
+      "MEAL-032",
+      "MEAL-033",
+      "MEAL-034",
+      "MEAL-035",
+      "MEAL-036",
+      "MEAL-037",
+      "MEAL-038",
+      "MEAL-039",
+      "MEAL-040",
+      "MEAL-041",
+      "MEAL-042",
+      "MEAL-043",
+      "MEAL-044",
+      "MEAL-045",
+      "MEAL-046",
+      "MEAL-047",
+      "MEAL-048",
+      "MEAL-049",
+      "MEAL-050",
+      "MEAL-051",
+      "MEAL-052",
+      "MEAL-053",
+      "MEAL-054",
+      "MEAL-055",
+      "MEAL-056",
+      "MEAL-057",
+      "MEAL-058",
+      "MEAL-059",
+      "MEAL-060"
+    ]
+  },
+  "meal_type_raw": {
+    "breakfast": 4,
+    "lunch": 6,
+    "dinner": 4,
+    "snack": 2,
+    "pre_workout": 2,
+    "post_workout": 2,
+    "Breakfast": 6,
+    "Lunch": 11,
+    "Dinner": 11,
+    "Snack": 4,
+    "Pre-workout": 4,
+    "Post-workout": 4
+  },
+  "meal_type_normalized_for_gap_only": {
+    "breakfast": 10,
+    "lunch": 17,
+    "dinner": 15,
+    "snack": 6,
+    "pre_workout": 6,
+    "post_workout": 6
+  },
+  "unmapped_meal_types": [],
+  "distribution_normalized": {
+    "breakfast": 10,
+    "lunch": 17,
+    "dinner": 15,
+    "snack": 6,
+    "pre_workout": 6,
+    "post_workout": 6,
+    "drinks": 0
+  },
+  "gap_to_300": [
+    {
+      "meal_type": "breakfast",
+      "current": 10,
+      "target": 55,
+      "remaining": 45
+    },
+    {
+      "meal_type": "lunch",
+      "current": 17,
+      "target": 70,
+      "remaining": 53
+    },
+    {
+      "meal_type": "dinner",
+      "current": 15,
+      "target": 60,
+      "remaining": 45
+    },
+    {
+      "meal_type": "snack",
+      "current": 6,
+      "target": 40,
+      "remaining": 34
+    },
+    {
+      "meal_type": "pre_workout",
+      "current": 6,
+      "target": 25,
+      "remaining": 19
+    },
+    {
+      "meal_type": "post_workout",
+      "current": 6,
+      "target": 30,
+      "remaining": 24
+    },
+    {
+      "meal_type": "drinks",
+      "current": 0,
+      "target": 20,
+      "remaining": 20
+    }
+  ],
+  "gap_total_remaining": 240,
+  "images": {
+    "master": 60,
+    "delivery": 60,
+    "thumbnails": 60,
+    "missing_master": [],
+    "missing_delivery_public": [],
+    "missing_thumb_public": [],
+    "broken_mappings": [],
+    "orphan_masters": [],
+    "duplicate_master_hashes": [],
+    "duplicate_delivery_hashes": []
+  },
+  "contract_notes": {
+    "001_020": "Pilot v1.1 — nutrition-library/batches/001-020/NUTRITION_DATA_CONTRACT.md",
+    "021_060": "Pilot 1.1 extension — nutrition-library/batches/021-060/NUTRITION_DATA_CONTRACT.md",
+    "meal_type_encoding": "001-020 uses snake_case (breakfast, pre_workout). 021-060 uses display labels (Breakfast, Pre-workout). Values were not changed.",
+    "serving_unit": "Present on 001-020. Absent on 021-060 source records.",
+    "review_status_001_020_runtime": "nutrition_library_review_passed_2026-08-16",
+    "review_status_001_020_original_package": "content_and_image_qa_passed_nutritionist_review_required",
+    "review_status_021_060": "approved"
+  },
+  "files": {
+    "json": [
+      "nutrition-library/batches/001-020/nutrition_pilot_20.json",
+      "nutrition-library/batches/001-020/nutrition_pilot_20.reviewed-runtime.json",
+      "src/lib/platform/data/nutrition-pilot-20.json",
+      "nutrition-library/batches/021-060/nutrition_batch_021_060.json"
+    ],
+    "csv": [
+      "nutrition-library/batches/001-020/nutrition_pilot_20_meals.csv",
+      "nutrition-library/batches/001-020/nutrition_pilot_20_ingredients.csv",
+      "nutrition-library/batches/021-060/nutrition_batch_021_060.csv",
+      "nutrition-library/batches/021-060/nutrition_batch_021_060_ingredients.csv"
+    ],
+    "contract": [
+      "nutrition-library/batches/001-020/NUTRITION_DATA_CONTRACT.md",
+      "nutrition-library/batches/021-060/NUTRITION_DATA_CONTRACT.md"
+    ],
+    "images_master": [
+      "nutrition-library/batches/001-020/images/MEAL-NNN.png",
+      "nutrition-library/batches/021-060/images/MEAL-NNN.png"
+    ],
+    "images_delivery": [
+      "public/nutrition/meals/MEAL-NNN/cover.webp",
+      "nutrition-library/batches/021-060/delivery/MEAL-NNN/cover.webp"
+    ],
+    "images_thumbnails": [
+      "public/nutrition/meals/MEAL-NNN/cover-thumb.webp",
+      "nutrition-library/batches/021-060/thumbnail/MEAL-NNN/cover-thumb.webp"
+    ],
+    "mapping": [
+      "nutrition-library/batches/001-020/meal_image_mapping.json",
+      "nutrition-library/batches/021-060/meal_image_mapping.json"
+    ],
+    "manifest": [
+      "nutrition-library/batches/001-020/manifest.json",
+      "nutrition-library/batches/021-060/manifest.json"
+    ],
+    "qa": [
+      "nutrition-library/batches/001-020/QA_REPORT.md",
+      "nutrition-library/batches/021-060/QA_REPORT.md",
+      "nutrition-library/batches/021-060/NUTRITION_BATCH_REPORT.md"
+    ],
+    "zip": []
+  },
+  "do_not_create": [
+    "MEAL-061+"
+  ],
+  "database": {
+    "project_ref": "ufgrbpakuemamggwypdh",
+    "meals_total": 20,
+    "meal_001_020": 20,
+    "meal_021_060": 0,
+    "ingredients": 86
+  },
+  "runtime": {
+    "frontend_catalog": "src/lib/platform/data/nutrition-pilot-20.json",
+    "loaded_meals": 20,
+    "note": "021-060 are archived and have public delivery assets, but are not merged into meal-library runtime or Supabase yet. meal_type casing and serving_unit differences must be mapped before upsert; records themselves were not rewritten."
+  }
+}

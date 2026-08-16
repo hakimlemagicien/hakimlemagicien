@@ -19,10 +19,11 @@ import { isToolsHubRoute, ToolsHubOverlay } from "@/components/platform/shared/T
 import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
+import { triggerSelectionHaptic } from "@/lib/haptic";
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV_ITEMS = [
-  { to: "/app/program", label: "برنامجي", icon: CalendarDays, hub: "program" as const },
+  { to: "/app/program/workout", label: "برنامجي", icon: CalendarDays, hub: "program" as const },
   { to: "/app/discover", label: "اكتشف", icon: BookOpen },
   { to: "/app", label: "الرئيسية", icon: Home, exact: true, center: true },
   { to: "/app/tools/calories", label: "الأدوات", icon: Wrench, hub: "tools" as const },
@@ -43,12 +44,17 @@ function isProgramHubRoute(pathname: string) {
 
 const DESKTOP_NAV_ITEMS = [
   { to: "/app", label: "الرئيسية", icon: Home, exact: true },
-  { to: "/app/program", label: "برنامجي", icon: CalendarDays },
+  { to: "/app/program/workout", label: "برنامجي", icon: CalendarDays },
   { to: "/app/exercises", label: "مكتبة التمارين", icon: Dumbbell },
   { to: "/app/discover", label: "اكتشف", icon: BookOpen },
   { to: "/app/nutrition", label: "التغذية", icon: Salad },
   { to: "/app/progress", label: "التقدم", icon: LineChart },
-  { to: "/app/tools/calories", label: "حاسبة السعرات", icon: Calculator, action: "calories" as const },
+  {
+    to: "/app/tools/calories",
+    label: "حاسبة السعرات",
+    icon: Calculator,
+    action: "calories" as const,
+  },
   { to: "/app/tools/timer", label: "المؤقت", icon: Timer },
   { to: "/app/profile", label: "الملف الشخصي", icon: User },
 ] as const;
@@ -75,13 +81,20 @@ function NavItem({
   activeOverride?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const active = activeOverride ?? (exact ? pathname === to : pathname === to || pathname.startsWith(`${to}/`));
+  const active =
+    activeOverride ?? (exact ? pathname === to : pathname === to || pathname.startsWith(`${to}/`));
+
+  const handlePress = () => {
+    triggerSelectionHaptic();
+    if (onSelect) onSelect();
+    else onNavigate?.();
+  };
 
   if (mobile && center) {
     return (
       <Link
         to={to}
-        onClick={onNavigate}
+        onClick={handlePress}
         className="platform-nav__link"
         aria-label={label}
         aria-current={active ? "page" : undefined}
@@ -94,7 +107,9 @@ function NavItem({
         >
           <Icon className="h-6 w-6" strokeWidth={2.25} />
         </span>
-        <span className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}>
+        <span
+          className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}
+        >
           {label}
         </span>
       </Link>
@@ -108,7 +123,9 @@ function NavItem({
           className={cn("h-6 w-6 shrink-0", active ? "text-primary" : "text-muted-foreground")}
           strokeWidth={1.75}
         />
-        <span className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}>
+        <span
+          className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}
+        >
           {label}
         </span>
       </>
@@ -118,7 +135,7 @@ function NavItem({
       return (
         <button
           type="button"
-          onClick={onSelect}
+          onClick={handlePress}
           className="platform-nav__link"
           aria-haspopup="dialog"
           aria-expanded={active}
@@ -132,7 +149,7 @@ function NavItem({
     return (
       <Link
         to={to}
-        onClick={onNavigate}
+        onClick={handlePress}
         className="platform-nav__link"
         aria-current={active ? "page" : undefined}
         aria-label={label}
@@ -145,7 +162,7 @@ function NavItem({
   return (
     <Link
       to={to}
-      onClick={onNavigate}
+      onClick={handlePress}
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition",
         active ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-muted",

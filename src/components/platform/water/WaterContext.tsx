@@ -16,6 +16,12 @@ import {
 import { readNutritionPlanStore } from "@/lib/platform/nutrition-plan-storage";
 import { recordActivityEvent } from "@/lib/platform/progress-storage";
 import {
+  playGoalSplashSound,
+  playWaterDropSound,
+  playWaterReminderSound,
+  primeWaterAudio,
+} from "@/lib/platform/water-audio";
+import {
   addWater,
   getRecentWaterLogs,
   getWaterDayState,
@@ -42,6 +48,7 @@ type WaterContextValue = {
   error: string | null;
   pendingUndo: UndoState | null;
   goalCelebration: boolean;
+  reminderPulse: boolean;
   openWaterSheet: () => void;
   closeWaterSheet: () => void;
   registerWater: (ml: number) => Promise<boolean>;
@@ -52,48 +59,6 @@ type WaterContextValue = {
 
 const WaterContext = createContext<WaterContextValue | null>(null);
 
-const SOUNDS_ENABLED_KEY = "hakim_water_sounds";
-
-function playWaterDropSound() {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(SOUNDS_ENABLED_KEY) === "false") return;
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 640;
-    gain.gain.value = 0.04;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-    osc.stop(ctx.currentTime + 0.2);
-  } catch {
-    /* optional audio */
-  }
-}
-
-function playGoalSplashSound() {
-  if (typeof window === "undefined") return;
-  if (localStorage.getItem(SOUNDS_ENABLED_KEY) === "false") return;
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.value = 420;
-    gain.gain.value = 0.05;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-    osc.stop(ctx.currentTime + 0.38);
-  } catch {
-    /* optional audio */
-  }
-}
-
 export function WaterProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState("guest");
   const [tick, setTick] = useState(0);
@@ -102,10 +67,18 @@ export function WaterProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [pendingUndo, setPendingUndo] = useState<UndoState | null>(null);
   const [goalCelebration, setGoalCelebration] = useState(false);
+  const [reminderPulse, setReminderPulse] = useState(false);
   const addingRef = useRef(false);
   const undoTimerRef = useRef<number | null>(null);
+  const reminderClearRef = useRef<number | null>(null);
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
+
+  useEffect(() => {
+    const prime = () => primeWaterAudio();
+    window.addEventListener("pointerdown", prime, { once: true });
+    return () => window.removeEventListener("pointerdown", prime);
+  }, []);
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => {
@@ -149,7 +122,35 @@ export function WaterProvider({ children }: { children: ReactNode }) {
     [state.totalMl, state.goalMl],
   );
 
+  useEffect(() => {
+    if (state.goalReached) {
+      setReminderPulse(false);
+      return;
+    }
+
+    const hourMs = 60 * 60 * 1000;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const fireReminder = () => {
+      if (document.visibilityState !== "visible") return;
+      if (prefersReduced) return;
+      playWaterReminderSound();
+      setReminderPulse(true);
+      if (reminderClearRef.current) window.clearTimeout(reminderClearRef.current);
+      reminderClearRef.current = window.setTimeout(() => setReminderPulse(false), 2400);
+    };
+
+    const timer = window.setInterval(fireReminder, hourMs);
+    return () => {
+      window.clearInterval(timer);
+      if (reminderClearRef.current) window.clearTimeout(reminderClearRef.current);
+    };
+  }, [state.goalReached, state.totalMl]);
+
   const openWaterSheet = useCallback(() => {
+    primeWaterAudio();
     setError(null);
     setSheetOpen(true);
   }, []);
@@ -225,6 +226,7 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       error,
       pendingUndo,
       goalCelebration,
+      reminderPulse,
       openWaterSheet,
       closeWaterSheet,
       registerWater,
@@ -241,6 +243,7 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       error,
       pendingUndo,
       goalCelebration,
+      reminderPulse,
       openWaterSheet,
       closeWaterSheet,
       registerWater,

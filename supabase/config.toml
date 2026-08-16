@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.notify-receipt-upload]
 verify_jwt = false
+
+[functions.notify-coaching-message]
+verify_jwt = true

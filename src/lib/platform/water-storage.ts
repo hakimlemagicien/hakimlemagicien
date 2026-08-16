@@ -279,3 +279,59 @@ export function migrateLegacyWaterLogs(
     },
   });
 }
+
+/** Partial water history for founder host preview — skipped if today already has logs. */
+export function seedHostPreviewWaterIfNeeded(
+  userId: string,
+  todayMl: number,
+  historyMlByDate: Record<string, number>,
+  force = false,
+): boolean {
+  if (typeof window === "undefined" || !userId || userId === "guest") return false;
+
+  const store = readStore(userId);
+  const dateKey = todayKey();
+  if (!force && (store.daily[dateKey]?.totalMl ?? 0) > 0) return false;
+
+  const goalMl = store.goalMl || DEFAULT_WATER_GOAL_ML;
+  const daily = { ...store.daily };
+
+  for (const [key, totalMl] of Object.entries(historyMlByDate)) {
+    if (daily[key]?.totalMl) continue;
+    daily[key] = {
+      totalMl,
+      logs: [
+        {
+          id: `preview-water-${key}`,
+          clientId: `preview-water-${key}`,
+          timeLabel: "10:00 ص",
+          ml: totalMl,
+          createdAt: `${key}T10:00:00.000Z`,
+        },
+      ],
+      goalAwarded: totalMl >= goalMl,
+    };
+  }
+
+  const glass = 250;
+  const pours = Math.max(1, Math.round(todayMl / glass));
+  const logs: WaterLogEntry[] = Array.from({ length: pours }, (_, index) => {
+    const ml = index === pours - 1 ? Math.max(WATER_MIN_ML, todayMl - glass * (pours - 1)) : glass;
+    return {
+      id: `preview-water-today-${index}`,
+      clientId: `preview-water-today-${index}`,
+      timeLabel: `${8 + index}:15 ص`,
+      ml,
+      createdAt: new Date().toISOString(),
+    };
+  });
+
+  daily[dateKey] = {
+    totalMl: todayMl,
+    logs,
+    goalAwarded: todayMl >= goalMl,
+  };
+
+  writeStore({ ...store, daily });
+  return true;
+}
