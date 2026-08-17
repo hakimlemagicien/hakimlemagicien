@@ -54,3 +54,65 @@ export function formatExerciseVolume(exercise: Pick<WorkoutSessionExercise, "rep
   if (exercise.durationSeconds) return `${exercise.durationSeconds} ث`;
   return "—";
 }
+
+/** Placeholder load rule — later replaced by per-goal progression. */
+export const SET_WEIGHT_INCREMENT = 0.1;
+
+export const SET_REP_RANGES = [
+  { min: 15, max: 20 },
+  { min: 12, max: 15 },
+  { min: 10, max: 12 },
+  { min: 8, max: 10 },
+] as const;
+
+export type SetProgression = {
+  setNumber: number;
+  weightKg: number;
+  reps: number;
+  repsMin: number;
+  repsMax: number;
+};
+
+export function getSetRepRange(setNumber: number) {
+  const index = Math.min(Math.max(setNumber, 1), SET_REP_RANGES.length) - 1;
+  return SET_REP_RANGES[index];
+}
+
+export function formatRepRange(range: { min: number; max: number }) {
+  return `${range.min}–${range.max}`;
+}
+
+export function roundWeightKg(kg: number, step = 0.5) {
+  if (kg <= 0) return 0;
+  return Math.round(kg / step) * step;
+}
+
+export function formatWeightKg(kg: number) {
+  if (kg <= 0) return "—";
+  const rounded = roundWeightKg(kg);
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+}
+
+export function getSetProgression(input: {
+  setNumber: number;
+  baseWeightKg: number;
+  lastWeightKg?: number | null;
+}): SetProgression {
+  const setNumber = Math.max(1, Math.floor(input.setNumber));
+  const step = setNumber - 1;
+  const fromLast =
+    input.lastWeightKg != null && input.lastWeightKg > 0
+      ? input.lastWeightKg * (1 + SET_WEIGHT_INCREMENT)
+      : input.baseWeightKg > 0
+        ? input.baseWeightKg * (1 + SET_WEIGHT_INCREMENT) ** step
+        : 0;
+  const range = getSetRepRange(setNumber);
+
+  return {
+    setNumber,
+    weightKg: roundWeightKg(fromLast),
+    reps: range.max,
+    repsMin: range.min,
+    repsMax: range.max,
+  };
+}

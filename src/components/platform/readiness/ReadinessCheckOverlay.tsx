@@ -334,6 +334,7 @@ export function ReadinessCheckOverlay({
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("is-readiness-open");
 
     const focusTimer = window.setTimeout(() => {
       const first = panelRef.current?.querySelector<HTMLElement>(
@@ -378,6 +379,7 @@ export function ReadinessCheckOverlay({
     return () => {
       window.clearTimeout(focusTimer);
       document.body.style.overflow = previousOverflow;
+      document.body.classList.remove("is-readiness-open");
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("popstate", onPop);
       if (window.history.state?.readinessOverlay) {
@@ -409,7 +411,6 @@ export function ReadinessCheckOverlay({
   if (typeof document === "undefined") return null;
 
   const duration = reduceMotion ? 0 : 0.22;
-  const lastStep = stepIndex === STEPS.length - 1;
 
   return createPortal(
     <AnimatePresence>
@@ -440,8 +441,8 @@ export function ReadinessCheckOverlay({
                 <button
                   type="button"
                   className="your-day-check__icon-btn"
-                  onClick={onDismiss}
-                  aria-label={READINESS_COPY.close}
+                  onClick={onSkip}
+                  aria-label={READINESS_COPY.skip}
                 >
                   <AssetImg
                     src={READINESS_ASSETS.closeIcon}
@@ -479,11 +480,9 @@ export function ReadinessCheckOverlay({
                 onConfirm={onConfirm}
               />
             </div>
-            {!lastStep ? (
-              <button type="button" className="your-day-check__skip" onClick={onSkip} disabled={saving}>
-                {READINESS_COPY.skip}
-              </button>
-            ) : null}
+            <button type="button" className="your-day-check__skip" onClick={onSkip} disabled={saving}>
+              {READINESS_COPY.skip}
+            </button>
           </motion.div>
         </motion.div>
       ) : null}

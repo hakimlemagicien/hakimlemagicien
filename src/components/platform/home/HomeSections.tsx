@@ -23,7 +23,7 @@ import {
   User,
   UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import appLogo from "@/assets/app-logo.png";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
@@ -83,7 +83,8 @@ const FEATURED_IMAGES = {
 const SNAPSHOT_ICONS = {
   workout: Dumbbell,
   nutrition: UtensilsCrossed,
-  progress: Scale,
+  water: Droplets,
+  weight: Scale,
 } as const;
 
 const GLANCE_ICONS = {
@@ -493,7 +494,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
 
 /* ── Daily Snapshot ────────────────────────────────────────────────────── */
 
-function WaterSnapshotCard() {
+function WaterSnapshotCard({ item }: { item: DailySnapshotItem }) {
   const water = useWaterOptional();
   if (!water) return null;
 
@@ -507,41 +508,118 @@ function WaterSnapshotCard() {
       type="button"
       onClick={openWaterSheet}
       className={cn(
-        "platform-home-day-card platform-touch is-progress",
+        "platform-home-day-card platform-touch is-water",
         done && "is-water-done",
+        reminderPulse && !done && "is-reminding",
       )}
       aria-label={
         done ? `اكتمل هدف الماء ${goal} لتر` : `الماء ${current} من ${goal} لتر`
       }
     >
-      <span
-        className={cn(
-          "platform-home-day-card__icon water-header-orb",
-          reminderPulse && !done ? "is-reminding" : null,
-        )}
-      >
-        <Droplets
-          className={cn("h-5 w-5", reminderPulse && !done ? "water-header-orb__icon" : null)}
-          aria-hidden
-          strokeWidth={2}
-        />
-      </span>
-      <p className="platform-home-day-card__title">الماء</p>
-      <p className="platform-home-day-card__value">
-        {current} / {goal} لتر
-      </p>
-      <AnimatedProgressBar
-        value={state.pct}
-        color="var(--card-accent)"
-        className="platform-home-day-card__bar"
+      <SnapshotCardBody
+        item={item}
+        value={current}
+        goalText={`/ ${goal} لتر`}
+        statusText={done ? "وصلت لهدف الماء" : "استمر، كأس إضافي يقرّبك"}
+        progress={state.pct}
+        complete={done}
+        icon={
+          <Droplets
+            className={cn("h-5 w-5", reminderPulse && !done ? "water-header-orb__icon" : null)}
+            aria-hidden
+            strokeWidth={2.2}
+          />
+        }
       />
     </button>
   );
 }
 
+function SnapshotRing({
+  progress,
+  children,
+}: {
+  progress: number;
+  children: ReactNode;
+}) {
+  const size = 56;
+  const stroke = 4.5;
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(Math.max(progress, 0), 100) / 100;
+  const offset = circumference * (1 - pct);
+
+  return (
+    <span className="platform-home-day-card__ring" aria-hidden>
+      <svg viewBox={`0 0 ${size} ${size}`} className="platform-home-day-card__ring-svg">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#F0EBE4"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#F97316"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </svg>
+      <span className="platform-home-day-card__ring-icon">{children}</span>
+    </span>
+  );
+}
+
+function SnapshotCardBody({
+  item,
+  icon,
+  value,
+  goalText,
+  statusText,
+  progress,
+  complete,
+}: {
+  item: DailySnapshotItem;
+  icon: ReactNode;
+  value: string;
+  goalText: string;
+  statusText: string;
+  progress: number;
+  complete: boolean;
+}) {
+  return (
+    <>
+      <p className="platform-home-day-card__title">{item.title}</p>
+      <div className="platform-home-day-card__body">
+        <div className="platform-home-day-card__metrics">
+          <p className="platform-home-day-card__value">{value}</p>
+          <p className="platform-home-day-card__goal">{goalText}</p>
+        </div>
+        <SnapshotRing progress={progress}>{icon}</SnapshotRing>
+      </div>
+      <p className={cn("platform-home-day-card__status", complete && "is-complete")}>
+        {complete ? (
+          <span className="platform-home-day-card__status-dot">
+            <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden />
+          </span>
+        ) : null}
+        {statusText}
+      </p>
+    </>
+  );
+}
+
 function SnapshotCard({ item }: { item: DailySnapshotItem }) {
-  if (item.id === "progress") {
-    return <WaterSnapshotCard />;
+  if (item.id === "water") {
+    return <WaterSnapshotCard item={item} />;
   }
 
   const Icon = SNAPSHOT_ICONS[item.icon];
@@ -552,18 +630,15 @@ function SnapshotCard({ item }: { item: DailySnapshotItem }) {
       className={cn("platform-home-day-card platform-touch", `is-${item.id}`)}
       aria-label={`${item.title}: ${item.value}`}
     >
-      <span className="platform-home-day-card__icon">
-        <Icon className="h-5 w-5" aria-hidden />
-      </span>
-      <p className="platform-home-day-card__title">{item.title}</p>
-      <p className="platform-home-day-card__value">{item.value}</p>
-      {item.showProgressBar ? (
-        <AnimatedProgressBar
-          value={item.progress}
-          color="var(--card-accent)"
-          className="platform-home-day-card__bar"
-        />
-      ) : null}
+      <SnapshotCardBody
+        item={item}
+        value={item.value}
+        goalText={item.goalText}
+        statusText={item.statusText}
+        progress={item.progress}
+        complete={item.complete}
+        icon={<Icon className="h-5 w-5" aria-hidden strokeWidth={2.2} />}
+      />
     </Link>
   );
 }
@@ -875,7 +950,7 @@ function WaterProgress({ current, total }: { current: number; total: number }) {
           cy="18"
           r="14"
           fill="none"
-          stroke="#2563EB"
+          stroke="var(--primary)"
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray={circumference}

@@ -18,7 +18,7 @@ export function WaterUndoToast() {
           className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] start-4 end-4 z-[130] mx-auto flex max-w-[390px] items-center gap-3 rounded-2xl border border-border/60 bg-card px-3 py-3 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.35)]"
           role="status"
         >
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#DBEAFE] text-[#2563EB]">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FFF1E6] text-[#F97316]">
             <Droplets className="h-4 w-4" />
           </span>
           <p className="min-w-0 flex-1 text-[12px] font-black text-foreground">

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CirclePlay, Dumbbell, LoaderCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   exerciseMediaQueryKey,
   fetchResolvedExerciseMediaUrl,
@@ -15,6 +16,10 @@ type ExerciseMediaProps = {
   title: string;
   label: string;
   autoPlay?: boolean;
+  loop?: boolean;
+  aspect?: "video" | "square";
+  showCaption?: boolean;
+  className?: string;
 };
 
 export function ExerciseMedia({
@@ -24,6 +29,10 @@ export function ExerciseMedia({
   title,
   label,
   autoPlay = false,
+  loop = false,
+  aspect = "video",
+  showCaption = true,
+  className,
 }: ExerciseMediaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaQuery = useQuery({
@@ -43,9 +52,11 @@ export function ExerciseMedia({
     });
   }, [autoPlay, mediaQuery.data]);
 
+  const frameClass = aspect === "square" ? "aspect-square" : "aspect-video";
+
   if (mediaQuery.isLoading) {
     return (
-      <div className="flex aspect-video items-center justify-center rounded-2xl border border-border bg-muted">
+      <div className={cn("flex items-center justify-center rounded-2xl border border-border bg-muted", frameClass, className)}>
         <LoaderCircle className="h-7 w-7 animate-spin text-primary" aria-label="جاري تحميل الفيديو" />
       </div>
     );
@@ -53,7 +64,7 @@ export function ExerciseMedia({
 
   if (!mediaQuery.data || mediaQuery.isError) {
     return (
-      <div className="flex aspect-video flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted px-6 text-center">
+      <div className={cn("flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted px-6 text-center", frameClass, className)}>
         <span className="grid h-14 w-14 place-items-center rounded-full bg-card text-primary shadow-sm">
           <Dumbbell className="h-6 w-6" />
         </span>
@@ -68,24 +79,27 @@ export function ExerciseMedia({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-black shadow-sm">
+    <div className={cn("overflow-hidden rounded-2xl border border-border bg-muted shadow-sm", className)}>
       <video
         ref={videoRef}
         key={mediaQuery.data}
         controls
         autoPlay={autoPlay}
+        loop={loop}
         preload="metadata"
         playsInline
-        className="aspect-video w-full bg-black object-contain"
+        className={cn("w-full bg-muted object-cover", frameClass)}
         aria-label={`${label}: ${title}`}
       >
         <source src={mediaQuery.data} />
         متصفحك لا يدعم تشغيل الفيديو.
       </video>
-      <div className="flex items-center gap-2 bg-card px-3 py-2 text-xs font-bold text-foreground">
-        <CirclePlay className="h-4 w-4 text-primary" />
-        <span>{label}</span>
-      </div>
+      {showCaption ? (
+        <div className="flex items-center gap-2 bg-card px-3 py-2 text-xs font-bold text-foreground">
+          <CirclePlay className="h-4 w-4 text-primary" />
+          <span>{label}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

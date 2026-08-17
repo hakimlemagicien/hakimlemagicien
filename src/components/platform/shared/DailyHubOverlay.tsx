@@ -19,21 +19,21 @@ const HUB_CARDS: HubCard[] = [
     title: "التمارين",
     to: "/app/program/workout",
     icon: Dumbbell,
-    tone: "bg-[#FFF1E6] text-[#FF6B00]",
+    tone: "bg-primary-soft text-primary",
   },
   {
     id: "nutrition",
     title: "التغذية",
     to: "/app/nutrition",
     icon: UtensilsCrossed,
-    tone: "bg-[#E9F9EF] text-[#22C55E]",
+    tone: "bg-primary-soft text-primary",
   },
   {
     id: "progress",
     title: "التقدم",
     to: "/app/progress",
     icon: TrendingUp,
-    tone: "bg-[#FFF7E8] text-[#F59E0B]",
+    tone: "bg-primary-soft text-primary",
   },
 ];
 
@@ -60,8 +60,8 @@ export function DailyHubOverlay({ open, onClose, origin }: DailyHubOverlayProps)
       closeLabel="إغلاق برنامجي"
     >
       <div className="mb-4 text-center">
-        <p className="font-[Tajawal] text-[15px] font-extrabold text-[#0F172A]">برنامجي</p>
-        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-[#64748B]">
+        <p className="font-[Tajawal] text-[15px] font-extrabold text-foreground">برنامجي</p>
+        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-muted-foreground">
           اختر ما تريد متابعته الآن
         </p>
       </div>

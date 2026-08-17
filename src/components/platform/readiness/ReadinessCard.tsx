@@ -1,6 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Check, ChevronLeft } from "lucide-react";
 import {
   READINESS_COPY,
+  shouldNudgeReadinessBadge,
   type DailyReadinessCheck,
   type ReadinessLevel,
 } from "@/lib/platform/readiness";
@@ -38,6 +40,28 @@ export function ReadinessCard({
 }: ReadinessCardProps) {
   const completed = record?.status === "completed" && record.level;
   const copy = completed ? LEVEL_COPY[record.level!] : null;
+  const nudge = shouldNudgeReadinessBadge(record);
+  const badgeRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const badge = badgeRef.current;
+    if (!badge || !nudge) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        badge.classList.toggle("is-nudge", Boolean(entry?.isIntersecting));
+      },
+      { threshold: 0.65 },
+    );
+    observer.observe(badge);
+    return () => {
+      observer.disconnect();
+      badge.classList.remove("is-nudge");
+    };
+  }, [nudge]);
 
   return (
     <section className="your-day-readiness" aria-label={READINESS_COPY.cardTitle}>
@@ -52,10 +76,15 @@ export function ReadinessCard({
           </p>
         </div>
         <span
-          className={cn("your-day-readiness__badge", copy ? `is-${copy.tone}` : "is-pending")}
+          ref={badgeRef}
+          className={cn(
+            "your-day-readiness__badge",
+            copy ? `is-${copy.tone}` : "is-pending",
+            nudge && "is-skipped",
+          )}
           aria-hidden
         >
-          <Check className="h-4 w-4" strokeWidth={2.8} />
+          <Check className="h-5 w-5" strokeWidth={2.6} />
         </span>
       </div>
 

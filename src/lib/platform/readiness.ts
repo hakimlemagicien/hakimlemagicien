@@ -170,6 +170,10 @@ export function hasStartedToday(record: DailyReadinessCheck | null): boolean {
   );
 }
 
+export function shouldNudgeReadinessBadge(record: DailyReadinessCheck | null): boolean {
+  return record?.status === "skipped";
+}
+
 export function didMutateDailyPlan(record: DailyReadinessCheck | null): boolean {
   void record;
   return false;

@@ -29,7 +29,7 @@ export const TOOLS_HUB_CARDS: ToolsCard[] = [
     title: "حاسبة السعرات الحرارية",
     kind: "calories",
     icon: Calculator,
-    tone: "bg-[#FFF1E6] text-[#FF6B00]",
+    tone: "bg-primary-soft text-primary",
   },
   {
     id: "timer",
@@ -37,7 +37,7 @@ export const TOOLS_HUB_CARDS: ToolsCard[] = [
     kind: "route",
     to: "/app/tools/timer",
     icon: Timer,
-    tone: "bg-[#EEF2FF] text-[#6366F1]",
+    tone: "bg-primary-soft text-primary",
   },
 ];
 
@@ -74,8 +74,8 @@ export function ToolsHubOverlay({
       closeLabel="إغلاق الأدوات"
     >
       <div className="mb-4 text-center">
-        <p className="font-[Tajawal] text-[15px] font-extrabold text-[#0F172A]">الأدوات</p>
-        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-[#64748B]">
+        <p className="font-[Tajawal] text-[15px] font-extrabold text-foreground">الأدوات</p>
+        <p className="mt-0.5 font-[Tajawal] text-[11px] font-medium text-muted-foreground">
           اختر الأداة التي تحتاجها
         </p>
       </div>

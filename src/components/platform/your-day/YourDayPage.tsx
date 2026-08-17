@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDailyReadiness } from "@/hooks/useDailyReadiness";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { trackReadinessEvent } from "@/lib/platform/readiness-analytics";
-import { shouldAutoOpenReadiness, type ReadinessAnswers } from "@/lib/platform/readiness";
+import { shouldAutoOpenReadiness, hasStartedToday, type ReadinessAnswers } from "@/lib/platform/readiness";
 import { buildYourDayScore, formatYourDayDate } from "@/lib/platform/your-day";
 import { cn } from "@/lib/utils";
 export type YourDaySearch = {
@@ -33,11 +33,20 @@ const TASK_ICONS = {
   activity: Footprints,
 } as const;
 
-function DayScoreGauge({ score, max, label }: { score: number; max: number; label: string }) {
+function DayScoreGauge({
+  score,
+  max,
+  label,
+}: {
+  score: number;
+  max: number;
+  label: string;
+}) {
   const radius = 86;
   const circumference = Math.PI * radius;
   const pct = Math.min(Math.max(score / max, 0), 1);
   const offset = circumference * (1 - pct);
+  const onTrack = score >= 70;
 
   return (
     <section className="your-day-gauge" aria-label={`إنجاز اليوم ${score} من ${max}`}>
@@ -53,7 +62,7 @@ function DayScoreGauge({ score, max, label }: { score: number; max: number; labe
           <path
             d="M24 118 A86 86 0 0 1 196 118"
             fill="none"
-            stroke="#F97316"
+            stroke={onTrack ? "#22C55E" : "#F97316"}
             strokeWidth="14"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -66,7 +75,7 @@ function DayScoreGauge({ score, max, label }: { score: number; max: number; labe
             <span className="tabular-nums">{score}</span>
             <span className="your-day-gauge__of"> من {max}</span>
           </p>
-          <p className="your-day-gauge__status">{label}</p>
+          <p className={cn("your-day-gauge__status", onTrack && "is-ready")}>{label}</p>
           <p className="your-day-gauge__hint">يتحدث تلقائياً مع كل إنجاز</p>
         </div>
       </div>
@@ -100,7 +109,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
       otherCriticalOverlayOpen: water.sheetOpen || upgrade.open,
       record,
     });
-    if (fromStartDay) {
+    if (fromStartDay && !shouldOpen && hasStartedToday(record)) {
       void navigate({ to: "/app/program", search: {}, replace: true });
     }
     if (!shouldOpen) return;
@@ -129,6 +138,9 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
     setOverlayOpen(false);
     setManualOpen(false);
     clearError();
+    if (search.from === "start-day") {
+      void navigate({ to: "/app/program", search: {}, replace: true });
+    }
   };
 
   const handleConfirm = async () => {
@@ -147,11 +159,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
 
   const handleDismiss = async () => {
     if (!overlayOpen) return;
-    if (!manualOpen) {
-      await save({ answers, status: "dismissed" });
-      trackReadinessEvent("readiness_check_dismissed");
-    }
-    closeOverlay();
+    await handleSkip();
   };
 
   const handleKeepPlan = async () => {
@@ -206,7 +214,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
         {dayScore.tasks.map((task) => {
           const Icon = TASK_ICONS[task.id];
           return (
-            <div key={task.id} className={cn("your-day-stats__item", `is-${task.id}`)}>
+            <div key={task.id} className={cn("your-day-stats__item", `is-${task.id}`, task.current >= task.total && "is-done")}>
               <Icon className="h-3.5 w-3.5" aria-hidden />
               <span className="tabular-nums">
                 {task.points}/{task.maxPoints}
@@ -240,7 +248,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
 
           const body = (
             <>
-              <span className={cn("your-day-task__icon", `is-${task.id}`)}>
+              <span className={cn("your-day-task__icon", `is-${task.id}`, task.current >= task.total && "is-done")}>
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <p className="your-day-task__title">{task.title}</p>
@@ -248,7 +256,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
               <p className="your-day-task__points tabular-nums">
                 {task.points}/{task.maxPoints}
               </p>
-              <span className="your-day-task__bar">
+              <span className={cn("your-day-task__bar", task.current >= task.total && "is-done")}>
                 <span style={{ width: `${pct}%` }} />
               </span>
               {action}

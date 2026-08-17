@@ -137,7 +137,7 @@ export function DiscoverTypeBadge({ label }: { label: string }) {
 
 export function DiscoverOfflineBanner() {
   return (
-    <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-900">
+    <div className="rounded-2xl border border-primary/20 bg-primary-soft px-3 py-2 text-[11px] font-bold text-foreground">
       أنت تعمل دون اتصال، وقد يكون المحتوى غير محدث.
     </div>
   );

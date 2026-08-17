@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   EFFORT_LABELS,
+  getSetProgression,
   type EffortLevel,
   type WorkoutSessionExercise,
   type WorkoutSessionMeta,
@@ -100,25 +101,39 @@ export function useWorkoutPlayer(
 
   const [setDraft, setSetDraft] = useState<SetLogDraft>({
     weightKg: currentExercise?.suggestedWeightKg ?? 0,
-    reps: 10,
+    reps: getSetProgression({
+      setNumber: 1,
+      baseWeightKg: currentExercise?.suggestedWeightKg ?? 0,
+    }).reps,
     effort: "medium",
     notes: "",
   });
 
   useEffect(() => {
     if (!currentExercise) return;
+    if (phase === "rest" || phase === "set-sheet") return;
+
     const lastLogForExercise = [...setLogs]
       .reverse()
-      .find((log) => log.exerciseExternalId === currentExercise.external_id);
+      .find((log) => log.exerciseExternalId === currentExercise.external_id && !log.skipped);
+    const nextSetNumber = Math.min(
+      Math.max(currentProgress.completedSets + 1, 1),
+      Math.max(currentExercise.sets, 1),
+    );
+    const targets = getSetProgression({
+      setNumber: nextSetNumber,
+      baseWeightKg: currentExercise.suggestedWeightKg,
+      lastWeightKg: nextSetNumber > 1 ? (lastLogForExercise?.weightKg ?? null) : null,
+    });
 
     setSetDraft({
-      weightKg: lastLogForExercise?.weightKg ?? currentExercise.suggestedWeightKg,
-      reps: lastLogForExercise?.reps ?? 10,
+      weightKg: targets.weightKg,
+      reps: targets.reps,
       effort: lastLogForExercise?.effort ?? "medium",
       notes: "",
     });
-    setCurrentSetNumber(currentProgress.completedSets + 1);
-  }, [currentExercise, currentProgress.completedSets, exerciseIndex, setLogs]);
+    setCurrentSetNumber(nextSetNumber);
+  }, [currentExercise, currentProgress.completedSets, exerciseIndex, phase, setLogs]);
 
   useEffect(() => {
     if (exercises.length === 0) return;
@@ -139,6 +154,59 @@ export function useWorkoutPlayer(
 
   const nextExercise = exercises[exerciseIndex + 1] ?? null;
 
+  const lastLogForCurrent = useMemo(() => {
+    if (!currentExercise) return null;
+    return (
+      [...setLogs]
+        .reverse()
+        .find((log) => log.exerciseExternalId === currentExercise.external_id && !log.skipped) ?? null
+    );
+  }, [currentExercise, setLogs]);
+
+  const currentSetTargets = useMemo(() => {
+    if (!currentExercise) {
+      return getSetProgression({ setNumber: 1, baseWeightKg: 0 });
+    }
+    return getSetProgression({
+      setNumber: currentSetNumber,
+      baseWeightKg: currentExercise.suggestedWeightKg,
+      lastWeightKg: currentSetNumber > 1 ? (lastLogForCurrent?.weightKg ?? null) : null,
+    });
+  }, [currentExercise, currentSetNumber, lastLogForCurrent]);
+
+  const restUpcoming = useMemo(() => {
+    if (!currentExercise) return null;
+    const exerciseDone = currentProgress.completedSets >= currentExercise.sets;
+    if (exerciseDone) {
+      if (!nextExercise) return null;
+      return { kind: "exercise" as const, exercise: nextExercise };
+    }
+
+    const nextSetNumber = currentProgress.completedSets + 1;
+    const fromProgression = getSetProgression({
+      setNumber: Math.max(1, nextSetNumber - 1),
+      baseWeightKg: currentExercise.suggestedWeightKg,
+    });
+    const to = getSetProgression({
+      setNumber: nextSetNumber,
+      baseWeightKg: currentExercise.suggestedWeightKg,
+      lastWeightKg: lastLogForCurrent?.weightKg ?? null,
+    });
+    const from = {
+      ...fromProgression,
+      weightKg: lastLogForCurrent?.weightKg ?? fromProgression.weightKg,
+    };
+
+    return {
+      kind: "set" as const,
+      exercise: currentExercise,
+      setNumber: nextSetNumber,
+      totalSets: currentExercise.sets,
+      from,
+      to,
+    };
+  }, [currentExercise, currentProgress.completedSets, lastLogForCurrent, nextExercise]);
+
   const beginSet = useCallback(() => {
     setVideoAutoPlay(true);
     setVideoOpen(true);
@@ -146,8 +214,6 @@ export function useWorkoutPlayer(
   }, []);
 
   const openSetSheet = useCallback(() => {
-    setVideoOpen(false);
-    setVideoAutoPlay(false);
     setPhase("set-sheet");
   }, []);
 
@@ -160,8 +226,6 @@ export function useWorkoutPlayer(
     setRestSecondsLeft(seconds);
     setPhase("rest");
     setSetInProgress(false);
-    setVideoOpen(false);
-    setVideoAutoPlay(false);
   }, []);
 
   const advanceAfterSet = useCallback(() => {
@@ -187,19 +251,12 @@ export function useWorkoutPlayer(
     );
 
     if (!isExerciseDone) {
-      setCurrentSetNumber(nextCompletedSets + 1);
       startRest(exercise.restSeconds);
       return;
     }
 
     if (exerciseIndex < exercises.length - 1) {
-      const nextIndex = exerciseIndex + 1;
-      setExerciseIndex(nextIndex);
-      setCurrentSetNumber(1);
-      setHeroKey((value) => value + 1);
-      setPhase("exercise");
-      setSetInProgress(false);
-      startRest(exercises[nextIndex].restSeconds);
+      startRest(exercise.restSeconds);
       return;
     }
 
@@ -251,12 +308,10 @@ export function useWorkoutPlayer(
         skipped,
       });
 
-      closeSetSheet();
       advanceAfterSet();
     },
     [
       advanceAfterSet,
-      closeSetSheet,
       currentSetNumber,
       exerciseIndex,
       exercises,
@@ -267,9 +322,25 @@ export function useWorkoutPlayer(
     ],
   );
 
-  const skipRest = useCallback(() => {
+  const finishRest = useCallback(() => {
+    const exercise = exercises[exerciseIndex];
+    const completed = progress[exerciseIndex]?.completedSets ?? 0;
+    const isExerciseDone = Boolean(exercise && completed >= exercise.sets);
+
+    if (isExerciseDone && exerciseIndex < exercises.length - 1) {
+      const nextIndex = exerciseIndex + 1;
+      setExerciseIndex(nextIndex);
+      setCurrentSetNumber(1);
+      setHeroKey((value) => value + 1);
+    }
+
     setPhase("exercise");
-  }, []);
+    setSetInProgress(true);
+    setVideoOpen(true);
+    setVideoAutoPlay(true);
+  }, [exerciseIndex, exercises, progress]);
+
+  const skipRest = finishRest;
 
   const addRestTime = useCallback(() => {
     setRestSecondsLeft((value) => value + 30);
@@ -288,34 +359,20 @@ export function useWorkoutPlayer(
 
   useEffect(() => {
     if (phase !== "rest" || restSecondsLeft > 0) return;
-    setPhase("exercise");
-  }, [phase, restSecondsLeft]);
+    finishRest();
+  }, [finishRest, phase, restSecondsLeft]);
 
   const primaryActionLabel = useMemo(() => {
     const exercise = exercises[exerciseIndex];
-    if (!exercise) return "ابدأ المجموعة";
+    if (!exercise) return "ابدأ الجولة";
 
     if (!setInProgress) {
-      const isLastSet =
-        currentProgress.completedSets + 1 >= exercise.sets &&
-        exerciseIndex === exercises.length - 1;
-      if (isLastSet && currentProgress.completedSets + 1 === exercise.sets) {
-        return "إنهاء المجموعة";
-      }
-      return "ابدأ المجموعة";
+      return "ابدأ الجولة";
     }
 
     const isLastSetOfExercise = currentSetNumber >= exercise.sets;
-    const isLastExercise = exerciseIndex === exercises.length - 1;
-
-    if (isLastSetOfExercise && isLastExercise) {
-      return "إنهاء المجموعة";
-    }
-    if (isLastSetOfExercise) {
-      return "التمرين التالي";
-    }
-    return "إنهاء المجموعة";
-  }, [currentProgress.completedSets, currentSetNumber, exerciseIndex, exercises, setInProgress]);
+    return isLastSetOfExercise ? "أنهِ المجموعة" : "مر إلى الجولة التالية";
+  }, [currentSetNumber, exerciseIndex, exercises, setInProgress]);
 
   const handlePrimaryAction = useCallback(() => {
     if (!setInProgress) {
@@ -343,8 +400,6 @@ export function useWorkoutPlayer(
       setSetInProgress(false);
       setPhase("exercise");
       setShowDetails(false);
-      setVideoOpen(false);
-      setVideoAutoPlay(false);
     },
     [exercises.length],
   );
@@ -391,6 +446,8 @@ export function useWorkoutPlayer(
     heroKey,
     sessionProgressPct,
     nextExercise,
+    restUpcoming,
+    currentSetTargets,
     setDraft,
     setSetDraft,
     effortLabels: EFFORT_LABELS,
