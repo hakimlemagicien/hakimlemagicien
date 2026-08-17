@@ -41,23 +41,21 @@ export function DiscoverCategoriesSection({ categories }: { categories: Discover
   return (
     <DiscoverMotionSection delay={0.06}>
       <DiscoverSectionHead title="الأقسام" actionLabel="عرض الكل" actionTo="/app/discover/search" />
-      <HorizontalRow label="تصنيفات المحتوى">
+      <div className="grid grid-cols-2 gap-2" aria-label="تصنيفات المحتوى">
         {categories.map((cat) => (
           <Link
             key={cat.id}
             to="/app/discover/category/$slug"
             params={{ slug: cat.slug }}
-            className="platform-touch flex w-20 shrink-0 flex-col items-center gap-2"
+            className="platform-touch flex h-14 items-center justify-start gap-3 rounded-[18px] border border-primary/15 bg-primary-soft/80 px-3 text-primary"
           >
-            <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-primary">
-              <DiscoverCategoryIcon icon={cat.icon} className="h-6 w-6" />
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-primary">
+              <DiscoverCategoryIcon icon={cat.icon} className="h-5 w-5" />
             </span>
-            <span className="text-center text-[11px] font-black leading-tight text-foreground">
-              {cat.name}
-            </span>
+            <span className="text-[12px] font-black leading-tight text-foreground">{cat.name}</span>
           </Link>
         ))}
-      </HorizontalRow>
+      </div>
     </DiscoverMotionSection>
   );
 }
@@ -78,14 +76,14 @@ export function DiscoverDailyTipSection({
   return (
     <DiscoverMotionSection delay={0.08}>
       <DiscoverSectionHead title="نصيحة اليوم" />
-      <div className={cn(discoverCardClass, "bg-[#FFFBEB] p-4")}>
+      <div className={cn(discoverCardClass, "bg-primary-soft p-4")}>
         <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#FEF3C7] text-amber-600">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-primary">
             <Lightbulb className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1 space-y-2">
             {category ? (
-              <p className="text-[10px] font-black text-amber-700">{category}</p>
+              <p className="text-[10px] font-black text-primary">{category}</p>
             ) : null}
             <p className="text-sm font-black leading-relaxed text-foreground">{tip.shortDescription}</p>
             <div className="flex items-center gap-1">

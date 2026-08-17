@@ -9,6 +9,7 @@ import {
   Droplets,
   Flame,
   Heart,
+  MessageCircle,
   Moon,
   RefreshCw,
   Salad,
@@ -16,7 +17,6 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
-import { WaterHeaderButton } from "@/components/platform/water/WaterHeaderButton";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import { cn } from "@/lib/utils";
@@ -71,7 +71,13 @@ export function DiscoverHeader({
       <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
       <div className="flex items-center gap-0.5">
         {backTo ? (
-          <WaterHeaderButton className="grid h-11 w-11 place-items-center text-foreground" />
+          <Link
+            to="/app/support/chat"
+            aria-label="دردشة الكوتش"
+            className="grid h-11 w-11 place-items-center text-foreground"
+          >
+            <MessageCircle className="h-6 w-6" strokeWidth={1.8} />
+          </Link>
         ) : null}
         <Link
           to="/app/profile"
@@ -131,7 +137,7 @@ export function DiscoverTypeBadge({ label }: { label: string }) {
 
 export function DiscoverOfflineBanner() {
   return (
-    <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-3 py-2 text-[11px] font-bold text-amber-900">
+    <div className="rounded-2xl border border-primary/20 bg-primary-soft px-3 py-2 text-[11px] font-bold text-foreground">
       أنت تعمل دون اتصال، وقد يكون المحتوى غير محدث.
     </div>
   );

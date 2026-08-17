@@ -54,27 +54,36 @@ export const BODY_SCORE: Record<ReadinessBody, 1 | 2 | 3> = {
 export const READINESS_COPY = {
   title: "فحص الجاهزية",
   description: "أخبرنا كيف تشعر لنجهز يومك بشكل أفضل. يستغرق أقل من 10 ثوانٍ.",
-  energyQuestion: "كيف مستوى طاقتك اليوم؟",
+  close: "إغلاق",
+  back: "رجوع",
+  stepOf: (current: number, total: number) => `${current} من ${total}`,
+  energyQuestion: "كيف طاقتك الآن؟",
+  energyHint: "اختر شعورك الحالي",
   energy: {
-    low: "منخفض",
-    medium: "متوسط",
-    high: "مرتفع",
+    low: "منخفضة",
+    medium: "متوسطة",
+    high: "عالية",
   },
-  sleepQuestion: "كيف كانت جودة نومك؟",
+  sleepQuestion: "كيف كان نومك؟",
+  sleepHint: "اختر ما يصف ليلتك",
   sleep: {
-    poor: "ضعيفة",
-    fair: "مقبولة",
-    good: "جيدة",
+    poor: "ضعيف",
+    fair: "متوسط",
+    good: "جيد",
   },
-  bodyQuestion: "هل تشعر بإجهاد أو ألم؟",
+  bodyQuestion: "هل تشعر بألم عضلي؟",
+  bodyHint: "اختر مستوى الألم اليوم",
   body: {
-    good: "لا",
-    fatigued: "إجهاد بسيط",
-    pain: "أشعر بألم",
+    good: "لا يوجد",
+    fatigued: "خفيف",
+    pain: "مرتفع",
   },
+  autoAdvance: "سيتم الانتقال تلقائياً",
+  adaptNotice: "سنكيف شدة تمرينك بأمان",
+  editHint: "يمكنك تعديل إجابتك من زر الرجوع",
   painNotice: "يمكننا اقتراح يوم أخف. إذا كان الألم شديدًا أو مستمرًا، استشر مختصًا صحيًا.",
-  confirm: "تأكيد الجاهزية",
-  skip: "تخطي الآن",
+  confirm: "تأكيد وفتح يومك",
+  skip: "تخطي فحص اليوم",
   cardTitle: "جاهزيتك اليوم",
   update: "تحديث الجاهزية",
   readyTitle: "جاهز لخطة اليوم",
@@ -159,6 +168,10 @@ export function hasStartedToday(record: DailyReadinessCheck | null): boolean {
     record &&
     (record.status === "completed" || record.status === "skipped" || record.status === "dismissed"),
   );
+}
+
+export function shouldNudgeReadinessBadge(record: DailyReadinessCheck | null): boolean {
+  return record?.status === "skipped";
 }
 
 export function didMutateDailyPlan(record: DailyReadinessCheck | null): boolean {

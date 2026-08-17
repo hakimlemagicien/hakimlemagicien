@@ -5,6 +5,7 @@ import {
   hasStartedToday,
   isReadinessAnswersComplete,
   shouldAutoOpenReadiness,
+  shouldNudgeReadinessBadge,
   type DailyReadinessCheck,
 } from "./readiness";
 import {
@@ -146,6 +147,9 @@ export function runReadinessTests() {
 
   assert(hasStartedToday(sampleRecord({ status: "skipped" })), "skipped counts as started");
   assert(!hasStartedToday(null), "no record is not started");
+  assert(shouldNudgeReadinessBadge(sampleRecord({ status: "skipped" })), "skipped badge nudges");
+  assert(!shouldNudgeReadinessBadge(sampleRecord({ status: "completed" })), "completed does not nudge");
+  assert(!shouldNudgeReadinessBadge(null), "missing record does not nudge");
   assert(
     !didMutateDailyPlan(sampleRecord({ adjustmentDecision: "accepted" })),
     "plan stays unchanged",

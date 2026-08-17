@@ -614,14 +614,17 @@ export function shouldShowActivateCta(tier: MembershipTier, isPaid: boolean): bo
 /* ── Home Dashboard v2 (CEO-approved layout) ───────────────────────────── */
 
 export type DailySnapshotItem = {
-  id: "workout" | "nutrition" | "progress";
+  id: "workout" | "nutrition" | "water" | "weight";
   title: string;
   value: string;
+  goalText: string;
+  statusText: string;
+  complete: boolean;
   subtitle: string;
   progress: number;
   href?: string;
   actionLabel: string;
-  icon: "workout" | "nutrition" | "progress";
+  icon: "workout" | "nutrition" | "water" | "weight";
   iconBg: string;
   iconColor: string;
   valueColor: string;
@@ -831,42 +834,24 @@ export function buildDailySnapshot(input: {
   const workoutProgress = workoutTotal ? Math.round((workoutDone / workoutTotal) * 100) : 0;
   const caloriesGoal = 2200;
   const caloriesUsed = mealsTotal ? Math.round((mealsDone / mealsTotal) * caloriesGoal) : 0;
-  const caloriesLeft = Math.max(0, caloriesGoal - caloriesUsed);
+  const currentWeight = activity.currentWeight;
+  const goalWeight = activity.goalWeight;
+  const startWeight = activity.startWeight;
+  const weightSpan =
+    startWeight != null && goalWeight != null ? Math.abs(startWeight - goalWeight) : 0;
+  const weightDone =
+    startWeight != null && currentWeight != null ? Math.abs(startWeight - currentWeight) : 0;
+  const weightProgress = weightSpan ? Math.min(100, Math.round((weightDone / weightSpan) * 100)) : 0;
 
-  const progressValue =
-    activity.currentWeight != null
-      ? `${activity.currentWeight} كغ`
-      : activity.weightChange != null
-        ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
-        : "سجّل وزنك";
-  const progressSubtitle =
-    activity.weightChange != null
-      ? `${activity.weightChange > 0 ? "+" : ""}${activity.weightChange} كغ`
-      : activity.daysIn > 0
-        ? `منذ ${activity.daysIn} ${activity.daysIn === 1 ? "يوم" : "أيام"}`
-        : "لم تسجّل بعد";
-
-  /* RTL: first item = right — التغذية → التمرين → الوزن */
+  /* RTL 2×2: يمين أعلى تمرين، يساره ماء، أسفل يمين تغذية، يسارها وزن */
   return [
-    {
-      id: "nutrition",
-      title: "التغذية",
-      value: `${caloriesLeft} سعرة`,
-      subtitle: "متبقية اليوم",
-      progress: nutritionProgress,
-      href: "/app/nutrition",
-      actionLabel: "سجّل وجبة",
-      icon: "nutrition",
-      iconBg: "bg-[#DCFCE7]",
-      iconColor: "text-[#22C55E]",
-      valueColor: "#16A34A",
-      progressColor: "#22C55E",
-      showProgressBar: true,
-    },
     {
       id: "workout",
       title: "التمرين",
-      value: `${workoutDone} من ${workoutTotal}`,
+      value: String(workoutDone),
+      goalText: `/ ${workoutTotal} تمرين`,
+      statusText: workoutProgress >= 100 ? "أحسنت، أكملت تمرينك" : "ابدأ تمرين اليوم",
+      complete: workoutTotal > 0 && workoutProgress >= 100,
       subtitle: workoutTask?.subtitle ?? WORKOUT_DAY_SEED.title,
       progress: workoutProgress,
       href: "/app/program/workout",
@@ -879,14 +864,53 @@ export function buildDailySnapshot(input: {
       showProgressBar: true,
     },
     {
-      id: "progress",
+      id: "water",
+      title: "الماء",
+      value: "—",
+      goalText: "هدف اليوم",
+      statusText: "اضغط للتسجيل",
+      complete: false,
+      subtitle: "اضغط للتسجيل",
+      progress: 0,
+      href: "/app",
+      actionLabel: "تسجيل الماء",
+      icon: "water",
+      iconBg: "bg-[#EFF6FF]",
+      iconColor: "text-[#2563EB]",
+      valueColor: "#2563EB",
+      progressColor: "#FF6B00",
+      showProgressBar: true,
+    },
+    {
+      id: "nutrition",
+      title: "التغذية",
+      value: caloriesUsed.toLocaleString("en-US"),
+      goalText: `/ ${caloriesGoal.toLocaleString("en-US")} سعرة`,
+      statusText: nutritionProgress >= 100 ? "أحسنت، أكملت وجباتك" : "سجّل وجباتك اليوم",
+      complete: mealsTotal > 0 && nutritionProgress >= 100,
+      subtitle: "سعرات اليوم",
+      progress: nutritionProgress,
+      href: "/app/nutrition",
+      actionLabel: "سجّل وجبة",
+      icon: "nutrition",
+      iconBg: "bg-[#DCFCE7]",
+      iconColor: "text-[#22C55E]",
+      valueColor: "#FF6B00",
+      progressColor: "#FF6B00",
+      showProgressBar: true,
+    },
+    {
+      id: "weight",
       title: "الوزن",
-      value: progressValue,
-      subtitle: progressSubtitle,
-      progress: activity.overallProgressPct,
+      value: currentWeight != null ? String(currentWeight) : "—",
+      goalText: goalWeight != null ? `/ ${goalWeight} كغ` : "سجّل وزنك",
+      statusText: currentWeight != null ? "تابع تقدمك" : "سجّل وزنك اليوم",
+      complete: false,
+      subtitle: "الوزن الحالي",
+      progress: weightProgress,
       href: "/app/progress",
-      actionLabel: "عرض النشاط",
-      icon: "progress",
+      actionLabel: "تحديث الوزن",
+      icon: "weight",
       iconBg: "bg-[#FFEDD5]",
       iconColor: "text-[#FF6B00]",
       valueColor: "#FF6B00",

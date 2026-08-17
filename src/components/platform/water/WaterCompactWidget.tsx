@@ -40,12 +40,12 @@ export function WaterCompactWidget({
         onClick={openWaterSheet}
         aria-label={`الماء ${current} من ${goal} لتر`}
         className={cn(
-          "inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-right transition active:scale-[0.98]",
+          "inline-flex min-h-11 items-center gap-2 rounded-2xl border border-primary/25 bg-primary-soft px-3 py-2 text-right transition active:scale-[0.98]",
           className,
         )}
       >
-        <Droplets className="h-4 w-4 shrink-0 text-[#2563EB]" />
-        <span className="text-[11px] font-black text-[#1E3A8A]">
+        <Droplets className="h-4 w-4 shrink-0 text-primary" />
+        <span className="text-[11px] font-black text-foreground">
           {current}/{goal} ل
         </span>
       </button>
@@ -63,7 +63,7 @@ export function WaterCompactWidget({
           className,
         )}
       >
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#DBEAFE] text-[#2563EB]">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
           <Droplets className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
@@ -73,7 +73,7 @@ export function WaterCompactWidget({
           </p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             <motion.div
-              className={cn("h-full rounded-full", done ? "bg-[#22C55E]" : "bg-[#2563EB]")}
+              className={cn("h-full rounded-full", done ? "bg-success" : "bg-primary")}
               initial={false}
               animate={{ width: `${pct * 100}%` }}
               transition={reduceMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
@@ -90,16 +90,16 @@ export function WaterCompactWidget({
       onClick={openWaterSheet}
       aria-label={`الماء ${current} من ${goal} لتر`}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-[20px] border border-[#BFDBFE]/80 bg-[#EFF6FF] px-3 py-2.5 text-right transition active:scale-[0.98]",
+        "flex w-full items-center gap-2.5 rounded-[20px] border border-primary/20 bg-primary-soft px-3 py-2.5 text-right transition active:scale-[0.98]",
         className,
       )}
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#2563EB] shadow-sm">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-primary shadow-sm">
         <Droplets className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold text-[#64748B]">الماء</p>
-        <p className="text-[12px] font-black text-[#1E3A8A]">
+        <p className="text-[10px] font-bold text-muted-foreground">الماء</p>
+        <p className="text-[12px] font-black text-foreground">
           {current} / {goal} لتر
         </p>
       </div>
@@ -131,7 +131,7 @@ export function WaterRing({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="#E0F2FE"
+        stroke="#FFF1E6"
         strokeWidth={size > 40 ? 8 : 4}
       />
       <motion.circle
@@ -139,7 +139,7 @@ export function WaterRing({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke={done ? "#22C55E" : "#2563EB"}
+        stroke={done ? "#22C55E" : "#F97316"}
         strokeWidth={size > 40 ? 8 : 4}
         strokeLinecap="round"
         strokeDasharray={circumference}

@@ -25,7 +25,7 @@ export function VipGlassShell({
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,120,0.22)_0%,transparent_42%),radial-gradient(ellipse_at_bottom_left,rgba(124,58,237,0.18)_0%,transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,120,0.22)_0%,transparent_42%),radial-gradient(ellipse_at_bottom_left,rgba(249,115,22,0.16)_0%,transparent_45%)]"
       />
       <span
         aria-hidden
@@ -33,7 +33,7 @@ export function VipGlassShell({
       />
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-10 -left-6 h-24 w-24 rounded-full bg-[#7C3AED]/25 blur-3xl"
+        className="pointer-events-none absolute -bottom-10 -left-6 h-24 w-24 rounded-full bg-primary/25 blur-3xl"
       />
       <span
         aria-hidden

@@ -34,14 +34,14 @@ export function WaterHeaderButton({
           "water-header-orb grid size-full place-items-center rounded-full border",
           done
             ? "border-success/35 bg-success-soft shadow-[0_2px_8px_-3px_rgba(34,197,94,0.25)]"
-            : "border-[#BFDBFE]/90 bg-[#EFF6FF] shadow-[0_2px_8px_-3px_rgba(37,99,235,0.3)]",
+            : "border-primary/30 bg-primary-soft shadow-[0_2px_8px_-3px_rgba(249,115,22,0.28)]",
           reminderPulse && !done ? "is-reminding" : null,
         )}
       >
         <Droplets
           className={cn(
             iconClassName,
-            done ? "text-success" : "text-[#2563EB]",
+            done ? "text-success" : "text-primary",
             reminderPulse && !done ? "water-header-orb__icon" : null,
           )}
           strokeWidth={2}

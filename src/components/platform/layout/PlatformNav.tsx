@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -69,6 +69,8 @@ function NavItem({
   onNavigate,
   onSelect,
   activeOverride,
+  expanded,
+  triggerRef,
 }: {
   to: string;
   label: string;
@@ -79,6 +81,8 @@ function NavItem({
   onNavigate?: () => void;
   onSelect?: () => void;
   activeOverride?: boolean;
+  expanded?: boolean;
+  triggerRef?: Ref<HTMLButtonElement>;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const active =
@@ -99,13 +103,8 @@ function NavItem({
         aria-label={label}
         aria-current={active ? "page" : undefined}
       >
-        <span
-          className={cn(
-            "platform-nav__fab",
-            !active && "bg-card text-muted-foreground shadow-none ring-1 ring-border",
-          )}
-        >
-          <Icon className="h-6 w-6" strokeWidth={2.25} />
+        <span className="platform-nav__fab">
+          <Icon className="h-5 w-5" strokeWidth={2.25} />
         </span>
         <span
           className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}
@@ -119,15 +118,8 @@ function NavItem({
   if (mobile) {
     const content = (
       <>
-        <Icon
-          className={cn("h-6 w-6 shrink-0", active ? "text-primary" : "text-muted-foreground")}
-          strokeWidth={1.75}
-        />
-        <span
-          className={cn("platform-nav__label", active ? "text-primary" : "text-muted-foreground")}
-        >
-          {label}
-        </span>
+        <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} />
+        <span className="platform-nav__label">{label}</span>
       </>
     );
 
@@ -135,10 +127,11 @@ function NavItem({
       return (
         <button
           type="button"
+          ref={triggerRef}
           onClick={handlePress}
           className="platform-nav__link"
           aria-haspopup="dialog"
-          aria-expanded={active}
+          aria-expanded={expanded ?? false}
           aria-label={label}
         >
           {content}
@@ -234,6 +227,10 @@ export function PlatformMobileNav() {
   const tools = useToolsOptional();
   const [programHubOpen, setProgramHubOpen] = useState(false);
   const [toolsHubOpen, setToolsHubOpen] = useState(false);
+  const [programOrigin, setProgramOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [toolsOrigin, setToolsOrigin] = useState<{ x: number; y: number } | null>(null);
+  const programTriggerRef = useRef<HTMLButtonElement>(null);
+  const toolsTriggerRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const prevPathname = useRef(pathname);
   const programHubActive = programHubOpen || isProgramHubRoute(pathname);
@@ -253,6 +250,12 @@ export function PlatformMobileNav() {
     setToolsHubOpen(false);
   };
 
+  const originFrom = (node: HTMLButtonElement | null) => {
+    const rect = node?.getBoundingClientRect();
+    if (!rect) return null;
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
+
   return (
     <>
       <nav className="platform-nav md:hidden" aria-label="التنقل الرئيسي">
@@ -263,8 +266,11 @@ export function PlatformMobileNav() {
                 key={item.to}
                 {...item}
                 mobile
+                triggerRef={programTriggerRef}
+                expanded={programHubOpen}
                 onSelect={() => {
                   setToolsHubOpen(false);
+                  setProgramOrigin(originFrom(programTriggerRef.current));
                   setProgramHubOpen((open) => !open);
                 }}
                 activeOverride={programHubActive}
@@ -274,8 +280,11 @@ export function PlatformMobileNav() {
                 key={item.to}
                 {...item}
                 mobile
+                triggerRef={toolsTriggerRef}
+                expanded={toolsHubOpen}
                 onSelect={() => {
                   setProgramHubOpen(false);
+                  setToolsOrigin(originFrom(toolsTriggerRef.current));
                   setToolsHubOpen((open) => !open);
                 }}
                 activeOverride={toolsHubActive}
@@ -292,9 +301,14 @@ export function PlatformMobileNav() {
           )}
         </div>
       </nav>
-      <DailyHubOverlay open={programHubOpen} onClose={() => setProgramHubOpen(false)} />
+      <DailyHubOverlay
+        open={programHubOpen}
+        origin={programOrigin}
+        onClose={() => setProgramHubOpen(false)}
+      />
       <ToolsHubOverlay
         open={toolsHubOpen}
+        origin={toolsOrigin}
         onClose={() => setToolsHubOpen(false)}
         onOpenCalories={() => tools?.openCalorieCalculator()}
       />

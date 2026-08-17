@@ -1581,6 +1581,7 @@ export type Database = {
         | "snack"
         | "pre_workout"
         | "post_workout"
+        | "drinks"
       payment_method: "stripe" | "bank_transfer" | "cash"
       payment_status: "pending" | "submitted" | "approved" | "rejected"
       program_day_type: "workout" | "rest" | "active_recovery"
@@ -1745,6 +1746,7 @@ export const Constants = {
         "snack",
         "pre_workout",
         "post_workout",
+        "drinks",
       ],
       payment_method: ["stripe", "bank_transfer", "cash"],
       payment_status: ["pending", "submitted", "approved", "rejected"],

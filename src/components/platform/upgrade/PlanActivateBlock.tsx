@@ -88,7 +88,7 @@ function SixMonthUpsell({
         compact ? "mt-3 px-3 py-2.5" : "mt-4 px-3.5 py-3",
         vip
           ? selected
-            ? "border-[#D4AF78]/55 bg-gradient-to-l from-[#D4AF78]/20 via-white/10 to-[#7C3AED]/15 shadow-[0_10px_24px_-16px_rgba(212,175,120,0.45)]"
+            ? "border-[#D4AF78]/55 bg-gradient-to-l from-[#D4AF78]/20 via-white/10 to-primary/15 shadow-[0_10px_24px_-16px_rgba(212,175,120,0.45)]"
             : "border-white/15 bg-white/5 hover:border-[#D4AF78]/35"
           : selected
             ? "border-[#5C9E54] bg-gradient-to-l from-[#F3FAF2] via-white to-[#F3FAF2] shadow-[0_10px_24px_-16px_rgba(92,158,84,0.45)]"

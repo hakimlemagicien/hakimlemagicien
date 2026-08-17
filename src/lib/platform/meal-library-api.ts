@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   setMealLibraryCatalog,
+  getMealLibraryCatalog,
   type MealLibraryIngredient,
   type MealLibraryRecord,
   type MealSubstitutionProfile,
@@ -181,7 +182,8 @@ let lastHydratedSource: MealLibrarySource = "json";
 export async function hydrateMealLibraryFromSupabase(): Promise<MealLibrarySource> {
   try {
     const meals = await fetchMealLibraryFromSupabase();
-    if (meals.length >= 20) {
+    const seedCount = getMealLibraryCatalog().length;
+    if (meals.length >= seedCount && meals.length > 0) {
       setMealLibraryCatalog(meals);
       lastHydratedSource = "supabase";
       return lastHydratedSource;
