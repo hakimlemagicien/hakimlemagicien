@@ -1,9 +1,10 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { AlertCircle, Bell, Check, Lock, Minus, RefreshCw, UtensilsCrossed, WifiOff, X } from "lucide-react";
+import { AlertCircle, Check, Lock, RefreshCw, UtensilsCrossed, WifiOff, X } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NotificationsBell } from "@/components/platform/shared/PlatformHeaderActions";
 import { useMembership } from "@/hooks/useMembership";
 import type { MealStatus } from "@/lib/platform/nutrition-experience";
 import { cn } from "@/lib/utils";
@@ -184,9 +185,7 @@ export function MealStatusIcon({ status }: { status: MealStatus }) {
     );
   }
   return (
-    <span className="grid h-7 w-7 place-items-center rounded-full border border-border/80 bg-muted text-muted-foreground">
-      <Minus className="h-3.5 w-3.5" strokeWidth={2.4} />
-    </span>
+    <span className="grid h-7 w-7 place-items-center rounded-full border-[1.5px] border-border/80 bg-card" />
   );
 }
 
@@ -242,13 +241,7 @@ export function NutritionHeader({ title = "التغذية" }: { title?: string }
         </span>
       </Link>
       <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
-      <button
-        type="button"
-        aria-label="الإشعارات"
-        className="grid h-11 w-11 place-items-center text-foreground"
-      >
-        <Bell className="h-6 w-6" strokeWidth={1.8} />
-      </button>
+      <NotificationsBell />
     </header>
   );
 }

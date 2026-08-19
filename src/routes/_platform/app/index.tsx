@@ -72,6 +72,7 @@ function PlatformHomePage() {
         streak: count,
         hakimPoints,
         heroImage: resolveHeroGoalImage({ goal, gender, goalId }),
+        features,
         activity,
       }),
       snapshot: buildDailySnapshot({ features, activity }),

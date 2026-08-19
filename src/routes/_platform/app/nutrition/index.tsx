@@ -8,7 +8,7 @@ import {
   Lock,
 } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
-import { WaterCompactWidget } from "@/components/platform/water/WaterCompactWidget";
+import { NutritionWaterCard } from "@/components/platform/water/NutritionWaterCard";
 import {
   CountUpNumber,
   MealStatusIcon,
@@ -38,23 +38,33 @@ import {
 } from "@/lib/platform/nutrition-experience";
 import { cn } from "@/lib/utils";
 
+type MacroTone = "protein" | "carbs" | "fat";
+
+const MACRO_EMOJI: Record<MacroTone, string> = {
+  protein: "🥩",
+  carbs: "🍞",
+  fat: "🥑",
+};
+
 export const Route = createFileRoute("/_platform/app/nutrition/")({
   head: () => ({ meta: [{ title: "التغذية | Hakim Platform" }] }),
   component: NutritionDashboardPage,
 });
 
 function CommitmentRing({ pct }: { pct: number }) {
-  const radius = 34;
+  const size = 98;
+  const radius = 39;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - Math.min(pct, 100) / 100);
+  const center = size / 2;
 
   return (
-    <div className="relative grid h-[88px] w-[88px] place-items-center">
-      <svg className="absolute inset-0 -rotate-90" viewBox="0 0 88 88" aria-hidden>
-        <circle cx="44" cy="44" r={radius} fill="none" stroke="#F3F4F6" strokeWidth="8" />
+    <div className="relative grid h-[98px] w-[98px] place-items-center">
+      <svg className="absolute inset-0 -rotate-90" viewBox={`0 0 ${size} ${size}`} aria-hidden>
+        <circle cx={center} cy={center} r={radius} fill="none" stroke="#F3F4F6" strokeWidth="8" />
         <circle
-          cx="44"
-          cy="44"
+          cx={center}
+          cy={center}
           r={radius}
           fill="none"
           stroke="#F97316"
@@ -69,7 +79,7 @@ function CommitmentRing({ pct }: { pct: number }) {
         <p className="text-lg font-black leading-none text-primary">
           <CountUpNumber value={pct} />%
         </p>
-        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">الالتزام</p>
+        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">من الهدف</p>
       </div>
     </div>
   );
@@ -106,7 +116,13 @@ function NutritionDashboardPage() {
   };
 
   const caloriesLeft = Math.max(plan.goals.calories - plan.consumed.calories, 0);
-  const waterLiters = (plan.waterMl / 1000).toFixed(1);
+  const caloriePct =
+    plan.goals.calories > 0
+      ? Math.min(100, Math.round((plan.consumed.calories / plan.goals.calories) * 100))
+      : 0;
+  const nextMealId =
+    plan.meals.find((item) => item.status === "current")?.slot.id ??
+    plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
 
   if (booting) {
     return (
@@ -128,17 +144,27 @@ function NutritionDashboardPage() {
           <NutritionMotionSection delay={0.02}>
             <section className={cn(nutritionCardClass, "relative overflow-hidden p-4")}>
               <div className="flex items-center justify-between gap-3" dir="rtl">
-                <div className="min-w-0 flex-1 text-right">
+                <div className="min-w-0 flex-1 text-center">
                   <p className="text-[11px] font-bold text-muted-foreground">الهدف اليومي</p>
-                  <p className="mt-1 text-[34px] font-black leading-none tracking-tight text-primary">
+                  <p className="mt-1 text-[28px] font-black leading-none tracking-tight text-primary tabular-nums">
                     <CountUpNumber value={plan.goals.calories} />
                   </p>
-                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">
-                    سعرة · متبقي{" "}
-                    <span className="font-black text-foreground">{caloriesLeft}</span>
-                  </p>
+                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">سعرة</p>
                 </div>
-                <CommitmentRing pct={plan.commitmentPct} />
+
+                <CommitmentRing pct={caloriePct} />
+
+                <div className="min-w-0 flex-1 text-center">
+                  <p className="text-[22px] font-black leading-none text-foreground tabular-nums">
+                    <CountUpNumber value={plan.consumed.calories} />
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium text-muted-foreground">سعرة مستهلكة</p>
+                  <div className="mx-auto my-2 h-px w-12 bg-border/70" />
+                  <p className="text-[22px] font-black leading-none text-foreground tabular-nums">
+                    <CountUpNumber value={caloriesLeft} />
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium text-muted-foreground">سعرة متبقية</p>
+                </div>
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
@@ -171,25 +197,30 @@ function NutritionDashboardPage() {
           <NutritionMotionSection delay={0.08}>
             <section className={cn(nutritionCardClass, "p-3.5")}>
               <div className="mb-2.5 flex items-center justify-between">
-                <h2 className="text-[12px] font-black text-foreground">هذا الأسبوع</h2>
+                <h2 className="text-[13px] font-black text-foreground">هذا الأسبوع</h2>
                 <div className="flex items-center gap-2">
                   <Link
                     to="/app/nutrition/progress"
-                    className="inline-flex items-center gap-0.5 text-[10px] font-bold text-primary"
+                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-primary"
                   >
                     {freePreview ? <Lock className="h-3 w-3" /> : <LineChart className="h-3 w-3" />}
                     التقدم
                   </Link>
                   <Link
                     to="/app/nutrition/shopping"
-                    className="inline-flex items-center gap-0.5 text-[10px] font-bold text-primary"
+                    className="inline-flex items-center gap-0.5 text-[11px] font-bold text-primary"
                   >
                     {freePreview ? <Lock className="h-3 w-3" /> : <ClipboardList className="h-3 w-3" />}
                     التسوق
                   </Link>
                 </div>
               </div>
-              <div className="grid grid-cols-7 gap-1.5">
+              <div className="relative grid grid-cols-7 gap-1.5">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-4 z-0 h-px bg-primary"
+                  style={{ top: "36px" }}
+                />
                 {weekDays.map((day) => {
                   const selected = day.dateKey === selectedDateKey;
                   return (
@@ -199,28 +230,33 @@ function NutritionDashboardPage() {
                       aria-pressed={selected}
                       aria-label={`${day.shortName} ${day.dateLabel}`}
                       onClick={() => setSelectedDateKey(day.dateKey)}
-                      className={cn(
-                        "relative flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl transition active:scale-[0.97]",
-                        selected
-                          ? "bg-primary text-primary-foreground shadow-[0_8px_18px_-10px_rgba(249,115,22,0.55)]"
-                          : day.isToday
-                            ? "bg-primary-soft text-primary"
-                            : "bg-muted/60 text-foreground",
-                      )}
+                      className="relative z-[1] flex w-full flex-col items-center gap-1.5 pt-0.5 transition active:scale-[0.98]"
                     >
-                      <span className="text-[8px] font-bold leading-none opacity-80">
+                      <p className="h-[10px] w-full truncate text-center text-[9px] font-bold leading-none text-muted-foreground">
                         {day.shortName}
-                      </span>
-                      <span className="text-sm font-black leading-none">{day.dateLabel}</span>
-                      {freePreview && !day.isToday ? (
-                        <Lock
+                      </p>
+                      <span className="relative z-[1] grid h-9 w-9 place-items-center">
+                        <span
                           className={cn(
-                            "absolute bottom-1 start-1 h-2.5 w-2.5",
-                            selected ? "text-primary-foreground/90" : "text-muted-foreground/80",
+                            "grid place-items-center rounded-full font-black leading-none",
+                            selected
+                              ? "h-9 w-9 bg-primary text-[13px] text-white shadow-[0_4px_10px_-4px_rgba(249,115,22,0.7)]"
+                              : "h-8 w-8 border-[1.5px] border-primary bg-card text-[12px] text-foreground",
                           )}
-                          strokeWidth={2.6}
-                        />
-                      ) : null}
+                        >
+                          {day.dateLabel}
+                        </span>
+                      </span>
+                      <span className="grid h-1.5 place-items-center">
+                        {selected ? (
+                          <span
+                            aria-hidden
+                            className="h-0 w-0 border-x-[4px] border-b-[5px] border-x-transparent border-b-primary"
+                          />
+                        ) : freePreview && !day.isToday ? (
+                          <Lock className="h-2.5 w-2.5 text-muted-foreground/80" strokeWidth={2.6} />
+                        ) : null}
+                      </span>
                     </button>
                   );
                 })}
@@ -230,7 +266,23 @@ function NutritionDashboardPage() {
 
           <NutritionMotionSection delay={0.14}>
             <section className="space-y-2.5">
-              <h2 className="px-0.5 text-[12px] font-black text-foreground">وجبات اليوم</h2>
+              <div className="flex items-center justify-between gap-3 px-0.5">
+                <h2 className="text-[13px] font-black text-foreground">وجبات اليوم</h2>
+                {plan.meals.length > 0 ? (
+                  <Link
+                    to="/app/nutrition/meal"
+                    search={{
+                      mealId:
+                        plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")
+                          ?.slot.id ?? plan.meals[0]!.slot.id,
+                      date: selectedDateKey,
+                    }}
+                    className="inline-flex items-center rounded-full border border-primary px-2.5 py-1 text-[11px] font-bold text-primary"
+                  >
+                    + تسجيل وجبة
+                  </Link>
+                ) : null}
+              </div>
               {plan.meals.length === 0 ? (
                 <NutritionEmptyState
                   title="لا توجد وجبات اليوم."
@@ -238,15 +290,11 @@ function NutritionDashboardPage() {
                 />
               ) : (
                 <motion.div
-                  className="relative space-y-2.5"
+                  className="space-y-2.5"
                   variants={staggerContainer}
                   initial="hidden"
                   animate="show"
                 >
-                  <div
-                    aria-hidden
-                    className="absolute top-4 bottom-4 end-[18px] w-px bg-gradient-to-b from-border via-border/70 to-transparent"
-                  />
                   {plan.meals.map(({ slot, meal, status }) => {
                     const unlocked = isFreeUnlockedMealSlot({
                       slotId: slot.id,
@@ -269,6 +317,7 @@ function NutritionDashboardPage() {
                           status={status}
                           dateKey={selectedDateKey}
                           locked={!unlocked}
+                          featured={slot.id === nextMealId}
                           onLockedClick={() => openUpgrade(lockedReason)}
                         />
                       </motion.div>
@@ -287,30 +336,7 @@ function NutritionDashboardPage() {
           </NutritionMotionSection>
 
           <NutritionMotionSection delay={0.2}>
-            <WaterCompactWidget variant="inline" />
-          </NutritionMotionSection>
-
-          <NutritionMotionSection delay={0.26}>
-            <section className={cn(nutritionCardClass, "relative overflow-hidden p-3.5")}>
-              <h2 className="text-[12px] font-black text-foreground">تقدم اليوم</h2>
-              <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-                <TodayStat
-                  label="وجبات"
-                  value={`${plan.completedCount}/${plan.meals.length}`}
-                />
-                <TodayStat label="سعرات متبقية" value={String(caloriesLeft)} />
-                <TodayStat label="ماء" value={`${waterLiters}L`} />
-                <TodayStat label="التزام" value={`${plan.commitmentPct}%`} />
-              </div>
-              {freePreview ? (
-                <NutritionLockedOverlay
-                  active={freeDayFullyLocked}
-                  intensity="medium"
-                  message="محتوى مقفل — فعّل برنامجك"
-                  onUnlockClick={() => openUpgrade(lockedReason)}
-                />
-              ) : null}
-            </section>
+            <NutritionWaterCard />
           </NutritionMotionSection>
         </>
       )}
@@ -325,7 +351,7 @@ function MacroStat({
 }: {
   label: string;
   value: number;
-  tone: "protein" | "carbs" | "fat";
+  tone: MacroTone;
 }) {
   const toneClass =
     tone === "protein"
@@ -335,21 +361,17 @@ function MacroStat({
         : "bg-[#FFF8E1] text-[#B45309]";
 
   return (
-    <div className={cn("rounded-2xl px-2 py-2.5 text-center", toneClass)}>
-      <p className="text-base font-black leading-none">
-        <CountUpNumber value={value} />
-        <span className="text-[10px]"> غ</span>
-      </p>
-      <p className="mt-1 text-[9px] font-bold opacity-80">{label}</p>
-    </div>
-  );
-}
-
-function TodayStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-muted/55 px-1.5 py-2">
-      <p className="text-[12px] font-black text-foreground">{value}</p>
-      <p className="mt-0.5 text-[8px] font-bold text-muted-foreground">{label}</p>
+    <div className={cn("flex items-center gap-2 rounded-2xl px-2.5 py-2", toneClass)}>
+      <span className="text-lg leading-none" aria-hidden>
+        {MACRO_EMOJI[tone]}
+      </span>
+      <div className="min-w-0 text-right">
+        <p className="text-base font-black leading-none">
+          <CountUpNumber value={value} />
+          <span className="text-[10px]"> غ</span>
+        </p>
+        <p className="mt-0.5 text-[9px] font-bold opacity-80">{label}</p>
+      </div>
     </div>
   );
 }
@@ -367,6 +389,7 @@ function MealTimelineCard({
   status,
   dateKey,
   locked,
+  featured = false,
   onLockedClick,
 }: {
   slotId: string;
@@ -381,42 +404,26 @@ function MealTimelineCard({
   status: MealStatus;
   dateKey: string;
   locked: boolean;
+  featured?: boolean;
   onLockedClick: () => void;
 }) {
+  const imageSize = featured ? 138 : 92;
   const body = (
     <>
-      <div className="relative z-[1] shrink-0">
-        {locked ? (
-          <span className="grid h-7 w-7 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary">
-            <Lock className="h-3.5 w-3.5" strokeWidth={2.4} />
-          </span>
-        ) : (
-          <MealStatusIcon status={status} />
-        )}
-      </div>
-
-      <div className={cn("min-w-0 flex-1 text-right", locked && "opacity-75")}>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] font-bold text-muted-foreground">{timeLabel}</p>
-          <p className="text-[11px] font-black text-primary">{slotLabel}</p>
-        </div>
-        <p className="mt-0.5 truncate text-[13px] font-black leading-snug text-foreground">
-          {mealName}
-        </p>
-        <p className="mt-1 text-[9px] font-medium text-muted-foreground">
-          {formatNutritionNumber(calories)} سعرة · ب {formatNutritionNumber(protein)} · ك{" "}
-          {formatNutritionNumber(carbs)} · د {formatNutritionNumber(fat)}
-        </p>
-      </div>
-
-      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-muted">
+      <div
+        className="relative shrink-0 overflow-hidden rounded-s-[24px] bg-muted"
+        style={{ width: imageSize, height: imageSize }}
+      >
         <NutritionMealImage
           src={image}
-          alt=""
-          width={112}
-          height={112}
-          sizes="56px"
-          className={cn("h-full w-full", locked && "opacity-45 saturate-50")}
+          alt={mealName}
+          width={imageSize * 2}
+          height={imageSize * 2}
+          sizes={`${imageSize}px`}
+          className={cn(
+            "h-full w-full object-cover transition-opacity duration-300 opacity-100",
+            locked && "opacity-45 saturate-50",
+          )}
         />
         {locked ? (
           <span className="absolute inset-0 grid place-items-center bg-black/35">
@@ -425,11 +432,39 @@ function MealTimelineCard({
         ) : null}
       </div>
 
-      {locked ? (
-        <Lock className="h-4 w-4 shrink-0 text-primary" strokeWidth={2.2} />
-      ) : (
-        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-      )}
+      <div className={cn("flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right", locked && "opacity-75")}>
+        <div className="flex items-center gap-1.5">
+          <p className={cn("font-bold text-muted-foreground", featured ? "text-[11px]" : "text-[10px]")}>
+            {timeLabel}
+          </p>
+          <p className={cn("font-black text-primary", featured ? "text-[13px]" : "text-[11px]")}>
+            {slotLabel}
+          </p>
+        </div>
+        <p
+          className={cn(
+            "line-clamp-2 font-black leading-snug text-foreground",
+            featured ? "text-[16px]" : "text-[14px]",
+          )}
+        >
+          {mealName}
+        </p>
+        <p className={cn("font-medium text-muted-foreground", featured ? "text-[11px]" : "text-[10px]")}>
+          {formatNutritionNumber(calories)} سعرة · ب {formatNutritionNumber(protein)} · ك{" "}
+          {formatNutritionNumber(carbs)} · د {formatNutritionNumber(fat)}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1">
+        {locked ? (
+          <span className="grid h-7 w-7 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary">
+            <Lock className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </span>
+        ) : (
+          <MealStatusIcon status={status} />
+        )}
+        <ChevronLeft className="h-4 w-4 text-muted-foreground/70" />
+      </div>
     </>
   );
 
@@ -441,7 +476,7 @@ function MealTimelineCard({
         aria-label={`${slotLabel}: ${mealName}. مقفلة`}
         className={cn(
           nutritionCardClass,
-          "relative flex w-full items-center gap-2.5 pe-3 ps-3 py-2.5 text-right transition active:scale-[0.99] active:bg-muted/25",
+          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-0 py-0 text-right transition active:scale-[0.99] active:bg-muted/25",
         )}
       >
         {body}
@@ -456,7 +491,7 @@ function MealTimelineCard({
       aria-label={`${slotLabel}: ${mealName}. الحالة: ${MEAL_STATUS_LABELS[status]}`}
       className={cn(
         nutritionCardClass,
-        "relative flex items-center gap-2.5 pe-3 ps-3 py-2.5 transition active:scale-[0.99]",
+        "relative flex items-center gap-2.5 overflow-hidden pe-3 ps-0 py-0 transition active:scale-[0.99]",
         status === "completed" && "opacity-90",
       )}
     >

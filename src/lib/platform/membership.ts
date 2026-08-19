@@ -249,19 +249,23 @@ function resolveAvatarUrl(avatarPath: string | null): Promise<string | null> {
 }
 
 export async function fetchMembershipState(): Promise<MembershipState> {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) {
     return withLocalFreeOverride({ ...FREE_MEMBERSHIP_STATE, tier: "visitor", isVisitor: true });
   }
 
   try {
     const [membership, profile] = await Promise.all([
       getMyMembership(),
-      resolveProfileSnapshot(data.user.id),
+      resolveProfileSnapshot(user.id),
     ]);
     const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
 
-    const email = resolveAuthEmail(data.user);
+    const email = resolveAuthEmail(user);
+    const resolved =
       isFounderReviewEmail(email) && membership.tier !== "vip"
         ? buildFounderReviewMembership({
             ...membership,
@@ -281,12 +285,12 @@ export async function fetchMembershipState(): Promise<MembershipState> {
   } catch (err) {
     // Keep the app usable: never crash / hang the platform home on RPC failure.
     console.error("[fetchMembershipState]", err);
-    const profile = await resolveProfileSnapshot(data.user.id).catch(() => ({
+    const profile = await resolveProfileSnapshot(user.id).catch(() => ({
       displayName: "بطل",
       avatarPath: null,
     }));
     const avatarUrl = await resolveAvatarUrl(profile.avatarPath);
-    const email = resolveAuthEmail(data.user);
+    const email = resolveAuthEmail(user);
     const fallback = isFounderReviewEmail(email)
       ? buildFounderReviewMembership({
           ...FREE_MEMBERSHIP_STATE,

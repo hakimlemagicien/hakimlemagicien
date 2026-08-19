@@ -5,31 +5,38 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import {
   ProfileAboutSection,
   ProfileAccountSecuritySection,
-  ProfileActivitySummarySection,
   ProfileAppSettingsSection,
   ProfileGoalsProgramSection,
-  ProfileHeroSection,
   ProfileLogoutButton,
-  ProfileMembershipSection,
   ProfileNotificationsSection,
-  ProfilePersonalInfoSection,
   ProfilePrivacySection,
-  ProfileSupportSection,
 } from "@/components/platform/profile/ProfileSections";
+import { ProfileMemberCard } from "@/components/platform/profile/ProfileMemberCard";
+import {
+  ProfileAchievementsRow,
+  ProfileBodySnapshot,
+  ProfileClientMenu,
+  ProfilePhotosPanel,
+  ProfileSupportMenu,
+  type ProfilePanelId,
+} from "@/components/platform/profile/ProfileHub";
+import { ProfileMembershipPass } from "@/components/platform/profile/ProfileMembershipPass";
 import {
   ProfileAvatarSheet,
+  ProfileBottomSheet,
   ProfileConfirmDialog,
   ProfileDeleteAccountFlow,
   ProfileEditInfoSheet,
+  ProfilePersonalInfoForm,
   ProfileSecurityFormSheet,
 } from "@/components/platform/profile/ProfileSheets";
 import {
   ProfileCardSkeleton,
   ProfileErrorCard,
   ProfileHeroSkeleton,
-  ProfileMotionSection,
   ProfileOfflineBanner,
   ProfilePageHeader,
+  ProfileSectionCard,
   ProfileToast,
 } from "@/components/platform/profile/ProfileShared";
 import { useProfileExperience } from "@/hooks/useProfileExperience";
@@ -75,9 +82,10 @@ function ProfilePage() {
     membershipStatus,
     membershipLoadFailed,
     membershipUi,
-    personalFields,
     programSummary,
-    activityStats,
+    hubStats,
+    hubAchievements,
+    dashboard,
     settings,
     photoConsent,
     sectionErrors,
@@ -87,6 +95,8 @@ function ProfilePage() {
   } = useProfileExperience();
 
   const [sheet, setSheet] = useState<SheetState>(null);
+  const [panel, setPanel] = useState<ProfilePanelId | null>(null);
+  const [membershipPass, setMembershipPass] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2 | 3>(1);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(membershipUi.avatarUrl);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -100,7 +110,6 @@ function ProfilePage() {
 
   const displayAvatar = avatarUrl ?? membershipUi.avatarUrl;
   const displayName = profile?.fullName ?? membershipUi.displayName;
-  const email = profile?.email ?? null;
 
   const handleAvatarPick = async (file: File) => {
     setUploadingAvatar(true);
@@ -171,7 +180,7 @@ function ProfilePage() {
 
   if (loading.profile && !profile) {
     return (
-      <PlatformStack className="space-y-4">
+      <PlatformStack className="space-y-4 pb-6">
         <ProfilePageHeader />
         <ProfileHeroSkeleton />
         <ProfileCardSkeleton />
@@ -181,56 +190,90 @@ function ProfilePage() {
   }
 
   return (
-    <PlatformStack className="space-y-4 pb-6">
+    <PlatformStack className="profile-hub space-y-4 pb-6">
       <ProfilePageHeader />
       {!online ? <ProfileOfflineBanner /> : null}
       {toast ? <ProfileToast message={toast.message} tone={toast.tone} /> : null}
 
-      <ProfileMotionSection>
-        <ProfileHeroSection
-          profile={profile}
-          displayName={displayName}
-          email={email}
-          avatarUrl={displayAvatar}
-          tier={membershipUi.tier}
-          memberSince={profile?.createdAt ?? null}
-          onAvatarClick={() => setSheet("avatar")}
-        />
-      </ProfileMotionSection>
+      <ProfileMemberCard
+        displayName={displayName}
+        avatarUrl={displayAvatar}
+        tier={membershipUi.tier}
+        memberSince={profile?.createdAt ?? null}
+        goal={programSummary.currentGoal}
+        stats={hubStats}
+        onAvatarClick={() => setSheet("avatar")}
+        onEdit={() => {
+          setPanel(null);
+          setSheet("edit-info");
+        }}
+      />
+      <ProfileAchievementsRow items={hubAchievements} />
+      <ProfileClientMenu
+        onHealth={() => setPanel("health")}
+        onMembership={() => setMembershipPass(true)}
+        onPhotos={() => setPanel("photos")}
+        onDevices={() => setSheet("sessions")}
+      />
+      <ProfileSupportMenu
+        canContactCoach={Boolean(canContactCoach)}
+        onSettings={() => setPanel("settings")}
+      />
 
-      <ProfileMotionSection delay={0.04}>
-        {sectionErrors.membership ? (
-          <ProfileErrorCard message={sectionErrors.membership} onRetry={() => void refresh()} />
-        ) : (
-          <ProfileMembershipSection
-            membership={membership}
-            status={membershipStatus}
-            loadFailed={membershipLoadFailed}
-            tier={membershipUi.tier}
-            onManage={() => openUpgrade("إدارة العضوية — تواصل مع الدعم لتعديل اشتراكك.")}
-          />
-        )}
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.08}>
+      <ProfileBottomSheet
+        open={panel === "health"}
+        title="بياناتي الصحية"
+        panel
+        onClose={() => setPanel(null)}
+      >
         {sectionErrors.profile ? (
           <ProfileErrorCard message={sectionErrors.profile} onRetry={() => void refresh()} />
         ) : (
-          <ProfilePersonalInfoSection fields={personalFields} onEdit={() => setSheet("edit-info")} />
+          <>
+            <ProfileSectionCard title="المعلومات الشخصية">
+              <ProfilePersonalInfoForm
+                active={panel === "health"}
+                profile={profile}
+                training={training}
+                currentGoal={programSummary.currentGoal}
+                saving={savingInfo}
+                onSave={handleSaveInfo}
+              />
+            </ProfileSectionCard>
+            {dashboard ? <ProfileBodySnapshot items={dashboard.bodyItems} /> : null}
+            <ProfileGoalsProgramSection summary={programSummary} />
+          </>
         )}
-      </ProfileMotionSection>
+      </ProfileBottomSheet>
 
-      <ProfileMotionSection delay={0.1}>
-        <ProfileGoalsProgramSection summary={programSummary} />
-      </ProfileMotionSection>
+      <ProfileMembershipPass
+        open={membershipPass}
+        displayName={displayName}
+        avatarUrl={displayAvatar}
+        memberId={profile?.id ?? null}
+        membership={membershipUi}
+        loadFailed={membershipLoadFailed}
+        tier={membershipUi.tier}
+        onClose={() => setMembershipPass(false)}
+        onRetry={() => void refresh()}
+        onManage={() => openUpgrade("إدارة العضوية — تواصل مع الدعم لتعديل اشتراكك.")}
+      />
 
-      <ProfileMotionSection delay={0.12}>
-        {activityStats.length ? (
-          <ProfileActivitySummarySection stats={activityStats} />
-        ) : null}
-      </ProfileMotionSection>
+      <ProfileBottomSheet
+        open={panel === "photos"}
+        title="صور التقدم"
+        panel
+        onClose={() => setPanel(null)}
+      >
+        <ProfilePhotosPanel sessions={dashboard?.photoSessions ?? []} />
+      </ProfileBottomSheet>
 
-      <ProfileMotionSection delay={0.14}>
+      <ProfileBottomSheet
+        open={panel === "settings"}
+        title="الإعدادات والخصوصية"
+        panel
+        onClose={() => setPanel(null)}
+      >
         <ProfileAccountSecuritySection
           onEditEmail={() => setSheet("email")}
           onChangePassword={() => setSheet("password")}
@@ -241,23 +284,14 @@ function ProfilePage() {
             setSheet("delete");
           }}
         />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.16}>
         <ProfileAppSettingsSection
           settings={settings.app}
           onChange={(patch) => updateProfileAppSettings(patch)}
         />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.18}>
         <ProfileNotificationsSection
           prefs={settings.notifications}
           onChange={(patch) => updateProfileNotificationPrefs(patch)}
         />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.2}>
         <ProfilePrivacySection
           photoConsentGranted={photoConsent.granted}
           photoConsentAt={photoConsent.at}
@@ -269,19 +303,9 @@ function ProfilePage() {
             setSheet("delete");
           }}
         />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.22}>
-        <ProfileSupportSection canContactCoach={Boolean(canContactCoach)} />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.24}>
         <ProfileAboutSection />
-      </ProfileMotionSection>
-
-      <ProfileMotionSection delay={0.26}>
         <ProfileLogoutButton onClick={() => setSheet("logout")} />
-      </ProfileMotionSection>
+      </ProfileBottomSheet>
 
       <ProfileAvatarSheet
         open={sheet === "avatar"}
@@ -295,6 +319,7 @@ function ProfilePage() {
         open={sheet === "edit-info"}
         profile={profile}
         training={training}
+        currentGoal={programSummary.currentGoal}
         saving={savingInfo}
         onClose={() => setSheet(null)}
         onSave={handleSaveInfo}

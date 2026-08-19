@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import {
   Award,
+  CalendarDays,
   Check,
   ChevronLeft,
   ClipboardList,
@@ -31,6 +32,7 @@ import {
   PlatformSection,
 } from "@/components/platform/layout/PlatformLayout";
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
+import { HeaderMenu } from "@/components/platform/shared/HeaderMenu";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { formatWaterLiters } from "@/lib/platform/water-storage";
@@ -304,8 +306,18 @@ export function HomeHeader({
 
   return (
     <header className="platform-home-header-v2 platform-home-enter">
-      <Link to="/app/profile" className="platform-home-header-v2__avatar-link platform-touch" aria-label="الملف الشخصي">
-        <div className={cn("platform-home-header-v2__avatar-col", `is-tier-${frameTier}`)}>
+      <div className="platform-home-header-v2__identity">
+        <HeaderMenu
+          className="platform-home-header-v2__slot"
+          actionClassName="platform-home-header-v2__action platform-touch"
+          iconClassName="platform-home-header-v2__action-icon"
+        />
+        <Link to="/app/profile" className="platform-home-header-v2__avatar-link platform-touch" aria-label="الملف الشخصي">
+        <div className={cn(
+          "platform-home-header-v2__avatar-col",
+          `is-tier-${frameTier}`,
+          tier === "vip" && vipBadgePhase !== "idle" && "is-vip-motion",
+        )}>
           <div className={cn("platform-home-header-v2__avatar-frame", `is-tier-${frameTier}`)}>
             <div className="platform-home-header-v2__avatar">
             {avatarUrl ? (
@@ -346,6 +358,7 @@ export function HomeHeader({
           )}
         </div>
       </Link>
+      </div>
 
       <div className="platform-home-header-v2__logo">
         <OptimizedImage
@@ -391,11 +404,13 @@ function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
 }
 
 export function HomeHeroCard({ hero }: { hero: HeroState }) {
-  const progress = useCountUp(hero.overallProgress);
   const streak = useCountUp(hero.streak);
   const points = useCountUp(hero.hakimPoints, 700);
+  const journeyDay = useCountUp(hero.journeyDay);
   const { userId } = usePlatformActivity();
   const [started, setStarted] = useState(false);
+  const missionIsRoute = hero.missionHref.startsWith("/");
+  const MissionIcon = hero.missionReward === 0 ? Check : ClipboardList;
 
   useEffect(() => {
     const refresh = () => setStarted(hasStartedToday(getTodayReadinessRecord(userId)));
@@ -404,31 +419,48 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
     return () => window.removeEventListener(READINESS_CHANGE_EVENT, refresh);
   }, [userId]);
 
+  const missionInner = (
+    <>
+      <span className="platform-home-hero__goal-icon">
+        <MissionIcon className="h-4 w-4 text-[#FF6B00]" aria-hidden />
+      </span>
+      <div className="platform-home-hero__goal-copy">
+        <span className="platform-home-hero__goal-label">مهمة اليوم</span>
+        <span className="platform-home-hero__goal-value">{hero.missionTitle}</span>
+      </div>
+      {hero.missionReward > 0 ? (
+        <span className="platform-home-hero__goal-reward">+{hero.missionReward}</span>
+      ) : null}
+    </>
+  );
+
   return (
     <section className="platform-home-hero platform-home-enter platform-home-enter--d1" aria-label="بطاقة الترحيب">
       <div className="platform-home-hero__aura" aria-hidden />
       <div className="platform-home-hero__top">
         <div className="platform-home-hero__content">
-          <p className="platform-home-hero__greeting">{hero.greeting}</p>
-          <p className="platform-home-hero__subtext">{hero.subtext}</p>
-
-          <div className="platform-home-hero__goal-card">
-            <span className="platform-home-hero__goal-icon">
-              <Target className="h-4 w-4 text-[#FF6B00]" aria-hidden />
-            </span>
-            <div className="platform-home-hero__goal-copy">
-              <span className="platform-home-hero__goal-label">هدفك الحالي</span>
-              <span className="platform-home-hero__goal-value">{hero.goalTitle}</span>
-            </div>
+          <div className="platform-home-hero__intro">
+            <p className="platform-home-hero__greeting">{hero.greeting}</p>
+            <p className="platform-home-hero__subtext">{hero.subtext}</p>
           </div>
+
+          {missionIsRoute ? (
+            <Link to={hero.missionHref} className="platform-home-hero__goal-card">
+              {missionInner}
+            </Link>
+          ) : (
+            <div className="platform-home-hero__goal-card">{missionInner}</div>
+          )}
 
           <div className="platform-home-hero__progress-card">
             <div className="platform-home-hero__progress-labels">
-              <span>التقدم نحو هدفك</span>
-              <span className="platform-home-hero__progress-value tabular-nums">{progress}%</span>
+              <span>إنجاز اليوم</span>
+              <span className="platform-home-hero__progress-value tabular-nums">
+                {hero.todayDone}/{hero.todayTotal}
+              </span>
             </div>
             <AnimatedProgressBar
-              value={hero.overallProgress}
+              value={hero.todayProgress}
               color="#FF6B00"
               className="platform-home-hero__progress-bar"
             />
@@ -449,15 +481,11 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
         <div className="platform-home-hero__stats" aria-label="ملخص سريع">
           <div className="platform-home-hero__stat">
             <span className="platform-home-hero__stat-icon is-progress">
-              <Scale className="h-4 w-4" aria-hidden />
+              <CalendarDays className="h-4 w-4" aria-hidden />
             </span>
-            <span className="platform-home-hero__stat-label">المتبقي</span>
-            <span className="platform-home-hero__stat-value tabular-nums">
-              {hero.remainingKg != null ? hero.remainingKg : "—"}
-            </span>
-            {hero.remainingKg != null ? (
-              <span className="platform-home-hero__stat-sub">كغ</span>
-            ) : null}
+            <span className="platform-home-hero__stat-label">رحلتك</span>
+            <span className="platform-home-hero__stat-value tabular-nums">{journeyDay}</span>
+            <span className="platform-home-hero__stat-sub">يوم</span>
           </div>
 
           <div className="platform-home-hero__stat">

@@ -5,6 +5,7 @@ import {
   BookOpen,
   Calculator,
   CalendarDays,
+  Compass,
   Dumbbell,
   Home,
   LineChart,
@@ -12,9 +13,9 @@ import {
   Salad,
   Timer,
   User,
+  UtensilsCrossed,
   Wrench,
 } from "lucide-react";
-import { DailyHubOverlay } from "@/components/platform/shared/DailyHubOverlay";
 import { isToolsHubRoute, ToolsHubOverlay } from "@/components/platform/shared/ToolsHubOverlay";
 import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,24 +24,12 @@ import { triggerSelectionHaptic } from "@/lib/haptic";
 import { cn } from "@/lib/utils";
 
 const MOBILE_NAV_ITEMS = [
-  { to: "/app/program/workout", label: "برنامجي", icon: CalendarDays, hub: "program" as const },
-  { to: "/app/discover", label: "اكتشف", icon: BookOpen },
+  { to: "/app/program/workout", label: "تماريني", icon: Dumbbell },
+  { to: "/app/nutrition", label: "تغذيتي", icon: UtensilsCrossed },
   { to: "/app", label: "الرئيسية", icon: Home, exact: true, center: true },
+  { to: "/app/discover", label: "اكتشف", icon: Compass },
   { to: "/app/tools/calories", label: "الأدوات", icon: Wrench, hub: "tools" as const },
-  { to: "/app/profile", label: "الملف الشخصي", icon: User },
 ] as const;
-
-function isProgramHubRoute(pathname: string) {
-  return (
-    pathname === "/app/nutrition" ||
-    pathname.startsWith("/app/nutrition/") ||
-    pathname === "/app/progress" ||
-    pathname === "/app/exercises" ||
-    pathname.startsWith("/app/exercises/") ||
-    pathname === "/app/program" ||
-    pathname.startsWith("/app/program/")
-  );
-}
 
 const DESKTOP_NAV_ITEMS = [
   { to: "/app", label: "الرئيسية", icon: Home, exact: true },
@@ -132,6 +121,7 @@ function NavItem({
           className="platform-nav__link"
           aria-haspopup="dialog"
           aria-expanded={expanded ?? false}
+          aria-current={active ? "page" : undefined}
           aria-label={label}
         >
           {content}
@@ -225,28 +215,22 @@ export function PlatformSidebar() {
 
 export function PlatformMobileNav() {
   const tools = useToolsOptional();
-  const [programHubOpen, setProgramHubOpen] = useState(false);
   const [toolsHubOpen, setToolsHubOpen] = useState(false);
-  const [programOrigin, setProgramOrigin] = useState<{ x: number; y: number } | null>(null);
   const [toolsOrigin, setToolsOrigin] = useState<{ x: number; y: number } | null>(null);
-  const programTriggerRef = useRef<HTMLButtonElement>(null);
   const toolsTriggerRef = useRef<HTMLButtonElement>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const prevPathname = useRef(pathname);
-  const programHubActive = programHubOpen || isProgramHubRoute(pathname);
   const toolsHubActive =
     toolsHubOpen || isToolsHubRoute(pathname) || Boolean(tools?.calorieSheetOpen);
 
   useEffect(() => {
     if (prevPathname.current !== pathname) {
-      setProgramHubOpen(false);
       setToolsHubOpen(false);
       prevPathname.current = pathname;
     }
   }, [pathname]);
 
   const closeHubs = () => {
-    setProgramHubOpen(false);
     setToolsHubOpen(false);
   };
 
@@ -261,21 +245,7 @@ export function PlatformMobileNav() {
       <nav className="platform-nav md:hidden" aria-label="التنقل الرئيسي">
         <div className="platform-nav__inner">
           {MOBILE_NAV_ITEMS.map((item) =>
-            "hub" in item && item.hub === "program" ? (
-              <NavItem
-                key={item.to}
-                {...item}
-                mobile
-                triggerRef={programTriggerRef}
-                expanded={programHubOpen}
-                onSelect={() => {
-                  setToolsHubOpen(false);
-                  setProgramOrigin(originFrom(programTriggerRef.current));
-                  setProgramHubOpen((open) => !open);
-                }}
-                activeOverride={programHubActive}
-              />
-            ) : "hub" in item && item.hub === "tools" ? (
+            "hub" in item && item.hub === "tools" ? (
               <NavItem
                 key={item.to}
                 {...item}
@@ -283,7 +253,6 @@ export function PlatformMobileNav() {
                 triggerRef={toolsTriggerRef}
                 expanded={toolsHubOpen}
                 onSelect={() => {
-                  setProgramHubOpen(false);
                   setToolsOrigin(originFrom(toolsTriggerRef.current));
                   setToolsHubOpen((open) => !open);
                 }}
@@ -296,16 +265,12 @@ export function PlatformMobileNav() {
                 mobile
                 center={"center" in item ? item.center : false}
                 onNavigate={closeHubs}
+                activeOverride={toolsHubOpen ? false : undefined}
               />
             ),
           )}
         </div>
       </nav>
-      <DailyHubOverlay
-        open={programHubOpen}
-        origin={programOrigin}
-        onClose={() => setProgramHubOpen(false)}
-      />
       <ToolsHubOverlay
         open={toolsHubOpen}
         origin={toolsOrigin}

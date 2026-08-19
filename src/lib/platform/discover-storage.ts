@@ -2,6 +2,7 @@ const SAVES_KEY = "hakim.discover.saves.v1";
 const SEARCH_KEY = "hakim.discover.search-history.v1";
 const CHALLENGES_KEY = "hakim.discover.challenges.v1";
 const LIKES_KEY = "hakim.discover.likes.v1";
+const PROGRESS_KEY = "hakim.discover.progress.v1";
 const CHANGE_EVENT = "hakim:discover-storage-change";
 
 export type DiscoverStorageSnapshot = {
@@ -75,6 +76,26 @@ export function joinDiscoverChallenge(challengeId: string): boolean {
   if (ids.includes(challengeId)) return false;
   writeJson(CHALLENGES_KEY, [challengeId, ...ids]);
   return true;
+}
+
+function readProgressMap(): Record<string, number> {
+  const value = readJson<Record<string, number>>(PROGRESS_KEY, {});
+  if (!value || typeof value !== "object") return {};
+  return value;
+}
+
+export function getDiscoverContentProgress(contentId: string): number {
+  const pct = readProgressMap()[contentId];
+  if (typeof pct !== "number" || Number.isNaN(pct)) return 0;
+  return Math.min(100, Math.max(0, Math.round(pct)));
+}
+
+export function setDiscoverContentProgress(contentId: string, pct: number): number {
+  const next = Math.min(100, Math.max(0, Math.round(pct)));
+  const map = readProgressMap();
+  map[contentId] = Math.max(map[contentId] ?? 0, next);
+  writeJson(PROGRESS_KEY, map);
+  return map[contentId] ?? next;
 }
 
 export function addDiscoverSearchQuery(query: string) {

@@ -9,13 +9,14 @@ import {
   Droplets,
   Flame,
   Heart,
-  MessageCircle,
   Moon,
   RefreshCw,
   Salad,
+  Search,
   UtensilsCrossed,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HeaderMenu } from "@/components/platform/shared/HeaderMenu";
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
@@ -57,43 +58,35 @@ export function DiscoverHeader({
 
   return (
     <header className="flex h-11 items-center justify-between px-0.5">
-      {backTo ? (
-        <Link
-          to={backTo}
-          aria-label="رجوع"
-          className="grid h-11 w-11 place-items-center text-foreground"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Link>
-      ) : (
-        <PlatformHeaderActions />
-      )}
-      <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
       <div className="flex items-center gap-0.5">
         {backTo ? (
           <Link
-            to="/app/support/chat"
-            aria-label="دردشة الكوتش"
+            to={backTo}
+            aria-label="رجوع"
             className="grid h-11 w-11 place-items-center text-foreground"
           >
-            <MessageCircle className="h-6 w-6" strokeWidth={1.8} />
+            <ChevronLeft className="h-6 w-6" />
           </Link>
-        ) : null}
+        ) : (
+          <HeaderMenu />
+        )}
         <Link
           to="/app/profile"
           data-preview-safe
           aria-label="الملف الشخصي"
           className="grid h-11 w-11 place-items-center"
         >
-        <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-border/70 bg-muted">
-          {avatarUrl ? (
-            <OptimizedImage src={avatarUrl} alt="" width={40} height={40} className="h-full w-full" />
-          ) : (
-            <span className="text-xs font-black text-muted-foreground">أنت</span>
-          )}
-        </span>
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-border/70 bg-muted">
+            {avatarUrl ? (
+              <OptimizedImage src={avatarUrl} alt="" width={40} height={40} className="h-full w-full" />
+            ) : (
+              <span className="text-xs font-black text-muted-foreground">أنت</span>
+            )}
+          </span>
         </Link>
       </div>
+      <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
+      <PlatformHeaderActions />
     </header>
   );
 }
@@ -108,11 +101,12 @@ export function DiscoverSectionHead({
   actionTo?: string;
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-2 px-0.5">
-      <h2 className="text-sm font-black text-foreground">{title}</h2>
+    <div className="discover-section-head">
+      <h2>{title}</h2>
       {actionLabel && actionTo ? (
-        <Link to={actionTo} className="text-xs font-bold text-primary">
+        <Link to={actionTo} className="discover-section-head__action">
           {actionLabel}
+          <ChevronLeft className="h-4 w-4" strokeWidth={2.4} />
         </Link>
       ) : null}
     </div>
@@ -208,15 +202,18 @@ export function DiscoverSearchBar({
   onFocus,
   onSubmit,
   autoFocus,
+  placeholder = "ابحث عن تمرين، وصفة أو نصيحة",
 }: {
   value: string;
   onChange: (value: string) => void;
   onFocus?: () => void;
   onSubmit?: () => void;
   autoFocus?: boolean;
+  placeholder?: string;
 }) {
   return (
-    <label className="block">
+    <label className="discover-search">
+      <Search className="discover-search__icon" strokeWidth={2} />
       <span className="sr-only">بحث في المحتوى</span>
       <input
         type="search"
@@ -227,8 +224,7 @@ export function DiscoverSearchBar({
           if (e.key === "Enter") onSubmit?.();
         }}
         autoFocus={autoFocus}
-        placeholder="ماذا تريد أن تتعلم اليوم؟"
-        className="h-12 w-full rounded-[20px] border border-border/70 bg-muted/40 px-4 text-sm font-bold text-foreground outline-none transition-shadow placeholder:font-medium placeholder:text-muted-foreground focus:border-primary/40 focus:shadow-[0_0_0_3px_rgba(249,115,22,0.12)]"
+        placeholder={placeholder}
         enterKeyHint="search"
         dir="rtl"
       />
@@ -247,30 +243,22 @@ export function useDebouncedValue<T>(value: T, delayMs = 400): T {
 
 export function DiscoverFeedSkeleton() {
   return (
-    <div className="space-y-5" aria-hidden>
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-10 w-10 rounded-full" />
-        <Skeleton className="h-5 w-16" />
-        <Skeleton className="h-10 w-10 rounded-full" />
-      </div>
-      <Skeleton className="h-12 w-full rounded-[20px]" />
-      <Skeleton className="h-[220px] w-full rounded-[24px]" />
-      <div className="flex gap-3 overflow-hidden">
+    <div className="discover-home" aria-hidden>
+      <Skeleton className="h-12 w-full rounded-2xl" />
+      <div className="flex gap-2 overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 w-20 shrink-0 rounded-full" />
+          <Skeleton key={i} className="h-9 w-16 shrink-0 rounded-full" />
         ))}
       </div>
-      <Skeleton className="h-24 w-full rounded-[24px]" />
+      <Skeleton className="h-[196px] w-full rounded-[22px]" />
+      <Skeleton className="h-5 w-28" />
       <div className="flex gap-3 overflow-hidden">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-40 w-44 shrink-0 rounded-[24px]" />
+          <Skeleton key={i} className="h-52 w-36 shrink-0 rounded-[18px]" />
         ))}
       </div>
-      <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-[24px]" />
-        ))}
-      </div>
+      <Skeleton className="h-[92px] w-full rounded-[22px]" />
+      <Skeleton className="h-[88px] w-full rounded-[22px]" />
     </div>
   );
 }

@@ -7,6 +7,9 @@ import khaledBefore from "@/assets/خالد قبل.jpg";
 import khaledAfter from "@/assets/خالد بعد.jpg";
 import fatimaBefore from "@/assets/فاطمة قبل.jpg";
 import fatimaAfter from "@/assets/فاطمة بعد.jpg";
+import commitmentCover from "@/assets/الالتزام والاستمرارية.png";
+import coachPhoto from "@/assets/coach-photo.png";
+import recoveryCover from "@/assets/Coach_Hakim_Branded_Profile_PNG/08_White_Recovery.png";
 
 export type DiscoverContentType =
   | "article"
@@ -73,6 +76,7 @@ export type DiscoverContentItem = {
     endDate: string;
     days: number;
     participantCount: number;
+    progressDays?: number;
   };
   successStory?: {
     displayName: string;
@@ -84,6 +88,7 @@ export type DiscoverContentItem = {
     afterImage?: string;
     disclaimer: string;
   };
+  learnings?: string[];
   badge?: string;
   sortPriority?: number;
 };
@@ -107,6 +112,25 @@ export type DiscoverContentFilter =
   | "success_story"
   | "challenge"
   | "daily_tip";
+
+export type DiscoverHomeChip = "all" | "exercises" | "nutrition" | "article" | "video";
+
+export const DISCOVER_HOME_CHIPS: Array<{ id: DiscoverHomeChip; label: string }> = [
+  { id: "all", label: "الكل" },
+  { id: "exercises", label: "تمارين" },
+  { id: "nutrition", label: "تغذية" },
+  { id: "article", label: "مقالات" },
+  { id: "video", label: "فيديو" },
+];
+
+export const DISCOVER_HOME_IDS = {
+  hero: "home-hero-commitment",
+  sleep: "home-goal-sleep",
+  back: "home-goal-back",
+  salad: "home-goal-salad",
+  challenge: "challenge-steps",
+  coach: "home-coach-mistakes",
+} as const;
 
 export const DISCOVER_CATEGORIES: DiscoverCategory[] = [
   { id: "exercises", name: "تمارين", slug: "exercises", icon: "dumbbell", sortOrder: 1, status: "active" },
@@ -136,6 +160,147 @@ const daysFromNow = (n: number) => {
 /** CMS-ready seed — replace with Supabase `discover_content` when populated. */
 export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
   {
+    id: "home-hero-commitment",
+    type: "article",
+    title: "كيف تبقى ملتزمًا بخطتك؟",
+    slug: "stay-committed",
+    shortDescription: "الالتزام عادة تُبنى يومًا بعد يوم، لا لحظة حماس.",
+    body: "الالتزام ليس حماساً مؤقتاً، بل عادة تُبنى يوماً بعد يوم. في هذا المحتوى ستتعلّم كيف تبقى على خطتك حتى في الأيام الصعبة، دون أن تنتظر الدافع المثالي.\n\n## بناء روتين واقعي\nابدأ بخطوات صغيرة يمكن تكرارها حتى في أيام الانشغال.\n\n## التعامل مع فقدان الحافز\nالحافز يتقلب. النظام هو ما يُكمل اليوم عندما لا تشعر بالرغبة.\n\n## العودة بعد يوم غير مثالي\nيوم واحد لا يلغي المسار. عد في الوجبة أو التمرين التالي دون عقاب.",
+    categoryId: "mindset",
+    coverImage: commitmentCover,
+    authorName: "كوتش حكيم",
+    publishDate: daysAgo(0),
+    createdAt: daysAgo(2),
+    updatedAt: daysAgo(0),
+    tags: ["الالتزام", "عقلية"],
+    featured: true,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    readingTimeMinutes: 8,
+    videoDurationSeconds: 504,
+    viewCount: 1840,
+    badge: "مختار لك",
+    sortPriority: 0,
+    learnings: ["بناء روتين واقعي", "التعامل مع فقدان الحافز", "العودة بعد يوم غير مثالي"],
+  },
+  {
+    id: "article-morning-habits",
+    type: "article",
+    title: "5 عادات لصباح نشيط",
+    slug: "morning-habits",
+    shortDescription: "روتين صباحي بسيط يرفع طاقتك دون تعقيد.",
+    body: "الصباح يحدد إيقاع اليوم. خمس عادات قصيرة تكفي: ماء، حركة خفيفة، وجبة، ضوء طبيعي، وتخطيط المهمة الأولى.\n\n## اشرب الماء أولاً\nابدأ بكوب ماء قبل القهوة.\n\n## تحرك خمس دقائق\nحركة خفيفة توقظ الجسم دون إرهاق.",
+    categoryId: "mindset",
+    coverImage: homeNutritionHero,
+    authorName: "فريق حكيم",
+    publishDate: daysAgo(3),
+    createdAt: daysAgo(8),
+    updatedAt: daysAgo(3),
+    tags: ["عادات", "صباح"],
+    featured: false,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    readingTimeMinutes: 5,
+    viewCount: 720,
+  },
+  {
+    id: "home-goal-sleep",
+    type: "article",
+    title: "النوم والتعافي",
+    slug: "sleep-and-recovery",
+    shortDescription: "سر التقدم المستمر",
+    body: "التعافي يحدث أثناء النوم. هذا الدليل يشرح كيف تدعم نومك لتتقدم في التدريب دون إرهاق.",
+    categoryId: "sleep",
+    coverImage: recoveryCover,
+    authorName: "فريق حكيم",
+    publishDate: daysAgo(1),
+    createdAt: daysAgo(4),
+    updatedAt: daysAgo(1),
+    tags: ["نوم", "تعافي"],
+    featured: false,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    readingTimeMinutes: 7,
+    viewCount: 960,
+  },
+  {
+    id: "home-goal-back",
+    type: "video",
+    title: "تمرين الظهر الكامل",
+    slug: "full-back-workout",
+    shortDescription: "تقوية وتضخيم العضلات",
+    body: "جلسة ظهر كاملة لبناء القوة والتناسق — للتعلم والتنفيذ داخل برنامجك.",
+    categoryId: "exercises",
+    coverImage: trainingGym,
+    authorName: "كوتش حكيم",
+    publishDate: daysAgo(2),
+    createdAt: daysAgo(6),
+    updatedAt: daysAgo(2),
+    tags: ["ظهر", "تمارين"],
+    featured: false,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    videoDurationSeconds: 720,
+    viewCount: 1320,
+  },
+  {
+    id: "home-goal-salad",
+    type: "recipe",
+    title: "سلطة دجاج مشوي",
+    slug: "grilled-chicken-salad",
+    shortDescription: "غنية بالبروتين ومنخفضة السعرات",
+    body: "وصفة تعليمية عامة — لا تستبدل وجبات برنامجك تلقائياً.",
+    categoryId: "recipes",
+    coverImage: homeNutritionHero,
+    authorName: "أ. سارة",
+    publishDate: daysAgo(2),
+    createdAt: daysAgo(5),
+    updatedAt: daysAgo(2),
+    tags: ["سلطة", "بروتين"],
+    featured: false,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    readingTimeMinutes: 10,
+    viewCount: 640,
+    recipe: {
+      calories: 380,
+      protein: 38,
+      carbs: 18,
+      fat: 14,
+      servings: 1,
+      prepMinutes: 10,
+      ingredients: ["صدر دجاج مشوي", "خس", "طماطم", "خيار", "زيت زيتون", "ليمون"],
+      steps: ["اشوِ الدجاج", "قطّع الخضار", "اخلط وقدّم"],
+      allergens: ["لا يوجد"],
+    },
+  },
+  {
+    id: "home-coach-mistakes",
+    type: "video",
+    title: "أخطاء شائعة توقف تقدمك",
+    slug: "common-progress-mistakes",
+    shortDescription: "5 أخطاء بسيطة تمنعك من تحقيق أهدافك",
+    body: "خمس أخطاء شائعة تعيق التقدم: التسرع، إهمال النوم، تغيير الخطة كل أسبوع، تجاهل التقنية، وعدم تتبع العادات.",
+    categoryId: "mindset",
+    coverImage: coachPhoto,
+    authorName: "كوتش حكيم",
+    publishDate: daysAgo(1),
+    createdAt: daysAgo(3),
+    updatedAt: daysAgo(1),
+    tags: ["أخطاء", "تقدم"],
+    featured: false,
+    accessLevel: "free",
+    status: "published",
+    language: "ar",
+    videoDurationSeconds: 360,
+    viewCount: 2100,
+  },
+  {
     id: "feat-muscle-mistakes",
     type: "video",
     title: "5 أخطاء تمنعك من بناء العضلات",
@@ -149,7 +314,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     createdAt: daysAgo(10),
     updatedAt: daysAgo(1),
     tags: ["عضلات", "تدريب", "أخطاء"],
-    featured: true,
+    featured: false,
     accessLevel: "free",
     status: "published",
     language: "ar",
@@ -172,7 +337,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     createdAt: daysAgo(12),
     updatedAt: daysAgo(2),
     tags: ["تغذية", "وجبات"],
-    featured: true,
+    featured: false,
     accessLevel: "free",
     status: "published",
     language: "ar",
@@ -194,7 +359,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     createdAt: daysAgo(8),
     updatedAt: daysAgo(1),
     tags: ["ماء", "تحدي"],
-    featured: true,
+    featured: false,
     accessLevel: "free",
     status: "published",
     language: "ar",
@@ -375,10 +540,10 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
   {
     id: "challenge-steps",
     type: "challenge",
-    title: "تحدي 10,000 خطوة",
+    title: "10,000 خطوة يومياً",
     slug: "steps-10000-challenge",
-    shortDescription: "14 يوماً من النشاط اليومي — انضمام اختياري.",
-    body: "تحدي عام — لا يعدّل برنامجك الشخصي.",
+    shortDescription: "استمر على المسار، أنت تقوم بعمل رائع!",
+    body: "تحدي أسبوعي اختياري لبناء عادة المشي اليومي — لا يعدّل برنامجك الشخصي.",
     categoryId: "cardio",
     coverImage: fatLoss,
     authorName: "فريق حكيم",
@@ -392,9 +557,10 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     language: "ar",
     challenge: {
       status: "active",
-      startDate: daysAgo(1),
-      endDate: daysFromNow(13),
-      days: 14,
+      startDate: daysAgo(4),
+      endDate: daysFromNow(3),
+      days: 7,
+      progressDays: 4,
       participantCount: 892,
     },
   },
@@ -529,6 +695,22 @@ export function formatDiscoverDuration(seconds?: number): string | null {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+export function formatDiscoverMinutes(item: DiscoverContentItem): string | null {
+  const minutes =
+    item.readingTimeMinutes ??
+    (item.videoDurationSeconds ? Math.max(1, Math.round(item.videoDurationSeconds / 60)) : null) ??
+    item.recipe?.prepMinutes;
+  if (!minutes) return null;
+  return `${minutes} د`;
+}
+
+export function getDiscoverKindLabel(type: DiscoverContentType): string {
+  if (type === "article") return "مقالات";
+  if (type === "video") return "تمرين";
+  if (type === "recipe") return "وصفة";
+  return getDiscoverTypeLabel(type);
+}
+
 export function formatDiscoverRelativeDate(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -537,6 +719,27 @@ export function formatDiscoverRelativeDate(iso: string): string {
   if (days < 7) return `منذ ${days} أيام`;
   if (days < 30) return `منذ ${Math.floor(days / 7)} أسابيع`;
   return `منذ ${Math.floor(days / 30)} شهر`;
+}
+
+export function getDiscoverLearnings(item: DiscoverContentItem): string[] {
+  if (item.learnings?.length) return item.learnings.slice(0, 4);
+  return item.body
+    .split("\n")
+    .filter((line) => line.startsWith("## "))
+    .map((line) => line.replace(/^##\s+/, "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
+export function formatDiscoverClock(seconds?: number): string | null {
+  if (!seconds) return null;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+export function getDiscoverAuthorLabel(name: string) {
+  return name.includes("حكيم") ? "الكوتش حكيم" : name;
 }
 
 export function getDiscoverTypeLabel(type: DiscoverContentType): string {

@@ -1,28 +1,22 @@
+import { useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Bookmark,
-  Clock,
-  Heart,
-  Play,
-  Share2,
-  Users,
-} from "lucide-react";
+import { BadgeCheck, Bookmark, Check, ChevronLeft, ChevronRight, Play, Users } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import coachPhoto from "@/assets/coach-photo.png";
 import {
   type DiscoverContentItem,
-  formatDiscoverDuration,
-  formatDiscoverRelativeDate,
+  formatDiscoverClock,
+  getDiscoverAuthorLabel,
   getDiscoverCategory,
+  getDiscoverLearnings,
   getDiscoverTypeLabel,
 } from "@/lib/platform/discover-content";
-import { joinDiscoverChallenge } from "@/lib/platform/discover-storage";
-import { DiscoverContentListItem } from "./DiscoverCards";
 import {
-  DiscoverHeader,
-  DiscoverPremiumBadge,
-  DiscoverTypeBadge,
-  discoverCardClass,
-} from "./DiscoverShared";
+  getDiscoverContentProgress,
+  joinDiscoverChallenge,
+  setDiscoverContentProgress,
+} from "@/lib/platform/discover-storage";
+import { DiscoverHeader, discoverCardClass } from "./DiscoverShared";
 import { cn } from "@/lib/utils";
 
 function DiscoverBody({ body }: { body: string }) {
@@ -53,16 +47,23 @@ function DiscoverBody({ body }: { body: string }) {
   );
 }
 
+function contentCtaLabel(type: DiscoverContentItem["type"], progress: number, locked: boolean) {
+  if (locked) return "ترقية العضوية";
+  if (type === "video") {
+    if (progress >= 100) return "إعادة المشاهدة";
+    return progress > 0 ? "متابعة المشاهدة" : "شاهد الآن";
+  }
+  if (progress >= 100) return "إعادة القراءة";
+  return "متابعة القراءة";
+}
+
 export function DiscoverContentDetailView({
   content,
   related,
   saved,
-  liked,
-  joinedChallenge,
   locked,
+  joinedChallenge,
   onToggleSave,
-  onToggleLike,
-  onShare,
   onUpgrade,
 }: {
   content: DiscoverContentItem;
@@ -77,199 +78,201 @@ export function DiscoverContentDetailView({
   onUpgrade: () => void;
 }) {
   const category = getDiscoverCategory(content.categoryId)?.name;
-  const duration = formatDiscoverDuration(content.videoDurationSeconds);
+  const topic = content.tags[0] || category;
+  const duration = formatDiscoverClock(content.videoDurationSeconds);
+  const learnings = getDiscoverLearnings(content);
+  const authorName = getDiscoverAuthorLabel(content.authorName);
+  const isCoach = content.authorName.includes("حكيم");
+  const intro = content.body.split("\n\n")[0] ?? content.shortDescription;
+  const suggested = related[0];
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(() => getDiscoverContentProgress(content.id));
+  const [expanded, setExpanded] = useState(() => getDiscoverContentProgress(content.id) > 0);
+  const readingLabel = content.readingTimeMinutes
+    ? `${content.readingTimeMinutes} دقائق قراءة`
+    : duration
+      ? `${Math.max(1, Math.round((content.videoDurationSeconds ?? 60) / 60))} دقائق`
+      : null;
 
-  const handleJoinChallenge = () => {
-    if (locked || joinedChallenge) return;
-    joinDiscoverChallenge(content.id);
+  const extras = useMemo(
+    () => ({
+      recipe: content.type === "recipe" ? content.recipe : null,
+      story: content.type === "success_story" ? content.successStory : null,
+      challenge: content.type === "challenge" ? content.challenge : null,
+    }),
+    [content],
+  );
+
+  const openContent = () => {
+    if (locked) {
+      onUpgrade();
+      return;
+    }
+    const next = setDiscoverContentProgress(content.id, Math.max(progress, 40));
+    setProgress(next);
+    setExpanded(true);
+    window.requestAnimationFrame(() => {
+      bodyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   return (
-    <div className="space-y-5 pb-8">
-      <DiscoverHeader title="تفاصيل المحتوى" backTo="/app/discover" />
+    <div className="discover-detail">
+      <header className="discover-detail__head">
+        <Link to="/app/discover" aria-label="رجوع" className="discover-detail__head-btn">
+          <ChevronRight className="h-6 w-6" />
+        </Link>
+        <h1>تفاصيل المحتوى</h1>
+        <button
+          type="button"
+          aria-label={saved ? "إزالة من المحفوظات" : "حفظ"}
+          aria-pressed={saved}
+          onClick={onToggleSave}
+          className={cn("discover-detail__head-btn", saved && "is-saved")}
+        >
+          <Bookmark className={cn("h-5 w-5", saved && "fill-current")} strokeWidth={1.9} />
+        </button>
+      </header>
 
-      <article className="space-y-4">
-        <div className="relative overflow-hidden rounded-[24px]">
-          <OptimizedImage
-            src={content.coverImage}
-            alt=""
-            width={390}
-            height={240}
-            priority
-          />
-          {content.type === "video" && !locked ? (
-            <span className="absolute inset-0 grid place-items-center bg-black/20">
-              <span className="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-primary">
-                <Play className="h-6 w-6 fill-current" />
-              </span>
+      <div className="discover-detail__hero">
+        <span className="discover-hero__media">
+          <OptimizedImage src={content.coverImage} alt="" width={390} height={196} priority />
+        </span>
+        <span className="discover-hero__shade" aria-hidden />
+        {content.videoDurationSeconds || content.type === "video" ? (
+          <button type="button" aria-label="تشغيل" className="discover-detail__play" onClick={openContent}>
+            <Play className="h-4 w-4 fill-current" />
+          </button>
+        ) : null}
+        {duration ? <span className="discover-detail__duration">{duration}</span> : null}
+      </div>
+
+      <div className="discover-detail__chips">
+        <span className="discover-detail__chip is-type">{getDiscoverTypeLabel(content.type)}</span>
+        {topic ? <span className="discover-detail__chip is-topic">{topic}</span> : null}
+      </div>
+
+      <h2 className="discover-detail__title">{content.title}</h2>
+
+      <div className="discover-detail__author">
+        <span className="discover-detail__avatar">
+          {isCoach ? (
+            <OptimizedImage src={coachPhoto} alt="" width={40} height={40} className="h-full w-full" />
+          ) : (
+            <span className="grid h-full w-full place-items-center text-[11px] font-black text-muted-foreground">
+              {authorName.slice(0, 1)}
             </span>
+          )}
+        </span>
+        <div className="min-w-0">
+          <p className="inline-flex items-center gap-1">
+            {authorName}
+            {isCoach ? <BadgeCheck className="h-4 w-4 fill-[#f97316] text-white" /> : null}
+          </p>
+          {readingLabel ? <span>{readingLabel}</span> : null}
+        </div>
+      </div>
+
+      <p className="discover-detail__intro">{intro}</p>
+
+      {learnings.length ? (
+        <section className="discover-detail__card">
+          <h2>ما ستتعلمه</h2>
+          {learnings.map((item) => (
+            <div key={item} className="discover-detail__learn">
+              <span className="discover-detail__check">
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </span>
+              {item}
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      <section className="discover-detail__card">
+        <div className="discover-detail__progress">
+          <p>أكملت</p>
+          <strong>{progress}%</strong>
+        </div>
+        <div className="discover-detail__bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+          <span style={{ width: `${progress}%` }} />
+        </div>
+      </section>
+
+      <button type="button" onClick={openContent} className="discover-detail__cta">
+        {contentCtaLabel(content.type, progress, locked)}
+      </button>
+
+      {suggested ? (
+        <Link
+          to="/app/discover/$slug"
+          params={{ slug: suggested.slug }}
+          className="discover-detail__suggest"
+        >
+          <span className="discover-detail__suggest-thumb">
+            <OptimizedImage src={suggested.coverImage} alt="" width={64} height={64} className="h-full w-full" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <p>محتوى مقترح</p>
+            <strong className="line-clamp-1">{suggested.title}</strong>
+          </span>
+          <ChevronLeft className="h-5 w-5" strokeWidth={2.4} />
+        </Link>
+      ) : null}
+
+      {expanded && !locked ? (
+        <div ref={bodyRef} className="space-y-4 pt-2">
+          <DiscoverBody body={content.body} />
+
+          {extras.recipe ? (
+            <div className={cn(discoverCardClass, "space-y-4 p-4")}>
+              <p className="text-sm font-black">المكونات</p>
+              <ul className="list-disc space-y-1 pr-5 text-sm">
+                {extras.recipe.ingredients.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <p className="text-sm font-black">الخطوات</p>
+              <ol className="list-decimal space-y-1 pr-5 text-sm">
+                {extras.recipe.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
+
+          {extras.story?.beforeImage && extras.story.afterImage ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="overflow-hidden rounded-[20px]">
+                <OptimizedImage src={extras.story.beforeImage} alt="قبل — بموافقة معتمدة" width={180} height={240} />
+              </div>
+              <div className="overflow-hidden rounded-[20px]">
+                <OptimizedImage src={extras.story.afterImage} alt="بعد — بموافقة معتمدة" width={180} height={240} />
+              </div>
+            </div>
+          ) : null}
+
+          {extras.challenge ? (
+            <div className={cn(discoverCardClass, "space-y-3 p-4")}>
+              <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-muted-foreground">
+                <span>{extras.challenge.days} أيام</span>
+                <span className="inline-flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  {extras.challenge.participantCount} مشارك
+                </span>
+              </div>
+              <button
+                type="button"
+                disabled={joinedChallenge || extras.challenge.status !== "active"}
+                onClick={() => joinDiscoverChallenge(content.id)}
+                className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground disabled:opacity-50"
+              >
+                {joinedChallenge ? "أنت منضم بالفعل" : "انضم إلى التحدي"}
+              </button>
+            </div>
           ) : null}
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 px-0.5">
-          <DiscoverTypeBadge label={getDiscoverTypeLabel(content.type)} />
-          {category ? <DiscoverTypeBadge label={category} /> : null}
-          {content.accessLevel === "premium" ? <DiscoverPremiumBadge /> : null}
-        </div>
-
-        <div className="space-y-2 px-0.5">
-          <h1 className="text-xl font-black leading-snug text-foreground">{content.title}</h1>
-          <p className="text-sm font-medium text-muted-foreground">{content.shortDescription}</p>
-          <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-muted-foreground">
-            <span>{content.authorName}</span>
-            <span>{formatDiscoverRelativeDate(content.publishDate)}</span>
-            {content.readingTimeMinutes ? (
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                {content.readingTimeMinutes} د قراءة
-              </span>
-            ) : null}
-            {duration ? (
-              <span className="inline-flex items-center gap-1">
-                <Play className="h-3.5 w-3.5" />
-                {duration}
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1 px-0.5">
-          <button
-            type="button"
-            aria-label={saved ? "إزالة من المحفوظات" : "حفظ"}
-            aria-pressed={saved}
-            onClick={onToggleSave}
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-muted text-muted-foreground transition-transform active:scale-95"
-          >
-            <Bookmark className={cn("h-5 w-5", saved && "fill-primary text-primary")} />
-          </button>
-          <button
-            type="button"
-            aria-label={liked ? "إلغاء الإعجاب" : "إعجاب"}
-            aria-pressed={liked}
-            onClick={onToggleLike}
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-muted text-muted-foreground transition-transform active:scale-95"
-          >
-            <Heart className={cn("h-5 w-5", liked && "fill-rose-500 text-rose-500")} />
-          </button>
-          <button
-            type="button"
-            aria-label="مشاركة"
-            onClick={onShare}
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-muted text-muted-foreground"
-          >
-            <Share2 className="h-5 w-5" />
-          </button>
-        </div>
-
-        {locked ? (
-          <div className={cn(discoverCardClass, "space-y-3 p-5 text-center")}>
-            <p className="text-sm font-black text-foreground">محتوى Premium</p>
-            <p className="text-xs font-medium text-muted-foreground">
-              يمكنك قراءة الملخص — افتح العضوية للوصول الكامل.
-            </p>
-            <button
-              type="button"
-              onClick={onUpgrade}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-black text-primary-foreground"
-            >
-              ترقية العضوية
-            </button>
-          </div>
-        ) : (
-          <>
-            <DiscoverBody body={content.body} />
-
-            {content.type === "recipe" && content.recipe ? (
-              <div className={cn(discoverCardClass, "space-y-4 p-4")}>
-                <p className="text-sm font-black">المكونات</p>
-                <ul className="list-disc space-y-1 pr-5 text-sm">
-                  {content.recipe.ingredients.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-                <p className="text-sm font-black">الخطوات</p>
-                <ol className="list-decimal space-y-1 pr-5 text-sm">
-                  {content.recipe.steps.map((step) => (
-                    <li key={step}>{step}</li>
-                  ))}
-                </ol>
-                <p className="text-[11px] font-medium text-muted-foreground">
-                  القيم الغذائية تقريبية — {content.recipe.servings} حصة · {content.recipe.prepMinutes} د
-                </p>
-              </div>
-            ) : null}
-
-            {content.type === "success_story" && content.successStory ? (
-              <div className="space-y-3">
-                {content.successStory.beforeImage && content.successStory.afterImage ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="overflow-hidden rounded-[20px]">
-                      <OptimizedImage
-                        src={content.successStory.beforeImage}
-                        alt="قبل — بموافقة معتمدة"
-                        width={180}
-                        height={240}
-                      />
-                    </div>
-                    <div className="overflow-hidden rounded-[20px]">
-                      <OptimizedImage
-                        src={content.successStory.afterImage}
-                        alt="بعد — بموافقة معتمدة"
-                        width={180}
-                        height={240}
-                      />
-                    </div>
-                  </div>
-                ) : null}
-                <p className="text-[11px] font-medium text-muted-foreground">
-                  {content.successStory.disclaimer}
-                </p>
-              </div>
-            ) : null}
-
-            {content.type === "challenge" && content.challenge ? (
-              <div className={cn(discoverCardClass, "space-y-3 p-4")}>
-                <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-muted-foreground">
-                  <span>{content.challenge.days} أيام</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {content.challenge.participantCount} مشارك
-                  </span>
-                </div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  تحدي عام اختياري — لا يغيّر برنامجك الشخصي.
-                </p>
-                <button
-                  type="button"
-                  disabled={joinedChallenge || content.challenge.status !== "active"}
-                  onClick={handleJoinChallenge}
-                  className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground disabled:opacity-50"
-                >
-                  {joinedChallenge ? "أنت منضم بالفعل" : "انضم إلى التحدي"}
-                </button>
-              </div>
-            ) : null}
-
-            {content.type === "video" ? (
-              <p className="text-[11px] font-medium text-muted-foreground">
-                لا يتم تشغيل الفيديو تلقائياً — اضغط للتشغيل عند توفر المصدر.
-              </p>
-            ) : null}
-          </>
-        )}
-
-        {related.length ? (
-          <section className="space-y-3 pt-2">
-            <h2 className="text-sm font-black text-foreground">محتوى مشابه</h2>
-            <div className="space-y-3">
-              {related.map((item) => (
-                <DiscoverContentListItem key={item.id} item={item} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </article>
+      ) : null}
     </div>
   );
 }

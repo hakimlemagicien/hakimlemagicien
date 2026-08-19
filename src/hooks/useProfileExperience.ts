@@ -5,6 +5,8 @@ import { useMembership } from "@/hooks/useMembership";
 import {
   buildPersonalInfoFields,
   buildProfileActivityStats,
+  buildProfileHubAchievements,
+  buildProfileHubStats,
   buildProgramSummary,
   resolveMembershipDisplayStatus,
 } from "@/lib/platform/profile-experience";
@@ -25,6 +27,7 @@ import {
   type ProfileSettingsSnapshot,
 } from "@/lib/platform/profile-settings-storage";
 import { getBodyMeasurements, getMarketingPhotoConsent } from "@/lib/platform/progress-storage";
+import { buildProgressDashboard } from "@/lib/platform/progress-experience";
 
 export const PROFILE_DETAILS_KEY = ["profile", "details"] as const;
 export const PROFILE_TRAINING_KEY = ["profile", "training"] as const;
@@ -74,8 +77,7 @@ export function useProfileExperience() {
 
   const bodyWeight = useMemo(() => {
     if (!userId) return null;
-    const body = getBodyMeasurements(userId);
-    return body.weight ?? null;
+    return getBodyMeasurements(userId).get("weight")?.value ?? null;
   }, [userId, snapshot]);
 
   const personalFields = useMemo(
@@ -91,6 +93,27 @@ export function useProfileExperience() {
   const activityStats = useMemo(
     () => (userId ? buildProfileActivityStats(userId, snapshot) : []),
     [userId, snapshot],
+  );
+
+  const dashboard = useMemo(
+    () => (userId ? buildProgressDashboard(userId, snapshot) : null),
+    [userId, snapshot],
+  );
+
+  const hubStats = useMemo(
+    () =>
+      buildProfileHubStats(
+        snapshot,
+        dashboard,
+        bodyWeight,
+        training?.answers.weightKg ?? null,
+      ),
+    [snapshot, dashboard, bodyWeight, training],
+  );
+
+  const hubAchievements = useMemo(
+    () => buildProfileHubAchievements(dashboard?.achievements ?? [], snapshot),
+    [dashboard, snapshot],
   );
 
   const membershipStatus = resolveMembershipDisplayStatus(membershipRaw, membershipLoadFailed);
@@ -122,6 +145,9 @@ export function useProfileExperience() {
     personalFields,
     programSummary,
     activityStats,
+    hubStats,
+    hubAchievements,
+    dashboard,
     settings,
     photoConsent,
     sectionErrors,

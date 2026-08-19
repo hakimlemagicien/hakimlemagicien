@@ -1,10 +1,12 @@
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Droplets } from "lucide-react";
-import { useWater } from "@/components/platform/water/WaterContext";
+import { useWaterOptional } from "@/components/platform/water/WaterContext";
 
 export function WaterUndoToast() {
-  const { pendingUndo, undoLastEntry } = useWater();
+  const water = useWaterOptional();
+  if (!water) return null;
+  const { pendingUndo, undoLastEntry } = water;
 
   if (typeof document === "undefined") return null;
 
@@ -39,7 +41,9 @@ export function WaterUndoToast() {
 }
 
 export function WaterGoalFeedback() {
-  const { goalCelebration, dismissGoalCelebration } = useWater();
+  const water = useWaterOptional();
+  if (!water) return null;
+  const { goalCelebration, dismissGoalCelebration } = water;
 
   if (typeof document === "undefined") return null;
 
