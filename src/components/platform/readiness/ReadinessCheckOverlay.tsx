@@ -367,25 +367,13 @@ export function ReadinessCheckOverlay({
       }
     };
 
-    let ignorePop = false;
-    const onPop = () => {
-      if (ignorePop) return;
-      onDismissRef.current();
-    };
-    window.history.pushState({ readinessOverlay: true }, "");
     window.addEventListener("keydown", onKey);
-    window.addEventListener("popstate", onPop);
 
     return () => {
       window.clearTimeout(focusTimer);
       document.body.style.overflow = previousOverflow;
       document.body.classList.remove("is-readiness-open");
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("popstate", onPop);
-      if (window.history.state?.readinessOverlay) {
-        ignorePop = true;
-        window.history.back();
-      }
       previouslyFocused.current?.focus();
     };
   }, [open]);
@@ -441,8 +429,8 @@ export function ReadinessCheckOverlay({
                 <button
                   type="button"
                   className="your-day-check__icon-btn"
-                  onClick={onSkip}
-                  aria-label={READINESS_COPY.skip}
+                  onClick={onDismiss}
+                  aria-label={READINESS_COPY.close}
                 >
                   <AssetImg
                     src={READINESS_ASSETS.closeIcon}

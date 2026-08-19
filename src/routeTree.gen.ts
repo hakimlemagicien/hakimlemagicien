@@ -34,6 +34,7 @@ import { Route as PlatformAppSupportIndexRouteImport } from './routes/_platform/
 import { Route as PlatformAppProgramIndexRouteImport } from './routes/_platform/app/program/index'
 import { Route as PlatformAppNutritionIndexRouteImport } from './routes/_platform/app/nutrition/index'
 import { Route as PlatformAppExercisesIndexRouteImport } from './routes/_platform/app/exercises/index'
+import { Route as PlatformAppDiscoverIndexRouteImport } from './routes/_platform/app/discover/index'
 import { Route as PlatformAppToolsTimerRouteImport } from './routes/_platform/app/tools/timer'
 import { Route as PlatformAppToolsCaloriesRouteImport } from './routes/_platform/app/tools/calories'
 import { Route as PlatformAppSupportChatRouteImport } from './routes/_platform/app/support/chat'
@@ -175,6 +176,12 @@ const PlatformAppExercisesIndexRoute =
     path: '/app/exercises/',
     getParentRoute: () => PlatformRouteRoute,
   } as any)
+const PlatformAppDiscoverIndexRoute =
+  PlatformAppDiscoverIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PlatformAppDiscoverRoute,
+  } as any)
 const PlatformAppToolsTimerRoute = PlatformAppToolsTimerRouteImport.update({
   id: '/app/tools/timer',
   path: '/app/tools/timer',
@@ -288,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/app/support/chat': typeof PlatformAppSupportChatRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/app/tools/timer': typeof PlatformAppToolsTimerRoute
+  '/app/discover/': typeof PlatformAppDiscoverIndexRoute
   '/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/app/program/': typeof PlatformAppProgramIndexRoute
@@ -308,7 +316,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
-  '/app/discover': typeof PlatformAppDiscoverRouteWithChildren
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/app/support/chat': typeof PlatformAppSupportChatRoute
   '/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/app/tools/timer': typeof PlatformAppToolsTimerRoute
+  '/app/discover': typeof PlatformAppDiscoverIndexRoute
   '/app/exercises': typeof PlatformAppExercisesIndexRoute
   '/app/nutrition': typeof PlatformAppNutritionIndexRoute
   '/app/program': typeof PlatformAppProgramIndexRoute
@@ -368,6 +376,7 @@ export interface FileRoutesById {
   '/_platform/app/support/chat': typeof PlatformAppSupportChatRoute
   '/_platform/app/tools/calories': typeof PlatformAppToolsCaloriesRoute
   '/_platform/app/tools/timer': typeof PlatformAppToolsTimerRoute
+  '/_platform/app/discover/': typeof PlatformAppDiscoverIndexRoute
   '/_platform/app/exercises/': typeof PlatformAppExercisesIndexRoute
   '/_platform/app/nutrition/': typeof PlatformAppNutritionIndexRoute
   '/_platform/app/program/': typeof PlatformAppProgramIndexRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/app/support/chat'
     | '/app/tools/calories'
     | '/app/tools/timer'
+    | '/app/discover/'
     | '/app/exercises/'
     | '/app/nutrition/'
     | '/app/program/'
@@ -429,7 +439,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/admin/payments'
     | '/app/achievements'
-    | '/app/discover'
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
@@ -447,6 +456,7 @@ export interface FileRouteTypes {
     | '/app/support/chat'
     | '/app/tools/calories'
     | '/app/tools/timer'
+    | '/app/discover'
     | '/app/exercises'
     | '/app/nutrition'
     | '/app/program'
@@ -488,6 +498,7 @@ export interface FileRouteTypes {
     | '/_platform/app/support/chat'
     | '/_platform/app/tools/calories'
     | '/_platform/app/tools/timer'
+    | '/_platform/app/discover/'
     | '/_platform/app/exercises/'
     | '/_platform/app/nutrition/'
     | '/_platform/app/program/'
@@ -689,6 +700,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppExercisesIndexRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/discover/': {
+      id: '/_platform/app/discover/'
+      path: '/'
+      fullPath: '/app/discover/'
+      preLoaderRoute: typeof PlatformAppDiscoverIndexRouteImport
+      parentRoute: typeof PlatformAppDiscoverRoute
+    }
     '/_platform/app/tools/timer': {
       id: '/_platform/app/tools/timer'
       path: '/app/tools/timer'
@@ -805,6 +823,7 @@ interface PlatformAppDiscoverRouteChildren {
   PlatformAppDiscoverSlugRoute: typeof PlatformAppDiscoverSlugRoute
   PlatformAppDiscoverSavedRoute: typeof PlatformAppDiscoverSavedRoute
   PlatformAppDiscoverSearchRoute: typeof PlatformAppDiscoverSearchRoute
+  PlatformAppDiscoverIndexRoute: typeof PlatformAppDiscoverIndexRoute
   PlatformAppDiscoverCategorySlugRoute: typeof PlatformAppDiscoverCategorySlugRoute
 }
 
@@ -812,6 +831,7 @@ const PlatformAppDiscoverRouteChildren: PlatformAppDiscoverRouteChildren = {
   PlatformAppDiscoverSlugRoute: PlatformAppDiscoverSlugRoute,
   PlatformAppDiscoverSavedRoute: PlatformAppDiscoverSavedRoute,
   PlatformAppDiscoverSearchRoute: PlatformAppDiscoverSearchRoute,
+  PlatformAppDiscoverIndexRoute: PlatformAppDiscoverIndexRoute,
   PlatformAppDiscoverCategorySlugRoute: PlatformAppDiscoverCategorySlugRoute,
 }
 

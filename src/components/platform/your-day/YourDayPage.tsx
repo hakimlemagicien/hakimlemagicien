@@ -106,11 +106,12 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
       isAuthenticated: authenticated,
       fromStartDay,
       dataReady: ready,
-      otherCriticalOverlayOpen: water.sheetOpen || upgrade.open,
+      otherCriticalOverlayOpen: false,
       record,
     });
     if (fromStartDay && !shouldOpen && hasStartedToday(record)) {
       void navigate({ to: "/app/program", search: {}, replace: true });
+      return;
     }
     if (!shouldOpen) return;
     autoOpenedRef.current = true;
@@ -121,7 +122,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
     });
     setOverlayOpen(true);
     trackReadinessEvent("readiness_check_viewed");
-  }, [authenticated, navigate, ready, record, search.from, upgrade.open, water.sheetOpen]);
+  }, [authenticated, navigate, ready, record, search.from]);
 
   const openManual = () => {
     setManualOpen(true);
@@ -157,9 +158,9 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
     closeOverlay();
   };
 
-  const handleDismiss = async () => {
+  const handleDismiss = () => {
     if (!overlayOpen) return;
-    await handleSkip();
+    closeOverlay();
   };
 
   const handleKeepPlan = async () => {

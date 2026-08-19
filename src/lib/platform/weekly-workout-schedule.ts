@@ -153,7 +153,7 @@ export const WEEKDAY_WORKOUT_PLANS: Record<WeekdayId, WeekdayWorkoutPlan> = {
   },
 };
 
-function dateKeyFromDate(date: Date) {
+export function dateKeyFromDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
@@ -221,6 +221,10 @@ export function isFreeUnlockedExerciseIndex(orderIndex: number) {
 
 export function formatWorkoutDayLabel(date: Date, dayName: string) {
   return `${dayName} ${date.getDate()} ${AR_MONTHS[date.getMonth()]}`;
+}
+
+export function formatWorkoutMonthTitle(date: Date) {
+  return `${AR_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
 }
 
 export function buildWeeklySchedule(input?: {

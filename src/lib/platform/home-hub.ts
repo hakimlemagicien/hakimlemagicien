@@ -2,6 +2,8 @@ import type { MembershipFeatures, MembershipTier } from "@/lib/platform/membersh
 import {
   HAKIM_POINTS_REWARDS,
   formatHakimPoints,
+  resolveNextMission,
+  resolveStreakMotivation,
   type NextMission,
 } from "@/lib/platform/daily-motivation";
 import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
@@ -272,7 +274,7 @@ export function resolveClientFirstName(displayName?: string | null): string {
 
 export function buildTimeGreeting(displayName: string, date = new Date()): string {
   const firstName = resolveClientFirstName(displayName);
-  return `${greetingPrefix(date)} ${firstName} 👋`;
+  return `${greetingPrefix(date)} ${firstName}\u00A0👋`;
 }
 
 export function resolveUserGoal(raw?: string | null): UserGoal {
@@ -362,7 +364,16 @@ export function buildDailyTasks(input: {
         status: activity.workoutDone >= activity.workoutTotal ? "done" : "arrow",
       });
     }
-    if (canNutrition && rotation !== 2) paid.push(nutrition);
+    if (canNutrition && rotation !== 2) {
+      const nutritionDone = activity.mealsTotal > 0 && activity.mealsDone >= activity.mealsTotal;
+      paid.push({
+        ...nutrition,
+        status: nutritionDone ? "done" : activity.mealsDone > 0 ? "progress" : "arrow",
+        subtitle: nutritionDone
+          ? "أحسنت — وجبات اليوم مكتملة"
+          : `${activity.mealsDone} / ${activity.mealsTotal} وجبات`,
+      });
+    }
 
     const freePick =
       rotation === 0 ? [water, weight] : rotation === 1 ? [water, calories] : [water, weight, calories];
@@ -635,13 +646,16 @@ export type DailySnapshotItem = {
 export type HeroState = {
   greeting: string;
   subtext: string;
-  goalTitle: string;
-  overallProgress: number;
+  missionTitle: string;
+  missionReward: number;
+  missionHref: string;
+  todayDone: number;
+  todayTotal: number;
+  todayProgress: number;
   motivation: string;
-  isFirstVisit: boolean;
   streak: number;
   hakimPoints: number;
-  remainingKg: number | null;
+  journeyDay: number;
   heroImage: HeroGoalImage;
 };
 
@@ -782,37 +796,61 @@ export function goalTitle(goal: UserGoal): string {
   return "خسارة الدهون";
 }
 
+const HERO_TRACKED_TASK_IDS = new Set(["workout", "nutrition", "water", "weight", "challenge"]);
+
+function isHeroTrackedTask(task: DailyTask, features: MembershipFeatures): boolean {
+  if (!HERO_TRACKED_TASK_IDS.has(task.id)) return false;
+  if (task.id === "workout" && !features.workout_program) return false;
+  if (task.id === "nutrition" && !features.nutrition_plan) return false;
+  return true;
+}
+
+function heroMissionTitle(mission: NextMission): string {
+  if (mission.id === "done" || mission.id === "complete") return "كل المهام اكتملت";
+  return mission.title.replace(/^الخطوة التالية:\s*/, "");
+}
+
 export function buildHeroState(input: {
   displayName: string;
   goal: UserGoal;
   streak: number;
   hakimPoints: number;
   heroImage: HeroGoalImage;
+  features: MembershipFeatures;
   activity?: PlatformActivitySnapshot;
   date?: Date;
 }): HeroState {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const isFirstVisit = readFirstVisit();
-  const remainingKg =
-    activity.currentWeight != null && activity.goalWeight != null
-      ? Math.max(
-          0,
-          Math.round(Math.abs(activity.currentWeight - activity.goalWeight) * 10) / 10,
-        )
-      : null;
+  const tasks = buildDailyTasks({
+    features: input.features,
+    activity,
+    date: input.date,
+  });
+  const tracked = tasks.filter((task) => isHeroTrackedTask(task, input.features));
+  const todayDone = tracked.filter((task) => task.status === "done").length;
+  const todayTotal = Math.max(tracked.length, 1);
+  const todayProgress = Math.round((todayDone / todayTotal) * 100);
+  const mission = resolveNextMission(tasks);
+  const streakCopy = resolveStreakMotivation(input.streak);
 
   return {
     greeting: buildTimeGreeting(input.displayName, input.date),
     subtext: isFirstVisit
       ? "مرحباً بك في منصتك الشخصية — لنبدأ رحلتك اليوم."
-      : "خطتك اليومية جاهزة",
-    goalTitle: goalTitle(input.goal),
-    overallProgress: activity.overallProgressPct,
-    motivation: "كل خطوة اليوم تقربك من هدفك",
-    isFirstVisit,
+      : todayProgress >= 100
+        ? "أحسنت — مهام اليوم مكتملة"
+        : "مهمتك اليوم بانتظارك",
+    missionTitle: heroMissionTitle(mission),
+    missionReward: mission.pointsReward,
+    missionHref: mission.href,
+    todayDone,
+    todayTotal,
+    todayProgress,
+    motivation: streakCopy.message,
     streak: input.streak,
     hakimPoints: input.hakimPoints,
-    remainingKg,
+    journeyDay: Math.max(activity.daysIn, 1),
     heroImage: input.heroImage,
   };
 }

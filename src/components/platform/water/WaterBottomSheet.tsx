@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Droplets, RefreshCw } from "lucide-react";
-import { useWater } from "@/components/platform/water/WaterContext";
+import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { WaterRing } from "@/components/platform/water/WaterCompactWidget";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,32 +19,25 @@ function formatAmountLabel(ml: number) {
 }
 
 export function WaterBottomSheet() {
-  const {
-    sheetOpen,
-    closeWaterSheet,
-    state,
-    message,
-    recentLogs,
-    registerWater,
-    loading,
-    error,
-    clearError,
-  } = useWater();
+  const water = useWaterOptional();
   const reduceMotion = useReducedMotion();
   const [customOpen, setCustomOpen] = useState(false);
   const [customMl, setCustomMl] = useState("300");
   const [activeAmount, setActiveAmount] = useState<number | null>(null);
+  const sheetOpen = water?.sheetOpen ?? false;
+  const closeWaterSheet = water?.closeWaterSheet;
+  const clearError = water?.clearError;
 
   useEffect(() => {
     if (!sheetOpen) {
       setCustomOpen(false);
       setActiveAmount(null);
-      clearError();
+      clearError?.();
     }
   }, [sheetOpen, clearError]);
 
   useEffect(() => {
-    if (!sheetOpen) return;
+    if (!sheetOpen || !closeWaterSheet) return;
     document.body.classList.add("is-water-open");
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeWaterSheet();
@@ -56,7 +49,16 @@ export function WaterBottomSheet() {
     };
   }, [sheetOpen, closeWaterSheet]);
 
-  if (typeof document === "undefined") return null;
+  if (!water || typeof document === "undefined") return null;
+
+  const {
+    state,
+    message,
+    recentLogs,
+    registerWater,
+    loading,
+    error,
+  } = water;
 
   const current = formatWaterLiters(state.totalMl);
   const goal = formatWaterLiters(state.goalMl, 0);
@@ -109,22 +111,22 @@ export function WaterBottomSheet() {
               className="water-overlay__card"
             >
               <div className="flex items-center justify-center gap-2 text-center">
-                <Droplets className="h-5 w-5 text-[#F97316]" />
-                <h2 className="text-base font-black text-foreground">متابعة شرب الماء</h2>
+                <Droplets className="h-5 w-5 text-sky-500" />
+                <h2 className="text-base font-black text-sky-950">متابعة شرب الماء</h2>
               </div>
 
               <div className="mt-5 flex flex-col items-center">
                 <div className="relative grid h-[148px] w-[148px] place-items-center">
-                  <WaterRing pct={pct} done={state.goalReached} size={148} />
+                  <WaterRing pct={pct} done={state.goalReached} size={148} tone="water" />
                   <div className="absolute inset-0 grid place-items-center text-center">
-                    <p className="text-[28px] font-black leading-none text-foreground">
+                    <p className="text-[28px] font-black leading-none text-sky-950">
                       {current}
-                      <span className="text-base font-bold text-muted-foreground"> / {goal}</span>
+                      <span className="text-base font-bold text-sky-700/70"> / {goal}</span>
                     </p>
-                    <p className="mt-1 text-[11px] font-bold text-muted-foreground">لتر</p>
+                    <p className="mt-1 text-[11px] font-bold text-sky-700/70">لتر</p>
                   </div>
                 </div>
-                <p className="mt-3 px-2 text-center text-[12px] font-bold text-[#C2410C]">
+                <p className="mt-3 px-2 text-center text-[12px] font-bold text-sky-800">
                   {message}
                 </p>
               </div>
@@ -142,14 +144,14 @@ export function WaterBottomSheet() {
                       className={cn(
                         "relative min-h-11 rounded-2xl border text-[12px] font-black transition active:scale-[0.96]",
                         suggested
-                          ? "border-[#F97316] bg-[#F97316] text-white shadow-[0_8px_20px_-10px_rgba(249,115,22,0.55)]"
-                          : "border-border/70 bg-card text-foreground",
+                          ? "border-sky-500 bg-sky-500 text-white shadow-[0_8px_20px_-10px_rgba(14,165,233,0.55)]"
+                          : "border-sky-200 bg-white text-sky-950",
                         isActive && "opacity-70",
                       )}
                     >
                       {formatAmountLabel(amount)}
                       {suggested ? (
-                        <span className="absolute -top-2 start-2 rounded-full bg-white px-1.5 py-0.5 text-[8px] font-black text-[#F97316] shadow-sm">
+                        <span className="absolute -top-2 start-2 rounded-full bg-white px-1.5 py-0.5 text-[8px] font-black text-sky-500 shadow-sm">
                           مقترح
                         </span>
                       ) : null}
@@ -163,8 +165,8 @@ export function WaterBottomSheet() {
                   className={cn(
                     "min-h-11 rounded-2xl border text-[12px] font-black",
                     customOpen
-                      ? "border-[#F97316] bg-[#FFF1E6] text-[#C2410C]"
-                      : "border-border/70 bg-muted/40 text-foreground",
+                      ? "border-sky-400 bg-sky-50 text-sky-800"
+                      : "border-sky-200 bg-white/70 text-sky-950",
                   )}
                 >
                   مخصص
@@ -180,14 +182,14 @@ export function WaterBottomSheet() {
                     max={WATER_MAX_ML}
                     value={customMl}
                     onChange={(event) => setCustomMl(event.target.value)}
-                    className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-card px-3 text-sm font-bold"
+                    className="h-11 min-w-0 flex-1 rounded-2xl border border-sky-200 bg-white px-3 text-sm font-bold text-sky-950"
                     aria-label="كمية مخصصة بالمل"
                   />
                   <button
                     type="button"
                     disabled={loading}
                     onClick={() => void handleCustom()}
-                    className="h-11 shrink-0 rounded-2xl bg-[#F97316] px-4 text-xs font-black text-white"
+                    className="h-11 shrink-0 rounded-2xl bg-sky-500 px-4 text-xs font-black text-white"
                   >
                     إضافة
                   </button>
@@ -195,14 +197,14 @@ export function WaterBottomSheet() {
               ) : null}
 
               <div className="mt-5">
-                <p className="mb-2 text-[11px] font-black text-muted-foreground">آخر عمليات الشرب</p>
+                <p className="mb-2 text-[11px] font-black text-sky-800/70">آخر عمليات الشرب</p>
                 {loading && recentLogs.length === 0 ? (
                   <div className="space-y-2">
                     <Skeleton className="h-10 w-full rounded-xl" />
                     <Skeleton className="h-10 w-full rounded-xl" />
                   </div>
                 ) : recentLogs.length === 0 ? (
-                  <p className="rounded-2xl bg-muted/45 px-3 py-3 text-center text-[11px] font-medium text-muted-foreground">
+                  <p className="rounded-2xl bg-sky-50 px-3 py-3 text-center text-[11px] font-medium text-sky-800/70">
                     لم يتم تسجيل الماء بعد.
                   </p>
                 ) : (
@@ -210,10 +212,10 @@ export function WaterBottomSheet() {
                     {recentLogs.map((log) => (
                       <li
                         key={log.id}
-                        className="flex items-center justify-between rounded-2xl bg-muted/45 px-3 py-2.5 text-[12px]"
+                        className="flex items-center justify-between rounded-2xl bg-sky-50 px-3 py-2.5 text-[12px]"
                       >
-                        <span className="font-bold text-muted-foreground">{log.timeLabel}</span>
-                        <span className="font-black text-foreground">{log.ml} ml</span>
+                        <span className="font-bold text-sky-700/70">{log.timeLabel}</span>
+                        <span className="font-black text-sky-950">{log.ml} ml</span>
                       </li>
                     ))}
                   </ul>
@@ -225,7 +227,7 @@ export function WaterBottomSheet() {
                   <p className="min-w-0 flex-1 text-[11px] font-bold text-destructive">{error}</p>
                   <button
                     type="button"
-                    onClick={() => clearError()}
+                    onClick={() => water.clearError()}
                     className="inline-flex h-9 items-center gap-1 rounded-xl bg-destructive px-2.5 text-[10px] font-black text-white"
                   >
                     <RefreshCw className="h-3 w-3" />

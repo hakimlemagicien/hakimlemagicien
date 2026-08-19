@@ -79,7 +79,7 @@ export function ExerciseMedia({
   }
 
   return (
-    <div className={cn("overflow-hidden rounded-2xl border border-border bg-muted shadow-sm", className)}>
+    <div className={cn("relative overflow-hidden rounded-2xl border border-border bg-muted shadow-sm", frameClass, className)}>
       <video
         ref={videoRef}
         key={mediaQuery.data}
@@ -88,7 +88,7 @@ export function ExerciseMedia({
         loop={loop}
         preload="metadata"
         playsInline
-        className={cn("w-full bg-muted object-cover", frameClass)}
+        className="absolute inset-0 h-full w-full bg-muted object-cover"
         aria-label={`${label}: ${title}`}
       >
         <source src={mediaQuery.data} />

@@ -1,6 +1,15 @@
-import type { MembershipResponse } from "@/lib/platform/membership";
+import {
+  getMembershipTierLabel,
+  isPaidMembershipTier,
+  type MembershipResponse,
+  type MembershipTier,
+} from "@/lib/platform/membership";
 import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
-import { buildProgressDashboard } from "@/lib/platform/progress-experience";
+import {
+  buildProgressDashboard,
+  type AchievementItem,
+  type ProgressDashboardData,
+} from "@/lib/platform/progress-experience";
 import type { ProfileDetails, TrainingProfileSnapshot } from "@/lib/platform/profile-api";
 
 export type MembershipDisplayStatus =
@@ -38,6 +47,21 @@ export type ProfileProgramSummary = {
   programStart: string;
 };
 
+export type ProfileHubStat = {
+  id: string;
+  value: string;
+  label: string;
+  accent?: boolean;
+};
+
+export type ProfileHubAchievement = {
+  id: string;
+  title: string;
+  subtitle: string;
+  tone: "blue" | "orange" | "green";
+  unlocked: boolean;
+};
+
 const GOAL_LABELS: Record<string, string> = {
   cut: "خسارة الدهون",
   bulk: "بناء العضلات",
@@ -68,9 +92,88 @@ export function formatProfileDate(iso: string | null | undefined): string {
   });
 }
 
+export function formatMemberSinceShort(iso: string | null | undefined): string {
+  if (!iso) return "عضو جديد";
+  return `منذ ${new Date(iso).toLocaleDateString("ar-EG", { month: "long", year: "numeric" })}`;
+}
+
+export function membershipBadgeLabel(tier: MembershipTier): string {
+  const frame = tier === "visitor" ? "free" : tier;
+  return `عضو ${getMembershipTierLabel(frame)}`;
+}
+
 export function formatMemberCode(userId: string): string {
   const compact = userId.replace(/-/g, "").slice(0, 5).toUpperCase();
-  return `#HKM-${compact}`;
+  return `\u2066#HKM-${compact}\u2069`;
+}
+
+const MS_DAY = 86_400_000;
+
+function formatCardDate(isoOrMs: string | number | null | undefined): string {
+  if (isoOrMs == null || isoOrMs === "") return "—";
+  const date = typeof isoOrMs === "number" ? new Date(isoOrMs) : new Date(isoOrMs);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("ar-EG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    numberingSystem: "latn",
+  });
+}
+
+function formatRemainingDays(days: number): string {
+  if (days <= 0) return "انتهت";
+  if (days >= 3650) return "مدى الحياة";
+  if (days >= 365) {
+    const years = Math.round(days / 365);
+    return years <= 1 ? "سنة واحدة" : `${years} سنوات`;
+  }
+  return `${days} يوماً`;
+}
+
+export type MembershipTerm = {
+  startedAt: string;
+  endsAt: string;
+  remaining: string;
+};
+
+export function resolveMembershipTerm(
+  membership: MembershipResponse | null,
+  tier: MembershipTier,
+): MembershipTerm {
+  const frame = membership?.tier ?? (tier === "visitor" ? "free" : tier);
+  const paid = isPaidMembershipTier(frame) && membership?.is_free !== true && frame !== "free";
+  const startMs = membership?.starts_at ? Date.parse(membership.starts_at) : Number.NaN;
+  let endMs = membership?.ends_at ? Date.parse(membership.ends_at) : Number.NaN;
+  let days = membership?.days_remaining ?? 0;
+
+  if (!paid) {
+    return {
+      startedAt: formatCardDate(Number.isFinite(startMs) ? startMs : null),
+      endsAt: "—",
+      remaining: "الخطة المجانية",
+    };
+  }
+
+  if (!Number.isFinite(endMs)) {
+    if (days > 0) {
+      endMs = Date.now() + days * MS_DAY;
+    } else if (Number.isFinite(startMs)) {
+      const assumed = new Date(startMs);
+      assumed.setFullYear(assumed.getFullYear() + 1);
+      endMs = assumed.getTime();
+    }
+  }
+
+  if (Number.isFinite(endMs)) {
+    days = Math.ceil((endMs - Date.now()) / MS_DAY);
+  }
+
+  return {
+    startedAt: formatCardDate(Number.isFinite(startMs) ? startMs : null),
+    endsAt: formatCardDate(Number.isFinite(endMs) ? endMs : null),
+    remaining: Number.isFinite(endMs) ? formatRemainingDays(days) : "—",
+  };
 }
 
 export function computeAgeFromBirthDate(birthDate: string | null | undefined): number | null {
@@ -94,7 +197,7 @@ export function resolveMembershipDisplayStatus(
     if (membership.ends_at && new Date(membership.ends_at) < new Date()) return "expired";
     return "cancelled";
   }
-  if (membership.is_paid && membership.is_active) return "active";
+  if (membership.is_paid || isPaidMembershipTier(membership.tier)) return "active";
   return "free";
 }
 
@@ -128,6 +231,15 @@ export function buildPersonalInfoFields(
 
   return [
     { id: "name", label: "الاسم", value: profile?.fullName ?? "غير محدد", missing: !profile?.fullName },
+    profile
+      ? { id: "code", label: "رقم العضوية", value: formatMemberCode(profile.id) }
+      : missing("رقم العضوية"),
+    profile?.email
+      ? { id: "email", label: "البريد", value: profile.email }
+      : missing("البريد"),
+    profile?.phone
+      ? { id: "phone", label: "الهاتف", value: profile.phone }
+      : missing("الهاتف"),
     answers.gender
       ? { id: "gender", label: "الجنس", value: GENDER_LABELS[answers.gender] ?? "غير محدد" }
       : missing("الجنس"),
@@ -238,6 +350,82 @@ export function buildProfileActivityStats(
 
 export function getAppBuildVersion(): string {
   return import.meta.env.VITE_APP_VERSION ?? "1.0.0";
+}
+
+function formatWeightKg(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded} كغ` : `${rounded.toFixed(1)} كغ`;
+}
+
+export function buildProfileHubStats(
+  snapshot: PlatformActivitySnapshot,
+  dashboard: ProgressDashboardData | null,
+  bodyWeightKg: number | null,
+  quizWeightKg: number | null,
+): ProfileHubStat[] {
+  const weight = bodyWeightKg ?? snapshot.currentWeight ?? quizWeightKg;
+  const weeklyRaw = dashboard?.weeklyCards.find((card) => card.id === "workout")?.summary ?? "0";
+  const weeklySessions = weeklyRaw.split("/")[0]?.trim() || "0";
+
+  return [
+    {
+      id: "weight",
+      value: weight != null ? formatWeightKg(weight) : "—",
+      label: "الوزن الحالي",
+    },
+    {
+      id: "streak",
+      value: `${snapshot.activityStreak} أيام`,
+      label: "التزام",
+    },
+    {
+      id: "sessions",
+      value: weeklySessions,
+      label: "حصص هذا الأسبوع",
+    },
+    {
+      id: "points",
+      value: String(dashboard?.level.currentPoints ?? snapshot.hakimPoints),
+      label: "نقطة تقدم",
+      accent: true,
+    },
+  ];
+}
+
+export function buildProfileHubAchievements(
+  achievements: AchievementItem[],
+  snapshot: PlatformActivitySnapshot,
+): ProfileHubAchievement[] {
+  const byId = new Map(achievements.map((item) => [item.id, item]));
+  const first = byId.get("first-workout");
+  const streak = byId.get("streak-7");
+  const nutrition = byId.get("nutrition-week");
+  const activeUnlocked =
+    Boolean(nutrition?.unlocked) || snapshot.activityStreak >= 7 || snapshot.bestStreak >= 7;
+
+  return [
+    {
+      id: "first-workout",
+      title: "بداية قوية",
+      subtitle: first?.unlocked ? "أكملت أول حصة" : "أكمل أول حصة",
+      tone: "blue",
+      unlocked: Boolean(first?.unlocked),
+    },
+    {
+      id: "streak-7",
+      title: "مركز الهدف",
+      subtitle: streak?.unlocked ? "التزام 7 أيام" : (streak?.progressLabel ?? "التزام 7 أيام"),
+      tone: "orange",
+      unlocked: Boolean(streak?.unlocked),
+    },
+    {
+      id: "active-week",
+      title: "أسبوع نشيط",
+      subtitle: nutrition?.unlocked ? "التزمت بأسبوعك الغذائي" : "7 أيام متتالية",
+      tone: "green",
+      unlocked: activeUnlocked,
+    },
+  ];
 }
 
 export const MEMBERSHIP_FEATURE_LABELS: { key: keyof MembershipResponse["features"]; label: string }[] = [

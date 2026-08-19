@@ -260,50 +260,102 @@ export async function fetchCoachingUnreadCount() {
   return Number(data ?? 0);
 }
 
+let inboxChannelSeq = 0;
+let threadChannelSeq = 0;
+const inboxListeners = new Set<() => void>();
+let inboxRefCount = 0;
+let inboxChannels: Array<ReturnType<typeof supabase.channel>> = [];
+
+function notifyInboxListeners() {
+  inboxListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch (error) {
+      console.error(error);
+    }
+  });
+}
+
+function startInboxChannels() {
+  const seq = ++inboxChannelSeq;
+  try {
+    const conversations = supabase
+      .channel(`coaching-inbox-conv:${seq}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "coaching_conversations" },
+        notifyInboxListeners,
+      )
+      .subscribe();
+    const notifications = supabase
+      .channel(`coaching-inbox-notif:${seq}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "coaching_notifications" },
+        notifyInboxListeners,
+      )
+      .subscribe();
+    inboxChannels = [conversations, notifications];
+  } catch (error) {
+    console.error(error);
+    inboxChannels = [];
+  }
+}
+
+function stopInboxChannels() {
+  const channels = inboxChannels;
+  inboxChannels = [];
+  channels.forEach((channel) => {
+    void supabase.removeChannel(channel);
+  });
+}
+
 export function subscribeCoachingThread(
   conversationId: string,
   onChange: () => void,
 ) {
-  const channel = supabase
-    .channel(`coaching-thread:${conversationId}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "coaching_messages",
-        filter: `conversation_id=eq.${conversationId}`,
-      },
-      onChange,
-    )
-    .subscribe();
-  return () => {
-    void supabase.removeChannel(channel);
-  };
+  try {
+    const channel = supabase
+      .channel(`coaching-thread:${conversationId}:${++threadChannelSeq}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "coaching_messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        onChange,
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  } catch (error) {
+    console.error(error);
+    return () => undefined;
+  }
 }
 
 export function subscribeCoachingInbox(onChange: () => void) {
-  const channel = supabase
-    .channel("coaching-inbox")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "coaching_conversations" },
-      onChange,
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "coaching_notifications" },
-      onChange,
-    )
-    .subscribe();
+  inboxListeners.add(onChange);
+  if (inboxRefCount === 0) startInboxChannels();
+  inboxRefCount += 1;
   return () => {
-    void supabase.removeChannel(channel);
+    inboxListeners.delete(onChange);
+    inboxRefCount = Math.max(0, inboxRefCount - 1);
+    if (inboxRefCount === 0) stopInboxChannels();
   };
 }
 
 /** Realtime when available, plus polling so replies still appear if events do not arrive. */
 export function watchCoachingUpdates(onChange: () => void, intervalMs = 8000) {
-  const stopRealtime = subscribeCoachingInbox(onChange);
+  let stopRealtime = () => undefined;
+  try {
+    stopRealtime = subscribeCoachingInbox(onChange);
+  } catch (error) {
+    console.error(error);
+  }
   const timer = window.setInterval(onChange, intervalMs);
   const onVisible = () => {
     if (document.visibilityState === "visible") onChange();
@@ -317,7 +369,12 @@ export function watchCoachingUpdates(onChange: () => void, intervalMs = 8000) {
 }
 
 export function watchCoachingThread(conversationId: string, onChange: () => void, intervalMs = 8000) {
-  const stopRealtime = subscribeCoachingThread(conversationId, onChange);
+  let stopRealtime = () => undefined;
+  try {
+    stopRealtime = subscribeCoachingThread(conversationId, onChange);
+  } catch (error) {
+    console.error(error);
+  }
   const timer = window.setInterval(onChange, intervalMs);
   const onVisible = () => {
     if (document.visibilityState === "visible") onChange();

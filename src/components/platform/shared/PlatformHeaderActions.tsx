@@ -1,72 +1,71 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, MessageCircle } from "lucide-react";
-import {
-  fetchCoachingUnreadCount,
-  fetchMyCoachingNotifications,
-  watchCoachingUpdates,
-} from "@/lib/platform/coaching-messaging-api";
-import { formatInboxTime, type CoachingNotification } from "@/lib/platform/coaching-messaging";
+import { createPortal } from "react-dom";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Bell, MessageSquare } from "lucide-react";
+import { useCoachingInbox } from "@/hooks/useCoachingInbox";
+import { formatInboxTime } from "@/lib/platform/coaching-messaging";
 import { cn } from "@/lib/utils";
 
-type PlatformHeaderActionsProps = {
+type BellButtonProps = {
   className?: string;
   actionClassName?: string;
   iconClassName?: string;
   bellStrokeWidth?: number;
 };
 
-export function PlatformHeaderActions({
-  className,
+export function NotificationsBell({
   actionClassName = "grid h-11 w-11 place-items-center text-foreground",
   iconClassName = "h-6 w-6",
   bellStrokeWidth = 1.8,
-}: PlatformHeaderActionsProps) {
+}: BellButtonProps) {
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
-  const [count, setCount] = useState(0);
-  const [items, setItems] = useState<CoachingNotification[]>([]);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const { count, items, refresh } = useCoachingInbox({ loadItems: open });
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const unread = (Array.isArray(items) ? items : []).some((item) => !item.readAt) || count > 0;
 
-  async function refresh() {
-    try {
-      const [nextCount, nextItems] = await Promise.all([
-        fetchCoachingUnreadCount(),
-        fetchMyCoachingNotifications(),
-      ]);
-      setCount(nextCount);
-      setItems(nextItems);
-    } catch {
-      setCount(0);
-    }
+  function placePanel() {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(320, window.innerWidth - 24);
+    const left = Math.min(Math.max(12, rect.right - width), window.innerWidth - width - 12);
+    setCoords({ top: rect.bottom + 8, left });
   }
 
   useEffect(() => {
-    void refresh();
-    return watchCoachingUpdates(() => void refresh(), 20000);
-  }, []);
+    setOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
-    function onPointer(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onPointer);
-    return () => document.removeEventListener("mousedown", onPointer);
-  }, []);
+    if (!open) return;
+    placePanel();
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (buttonRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    const onReposition = () => placePanel();
+    document.addEventListener("pointerdown", onPointer);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [open]);
 
   return (
-    <div ref={rootRef} className={cn("relative flex shrink-0 items-center", className)}>
-      <Link
-        to="/app/support/chat"
-        aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
-        className={cn(actionClassName, "relative")}
-      >
-        <MessageCircle className={iconClassName} strokeWidth={bellStrokeWidth} />
-        {count > 0 ? <span className="platform-bell-dot" /> : null}
-      </Link>
+    <>
       <button
+        ref={buttonRef}
         type="button"
         aria-label="الإشعارات"
+        aria-expanded={open}
+        aria-haspopup="dialog"
         className={cn(actionClassName, "relative")}
         onClick={() => {
           setOpen((value) => !value);
@@ -74,37 +73,70 @@ export function PlatformHeaderActions({
         }}
       >
         <Bell className={iconClassName} strokeWidth={bellStrokeWidth} />
+        {unread ? <span className="platform-bell-dot" /> : null}
       </button>
-      {open ? (
-        <div className="platform-bell-panel" role="dialog" aria-label="الإشعارات">
-          {items.length === 0 ? (
-            <p>لا إشعارات بعد.</p>
-          ) : (
-            items.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={item.readAt ? undefined : "is-unread"}
-                onClick={() => {
-                  setOpen(false);
-                  if (item.kind === "member_message") {
-                    void navigate({
-                      to: "/admin/messages/$conversationId",
-                      params: { conversationId: item.conversationId ?? "" },
-                    });
-                  } else {
-                    void navigate({ to: "/app/support/chat" });
-                  }
-                }}
-              >
-                <strong>{item.title}</strong>
-                <span>{item.body}</span>
-                <time>{formatInboxTime(item.createdAt)}</time>
-              </button>
-            ))
-          )}
-        </div>
-      ) : null}
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={panelRef}
+              className="platform-bell-panel is-portal"
+              role="dialog"
+              aria-label="الإشعارات"
+              style={{ top: coords.top, left: coords.left }}
+            >
+              {items.length === 0 ? (
+                <p>لا إشعارات بعد.</p>
+              ) : (
+                (Array.isArray(items) ? items : []).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={item.readAt ? undefined : "is-unread"}
+                    onClick={() => {
+                      setOpen(false);
+                      void navigate({
+                        to: "/app/support/chat",
+                        search: { from: pathname },
+                      });
+                    }}
+                  >
+                    <strong>{item.title}</strong>
+                    <span>{item.body}</span>
+                    <time>{formatInboxTime(item.createdAt)}</time>
+                  </button>
+                ))
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+export function PlatformHeaderActions({
+  className,
+  actionClassName = "grid h-11 w-11 place-items-center text-foreground",
+  iconClassName = "h-6 w-6",
+  bellStrokeWidth = 1.8,
+}: BellButtonProps) {
+  const { count } = useCoachingInbox();
+
+  return (
+    <div className={cn("relative flex shrink-0 items-center gap-2", className)}>
+      <Link
+        to="/app/support/chat"
+        aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
+        className={cn(actionClassName, "relative")}
+      >
+        <MessageSquare className={iconClassName} strokeWidth={bellStrokeWidth} />
+        {count > 0 ? <span className="platform-bell-dot" /> : null}
+      </Link>
+      <NotificationsBell
+        actionClassName={actionClassName}
+        iconClassName={iconClassName}
+        bellStrokeWidth={bellStrokeWidth}
+      />
     </div>
   );
 }

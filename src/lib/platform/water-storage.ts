@@ -4,6 +4,8 @@ export const WATER_MIN_ML = 50;
 export const WATER_MAX_ML = 2000;
 
 export const WATER_CHANGE_EVENT = "hakim:water-changed";
+export const WATER_REMINDER_MS = 30 * 60 * 1000;
+const REMINDER_STORAGE_PREFIX = "hakim_water_nudge_v1";
 
 function notifyWaterChanged() {
   if (typeof window === "undefined") return;
@@ -334,4 +336,40 @@ export function seedHostPreviewWaterIfNeeded(
 
   writeStore({ ...store, daily });
   return true;
+}
+
+function reminderStorageKey(userId: string) {
+  return `${REMINDER_STORAGE_PREFIX}:${userId}`;
+}
+
+export function writeWaterReminderAnchor(
+  userId: string,
+  lastAt = Date.now(),
+  dateKey = todayKey(),
+) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(reminderStorageKey(userId), JSON.stringify({ dateKey, lastAt }));
+}
+
+export function getWaterReminderAnchor(userId: string, dateKey = todayKey()): number {
+  if (typeof window === "undefined") return Date.now();
+  try {
+    const raw = localStorage.getItem(reminderStorageKey(userId));
+    if (!raw) {
+      const now = Date.now();
+      writeWaterReminderAnchor(userId, now, dateKey);
+      return now;
+    }
+    const parsed = JSON.parse(raw) as { dateKey?: string; lastAt?: number };
+    if (parsed.dateKey !== dateKey || typeof parsed.lastAt !== "number") {
+      const now = Date.now();
+      writeWaterReminderAnchor(userId, now, dateKey);
+      return now;
+    }
+    return parsed.lastAt;
+  } catch {
+    const now = Date.now();
+    writeWaterReminderAnchor(userId, now, dateKey);
+    return now;
+  }
 }

@@ -1,8 +1,9 @@
 import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, MessageSquare, RefreshCw } from "lucide-react";
+import { ChevronLeft, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HeaderMenu } from "@/components/platform/shared/HeaderMenu";
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { cn } from "@/lib/utils";
 
@@ -34,19 +35,9 @@ export function ProfileMotionSection({
 export function ProfilePageHeader() {
   return (
     <header className="flex h-11 items-center justify-between px-0.5">
-      <Link
-        to="/app/support"
-        className="platform-home-header-v2__action platform-touch grid h-11 w-11 place-items-center text-foreground"
-        aria-label="الرسائل"
-      >
-        <MessageSquare strokeWidth={1.75} className="h-6 w-6" />
-      </Link>
+      <HeaderMenu />
       <h1 className="text-base font-black tracking-tight text-foreground">الملف الشخصي</h1>
-      <PlatformHeaderActions
-        actionClassName="platform-home-header-v2__action platform-touch grid h-11 w-11"
-        iconClassName="h-6 w-6"
-        bellStrokeWidth={1.75}
-      />
+      <PlatformHeaderActions />
     </header>
   );
 }
@@ -197,10 +188,18 @@ export function ProfileField({
 
 export function ProfileHeroSkeleton() {
   return (
-    <div className={cn(profileCardClass, "overflow-hidden p-5")} aria-hidden>
-      <Skeleton className="mx-auto h-24 w-24 rounded-full" />
-      <Skeleton className="mx-auto mt-4 h-5 w-32" />
-      <Skeleton className="mx-auto mt-2 h-4 w-40" />
+    <div className="space-y-4" aria-hidden>
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-[72px] w-[72px] shrink-0 rounded-full" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-3 w-28" />
+        </div>
+        <Skeleton className="h-9 w-24 rounded-full" />
+      </div>
+      <Skeleton className="h-12 w-full rounded-2xl" />
+      <Skeleton className="h-20 w-full rounded-[22px]" />
     </div>
   );
 }

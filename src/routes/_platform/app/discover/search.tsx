@@ -80,18 +80,15 @@ function DiscoverSearchPage() {
           </p>
         ) : null}
 
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
+        <div className="discover-chips" role="tablist" aria-label="تصفية البحث">
           {FILTERS.map((key) => (
             <button
               key={key}
               type="button"
+              role="tab"
+              aria-selected={filter === key}
               onClick={() => setFilter(key)}
-              className={cn(
-                "shrink-0 rounded-full px-3 py-2 text-[11px] font-black",
-                filter === key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground",
-              )}
+              className={cn("discover-chip", filter === key && "is-active")}
             >
               {DISCOVER_FILTER_LABELS[key]}
             </button>

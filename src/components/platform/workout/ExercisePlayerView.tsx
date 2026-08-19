@@ -3,22 +3,21 @@ import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import {
-  Activity,
   Check,
   ChevronRight,
   Circle,
-  Dumbbell,
+  Layers,
   LoaderCircle,
   Play,
-  Repeat2,
+  RefreshCcw,
+  Timer,
   Weight,
 } from "lucide-react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
-import { formatExerciseVolume } from "@/lib/platform/workout-session";
+import { formatExerciseVolume, formatWeightKg } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
-import { AnimatedMetricValue, AnimatedRepRange } from "./AnimatedMetricValue";
 import { SetLogBottomSheet } from "./SetLogBottomSheet";
 import { WorkoutCompleteScreen } from "./WorkoutCompleteScreen";
 
@@ -26,38 +25,52 @@ type ExercisePlayerViewProps = {
   player: WorkoutPlayerState;
 };
 
-function MetricPill({
-  icon: Icon,
-  label,
-  value,
-  number,
-  decimals = 0,
-  suffix = "",
-  range,
+function formatWeightLabel(kg: number) {
+  const value = formatWeightKg(kg);
+  return value === "—" ? "—" : `${value} كغ`;
+}
+
+function formatRestSeconds(seconds: number) {
+  if (seconds <= 0) return "—";
+  return `${seconds} ثانية`;
+}
+
+function ExerciseRxStrip({
+  sets,
+  reps,
+  weightLabel,
+  restLabel,
 }: {
-  icon: typeof Dumbbell;
-  label: string;
-  value?: string;
-  number?: number;
-  decimals?: number;
-  suffix?: string;
-  range?: { min: number; max: number };
+  sets: number;
+  reps: string;
+  weightLabel: string;
+  restLabel: string;
 }) {
+  const stats = [
+    { icon: Layers, label: "المجموعات", value: String(sets) },
+    { icon: RefreshCcw, label: "التكرارات", value: reps },
+    { icon: Weight, label: "الوزن", value: weightLabel },
+    { icon: Timer, label: "الراحة", value: restLabel },
+  ] as const;
+
   return (
-    <div className="rounded-2xl border border-border/50 bg-card px-2 py-2.5 text-center shadow-[0_8px_20px_-14px_rgba(15,23,42,0.16)]">
-      <span className="mx-auto grid h-9 w-9 place-items-center rounded-[12px] bg-gradient-to-b from-primary/18 to-primary/6 text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ring-1 ring-primary/20">
-        <Icon className="h-4 w-4" strokeWidth={1.75} />
-      </span>
-      <p className="mt-1.5 text-[13px] font-black leading-none tracking-tight text-foreground">
-        {range ? (
-          <AnimatedRepRange min={range.min} max={range.max} />
-        ) : typeof number === "number" ? (
-          <AnimatedMetricValue value={number} decimals={decimals} suffix={suffix} />
-        ) : (
-          value
-        )}
-      </p>
-      <p className="mt-1 text-[9px] font-bold text-muted-foreground">{label}</p>
+    <div className="rounded-[20px] bg-muted/90 px-2 py-3.5">
+      <div className="grid grid-cols-4 gap-1.5">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div key={stat.label} className="flex min-w-0 flex-col items-center text-center">
+              <Icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.85} />
+              <p className="mt-1.5 text-[11px] font-medium leading-none text-foreground/70">
+                {stat.label}
+              </p>
+              <p className="mt-1.5 max-w-full truncate text-[14px] font-black leading-none tracking-tight text-foreground">
+                {stat.value}
+              </p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -66,7 +79,6 @@ type PlayerExercise = NonNullable<WorkoutPlayerState["currentExercise"]>;
 
 function ExercisePlayerStage({
   sessionActive,
-  compact,
   currentExercise,
   exerciseIndex,
   totalExercises,
@@ -77,7 +89,6 @@ function ExercisePlayerStage({
   onStart,
 }: {
   sessionActive: boolean;
-  compact?: boolean;
   currentExercise: PlayerExercise;
   exerciseIndex: number;
   totalExercises: number;
@@ -140,8 +151,7 @@ function ExercisePlayerStage({
           >
             <div
               className={cn(
-                "relative overflow-hidden rounded-[24px] border border-border/60 bg-muted shadow-[0_12px_30px_-16px_rgba(15,23,42,0.25)]",
-                compact && "mx-auto aspect-square w-[min(100%,min(38dvh,300px))]",
+                "relative aspect-square w-full overflow-hidden rounded-[24px] border border-border/60 bg-muted shadow-[0_12px_30px_-16px_rgba(15,23,42,0.25)]",
               )}
             >
               {sessionActive ? (
@@ -155,7 +165,7 @@ function ExercisePlayerStage({
                   loop
                   aspect="square"
                   showCaption={false}
-                  className="rounded-[24px] border-0 shadow-none"
+                  className="absolute inset-0 h-full w-full rounded-[24px] border-0 shadow-none"
                 />
               ) : (
                 <button
@@ -178,6 +188,7 @@ function ExercisePlayerStage({
                   </span>
                 </button>
               )}
+              <span aria-hidden className="workout-video-electric" />
             </div>
           </motion.div>
         </AnimatePresence>
@@ -280,7 +291,8 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
           <>
             <div
               aria-hidden
-              style={{ height: dockH || "calc(min(38dvh, 300px) + 5.75rem)" }}
+              style={{ height: dockH || undefined }}
+              className={dockH ? undefined : "h-[calc(min(100%,var(--platform-frame-w))+5.75rem)]"}
             />
             {typeof document !== "undefined"
               ? createPortal(
@@ -299,7 +311,6 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                   >
                     <ExercisePlayerStage
                       sessionActive
-                      compact
                       currentExercise={currentExercise}
                       exerciseIndex={exerciseIndex}
                       totalExercises={meta.totalExercises}
@@ -338,27 +349,12 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
               transition={{ duration: 0.32 }}
               className="pt-3"
             >
-              <div className="grid grid-cols-3 gap-1.5">
-                <MetricPill
-                  icon={Repeat2}
-                  number={currentSetNumber}
-                  suffix={`/${currentExercise.sets}`}
-                  label="الجولات"
-                />
-                <MetricPill
-                  icon={Weight}
-                  number={currentSetTargets.weightKg > 0 ? currentSetTargets.weightKg : undefined}
-                  value={currentSetTargets.weightKg > 0 ? undefined : "—"}
-                  decimals={currentSetTargets.weightKg % 1 === 0 ? 0 : 1}
-                  suffix=" كجم"
-                  label={currentSetNumber > 1 ? "الوزن +10%" : "الوزن المقترح"}
-                />
-                <MetricPill
-                  icon={Activity}
-                  range={{ min: currentSetTargets.repsMin, max: currentSetTargets.repsMax }}
-                  label="عدد التكرارات"
-                />
-              </div>
+              <ExerciseRxStrip
+                sets={currentExercise.sets}
+                reps={`${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`}
+                weightLabel={formatWeightLabel(currentSetTargets.weightKg)}
+                restLabel={formatRestSeconds(currentExercise.restSeconds)}
+              />
 
               <section className="mt-3 rounded-[24px] border border-border/60 bg-card p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.14)]">
                   <p className="text-center text-[10px] font-bold text-primary">طريقة الأداء الصحيح</p>
@@ -369,23 +365,6 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     {currentExercise.coachNotes?.trim() ||
                       "حافظ على التحكم في الحركة، لا تتعجل التكرار، وتنفّس بثبات مع كل عدة. شاهد الفيديو أعلاه أثناء التنفيذ."}
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[10px] font-bold text-primary">
-                      {currentExercise.sets} مجموعات
-                    </span>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-bold text-foreground">
-                      {currentSetTargets.repsMin}–{currentSetTargets.repsMax} تكرار
-                    </span>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-bold text-foreground">
-                      راحة {currentExercise.restLabel}
-                    </span>
-                    {currentSetTargets.weightKg > 0 ? (
-                      <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-bold text-foreground">
-                        {currentSetTargets.weightKg} كجم
-                        {currentSetNumber > 1 ? " · +10%" : " مقترح"}
-                      </span>
-                    ) : null}
-                  </div>
 
                   {currentExercise.instructionsVideoPath ? (
                     <div className="mt-3 border-t border-border/50 pt-3">
@@ -420,16 +399,12 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
               transition={{ duration: 0.32 }}
               className="overflow-hidden pt-3"
             >
-              <div className="grid grid-cols-4 gap-1.5">
-                <MetricPill icon={Repeat2} value={String(currentExercise.sets)} label="مجموعات" />
-                <MetricPill icon={Activity} value={volumeLabel} label="تكرار" />
-                <MetricPill
-                  icon={Weight}
-                  value={currentExercise.suggestedWeightKg > 0 ? `${currentExercise.suggestedWeightKg} كجم` : "—"}
-                  label="الوزن المقترح"
-                />
-                <MetricPill icon={Dumbbell} value={String(meta.totalExercises)} label="تمارين" />
-              </div>
+              <ExerciseRxStrip
+                sets={currentExercise.sets}
+                reps={volumeLabel}
+                weightLabel={formatWeightLabel(currentExercise.suggestedWeightKg)}
+                restLabel={formatRestSeconds(currentExercise.restSeconds)}
+              />
 
               <section className="mt-4">
                 <h2 className="mb-2 text-[10px] font-black text-foreground">تمارين الحصة</h2>

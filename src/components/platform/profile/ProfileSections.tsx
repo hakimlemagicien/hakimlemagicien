@@ -295,7 +295,7 @@ export function ProfileGoalsProgramSection({ summary }: { summary: ProfileProgra
         <ProfileField label="بداية البرنامج" value={summary.programStart} />
       </ProfileFieldGrid>
       <p className="mt-3 text-[10px] font-medium text-muted-foreground">
-        البيانات من ملف التدريب النشط — لا يمكن تعديل الخطة المعتمدة مباشرة.
+        الهدف والجنس ثابتان بعد التسجيل. لطلب تغيير أي منهما تواصل مع المدرب.
       </p>
     </ProfileSectionCard>
   );

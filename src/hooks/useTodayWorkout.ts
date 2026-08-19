@@ -49,7 +49,7 @@ async function buildSessionExercise(
     id: details.id,
     external_id: details.external_id,
     name: details.name_ar,
-    muscle: details.primary_muscle ?? details.muscle_group.name_ar,
+    muscle: details.primary_muscle ?? details.muscle_group?.name_ar ?? "عضلة",
     sets: prescription.sets,
     reps: prescription.reps ?? null,
     durationSeconds: prescription.duration_seconds ?? details.duration_seconds ?? null,
@@ -87,13 +87,19 @@ async function fetchWorkoutDaySession(plan: WeekdayWorkoutPlan): Promise<TodayWo
   const byExternalId = new Map(rows.map((row) => [row.external_id, row]));
 
   const missingExternalIds = externalIds.filter((id) => !byExternalId.has(id));
-  const exercises: WorkoutSessionExercise[] = [];
-
-  for (const prescription of plan.prescriptions) {
-    const details = byExternalId.get(prescription.external_id);
-    if (!details) continue;
-    exercises.push(await buildSessionExercise(prescription, details));
-  }
+  const exercises = (
+    await Promise.all(
+      plan.prescriptions.map(async (prescription) => {
+        const details = byExternalId.get(prescription.external_id);
+        if (!details) return null;
+        try {
+          return await buildSessionExercise(prescription, details);
+        } catch {
+          return null;
+        }
+      }),
+    )
+  ).filter((item): item is WorkoutSessionExercise => item !== null);
 
   return {
     meta: {

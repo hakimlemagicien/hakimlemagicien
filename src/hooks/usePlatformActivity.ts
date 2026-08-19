@@ -41,10 +41,6 @@ export function usePlatformActivity() {
       applyFromUser(data.session?.user ?? null);
     });
 
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data.user) applyFromUser(data.user);
-    });
-
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       applyFromUser(session?.user ?? null);
     });

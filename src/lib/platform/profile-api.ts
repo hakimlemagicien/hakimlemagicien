@@ -45,7 +45,6 @@ export type PersonalInfoUpdate = {
   weightKg?: number | null;
   targetWeightKg?: number | null;
   activityLevel?: string | null;
-  gender?: "male" | "female" | null;
   birthDate?: string | null;
 };
 
@@ -234,7 +233,6 @@ export async function updateMyPersonalInfo(input: PersonalInfoUpdate): Promise<v
 
   const prevAnswers = (trainingRow?.answers ?? {}) as Record<string, unknown>;
   const nextAnswers = { ...prevAnswers };
-  if (input.gender !== undefined) nextAnswers.gender = input.gender;
   if (input.heightCm !== undefined) nextAnswers.heightCm = input.heightCm;
   if (input.weightKg !== undefined) nextAnswers.weightKg = input.weightKg;
   if (input.targetWeightKg !== undefined) nextAnswers.targetWeightKg = input.targetWeightKg;

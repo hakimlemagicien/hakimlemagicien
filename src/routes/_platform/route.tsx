@@ -1,33 +1,61 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, Outlet, redirect } from "@tanstack/react-router";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
 import { useMembership } from "@/hooks/useMembership";
 import { supabase } from "@/integrations/supabase/client";
 
+function errorDetail(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  if (typeof error === "string" && error.trim()) return error.trim();
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message.trim();
+  }
+  return "";
+}
+
 function PlatformErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  const detail = errorDetail(error);
+
   return (
-    <PlatformShell>
-      <div className="px-2 py-16 text-center">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
+      <div className="max-w-md text-center">
         <h1 className="text-xl font-black text-foreground">تعذر فتح الصفحة</h1>
-        <p className="mt-2 text-sm text-muted-foreground">حدث خطأ أثناء الانتقال. حاول مرة أخرى.</p>
-        <button
-          type="button"
-          onClick={reset}
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground"
-        >
-          إعادة المحاولة
-        </button>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {detail || "حدث خطأ أثناء الانتقال. حاول مرة أخرى."}
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              reset();
+              window.location.assign("/app");
+            }}
+            className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
       </div>
-    </PlatformShell>
+    </div>
   );
 }
 
 export const Route = createFileRoute("/_platform")({
   ssr: false,
+  staleTime: 5 * 60 * 1000,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) throw redirect({ to: "/auth" });
+      return { user: session.user };
+    } catch (error) {
+      if (isRedirect(error)) throw error;
+      console.error(error);
+      throw redirect({ to: "/auth" });
+    }
   },
   component: PlatformLayout,
   errorComponent: PlatformErrorComponent,

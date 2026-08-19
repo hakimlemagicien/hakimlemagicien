@@ -6,7 +6,15 @@ import { CalorieCalculatorSheet } from "@/components/platform/tools/CalorieCalcu
 import { ToolsProvider, useTools } from "@/components/platform/tools/ToolsContext";
 import { WaterBottomSheet } from "@/components/platform/water/WaterBottomSheet";
 import { WaterGoalFeedback, WaterUndoToast } from "@/components/platform/water/WaterFeedback";
+import { WaterReminderOverlay } from "@/components/platform/water/WaterReminderOverlay";
 import { WaterProvider } from "@/components/platform/water/WaterContext";
+import { ShellErrorBoundary } from "@/components/platform/shared/ShellErrorBoundary";
+import {
+  MenuDrawer,
+  MenuDrawerProvider,
+  MenuStage,
+  useMenuDrawer,
+} from "@/components/platform/shared/HeaderMenu";
 import { cn } from "@/lib/utils";
 import { PlatformFrame } from "./PlatformLayout";
 import { PlatformMobileNav, PlatformSidebar } from "./PlatformNav";
@@ -21,53 +29,77 @@ function CalorieCalculatorHost() {
   return <CalorieCalculatorSheet open={calorieSheetOpen} onClose={closeCalorieCalculator} />;
 }
 
-export function PlatformShell({ children }: PlatformShellProps) {
+function PlatformShellFrame({ children }: PlatformShellProps) {
   const location = useLocation();
+  const drawer = useMenuDrawer();
   const isStudioRoute = location.pathname.startsWith("/app/studio");
   const isCoachChatRoute = location.pathname.startsWith("/app/support/chat");
 
   return (
+    <div
+      dir="rtl"
+      lang="ar"
+      className={cn(
+        "platform-shell min-h-dvh font-sans text-foreground",
+        drawer?.open && "is-menu-open",
+      )}
+    >
+      <MenuDrawer />
+      <MenuStage>
+        <div
+          className={cn(
+            "platform-shell__layout mx-auto flex min-h-dvh w-full min-w-0 max-w-full overflow-x-clip",
+            isStudioRoute ? "max-w-none" : "max-w-7xl",
+          )}
+        >
+          <PlatformSidebar />
+          <div
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1 flex-col",
+              isCoachChatRoute && "h-full overflow-hidden",
+            )}
+          >
+            <main
+              className={cn(
+                "platform-main",
+                isStudioRoute && "platform-main--studio",
+                isCoachChatRoute && "platform-main--coach-chat",
+              )}
+            >
+              {isStudioRoute || isCoachChatRoute ? (
+                children
+              ) : (
+                <PlatformFrame>
+                  <PlatformPageTransition>{children}</PlatformPageTransition>
+                </PlatformFrame>
+              )}
+            </main>
+          </div>
+        </div>
+        {isCoachChatRoute ? null : <PlatformMobileNav />}
+      </MenuStage>
+      <div className="platform-shell__overlays">
+        <MembershipUpgradeSheet />
+        <CalorieCalculatorHost />
+        <ShellErrorBoundary>
+          <WaterBottomSheet />
+          <WaterReminderOverlay />
+          <WaterUndoToast />
+          <WaterGoalFeedback />
+        </ShellErrorBoundary>
+      </div>
+    </div>
+  );
+}
+
+export function PlatformShell({ children }: PlatformShellProps) {
+  return (
     <UpgradeProvider>
       <ToolsProvider>
         <WaterProvider>
-          <div dir="rtl" lang="ar" className="platform-shell min-h-dvh font-sans text-foreground">
-            <div
-              className={cn(
-                "platform-shell__layout mx-auto flex min-h-dvh w-full min-w-0 max-w-full overflow-x-clip",
-                isStudioRoute ? "max-w-none" : "max-w-7xl",
-              )}
-            >
-              <PlatformSidebar />
-              <div
-                className={cn(
-                  "flex min-h-0 min-w-0 flex-1 flex-col",
-                  isCoachChatRoute && "h-full overflow-hidden",
-                )}
-              >
-                <main
-                  className={cn(
-                    "platform-main",
-                    isStudioRoute && "platform-main--studio",
-                    isCoachChatRoute && "platform-main--coach-chat",
-                  )}
-                >
-                  {isStudioRoute || isCoachChatRoute ? (
-                    children
-                  ) : (
-                    <PlatformFrame>
-                      <PlatformPageTransition>{children}</PlatformPageTransition>
-                    </PlatformFrame>
-                  )}
-                </main>
-              </div>
-            </div>
-            {isCoachChatRoute ? null : <PlatformMobileNav />}
-            <MembershipUpgradeSheet />
-            <CalorieCalculatorHost />
-            <WaterBottomSheet />
-            <WaterUndoToast />
-            <WaterGoalFeedback />
-          </div>
+          <MenuDrawerProvider>
+            <PlatformShellFrame>{children}</PlatformShellFrame>
+          </MenuDrawerProvider>
         </WaterProvider>
       </ToolsProvider>
     </UpgradeProvider>

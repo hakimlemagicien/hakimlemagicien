@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, MoreVertical } from "lucide-react";
+import { Check, Lock, MoreVertical, Sparkles } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import {
   NUTRITION_DAY_LOCKED_REASON,
@@ -215,19 +216,10 @@ function MealDetailsPage() {
       <NutritionMotionSection delay={0.2} className="space-y-2.5">
         {unlocked ? (
           <>
-            <button
-              type="button"
-              disabled={isCompleted}
-              onClick={() => plan.markCompleted(slot.id)}
-              className={cn(
-                "flex h-12 w-full items-center justify-center rounded-2xl text-sm font-black shadow-cta transition active:scale-[0.98]",
-                isCompleted
-                  ? "bg-secondary text-secondary-foreground"
-                  : "bg-primary text-primary-foreground",
-              )}
-            >
-              {isCompleted ? "تم تسجيل الوجبة ✓" : "تم تناول الوجبة"}
-            </button>
+            <MealLogButton
+              completed={isCompleted}
+              onLog={() => plan.markCompleted(slot.id)}
+            />
             <Link
               to="/app/nutrition/alternatives"
               search={{ mealId: slot.id, date: plan.dateKey }}
@@ -265,6 +257,81 @@ function MealDetailsPage() {
     </PlatformStack>
   );
 }
+
+function MealLogButton({
+  completed,
+  onLog,
+}: {
+  completed: boolean;
+  onLog: () => void;
+}) {
+  const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    if (!opening) return;
+    const timer = window.setTimeout(() => setOpening(false), 1100);
+    return () => window.clearTimeout(timer);
+  }, [opening]);
+
+  return (
+    <button
+      type="button"
+      disabled={completed}
+      onClick={() => {
+        if (completed) return;
+        onLog();
+        setOpening(true);
+      }}
+      className={cn(
+        "meal-log-cta flex h-12 w-full items-center justify-center rounded-2xl text-sm font-black shadow-cta transition active:scale-[0.98]",
+        completed ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground",
+        opening && "is-opening",
+      )}
+    >
+      <span aria-hidden className="meal-log-cta__glow" />
+      <span aria-hidden className="meal-log-cta__lid" />
+      {MEAL_LOG_CONFETTI.map((piece) => (
+        <span
+          key={piece.id}
+          aria-hidden
+          className="meal-log-cta__piece"
+          style={{
+            background: piece.color,
+            borderRadius: piece.round ? "999px" : "2px",
+            animationDelay: `${piece.delay}s`,
+            ["--dx" as string]: piece.dx,
+            ["--dy" as string]: piece.dy,
+            ["--rot" as string]: piece.rot,
+          }}
+        />
+      ))}
+      <span className="relative z-[1] inline-flex items-center gap-1.5">
+        {completed ? (
+          <>
+            <Check className={cn("h-4 w-4", opening && "meal-log-cta__check")} strokeWidth={3} />
+            تم تسجيل الوجبة
+            {opening ? <Sparkles className="h-4 w-4 text-amber-200" strokeWidth={2.4} /> : null}
+          </>
+        ) : (
+          "تم تناول الوجبة"
+        )}
+      </span>
+    </button>
+  );
+}
+
+const MEAL_LOG_CONFETTI = [
+  { id: 1, color: "#F97316", dx: "-52px", dy: "-58px", rot: "-140deg", delay: 0, round: false },
+  { id: 2, color: "#FBBF24", dx: "-18px", dy: "-72px", rot: "80deg", delay: 0.04, round: true },
+  { id: 3, color: "#22C55E", dx: "28px", dy: "-68px", rot: "160deg", delay: 0.08, round: false },
+  { id: 4, color: "#FFFFFF", dx: "56px", dy: "-50px", rot: "40deg", delay: 0.05, round: true },
+  { id: 5, color: "#F97316", dx: "-64px", dy: "-22px", rot: "-80deg", delay: 0.1, round: true },
+  { id: 6, color: "#FBBF24", dx: "68px", dy: "-18px", rot: "210deg", delay: 0.12, round: false },
+  { id: 7, color: "#22C55E", dx: "-36px", dy: "-40px", rot: "120deg", delay: 0.02, round: false },
+  { id: 8, color: "#FFEDD5", dx: "12px", dy: "-78px", rot: "-40deg", delay: 0.14, round: true },
+  { id: 9, color: "#F97316", dx: "42px", dy: "-36px", rot: "90deg", delay: 0.07, round: false },
+  { id: 10, color: "#86EFAC", dx: "-8px", dy: "-54px", rot: "-200deg", delay: 0.16, round: true },
+] as const;
 
 function MacroBox({
   label,

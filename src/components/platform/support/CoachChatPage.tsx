@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import coachPortrait from "@/assets/Coach_Hakim_Branded_Profile_PNG/03_Black_Guidance.png";
 import { CoachChatComposer, type ChatComposerPayload } from "@/components/platform/support/CoachChatComposer";
@@ -32,6 +32,8 @@ import { cn } from "@/lib/utils";
 
 export function CoachChatPage() {
   const navigate = useNavigate();
+  const router = useRouter();
+  const { from } = useSearch({ from: "/_platform/app/support/chat" });
   const { features } = useMembership();
   const canChat = canUseCoachChat(features);
   const [available, setAvailable] = useState(() => isCoachAvailableAt());
@@ -42,6 +44,14 @@ export function CoachChatPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingPayloads = useRef(new Map<string, ChatComposerPayload>());
+
+  const goBack = useCallback(() => {
+    if (from) {
+      void navigate({ to: from });
+      return;
+    }
+    router.history.back();
+  }, [from, navigate, router.history]);
 
   useEffect(() => {
     const tick = () => setAvailable(isCoachAvailableAt());
@@ -150,9 +160,9 @@ export function CoachChatPage() {
     return (
       <div className="coach-chat coach-chat--locked">
         <header className="coach-chat__header">
-          <Link to="/app/support" className="coach-chat__icon-btn" aria-label="رجوع">
+          <button type="button" className="coach-chat__icon-btn" aria-label="رجوع" onClick={goBack}>
             <ChevronRight className="h-5 w-5" />
-          </Link>
+          </button>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-black">الدردشة مع الكوتش</p>
           </div>
@@ -168,7 +178,7 @@ export function CoachChatPage() {
   return (
     <div className="coach-chat">
       <header className="coach-chat__header">
-        <button type="button" className="coach-chat__icon-btn" aria-label="رجوع" onClick={() => navigate({ to: "/app/support" })}>
+        <button type="button" className="coach-chat__icon-btn" aria-label="رجوع" onClick={goBack}>
           <ChevronRight className="h-5 w-5" />
         </button>
         <span className="coach-chat__avatar">

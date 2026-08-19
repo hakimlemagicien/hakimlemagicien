@@ -11,11 +11,13 @@ export function ProfileBottomSheet({
   title,
   onClose,
   children,
+  panel,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  panel?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   if (typeof document === "undefined") return null;
@@ -35,7 +37,10 @@ export function ProfileBottomSheet({
             animate={{ y: 0 }}
             exit={reduceMotion ? undefined : { y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className="relative z-10 w-full max-w-lg rounded-t-[28px] bg-background px-5 pb-8 pt-4 shadow-2xl"
+            className={cn(
+              "relative z-10 w-full max-w-lg rounded-t-[28px] bg-background px-5 pb-8 pt-4 shadow-2xl",
+              panel && "flex max-h-[88dvh] flex-col",
+            )}
             role="dialog"
             aria-modal="true"
             aria-label={title}
@@ -46,7 +51,9 @@ export function ProfileBottomSheet({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {children}
+            <div className={cn(panel && "min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pb-2")}>
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       ) : null}
@@ -204,49 +211,57 @@ export function ProfileAvatarSheet({
 
 const inputClass =
   "h-11 w-full rounded-2xl border border-border/70 bg-muted/30 px-3 text-sm font-bold outline-none focus:border-primary/40";
+const lockedClass =
+  "h-11 w-full cursor-not-allowed rounded-2xl border border-border/50 bg-muted/50 px-3 text-sm font-bold text-muted-foreground";
 
-export function ProfileEditInfoSheet({
-  open,
+function genderLabel(value: "male" | "female" | null | undefined): string {
+  if (value === "male") return "ذكر";
+  if (value === "female") return "أنثى";
+  return "غير محدد";
+}
+
+export function ProfilePersonalInfoForm({
+  active = true,
   profile,
   training,
+  currentGoal,
   saving,
-  onClose,
   onSave,
+  onSaved,
 }: {
-  open: boolean;
+  active?: boolean;
   profile: ProfileDetails | null;
   training: TrainingProfileSnapshot | null;
+  currentGoal: string;
   saving: boolean;
-  onClose: () => void;
   onSave: (input: PersonalInfoUpdate) => Promise<void>;
+  onSaved?: () => void;
 }) {
-  const answers = training?.answers ?? {};
+  const answers = training?.answers;
   const [fullName, setFullName] = useState(profile?.fullName ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
   const [country, setCountry] = useState(profile?.country ?? "");
-  const [heightCm, setHeightCm] = useState(answers.heightCm?.toString() ?? "");
-  const [weightKg, setWeightKg] = useState(answers.weightKg?.toString() ?? "");
-  const [targetWeightKg, setTargetWeightKg] = useState(answers.targetWeightKg?.toString() ?? "");
-  const [activityLevel, setActivityLevel] = useState(answers.activityLevel ?? "");
-  const [gender, setGender] = useState<"male" | "female" | "">(answers.gender ?? "");
-  const [birthDate, setBirthDate] = useState(answers.birthDate ?? "");
+  const [heightCm, setHeightCm] = useState(answers?.heightCm?.toString() ?? "");
+  const [weightKg, setWeightKg] = useState(answers?.weightKg?.toString() ?? "");
+  const [targetWeightKg, setTargetWeightKg] = useState(answers?.targetWeightKg?.toString() ?? "");
+  const [activityLevel, setActivityLevel] = useState(answers?.activityLevel ?? "");
+  const [birthDate, setBirthDate] = useState(answers?.birthDate ?? "");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!active) return;
     setFullName(profile?.fullName ?? "");
     setPhone(profile?.phone ?? "");
     setCity(profile?.city ?? "");
     setCountry(profile?.country ?? "");
-    setHeightCm(answers.heightCm?.toString() ?? "");
-    setWeightKg(answers.weightKg?.toString() ?? "");
-    setTargetWeightKg(answers.targetWeightKg?.toString() ?? "");
-    setActivityLevel(answers.activityLevel ?? "");
-    setGender(answers.gender ?? "");
-    setBirthDate(answers.birthDate ?? "");
+    setHeightCm(answers?.heightCm?.toString() ?? "");
+    setWeightKg(answers?.weightKg?.toString() ?? "");
+    setTargetWeightKg(answers?.targetWeightKg?.toString() ?? "");
+    setActivityLevel(answers?.activityLevel ?? "");
+    setBirthDate(answers?.birthDate ?? "");
     setError(null);
-  }, [open, profile, training, answers]);
+  }, [active, profile, training, answers]);
 
   const submit = async () => {
     setError(null);
@@ -271,88 +286,123 @@ export function ProfileEditInfoSheet({
         weightKg: weight,
         targetWeightKg: target,
         activityLevel: activityLevel || null,
-        gender: gender || null,
         birthDate: birthDate || null,
       });
-      onClose();
+      onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر الحفظ");
     }
   };
 
   return (
+    <div className="space-y-3 pb-2">
+      <label className="block">
+        <span className="mb-1 block text-xs font-black">الاسم الكامل</span>
+        <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-xs font-black">الهاتف</span>
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" className={inputClass} />
+      </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الجنس</span>
+          <input value={genderLabel(answers?.gender)} readOnly disabled className={lockedClass} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الهدف</span>
+          <input value={currentGoal || "غير محدد"} readOnly disabled className={lockedClass} />
+        </label>
+      </div>
+      <p className="text-[10px] font-medium text-muted-foreground">
+        الجنس والهدف لا يمكن تغييرهما. لطلب مراجعة تواصل مع المدرب.
+      </p>
+      <label className="block">
+        <span className="mb-1 block text-xs font-black">تاريخ الميلاد</span>
+        <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputClass} />
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الطول</span>
+          <input inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className={inputClass} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الوزن</span>
+          <input inputMode="numeric" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className={inputClass} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الوزن المستهدف</span>
+          <input
+            inputMode="numeric"
+            value={targetWeightKg}
+            onChange={(e) => setTargetWeightKg(e.target.value)}
+            className={inputClass}
+          />
+        </label>
+      </div>
+      <label className="block">
+        <span className="mb-1 block text-xs font-black">مستوى النشاط</span>
+        <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className={inputClass}>
+          <option value="">غير محدد</option>
+          <option value="sedentary">قليل الحركة</option>
+          <option value="light">نشاط خفيف</option>
+          <option value="moderate">نشاط متوسط</option>
+          <option value="active">نشط</option>
+          <option value="very_active">نشط جداً</option>
+        </select>
+      </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">المدينة</span>
+          <input value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-black">الدولة</span>
+          <input value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} />
+        </label>
+      </div>
+      {error ? <p className="text-xs font-bold text-destructive">{error}</p> : null}
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => void submit()}
+        className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground disabled:opacity-50"
+      >
+        {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
+      </button>
+    </div>
+  );
+}
+
+export function ProfileEditInfoSheet({
+  open,
+  profile,
+  training,
+  currentGoal,
+  saving,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  profile: ProfileDetails | null;
+  training: TrainingProfileSnapshot | null;
+  currentGoal: string;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (input: PersonalInfoUpdate) => Promise<void>;
+}) {
+  return (
     <ProfileBottomSheet open={open} title="تعديل المعلومات" onClose={onClose}>
-      <div className="max-h-[60vh] space-y-3 overflow-y-auto pb-2">
-        <label className="block">
-          <span className="mb-1 block text-xs font-black">الاسم الكامل</span>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-black">الهاتف</span>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">الجنس</span>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value as "male" | "female" | "")}
-              className={inputClass}
-            >
-              <option value="">غير محدد</option>
-              <option value="male">ذكر</option>
-              <option value="female">أنثى</option>
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">تاريخ الميلاد</span>
-            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputClass} />
-          </label>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">الطول</span>
-            <input inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className={inputClass} />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">الوزن</span>
-            <input inputMode="numeric" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className={inputClass} />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">الهدف</span>
-            <input inputMode="numeric" value={targetWeightKg} onChange={(e) => setTargetWeightKg(e.target.value)} className={inputClass} />
-          </label>
-        </div>
-        <label className="block">
-          <span className="mb-1 block text-xs font-black">مستوى النشاط</span>
-          <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className={inputClass}>
-            <option value="">غير محدد</option>
-            <option value="sedentary">قليل الحركة</option>
-            <option value="light">نشاط خفيف</option>
-            <option value="moderate">نشاط متوسط</option>
-            <option value="active">نشط</option>
-            <option value="very_active">نشط جداً</option>
-          </select>
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">المدينة</span>
-            <input value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-black">الدولة</span>
-            <input value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass} />
-          </label>
-        </div>
-        {error ? <p className="text-xs font-bold text-destructive">{error}</p> : null}
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => void submit()}
-          className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground disabled:opacity-50"
-        >
-          {saving ? "جاري الحفظ..." : "حفظ التغييرات"}
-        </button>
+      <div className="max-h-[60vh] overflow-y-auto">
+        <ProfilePersonalInfoForm
+          active={open}
+          profile={profile}
+          training={training}
+          currentGoal={currentGoal}
+          saving={saving}
+          onSave={onSave}
+          onSaved={onClose}
+        />
       </div>
     </ProfileBottomSheet>
   );

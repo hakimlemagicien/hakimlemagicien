@@ -16,6 +16,10 @@ import {
 import { readNutritionPlanStore } from "@/lib/platform/nutrition-plan-storage";
 import { recordActivityEvent } from "@/lib/platform/progress-storage";
 import {
+  getProfileSettings,
+  subscribeProfileSettings,
+} from "@/lib/platform/profile-settings-storage";
+import {
   playGoalSplashSound,
   playWaterDropSound,
   playWaterReminderSound,
@@ -26,10 +30,13 @@ import {
   getRecentWaterLogs,
   getWaterDayState,
   getWaterMotivationMessage,
+  getWaterReminderAnchor,
   migrateLegacyWaterLogs,
   todayKey,
   undoLastWater,
   WATER_CHANGE_EVENT,
+  WATER_REMINDER_MS,
+  writeWaterReminderAnchor,
   type WaterDayState,
   type WaterLogEntry,
 } from "@/lib/platform/water-storage";
@@ -49,8 +56,10 @@ type WaterContextValue = {
   pendingUndo: UndoState | null;
   goalCelebration: boolean;
   reminderPulse: boolean;
+  reminderOpen: boolean;
   openWaterSheet: () => void;
   closeWaterSheet: () => void;
+  skipWaterReminder: () => void;
   registerWater: (ml: number) => Promise<boolean>;
   undoLastEntry: () => void;
   dismissGoalCelebration: () => void;
@@ -68,9 +77,15 @@ export function WaterProvider({ children }: { children: ReactNode }) {
   const [pendingUndo, setPendingUndo] = useState<UndoState | null>(null);
   const [goalCelebration, setGoalCelebration] = useState(false);
   const [reminderPulse, setReminderPulse] = useState(false);
+  const [reminderOpen, setReminderOpen] = useState(false);
   const addingRef = useRef(false);
   const undoTimerRef = useRef<number | null>(null);
   const reminderClearRef = useRef<number | null>(null);
+  const reminderOpenRef = useRef(false);
+  const sheetOpenRef = useRef(false);
+
+  reminderOpenRef.current = reminderOpen;
+  sheetOpenRef.current = sheetOpen;
 
   const refresh = useCallback(() => setTick((value) => value + 1), []);
 
@@ -81,8 +96,8 @@ export function WaterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? "guest");
+    void supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? "guest");
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserId(session?.user?.id ?? "guest");
@@ -124,30 +139,71 @@ export function WaterProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (state.goalReached) {
+      setReminderOpen(false);
       setReminderPulse(false);
       return;
     }
 
-    const hourMs = 60 * 60 * 1000;
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timer = 0;
+    let cancelled = false;
 
-    const fireReminder = () => {
-      if (document.visibilityState !== "visible") return;
-      if (prefersReduced) return;
-      playWaterReminderSound();
-      setReminderPulse(true);
+    const clearPulseLater = () => {
       if (reminderClearRef.current) window.clearTimeout(reminderClearRef.current);
       reminderClearRef.current = window.setTimeout(() => setReminderPulse(false), 2400);
     };
 
-    const timer = window.setInterval(fireReminder, hourMs);
+    const schedule = (ms: number) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(run, Math.max(ms, 250));
+    };
+
+    const run = () => {
+      if (cancelled) return;
+      const enabled = getProfileSettings().notifications.waterReminders;
+      if (!enabled || getWaterDayState(userId).goalReached) {
+        setReminderOpen(false);
+        setReminderPulse(false);
+        return;
+      }
+      if (document.visibilityState !== "visible") {
+        schedule(12_000);
+        return;
+      }
+      if (sheetOpenRef.current || reminderOpenRef.current) {
+        schedule(4000);
+        return;
+      }
+
+      const dateKey = todayKey();
+      const wait = getWaterReminderAnchor(userId, dateKey) + WATER_REMINDER_MS - Date.now();
+      if (wait > 0) {
+        schedule(wait);
+        return;
+      }
+
+      writeWaterReminderAnchor(userId, Date.now(), dateKey);
+      playWaterReminderSound();
+      setReminderOpen(true);
+      setReminderPulse(true);
+      clearPulseLater();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") schedule(400);
+    };
+
+    schedule(800);
+    document.addEventListener("visibilitychange", onVisibility);
+    const unsubscribeSettings = subscribeProfileSettings(() => schedule(200));
+
     return () => {
-      window.clearInterval(timer);
+      cancelled = true;
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+      unsubscribeSettings();
       if (reminderClearRef.current) window.clearTimeout(reminderClearRef.current);
     };
-  }, [state.goalReached, state.totalMl]);
+  }, [state.goalReached, userId]);
 
   const openWaterSheet = useCallback(() => {
     primeWaterAudio();
@@ -159,6 +215,12 @@ export function WaterProvider({ children }: { children: ReactNode }) {
     setSheetOpen(false);
     setError(null);
   }, []);
+
+  const skipWaterReminder = useCallback(() => {
+    writeWaterReminderAnchor(userId);
+    setReminderOpen(false);
+    setReminderPulse(false);
+  }, [userId]);
 
   const registerWater = useCallback(
     async (ml: number) => {
@@ -198,6 +260,8 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       }
 
       setPendingUndo({ ml, expiresAt: Date.now() + 5000 });
+      writeWaterReminderAnchor(userId);
+      setReminderOpen(false);
       refresh();
 
       window.setTimeout(() => {
@@ -227,8 +291,10 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       pendingUndo,
       goalCelebration,
       reminderPulse,
+      reminderOpen,
       openWaterSheet,
       closeWaterSheet,
+      skipWaterReminder,
       registerWater,
       undoLastEntry,
       dismissGoalCelebration: () => setGoalCelebration(false),
@@ -244,8 +310,10 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       pendingUndo,
       goalCelebration,
       reminderPulse,
+      reminderOpen,
       openWaterSheet,
       closeWaterSheet,
+      skipWaterReminder,
       registerWater,
       undoLastEntry,
     ],

@@ -114,15 +114,19 @@ export function WaterRing({
   pct,
   done,
   size = 88,
+  tone = "brand",
 }: {
   pct: number;
   done?: boolean;
   size?: number;
+  tone?: "brand" | "water";
 }) {
   const reduceMotion = useReducedMotion();
   const radius = (size - 10) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - Math.min(pct, 1));
+  const track = tone === "water" ? "#E0F2FE" : "#FFF1E6";
+  const stroke = done ? "#22C55E" : tone === "water" ? "#0EA5E9" : "#F97316";
 
   return (
     <svg width={size} height={size} className="-rotate-90" aria-hidden>
@@ -131,7 +135,7 @@ export function WaterRing({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="#FFF1E6"
+        stroke={track}
         strokeWidth={size > 40 ? 8 : 4}
       />
       <motion.circle
@@ -139,7 +143,7 @@ export function WaterRing({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke={done ? "#22C55E" : "#F97316"}
+        stroke={stroke}
         strokeWidth={size > 40 ? 8 : 4}
         strokeLinecap="round"
         strokeDasharray={circumference}

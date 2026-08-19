@@ -15,12 +15,10 @@ export function useMembership() {
   const query = useQuery({
     queryKey: MEMBERSHIP_QUERY_KEY,
     queryFn: fetchMembershipState,
-    staleTime: 15_000,
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 1,
-    // Keep membership fresh without manual page refresh.
-    refetchInterval: 20_000,
     // Never blank the platform while membership loads / refreshes.
     placeholderData: DEFAULT_STATE,
   });
