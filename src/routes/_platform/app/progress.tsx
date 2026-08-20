@@ -32,7 +32,7 @@ import {
 } from "@/lib/platform/progress-storage";
 
 export const Route = createFileRoute("/_platform/app/progress")({
-  head: () => ({ meta: [{ title: "التقدم | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "التقدم | MAAKFIT" }] }),
   component: ProgressDashboardPage,
 });
 
@@ -184,7 +184,7 @@ function ProgressDashboardPage() {
       />
       <ProgressDetailSheet
         open={detailSheet === "points"}
-        title="Hakim Points"
+        title="MAAKFIT Points"
         body="تُمنح النقاط عند إكمال التمارين، الالتزام الغذائي، تحقيق هدف الماء، تحديث القياسات، ورفع صور التقدم — وليس لتسجيل الدخول فقط."
         onClose={() => setDetailSheet(null)}
       />

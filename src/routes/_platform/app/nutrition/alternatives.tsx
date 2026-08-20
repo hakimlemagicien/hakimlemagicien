@@ -30,7 +30,7 @@ type AlternativesSearch = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/alternatives")({
-  head: () => ({ meta: [{ title: "بدائل الوجبة | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "بدائل الوجبة | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): AlternativesSearch => ({
     mealId: typeof search.mealId === "string" ? search.mealId : "breakfast",
     date: typeof search.date === "string" ? search.date : undefined,

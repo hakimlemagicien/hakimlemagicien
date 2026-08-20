@@ -61,7 +61,7 @@ function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }
 }
 
 export const Route = createFileRoute("/_platform/app/program/workout/")({
-  head: () => ({ meta: [{ title: "تمرين اليوم | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تمرين اليوم | MAAKFIT" }] }),
   component: WorkoutDayPage,
   errorComponent: WorkoutRouteError,
 });

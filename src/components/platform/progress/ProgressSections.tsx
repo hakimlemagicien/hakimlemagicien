@@ -463,7 +463,7 @@ export function MonthlySummarySection({ summary }: { summary: ProgressDashboardD
         <SummaryStat label="تمارين" value={String(summary.workouts)} />
         <SummaryStat label="وجبات" value={String(summary.meals)} />
         <SummaryStat label="أيام ماء" value={String(summary.waterDays)} />
-        <SummaryStat label="Hakim Points" value={summary.points.toLocaleString("en-US")} />
+        <SummaryStat label="MAAKFIT Points" value={summary.points.toLocaleString("en-US")} />
       </div>
       <div className="grid grid-cols-2 gap-2 text-right">
         <div className="rounded-2xl bg-muted/45 px-3 py-2.5">
@@ -623,7 +623,7 @@ export function PhotoCaptureFlow({
             <label className="mt-4 flex items-start gap-2 rounded-2xl bg-muted/45 p-3 text-[11px]">
               <input type="checkbox" checked={consent} onChange={(e) => onToggleConsent(e.target.checked)} className="mt-0.5" />
               <span>
-                أوافق على مراجعة صور تقدمي لاستخدامها المحتمل ضمن قصص نجاح Hakim Coaching. (اختياري — غير مفعّل
+                أوافق على مراجعة صور تقدمي لاستخدامها المحتمل ضمن قصص نجاح MAAKFIT. (اختياري — غير مفعّل
                 افتراضياً)
               </span>
             </label>

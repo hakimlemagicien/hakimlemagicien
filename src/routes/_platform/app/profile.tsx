@@ -57,7 +57,7 @@ import { setMarketingPhotoConsent } from "@/lib/platform/progress-storage";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_platform/app/profile")({
-  head: () => ({ meta: [{ title: "الملف الشخصي | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "الملف الشخصي | MAAKFIT" }] }),
   component: ProfilePage,
 });
 

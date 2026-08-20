@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
   const emailResult = await sendAdminNotificationEmail({
     to: adminEmail,
-    subject: `[Hakim Coaching] إيصال تحويل جديد — ${lead.full_name ?? lead.email ?? leadId}`,
+    subject: `[MAAKFIT] إيصال تحويل جديد — ${lead.full_name ?? lead.email ?? leadId}`,
     html,
   });
 

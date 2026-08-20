@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "تسجيل الدخول | Hakim Coaching" }] }),
+  head: () => ({ meta: [{ title: "تسجيل الدخول | MAAKFIT" }] }),
   component: AuthPage,
 });
 
@@ -139,8 +139,7 @@ function AuthPage() {
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md lg:max-w-lg">
         <Link to="/" className="block text-center mb-6">
-          <span className="text-2xl font-black text-foreground">HAKIM</span>
-          <span className="mx-2 text-primary font-bold">COACHING</span>
+          <span className="text-2xl font-black text-foreground">MAAKFIT</span>
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">

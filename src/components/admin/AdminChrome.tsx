@@ -14,7 +14,7 @@ export function AdminChrome({
     <div className="admin-shell" dir="rtl">
       <header className="admin-shell__top">
         <div>
-          <p className="admin-shell__kicker">Hakim Admin</p>
+          <p className="admin-shell__kicker">MAAKFIT Admin</p>
           <h1>{title}</h1>
           {subtitle ? <p className="admin-shell__sub">{subtitle}</p> : null}
         </div>

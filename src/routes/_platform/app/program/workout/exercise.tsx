@@ -27,7 +27,7 @@ function parseDayId(value: unknown): WeekdayId {
 }
 
 export const Route = createFileRoute("/_platform/app/program/workout/exercise")({
-  head: () => ({ meta: [{ title: "تمرين الحصة | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تمرين الحصة | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): ExercisePlayerSearch => ({
     exerciseId: typeof search.exerciseId === "string" ? search.exerciseId : undefined,
     index:

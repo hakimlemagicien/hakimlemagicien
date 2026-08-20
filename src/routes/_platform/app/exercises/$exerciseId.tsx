@@ -23,7 +23,7 @@ import {
 import { guardExerciseLibraryRoute } from "@/lib/platform/exercise-library-route-guard";
 
 export const Route = createFileRoute("/_platform/app/exercises/$exerciseId")({
-  head: () => ({ meta: [{ title: "تفاصيل التمرين | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل التمرين | MAAKFIT" }] }),
   beforeLoad: guardExerciseLibraryRoute,
   component: ExerciseDetailsPage,
 });

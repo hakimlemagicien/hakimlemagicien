@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     `;
     const emailResult = await sendAdminNotificationEmail({
       to: adminEmail,
-      subject: `[Hakim Coaching] رسالة جديدة — ${profile?.full_name ?? "عميل"}`,
+      subject: `[MAAKFIT] رسالة جديدة — ${profile?.full_name ?? "عميل"}`,
       html,
     });
     return jsonResponse({ ok: true, emailSent: emailResult.sent, reason: emailResult.reason });
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
   `;
   const emailResult = await sendAdminNotificationEmail({
     to: member.email,
-    subject: "رد من الكوتش حكيم — Hakim Coaching",
+    subject: "رد من الكوتش حكيم — MAAKFIT",
     html,
   });
   return jsonResponse({ ok: true, emailSent: emailResult.sent, reason: emailResult.reason });

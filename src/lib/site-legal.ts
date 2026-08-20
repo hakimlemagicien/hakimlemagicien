@@ -1,4 +1,9 @@
-export const SITE_BRAND = "Hakim Le Magicien";
+/** Product / platform brand (user-facing). */
+export const SITE_BRAND = "MAAKFIT";
+/** Human coach identity inside MAAKFIT — do not treat as product brand. */
+export const SITE_COACH_NAME = "Coach Hakim";
+export const SITE_COACH_NAME_AR = "الكوتش حكيم";
+/** Legal entity name — unchanged until the dedicated legal package lands. */
 export const SITE_LEGAL_ENTITY = "Hakim Coaching FZ-LLC";
 export const SITE_JURISDICTION = "الإمارات العربية المتحدة";
 export const SITE_SUPPORT_EMAIL = "support@hakimlemagicien.com";

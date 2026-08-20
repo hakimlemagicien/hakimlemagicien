@@ -68,7 +68,7 @@ export async function generateAndEmailAccessLink(
       <div dir="rtl" style="font-family: Tajawal, Arial, sans-serif; max-width: 560px; margin: 0 auto;">
         <h2 style="color: #0F172A;">مرحباً ${options.fullName ?? ""}</h2>
         <p style="color: #475569; line-height: 1.7;">
-          اضغط الزر أدناه للوصول إلى برنامجك على موقع الكوتش حكيم.
+          اضغط الزر أدناه للوصول إلى برنامجك على MAAKFIT.
         </p>
         <p style="text-align: center; margin: 28px 0;">
           <a href="${actionLink}"

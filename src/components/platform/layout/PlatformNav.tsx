@@ -176,7 +176,7 @@ export function PlatformSidebar() {
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:border-l md:border-border md:bg-sidebar md:px-4 md:py-6">
       <div className="mb-8 px-2">
-        <p className="text-xs font-bold tracking-[0.2em] text-primary">HAKIM</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-primary">MAAKFIT</p>
         <p className="text-lg font-black text-foreground">Platform</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1">

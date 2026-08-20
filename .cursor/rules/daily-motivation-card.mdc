@@ -1,5 +1,5 @@
 ---
-description: Daily Motivation Card — streak, Hakim Points, next mission; home first card
+description: Daily Motivation Card — streak, MAAKFIT Points, next mission; home first card
 globs: src/components/platform/home/**/*.tsx,src/lib/platform/daily-motivation.ts,src/hooks/useStreak.ts,src/routes/_platform/app/index.tsx,src/routes/_platform/app/achievements.tsx
 alwaysApply: false
 ---
@@ -11,7 +11,7 @@ First card on `/app` home. Not a stats strip — the daily return engine.
 ## Required content
 
 1. **سلسلة الإنجاز** (streak) + dynamic motivation copy — never frame as “login days”
-2. **Hakim Points** — official currency label (not «النقاط»)
+2. **MAAKFIT Points** — official currency label (not «النقاط»)
 3. **المهمة التالية** — one dynamic next action from task state (+ points hint)
 
 ## Rules

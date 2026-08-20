@@ -1,5 +1,5 @@
 /**
- * Pricing & Activation Strategy — Hakim Coaching (CEO official)
+ * Pricing & Activation Strategy — MAAKFIT (CEO official)
  *
  * Philosophy: we do not sell a subscription — we activate a personal program
  * inside an Arabic digital coaching platform.

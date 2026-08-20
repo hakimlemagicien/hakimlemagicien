@@ -11,7 +11,7 @@ import {
 } from "@/lib/platform/daily-motivation";
 
 export const Route = createFileRoute("/_platform/app/achievements")({
-  head: () => ({ meta: [{ title: "الإنجازات | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "الإنجازات | MAAKFIT" }] }),
   component: AchievementsPage,
 });
 
@@ -43,7 +43,7 @@ function AchievementsPage() {
         <div className="min-w-0 flex-1">
           <PlatformPageHeader
             title="الإنجازات"
-            subtitle="سلسلة الإنجاز وHakim Points في مكان واحد"
+            subtitle="سلسلة الإنجاز وMAAKFIT Points في مكان واحد"
           />
         </div>
       </div>

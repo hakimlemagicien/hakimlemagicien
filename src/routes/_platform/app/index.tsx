@@ -29,7 +29,7 @@ import {
 import { readHomeGoalContext, resolveHeroGoalImage } from "@/lib/platform/hero-goal-images";
 
 export const Route = createFileRoute("/_platform/app/")({
-  head: () => ({ meta: [{ title: "الرئيسية | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "الرئيسية | MAAKFIT" }] }),
   component: PlatformHomePage,
 });
 

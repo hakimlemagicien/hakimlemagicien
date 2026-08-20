@@ -103,7 +103,7 @@ export function HomePersonalNutritionCard() {
         <button
           type="button"
           className="platform-home-nutrition__more"
-          onClick={() => openUpgrade("اعرف المزيد عن باقات Hakim Coaching.")}
+          onClick={() => openUpgrade("اعرف المزيد عن باقات MAAKFIT.")}
         >
           اعرف المزيد عن الباقات
           <ChevronLeft className="h-4 w-4" aria-hidden />

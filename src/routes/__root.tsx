@@ -84,26 +84,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#FF6B00" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "author", content: "Hakim Coaching" },
+      { name: "apple-mobile-web-app-title", content: "MAAKFIT" },
+      { name: "application-name", content: "MAAKFIT" },
+      { name: "author", content: "MAAKFIT" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
-      { property: "og:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
-      { name: "twitter:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
+      { title: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
+      { property: "og:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
+      { name: "twitter:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
       {
         name: "description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         name: "twitter:description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:image",

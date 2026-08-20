@@ -76,8 +76,9 @@ function Logo() {
         H
       </span>
       <span className="flex flex-col leading-tight">
-        <span className="text-lg max-lg:text-base font-black tracking-tight text-foreground">HAKIM</span>
-        <span className="text-[10px] font-bold tracking-[0.25em] text-primary">COACHING</span>
+        <span className="text-lg max-lg:text-base font-black tracking-tight text-foreground">
+          MAAKFIT
+        </span>
       </span>
     </Link>
   );

@@ -579,7 +579,7 @@ export function ProfileAboutSection() {
   return (
     <ProfileSectionCard title="عن المنصة">
       <div className="space-y-2 text-sm">
-        <p className="font-black text-foreground">Hakim Coaching</p>
+        <p className="font-black text-foreground">MAAKFIT</p>
         <p className="text-xs font-bold text-muted-foreground">الإصدار {getAppBuildVersion()}</p>
       </div>
       <div className="mt-3 divide-y divide-border/50">
@@ -604,7 +604,7 @@ export function ProfileAboutSection() {
           href={SITE_WHATSAPP_URL}
         />
       </div>
-      <p className="mt-3 text-[10px] text-muted-foreground">© {new Date().getFullYear()} Hakim Coaching</p>
+      <p className="mt-3 text-[10px] text-muted-foreground">© {new Date().getFullYear()} MAAKFIT</p>
     </ProfileSectionCard>
   );
 }

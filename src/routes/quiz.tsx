@@ -130,7 +130,7 @@ export const Route = createFileRoute("/quiz")({
   }),
   head: () => ({
     meta: [
-      { title: "ابدأ تقييمك المجاني — Hakim Coaching" },
+      { title: "ابدأ تقييمك المجاني — MAAKFIT" },
       { name: "description", content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة." },
     ],
   }),
