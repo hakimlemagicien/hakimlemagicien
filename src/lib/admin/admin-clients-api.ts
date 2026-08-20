@@ -63,6 +63,10 @@ export type AdminClientOverview = {
     template_version: number;
     status: string;
     assigned_at: string;
+    starts_on?: string | null;
+    name_ar?: string | null;
+    duration_weeks?: number | null;
+    snapshot_complete?: boolean | null;
   } | null;
   last_workout_at: string | null;
   notes_count: number;

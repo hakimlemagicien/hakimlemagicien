@@ -56,6 +56,16 @@ const LIBRARY_ERROR_MESSAGES: Record<string, string> = {
   summary_required: "الملخص مطلوب قبل النشر.",
   schedule_required: "حدد وقت النشر للمحتوى المجدول.",
   name_ar_required: "الاسم العربي مطلوب.",
+  invalid_client: "العميل غير موجود.",
+  template_not_found: "القالب غير موجود.",
+  template_not_assignable: "لا يمكن تعيين قالب غير منشور أو مؤرشف.",
+  template_empty: "القالب بلا أسابيع ولا يمكن تعيينه.",
+  active_assignment_exists: "يوجد برنامج نشط. أكّد الاستبدال أولاً.",
+  scheduled_assignment_exists: "يوجد برنامج مجدول. أكّد الاستبدال أولاً.",
+  assignment_not_editable: "لا يمكن تعديل برنامج غير نشط أو غير مجدول.",
+  invalid_assignment_status: "حالة البرنامج غير صالحة.",
+  invalid_sets: "عدد المجموعات يجب أن يكون أكبر من صفر.",
+  invalid_rest: "وقت الراحة لا يمكن أن يكون سالباً.",
 };
 
 export function clampAdminLibraryLimit(limit: number, max = ADMIN_LIBRARY_PAGE_SIZE): number {

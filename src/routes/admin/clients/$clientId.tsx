@@ -8,13 +8,14 @@ import {
   AdminSection,
   AdminStatusBadge,
 } from "@/components/admin/AdminPage";
+import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
 import {
   AdminConfirmDialog,
   AdminSkeletonRows,
   type AdminConfirmRequest,
 } from "@/components/admin/AdminConfirmDialog";
 import { fetchAdminClientOverview, type AdminClientOverview } from "@/lib/admin/admin-clients-api";
-import { CLIENT_360_SECTIONS, PROGRAM_BOUNDARIES, type Client360Section } from "@/lib/admin/admin-architecture";
+import { CLIENT_360_SECTIONS, type Client360Section } from "@/lib/admin/admin-architecture";
 import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
 import {
   addAdminClientNote,
@@ -23,6 +24,12 @@ import {
   listAdminClientNotes,
   type AdminCoachNote,
 } from "@/lib/admin/admin-notes-api";
+import {
+  assignmentStatusLabel,
+  currentWeekNumber,
+  objectiveSignalLabel,
+  objectiveTrainingSignals,
+} from "@/lib/admin/admin-client-training";
 import {
   formatAdminDate,
   formatRelativeAge,
@@ -293,8 +300,27 @@ function AdminClient360Page() {
                       <dt>برنامج معيَّن</dt>
                       <dd>
                         {overview.assignment
-                          ? `نسخة ${overview.assignment.template_version} — ${overview.assignment.status}`
+                          ? `${overview.assignment.name_ar ?? "برنامج"} · ${assignmentStatusLabel(overview.assignment.status)} · إصدار ${overview.assignment.template_version}`
                           : "لا تعيين"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>بداية البرنامج</dt>
+                      <dd>{overview.assignment?.starts_on ? formatAdminDate(overview.assignment.starts_on) : "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>الأسبوع الحالي</dt>
+                      <dd>
+                        {overview.assignment?.starts_on &&
+                        currentWeekNumber({
+                          startsOn: overview.assignment.starts_on,
+                          durationWeeks: overview.assignment.duration_weeks ?? null,
+                        }).reason === "ok"
+                          ? currentWeekNumber({
+                              startsOn: overview.assignment.starts_on,
+                              durationWeeks: overview.assignment.duration_weeks ?? null,
+                            }).week
+                          : "غير محسوب بدقة"}
                       </dd>
                     </div>
                     <div>
@@ -414,61 +440,18 @@ function AdminClient360Page() {
             </AdminSection>
           ) : null}
 
-          {tab === "training" ? (
-            overview.assignment ? (
-              <AdminCard>
-                <h2 className="cc-section__title">التعيين الحالي</h2>
-                <p className="cc-muted">
-                  {PROGRAM_BOUNDARIES.template} منفصل عن {PROGRAM_BOUNDARIES.assigned}. تعديل القالب لا يغيّر هذا المؤشر.
-                </p>
-                <dl className="cc-dl">
-                  <div>
-                    <dt>معرف القالب المصدر</dt>
-                    <dd>{overview.assignment.source_template_id}</dd>
-                  </div>
-                  <div>
-                    <dt>الإصدار المجمّد</dt>
-                    <dd>{overview.assignment.template_version}</dd>
-                  </div>
-                  <div>
-                    <dt>الحالة</dt>
-                    <dd>{overview.assignment.status}</dd>
-                  </div>
-                  <div>
-                    <dt>تاريخ التعيين</dt>
-                    <dd>{formatAdminDate(overview.assignment.assigned_at)}</dd>
-                  </div>
-                </dl>
-              </AdminCard>
-            ) : (
-              <AdminEmptyState
-                title="لا برنامج معيَّن"
-                body="لا يوجد تعيين مجمّد لهذا العميل. قوالب البرامج لا تُعرض هنا كبرنامج عميل."
-                later="محرر البرامج سيأتي لاحقاً. Phase 3 تثبت الفصل بين القالب والتعيين فقط."
-              />
-            )
-          ) : null}
-
-          {tab === "progress" ? (
-            <AdminCard>
-              <h2 className="cc-section__title">ما هو متاح</h2>
-              <dl className="cc-dl">
-                <div>
-                  <dt>آخر تمرين مسجّل</dt>
-                  <dd>
-                    {overview.last_workout_at ? formatRelativeAge(overview.last_workout_at) : "لا سجل في قاعدة البيانات"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>صور التقدم</dt>
-                  <dd>خاصة افتراضياً — غير مخزّنة في قاعدة البيانات الحالية (محلية على جهاز العميل).</dd>
-                </div>
-                <div>
-                  <dt>نسبة الالتزام</dt>
-                  <dd>غير معتمدة — لا تُحسب في هذه المرحلة.</dd>
-                </div>
-              </dl>
-            </AdminCard>
+          {tab === "training" || tab === "progress" ? (
+            <ClientTrainingWorkspace
+              clientId={clientId}
+              conversationId={conversationId}
+              overview={overview}
+              tab={tab}
+              onOverviewRefresh={async () => {
+                const next = await fetchAdminClientOverview(clientId);
+                if (next) setOverview(next);
+              }}
+              onConfirm={setConfirm}
+            />
           ) : null}
 
           {tab === "history" ? (
@@ -508,5 +491,13 @@ function attentionSummary(overview: AdminClientOverview): string {
   if ((overview.coaching?.unread_count ?? 0) > 0) parts.push(`${overview.coaching?.unread_count} رسالة غير مقروءة`);
   if (overview.coaching?.status === "waiting_for_reply") parts.push("محادثة بانتظار رد");
   if ((overview.open_support_count ?? 0) > 0) parts.push(`${overview.open_support_count} تذكرة دعم`);
+  for (const signal of objectiveTrainingSignals({
+    status: overview.assignment?.status ?? null,
+    startsOn: overview.assignment?.starts_on ?? null,
+    durationWeeks: overview.assignment?.duration_weeks ?? null,
+    snapshotComplete: overview.assignment?.snapshot_complete ?? null,
+  })) {
+    parts.push(objectiveSignalLabel(signal));
+  }
   return parts.length > 0 ? parts.join(" · ") : "لا إشارات معتمدة حالياً";
 }

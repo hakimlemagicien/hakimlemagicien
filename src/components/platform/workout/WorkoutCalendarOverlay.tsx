@@ -10,6 +10,7 @@ import {
   resolveWeekdayPlan,
   type WeekdayId,
   type WeekDayEntry,
+  type WeekdayWorkoutPlan,
 } from "@/lib/platform/weekly-workout-schedule";
 import { cn } from "@/lib/utils";
 
@@ -36,12 +37,14 @@ function buildMonthCells({
   selectedDateKey,
   currentWeekKeys,
   hasWorkoutProgram,
+  assignedPlans,
 }: {
   monthDate: Date;
   todayKey: string;
   selectedDateKey: string;
   currentWeekKeys: Set<string>;
   hasWorkoutProgram: boolean;
+  assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null;
 }): MonthCell[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -53,7 +56,7 @@ function buildMonthCells({
   const pushDay = (date: Date, inMonth: boolean) => {
     const dateKey = dateKeyFromDate(date);
     const dayId = getWeekdayIdFromDate(date);
-    const plan = resolveWeekdayPlan(dayId, hasWorkoutProgram);
+    const plan = resolveWeekdayPlan(dayId, hasWorkoutProgram, assignedPlans);
     cells.push({
       date,
       dateKey,
@@ -86,6 +89,7 @@ export function WorkoutCalendarOverlay({
   selectedDayId,
   weeklySchedule,
   hasWorkoutProgram,
+  assignedPlans,
   onSelectDay,
 }: {
   open: boolean;
@@ -93,6 +97,7 @@ export function WorkoutCalendarOverlay({
   selectedDayId: WeekdayId;
   weeklySchedule: WeekDayEntry[];
   hasWorkoutProgram: boolean;
+  assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null;
   onSelectDay: (dayId: WeekdayId) => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -132,9 +137,10 @@ export function WorkoutCalendarOverlay({
             selectedDateKey: selectedEntry.dateKey,
             currentWeekKeys,
             hasWorkoutProgram,
+            assignedPlans,
           })
         : [],
-    [cursor, todayKey, selectedEntry, currentWeekKeys, hasWorkoutProgram],
+    [cursor, todayKey, selectedEntry, currentWeekKeys, hasWorkoutProgram, assignedPlans],
   );
 
   if (!selectedEntry || typeof document === "undefined") return null;

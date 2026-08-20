@@ -11,6 +11,8 @@ export type WorkoutSetLogInput = {
   notes: string;
   skipped: boolean;
   sessionDate?: string;
+  assignmentId?: string | null;
+  assignmentExerciseId?: string | null;
 };
 
 export async function upsertWorkoutSetLog(input: WorkoutSetLogInput): Promise<void> {
@@ -33,6 +35,8 @@ export async function upsertWorkoutSetLog(input: WorkoutSetLogInput): Promise<vo
       effort: input.effort,
       notes: input.notes.trim() || null,
       skipped: input.skipped,
+      assignment_id: input.assignmentId || null,
+      assignment_exercise_id: input.assignmentExerciseId || null,
     },
     {
       onConflict: "user_id,session_date,exercise_external_id,set_number",

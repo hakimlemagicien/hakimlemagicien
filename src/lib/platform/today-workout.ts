@@ -11,6 +11,9 @@ export type TodayWorkoutPrescription = {
   duration_seconds?: number;
   rest_seconds: number;
   suggested_weight_kg?: number;
+  assignmentId?: string;
+  assignmentExerciseId?: string;
+  notes_ar?: string;
 };
 
 export const TODAY_WORKOUT_PRESCRIPTIONS: TodayWorkoutPrescription[] = [

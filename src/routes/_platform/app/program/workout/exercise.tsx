@@ -3,9 +3,12 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutPlayer } from "@/hooks/useWorkoutPlayer";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 import {
   getWeekdayIdFromDate,
   isFreeUnlockedExerciseIndex,
+  resolveWeekdayPlan,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -47,7 +50,13 @@ function ExercisePlayerPage() {
   const hasWorkoutProgram = features.workout_program;
   const freePreview = !hasWorkoutProgram;
   const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
-  const sessionQuery = useWorkoutDaySession(day, hasWorkoutProgram);
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const assignedPlans =
+    hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
+      ? runtimeToWeekdayPlans(runtimeQuery.data)
+      : null;
+  const plan = resolveWeekdayPlan(day, hasWorkoutProgram, hasWorkoutProgram ? assignedPlans : undefined);
+  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? plan : null);
 
   const exercises = sessionQuery.data?.exercises ?? [];
   const meta = sessionQuery.data?.meta ?? {
@@ -60,6 +69,36 @@ function ExercisePlayerPage() {
 
   const todayId = getWeekdayIdFromDate();
   const freeDayFullyLocked = freePreview && day !== todayId;
+
+  if (hasWorkoutProgram && runtimeQuery.isLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm font-bold text-muted-foreground">جاري تحميل البرنامج…</p>
+      </div>
+    );
+  }
+
+  if (hasWorkoutProgram && (runtimeQuery.isError || runtimeQuery.data?.reason !== "ok")) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">
+        <p className="text-sm font-black text-foreground">
+          {runtimeQuery.isError
+            ? "تعذر تحميل البرنامج."
+            : runtimeQuery.data?.reason === "no_program"
+              ? "لا برنامج تدريبي معيَّن"
+              : "البرنامج غير متاح لهذه الحصة"}
+        </p>
+        <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+        <Link
+          to="/app/program/workout"
+          className="rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground"
+        >
+          العودة لتمرين اليوم
+        </Link>
+      </div>
+    );
+  }
 
   if (freePreview && (freeDayFullyLocked || !isFreeUnlockedExerciseIndex(index))) {
     return (

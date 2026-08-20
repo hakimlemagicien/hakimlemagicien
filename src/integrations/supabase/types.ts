@@ -1481,6 +1481,8 @@ export type Database = {
           updated_at: string
           user_id: string
           weight_kg: number | null
+          assignment_id: string | null
+          assignment_exercise_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1496,6 +1498,8 @@ export type Database = {
           updated_at?: string
           user_id: string
           weight_kg?: number | null
+          assignment_id?: string | null
+          assignment_exercise_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1511,6 +1515,8 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weight_kg?: number | null
+          assignment_id?: string | null
+          assignment_exercise_id?: string | null
         }
         Relationships: [
           {
@@ -1586,8 +1592,16 @@ export type Database = {
           assigned_by: string | null
           client_id: string
           created_at: string
+          days_per_week: number | null
+          duration_weeks: number | null
+          ended_at: string | null
+          goal: string | null
           id: string
+          level: string | null
+          name_ar: string | null
+          name_en: string | null
           source_template_id: string
+          starts_on: string | null
           status: string
           template_version: number
           updated_at: string
@@ -1598,8 +1612,16 @@ export type Database = {
           assigned_by?: string | null
           client_id: string
           created_at?: string
+          days_per_week?: number | null
+          duration_weeks?: number | null
+          ended_at?: string | null
+          goal?: string | null
           id?: string
+          level?: string | null
+          name_ar?: string | null
+          name_en?: string | null
           source_template_id: string
+          starts_on?: string | null
           status?: string
           template_version: number
           updated_at?: string
@@ -1610,10 +1632,144 @@ export type Database = {
           assigned_by?: string | null
           client_id?: string
           created_at?: string
+          days_per_week?: number | null
+          duration_weeks?: number | null
+          ended_at?: string | null
+          goal?: string | null
           id?: string
+          level?: string | null
+          name_ar?: string | null
+          name_en?: string | null
           source_template_id?: string
+          starts_on?: string | null
           status?: string
           template_version?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_program_weeks: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          id: string
+          notes_ar: string | null
+          title_ar: string | null
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          id?: string
+          notes_ar?: string | null
+          title_ar?: string | null
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          id?: string
+          notes_ar?: string | null
+          title_ar?: string | null
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: []
+      }
+      client_program_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          day_type: Database["public"]["Enums"]["program_day_type"]
+          estimated_calories: number | null
+          estimated_minutes: number | null
+          id: string
+          muscle_focus: string | null
+          title_ar: string
+          updated_at: string
+          week_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          day_type?: Database["public"]["Enums"]["program_day_type"]
+          estimated_calories?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          muscle_focus?: string | null
+          title_ar: string
+          updated_at?: string
+          week_id: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          day_type?: Database["public"]["Enums"]["program_day_type"]
+          estimated_calories?: number | null
+          estimated_minutes?: number | null
+          id?: string
+          muscle_focus?: string | null
+          title_ar?: string
+          updated_at?: string
+          week_id?: string
+        }
+        Relationships: []
+      }
+      client_program_exercises: {
+        Row: {
+          created_at: string
+          day_id: string
+          exercise_external_id: string
+          exercise_id: string | null
+          exercise_name_ar: string
+          exercise_name_en: string | null
+          id: string
+          notes_ar: string | null
+          reps_label: string | null
+          reps_max: number | null
+          reps_min: number | null
+          rest_seconds: number
+          sets: number
+          sort_order: number
+          suggested_weight_kg: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_id: string
+          exercise_external_id: string
+          exercise_id?: string | null
+          exercise_name_ar: string
+          exercise_name_en?: string | null
+          id?: string
+          notes_ar?: string | null
+          reps_label?: string | null
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number
+          sets?: number
+          sort_order?: number
+          suggested_weight_kg?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_id?: string
+          exercise_external_id?: string
+          exercise_id?: string | null
+          exercise_name_ar?: string
+          exercise_name_en?: string | null
+          id?: string
+          notes_ar?: string | null
+          reps_label?: string | null
+          reps_max?: number | null
+          reps_min?: number | null
+          rest_seconds?: number
+          sets?: number
+          sort_order?: number
+          suggested_weight_kg?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -1881,6 +2037,66 @@ export type Database = {
       }
       admin_publish_program_template: { Args: { p_id: string }; Returns: Json }
       admin_archive_program_template: { Args: { p_id: string }; Returns: Json }
+      admin_assign_client_program: {
+        Args: {
+          p_client_id: string
+          p_replace?: boolean
+          p_starts_on?: string
+          p_template_id: string
+        }
+        Returns: Json
+      }
+      admin_get_client_assignment: { Args: { p_assignment_id: string }; Returns: Json }
+      admin_list_client_assignments: {
+        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          assigned_at: string
+          ended_at: string | null
+          id: string
+          name_ar: string | null
+          snapshot_complete: boolean
+          source_template_id: string
+          starts_on: string | null
+          status: string
+          template_version: number
+          total_count: number
+        }[]
+      }
+      admin_end_client_program: {
+        Args: { p_assignment_id: string; p_status?: string }
+        Returns: Json
+      }
+      admin_save_client_assignment_exercises: {
+        Args: {
+          p_assignment_id: string
+          p_expected_updated_at?: string | null
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      admin_list_client_set_logs: {
+        Args: {
+          p_client_id: string
+          p_exercise_id?: string | null
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          assignment_id: string | null
+          created_at: string
+          effort: Database["public"]["Enums"]["workout_effort_level"]
+          exercise_external_id: string
+          exercise_id: string | null
+          id: string
+          reps: number | null
+          session_date: string
+          set_number: number
+          skipped: boolean
+          total_count: number
+          weight_kg: number | null
+        }[]
+      }
+      client_get_my_training_runtime: { Args: never; Returns: Json }
       admin_list_discover_categories: { Args: never; Returns: Json }
       admin_list_discover_content: {
         Args: {

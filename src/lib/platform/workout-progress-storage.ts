@@ -30,9 +30,9 @@ export type StoredWorkoutSession = {
 const STORAGE_KEY = "hakim:today-workout-session:v2";
 const LEGACY_STORAGE_KEY = "hakim:today-workout-progress:v1";
 
-export function getTodayWorkoutSessionKey(): string {
+export function getTodayWorkoutSessionKey(externalIds?: string[]): string {
   const date = new Date().toISOString().slice(0, 10);
-  const ids = TODAY_WORKOUT_PRESCRIPTIONS.map((item) => item.external_id).join(",");
+  const ids = (externalIds ?? TODAY_WORKOUT_PRESCRIPTIONS.map((item) => item.external_id)).join(",");
   return `${date}::${ids}`;
 }
 
@@ -89,8 +89,8 @@ export function loadWorkoutSession(
   };
 }
 
-export function loadWorkoutProgress(length: number): StoredExerciseProgress[] | null {
-  const sessionKey = getTodayWorkoutSessionKey();
+export function loadWorkoutProgress(length: number, externalIds?: string[]): StoredExerciseProgress[] | null {
+  const sessionKey = getTodayWorkoutSessionKey(externalIds);
   return loadWorkoutSession(sessionKey, length)?.progress ?? null;
 }
 

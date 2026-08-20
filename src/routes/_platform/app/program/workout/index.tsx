@@ -22,6 +22,8 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 import {
   buildWeeklySchedule,
   formatWorkoutDayLabel,
@@ -751,15 +753,30 @@ function WorkoutDayPage() {
     ? "فعّل برنامجك الآن لفتح تمارين كل أيام الأسبوع — يمكنك معاينة شكل البرنامج فقط."
     : "فعّل برنامجك الآن لفتح كل تمارين الأسبوع — التمرين الأول للصدر متاح للمعاينة.";
 
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const assignedPlans =
+    hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
+      ? runtimeToWeekdayPlans(runtimeQuery.data)
+      : null;
+
   const weeklySchedule = useMemo(
-    () => buildWeeklySchedule({ userId, freeMember: freePreview }),
-    [userId, freePreview, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
+    () =>
+      buildWeeklySchedule({
+        userId,
+        freeMember: freePreview,
+        assignedPlans: hasWorkoutProgram ? assignedPlans : undefined,
+      }),
+    [userId, freePreview, hasWorkoutProgram, assignedPlans, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
   );
 
   const selectedEntry =
     weeklySchedule.find((entry) => entry.id === selectedDayId) ?? weeklySchedule[0]!;
-  const selectedPlan = resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
-  const sessionQuery = useWorkoutDaySession(selectedDayId, hasWorkoutProgram);
+  const selectedPlan = resolveWeekdayPlan(
+    selectedDayId,
+    hasWorkoutProgram,
+    hasWorkoutProgram ? assignedPlans : undefined,
+  );
+  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? selectedPlan : null);
   const sessionExercises = sessionQuery.data?.exercises ?? [];
   const todayKey = new Date().toISOString().slice(0, 10);
   const applyStoredProgress = selectedEntry.dateKey === todayKey;
@@ -771,6 +788,8 @@ function WorkoutDayPage() {
   };
   const selectedDayLabel = formatWorkoutDayLabel(selectedEntry.calendarDate, selectedEntry.dayName);
   const overallProgress = snapshot.overallProgressPct;
+  const runtimeReason = runtimeQuery.data?.reason;
+  const programName = runtimeQuery.data?.assignment?.name_ar;
 
   return (
     <PlatformStack>
@@ -795,6 +814,50 @@ function WorkoutDayPage() {
           showPremiumBadge={showPremiumBadge}
         />
 
+        {hasWorkoutProgram && runtimeQuery.isLoading ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4">
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-16 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+          </section>
+        ) : null}
+
+        {hasWorkoutProgram && runtimeQuery.isError ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">تعذر تحميل البرنامج.</p>
+            <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+            <button
+              type="button"
+              className="text-[11px] font-black text-primary"
+              onClick={() => void runtimeQuery.refetch()}
+            >
+              إعادة المحاولة
+            </button>
+          </section>
+        ) : null}
+
+        {hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason !== "ok" ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">
+              {runtimeReason === "scheduled"
+                ? "برنامجك مجدول ولم يبدأ بعد"
+                : runtimeReason === "ended"
+                  ? "انتهت مدة البرنامج الحالي"
+                  : runtimeReason === "legacy_incomplete"
+                    ? "هذا التعيين يحتاج مراجعة من المدرب"
+                    : "لا برنامج تدريبي معيَّن"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {programName ? `${programName} — ` : ""}
+              {runtimeReason === "no_program"
+                ? "سيظهر تمرينك هنا بعد أن يعيّن المدرب برنامجاً."
+                : "لا تُعرض تمارين جاهزة مكان البرنامج المعيَّن."}
+            </p>
+          </section>
+        ) : null}
+
+        {freePreview || (hasWorkoutProgram && runtimeReason === "ok") ? (
+        <>
         <section
           className={cn(
             "platform-card space-y-3.5 rounded-3xl p-4",
@@ -889,12 +952,15 @@ function WorkoutDayPage() {
             />
           ) : null}
         </section>
+        </>
+        ) : null}
         <WorkoutCalendarOverlay
           open={calendarOpen}
           onClose={() => setCalendarOpen(false)}
           selectedDayId={selectedDayId}
           weeklySchedule={weeklySchedule}
           hasWorkoutProgram={hasWorkoutProgram}
+          assignedPlans={hasWorkoutProgram ? assignedPlans : undefined}
           onSelectDay={setSelectedDayId}
         />
       </PlatformStack>

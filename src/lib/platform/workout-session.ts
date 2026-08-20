@@ -27,6 +27,8 @@ export type WorkoutSessionExercise = {
   instructionsStatus: ExerciseMediaStatus;
   instructionsVideoPath: string | null;
   coachNotes: string | null;
+  assignmentId?: string;
+  assignmentExerciseId?: string;
 };
 
 export const EFFORT_LABELS: Record<EffortLevel, string> = {

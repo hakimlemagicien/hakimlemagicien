@@ -71,7 +71,10 @@ export function useWorkoutPlayer(
   meta: WorkoutSessionMeta,
   initialExerciseIndex = 0,
 ) {
-  const sessionKey = useMemo(() => getTodayWorkoutSessionKey(), []);
+  const sessionKey = useMemo(
+    () => getTodayWorkoutSessionKey(exercises.map((item) => item.assignmentExerciseId ?? item.external_id)),
+    [exercises],
+  );
   const initialState = useMemo(
     () => createInitialProgress(exercises, initialExerciseIndex, sessionKey),
     [exercises, initialExerciseIndex, sessionKey],
@@ -306,6 +309,8 @@ export function useWorkoutPlayer(
         effort: setDraft.effort,
         notes: setDraft.notes,
         skipped,
+        assignmentId: exercise.assignmentId ?? null,
+        assignmentExerciseId: exercise.assignmentExerciseId ?? null,
       });
 
       advanceAfterSet();
