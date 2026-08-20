@@ -44,7 +44,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "foundation" },
       { id: "billing", to: "/admin/payments", label: "الفوترة", status: "live" },
-      { id: "support", to: "/admin/support", label: "الدعم", status: "foundation" },
+      { id: "support", to: "/admin/support", label: "الدعم", status: "live" },
     ],
   },
   {

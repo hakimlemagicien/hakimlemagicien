@@ -3,7 +3,25 @@ import { Bell, Menu, Search, X } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin/admin-nav";
-import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
+import {
+  fetchAdminOperationsSnapshot,
+  snapshotAttentionCount,
+  type AdminOperationsSnapshot,
+} from "@/lib/admin/admin-ops-api";
+
+const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
+  unreadThreads: 0,
+  waitingThreads: 0,
+  pendingPayments: 0,
+  openSupport: 0,
+};
+
+function navCount(href: string, snapshot: AdminOperationsSnapshot): number {
+  if (href === "/admin/messages") return snapshot.unreadThreads + snapshot.waitingThreads;
+  if (href === "/admin/support") return snapshot.openSupport;
+  if (href === "/admin/payments") return snapshot.pendingPayments;
+  return 0;
+}
 
 export function AdminShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -11,10 +29,11 @@ export function AdminShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [accountLabel, setAccountLabel] = useState("Admin");
-  const [unreadThreads, setUnreadThreads] = useState(0);
+  const [snapshot, setSnapshot] = useState<AdminOperationsSnapshot>(EMPTY_SNAPSHOT);
   const [menuOpen, setMenuOpen] = useState(false);
   const drawerId = useId();
   const menuId = useId();
+  const attention = snapshotAttentionCount(snapshot);
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -39,13 +58,12 @@ export function AdminShell() {
 
   useEffect(() => {
     let cancelled = false;
-    void fetchCoachingInbox()
-      .then((rows) => {
-        if (cancelled) return;
-        setUnreadThreads(rows.filter((row) => row.unreadCount > 0 || row.status === "waiting_for_reply").length);
+    void fetchAdminOperationsSnapshot()
+      .then((next) => {
+        if (!cancelled) setSnapshot(next);
       })
       .catch(() => {
-        if (!cancelled) setUnreadThreads(0);
+        if (!cancelled) setSnapshot(EMPTY_SNAPSHOT);
       });
     return () => {
       cancelled = true;
@@ -94,25 +112,21 @@ export function AdminShell() {
               {group.items.map((item) => {
                 const active = isAdminNavActive(pathname, item.to);
                 const later = item.status === "foundation";
-                const unread = item.to === "/admin/messages" && unreadThreads > 0;
+                const count = navCount(item.to, snapshot);
                 return (
                   <Link
                     key={item.id}
                     to={item.to}
-                    className={[
-                      "cc-nav-link",
-                      active ? "is-active" : "",
-                      later ? "is-later" : "",
-                    ]
+                    className={["cc-nav-link", active ? "is-active" : "", later ? "is-later" : ""]
                       .filter(Boolean)
                       .join(" ")}
                     aria-current={active ? "page" : undefined}
                     aria-label={later ? `${item.label} — أساس غير مكتمل` : item.label}
                   >
                     <span>{item.label}</span>
-                    {unread ? (
+                    {count > 0 ? (
                       <b className="cc-nav-badge" title="يحتاج انتباهاً">
-                        {unreadThreads > 9 ? "9+" : unreadThreads}
+                        {count > 9 ? "9+" : count}
                       </b>
                     ) : later ? (
                       <em>أساس</em>
@@ -152,8 +166,15 @@ export function AdminShell() {
             <Link to="/admin/messages" className="cc-btn cc-btn--ghost cc-topbar__quick">
               الرسائل
             </Link>
-            <Link to="/admin/notifications" className="cc-icon-btn" aria-label="الإشعارات الإدارية — أساس">
+            <Link
+              to="/admin"
+              className="cc-icon-btn"
+              aria-label={
+                attention > 0 ? `عناصر الانتباه اليوم: ${attention}` : "لا عناصر انتباه حالياً — مركز التشغيل"
+              }
+            >
               <Bell className="h-4 w-4" />
+              {attention > 0 ? <b className="cc-nav-badge cc-bell-count">{attention > 9 ? "9+" : attention}</b> : null}
             </Link>
             <div className="cc-account">
               <button

@@ -1567,8 +1567,14 @@ export type Database = {
         Returns: Json
       }
       admin_list_client_notes: {
-        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Args: {
+          p_client_id: string
+          p_include_archived?: boolean
+          p_limit?: number
+          p_offset?: number
+        }
         Returns: {
+          archived_at: string | null
           author_id: string
           body: string
           client_id: string
@@ -1586,7 +1592,12 @@ export type Database = {
         Returns: undefined
       }
       admin_list_audit_events: {
-        Args: { p_event_type?: string | null; p_limit?: number; p_offset?: number }
+        Args: {
+          p_event_type?: string | null
+          p_limit?: number
+          p_offset?: number
+          p_subject_user_id?: string | null
+        }
         Returns: {
           actor_id: string | null
           created_at: string
@@ -1598,7 +1609,13 @@ export type Database = {
       }
       admin_get_operations_snapshot: { Args: never; Returns: Json }
       admin_list_support_tickets: {
-        Args: { p_limit?: number; p_offset?: number; p_status?: string | null }
+        Args: {
+          p_category?: string | null
+          p_limit?: number
+          p_offset?: number
+          p_status?: string | null
+          p_user_id?: string | null
+        }
         Returns: {
           category: string
           created_at: string

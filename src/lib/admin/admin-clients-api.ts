@@ -45,6 +45,11 @@ export type AdminClientOverview = {
     source: string;
     starts_at: string;
     ends_at: string | null;
+    billing_period_months?: number | null;
+    paid_period_end?: string | null;
+    auto_renew?: boolean | null;
+    cancel_at_period_end?: boolean | null;
+    next_renewal_at?: string | null;
   } | null;
   coaching: {
     conversation_id: string;
@@ -61,6 +66,7 @@ export type AdminClientOverview = {
   } | null;
   last_workout_at: string | null;
   notes_count: number;
+  open_support_count?: number;
 };
 
 function mapListRow(row: {

@@ -15,6 +15,7 @@ import {
 } from "@/components/admin/AdminConfirmDialog";
 import { fetchAdminClientOverview, type AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import { CLIENT_360_SECTIONS, PROGRAM_BOUNDARIES, type Client360Section } from "@/lib/admin/admin-architecture";
+import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
 import {
   addAdminClientNote,
   archiveAdminClientNote,
@@ -59,10 +60,14 @@ function AdminClient360Page() {
   const { tab } = Route.useSearch();
   const [overview, setOverview] = useState<AdminClientOverview | null>(null);
   const [notes, setNotes] = useState<AdminCoachNote[] | null>(null);
+  const [history, setHistory] = useState<AdminAuditEvent[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notesError, setNotesError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [includeArchived, setIncludeArchived] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
@@ -85,7 +90,7 @@ function AdminClient360Page() {
     if (tab !== "notes") return;
     setNotesLoading(true);
     setNotesError(null);
-    void listAdminClientNotes(clientId)
+    void listAdminClientNotes(clientId, { includeArchived })
       .then((rows) => setNotes(rows))
       .catch((err) => {
         console.error(err);
@@ -93,6 +98,20 @@ function AdminClient360Page() {
         setNotes(null);
       })
       .finally(() => setNotesLoading(false));
+  }, [clientId, tab, includeArchived]);
+
+  useEffect(() => {
+    if (tab !== "history") return;
+    setHistoryLoading(true);
+    setHistoryError(null);
+    void listAdminAuditEvents({ subjectUserId: clientId })
+      .then((rows) => setHistory(rows))
+      .catch((err) => {
+        console.error(err);
+        setHistoryError("تعذر تحميل سجل هذا العميل.");
+        setHistory(null);
+      })
+      .finally(() => setHistoryLoading(false));
   }, [clientId, tab]);
 
   const status = onboardingStatus(overview?.onboarding_completed_at);
@@ -105,7 +124,7 @@ function AdminClient360Page() {
     try {
       await addAdminClientNote(clientId, draft);
       setDraft("");
-      const rows = await listAdminClientNotes(clientId);
+      const rows = await listAdminClientNotes(clientId, { includeArchived });
       setNotes(rows);
       const next = await fetchAdminClientOverview(clientId);
       setOverview(next);
@@ -120,12 +139,12 @@ function AdminClient360Page() {
   const requestArchive = (noteId: string) => {
     setConfirm({
       title: "أرشفة الملاحظة",
-      body: "ستُخفى هذه الملاحظة من الملف. الأرشفة ناعمة وليست حذفاً نهائياً. الملاحظات خاصة بالطاقم ولا تظهر للعميل.",
+      body: "سيتم إخفاء الملاحظة من العرض التشغيلي ولن تُحذف من السجل. الملاحظات داخلية ولا تظهر للعميل.",
       confirmLabel: "أرشفة",
       tone: "danger",
       onConfirm: () => {
         void archiveAdminClientNote(noteId)
-          .then(() => listAdminClientNotes(clientId))
+          .then(() => listAdminClientNotes(clientId, { includeArchived }))
           .then(setNotes)
           .catch((err) => {
             console.error(err);
@@ -162,12 +181,14 @@ function AdminClient360Page() {
             </span>
             <div className="cc-client-hero__text">
               <h2>{overview.full_name || "بدون اسم"}</h2>
-              <p>{overview.goal || "الهدف غير محدد"}</p>
+              <p>{overview.email || overview.phone || "بدون بريد"}</p>
+              <p>{overview.goal || "الهدف غير محدد"} · انضم {formatAdminDate(overview.created_at)}</p>
               <div className="cc-client-hero__badges">
                 <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
                 {overview.membership?.tier ? (
                   <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
                     {planLabel(overview.membership.tier)}
+                    {overview.membership.is_active ? "" : " — غير نشطة"}
                   </AdminStatusBadge>
                 ) : null}
               </div>
@@ -184,6 +205,17 @@ function AdminClient360Page() {
               ) : (
                 <span className="cc-muted">لا محادثة تدريب مسجّلة</span>
               )}
+              <Link
+                to="/admin/clients/$clientId"
+                params={{ clientId }}
+                search={{ tab: "notes" }}
+                className="cc-btn"
+              >
+                إضافة ملاحظة
+              </Link>
+              <Link to="/admin/support" search={{ userId: clientId }} className="cc-btn">
+                تذاكر الدعم
+              </Link>
             </div>
           </header>
 
@@ -218,6 +250,30 @@ function AdminClient360Page() {
                           ? `${planLabel(overview.membership.tier)}${overview.membership.is_active ? " — نشطة" : " — غير نشطة"}`
                           : "لا عضوية مسجّلة"}
                       </dd>
+                    </div>
+                    <div>
+                      <dt>الفترة المدفوعة حتى</dt>
+                      <dd>{overview.membership?.paid_period_end ? formatAdminDate(overview.membership.paid_period_end) : "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>التجديد</dt>
+                      <dd>
+                        {overview.membership
+                          ? overview.membership.cancel_at_period_end
+                            ? "إلغاء عند نهاية الفترة"
+                            : overview.membership.auto_renew
+                              ? "تجديد تلقائي"
+                              : "—"
+                          : "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>انتباه حالي</dt>
+                      <dd>{attentionSummary(overview)}</dd>
+                    </div>
+                    <div>
+                      <dt>دعم مفتوح</dt>
+                      <dd>{overview.open_support_count ?? 0}</dd>
                     </div>
                     <div>
                       <dt>حالة التدريب</dt>
@@ -308,8 +364,8 @@ function AdminClient360Page() {
           {tab === "notes" ? (
             <AdminSection>
               <AdminCard>
-                <h2 className="cc-section__title">ملاحظة خاصة بالطاقم</h2>
-                <p className="cc-muted">هذه الملاحظات لا تظهر للعميل. لا تُحذف نهائياً — الأرشفة فقط.</p>
+                <h2 className="cc-section__title">ملاحظة داخلية — لا تظهر للعميل.</h2>
+                <p className="cc-muted">لا يمكن إرسال ملاحظة فارغة. الحد 8000 حرف. الأرشفة تخفي العرض التشغيلي دون حذف السجل.</p>
                 <div className="cc-thread__draft">
                   <textarea
                     value={draft}
@@ -330,16 +386,29 @@ function AdminClient360Page() {
               </AdminCard>
               {notesError ? <AdminErrorState message={notesError} /> : null}
               {notesLoading ? <AdminSkeletonRows rows={3} /> : null}
+              <label className="cc-filter">
+                <input
+                  type="checkbox"
+                  checked={includeArchived}
+                  onChange={(event) => setIncludeArchived(event.target.checked)}
+                />
+                <span>إظهار المؤرشف</span>
+              </label>
               {!notesLoading && notes && notes.length === 0 ? (
                 <AdminEmptyState title="لا ملاحظات" body="لم يُكتب شيء بعد لهذا العميل." />
               ) : null}
               {notes?.map((note) => (
                 <AdminCard key={note.id}>
                   <p>{note.body}</p>
-                  <p className="cc-meta">{formatAdminDate(note.createdAt)}</p>
-                  <button type="button" className="cc-btn cc-btn--compact" onClick={() => requestArchive(note.id)}>
-                    أرشفة
-                  </button>
+                  <p className="cc-meta">
+                    {formatAdminDate(note.createdAt)} · {note.authorId.slice(0, 8)}
+                    {note.archivedAt ? " · مؤرشفة" : ""}
+                  </p>
+                  {!note.archivedAt ? (
+                    <button type="button" className="cc-btn cc-btn--compact" onClick={() => requestArchive(note.id)}>
+                      أرشفة
+                    </button>
+                  ) : null}
                 </AdminCard>
               ))}
             </AdminSection>
@@ -403,41 +472,27 @@ function AdminClient360Page() {
           ) : null}
 
           {tab === "history" ? (
-            <AdminCard>
-              <dl className="cc-dl">
-                <div>
-                  <dt>إنشاء الملف</dt>
-                  <dd>{formatAdminDate(overview.created_at)}</dd>
-                </div>
-                <div>
-                  <dt>اكتمال التسجيل</dt>
-                  <dd>
-                    {overview.onboarding_completed_at ? formatAdminDate(overview.onboarding_completed_at) : "غير مكتمل"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>تعيين البرنامج</dt>
-                  <dd>
-                    {overview.assignment ? formatAdminDate(overview.assignment.assigned_at) : "لا تعيين"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>آخر رسالة تدريب</dt>
-                  <dd>
-                    {overview.coaching?.last_message_at
-                      ? formatRelativeAge(overview.coaching.last_message_at)
-                      : "—"}
-                  </dd>
-                </div>
-              </dl>
-            </AdminCard>
+            <AdminSection>
+              {historyLoading ? <AdminSkeletonRows rows={4} /> : null}
+              {historyError ? <AdminErrorState message={historyError} /> : null}
+              {!historyLoading && history && history.length === 0 ? (
+                <AdminEmptyState title="لا سجل عمليات لهذا العميل" body="تُعرض هنا أحداث التدقيق المرتبطة بهذا المعرّف فقط." />
+              ) : null}
+              {history?.map((row) => (
+                <AdminCard key={row.id}>
+                  <p>{row.eventType}</p>
+                  <p className="cc-meta">
+                    {formatAdminDate(row.createdAt)} · فاعل {row.actorId ?? "—"}
+                  </p>
+                </AdminCard>
+              ))}
+            </AdminSection>
           ) : null}
 
           {tab === "nutrition" ? (
             <AdminEmptyState
-              title="التغذية غير مربوطة هنا بعد"
-              body="مكتبة الوجبات الرسمية موجودة، لكن هذا التبويب لا يعرض تاريخ تغذية العميل في Phase 3."
-              later="محرر التغذية سيأتي لاحقاً دون اختراع قواعد غذائية."
+              title="إدارة تغذية العميل ستتوفر ضمن مرحلة إدارة التغذية."
+              body="لا توجد خطة تغذية معيَّنة في عقود التشغيل الحالية، ولا تُعرض وحدات ماكرو أو التزام وهمية."
             />
           ) : null}
         </>
@@ -446,4 +501,12 @@ function AdminClient360Page() {
       <AdminConfirmDialog request={confirm} onClose={() => setConfirm(null)} />
     </>
   );
+}
+
+function attentionSummary(overview: AdminClientOverview): string {
+  const parts: string[] = [];
+  if ((overview.coaching?.unread_count ?? 0) > 0) parts.push(`${overview.coaching?.unread_count} رسالة غير مقروءة`);
+  if (overview.coaching?.status === "waiting_for_reply") parts.push("محادثة بانتظار رد");
+  if ((overview.open_support_count ?? 0) > 0) parts.push(`${overview.open_support_count} تذكرة دعم`);
+  return parts.length > 0 ? parts.join(" · ") : "لا إشارات معتمدة حالياً";
 }

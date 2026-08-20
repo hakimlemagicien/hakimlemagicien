@@ -48,6 +48,13 @@ export function onboardingStatus(completedAt: string | null | undefined): {
     : { kind: "onboarding", label: "تسجيل غير مكتمل" };
 }
 
+export function ticketStatusKind(status: string): AdminStatusKind {
+  if (status === "received" || status === "in_review") return "review";
+  if (status === "resolved") return "resolved";
+  if (status === "closed") return "closed";
+  return "neutral";
+}
+
 export function conversationStatusKind(status: string): AdminStatusKind {
   if (status === "waiting_for_reply" || status === "new") return "waiting";
   if (status === "closed") return "closed";

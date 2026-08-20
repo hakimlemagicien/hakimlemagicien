@@ -18,10 +18,12 @@ export type AdminAuditEvent = {
 
 export async function listAdminAuditEvents(opts?: {
   eventType?: string;
+  subjectUserId?: string;
   offset?: number;
 }): Promise<AdminAuditEvent[]> {
   const { data, error } = await supabase.rpc("admin_list_audit_events", {
     p_event_type: opts?.eventType?.trim() || null,
+    p_subject_user_id: opts?.subjectUserId || null,
     p_limit: clampAdminAuditLimit(ADMIN_AUDIT_PAGE_SIZE),
     p_offset: Math.max(opts?.offset ?? 0, 0),
   });

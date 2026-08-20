@@ -152,6 +152,11 @@ function AdminConversationPage() {
           </div>
         </div>
         <div className="cc-thread__actions">
+          {row?.memberId ? (
+            <Link to="/admin/clients/$clientId" params={{ clientId: row.memberId }} className="cc-btn cc-btn--primary">
+              ملف العميل
+            </Link>
+          ) : null}
           <button type="button" className="cc-btn cc-btn--ghost" onClick={requestClose}>
             إغلاق
           </button>

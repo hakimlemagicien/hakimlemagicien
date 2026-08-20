@@ -39,12 +39,20 @@ assert(ADMIN_NAV_GROUPS.length === 5, "five nav groups");
 const liveItems = ADMIN_NAV_GROUPS.flatMap((group) => group.items).filter((item) => item.status === "live");
 assert(
   liveItems.every((item) =>
-    ["/admin", "/admin/clients", "/admin/messages", "/admin/payments", "/admin/audit"].includes(item.to),
+    [
+      "/admin",
+      "/admin/clients",
+      "/admin/messages",
+      "/admin/payments",
+      "/admin/audit",
+      "/admin/support",
+    ].includes(item.to),
   ),
-  "live nav is existing operational surfaces only",
+  "live nav is operational surfaces only",
 );
 assert(liveItems.some((item) => item.to === "/admin/clients"), "clients table is live");
 assert(liveItems.some((item) => item.to === "/admin/audit"), "audit read is live");
+assert(liveItems.some((item) => item.to === "/admin/support"), "support queue is live");
 
 assert(PROGRAM_BOUNDARIES.template !== PROGRAM_BOUNDARIES.assigned, "template ≠ assigned program");
 assert(CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived", "publishing states");

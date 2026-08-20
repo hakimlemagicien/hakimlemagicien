@@ -14,13 +14,18 @@ export type AdminCoachNote = {
   body: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt: string | null;
 };
 
-export async function listAdminClientNotes(clientId: string): Promise<AdminCoachNote[]> {
+export async function listAdminClientNotes(
+  clientId: string,
+  opts?: { includeArchived?: boolean },
+): Promise<AdminCoachNote[]> {
   const { data, error } = await supabase.rpc("admin_list_client_notes", {
     p_client_id: clientId,
     p_limit: 50,
     p_offset: 0,
+    p_include_archived: opts?.includeArchived ?? false,
   });
   if (error) throw error;
   return (data ?? []).map((row) => ({
@@ -30,6 +35,7 @@ export async function listAdminClientNotes(clientId: string): Promise<AdminCoach
     body: row.body,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    archivedAt: row.archived_at ?? null,
   }));
 }
 

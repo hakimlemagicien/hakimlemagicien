@@ -11,7 +11,13 @@ import {
 } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { fetchSubmittedLeads, type AdminSubmittedLead } from "@/lib/admin-payments-api";
-import { buildAttentionQueue } from "@/lib/admin/admin-attention";
+import { buildAttentionQueue, sortCoachingInbox } from "@/lib/admin/admin-attention";
+import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
+import {
+  listAdminSupportTickets,
+  supportCategoryLabel,
+  type AdminSupportTicketListItem,
+} from "@/lib/admin/admin-ops-api";
 import {
   dayGreeting,
   formatRelativeAge,
@@ -28,75 +34,118 @@ export const Route = createFileRoute("/admin/")({
   component: CommandCenterPage,
 });
 
-type CommandCenterState = {
-  inbox: CoachingInboxRow[];
-  payments: AdminSubmittedLead[];
-};
+type LoadState<T> = { rows: T; error: string | null; loading: boolean };
+
+const emptyInbox: LoadState<CoachingInboxRow[]> = { rows: [], error: null, loading: true };
+const emptyPayments: LoadState<AdminSubmittedLead[]> = { rows: [], error: null, loading: true };
+const emptySupport: LoadState<AdminSupportTicketListItem[]> = { rows: [], error: null, loading: true };
+const emptyAudit: LoadState<AdminAuditEvent[]> = { rows: [], error: null, loading: true };
 
 function CommandCenterPage() {
-  const [data, setData] = useState<CommandCenterState | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const now = useMemo(() => new Date(), [data]);
+  const [inbox, setInbox] = useState(emptyInbox);
+  const [payments, setPayments] = useState(emptyPayments);
+  const [support, setSupport] = useState(emptySupport);
+  const [audit, setAudit] = useState(emptyAudit);
+  const now = useMemo(
+    () => new Date(),
+    [inbox.rows, payments.rows, support.rows, audit.rows],
+  );
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const loadInbox = useCallback(async () => {
+    setInbox((prev) => ({ ...prev, loading: true, error: null }));
     try {
-      const [inbox, payments] = await Promise.all([fetchCoachingInbox(), fetchSubmittedLeads()]);
-      setData({ inbox, payments });
+      const rows = sortCoachingInbox(await fetchCoachingInbox());
+      setInbox({ rows, error: null, loading: false });
     } catch (err) {
       console.error(err);
-      setError("تعذر تحميل إشارات التشغيل الحالية.");
-      setData(null);
-    } finally {
-      setLoading(false);
+      setInbox({ rows: [], error: "تعذر تحميل صندوق التدريب.", loading: false });
+    }
+  }, []);
+
+  const loadPayments = useCallback(async () => {
+    setPayments((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const rows = await fetchSubmittedLeads();
+      setPayments({ rows, error: null, loading: false });
+    } catch (err) {
+      console.error(err);
+      setPayments({ rows: [], error: "تعذر تحميل مراجعات الدفع.", loading: false });
+    }
+  }, []);
+
+  const loadSupport = useCallback(async () => {
+    setSupport((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const [received, inReview] = await Promise.all([
+        listAdminSupportTickets({ status: "received" }),
+        listAdminSupportTickets({ status: "in_review" }),
+      ]);
+      setSupport({ rows: [...received, ...inReview], error: null, loading: false });
+    } catch (err) {
+      console.error(err);
+      setSupport({ rows: [], error: "تعذر تحميل طابور الدعم.", loading: false });
+    }
+  }, []);
+
+  const loadAudit = useCallback(async () => {
+    setAudit((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const rows = await listAdminAuditEvents();
+      setAudit({ rows: rows.slice(0, 8), error: null, loading: false });
+    } catch (err) {
+      console.error(err);
+      setAudit({ rows: [], error: "تعذر تحميل آخر نشاط إداري.", loading: false });
     }
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadInbox();
+    void loadPayments();
+    void loadSupport();
+    void loadAudit();
+  }, [loadInbox, loadPayments, loadSupport, loadAudit]);
 
-  const queue = data ? buildAttentionQueue(data) : [];
-  const unreadThreads = data?.inbox.filter((row) => row.unreadCount > 0).length ?? 0;
-  const waitingThreads = data?.inbox.filter((row) => row.status === "waiting_for_reply").length ?? 0;
-  const pendingPayments = data?.payments.length ?? 0;
-  const coachingInbox = (data?.inbox ?? [])
+  const queue = buildAttentionQueue({
+    inbox: inbox.rows,
+    payments: payments.rows,
+    support: support.rows,
+    now,
+  });
+  const coachingQueue = inbox.rows
     .filter((row) => row.unreadCount > 0 || row.status === "waiting_for_reply")
     .slice(0, 6);
-  const recent = buildRecentActivity(data);
+  const paymentQueue = payments.rows.slice(0, 6);
+  const supportQueue = support.rows.slice(0, 6);
+  const clientActivity = inbox.rows
+    .filter((row) => row.lastMessageAt)
+    .slice()
+    .sort((a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime())
+    .slice(0, 6);
+
+  const attentionLoading = inbox.loading || payments.loading || support.loading;
 
   return (
     <>
       <AdminPageHeader
-        kicker={todayContextLabel(now)}
+        kicker={`${todayContextLabel(now)} · MAAKFIT Command Center`}
         title={`${dayGreeting(now)}، Coach Hakim`}
-        subtitle={
-          loading
-            ? "جمع عناصر الانتباه من الرسائل والمدفوعات."
-            : queue.length > 0
-              ? `${queue.length} عنصر يحتاج إجراءً الآن — من الإشارات المتاحة فقط.`
-              : "لا يوجد ما يحتاج إجراءً من الإشارات المتاحة حالياً."
-        }
+        subtitle="هذه أهم الأمور التي تحتاج متابعتك اليوم."
       />
 
-      {error ? <AdminErrorState message={error} onRetry={() => void load()} /> : null}
-
       <AdminSection title="يحتاج انتباهاً">
-        {loading ? <AdminSkeletonRows rows={4} /> : null}
-        {!loading && queue.length === 0 ? (
+        {attentionLoading ? <AdminSkeletonRows rows={4} /> : null}
+        {!attentionLoading && queue.length === 0 ? (
           <AdminEmptyState
-            title="طابور الانتباه فارغ"
-            body="تُعرض هنا الرسائل بانتظار الرد ومدفوعات التحويل المعلّقة فقط."
-            later="مراجعات التقدم والتنبيهات الأخرى تظهر عند اعتماد قواعدها التشغيلية."
+            title="لا توجد مهام عاجلة حالياً."
+            body="لا رسائل بانتظار رد، ولا دفعات معلّقة، ولا تذاكر دعم مفتوحة من الإشارات المعتمدة."
           />
         ) : null}
-        {!loading && queue.length > 0 ? (
+        {!attentionLoading && queue.length > 0 ? (
           <AdminTable>
             <thead>
               <tr>
                 <th>العميل</th>
+                <th>الفئة</th>
                 <th>السبب</th>
                 <th>الأولوية</th>
                 <th>منذ</th>
@@ -113,6 +162,7 @@ function CommandCenterPage() {
                       {item.vip ? <AdminStatusBadge tone="vip">VIP</AdminStatusBadge> : null}
                     </div>
                   </td>
+                  <td>{categoryLabel(item.category)}</td>
                   <td>{item.reason}</td>
                   <td>
                     <AdminPriorityBadge priority={item.priority} />
@@ -133,13 +183,14 @@ function CommandCenterPage() {
 
       <div className="cc-ops-split">
         <AdminSection title="صندوق التدريب">
-          {loading ? <AdminSkeletonRows rows={3} /> : null}
-          {!loading && coachingInbox.length === 0 ? (
-            <AdminEmptyState title="لا رسائل بانتظار رد" body="عندما ينتظر عميل رداً ستظهر المحادثة هنا." />
+          {inbox.loading ? <AdminSkeletonRows rows={3} /> : null}
+          {inbox.error ? <AdminErrorState message={inbox.error} onRetry={() => void loadInbox()} /> : null}
+          {!inbox.loading && !inbox.error && coachingQueue.length === 0 ? (
+            <AdminEmptyState title="لا توجد رسائل تنتظر الرد." body="عندما ينتظر عميل رداً ستظهر المحادثة هنا." />
           ) : null}
-          {!loading && coachingInbox.length > 0 ? (
+          {!inbox.loading && coachingQueue.length > 0 ? (
             <ul className="cc-queue">
-              {coachingInbox.map((row) => (
+              {coachingQueue.map((row) => (
                 <li key={row.id}>
                   <Link to="/admin/messages/$conversationId" params={{ conversationId: row.id }} className="cc-queue__item">
                     <span className="cc-queue__main">
@@ -164,54 +215,106 @@ function CommandCenterPage() {
           ) : null}
         </AdminSection>
 
-        <AdminSection title="مراجعات العملاء">
-          <AdminEmptyState
-            title="لا توجد مراجعات مستحقة للعرض"
-            body="استحقاق مراجعة التقدم يحتاج قاعدة تشغيل معتمدة. لا تُعرض مواعيد أو نسب وهمية."
-            later="عند اعتماد القاعدة ستظهر هنا عناصر مثل مراجعة مستحقة مع رابط ملف العميل."
-          />
+        <AdminSection title="طابور الدعم">
+          {support.loading ? <AdminSkeletonRows rows={3} /> : null}
+          {support.error ? <AdminErrorState message={support.error} onRetry={() => void loadSupport()} /> : null}
+          {!support.loading && !support.error && supportQueue.length === 0 ? (
+            <AdminEmptyState title="لا توجد تذاكر دعم مفتوحة." body="التذاكر المستلمة أو قيد المراجعة تظهر هنا." />
+          ) : null}
+          {!support.loading && supportQueue.length > 0 ? (
+            <ul className="cc-queue">
+              {supportQueue.map((ticket) => (
+                <li key={ticket.id}>
+                  <Link to="/admin/support" search={{ ticket: ticket.id }} className="cc-queue__item">
+                    <span className="cc-queue__main">
+                      <strong>{ticket.displayName || ticket.email || ticket.ticketCode}</strong>
+                      <span>
+                        {ticket.category === "privacy"
+                          ? "خصوصية — التفاصيل داخل شاشة الدعم"
+                          : ticket.subject}
+                      </span>
+                    </span>
+                    <span className="cc-queue__meta">
+                      <AdminStatusBadge tone="review">{supportCategoryLabel(ticket.category)}</AdminStatusBadge>
+                      <em>{formatRelativeAge(ticket.createdAt)}</em>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </AdminSection>
       </div>
 
-      <AdminSection title="ملخص تشغيلي">
-        {loading ? (
-          <AdminSkeletonRows rows={1} />
-        ) : (
-          <div className="cc-summary">
-            <Link to="/admin/messages" className="cc-summary__item">
-              <span>رسائل غير مقروءة</span>
-              <strong>{unreadThreads}</strong>
-            </Link>
-            <Link to="/admin/messages" className="cc-summary__item">
-              <span>بانتظار رد</span>
-              <strong>{waitingThreads}</strong>
-            </Link>
-            <Link to="/admin/payments" className="cc-summary__item">
-              <span>مدفوعات للمراجعة</span>
-              <strong>{pendingPayments}</strong>
-            </Link>
-          </div>
-        )}
-      </AdminSection>
-
-      <AdminSection title="آخر النشاط">
-        {loading ? <AdminSkeletonRows rows={3} /> : null}
-        {!loading && recent.length === 0 ? (
-          <AdminEmptyState title="لا نشاط حديث من المصادر المتاحة" body="يظهر هنا آخر الرسائل وطلبات الدفع الحقيقية فقط." />
+      <AdminSection title="مراجعات الدفع">
+        {payments.loading ? <AdminSkeletonRows rows={3} /> : null}
+        {payments.error ? <AdminErrorState message={payments.error} onRetry={() => void loadPayments()} /> : null}
+        {!payments.loading && !payments.error && paymentQueue.length === 0 ? (
+          <AdminEmptyState title="لا توجد دفعات تحتاج مراجعة." body="تحويلات submitted تظهر هنا لمراجعة الإيصال." />
         ) : null}
-        {!loading && recent.length > 0 ? (
-          <ul className="cc-activity">
-            {recent.map((item) => (
-              <li key={item.id}>
-                <a href={item.href}>
-                  <span>{item.title}</span>
-                  <em>{item.meta}</em>
-                </a>
+        {!payments.loading && paymentQueue.length > 0 ? (
+          <ul className="cc-queue">
+            {paymentQueue.map((lead) => (
+              <li key={lead.id}>
+                <Link to="/admin/payments" className="cc-queue__item">
+                  <span className="cc-queue__main">
+                    <strong>{lead.full_name || lead.email || "طلب"}</strong>
+                    <span>
+                      {lead.payment_amount} {lead.payment_currency} — مراجعة تحويل بنكي
+                    </span>
+                  </span>
+                  <span className="cc-queue__meta">
+                    <em>{formatRelativeAge(lead.created_at)}</em>
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
         ) : null}
       </AdminSection>
+
+      <div className="cc-ops-split">
+        <AdminSection title="نشاط العملاء">
+          {inbox.loading ? <AdminSkeletonRows rows={3} /> : null}
+          {!inbox.loading && clientActivity.length === 0 ? (
+            <AdminEmptyState title="لا نشاط رسائل حديث" body="يظهر هنا آخر نشاط من صندوق التدريب فقط." />
+          ) : null}
+          {clientActivity.length > 0 ? (
+            <ul className="cc-activity">
+              {clientActivity.map((row) => (
+                <li key={row.id}>
+                  <Link to="/admin/messages/$conversationId" params={{ conversationId: row.id }}>
+                    <span>
+                      {row.memberName} — {row.lastMessagePreview || "رسالة"}
+                    </span>
+                    <em>{formatRelativeAge(row.lastMessageAt)}</em>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AdminSection>
+
+        <AdminSection title="آخر نشاط إداري">
+          {audit.loading ? <AdminSkeletonRows rows={3} /> : null}
+          {audit.error ? <AdminErrorState message={audit.error} onRetry={() => void loadAudit()} /> : null}
+          {!audit.loading && !audit.error && audit.rows.length === 0 ? (
+            <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة فقط." />
+          ) : null}
+          {audit.rows.length > 0 ? (
+            <ul className="cc-activity">
+              {audit.rows.map((row) => (
+                <li key={row.id}>
+                  <Link to="/admin/audit">
+                    <span>{row.eventType}</span>
+                    <em>{formatRelativeAge(row.createdAt)}</em>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AdminSection>
+      </div>
 
       <AdminSection title="إجراءات سريعة">
         <div className="cc-actions cc-actions--compact">
@@ -224,36 +327,21 @@ function CommandCenterPage() {
           <Link to="/admin/payments" className="cc-btn">
             مراجعة المدفوعات
           </Link>
+          <Link to="/admin/support" className="cc-btn">
+            فتح الدعم
+          </Link>
+          <Link to="/admin/audit" className="cc-btn">
+            سجل العمليات
+          </Link>
         </div>
       </AdminSection>
     </>
   );
 }
 
-function buildRecentActivity(data: CommandCenterState | null) {
-  if (!data) return [];
-  const items: Array<{ id: string; title: string; meta: string; href: string; at: number }> = [];
-
-  for (const row of data.inbox) {
-    if (!row.lastMessageAt) continue;
-    items.push({
-      id: `msg:${row.id}`,
-      title: `${row.memberName} — ${row.lastMessagePreview || "رسالة"}`,
-      meta: formatRelativeAge(row.lastMessageAt),
-      href: `/admin/messages/${row.id}`,
-      at: new Date(row.lastMessageAt).getTime(),
-    });
-  }
-
-  for (const lead of data.payments) {
-    items.push({
-      id: `pay:${lead.id}`,
-      title: `دفع معلّق — ${lead.full_name || lead.email || "طلب"}`,
-      meta: formatRelativeAge(lead.created_at),
-      href: "/admin/payments",
-      at: lead.created_at ? new Date(lead.created_at).getTime() : 0,
-    });
-  }
-
-  return items.sort((a, b) => b.at - a.at).slice(0, 8);
+function categoryLabel(category: string): string {
+  if (category === "coaching") return "تدريب";
+  if (category === "payment") return "دفع";
+  if (category === "support") return "دعم";
+  return category;
 }

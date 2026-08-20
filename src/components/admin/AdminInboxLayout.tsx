@@ -4,6 +4,7 @@ import { RefreshCw, Search } from "lucide-react";
 import { AdminEmptyState, AdminErrorState, AdminStatusBadge } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { conversationStatusKind, formatRelativeAge, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { sortCoachingInbox } from "@/lib/admin/admin-attention";
 import {
   conversationStatusLabel,
   type CoachingConversationStatus,
@@ -36,10 +37,12 @@ export function AdminInboxLayout() {
       setError(null);
       try {
         setRows(
-          await fetchCoachingInbox({
-            search,
-            status: filter === "all" ? null : filter,
-          }),
+          sortCoachingInbox(
+            await fetchCoachingInbox({
+              search,
+              status: filter === "all" ? null : filter,
+            }),
+          ),
         );
       } catch (err) {
         console.error(err);

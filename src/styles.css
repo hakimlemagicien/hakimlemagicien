@@ -10902,6 +10902,16 @@ body.is-membership-pass-open {
   font-style: normal;
 }
 
+.cc-icon-btn {
+  position: relative;
+}
+
+.cc-bell-count {
+  position: absolute;
+  top: 2px;
+  inset-inline-end: 2px;
+}
+
 .cc-main {
   display: flex;
   min-width: 0;
@@ -11757,6 +11767,12 @@ body.is-membership-pass-open {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.cc-client-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .cc-card--muted {
