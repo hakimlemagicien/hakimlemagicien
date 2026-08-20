@@ -180,6 +180,7 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isQuizEntry = pathname === "/" || pathname.startsWith("/quiz");
   const isPlatform = pathname.startsWith("/app");
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
 
   useEffect(() => {
     return startVisualPropertiesEngine(pathname);
@@ -192,8 +193,8 @@ function RootComponent() {
         <HashScrollHandler />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        {!isQuizEntry && !isPlatform && <FloatingWhatsApp />}
-        {!isQuizEntry && !isPlatform && <ScrollToTopButton />}
+        {!isQuizEntry && !isPlatform && !isAdmin && <FloatingWhatsApp />}
+        {!isQuizEntry && !isPlatform && !isAdmin && <ScrollToTopButton />}
       </QueryClientProvider>
     </MotionProvider>
   );

@@ -1,6 +1,8 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { AdminInboxLayout } from "@/components/admin/AdminInboxLayout";
 
 export const Route = createFileRoute("/admin/messages")({
   ssr: false,
-  component: () => <Outlet />,
+  head: () => ({ meta: [{ title: "الرسائل | مركز التشغيل" }] }),
+  component: AdminInboxLayout,
 });

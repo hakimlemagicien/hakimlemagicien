@@ -17,15 +17,30 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CoachingRouteImport } from './routes/coaching'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as PlatformRouteRouteImport } from './routes/_platform/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminSupportRouteImport } from './routes/admin/support'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminProgressRouteImport } from './routes/admin/progress'
+import { Route as AdminProgramsRouteImport } from './routes/admin/programs'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminNutritionRouteImport } from './routes/admin/nutrition'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
+import { Route as AdminMembershipsRouteImport } from './routes/admin/memberships'
+import { Route as AdminExercisesRouteImport } from './routes/admin/exercises'
+import { Route as AdminContentRouteImport } from './routes/admin/content'
+import { Route as AdminAuditRouteImport } from './routes/admin/audit'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AdminMessagesRouteRouteImport } from './routes/admin/messages/route'
 import { Route as AdminMessagesIndexRouteImport } from './routes/admin/messages/index'
+import { Route as AdminClientsIndexRouteImport } from './routes/admin/clients/index'
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
 import { Route as AdminMessagesConversationIdRouteImport } from './routes/admin/messages/$conversationId'
+import { Route as AdminClientsClientIdRouteImport } from './routes/admin/clients/$clientId'
 import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
@@ -92,6 +107,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlatformRouteRoute = PlatformRouteRouteImport.update({
   id: '/_platform',
   getParentRoute: () => rootRouteImport,
@@ -105,10 +125,70 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProgressRoute = AdminProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProgramsRoute = AdminProgramsRouteImport.update({
+  id: '/programs',
+  path: '/programs',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
-  id: '/admin/payments',
-  path: '/admin/payments',
-  getParentRoute: () => rootRouteImport,
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNutritionRoute = AdminNutritionRouteImport.update({
+  id: '/nutrition',
+  path: '/nutrition',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminMembershipsRoute = AdminMembershipsRouteImport.update({
+  id: '/memberships',
+  path: '/memberships',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminExercisesRoute = AdminExercisesRouteImport.update({
+  id: '/exercises',
+  path: '/exercises',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -116,14 +196,19 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AdminMessagesRouteRoute = AdminMessagesRouteRouteImport.update({
-  id: '/admin/messages',
-  path: '/admin/messages',
-  getParentRoute: () => rootRouteImport,
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminMessagesIndexRoute = AdminMessagesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminMessagesRouteRoute,
+} as any)
+const AdminClientsIndexRoute = AdminClientsIndexRouteImport.update({
+  id: '/clients/',
+  path: '/clients/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const PlatformAppIndexRoute = PlatformAppIndexRouteImport.update({
   id: '/app/',
@@ -136,6 +221,11 @@ const AdminMessagesConversationIdRoute =
     path: '/$conversationId',
     getParentRoute: () => AdminMessagesRouteRoute,
   } as any)
+const AdminClientsClientIdRoute = AdminClientsClientIdRouteImport.update({
+  id: '/clients/$clientId',
+  path: '/clients/$clientId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const PlatformAppStudioRoute = PlatformAppStudioRouteImport.update({
   id: '/app/studio',
   path: '/app/studio',
@@ -278,6 +368,7 @@ const PlatformAppDiscoverCategorySlugRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/coaching': typeof CoachingRoute
   '/contact': typeof ContactRoute
@@ -288,15 +379,29 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/memberships': typeof AdminMembershipsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/nutrition': typeof AdminNutritionRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/progress': typeof AdminProgressRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
   '/app/billing': typeof PlatformAppBillingRoute
   '/app/discover': typeof PlatformAppDiscoverRouteWithChildren
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
+  '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app/': typeof PlatformAppIndexRoute
+  '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -329,14 +434,28 @@ export interface FileRoutesByTo {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/memberships': typeof AdminMembershipsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/nutrition': typeof AdminNutritionRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/progress': typeof AdminProgressRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
   '/app/billing': typeof PlatformAppBillingRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
+  '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app': typeof PlatformAppIndexRoute
+  '/admin/clients': typeof AdminClientsIndexRoute
   '/admin/messages': typeof AdminMessagesIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -363,6 +482,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_platform': typeof PlatformRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/coaching': typeof CoachingRoute
   '/contact': typeof ContactRoute
@@ -373,15 +493,29 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/memberships': typeof AdminMembershipsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/nutrition': typeof AdminNutritionRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/programs': typeof AdminProgramsRoute
+  '/admin/progress': typeof AdminProgressRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/': typeof AdminIndexRoute
   '/_platform/app/achievements': typeof PlatformAppAchievementsRoute
   '/_platform/app/billing': typeof PlatformAppBillingRoute
   '/_platform/app/discover': typeof PlatformAppDiscoverRouteWithChildren
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
   '/_platform/app/studio': typeof PlatformAppStudioRoute
+  '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
+  '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
   '/_platform/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/_platform/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -407,6 +541,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/coaching'
     | '/contact'
@@ -417,15 +552,29 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/messages'
     | '/dashboard'
+    | '/admin/analytics'
+    | '/admin/audit'
+    | '/admin/content'
+    | '/admin/exercises'
+    | '/admin/memberships'
+    | '/admin/notifications'
+    | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/programs'
+    | '/admin/progress'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin/'
     | '/app/achievements'
     | '/app/billing'
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
+    | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/app/'
+    | '/admin/clients/'
     | '/admin/messages/'
     | '/app/discover/$slug'
     | '/app/discover/saved'
@@ -458,14 +607,28 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/dashboard'
+    | '/admin/analytics'
+    | '/admin/audit'
+    | '/admin/content'
+    | '/admin/exercises'
+    | '/admin/memberships'
+    | '/admin/notifications'
+    | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/programs'
+    | '/admin/progress'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin'
     | '/app/achievements'
     | '/app/billing'
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
+    | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/app'
+    | '/admin/clients'
     | '/admin/messages'
     | '/app/discover/$slug'
     | '/app/discover/saved'
@@ -491,6 +654,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_platform'
+    | '/admin'
     | '/auth'
     | '/coaching'
     | '/contact'
@@ -501,15 +665,29 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/messages'
     | '/_authenticated/dashboard'
+    | '/admin/analytics'
+    | '/admin/audit'
+    | '/admin/content'
+    | '/admin/exercises'
+    | '/admin/memberships'
+    | '/admin/notifications'
+    | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/programs'
+    | '/admin/progress'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin/'
     | '/_platform/app/achievements'
     | '/_platform/app/billing'
     | '/_platform/app/discover'
     | '/_platform/app/profile'
     | '/_platform/app/progress'
     | '/_platform/app/studio'
+    | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/_platform/app/'
+    | '/admin/clients/'
     | '/admin/messages/'
     | '/_platform/app/discover/$slug'
     | '/_platform/app/discover/saved'
@@ -536,6 +714,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   PlatformRouteRoute: typeof PlatformRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CoachingRoute: typeof CoachingRoute
   ContactRoute: typeof ContactRoute
@@ -544,8 +723,6 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   RefundRoute: typeof RefundRoute
   TermsRoute: typeof TermsRoute
-  AdminMessagesRouteRoute: typeof AdminMessagesRouteRouteWithChildren
-  AdminPaymentsRoute: typeof AdminPaymentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -606,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_platform': {
       id: '/_platform'
       path: ''
@@ -627,12 +811,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/progress': {
+      id: '/admin/progress'
+      path: '/progress'
+      fullPath: '/admin/progress'
+      preLoaderRoute: typeof AdminProgressRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/programs': {
+      id: '/admin/programs'
+      path: '/programs'
+      fullPath: '/admin/programs'
+      preLoaderRoute: typeof AdminProgramsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/payments': {
       id: '/admin/payments'
-      path: '/admin/payments'
+      path: '/payments'
       fullPath: '/admin/payments'
       preLoaderRoute: typeof AdminPaymentsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/nutrition': {
+      id: '/admin/nutrition'
+      path: '/nutrition'
+      fullPath: '/admin/nutrition'
+      preLoaderRoute: typeof AdminNutritionRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/memberships': {
+      id: '/admin/memberships'
+      path: '/memberships'
+      fullPath: '/admin/memberships'
+      preLoaderRoute: typeof AdminMembershipsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/exercises': {
+      id: '/admin/exercises'
+      path: '/exercises'
+      fullPath: '/admin/exercises'
+      preLoaderRoute: typeof AdminExercisesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -643,10 +911,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/messages': {
       id: '/admin/messages'
-      path: '/admin/messages'
+      path: '/messages'
       fullPath: '/admin/messages'
       preLoaderRoute: typeof AdminMessagesRouteRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/messages/': {
       id: '/admin/messages/'
@@ -654,6 +922,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/messages/'
       preLoaderRoute: typeof AdminMessagesIndexRouteImport
       parentRoute: typeof AdminMessagesRouteRoute
+    }
+    '/admin/clients/': {
+      id: '/admin/clients/'
+      path: '/clients'
+      fullPath: '/admin/clients/'
+      preLoaderRoute: typeof AdminClientsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_platform/app/': {
       id: '/_platform/app/'
@@ -668,6 +943,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/messages/$conversationId'
       preLoaderRoute: typeof AdminMessagesConversationIdRouteImport
       parentRoute: typeof AdminMessagesRouteRoute
+    }
+    '/admin/clients/$clientId': {
+      id: '/admin/clients/$clientId'
+      path: '/clients/$clientId'
+      fullPath: '/admin/clients/$clientId'
+      preLoaderRoute: typeof AdminClientsClientIdRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_platform/app/studio': {
       id: '/_platform/app/studio'
@@ -943,10 +1225,53 @@ const AdminMessagesRouteRouteChildren: AdminMessagesRouteRouteChildren = {
 const AdminMessagesRouteRouteWithChildren =
   AdminMessagesRouteRoute._addFileChildren(AdminMessagesRouteRouteChildren)
 
+interface AdminRouteRouteChildren {
+  AdminMessagesRouteRoute: typeof AdminMessagesRouteRouteWithChildren
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminContentRoute: typeof AdminContentRoute
+  AdminExercisesRoute: typeof AdminExercisesRoute
+  AdminMembershipsRoute: typeof AdminMembershipsRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminNutritionRoute: typeof AdminNutritionRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminProgramsRoute: typeof AdminProgramsRoute
+  AdminProgressRoute: typeof AdminProgressRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminClientsClientIdRoute: typeof AdminClientsClientIdRoute
+  AdminClientsIndexRoute: typeof AdminClientsIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminMessagesRouteRoute: AdminMessagesRouteRouteWithChildren,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminContentRoute: AdminContentRoute,
+  AdminExercisesRoute: AdminExercisesRoute,
+  AdminMembershipsRoute: AdminMembershipsRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminNutritionRoute: AdminNutritionRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminProgramsRoute: AdminProgramsRoute,
+  AdminProgressRoute: AdminProgressRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminSupportRoute: AdminSupportRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminClientsClientIdRoute: AdminClientsClientIdRoute,
+  AdminClientsIndexRoute: AdminClientsIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   PlatformRouteRoute: PlatformRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CoachingRoute: CoachingRoute,
   ContactRoute: ContactRoute,
@@ -955,8 +1280,6 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   RefundRoute: RefundRoute,
   TermsRoute: TermsRoute,
-  AdminMessagesRouteRoute: AdminMessagesRouteRouteWithChildren,
-  AdminPaymentsRoute: AdminPaymentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -7,6 +7,8 @@ import {
   type ResendAccessResult,
 } from "@/lib/payment-notifications-api";
 
+export { checkAdminAccess, requireAdminRouteAccess } from "@/lib/admin/admin-access";
+
 export type { AcceptPaymentOnboardingResult, ResendAccessResult };
 
 const PAYMENT_PROOFS_BUCKET = "payment-proofs";
@@ -20,34 +22,12 @@ export type AdminApprovedLead =
 
 export type AdminPaymentDecision = "approved" | "rejected";
 
-export async function checkAdminAccess(): Promise<{ userId: string }> {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
+export const PAYMENT_REJECT_REASON_MIN = 3;
+export const PAYMENT_REJECT_REASON_MAX = 500;
 
-  if (sessionError || !session?.user) {
-    throw new Error("unauthenticated");
-  }
-
-  const userId = session.user.id;
-
-  const { data: roles, error: roleError } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-
-  if (roleError) {
-    console.error("[checkAdminAccess] user_roles:", roleError.message);
-    throw new Error("forbidden");
-  }
-
-  const isAdmin = roles?.some((row) => row.role === "admin") ?? false;
-  if (!isAdmin) {
-    throw new Error("forbidden");
-  }
-
-  return { userId };
+export function isValidPaymentRejectReason(reason: string | undefined): boolean {
+  const trimmed = reason?.trim() ?? "";
+  return trimmed.length >= PAYMENT_REJECT_REASON_MIN && trimmed.length <= PAYMENT_REJECT_REASON_MAX;
 }
 
 export async function fetchSubmittedLeads(): Promise<AdminSubmittedLead[]> {
@@ -69,10 +49,16 @@ export async function resendClientAccessLink(leadId: string): Promise<ResendAcce
 export async function updateLeadPaymentStatus(
   leadId: string,
   status: AdminPaymentDecision,
+  reason?: string,
 ): Promise<void> {
+  if (status === "rejected" && !isValidPaymentRejectReason(reason)) {
+    throw new Error("reason_required");
+  }
+
   const { error } = await supabase.rpc("admin_update_lead_payment_status", {
     p_lead_id: leadId,
     p_payment_status: status,
+    p_reason: reason?.trim() || null,
   });
   if (error) throw error;
 }

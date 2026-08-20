@@ -1,11 +1,17 @@
-import { createFileRoute, isRedirect, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { AdminChrome } from "@/components/admin/AdminChrome";
+import { AdminConfirmDialog, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
+import { AdminErrorState, AdminStatusBadge } from "@/components/admin/AdminPage";
 import { CoachChatComposer, type ChatComposerPayload } from "@/components/platform/support/CoachChatComposer";
 import { CoachingMessageList } from "@/components/platform/support/CoachingMessageList";
-import { checkAdminAccess } from "@/lib/admin-payments-api";
 import { triageMemberMessage } from "@/lib/platform/coach-chat-triage";
+import {
+  conversationStatusKind,
+  formatRelativeAge,
+  planLabel,
+  planStatusKind,
+} from "@/lib/admin/admin-status";
 import {
   COACHING_MESSAGE_PAGE_SIZE,
   conversationStatusLabel,
@@ -27,15 +33,7 @@ import {
 
 export const Route = createFileRoute("/admin/messages/$conversationId")({
   ssr: false,
-  head: () => ({ meta: [{ title: "محادثة عميل | Admin" }] }),
-  beforeLoad: async () => {
-    try {
-      return await checkAdminAccess();
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      throw redirect({ to: "/" });
-    }
-  },
+  head: () => ({ meta: [{ title: "محادثة عميل | مركز التشغيل" }] }),
   component: AdminConversationPage,
 });
 
@@ -48,6 +46,7 @@ function AdminConversationPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
 
   const lastMemberText = useMemo(
     () => [...messages].reverse().find((message) => message.actor === "member" && message.body)?.body ?? "",
@@ -55,10 +54,7 @@ function AdminConversationPage() {
   );
 
   const reload = useCallback(async () => {
-    const [inbox, page] = await Promise.all([
-      fetchCoachingInbox(),
-      fetchCoachingMessages(conversationId),
-    ]);
+    const [inbox, page] = await Promise.all([fetchCoachingInbox(), fetchCoachingMessages(conversationId)]);
     setRow(inbox.find((item) => item.id === conversationId) ?? null);
     setMessages(page);
     setHasOlder(page.length >= COACHING_MESSAGE_PAGE_SIZE);
@@ -111,31 +107,60 @@ function AdminConversationPage() {
     }
   }
 
-  async function setStatus(status: CoachingConversationStatus) {
+  async function applyStatus(status: CoachingConversationStatus) {
     await setCoachingConversationStatus(conversationId, status);
     await reload();
   }
 
+  function requestClose() {
+    setConfirm({
+      title: "إغلاق المحادثة",
+      body: "سيتم وضع المحادثة في حالة مغلقة. يمكنك إعادة فتحها لاحقاً من إجراءات المحادثة.",
+      confirmLabel: "إغلاق المحادثة",
+      tone: "danger",
+      onConfirm: () => {
+        void applyStatus("closed");
+      },
+    });
+  }
+
+  const vip = row?.membershipTier?.toLowerCase() === "vip";
+
   return (
-    <AdminChrome title={row?.memberName ?? "محادثة"} subtitle={row ? conversationStatusLabel(row.status) : undefined}>
-      <div className="admin-thread">
-        <Link to="/admin/messages" className="admin-thread__back">
+    <div className="cc-thread">
+      <header className="cc-thread__head">
+        <Link to="/admin/messages" className="cc-thread__back">
           <ChevronRight className="h-4 w-4" />
           الصندوق
         </Link>
-        {row ? (
-          <p className="admin-thread__meta">
-            {row.memberEmail ?? ""}
-            {row.membershipTier ? ` · ${row.membershipTier}` : ""}
-            {row.memberGoal ? ` · ${row.memberGoal}` : ""}
-          </p>
-        ) : null}
-        {error ? <p className="admin-inbox__error">{error}</p> : null}
-        <div className="admin-thread__actions">
-          <button type="button" onClick={() => void setStatus("closed")}>إغلاق</button>
-          <button type="button" onClick={() => void setStatus("waiting_for_reply")}>إعادة فتح</button>
+        <div className="cc-thread__identity">
+          <h1>{row?.memberName ?? "محادثة"}</h1>
+          <div className="cc-thread__meta">
+            {row ? (
+              <AdminStatusBadge tone={conversationStatusKind(row.status)}>
+                {conversationStatusLabel(row.status)}
+              </AdminStatusBadge>
+            ) : null}
+            {vip ? <AdminStatusBadge tone="vip">VIP</AdminStatusBadge> : null}
+            {row?.membershipTier && !vip ? (
+              <AdminStatusBadge tone={planStatusKind(row.membershipTier)}>
+                {planLabel(row.membershipTier)}
+              </AdminStatusBadge>
+            ) : null}
+            {row?.memberGoal ? <span>{row.memberGoal}</span> : null}
+            {row?.lastMessageAt ? <span>منذ {formatRelativeAge(row.lastMessageAt)}</span> : null}
+          </div>
+        </div>
+        <div className="cc-thread__actions">
+          <button type="button" className="cc-btn cc-btn--ghost" onClick={requestClose}>
+            إغلاق
+          </button>
+          <button type="button" className="cc-btn cc-btn--ghost" onClick={() => void applyStatus("waiting_for_reply")}>
+            إعادة فتح
+          </button>
           <button
             type="button"
+            className="cc-btn"
             onClick={() => {
               if (!lastMemberText) return;
               const suggestion = triageMemberMessage({
@@ -148,33 +173,35 @@ function AdminConversationPage() {
             اقتراح رد
           </button>
         </div>
-        <div className="admin-thread__chat">
-          <CoachingMessageList
-            messages={messages}
-            loading={loading}
-            hasOlder={hasOlder}
-            selfActor="coach"
-            empty={<p className="coach-chat__empty">لا رسائل بعد. انتظر رسالة العميل.</p>}
-          />
-          {draft ? (
-            <label className="admin-thread__draft">
-              مسودة للمراجعة — لن تُرسل إلا بعد الضغط على إرسال
-              <textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={3} />
-            </label>
-          ) : null}
-          {draft ? (
-            <button
-              type="button"
-              className="admin-thread__send-draft"
-              disabled={sending || !draft.trim()}
-              onClick={() => void deliver({ kind: "text", text: draft.trim() })}
-            >
-              اعتماد المسودة وإرسالها
-            </button>
-          ) : null}
-          <CoachChatComposer sending={sending} onSend={(payload) => deliver(payload)} />
-        </div>
+      </header>
+      {error ? <AdminErrorState message={error} /> : null}
+      <div className="cc-thread__chat">
+        <CoachingMessageList
+          messages={messages}
+          loading={loading}
+          hasOlder={hasOlder}
+          selfActor="coach"
+          empty={<p className="coach-chat__empty">لا رسائل بعد. انتظر رسالة العميل.</p>}
+        />
+        {draft ? (
+          <label className="cc-thread__draft">
+            مسودة للمراجعة — لن تُرسل إلا بعد الضغط على إرسال
+            <textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={3} />
+          </label>
+        ) : null}
+        {draft ? (
+          <button
+            type="button"
+            className="cc-btn cc-btn--primary cc-thread__send-draft"
+            disabled={sending || !draft.trim()}
+            onClick={() => void deliver({ kind: "text", text: draft.trim() })}
+          >
+            اعتماد المسودة وإرسالها
+          </button>
+        ) : null}
+        <CoachChatComposer sending={sending} onSend={(payload) => deliver(payload)} />
       </div>
-    </AdminChrome>
+      <AdminConfirmDialog request={confirm} onClose={() => setConfirm(null)} />
+    </div>
   );
 }

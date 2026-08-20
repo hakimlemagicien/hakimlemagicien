@@ -55,6 +55,14 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (
+              id.includes("/src/routes/admin/") ||
+              id.includes("/src/components/admin/") ||
+              id.includes("/src/lib/admin/") ||
+              id.includes("/src/lib/admin-payments-api")
+            ) {
+              return "admin-command-center";
+            }
             if (!id.includes("node_modules")) return;
             if (id.includes("framer-motion")) return "vendor-motion";
             if (id.includes("swiper")) return "vendor-swiper";

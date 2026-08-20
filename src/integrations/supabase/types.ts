@@ -680,12 +680,28 @@ export type Database = {
       }
       memberships: {
         Row: {
+          auto_renew: boolean
+          billing_period_months: number | null
+          cancel_at_period_end: boolean
           created_at: string
+          currency: string
           ends_at: string | null
           id: string
           is_active: boolean
+          last_renewal_reminder_at: string | null
+          next_renewal_at: string | null
+          paid_period_end: string | null
+          payment_succeeded_at: string | null
+          personal_program_delivered_at: string | null
+          personal_program_started_at: string | null
+          premium_access_granted_at: string | null
+          price_amount: number | null
           source: string
           starts_at: string
+          subscription_activated_at: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           tier: string
           updated_at: string
           user_id: string
@@ -1096,6 +1112,7 @@ export type Database = {
       }
       program_templates: {
         Row: {
+          archived_at: string | null
           created_at: string
           days_per_week: number
           description_ar: string | null
@@ -1109,8 +1126,10 @@ export type Database = {
           name_en: string | null
           slug: string
           updated_at: string
+          version: number
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           days_per_week?: number
           description_ar?: string | null
@@ -1124,8 +1143,10 @@ export type Database = {
           name_en?: string | null
           slug: string
           updated_at?: string
+          version?: number
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           days_per_week?: number
           description_ar?: string | null
@@ -1139,6 +1160,7 @@ export type Database = {
           name_en?: string | null
           slug?: string
           updated_at?: string
+          version?: number
         }
         Relationships: []
       }
@@ -1362,11 +1384,238 @@ export type Database = {
           },
         ]
       }
+      audit_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          subject_user_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          subject_user_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          subject_user_id?: string | null
+        }
+        Relationships: []
+      }
+      coach_client_notes: {
+        Row: {
+          archived_at: string | null
+          author_id: string
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          author_id: string
+          body: string
+          client_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          author_id?: string
+          body?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_program_assignments: {
+        Row: {
+          archived_at: string | null
+          assigned_at: string
+          assigned_by: string | null
+          client_id: string
+          created_at: string
+          id: string
+          source_template_id: string
+          status: string
+          template_version: number
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          source_template_id: string
+          status?: string
+          template_version: number
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          source_template_id?: string
+          status?: string
+          template_version?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          assigned_role: string | null
+          assigned_user_id: string | null
+          category: string
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          language: string | null
+          message: string
+          status: string
+          subject: string
+          ticket_code: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_role?: string | null
+          assigned_user_id?: string | null
+          category: string
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          language?: string | null
+          message: string
+          status?: string
+          subject: string
+          ticket_code: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_role?: string | null
+          assigned_user_id?: string | null
+          category?: string
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          language?: string | null
+          message?: string
+          status?: string
+          subject?: string
+          ticket_code?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_list_clients: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_onboarding?: string | null
+          p_plan?: string | null
+          p_query?: string | null
+        }
+        Returns: {
+          avatar_path: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          goal: string | null
+          id: string
+          last_activity_at: string | null
+          membership_active: boolean | null
+          membership_plan: string | null
+          onboarding_completed_at: string | null
+          phone: string | null
+          total_count: number
+          unread_coaching_count: number
+          waiting_coaching: boolean
+        }[]
+      }
+      admin_get_client_overview: {
+        Args: { p_client_id: string }
+        Returns: Json
+      }
+      admin_list_client_notes: {
+        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          author_id: string
+          body: string
+          client_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }[]
+      }
+      admin_add_client_note: {
+        Args: { p_body: string; p_client_id: string }
+        Returns: string
+      }
+      admin_archive_client_note: {
+        Args: { p_note_id: string }
+        Returns: undefined
+      }
+      admin_list_audit_events: {
+        Args: { p_event_type?: string | null; p_limit?: number; p_offset?: number }
+        Returns: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          subject_user_id: string | null
+        }[]
+      }
+      admin_get_operations_snapshot: { Args: never; Returns: Json }
+      admin_list_support_tickets: {
+        Args: { p_limit?: number; p_offset?: number; p_status?: string | null }
+        Returns: {
+          category: string
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          status: string
+          subject: string
+          ticket_code: string
+          updated_at: string
+          user_id: string | null
+        }[]
+      }
+      admin_set_support_ticket_status: {
+        Args: { p_status: string; p_ticket_id: string }
+        Returns: undefined
+      }
       admin_list_coaching_inbox: {
         Args: {
           p_search?: string | null
@@ -1421,6 +1670,7 @@ export type Database = {
         Args: {
           p_lead_id: string
           p_payment_status: Database["public"]["Enums"]["payment_status"]
+          p_reason?: string | null
         }
         Returns: undefined
       }
