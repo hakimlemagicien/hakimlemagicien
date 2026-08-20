@@ -157,7 +157,7 @@ const daysFromNow = (n: number) => {
   return d.toISOString();
 };
 
-/** CMS-ready seed — replace with Supabase `discover_content` when populated. */
+/** CMS-ready seed — overlay with Supabase `discover_content`. Database wins by slug. */
 export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
   {
     id: "home-hero-commitment",
@@ -674,6 +674,16 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
   },
 ];
 
+let runtimeDiscoverCatalog: DiscoverContentItem[] | null = null;
+
+export function getDiscoverCatalog(): DiscoverContentItem[] {
+  return runtimeDiscoverCatalog ?? DISCOVER_CONTENT_SEED;
+}
+
+export function setDiscoverCatalog(items: DiscoverContentItem[] | null) {
+  runtimeDiscoverCatalog = items;
+}
+
 export function isDiscoverPublished(item: DiscoverContentItem, at = new Date()): boolean {
   if (item.status !== "published" && item.status !== "scheduled") return false;
   if (item.status === "scheduled" && new Date(item.publishDate) > at) return false;
@@ -765,20 +775,20 @@ export function canAccessDiscoverContent(
 }
 
 function publishedItems(): DiscoverContentItem[] {
-  return DISCOVER_CONTENT_SEED.filter((item) => isDiscoverPublished(item)).sort(
-    (a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime(),
-  );
+  return getDiscoverCatalog()
+    .filter((item) => isDiscoverPublished(item))
+    .sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
 }
 
 export function getDiscoverContentBySlug(slug: string): DiscoverContentItem | undefined {
-  const item = DISCOVER_CONTENT_SEED.find((c) => c.slug === slug);
+  const item = getDiscoverCatalog().find((c) => c.slug === slug);
   if (!item || !isDiscoverPublished(item)) return undefined;
   if (item.type === "success_story" && !item.successStory?.consentApproved) return undefined;
   return item;
 }
 
 export function getDiscoverContentById(id: string): DiscoverContentItem | undefined {
-  const item = DISCOVER_CONTENT_SEED.find((c) => c.id === id);
+  const item = getDiscoverCatalog().find((c) => c.id === id);
   if (!item || !isDiscoverPublished(item)) return undefined;
   return item;
 }
@@ -869,14 +879,16 @@ export function getRelatedDiscoverContent(item: DiscoverContentItem, limit = 4):
     .slice(0, limit);
 }
 
-/** Simulated CMS fetch — swap body with Supabase when tables are populated. */
+/** CMS fetch — database published rows overlay the seed catalog. */
 export async function fetchDiscoverFeed(): Promise<DiscoverFeed> {
-  await new Promise((r) => setTimeout(r, 120));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return buildDiscoverFeed();
 }
 
 export async function fetchDiscoverContent(slug: string): Promise<DiscoverContentItem | null> {
-  await new Promise((r) => setTimeout(r, 80));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return getDiscoverContentBySlug(slug) ?? null;
 }
 
@@ -884,6 +896,7 @@ export async function searchDiscoverContentAsync(
   query: string,
   options?: Parameters<typeof searchDiscoverContent>[1],
 ): Promise<DiscoverContentItem[]> {
-  await new Promise((r) => setTimeout(r, 200));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return searchDiscoverContent(query, options);
 }

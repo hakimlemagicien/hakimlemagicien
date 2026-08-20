@@ -32,10 +32,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "content",
     label: "المحتوى",
     items: [
-      { id: "programs", to: "/admin/programs", label: "البرامج", status: "foundation" },
-      { id: "exercises", to: "/admin/exercises", label: "التمارين", status: "foundation" },
-      { id: "nutrition", to: "/admin/nutrition", label: "التغذية", status: "foundation" },
-      { id: "content", to: "/admin/content", label: "المحتوى", status: "foundation" },
+      { id: "programs", to: "/admin/programs", label: "البرامج", status: "live" },
+      { id: "exercises", to: "/admin/exercises", label: "التمارين", status: "live" },
+      { id: "nutrition", to: "/admin/nutrition", label: "التغذية", status: "live" },
+      { id: "content", to: "/admin/content", label: "المحتوى", status: "live" },
     ],
   },
   {
@@ -60,46 +60,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
 ];
 
 export const ADMIN_PLACEHOLDER_MODULES = [
-  {
-    id: "programs",
-    path: "/admin/programs",
-    title: "البرامج",
-    purpose: "إدارة قوالب البرامج التدريبية وتعيينها للعملاء لاحقاً.",
-    summary: "كتالوج القوالب منفصل عن البرنامج المعيَّن للعميل.",
-    later: "استعراض القوالب، النشر، وربط برنامج بعميل دون خلط القالب بالنسخة المعيَّنة.",
-    source: "لا توجد قائمة تشغيلية معروضة هنا بعد.",
-    contract: "PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM",
-  },
-  {
-    id: "exercises",
-    path: "/admin/exercises",
-    title: "التمارين",
-    purpose: "إدارة مكتبة التمارين وحالات النشر.",
-    summary: "مسار النشر: مسودة → مراجعة → منشور → مؤرشف.",
-    later: "بحث، فلترة، وتعديل عناصر المكتبة من مركز التشغيل.",
-    source: "المكتبة الحالية تُدار خارج هذه الشاشة.",
-    contract: "CONTENT_PUBLISHING",
-  },
-  {
-    id: "nutrition",
-    path: "/admin/nutrition",
-    title: "التغذية",
-    purpose: "إدارة الوجبات والخطط الغذائية للتشغيل اليومي.",
-    summary: "لا تُخترع قواعد تغذية من الواجهة الإدارية.",
-    later: "استعراض المكتبة، الحالات، وربط الخطة بالعميل عند اعتماد العقد.",
-    source: "لا قائمة وجبات داخل Command Center حالياً.",
-    contract: "DOMAIN_RULE_REQUIRED",
-  },
-  {
-    id: "content",
-    path: "/admin/content",
-    title: "المحتوى",
-    purpose: "نشر محتوى Discover وإدارته.",
-    summary: "شاشة أساس لمسار النشر، وليست CMS كاملة.",
-    later: "مسودة، مراجعة، نشر، وأرشفة من مكان واحد.",
-    source: "لا عناصر محتوى معروضة هنا بعد.",
-    contract: "CONTENT_PUBLISHING",
-  },
   {
     id: "progress",
     path: "/admin/progress",

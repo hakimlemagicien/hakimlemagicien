@@ -192,6 +192,144 @@ export type Database = {
         }
         Relationships: []
       }
+      discover_categories: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          image_path: string | null
+          name_ar: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          image_path?: string | null
+          name_ar: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          image_path?: string | null
+          name_ar?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      discover_content: {
+        Row: {
+          access_level: Database["public"]["Enums"]["discover_access_level"]
+          author_id: string | null
+          author_name: string | null
+          body: string
+          category_id: string | null
+          content_type: Database["public"]["Enums"]["discover_content_type"]
+          cover_image_path: string | null
+          created_at: string
+          created_by: string | null
+          featured: boolean
+          id: string
+          language: string
+          publish_at: string | null
+          published_by: string | null
+          reading_time_minutes: number | null
+          seo_description: string | null
+          seo_title: string | null
+          short_description: string
+          slug: string
+          sort_priority: number
+          status: Database["public"]["Enums"]["discover_content_status"]
+          tags: string[]
+          title: string
+          type_payload: Json
+          updated_at: string
+          updated_by: string | null
+          video_duration_seconds: number | null
+          video_source: string | null
+          view_count: number
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["discover_access_level"]
+          author_id?: string | null
+          author_name?: string | null
+          body?: string
+          category_id?: string | null
+          content_type: Database["public"]["Enums"]["discover_content_type"]
+          cover_image_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          featured?: boolean
+          id?: string
+          language?: string
+          publish_at?: string | null
+          published_by?: string | null
+          reading_time_minutes?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string
+          slug: string
+          sort_priority?: number
+          status?: Database["public"]["Enums"]["discover_content_status"]
+          tags?: string[]
+          title: string
+          type_payload?: Json
+          updated_at?: string
+          updated_by?: string | null
+          video_duration_seconds?: number | null
+          video_source?: string | null
+          view_count?: number
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["discover_access_level"]
+          author_id?: string | null
+          author_name?: string | null
+          body?: string
+          category_id?: string | null
+          content_type?: Database["public"]["Enums"]["discover_content_type"]
+          cover_image_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          featured?: boolean
+          id?: string
+          language?: string
+          publish_at?: string | null
+          published_by?: string | null
+          reading_time_minutes?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string
+          slug?: string
+          sort_priority?: number
+          status?: Database["public"]["Enums"]["discover_content_status"]
+          tags?: string[]
+          title?: string
+          type_payload?: Json
+          updated_at?: string
+          updated_by?: string | null
+          video_duration_seconds?: number | null
+          video_source?: string | null
+          view_count?: number
+        }
+        Relationships: []
+      }
       exercise_muscle_groups: {
         Row: {
           code: string
@@ -1633,6 +1771,147 @@ export type Database = {
         Args: { p_status: string; p_ticket_id: string }
         Returns: undefined
       }
+      client_list_hidden_library_keys: { Args: never; Returns: Json }
+      admin_exercise_filter_options: { Args: never; Returns: Json }
+      admin_list_exercises: {
+        Args: {
+          p_active?: boolean | null
+          p_difficulty?: string | null
+          p_equipment?: string | null
+          p_limit?: number
+          p_muscle?: string | null
+          p_offset?: number
+          p_query?: string | null
+          p_type?: string | null
+        }
+        Returns: {
+          difficulty: Database["public"]["Enums"]["exercise_difficulty"] | null
+          exercise_type: Database["public"]["Enums"]["exercise_type"]
+          equipment: string | null
+          external_id: string
+          id: string
+          instructions_status: Database["public"]["Enums"]["exercise_media_status"]
+          is_active: boolean
+          muscle_group_name_ar: string | null
+          name_ar: string
+          name_en: string
+          primary_muscle: string | null
+          slug: string
+          thumbnail_path: string | null
+          total_count: number
+          updated_at: string
+          video_status: Database["public"]["Enums"]["exercise_media_status"]
+        }[]
+      }
+      admin_get_exercise: { Args: { p_id: string }; Returns: Json }
+      admin_save_exercise: {
+        Args: { p_expected_updated_at?: string | null; p_payload: Json }
+        Returns: Json
+      }
+      admin_set_exercise_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: Json
+      }
+      admin_list_meals: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string | null
+          p_status?: string | null
+          p_type?: string | null
+        }
+        Returns: {
+          calories: number
+          carbs_g: number
+          external_id: string
+          fat_g: number
+          id: string
+          image_status: Database["public"]["Enums"]["meal_image_status"]
+          image_thumb_path: string | null
+          is_active: boolean
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          name_ar: string
+          name_en: string
+          protein_g: number
+          review_status: string | null
+          status: Database["public"]["Enums"]["meal_library_status"]
+          total_count: number
+          updated_at: string
+        }[]
+      }
+      admin_get_meal: { Args: { p_id: string }; Returns: Json }
+      admin_save_meal: {
+        Args: { p_expected_updated_at?: string | null; p_payload: Json }
+        Returns: Json
+      }
+      admin_set_meal_status: {
+        Args: { p_id: string; p_status: string }
+        Returns: Json
+      }
+      admin_list_program_templates: {
+        Args: {
+          p_goal?: string | null
+          p_level?: string | null
+          p_limit?: number
+          p_offset?: number
+          p_query?: string | null
+          p_status?: string | null
+        }
+        Returns: {
+          archived_at: string | null
+          assignment_count: number
+          days_per_week: number
+          duration_weeks: number
+          goal: Database["public"]["Enums"]["program_goal"] | null
+          id: string
+          is_published: boolean
+          level: Database["public"]["Enums"]["program_level"] | null
+          name_ar: string
+          name_en: string | null
+          slug: string
+          total_count: number
+          updated_at: string
+          version: number
+        }[]
+      }
+      admin_get_program_template: { Args: { p_id: string }; Returns: Json }
+      admin_save_program_template: {
+        Args: { p_expected_updated_at?: string | null; p_payload: Json }
+        Returns: Json
+      }
+      admin_publish_program_template: { Args: { p_id: string }; Returns: Json }
+      admin_archive_program_template: { Args: { p_id: string }; Returns: Json }
+      admin_list_discover_categories: { Args: never; Returns: Json }
+      admin_list_discover_content: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string | null
+          p_status?: string | null
+          p_type?: string | null
+        }
+        Returns: {
+          author_name: string | null
+          content_type: Database["public"]["Enums"]["discover_content_type"]
+          featured: boolean
+          id: string
+          publish_at: string | null
+          slug: string
+          status: Database["public"]["Enums"]["discover_content_status"]
+          title: string
+          total_count: number
+          updated_at: string
+        }[]
+      }
+      admin_get_discover_content: { Args: { p_id: string }; Returns: Json }
+      admin_save_discover_content: {
+        Args: { p_expected_updated_at?: string | null; p_payload: Json }
+        Returns: Json
+      }
+      admin_set_discover_content_status: {
+        Args: { p_id: string; p_status: string }
+        Returns: Json
+      }
       admin_list_coaching_inbox: {
         Args: {
           p_search?: string | null
@@ -1869,6 +2148,17 @@ export type Database = {
       coaching_actor: "member" | "coach"
       coaching_conversation_status: "new" | "waiting_for_reply" | "replied" | "closed"
       coaching_message_kind: "text" | "image" | "voice" | "video"
+      discover_access_level: "free" | "premium"
+      discover_content_status: "draft" | "scheduled" | "published" | "unpublished" | "archived"
+      discover_content_type:
+        | "article"
+        | "video"
+        | "recipe"
+        | "success_story"
+        | "challenge"
+        | "daily_tip"
+        | "platform_update"
+        | "promotional"
       exercise_difficulty: "beginner" | "intermediate" | "advanced"
       exercise_media_status:
         | "placeholder"
@@ -2032,6 +2322,18 @@ export const Constants = {
       coaching_actor: ["member", "coach"],
       coaching_conversation_status: ["new", "waiting_for_reply", "replied", "closed"],
       coaching_message_kind: ["text", "image", "voice", "video"],
+      discover_access_level: ["free", "premium"],
+      discover_content_status: ["draft", "scheduled", "published", "unpublished", "archived"],
+      discover_content_type: [
+        "article",
+        "video",
+        "recipe",
+        "success_story",
+        "challenge",
+        "daily_tip",
+        "platform_update",
+        "promotional",
+      ],
       exercise_difficulty: ["beginner", "intermediate", "advanced"],
       exercise_media_status: [
         "placeholder",
@@ -2067,4 +2369,3 @@ export const Constants = {
     },
   },
 } as const
-{"_tag":"Error","error":{"code":"UnknownError","message":"Timeout while shutting down PostHog. Some events may not have been sent."}}

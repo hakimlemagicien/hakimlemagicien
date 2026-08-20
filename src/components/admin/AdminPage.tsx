@@ -61,7 +61,12 @@ export function AdminStatusBadge({
     | "critical"
     | "high"
     | "normal"
-    | "low";
+    | "low"
+    | "draft"
+    | "published"
+    | "archived"
+    | "inactive"
+    | "pilot";
   children: ReactNode;
 }) {
   return <span className={`cc-badge cc-badge--${tone}`}>{children}</span>;

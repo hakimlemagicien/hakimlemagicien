@@ -138,6 +138,10 @@ const seedCatalog = {
 };
 let runtimeCatalog: MealLibraryRecord[] | null = null;
 
+export function getMealLibrarySeed(): MealLibraryRecord[] {
+  return seedCatalog.meals;
+}
+
 export function getMealLibraryCatalog(): MealLibraryRecord[] {
   return runtimeCatalog ?? seedCatalog.meals;
 }

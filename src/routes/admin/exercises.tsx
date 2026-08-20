@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AdminModulePlaceholder } from "@/components/admin/AdminModulePlaceholder";
+import { ExerciseLibraryManager } from "@/components/admin/libraries/ExerciseLibraryManager";
 
 export const Route = createFileRoute("/admin/exercises")({
   ssr: false,
   head: () => ({ meta: [{ title: "التمارين | مركز التشغيل" }] }),
-  component: () => <AdminModulePlaceholder moduleId="exercises" />,
+  component: ExerciseLibraryManager,
 });

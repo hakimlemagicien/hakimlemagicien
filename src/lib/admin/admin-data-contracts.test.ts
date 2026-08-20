@@ -74,4 +74,12 @@ assert(migration.includes("reason_required"), "payment reject requires reason");
 assert(migration.includes("invalid_transition"), "support status transitions are constrained");
 assert(migration.includes("LEAST(GREATEST(COALESCE(p_limit, 25), 1), 25)") || migration.includes("LEAST(GREATEST"), "RPC pagination is clamped");
 
+const phase5 = readFileSync(
+  join(root, "supabase/migrations/20260820230000_admin_library_management.sql"),
+  "utf8",
+);
+assert(phase5.includes("_require_admin"), "phase 5 RPCs reuse admin gate");
+assert(!/CREATE TABLE[\s\S]*admin_exercises/.test(phase5), "phase 5 has no parallel exercise table");
+assert(phase5.includes("client_list_hidden_library_keys"), "client overlay exclusions exist");
+
 console.log("admin-data-contracts tests passed");
