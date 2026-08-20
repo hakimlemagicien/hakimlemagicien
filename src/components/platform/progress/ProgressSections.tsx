@@ -623,8 +623,7 @@ export function PhotoCaptureFlow({
             <label className="mt-4 flex items-start gap-2 rounded-2xl bg-muted/45 p-3 text-[11px]">
               <input type="checkbox" checked={consent} onChange={(e) => onToggleConsent(e.target.checked)} className="mt-0.5" />
               <span>
-                أوافق على مراجعة صور تقدمي لاستخدامها المحتمل ضمن قصص نجاح MAAKFIT. (اختياري — غير مفعّل
-                افتراضياً)
+                أوافق اختيارياً على استخدام صور تقدمي في حملات Before/After التسويقية. الرفض لا يؤثر على الحساب أو البرنامج أو الاشتراك أو الكوتش. الصور خاصة افتراضياً.
               </span>
             </label>
             <button type="button" onClick={onNext} className="mt-4 flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-xs font-black text-primary-foreground">

@@ -14,6 +14,7 @@ import { Route as RefundRouteImport } from './routes/refund'
 import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CoachingRouteImport } from './routes/coaching'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PlatformRouteRouteImport } from './routes/_platform/route'
@@ -29,6 +30,7 @@ import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/st
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
 import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/discover'
+import { Route as PlatformAppBillingRouteImport } from './routes/_platform/app/billing'
 import { Route as PlatformAppAchievementsRouteImport } from './routes/_platform/app/achievements'
 import { Route as PlatformAppSupportIndexRouteImport } from './routes/_platform/app/support/index'
 import { Route as PlatformAppProgramIndexRouteImport } from './routes/_platform/app/program/index'
@@ -73,6 +75,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachingRoute = CoachingRouteImport.update({
@@ -147,6 +154,11 @@ const PlatformAppProfileRoute = PlatformAppProfileRouteImport.update({
 const PlatformAppDiscoverRoute = PlatformAppDiscoverRouteImport.update({
   id: '/app/discover',
   path: '/app/discover',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
+const PlatformAppBillingRoute = PlatformAppBillingRouteImport.update({
+  id: '/app/billing',
+  path: '/app/billing',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
 const PlatformAppAchievementsRoute = PlatformAppAchievementsRouteImport.update({
@@ -268,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/coaching': typeof CoachingRoute
+  '/contact': typeof ContactRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -277,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
+  '/app/billing': typeof PlatformAppBillingRoute
   '/app/discover': typeof PlatformAppDiscoverRouteWithChildren
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
@@ -308,6 +322,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/coaching': typeof CoachingRoute
+  '/contact': typeof ContactRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -316,6 +331,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
+  '/app/billing': typeof PlatformAppBillingRoute
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
@@ -349,6 +365,7 @@ export interface FileRoutesById {
   '/_platform': typeof PlatformRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/coaching': typeof CoachingRoute
+  '/contact': typeof ContactRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/quiz': typeof QuizRoute
@@ -358,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/_platform/app/achievements': typeof PlatformAppAchievementsRoute
+  '/_platform/app/billing': typeof PlatformAppBillingRoute
   '/_platform/app/discover': typeof PlatformAppDiscoverRouteWithChildren
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
@@ -391,6 +409,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/coaching'
+    | '/contact'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -400,6 +419,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/admin/payments'
     | '/app/achievements'
+    | '/app/billing'
     | '/app/discover'
     | '/app/profile'
     | '/app/progress'
@@ -431,6 +451,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/coaching'
+    | '/contact'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -439,6 +460,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/admin/payments'
     | '/app/achievements'
+    | '/app/billing'
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
@@ -471,6 +493,7 @@ export interface FileRouteTypes {
     | '/_platform'
     | '/auth'
     | '/coaching'
+    | '/contact'
     | '/pricing'
     | '/privacy'
     | '/quiz'
@@ -480,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/admin/payments'
     | '/_platform/app/achievements'
+    | '/_platform/app/billing'
     | '/_platform/app/discover'
     | '/_platform/app/profile'
     | '/_platform/app/progress'
@@ -514,6 +538,7 @@ export interface RootRouteChildren {
   PlatformRouteRoute: typeof PlatformRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CoachingRoute: typeof CoachingRoute
+  ContactRoute: typeof ContactRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   QuizRoute: typeof QuizRoute
@@ -558,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coaching': {
@@ -663,6 +695,13 @@ declare module '@tanstack/react-router' {
       path: '/app/discover'
       fullPath: '/app/discover'
       preLoaderRoute: typeof PlatformAppDiscoverRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
+    '/_platform/app/billing': {
+      id: '/_platform/app/billing'
+      path: '/app/billing'
+      fullPath: '/app/billing'
+      preLoaderRoute: typeof PlatformAppBillingRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
     '/_platform/app/achievements': {
@@ -840,6 +879,7 @@ const PlatformAppDiscoverRouteWithChildren =
 
 interface PlatformRouteRouteChildren {
   PlatformAppAchievementsRoute: typeof PlatformAppAchievementsRoute
+  PlatformAppBillingRoute: typeof PlatformAppBillingRoute
   PlatformAppDiscoverRoute: typeof PlatformAppDiscoverRouteWithChildren
   PlatformAppProfileRoute: typeof PlatformAppProfileRoute
   PlatformAppProgressRoute: typeof PlatformAppProgressRoute
@@ -863,6 +903,7 @@ interface PlatformRouteRouteChildren {
 
 const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
   PlatformAppAchievementsRoute: PlatformAppAchievementsRoute,
+  PlatformAppBillingRoute: PlatformAppBillingRoute,
   PlatformAppDiscoverRoute: PlatformAppDiscoverRouteWithChildren,
   PlatformAppProfileRoute: PlatformAppProfileRoute,
   PlatformAppProgressRoute: PlatformAppProgressRoute,
@@ -908,6 +949,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlatformRouteRoute: PlatformRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CoachingRoute: CoachingRoute,
+  ContactRoute: ContactRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   QuizRoute: QuizRoute,

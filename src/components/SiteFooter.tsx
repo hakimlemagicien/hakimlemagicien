@@ -58,9 +58,10 @@ const FOOTER_COLUMNS = [
   {
     title: "الدعم",
     links: [
-      { label: "اتصل بنا", href: `mailto:${SITE_SUPPORT_EMAIL}` },
+      { label: "اتصل بنا", to: LEGAL_ROUTES.contact },
       { label: "سياسة الخصوصية", to: LEGAL_ROUTES.privacy },
       { label: "الشروط والأحكام", to: LEGAL_ROUTES.terms },
+      { label: "الاسترداد والإلغاء", to: LEGAL_ROUTES.refund },
     ],
   },
   {
@@ -118,9 +119,9 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
             <Link to={LEGAL_ROUTES.refund} className="hover:text-primary">
               الاسترجاع
             </Link>
-            <a href={SITE_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-              واتساب
-            </a>
+            <Link to={LEGAL_ROUTES.contact} className="hover:text-primary">
+              التواصل
+            </Link>
           </div>
           <p className="mt-4 text-center font-[Tajawal] text-[11px] text-neutral-400">
             © {new Date().getFullYear()} جميع الحقوق محفوظة لـ MAAKFIT

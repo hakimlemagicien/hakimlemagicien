@@ -15,6 +15,7 @@ import {
   VerifyEmailScreen,
 } from "@/components/quiz/QuizOnboardingScreens";
 import { QuizLoginEntry } from "@/components/quiz/QuizLoginEntry";
+import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactElement } from "react";
 import {
@@ -28,7 +29,6 @@ import {
   PersonStanding,
   Trophy,
   Zap,
-  TrendingUp,
   Target,
   Calendar,
   Heart,
@@ -37,22 +37,13 @@ import {
   Ruler,
   Scale,
   Lightbulb,
-  Salad,
-  BarChart3,
   MessageCircle,
   ShieldCheck,
   BadgeCheck,
-  PartyPopper,
   Crown,
   Star,
   Gem,
   Shield,
-  ShieldHalf,
-  Headphones,
-  ClipboardList,
-  RefreshCw,
-  Clock,
-  UserCheck,
 } from "lucide-react";
 import { useRef } from "react";
 import maleImg from "@/assets/ذكر.png";
@@ -177,7 +168,6 @@ export function QuizPage() {
     setBodyType,
     trainingEnvironment,
     setTrainingEnvironment,
-    userLocation,
     setUserLocation,
     selectedTierId,
     setSelectedTierId,
@@ -374,38 +364,15 @@ export function QuizPage() {
           step="platformWelcome"
         />
       )}
-      {step === "trainingType" && (
-        <TrainingTypeScreen
+      {(step === "pricing" ||
+        step === "trainingType" ||
+        step === "pricingDubai" ||
+        step === "offlinePackages") && (
+        <PricingScreen
+          name={userName}
+          total={totalSteps}
           onBack={() => goBack("reveal")}
-          onSelect={(t) => transitionTo(t === "inperson" ? "offlinePackages" : "pricing")}
-        />
-      )}
-      {step === "pricing" && (
-        <PricingScreen
-          name={userName}
-          total={totalSteps}
-          onBack={() => goBack(userLocation === "dubai" ? "trainingType" : "reveal")}
           onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
-        />
-      )}
-      {step === "pricingDubai" && (
-        <PricingScreen
-          name={userName}
-          total={totalSteps}
-          onBack={() => goBack("trainingType")}
-          dubai
-          onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
-        />
-      )}
-      {step === "offlinePackages" && (
-        <OfflinePackagesScreen
-          name={userName}
-          phone={userPhone}
-          city={userCity}
-          goalId={goalId}
-          challengeId={challengeId}
-          total={totalSteps}
-          onBack={() => goBack("trainingType")}
         />
       )}
       {step === "payment" && (
@@ -413,7 +380,7 @@ export function QuizPage() {
           name={userName}
           tierId={selectedTierId}
           total={totalSteps}
-          onBack={() => goBack(userLocation === "dubai" ? "pricingDubai" : "pricing")}
+          onBack={() => goBack("pricing")}
         />
       )}
       </MotionStepView>
@@ -2128,276 +2095,6 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
 }
 
 
-function LocationScreen({ onBack, onNext }: { onBack: () => void; onNext: (loc: "dubai" | "remote") => void }) {
-  const [selected, setSelected] = useState<"dubai" | "remote" | null>(null);
-  const ORANGE = "#FF6B00";
-
-  const Check2 = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" stroke={ORANGE} strokeWidth="1.8" />
-      <path d="M8 12.5l2.8 2.8L16.5 9.5" />
-    </svg>
-  );
-
-  const PinIcon = ({ size = 22, color = ORANGE }: { size?: number; color?: string }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s7-7.5 7-13a7 7 0 1 0-14 0c0 5.5 7 13 7 13z" />
-      <circle cx="12" cy="9" r="2.6" />
-    </svg>
-  );
-
-  const DubaiArt = () => (
-    <svg viewBox="0 0 130 150" className="w-full h-full" preserveAspectRatio="xMidYMax meet">
-      <defs>
-        <linearGradient id="sky1" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="#FFE7D1" />
-          <stop offset="1" stopColor="#FFD0A8" />
-        </linearGradient>
-        <linearGradient id="burj" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="#C9613B" />
-          <stop offset="1" stopColor="#7A3318" />
-        </linearGradient>
-      </defs>
-      <rect width="130" height="150" fill="url(#sky1)" />
-      <circle cx="95" cy="42" r="14" fill="#FFB07A" opacity="0.55" />
-      {/* Burj Khalifa */}
-      <polygon points="62,20 66,140 58,140" fill="url(#burj)" />
-      <polygon points="62,20 60,55 64,55" fill="#3A1608" opacity="0.4" />
-      {/* side towers */}
-      <rect x="40" y="70" width="10" height="70" fill="#A04A28" />
-      <polygon points="40,70 50,70 45,58" fill="#A04A28" />
-      <rect x="75" y="80" width="9" height="60" fill="#8E3E22" />
-      <polygon points="75,80 84,80 79.5,68" fill="#8E3E22" />
-      <rect x="88" y="90" width="14" height="50" fill="#B65733" />
-      <rect x="22" y="95" width="12" height="45" fill="#9E4628" />
-      {/* palms */}
-      <g stroke="#5C2810" strokeWidth="1.6">
-        <line x1="20" y1="140" x2="22" y2="120" />
-        <line x1="106" y1="140" x2="108" y2="118" />
-      </g>
-      <g fill="#7A3D1C">
-        <ellipse cx="22" cy="118" rx="9" ry="3" />
-        <ellipse cx="108" cy="116" rx="10" ry="3" />
-      </g>
-      {/* water */}
-      <rect y="138" width="130" height="12" fill="#E89870" opacity="0.55" />
-    </svg>
-  );
-
-  const GlobeArt = () => (
-    <svg viewBox="0 0 130 130" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <radialGradient id="g1" cx="0.35" cy="0.35" r="0.8">
-          <stop offset="0" stopColor="#FFD9B8" />
-          <stop offset="1" stopColor="#E58348" />
-        </radialGradient>
-      </defs>
-      <circle cx="65" cy="68" r="42" fill="url(#g1)" />
-      <g fill="#A0451E" opacity="0.85">
-        <path d="M40 55 q8 -6 18 -3 q6 2 4 9 q-2 6 -10 6 q-8 0 -12 -12z" />
-        <path d="M68 78 q10 -2 16 4 q4 5 -2 9 q-8 4 -14 -3z" />
-        <path d="M50 82 q6 1 8 6 q1 4 -4 5 q-7 1 -6 -8z" />
-      </g>
-      <g fill="none" stroke="#7A3318" strokeWidth="1" opacity="0.5">
-        <ellipse cx="65" cy="68" rx="42" ry="14" />
-        <ellipse cx="65" cy="68" rx="42" ry="28" />
-        <line x1="65" y1="26" x2="65" y2="110" />
-      </g>
-      {/* flight path */}
-      <path d="M18 60 Q 65 0 112 60" fill="none" stroke="#5C2810" strokeWidth="1.4" strokeDasharray="3 3" />
-      <path d="M18 60 Q 65 120 112 60" fill="none" stroke="#5C2810" strokeWidth="1.2" strokeDasharray="2 3" opacity="0.6" />
-      {/* plane */}
-      <g transform="translate(100 36) rotate(35)" fill="#3A1608">
-        <path d="M0 0 L14 4 L18 2 L20 6 L18 10 L14 8 L0 12 L4 6 Z" />
-      </g>
-    </svg>
-  );
-
-  const Card = ({
-    id,
-    title,
-    subtitle,
-    benefits,
-    art,
-    watermark,
-  }: {
-    id: "dubai" | "remote";
-    title: string;
-    subtitle: string;
-    benefits: string[];
-    art: React.ReactNode;
-    watermark: React.ReactNode;
-  }) => {
-    const active = selected === id;
-    return (
-      <button
-        onClick={() => {
-          triggerSelectionHaptic();
-          setSelected(id);
-        }}
-        className="relative w-full rounded-[26px] bg-white text-right overflow-hidden transition-all duration-250"
-        style={{
-          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
-          boxShadow: active
-            ? "0 18px 40px -16px rgba(255,107,0,0.45), 0 6px 16px -8px rgba(0,0,0,0.08)"
-            : "0 10px 26px -16px rgba(0,0,0,0.18), 0 2px 6px -2px rgba(0,0,0,0.06)",
-          transform: active ? "scale(1.02)" : "scale(1)",
-        }}
-      >
-        {/* watermark right */}
-        <div className="absolute right-2 bottom-2 w-16 h-16 opacity-15 pointer-events-none">
-          {watermark}
-        </div>
-
-        <div className="flex flex-row-reverse items-stretch min-h-[150px]">
-          {/* art left */}
-          <div className="w-[130px] shrink-0 self-stretch overflow-hidden rounded-l-[24px]">
-            {art}
-          </div>
-          {/* text */}
-          <div className="flex-1 px-4 py-3 flex flex-col justify-center gap-1.5">
-            <h3 className="text-[19px] font-extrabold text-[#2A2A2A] leading-tight">{title}</h3>
-            <p className="text-[13px] font-bold" style={{ color: ORANGE }}>{subtitle}</p>
-            <ul className="mt-1 space-y-1.5">
-              {benefits.map((b, i) => (
-                <li key={i} className="flex flex-row-reverse items-center gap-1.5 text-[11.5px] text-[#4A4A4A] font-medium">
-                  <Check2 />
-                  <span>{b}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </button>
-    );
-  };
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        backgroundColor: "#FAF8F5",
-        backgroundImage: `url(${gymBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        animation: "fadeIn .35s ease-out",
-      }}
-    >
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)" }} />
-
-      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-md"
-            aria-label="رجوع"
-          >
-            <ChevronLeft size={20} className="text-gray-700" />
-          </button>
-          <div className="text-[15px] font-bold text-gray-700">
-            <span style={{ color: ORANGE }}>8</span> من 10
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Progress */}
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex-1 h-[5px] rounded-full overflow-hidden bg-gray-200">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: i < 7 ? "100%" : i === 7 ? "55%" : "0%",
-                  background: ORANGE,
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
-          <div className="inline-flex items-center justify-center gap-2">
-            <PinIcon size={22} />
-            <span className="text-[22px] font-extrabold" style={{ color: ORANGE }}>ممتاز</span>
-          </div>
-          <h1 className="mt-1 text-[26px] font-extrabold text-[#1F1F1F] leading-tight">أين تتواجد حالياً؟</h1>
-          <p className="mt-1.5 text-[13px] text-gray-500 font-medium leading-relaxed px-6">
-            ساعدنا في تحديد أفضل خطة تدريب تناسب موقعك.
-          </p>
-        </div>
-
-        {/* Cards */}
-        <div className="mt-4 flex flex-col gap-3">
-          <div style={{ animation: "fadeUp .5s ease-out .1s both" }}>
-            <Card
-              id="dubai"
-              title="أعيش في دبي"
-              subtitle="تدريب شخصي مباشر"
-              benefits={["جلسات تدريبية في أفضل الأندية", "متابعة مباشرة مع مدربك"]}
-              art={<DubaiArt />}
-              watermark={
-                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.5">
-                  <path d="M12 2 L8 8 L10 8 L8 14 L11 14 L9 22 L15 22 L13 14 L16 14 L14 8 L16 8 Z" />
-                </svg>
-              }
-            />
-          </div>
-          <div style={{ animation: "fadeUp .5s ease-out .2s both" }}>
-            <Card
-              id="remote"
-              title="خارج دبي"
-              subtitle="تدريب أونلاين مخصص لك"
-              benefits={["خطة تدريب وغذائية مخصصة", "متابعة أونلاين أينما كنت"]}
-              art={<GlobeArt />}
-              watermark={
-                <svg viewBox="0 0 24 24" fill="none" stroke={ORANGE} strokeWidth="1.4">
-                  <circle cx="12" cy="12" r="10" />
-                  <ellipse cx="12" cy="12" rx="10" ry="4" />
-                  <line x1="2" y1="12" x2="22" y2="12" />
-                  <line x1="12" y1="2" x2="12" y2="22" />
-                </svg>
-              }
-            />
-          </div>
-        </div>
-
-        <QuizImportantInfoNote
-          text="نقدم أفضل تجربة سواء كنت في دبي أو خارجها."
-          icon={<PinIcon />}
-        />
-
-        {/* CTA */}
-        <div className="mt-auto pt-3">
-          <button
-            disabled={!selected}
-            onClick={() => selected && onNext(selected)}
-            className="w-full h-[58px] rounded-[20px] flex items-center justify-center gap-3 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
-            style={{
-              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
-              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
-              opacity: selected ? 1 : 0.7,
-            }}
-          >
-            <span>متابعة</span>
-            <ArrowLeft size={20} />
-          </button>
-          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
-            <Lock size={12} />
-            <span>معلوماتك تبقى خاصة وآمنة</span>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-      `}</style>
-    </div>
-  );
-}
-
 /* ===================== INVESTMENT SCREEN ===================== */
 
 function TrophyIcon({ size = 48 }: { size?: number }) {
@@ -3288,7 +2985,7 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
           </div>
           <div className="flex-1 text-right">
             <div className="text-[12px] font-bold text-gray-900 flex items-center justify-end gap-1">
-              <span>خصوصيتك 100% آمنة</span>
+              <span>خصوصيتك محمية بضمانات معقولة</span>
               <Lock size={11} className="text-[#FF6B00]" />
             </div>
             <p className="text-[10.5px] text-gray-600 leading-snug">جميع بياناتك محمية ولن يتم مشاركتها مع أي جهة خارجية نهائياً.</p>
@@ -3516,7 +3213,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         <div className="grid grid-cols-3 gap-2 text-center">
           <TrustItem color="#22C55E" icon={<WhatsAppIcon small />} text="ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب" signalDelay={0} />
           <TrustItem color="#3B82F6" icon={<MailIcon small />} text="سأرسل برنامجك وتفاصيله على البريد الإلكتروني" signalDelay={450} />
-          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة وآمنة 100%" signalDelay={900} />
+          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة ونستخدم ضمانات حماية معقولة" signalDelay={900} />
         </div>
       </div>
 
@@ -4462,16 +4159,16 @@ type PricingTier = {
 const PRICING_TIERS: PricingTier[] = [
   {
     id: "transform",
-    name: "باقة التحول العادية",
-    tagline: "كل ما تحتاجه لتحقيق أفضل نسخة منك في 90 يوم.",
-    pricePerDay: "3.3",
-    totalPrice: "299",
+    name: "Essential",
+    tagline: "البرنامج والمزايا الأساسية لمدة 3 أشهر — بدون دردشة الكوتش.",
+    pricePerDay: "0.97",
+    totalPrice: "87",
     features: [
       "خطة تدريب مخصصة",
-      "خطة تغذية مخصصة",
-      "مراجعة كل أسبوعين",
-      "دعم واتساب",
-      "تعديلات حسب التقدم",
+      "خطة تغذية أساسية",
+      "متابعة التقدم داخل المنصة",
+      "دعم الحساب والفوترة",
+      "بدون دردشة الكوتش البشرية",
     ],
     primary: "#FF6B00",
     primarySoft: "#FFE6D2",
@@ -4481,16 +4178,16 @@ const PRICING_TIERS: PricingTier[] = [
   },
   {
     id: "pro",
-    name: "باقة التحول Pro",
-    tagline: "للأشخاص الذين يريدون متابعة أقرب ونتائج أسرع.",
-    pricePerDay: "5.5",
-    totalPrice: "499",
+    name: "Premium",
+    tagline: "كل مزايا Essential مع دردشة الكوتش ومراجعة كل أسبوعين.",
+    pricePerDay: "1.63",
+    totalPrice: "147",
     features: [
-      "كل مزايا باقة التحول العادية",
-      "مراجعة أسبوعية",
-      "أولوية في الدعم",
-      "تعديلات أسرع",
-      "متابعة أدق للتقدم",
+      "كل مزايا Essential",
+      "دردشة الكوتش مع Coach Hakim",
+      "مراجعة تقدم كل أسبوعين",
+      "تحسينات مناسبة حسب التقدم",
+      "دعم الحساب والفوترة",
     ],
     primary: "#2563EB",
     primarySoft: "#DBEAFE",
@@ -4501,17 +4198,16 @@ const PRICING_TIERS: PricingTier[] = [
   },
   {
     id: "vip",
-    name: "باقة التحول VIP",
-    tagline: "لمن يريد أعلى مستوى من المتابعة والدعم.",
-    pricePerDay: "11",
-    totalPrice: "999",
+    name: "VIP",
+    tagline: "متابعة أقرب ودعم يومي بأولوية أعلى — ليس 24/7 وليس رداً فورياً مضموناً.",
+    pricePerDay: "4.41",
+    totalPrice: "397",
     features: [
-      "جميع مزايا باقة التحول Pro",
-      "متابعة شخصية",
-      "تواصل مباشر مع المدرب",
-      "مراجعة مستمرة",
-      "خطة مخصصة بالكامل",
-      "دعم فوري على مدار الساعة",
+      "كل مزايا Premium",
+      "دعم يومي بأولوية أعلى",
+      "متابعة أقرب مع Coach Hakim",
+      "تعديلات أسرع عند الملاءمة",
+      "ليس دعماً على مدار الساعة",
     ],
     primary: "#7C3AED",
     primarySoft: "#EDE3FF",
@@ -4522,23 +4218,22 @@ const PRICING_TIERS: PricingTier[] = [
 ];
 
 function PricingTierTitle({ tier, color }: { tier: PricingTier; color: string }) {
-  const suffix = tier.id === "transform" ? "العادية" : tier.id === "pro" ? "Pro" : "VIP";
   return (
     <h3 className="pri-heading text-[22px]" style={{ color }}>
-      باقة التحول <span style={{ color: tier.primary }}>{suffix}</span>
+      باقة <span style={{ color: tier.primary }}>{tier.name}</span>
     </h3>
   );
 }
 
 const PRICING_CTA_COPY: Record<PricingTier["id"], string> = {
-  transform: "ابدأ تحولي الآن — 90 يوم",
-  pro: "انطلق مع الأكثر اختياراً",
-  vip: "احجز مقعدك VIP الآن",
+  transform: "فعّل Essential — 3 أشهر",
+  pro: "فعّل Premium — 3 أشهر",
+  vip: "فعّل VIP — 3 أشهر",
 };
 
 const PRICING_TIER_TABS: { id: PricingTier["id"]; label: string }[] = [
-  { id: "transform", label: "العادية" },
-  { id: "pro", label: "Pro" },
+  { id: "transform", label: "Essential" },
+  { id: "pro", label: "Premium" },
   { id: "vip", label: "VIP" },
 ];
 
@@ -4563,8 +4258,8 @@ function PricingTrustInline() {
             <Lock className="h-4 w-4" style={{ color: "#16A34A" }} strokeWidth={2.4} />
           </div>
           <div className="text-right min-w-0">
-            <div className="pri-heading text-[11.5px]" style={{ color: "#16A34A" }}>دفع آمن 100%</div>
-            <div className="text-[9.5px] text-neutral-500 leading-snug mt-0.5">جميع المدفوعات مشفرة وآمنة</div>
+            <div className="pri-heading text-[11.5px]" style={{ color: "#16A34A" }}>دفع بمراجعة آمنة</div>
+            <div className="text-[9.5px] text-neutral-500 leading-snug mt-0.5">تحويل بنكي بمراجعة يدوية — ليس مزود دفع مدمجاً بعد</div>
           </div>
         </div>
       </div>
@@ -4596,7 +4291,7 @@ function PricingPriceRing({ tier, mounted, className = "" }: { tier: PricingTier
             <span className="pri-heading text-[13px]" style={{ color: tier.primary }}>$</span>
             <span className="pri-heading text-[22px] leading-none" style={{ color: tier.primary }}>{tier.totalPrice}</span>
           </div>
-          <div className="text-[9px] text-neutral-500 font-bold mt-0.5">الإجمالي · 90 يوم</div>
+          <div className="text-[9px] text-neutral-500 font-bold mt-0.5">الإجمالي · 3 أشهر</div>
           <div className="mt-0.5 text-[8px] font-medium text-neutral-400">
             حوالي {tier.pricePerDay}$ يومياً
           </div>
@@ -4646,8 +4341,8 @@ function PricingValueCompare({ tier }: { tier: PricingTier }) {
               حوالي {tier.pricePerDay}$ يومياً...
             </div>
             <p className="mt-1 text-[9px] text-neutral-600 leading-[1.55]">
-              أقل من ثمن كوب قهوة ووجبة خفيفة، لكنه استثمار حقيقي في صحتك ولياقتك خلال{" "}
-              <span className="font-extrabold" style={{ color: tier.primary }}>90 يوماً</span>.
+              أقل من ثمن كوب قهوة ووجبة خفيفة، استثمار في برنامجك لمدة{" "}
+              <span className="font-extrabold" style={{ color: tier.primary }}>3 أشهر</span>.
             </p>
           </div>
 
@@ -4718,7 +4413,7 @@ function PricingFeaturesList({
   );
 }
 
-function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }: { name: string; total?: number; onBack: () => void; dubai?: boolean; onSelectTier: (id: PricingTier["id"]) => void }) {
+function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: string; total?: number; onBack: () => void; onSelectTier: (id: PricingTier["id"]) => void }) {
   const ORANGE = "#FF6B00";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo','Tajawal',sans-serif";
@@ -5068,9 +4763,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
           </h1>
         </div>
         <p className="pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed" style={{ animationDelay: ".08s" }}>
-          {dubai
-            ? "باقات التدريب الحضوري + الأونلاين قادمة قريباً. في الوقت الحالي يمكنك اختيار باقات المتابعة عن بُعد."
-            : <>تم تصميم جميع الباقات لتحقيق هدفك خلال <span className="font-extrabold" style={{ color: ORANGE }}>90 يوماً</span>.</>}
+          الباقات الرسمية الرقمية: Essential وPremium وVIP لمدة 3 أو 6 أشهر. النتائج تختلف من شخص لآخر.
         </p>
 
         {/* Tier switcher */}
@@ -5108,7 +4801,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
                     <span>{tab.label}</span>
                   </div>
                   <div className="mt-0.5 text-[10px] font-bold text-neutral-500">
-                    ${tierMeta.totalPrice} · 90 يوم
+                    ${tierMeta.totalPrice} · 3 أشهر
                   </div>
                   <div className="text-[9px] font-medium text-neutral-400">
                     ≈ ${tierMeta.pricePerDay}/يوم
@@ -5167,7 +4860,7 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
                         ["--rate-glow-soft" as string]: `${tier.primary}22`,
                       }}
                     >
-                      <span className="relative z-[1]">السعر الرسمي ${tier.totalPrice} لمدة 90 يوم</span>
+                      <span className="relative z-[1]">السعر الرسمي ${tier.totalPrice} لمدة 3 أشهر</span>
                     </div>
                   </div>
 
@@ -5223,650 +4916,6 @@ function PricingScreen({ name, total = 14, onBack, dubai = false, onSelectTier }
   );
 }
 
-// ============================================================
-// Training Type Screen — Dubai-only choice (Online vs In-Person)
-// ============================================================
-function TrainingTypeScreen({ onBack, onSelect }: { onBack: () => void; onSelect: (type: "online" | "inperson") => void }) {
-  const ORANGE = "#FF6B00";
-  const TEXT = "#0F172A";
-  const [selected, setSelected] = useState<"online" | "inperson" | null>(null);
-  const TOTAL = 14;
-  const CURRENT = 13;
-
-  const pick = (id: "online" | "inperson") => {
-    if (selected) return;
-    setSelected(id);
-    triggerSelectionHaptic();
-    window.setTimeout(() => onSelect(id), HAPTIC_NAV_DELAY_MS);
-  };
-
-  const Card = ({
-    id,
-    emoji,
-    title,
-    subtitle1,
-    subtitle2,
-    chips,
-  }: {
-    id: "online" | "inperson";
-    emoji: string;
-    title: string;
-    subtitle1: string;
-    subtitle2: string;
-    chips: [string, string];
-  }) => {
-    const active = selected === id;
-    return (
-      <button
-        type="button"
-        onClick={() => pick(id)}
-        disabled={!!selected && !active}
-        className="relative w-full text-right rounded-[26px] bg-white p-5 transition-all duration-300 active:scale-[0.99]"
-        style={{
-          border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.05)"}`,
-          boxShadow: active
-            ? `0 22px 48px -18px ${ORANGE}66, 0 0 0 6px ${ORANGE}1A`
-            : "0 10px 26px -16px rgba(0,0,0,0.14)",
-          transform: active ? "scale(1.03)" : "scale(1)",
-          animation: active ? "tt-bounce .55s cubic-bezier(.34,1.56,.64,1)" : undefined,
-        }}
-      >
-        {/* Selection mark */}
-        <div className="absolute top-4 left-4 z-10">
-          {active ? (
-            <div className="relative h-8 w-8 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-              <Check size={18} strokeWidth={3} className="text-white" />
-              <Sparkles className="absolute -top-2 -right-2 h-3.5 w-3.5" style={{ color: "#FBBF24", animation: "tt-spark 1s ease-in-out infinite" }} />
-              <Sparkles className="absolute -bottom-2 -left-2 h-3 w-3" style={{ color: ORANGE, animation: "tt-spark 1s ease-in-out infinite .2s" }} />
-            </div>
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-white border-2 border-gray-200" />
-          )}
-        </div>
-
-        <div className="flex items-start gap-4">
-          <div className="flex-1">
-            <h3 className="text-[22px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{title}</h3>
-            <p className="mt-2 text-[13px] leading-6 text-neutral-600">{subtitle1}</p>
-            <p className="text-[13px] leading-6 text-neutral-600">{subtitle2}</p>
-            <div className="mt-4 flex gap-2 flex-wrap">
-              {chips.map((c) => (
-                <span key={c} className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11.5px] font-bold"
-                  style={{ background: active ? `${ORANGE}15` : "#FFF6EE", color: ORANGE }}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: ORANGE }} />
-                  {c}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div
-            className="shrink-0 h-20 w-20 rounded-2xl grid place-items-center text-[40px] leading-none"
-            style={{
-              background: active ? `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` : "#FFF1E5",
-              boxShadow: active ? `0 12px 24px -10px ${ORANGE}80` : "none",
-              transition: "all .3s",
-            }}
-          >
-            <span style={{ filter: active ? "grayscale(0) brightness(1.05)" : "none" }}>{emoji}</span>
-          </div>
-        </div>
-      </button>
-    );
-  };
-
-  return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
-      <style>{`
-        @keyframes tt-bounce { 0%{ transform: scale(1);} 35%{ transform: scale(1.06);} 70%{ transform: scale(1.01);} 100%{ transform: scale(1.03);} }
-        @keyframes tt-spark { 0%,100%{ opacity:.5; transform: scale(.85);} 50%{ opacity:1; transform: scale(1.15);} }
-        @keyframes tt-in { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }
-        .tt-in { animation: tt-in .5s ease-out both; }
-      `}</style>
-
-      <div className="max-w-md mx-auto md:max-w-none px-5 pt-4 pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
-            <ChevronLeft className="h-5 w-5 text-neutral-700" />
-          </button>
-          <div className="text-sm font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>{CURRENT}</span> من {TOTAL}
-          </div>
-          <div className="w-10" />
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: TOTAL }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="tt-in mt-7 text-center">
-          <h1 className="text-[26px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
-            اختر ما <span style={{ color: ORANGE }}>يناسبك</span>
-          </h1>
-          <p className="mt-2 text-[14px] text-neutral-700 font-bold">حتى نساعدك بطريقة أفضل</p>
-          <p className="mt-1 text-[12.5px] text-neutral-500 leading-relaxed px-4">
-            اختر طريقة التدريب الأنسب لك
-          </p>
-        </div>
-
-        {/* Cards */}
-        <div className="mt-6 space-y-4">
-          <div className="tt-in" style={{ animationDelay: ".08s" }}>
-            <Card
-              id="online"
-              emoji="🌍"
-              title="أونلاين"
-              subtitle1="تدريب ومتابعة عن بعد"
-              subtitle2="عبر التطبيق وواتساب"
-              chips={["مرونة أكبر", "سعر أقل"]}
-            />
-          </div>
-          <div className="tt-in" style={{ animationDelay: ".18s" }}>
-            <Card
-              id="inperson"
-              emoji="🏋️"
-              title="تدريب شخصي"
-              subtitle1="جلسات تدريب مباشرة"
-              subtitle2="في النادي مع المدرب"
-              chips={["نتائج أسرع", "إشراف مباشر"]}
-            />
-          </div>
-        </div>
-
-        {/* Trust note */}
-        <div className="mt-6 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-black/5 px-4 py-3 flex items-center justify-center gap-2 tt-in" style={{ animationDelay: ".28s" }}>
-          <ShieldCheck className="h-4 w-4" style={{ color: ORANGE }} />
-          <span className="text-[12px] text-neutral-700">كلا الخيارين يضمن لك متابعة احترافية ونتائج حقيقية</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============= OFFLINE PACKAGES (Dubai in-person) =============
-const OFFLINE_GOAL_LABELS: Record<string, string> = {
-  muscle: "بناء العضلات",
-  lose: "خسارة الوزن",
-  strength: "زيادة القوة",
-  fitness: "تحسين اللياقة",
-  tone: "شد الجسم",
-  weight_loss: "خسارة الوزن",
-  toning: "شد وتنسيق الجسم",
-};
-const OFFLINE_CHALLENGE_LABELS: Record<string, string> = {
-  muscle: "صعوبة بناء العضلات",
-  fat: "تراكم الدهون",
-  motivation: "ضعف الالتزام",
-  time: "ضيق الوقت",
-  plan: "عدم وجود خطة واضحة",
-  diet: "صعوبة في التغذية",
-};
-
-type OfflinePkgId = "p12" | "p20" | "custom";
-
-function OfflinePackagesScreen({
-  name,
-  phone,
-  city,
-  goalId,
-  challengeId,
-  total,
-  onBack,
-}: {
-  name: string;
-  phone: string;
-  city: string;
-  goalId: string;
-  challengeId: string;
-  total: number;
-  onBack: () => void;
-}) {
-  const ORANGE = "#FF6B00";
-  const GREEN = "#22C55E";
-  const TEXT = "#111827";
-  const CURRENT = total; // last step
-
-  const [selected, setSelected] = useState<OfflinePkgId | null>(null);
-  const [customSessions, setCustomSessions] = useState<string>("");
-  const [timeLeft, setTimeLeft] = useState({ h: 23, m: 59, s: 59 });
-
-  // Countdown
-  useEffect(() => {
-    const t = setInterval(() => {
-      setTimeLeft((p) => {
-        let { h, m, s } = p;
-        s--;
-        if (s < 0) { s = 59; m--; }
-        if (m < 0) { m = 59; h--; }
-        if (h < 0) { h = 23; m = 59; s = 59; }
-        return { h, m, s };
-      });
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  const pickPackage = (id: OfflinePkgId) => {
-    if (selected) return;
-    setSelected(id);
-    triggerSelectionHaptic();
-  };
-
-  const packageLabel = (id: OfflinePkgId): string => {
-    if (id === "p12") return "باقة 12 حصة (3 مرات أسبوعياً) — 3,600 درهم شهرياً";
-    if (id === "p20") return "باقة 20 حصة (5 مرات أسبوعياً) — 5,500 درهم شهرياً";
-    const s = customSessions || "حسب اقتراح المدرب";
-    return `باقة مخصصة — ${s}`;
-  };
-
-  const buildWhatsapp = () => {
-    if (!selected) return "#";
-    const goal = OFFLINE_GOAL_LABELS[goalId] || goalId || "—";
-    const ch = OFFLINE_CHALLENGE_LABELS[challengeId] || challengeId || "—";
-    const msg =
-      `مرحباً كابتن حكيم،\nأريد حجز باقة التدريب الشخصي في دبي.\n\n` +
-      `الاسم: ${name || "—"}\n` +
-      `الهاتف: ${phone || "—"}\n` +
-      `المدينة: ${city || "دبي"}\n` +
-      `الهدف: ${goal}\n` +
-      `المشكلة الأساسية: ${ch}\n` +
-      `الباقة المختارة: ${packageLabel(selected)}\n\n` +
-      `أريد البدء في رحلتي نحو أفضل نسخة مني.`;
-    return `https://wa.me/971505129019?text=${encodeURIComponent(msg)}`;
-  };
-
-  // Package data
-  const pkg12 = {
-    id: "p12" as const,
-    name: "باقة 12 حصة",
-    badge: "الأكثر توازناً",
-    badgeColor: ORANGE,
-    freq: "3 مرات أسبوعياً",
-    price: "3,600",
-    oldPrice: "4,500",
-    save: "وفر 900 درهم",
-    desc: "مناسبة لمن يريد نتائج قوية مع جدول مرن ومتوازن.",
-    icon: "🏆",
-    iconBg: "#FFF6E6",
-    features: [
-      "12 حصة تدريب شخصية شهرياً",
-      "3 حصص أسبوعياً",
-      "خطة تدريب مخصصة لهدفك",
-      "متابعة تقدمك أسبوعياً",
-      "تعديل التمارين حسب مستواك",
-      "دعم عبر واتساب",
-    ],
-    guaranteeTitle: "ضمان 90 يوم:",
-    guaranteeText: "إذا التزمت بالخطة ولم تحقق تقدماً حقيقياً، تسترجع أموالك.",
-    guaranteeBg: "#FFF1E6",
-    guaranteeColor: ORANGE,
-  };
-  const pkg20 = {
-    id: "p20" as const,
-    name: "باقة 20 حصة",
-    badge: "أسرع نتائج",
-    badgeColor: "#A855F7",
-    freq: "5 مرات أسبوعياً",
-    price: "5,500",
-    oldPrice: "7,000",
-    save: "وفر 1,500 درهم",
-    desc: "لمن يريد أفضل نتيجة في أقل وقت مع التزام أعلى ومتابعة أقوى.",
-    icon: "⚡",
-    iconBg: "#F3E8FF",
-    features: [
-      "20 حصة تدريب شخصية شهرياً",
-      "5 حصص أسبوعياً",
-      "تسريع النتائج بشكل واضح",
-      "متابعة أدق لتقدمك",
-      "تعديل مستمر للبرنامج",
-      "خطة تدريب مكثفة حسب هدفك",
-      "دعم مباشر عبر واتساب",
-      "أولوية في المواعيد",
-    ],
-    guaranteeTitle: "ضمان نتائج أسرع:",
-    guaranteeText: "إذا التزمت ولم تشعر بتغيير حقيقي، سنعالج الأمر أو تسترجع أموالك.",
-    guaranteeBg: "#F5EBFF",
-    guaranteeColor: "#9333EA",
-  };
-
-  const PackageCard = ({ p }: { p: Omit<typeof pkg12, "id"> & { id: OfflinePkgId } }) => {
-    const active = selected === p.id;
-    const hidden = selected !== null && selected !== p.id;
-    return (
-      <div
-        className="off-card transition-all duration-400"
-        style={{
-          opacity: hidden ? 0 : 1,
-          maxHeight: hidden ? 0 : 2000,
-          transform: active ? "scale(1.02)" : "scale(1)",
-          marginBottom: hidden ? 0 : 16,
-          overflow: "hidden",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => pickPackage(p.id)}
-          disabled={!!selected}
-          className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
-          style={{
-            border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.06)"}`,
-            boxShadow: active
-              ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
-              : "0 10px 26px -16px rgba(0,0,0,0.12)",
-          }}
-        >
-          {/* radio */}
-          <div className="absolute top-4 right-4">
-            {active ? (
-              <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-                <Check size={16} strokeWidth={3} className="text-white" />
-              </div>
-            ) : (
-              <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
-            )}
-          </div>
-
-          {/* header row */}
-          <div className="flex items-start gap-3 pr-9">
-            <div
-              className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center text-[34px] leading-none"
-              style={{ background: p.iconBg }}
-            >
-              {p.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>{p.name}</h3>
-                <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: p.badgeColor }}>
-                  {p.badge}
-                </span>
-              </div>
-              <p className="mt-1 text-[12.5px] font-bold" style={{ color: ORANGE }}>{p.freq}</p>
-              <div className="mt-2 flex items-end gap-2 flex-wrap">
-                <span className="text-[26px] font-black leading-none" style={{ color: ORANGE, fontFamily: "'Cairo',sans-serif" }}>{p.price}</span>
-                <span className="text-[12px] text-neutral-600 mb-0.5">درهم شهرياً</span>
-                <span className="text-[13px] text-neutral-400 line-through mb-0.5">{p.oldPrice}</span>
-              </div>
-              <span className="mt-2 inline-block rounded-full bg-green-50 text-green-700 px-2.5 py-0.5 text-[11px] font-bold">
-                {p.save}
-              </span>
-            </div>
-          </div>
-
-          <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">{p.desc}</p>
-
-          {/* features */}
-          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
-            {p.features.map((f) => (
-              <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
-                <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
-                  <Check size={10} strokeWidth={3} className="text-green-600" />
-                </span>
-                <span>{f}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* guarantee */}
-          <div className="mt-4 rounded-2xl p-3 flex items-start gap-2.5" style={{ background: p.guaranteeBg }}>
-            <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0" style={{ color: p.guaranteeColor }} />
-            <div className="text-right">
-              <p className="text-[12.5px] font-black" style={{ color: p.guaranteeColor }}>{p.guaranteeTitle}</p>
-              <p className="text-[11.5px] text-neutral-700 leading-5">{p.guaranteeText}</p>
-            </div>
-          </div>
-        </button>
-      </div>
-    );
-  };
-
-  // Custom card
-  const customActive = selected === "custom";
-  const customHidden = selected !== null && selected !== "custom";
-  const sessionOptions = ["8 حصص", "12 حصة", "16 حصة", "20 حصة", "أريد اقتراح المدرب"];
-
-  return (
-    <div className="absolute inset-0 overflow-y-auto" style={{ background: "#FAF8F5", fontFamily: FONT }}>
-      <style>{`
-        @keyframes off-in { from{opacity:0; transform: translateY(14px);} to{opacity:1; transform: translateY(0);} }
-        .off-in { animation: off-in .5s ease-out both; }
-        @keyframes off-pulse { 0%,100%{ transform: scale(1); box-shadow: 0 14px 30px -10px rgba(34,197,94,0.55);} 50%{ transform: scale(1.015); box-shadow: 0 18px 40px -10px rgba(34,197,94,0.7);} }
-        .off-pulse { animation: off-pulse 2.2s ease-in-out infinite; }
-        @keyframes off-glow { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,107,0,0.35);} 50%{ box-shadow: 0 0 0 10px rgba(255,107,0,0);} }
-        .off-urgent-glow { animation: off-glow 2.4s ease-in-out infinite; }
-      `}</style>
-
-      <div className="max-w-md mx-auto md:max-w-none px-5 pt-4 pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-bold text-neutral-800">
-            <span style={{ color: ORANGE }}>{CURRENT}</span> من {total}
-          </div>
-          <button onClick={onBack} className="flex items-center gap-1 text-sm font-bold text-neutral-700">
-            <span>رجوع</span>
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="mt-3 flex gap-1.5">
-          {Array.from({ length: total }).map((_, i) => (
-            <div key={i} className="flex-1 h-1.5 rounded-full" style={{ background: i < CURRENT ? ORANGE : "rgba(0,0,0,0.1)" }} />
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="off-in mt-6">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <h1 className="text-[24px] font-black leading-tight" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>
-                اختر باقة <span style={{ color: ORANGE }}>التدريب الشخصي</span> المناسبة لك
-              </h1>
-              <p className="mt-2 text-[12.5px] leading-6 text-neutral-600">
-                جلسات حضورية مباشرة في دبي مع متابعة مخصصة لتحقيق أفضل نتيجة خلال 90 يوم.
-              </p>
-            </div>
-            <div className="shrink-0 h-14 w-14 rounded-2xl grid place-items-center text-[28px]" style={{ background: "#FFF1E5" }}>
-              <Dumbbell className="h-7 w-7" style={{ color: ORANGE }} />
-            </div>
-          </div>
-          <div className="mt-3 flex justify-center">
-            <span
-              className="off-urgent-glow inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12.5px] font-black text-white"
-              style={{ background: `linear-gradient(135deg, ${ORANGE} 0%, #FF8A33 100%)` }}
-            >
-              <Flame className="h-4 w-4" /> عرض محدود لعملاء دبي فقط
-            </span>
-          </div>
-        </div>
-
-        {/* Urgency bar */}
-        <div className="off-in mt-5 rounded-[22px] p-4" style={{ background: "linear-gradient(135deg,#FFF6EC 0%, #FFEAD2 100%)", border: "1px solid #FFD1A8" }}>
-          <div className="flex items-start gap-3">
-            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
-              <Clock className="h-6 w-6" style={{ color: ORANGE }} />
-            </div>
-            <div className="flex-1 text-right">
-              <p className="text-[13.5px] font-black flex items-center gap-1 justify-start" style={{ color: ORANGE }}>
-                <span>⚠️</span> الأماكن محدودة هذا الأسبوع
-              </p>
-              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">
-                عدد المقاعد المتاحة للتدريب الشخصي محدود بسبب عدد الحصص اليومية. سارع بحجز مكانك قبل أن يسبقك شخص آخر.
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 rounded-2xl bg-white/70 p-3">
-            <p className="text-[11.5px] font-bold text-neutral-700 text-center">ينتهي العرض خلال:</p>
-            <div className="mt-2 flex items-center justify-center gap-2" dir="ltr">
-              {[
-                { v: pad(timeLeft.h), l: "ساعة" },
-                { v: pad(timeLeft.m), l: "دقيقة" },
-                { v: pad(timeLeft.s), l: "ثانية" },
-              ].map((u, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  {i > 0 && <span className="text-[20px] font-black" style={{ color: ORANGE }}>:</span>}
-                  <div className="text-center">
-                    <div className="rounded-xl px-3 py-1.5 text-[20px] font-black text-white min-w-[52px]" style={{ background: `linear-gradient(180deg, ${ORANGE}, #E85F00)` }}>
-                      {u.v}
-                    </div>
-                    <div className="mt-1 text-[10px] text-neutral-600" dir="rtl">{u.l}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Packages */}
-        <div className="mt-6">
-          <PackageCard p={pkg12} />
-          <PackageCard p={pkg20} />
-
-          {/* Custom package */}
-          <div
-            className="off-card transition-all duration-400"
-            style={{
-              opacity: customHidden ? 0 : 1,
-              maxHeight: customHidden ? 0 : 2000,
-              transform: customActive ? "scale(1.02)" : "scale(1)",
-              marginBottom: customHidden ? 0 : 16,
-              overflow: "hidden",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => pickPackage("custom")}
-              disabled={!!selected && !customActive}
-              className="w-full text-right rounded-[24px] bg-white p-5 transition-all relative"
-              style={{
-                border: `2px solid ${customActive ? ORANGE : "rgba(0,0,0,0.06)"}`,
-                boxShadow: customActive
-                  ? `0 24px 50px -18px ${ORANGE}55, 0 0 0 6px ${ORANGE}1A`
-                  : "0 10px 26px -16px rgba(0,0,0,0.12)",
-              }}
-            >
-              <div className="absolute top-4 right-4">
-                {customActive ? (
-                  <div className="h-7 w-7 rounded-full grid place-items-center" style={{ background: ORANGE, boxShadow: `0 6px 14px ${ORANGE}66` }}>
-                    <Check size={16} strokeWidth={3} className="text-white" />
-                  </div>
-                ) : (
-                  <div className="h-7 w-7 rounded-full border-2 border-gray-300" />
-                )}
-              </div>
-
-              <div className="flex items-start gap-3 pr-9">
-                <div className="shrink-0 h-16 w-16 rounded-2xl grid place-items-center" style={{ background: "#E0F2FE" }}>
-                  <Calendar className="h-8 w-8" style={{ color: "#0EA5E9" }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[19px] font-black" style={{ color: TEXT, fontFamily: "'Cairo','Tajawal',sans-serif" }}>خصص باقتك</h3>
-                    <span className="inline-block rounded-full px-2.5 py-0.5 text-[10.5px] font-bold text-white" style={{ background: "#0EA5E9" }}>
-                      مرونة كاملة
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[12.5px] font-bold text-neutral-700">حسب عدد الحصص</p>
-                </div>
-              </div>
-
-              <p className="mt-3 text-[12.5px] leading-6 text-neutral-600">
-                اختر عدد الحصص التي تناسب وقتك وهدفك، وسنصمم لك باقة شخصية بالكامل.
-              </p>
-
-              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2">
-                {[
-                  "اختر عدد الحصص المناسب لك",
-                  "جدول مرن حسب وقتك",
-                  "مناسب للمبتدئين والمشغولين",
-                  "خطة تدريب مخصصة",
-                  "متابعة مباشرة",
-                  "إمكانية ترقية الباقة لاحقاً",
-                ].map((f) => (
-                  <div key={f} className="flex items-start gap-1.5 text-[11.5px] leading-5 text-neutral-700">
-                    <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full grid place-items-center" style={{ background: "#DCFCE7" }}>
-                      <Check size={10} strokeWidth={3} className="text-green-600" />
-                    </span>
-                    <span>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* sessions selector */}
-              <div className="mt-4 rounded-2xl bg-[#F8FAFC] p-3">
-                <p className="text-[12px] font-bold text-neutral-700 text-right mb-2">عدد الحصص المطلوبة شهرياً</p>
-                <div className="flex flex-wrap gap-2">
-                  {sessionOptions.map((opt) => {
-                    const on = customSessions === opt;
-                    return (
-                      <span
-                        key={opt}
-                        onClick={(e) => { e.stopPropagation(); if (!selected || customActive) setCustomSessions(opt); }}
-                        className="cursor-pointer rounded-full px-3 py-1.5 text-[11.5px] font-bold transition-all"
-                        style={{
-                          background: on ? ORANGE : "#fff",
-                          color: on ? "#fff" : "#334155",
-                          border: `1.5px solid ${on ? ORANGE : "#E2E8F0"}`,
-                        }}
-                      >
-                        {opt}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Scarcity */}
-        {!selected && (
-          <div className="off-in mt-2 rounded-[22px] p-4 flex items-start gap-3" style={{ background: "#FFF6EC", border: "1px solid #FFD1A8" }}>
-            <div className="shrink-0 h-12 w-12 rounded-2xl grid place-items-center" style={{ background: "#FFE1C2" }}>
-              <Flame className="h-6 w-6" style={{ color: ORANGE }} />
-            </div>
-            <div className="flex-1 text-right">
-              <p className="text-[13px] font-black" style={{ color: ORANGE }}>المقاعد محدودة جداً لهذا الأسبوع!</p>
-              <p className="mt-1 text-[11.5px] text-neutral-700 leading-5">لا تنتظر حتى يسرق شخص آخر حلمك ويحقق ما تتمناه.</p>
-            </div>
-          </div>
-        )}
-
-        {/* WhatsApp CTA */}
-        {selected && (
-          <div className="mt-6 off-in">
-            <p className="text-center text-[12px] text-neutral-700 mb-2 font-bold">
-              <Lock className="inline h-3 w-3 mb-0.5 ml-1" />
-              تدريب شخصي + متابعة احترافية + نتائج مضمونة
-            </p>
-            <a
-              href={buildWhatsapp()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="off-pulse w-full h-14 rounded-[22px] font-black text-white text-[15px] flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
-              style={{ background: `linear-gradient(135deg, ${GREEN} 0%, #16A34A 100%)` }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6 fill-white"><path d="M20.52 3.48A11.93 11.93 0 0 0 12.06 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.15 1.6 5.96L0 24l6.32-1.66a11.9 11.9 0 0 0 5.73 1.46h.01c6.56 0 11.9-5.34 11.9-11.9 0-3.18-1.24-6.17-3.44-8.42zM12.06 21.5h-.01a9.6 9.6 0 0 1-4.89-1.34l-.35-.21-3.75.99 1-3.65-.23-.37a9.58 9.58 0 0 1-1.47-5.02c0-5.3 4.31-9.6 9.61-9.6 2.57 0 4.98 1 6.8 2.81a9.55 9.55 0 0 1 2.81 6.8c0 5.3-4.31 9.6-9.62 9.6zm5.55-7.18c-.3-.15-1.79-.88-2.07-.98-.28-.1-.48-.15-.69.15s-.79.98-.97 1.18c-.18.2-.36.22-.66.07-.3-.15-1.28-.47-2.43-1.5-.9-.8-1.51-1.79-1.69-2.09-.18-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.07-.15-.67-1.61-.91-2.21-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.51.07-.78.38-.27.3-1.02 1-1.02 2.44s1.05 2.83 1.2 3.03c.15.2 2.06 3.14 5 4.4.7.3 1.25.48 1.68.62.7.22 1.34.19 1.85.12.56-.08 1.79-.73 2.04-1.43.25-.7.25-1.3.18-1.43-.07-.13-.27-.2-.57-.35z"/></svg>
-              <span>أرسل حجزك على الواتساب الآن وابدأ رحلتك نحو الأفضل</span>
-            </a>
-            <p className="mt-3 text-center text-[11.5px] text-neutral-600 leading-5">
-              سيتم إرسال اختيارك وبياناتك للمدرب لتأكيد الحجز والبدء في رحلتك.
-            </p>
-          </div>
-        )}
-
-        {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-neutral-600">
-          <span className="inline-flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" style={{ color: GREEN }} /> بياناتك محمية</span>
-          <span className="inline-flex items-center gap-1"><Lock className="h-3.5 w-3.5" style={{ color: GREEN }} /> دفع آمن</span>
-          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5" style={{ color: "#F59E0B" }} /> +500 عميل</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tierId: PricingTier["id"]; total?: number; onBack: () => void }) {
   const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
   return (
@@ -5877,6 +4926,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
         name: tier.name,
         pricePerDay: tier.pricePerDay,
         totalPrice: tier.totalPrice,
+        billingPeriodMonths: 3,
         topBadge: tier.topBadge,
       }}
       total={total}

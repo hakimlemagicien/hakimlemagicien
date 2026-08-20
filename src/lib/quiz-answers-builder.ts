@@ -11,7 +11,9 @@ export type QuizAnswersInput = {
   activityLevel?: string;
   investment?: string;
   bodyType?: string;
+  /** LEGACY_UNUSED_DATA_FIELD — not an active offering; do not surface as a service picker. */
   trainingType?: "online" | "inperson" | null;
+  /** LEGACY_UNUSED_DATA_FIELD — city inference only; not Dubai vs Remote service choice. */
   userLocation?: "dubai" | "remote" | null;
   selectedTierId?: "transform" | "pro" | "vip";
   lastStep?: string;
@@ -23,6 +25,7 @@ export type QuizContactInput = {
   phone: string;
   city: string;
   country: string;
+  /** LEGACY_UNUSED_DATA_FIELD — persisted from city; not an in-person offering. */
   locationPreference: "dubai" | "remote";
 };
 

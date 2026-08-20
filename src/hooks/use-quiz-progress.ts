@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { consumeQuizAuthCallback } from "@/lib/quiz-onboarding-api";
 import { readQuizProgress, writeQuizProgress, type QuizProgressSnapshot } from "@/lib/quiz-progress-storage";
 import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
+import { resolveActiveQuizStep } from "@/lib/quiz-step-progress";
 
 const PERSIST_DEBOUNCE_MS = 280;
 
@@ -133,8 +134,10 @@ export function useQuizProgress() {
       const previewStep = readPreviewStepFromUrl();
       if (previewStep) {
         const nextStep =
-          verifiedViaLink && previewStep === "verifyEmail" ? "createPassword" : previewStep;
-        replaceStep(nextStep);
+          verifiedViaLink && previewStep === "verifyEmail"
+            ? "createPassword"
+            : resolveActiveQuizStep(previewStep);
+        replaceStep(nextStep as QuizStep);
         hydratedRef.current = true;
         return;
       }
@@ -162,7 +165,9 @@ export function useQuizProgress() {
         });
         if (saved.step && saved.step !== "loading") {
           const nextStep =
-            verifiedViaLink && saved.step === "verifyEmail" ? "createPassword" : saved.step;
+            verifiedViaLink && saved.step === "verifyEmail"
+              ? "createPassword"
+              : resolveActiveQuizStep(saved.step);
           replaceStep(nextStep as QuizStep);
         } else if (verifiedViaLink) {
           replaceStep("createPassword");

@@ -511,17 +511,17 @@ export function ProfilePrivacySection({
         <div className="rounded-2xl bg-muted/35 p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-black">موافقة صور التقدم</p>
+              <p className="text-sm font-black">موافقة تسويق صور Before/After</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {photoConsentGranted
-                  ? `موافقة نشطة${photoConsentAt ? ` — ${formatProfileDate(photoConsentAt)}` : ""}`
-                  : "لا توجد موافقة حالية"}
+                  ? `موافقة تسويقية اختيارية نشطة${photoConsentAt ? ` — ${formatProfileDate(photoConsentAt)}` : ""}`
+                  : "الصور خاصة افتراضياً. الرفض لا يؤثر على الحساب أو البرنامج أو الاشتراك أو الكوتش."}
               </p>
             </div>
             <Switch
               checked={photoConsentGranted}
               onCheckedChange={onTogglePhotoConsent}
-              aria-label="موافقة صور التقدم"
+              aria-label="موافقة تسويق صور Before/After"
             />
           </div>
         </div>
@@ -589,6 +589,11 @@ export function ProfileAboutSection() {
           href="https://hakimlemagicien.com"
         />
         <ProfileRowButton
+          icon={<Shield className="h-4 w-4" />}
+          title="سياسة الخصوصية"
+          href={LEGAL_ROUTES.privacy}
+        />
+        <ProfileRowButton
           icon={<FileText className="h-4 w-4" />}
           title="الشروط والأحكام"
           href={LEGAL_ROUTES.terms}
@@ -597,6 +602,11 @@ export function ProfileAboutSection() {
           icon={<Shield className="h-4 w-4" />}
           title="سياسة الاسترجاع"
           href={LEGAL_ROUTES.refund}
+        />
+        <ProfileRowButton
+          icon={<HelpCircle className="h-4 w-4" />}
+          title="التواصل والدعم"
+          href={LEGAL_ROUTES.contact}
         />
         <ProfileRowButton
           icon={<MessageCircle className="h-4 w-4" />}

@@ -1491,6 +1491,49 @@ export type Database = {
       create_onboarding_draft: { Args: { p_payload?: Json }; Returns: Json }
       finalize_onboarding: { Args: { p_draft_token: string }; Returns: Json }
       get_my_membership: { Args: never; Returns: Json }
+      get_my_billing: { Args: never; Returns: Json }
+      create_support_ticket: {
+        Args: {
+          p_category: string
+          p_subject: string
+          p_message: string
+          p_email?: string | null
+          p_name?: string | null
+          p_language?: string | null
+        }
+        Returns: Json
+      }
+      accept_checkout_policies: {
+        Args: {
+          p_plan: string
+          p_billing_period_months: number
+          p_amount: number
+          p_currency: string
+          p_terms_version: string
+          p_refund_policy_version: string
+          p_privacy_version: string
+          p_checkout_disclosure_version: string
+          p_renewal_disclosure_version: string
+          p_consent_text: string
+          p_policy_version: string
+        }
+        Returns: Json
+      }
+      accept_policy_version: {
+        Args: { p_policy: string; p_version: string; p_language?: string | null }
+        Returns: Json
+      }
+      cancel_my_renewal: { Args: never; Returns: Json }
+      request_account_deletion: { Args: { p_reason?: string | null }; Returns: Json }
+      record_media_consent: {
+        Args: {
+          p_granted: boolean
+          p_scope: string
+          p_asset_ids?: string[] | null
+          p_version?: string | null
+        }
+        Returns: Json
+      }
       get_my_onboarding_state: { Args: never; Returns: Json }
       has_role:
         | {
