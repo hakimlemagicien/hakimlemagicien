@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import appLogo from "@/assets/app-logo.png";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "تسجيل الدخول | MAAKFIT" }] }),
@@ -138,7 +140,14 @@ function AuthPage() {
   return (
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md lg:max-w-lg">
-        <Link to="/" className="block text-center mb-6">
+        <Link to="/" className="mb-6 flex flex-col items-center gap-3 text-center">
+          <OptimizedImage
+            src={appLogo}
+            alt="MAAKFIT"
+            width={56}
+            height={56}
+            className="h-14 w-14 rounded-2xl object-cover"
+          />
           <span className="text-2xl font-black text-foreground">MAAKFIT</span>
         </Link>
 

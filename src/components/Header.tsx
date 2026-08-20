@@ -17,6 +17,8 @@ import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { LEGAL_ROUTES } from "@/lib/site-legal";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, type ReactNode } from "react";
+import appLogo from "@/assets/app-logo.png";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const navItems: {
   label: string;
@@ -72,9 +74,13 @@ const navItems: {
 function Logo() {
   return (
     <Link to="/coaching" className="flex items-center gap-2 shrink-0">
-      <span className="grid h-11 w-11 max-lg:h-10 max-lg:w-10 place-items-center rounded-xl max-lg:rounded-full bg-primary text-primary-foreground font-black text-2xl max-lg:text-xl">
-        H
-      </span>
+      <OptimizedImage
+        src={appLogo}
+        alt="MAAKFIT"
+        width={44}
+        height={44}
+        className="h-11 w-11 max-lg:h-10 max-lg:w-10 rounded-xl max-lg:rounded-full object-cover"
+      />
       <span className="flex flex-col leading-tight">
         <span className="text-lg max-lg:text-base font-black tracking-tight text-foreground">
           MAAKFIT
