@@ -1,6 +1,9 @@
 /**
  * Temporary today's session prescription until program_templates is wired to the client.
  * Only external_id + program fields — exercise names/media come from public.exercises.
+ * KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_4 — suggested_weight_kg values are fixed starting loads, not calibration.
+ * Phase 4 Core Prescription Engine (`src/lib/platform/prescription`) must not read these values as V2 baselines.
+ * Free/legacy preview may keep them until a later approved rewrite.
  */
 export type TodayWorkoutPrescription = {
   external_id: string;
@@ -11,6 +14,10 @@ export type TodayWorkoutPrescription = {
   duration_seconds?: number;
   rest_seconds: number;
   suggested_weight_kg?: number;
+  assignmentId?: string;
+  assignmentExerciseId?: string;
+  assignmentDayId?: string;
+  notes_ar?: string;
 };
 
 export const TODAY_WORKOUT_PRESCRIPTIONS: TodayWorkoutPrescription[] = [

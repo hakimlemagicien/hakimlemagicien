@@ -50,14 +50,15 @@ function workoutDoneCount(): number {
 export function buildYourDayScore(
   activity: PlatformActivitySnapshot,
   workoutCurrent = workoutDoneCount(),
+  workoutTotal = Math.max(TODAY_WORKOUT_PRESCRIPTIONS.length, 1),
 ): YourDayScore {
   const mealsTotal = Math.max(activity.mealsTotal, 1);
   const waterTotal = Math.max(activity.waterGoal, 1);
-  const workoutTotal = Math.max(TODAY_WORKOUT_PRESCRIPTIONS.length, 1);
+  const safeWorkoutTotal = Math.max(workoutTotal, 0);
 
   const nutritionPoints = ratioPoints(activity.mealsDone, mealsTotal, YOUR_DAY_SCORE_MAX.nutrition);
   const waterPoints = ratioPoints(activity.waterGlasses, waterTotal, YOUR_DAY_SCORE_MAX.water);
-  const workoutPoints = ratioPoints(workoutCurrent, workoutTotal, YOUR_DAY_SCORE_MAX.workout);
+  const workoutPoints = ratioPoints(workoutCurrent, Math.max(safeWorkoutTotal, 1), YOUR_DAY_SCORE_MAX.workout);
   const activityPoints = ratioPoints(
     nutritionPoints + waterPoints + workoutPoints,
     YOUR_DAY_SCORE_MAX.nutrition + YOUR_DAY_SCORE_MAX.water + YOUR_DAY_SCORE_MAX.workout,
@@ -90,7 +91,7 @@ export function buildYourDayScore(
       id: "workout",
       title: "التمرين",
       current: workoutCurrent,
-      total: workoutTotal,
+      total: Math.max(safeWorkoutTotal, 1),
       points: workoutPoints,
       maxPoints: YOUR_DAY_SCORE_MAX.workout,
       href: "/app/program/workout",

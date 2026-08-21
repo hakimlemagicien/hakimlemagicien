@@ -16,7 +16,7 @@ type OptimizedImageProps = {
 };
 
 /**
- * Standard image component for Hakim Platform.
+ * Standard image component for MAAKFIT.
  * Enforces lazy loading, async decoding, shimmer placeholder, and stable dimensions (CLS).
  */
 export function OptimizedImage({

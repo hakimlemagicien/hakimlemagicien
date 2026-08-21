@@ -73,10 +73,15 @@ export type CoachingNotification = {
   createdAt: string;
 };
 
-export function canUseCoachChat(features: {
-  limited_coach_contact: boolean;
-  personal_followup: boolean;
-}) {
+export function canUseCoachChat(
+  features: {
+    limited_coach_contact: boolean;
+    personal_followup: boolean;
+  },
+  tier?: string | null,
+) {
+  if (tier === "essential" || tier === "free" || tier === "visitor") return false;
+  if (tier === "premium" || tier === "vip" || tier === "admin") return true;
   return features.limited_coach_contact || features.personal_followup;
 }
 

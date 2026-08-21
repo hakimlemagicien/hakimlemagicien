@@ -414,7 +414,7 @@ export function VerifyEmailScreen({
 
             {sent && !sending && !editingEmail ? (
               <p className="mt-2 text-[11.5px] text-neutral-600 leading-relaxed">
-                افتح بريدك من Hakim Coaching، أدخل الرمز المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام هنا، أو استخدم «متابعة عبر رابط التحقق» للانتقال مباشرة إلى إنشاء كلمة المرور.
+                افتح بريدك من MAAKFIT، أدخل الرمز المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام هنا، أو استخدم «متابعة عبر رابط التحقق» للانتقال مباشرة إلى إنشاء كلمة المرور.
               </p>
             ) : null}
           </div>

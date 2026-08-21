@@ -107,7 +107,12 @@ export async function fetchMyTrainingProfile(): Promise<TrainingProfileSnapshot 
       targetWeightKg: typeof answers.targetWeightKg === "number" ? answers.targetWeightKg : null,
       birthDate: typeof answers.birthDate === "string" ? answers.birthDate : null,
       activityLevel: typeof answers.activityLevel === "string" ? answers.activityLevel : null,
-      goalId: typeof answers.goalId === "string" ? answers.goalId : null,
+      goalId:
+        typeof answers.goalId === "string" && answers.goalId.trim()
+          ? answers.goalId.trim()
+          : typeof answers.goal_id === "string" && answers.goal_id.trim()
+            ? answers.goal_id.trim()
+            : null,
     },
   };
 }

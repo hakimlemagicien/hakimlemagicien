@@ -57,5 +57,14 @@ Order summary later: **`متابعة الدفع`**
 
 ## Code
 
-`src/lib/pricing-presentation.ts` — catalog + CTAs + formatters  
-Handbook §4.5–4.6 — policy source of truth
+## Official V1 prices (CEO 2026-08-20)
+
+| Tier | 3 months | 6 months |
+|------|----------|----------|
+| Essential | $87 | $149 |
+| Premium | $147 | $249 |
+| VIP | $397 | $647 |
+
+No monthly. No annual. Essential has no Coaching Chat. VIP daily support ≠ 24/7.
+
+Code: `src/lib/pricing-presentation.ts`

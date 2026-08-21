@@ -19,7 +19,7 @@ import { buildNutritionProgressWeek } from "@/lib/platform/nutrition-experience"
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_platform/app/nutrition/progress")({
-  head: () => ({ meta: [{ title: "التقدم الغذائي | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "التقدم الغذائي | MAAKFIT" }] }),
   component: NutritionProgressPage,
 });
 

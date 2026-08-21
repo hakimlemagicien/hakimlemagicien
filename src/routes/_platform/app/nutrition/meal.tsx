@@ -34,7 +34,7 @@ type MealSearch = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/meal")({
-  head: () => ({ meta: [{ title: "تفاصيل الوجبة | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل الوجبة | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): MealSearch => ({
     mealId: typeof search.mealId === "string" ? search.mealId : "breakfast",
     date: typeof search.date === "string" ? search.date : undefined,

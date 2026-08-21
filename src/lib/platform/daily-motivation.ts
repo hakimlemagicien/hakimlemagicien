@@ -1,7 +1,7 @@
 import type { DailyTaskSeed } from "@/lib/platform/seed-content";
 
 /** Official platform currency — never label as plain «النقاط» in UI. */
-export const HAKIM_POINTS_LABEL = "Hakim Points" as const;
+export const HAKIM_POINTS_LABEL = "MAAKFIT Points" as const;
 
 export type NextMission = {
   id: string;

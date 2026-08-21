@@ -1,4 +1,4 @@
-import { checkAdminAccess } from "@/lib/admin-payments-api";
+import { checkAdminAccess } from "@/lib/admin/admin-access";
 
 export function isLocalDevEnvironment(): boolean {
   return import.meta.env.DEV;

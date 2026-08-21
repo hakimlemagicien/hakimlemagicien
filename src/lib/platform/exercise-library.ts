@@ -24,6 +24,10 @@ export {
   type ExerciseMediaStatus,
 } from "@/lib/platform/exercise-media";
 
+/**
+ * Client library reads. Workout screens keep this lean payload on purpose.
+ * V2 training metadata is loaded via exercise-library-v2-api candidate queries, not here.
+ */
 type MuscleGroupRelation = {
   id: string;
   code: string;

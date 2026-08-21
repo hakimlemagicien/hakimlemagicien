@@ -1,5 +1,5 @@
 /**
- * Pricing & Activation Strategy — Hakim Coaching (CEO official)
+ * Pricing & Activation Strategy — MAAKFIT (CEO official)
  *
  * Philosophy: we do not sell a subscription — we activate a personal program
  * inside an Arabic digital coaching platform.
@@ -139,8 +139,9 @@ export const FREE_TIER: FreeTierCatalog = {
  * Core product = Essential. Premium/VIP add services on top.
  * Terms: 3 months | 6 months only (no monthly).
  *
- * Example economics (Essential) from CEO decision:
- * 87 / 90d ≈ 0.96/day · 156 / 180d ≈ 0.86/day · save 18 vs 2×3mo
+ * Official V1 economics (CEO 2026-08-20):
+ * Essential 87 / 149 · Premium 147 / 249 · VIP 397 / 647
+ * 6-month savings vs buying the 3-month term twice.
  */
 export const PAID_TIERS: PaidTierCatalog[] = [
   {
@@ -150,54 +151,55 @@ export const PAID_TIERS: PaidTierCatalog[] = [
     role: "المنتج الرئيسي للمنصة",
     features: [
       "برنامج تدريبي مخصص",
-      "خطة غذائية أساسية",
+      "خطة تغذية أساسية",
       "متابعة التقدم داخل المنصة",
-      "دعم عبر البريد الإلكتروني",
+      "دعم الحساب والفوترة عبر قنوات الدعم العامة",
+      "بدون دردشة الكوتش البشرية (Premium/VIP)",
     ],
     popular: true,
     terms: [
       term(3, 87),
-      term(6, 156, {
+      term(6, 149, {
         bestValue: true,
-        savingsUsd: 18,
+        savingsUsd: 25,
       }),
     ],
   },
   {
     id: "premium",
     name: "Premium",
-    tagline: "كل مزايا Essential مع خدمات إضافية أقرب",
-    role: "Essential + خدمات إضافية",
+    tagline: "كل مزايا Essential مع متابعة كوتش أقرب",
+    role: "Essential + Coaching Chat",
     features: [
       "كل مزايا Essential",
-      "خطط غذائية متقدمة",
-      "تعديلات أسبوعية",
-      "دعم عبر الدردشة",
+      "دردشة الكوتش مع Coach Hakim",
+      "مراجعة تقدم دورية كل أسبوعين",
+      "تحسينات مناسبة على البرنامج حسب التقدم",
     ],
     terms: [
       term(3, 147),
-      term(6, 258, {
+      term(6, 249, {
         bestValue: true,
-        savingsUsd: 36,
+        savingsUsd: 45,
       }),
     ],
   },
   {
     id: "vip",
     name: "VIP",
-    tagline: "أعلى مستوى من المتابعة الشخصية",
+    tagline: "أعلى مستوى متابعة شخصية — ليست 24/7",
     role: "أعلى مستوى خدمة ومتابعة",
     features: [
       "كل مزايا Premium",
-      "مدرب خاص",
-      "خطة مخصصة بالكامل",
-      "متابعة يومية وتعديلات فورية",
+      "دعم يومي بأولوية أعلى (ليس 24/7 وليس رداً فورياً مضموناً)",
+      "متابعة أقرب مع Coach Hakim",
+      "تعديلات أسرع عند الملاءمة",
     ],
     terms: [
-      term(3, 267),
-      term(6, 468, {
+      term(3, 397),
+      term(6, 647, {
         bestValue: true,
-        savingsUsd: 66,
+        savingsUsd: 147,
       }),
     ],
   },

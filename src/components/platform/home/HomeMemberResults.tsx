@@ -153,7 +153,7 @@ export function HomeMemberResults() {
           شاهد <span className="platform-home-results__accent">نتائج</span> أعضائنا
         </h2>
         <p className="platform-home-results__lead">
-          آلاف الأعضاء حققوا أهدافهم مع برامج حكيم المخصصة
+          آلاف الأعضاء حققوا أهدافهم مع برامج MAAKFIT المخصصة
         </p>
       </header>
 

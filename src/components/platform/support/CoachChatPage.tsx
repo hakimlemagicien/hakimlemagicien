@@ -34,8 +34,8 @@ export function CoachChatPage() {
   const navigate = useNavigate();
   const router = useRouter();
   const { from } = useSearch({ from: "/_platform/app/support/chat" });
-  const { features } = useMembership();
-  const canChat = canUseCoachChat(features);
+  const { features, tier } = useMembership();
+  const canChat = canUseCoachChat(features, tier);
   const [available, setAvailable] = useState(() => isCoachAvailableAt());
   const [conversation, setConversation] = useState<CoachingConversation | null>(null);
   const [messages, setMessages] = useState<CoachingMessage[]>([]);

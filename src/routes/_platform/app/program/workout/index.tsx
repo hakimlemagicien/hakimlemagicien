@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -22,6 +23,8 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import {
   buildWeeklySchedule,
   formatWorkoutDayLabel,
@@ -36,6 +39,8 @@ import {
   type WorkoutSessionExercise,
 } from "@/lib/platform/workout-session";
 import { loadWorkoutProgress } from "@/lib/platform/workout-progress-storage";
+import { trainingGoalLabelAr } from "@/lib/platform/training-v2-contracts";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
 import workoutGoalStack1 from "@/assets/workout-goal-stack-1.webp";
@@ -61,7 +66,7 @@ function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }
 }
 
 export const Route = createFileRoute("/_platform/app/program/workout/")({
-  head: () => ({ meta: [{ title: "تمرين اليوم | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تمرين اليوم | MAAKFIT" }] }),
   component: WorkoutDayPage,
   errorComponent: WorkoutRouteError,
 });
@@ -306,9 +311,11 @@ function GoalHeroPhotoStack({
 function WorkoutGoalHero({
   overallProgress,
   showPremiumBadge,
+  goalLabel,
 }: {
   overallProgress: number;
   showPremiumBadge: boolean;
+  goalLabel: string;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
 
@@ -346,7 +353,7 @@ function WorkoutGoalHero({
               <Target className="h-3.5 w-3.5" strokeWidth={2.4} />
               هدفك
             </p>
-            <h2 className="workout-goal-hero__title">خسارة الدهون</h2>
+            <h2 className="workout-goal-hero__title">{goalLabel}</h2>
             <p className="workout-goal-hero__desc">
               برنامجك مصمم خصيصاً لك بناءً على بياناتك وسيتم تحديثه كل أسبوع.
             </p>
@@ -381,6 +388,8 @@ function TodayWorkoutBriefCard({
   lockedPreview = false,
   lockedPreviewIntensity = "medium",
   onLockedClick,
+  ctaLabel,
+  notice,
 }: {
   dateLabel: string;
   muscleTitle: string;
@@ -392,6 +401,8 @@ function TodayWorkoutBriefCard({
   lockedPreview?: boolean;
   lockedPreviewIntensity?: "light" | "medium" | "strong";
   onLockedClick?: () => void;
+  ctaLabel?: string;
+  notice?: string;
 }) {
   const fullyLocked = lockedPreview && lockedPreviewIntensity === "strong";
   const startClassName =
@@ -404,7 +415,7 @@ function TodayWorkoutBriefCard({
         className="workout-start-cta__streak pointer-events-none absolute inset-y-[-30%] left-0 w-[38%] bg-gradient-to-r from-transparent via-yellow-200/90 to-transparent"
       />
       <Zap className="workout-start-cta__zap relative h-4 w-4 fill-current" strokeWidth={2.4} />
-      <span className="relative">ابدأ تمرين</span>
+      <span className="relative">{ctaLabel ?? "ابدأ تمرين"}</span>
     </>
   );
 
@@ -510,6 +521,9 @@ function TodayWorkoutBriefCard({
           {startLabel}
         </Link>
       )}
+      {notice ? (
+        <p className="text-center text-[11px] font-medium leading-relaxed text-muted-foreground">{notice}</p>
+      ) : null}
     </div>
   );
 }
@@ -751,17 +765,45 @@ function WorkoutDayPage() {
     ? "فعّل برنامجك الآن لفتح تمارين كل أيام الأسبوع — يمكنك معاينة شكل البرنامج فقط."
     : "فعّل برنامجك الآن لفتح كل تمارين الأسبوع — التمرين الأول للصدر متاح للمعاينة.";
 
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const profileGoalQuery = useQuery({
+    queryKey: ["workout-profile-goal", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase.from("profiles").select("goal").eq("id", userId).maybeSingle();
+      if (error) throw error;
+      return data?.goal ?? null;
+    },
+    enabled: Boolean(userId),
+    staleTime: 60 * 1000,
+  });
+  const goalLabel = trainingGoalLabelAr(profileGoalQuery.data);
+  const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
+  const assignedPlans =
+    hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
+      ? continuity.assignedPlans
+      : null;
+
   const weeklySchedule = useMemo(
-    () => buildWeeklySchedule({ userId, freeMember: freePreview }),
-    [userId, freePreview, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
+    () =>
+      buildWeeklySchedule({
+        userId,
+        freeMember: freePreview,
+        assignedPlans: hasWorkoutProgram ? assignedPlans : undefined,
+      }),
+    [userId, freePreview, hasWorkoutProgram, assignedPlans, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
   );
 
   const selectedEntry =
     weeklySchedule.find((entry) => entry.id === selectedDayId) ?? weeklySchedule[0]!;
-  const selectedPlan = resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
-  const sessionQuery = useWorkoutDaySession(selectedDayId, hasWorkoutProgram);
+  const selectedPlan = resolveWeekdayPlan(
+    selectedDayId,
+    hasWorkoutProgram,
+    hasWorkoutProgram ? assignedPlans : undefined,
+  );
+  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? selectedPlan : null);
   const sessionExercises = sessionQuery.data?.exercises ?? [];
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = continuity.todayKey;
   const applyStoredProgress = selectedEntry.dateKey === todayKey;
   const sessionViews = buildSessionExerciseViews(sessionExercises, applyStoredProgress);
   const workoutStats = {
@@ -771,6 +813,8 @@ function WorkoutDayPage() {
   };
   const selectedDayLabel = formatWorkoutDayLabel(selectedEntry.calendarDate, selectedEntry.dayName);
   const overallProgress = snapshot.overallProgressPct;
+  const runtimeReason = runtimeQuery.data?.reason;
+  const programName = runtimeQuery.data?.assignment?.name_ar;
 
   return (
     <PlatformStack>
@@ -793,8 +837,53 @@ function WorkoutDayPage() {
         <WorkoutGoalHero
           overallProgress={overallProgress}
           showPremiumBadge={showPremiumBadge}
+          goalLabel={goalLabel}
         />
 
+        {hasWorkoutProgram && runtimeQuery.isLoading ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4">
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-16 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+          </section>
+        ) : null}
+
+        {hasWorkoutProgram && runtimeQuery.isError ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">تعذر تحميل البرنامج.</p>
+            <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+            <button
+              type="button"
+              className="text-[11px] font-black text-primary"
+              onClick={() => void runtimeQuery.refetch()}
+            >
+              إعادة المحاولة
+            </button>
+          </section>
+        ) : null}
+
+        {hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason !== "ok" ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">
+              {runtimeReason === "scheduled"
+                ? "برنامجك مجدول ولم يبدأ بعد"
+                : runtimeReason === "ended"
+                  ? "انتهت مدة البرنامج الحالي"
+                  : runtimeReason === "legacy_incomplete"
+                    ? "هذا التعيين يحتاج مراجعة من المدرب"
+                    : "لا برنامج تدريبي معيَّن"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {programName ? `${programName} — ` : ""}
+              {runtimeReason === "no_program"
+                ? "سيظهر تمرينك هنا بعد أن يعيّن المدرب برنامجاً."
+                : "لا تُعرض تمارين جاهزة مكان البرنامج المعيَّن."}
+            </p>
+          </section>
+        ) : null}
+
+        {freePreview || (hasWorkoutProgram && runtimeReason === "ok") ? (
+        <>
         <section
           className={cn(
             "platform-card space-y-3.5 rounded-3xl p-4",
@@ -846,6 +935,20 @@ function WorkoutDayPage() {
             lockedPreview={freePreview && !selectedPlan.isRestDay}
             lockedPreviewIntensity={freeDayFullyLocked ? "strong" : "light"}
             onLockedClick={() => openUpgrade(lockedReason)}
+            ctaLabel={
+              isSelectedToday && continuity.decision?.action === "RESUME_SESSION"
+                ? "استكمل التمرين"
+                : undefined
+            }
+            notice={
+              isSelectedToday &&
+              continuity.decision &&
+              ["RESCHEDULE_SESSION", "DEFER_SESSION", "ADVANCE_AFTER_PARTIAL", "ENTER_RECONDITIONING", "SCHEDULE_REVIEW_REQUIRED"].includes(
+                continuity.decision.action,
+              )
+                ? continuity.decision.client_explanation
+                : undefined
+            }
           />
 
           {selectedPlan.isRestDay ? (
@@ -889,12 +992,15 @@ function WorkoutDayPage() {
             />
           ) : null}
         </section>
+        </>
+        ) : null}
         <WorkoutCalendarOverlay
           open={calendarOpen}
           onClose={() => setCalendarOpen(false)}
           selectedDayId={selectedDayId}
           weeklySchedule={weeklySchedule}
           hasWorkoutProgram={hasWorkoutProgram}
+          assignedPlans={hasWorkoutProgram ? assignedPlans : undefined}
           onSelectDay={setSelectedDayId}
         />
       </PlatformStack>

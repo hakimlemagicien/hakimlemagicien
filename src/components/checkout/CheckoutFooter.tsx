@@ -12,6 +12,7 @@ export function CheckoutFooter({ className }: CheckoutFooterProps) {
     { to: LEGAL_ROUTES.terms, label: "الشروط" },
     { to: LEGAL_ROUTES.privacy, label: "الخصوصية" },
     { to: LEGAL_ROUTES.refund, label: "الاسترجاع" },
+    { to: LEGAL_ROUTES.contact, label: "التواصل" },
   ] as const;
 
   return (

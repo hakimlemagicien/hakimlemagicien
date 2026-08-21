@@ -1,3 +1,5 @@
+# PRODUCTION Supabase identity. Do not retarget this file to Staging.
+# Staging project: dxerwrdpcflpnjvsnrjq (hakim-coaching-staging). See docs/ENVIRONMENTS.md.
 project_id = "ufgrbpakuemamggwypdh"
 
 [auth]
@@ -21,7 +23,7 @@ subject = "تحقق من بريدك الإلكتروني"
 content_path = "./supabase/email-templates/magic-link.html"
 
 [auth.email.template.invite]
-subject = "دعوة من Hakim Coaching — أكمل إنشاء حسابك"
+subject = "دعوة من MAAKFIT — أكمل إنشاء حسابك"
 content_path = "./supabase/email-templates/invite-user.html"
 
 [functions.admin-accept-payment]

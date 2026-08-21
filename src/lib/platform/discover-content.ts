@@ -157,7 +157,7 @@ const daysFromNow = (n: number) => {
   return d.toISOString();
 };
 
-/** CMS-ready seed — replace with Supabase `discover_content` when populated. */
+/** CMS-ready seed — overlay with Supabase `discover_content`. Database wins by slug. */
 export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
   {
     id: "home-hero-commitment",
@@ -193,7 +193,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "الصباح يحدد إيقاع اليوم. خمس عادات قصيرة تكفي: ماء، حركة خفيفة، وجبة، ضوء طبيعي، وتخطيط المهمة الأولى.\n\n## اشرب الماء أولاً\nابدأ بكوب ماء قبل القهوة.\n\n## تحرك خمس دقائق\nحركة خفيفة توقظ الجسم دون إرهاق.",
     categoryId: "mindset",
     coverImage: homeNutritionHero,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(3),
     createdAt: daysAgo(8),
     updatedAt: daysAgo(3),
@@ -214,7 +214,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "التعافي يحدث أثناء النوم. هذا الدليل يشرح كيف تدعم نومك لتتقدم في التدريب دون إرهاق.",
     categoryId: "sleep",
     coverImage: recoveryCover,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(1),
     createdAt: daysAgo(4),
     updatedAt: daysAgo(1),
@@ -309,7 +309,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "بناء العضلات يحتاج اتساقاً في التدريب والتغذية والنوم. في هذا الفيديو نراجع أهم 5 أخطاء: قلة البروتين، تخطي أيام الراحة، تكرار نفس الوزن، إهمال الشكل التقني، وعدم تتبع التقدم.\n\n## الخطأ الأول\nقلة البروتين اليومي.\n\n## الخطأ الثاني\nعدم الراحة الكافية بين الجلسات.",
     categoryId: "muscle",
     coverImage: muscleBuild,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(1),
     createdAt: daysAgo(10),
     updatedAt: daysAgo(1),
@@ -354,7 +354,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "تحدي عام اختياري — لا يغيّر برنامجك الشخصي. الهدف: بناء عادة الترطيب اليومي.",
     categoryId: "hydration",
     coverImage: heroCoachDashboard,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(3),
     createdAt: daysAgo(8),
     updatedAt: daysAgo(1),
@@ -381,7 +381,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "ابدأ يومك بكوب ماء قبل الإفطار — عادة بسيطة تساعد على الترطيب والانتظام.",
     categoryId: "hydration",
     coverImage: heroCoachDashboard,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(0),
     createdAt: daysAgo(1),
     updatedAt: daysAgo(0),
@@ -463,7 +463,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "الاستمرارية أهم من الكمال.\n\n## ابدأ صغيراً\n...\n\n## تتبّع العادات\n...",
     categoryId: "mindset",
     coverImage: heroCoachDashboard,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(7),
     createdAt: daysAgo(25),
     updatedAt: daysAgo(7),
@@ -546,7 +546,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "تحدي أسبوعي اختياري لبناء عادة المشي اليومي — لا يعدّل برنامجك الشخصي.",
     categoryId: "cardio",
     coverImage: fatLoss,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(1),
     createdAt: daysAgo(5),
     updatedAt: daysAgo(1),
@@ -573,7 +573,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "تحدي تعليمي عام — استشر مختصاً عند الحاجة.",
     categoryId: "nutrition",
     coverImage: homeNutritionHero,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(20),
     createdAt: daysAgo(25),
     updatedAt: daysAgo(20),
@@ -631,7 +631,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "وصفة عامة للإلهام — القيم تقريبية.",
     categoryId: "recipes",
     coverImage: homeNutritionHero,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(8),
     createdAt: daysAgo(14),
     updatedAt: daysAgo(8),
@@ -661,7 +661,7 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     body: "نقدّم لكم تجربة اكتشف — محتوى متجدد من مقالات وفيديوهات ووصفات.",
     categoryId: "health",
     coverImage: heroCoachDashboard,
-    authorName: "فريق حكيم",
+    authorName: "فريق MAAKFIT",
     publishDate: daysAgo(0),
     createdAt: daysAgo(0),
     updatedAt: daysAgo(0),
@@ -673,6 +673,16 @@ export const DISCOVER_CONTENT_SEED: DiscoverContentItem[] = [
     readingTimeMinutes: 2,
   },
 ];
+
+let runtimeDiscoverCatalog: DiscoverContentItem[] | null = null;
+
+export function getDiscoverCatalog(): DiscoverContentItem[] {
+  return runtimeDiscoverCatalog ?? DISCOVER_CONTENT_SEED;
+}
+
+export function setDiscoverCatalog(items: DiscoverContentItem[] | null) {
+  runtimeDiscoverCatalog = items;
+}
 
 export function isDiscoverPublished(item: DiscoverContentItem, at = new Date()): boolean {
   if (item.status !== "published" && item.status !== "scheduled") return false;
@@ -765,20 +775,20 @@ export function canAccessDiscoverContent(
 }
 
 function publishedItems(): DiscoverContentItem[] {
-  return DISCOVER_CONTENT_SEED.filter((item) => isDiscoverPublished(item)).sort(
-    (a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime(),
-  );
+  return getDiscoverCatalog()
+    .filter((item) => isDiscoverPublished(item))
+    .sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
 }
 
 export function getDiscoverContentBySlug(slug: string): DiscoverContentItem | undefined {
-  const item = DISCOVER_CONTENT_SEED.find((c) => c.slug === slug);
+  const item = getDiscoverCatalog().find((c) => c.slug === slug);
   if (!item || !isDiscoverPublished(item)) return undefined;
   if (item.type === "success_story" && !item.successStory?.consentApproved) return undefined;
   return item;
 }
 
 export function getDiscoverContentById(id: string): DiscoverContentItem | undefined {
-  const item = DISCOVER_CONTENT_SEED.find((c) => c.id === id);
+  const item = getDiscoverCatalog().find((c) => c.id === id);
   if (!item || !isDiscoverPublished(item)) return undefined;
   return item;
 }
@@ -869,14 +879,16 @@ export function getRelatedDiscoverContent(item: DiscoverContentItem, limit = 4):
     .slice(0, limit);
 }
 
-/** Simulated CMS fetch — swap body with Supabase when tables are populated. */
+/** CMS fetch — database published rows overlay the seed catalog. */
 export async function fetchDiscoverFeed(): Promise<DiscoverFeed> {
-  await new Promise((r) => setTimeout(r, 120));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return buildDiscoverFeed();
 }
 
 export async function fetchDiscoverContent(slug: string): Promise<DiscoverContentItem | null> {
-  await new Promise((r) => setTimeout(r, 80));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return getDiscoverContentBySlug(slug) ?? null;
 }
 
@@ -884,6 +896,7 @@ export async function searchDiscoverContentAsync(
   query: string,
   options?: Parameters<typeof searchDiscoverContent>[1],
 ): Promise<DiscoverContentItem[]> {
-  await new Promise((r) => setTimeout(r, 200));
+  const { hydrateDiscoverFromSupabase } = await import("./discover-content-api");
+  await hydrateDiscoverFromSupabase();
   return searchDiscoverContent(query, options);
 }

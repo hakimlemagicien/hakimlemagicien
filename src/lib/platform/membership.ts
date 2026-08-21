@@ -26,6 +26,13 @@ export type MembershipResponse = {
   ends_at: string | null;
   days_remaining: number;
   features: MembershipFeatures;
+  billing_period_months?: 3 | 6 | null;
+  price_amount?: number | null;
+  currency?: string | null;
+  auto_renew?: boolean | null;
+  cancel_at_period_end?: boolean | null;
+  next_renewal_at?: string | null;
+  paid_period_end?: string | null;
 };
 
 export type MembershipState = MembershipResponse & {
@@ -196,6 +203,16 @@ function normalizeMembershipResponse(data: unknown): MembershipResponse {
     subscription_id: source.subscription_id ?? null,
     starts_at: source.starts_at ?? null,
     ends_at: source.ends_at ?? null,
+    paid_period_end: source.paid_period_end ?? source.ends_at ?? null,
+    billing_period_months:
+      source.billing_period_months === 3 || source.billing_period_months === 6
+        ? source.billing_period_months
+        : null,
+    price_amount: source.price_amount ?? null,
+    currency: source.currency ?? "USD",
+    auto_renew: source.auto_renew ?? null,
+    cancel_at_period_end: source.cancel_at_period_end ?? null,
+    next_renewal_at: source.next_renewal_at ?? null,
     days_remaining: source.days_remaining ?? 0,
     features: {
       platform_access: rawFeatures.platform_access ?? true,

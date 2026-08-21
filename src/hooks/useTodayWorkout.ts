@@ -18,7 +18,6 @@ import {
 import {
   getWeekdayIdFromDate,
   resolveWeekdayPlan,
-  type WeekdayId,
   type WeekdayWorkoutPlan,
 } from "@/lib/platform/weekly-workout-schedule";
 
@@ -61,7 +60,10 @@ async function buildSessionExercise(
     videoPath: details.video_path,
     instructionsStatus: details.instructions_status,
     instructionsVideoPath: details.instructions_video_path,
-    coachNotes: details.coach_notes,
+    coachNotes: prescription.notes_ar ?? details.coach_notes,
+    assignmentId: prescription.assignmentId,
+    assignmentExerciseId: prescription.assignmentExerciseId,
+    assignmentDayId: prescription.assignmentDayId,
   };
 }
 
@@ -116,20 +118,23 @@ async function fetchWorkoutDaySession(plan: WeekdayWorkoutPlan): Promise<TodayWo
   };
 }
 
-export function useWorkoutDaySession(dayId: WeekdayId, hasWorkoutProgram = true) {
-  const plan = resolveWeekdayPlan(dayId, hasWorkoutProgram);
-
+export function useWorkoutDaySession(plan: WeekdayWorkoutPlan | null) {
   return useQuery({
-    queryKey: ["workout-day-session", dayId, hasWorkoutProgram],
-    queryFn: () => fetchWorkoutDaySession(plan),
+    queryKey: [
+      "workout-day-session",
+      plan?.id,
+      (plan?.prescriptions ?? []).map((item) => item.external_id).join(","),
+    ],
+    queryFn: () => fetchWorkoutDaySession(plan!),
+    enabled: Boolean(plan),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
 
-/** @deprecated use useWorkoutDaySession(getWeekdayIdFromDate(), hasWorkoutProgram) */
+/** @deprecated use useWorkoutDaySession with a resolved weekday plan */
 export function useTodayWorkout(hasWorkoutProgram = true) {
-  return useWorkoutDaySession(getWeekdayIdFromDate(), hasWorkoutProgram);
+  return useWorkoutDaySession(resolveWeekdayPlan(getWeekdayIdFromDate(), hasWorkoutProgram));
 }
 
 export { TODAY_WORKOUT_BRIEF, TODAY_WORKOUT_PRESCRIPTIONS };

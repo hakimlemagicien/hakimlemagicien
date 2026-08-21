@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_platform/app/nutrition/shopping")({
-  head: () => ({ meta: [{ title: "قائمة التسوق | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "قائمة التسوق | MAAKFIT" }] }),
   component: ShoppingListPage,
 });
 

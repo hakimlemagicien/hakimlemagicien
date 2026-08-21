@@ -363,7 +363,7 @@ export function HomeHeader({
       <div className="platform-home-header-v2__logo">
         <OptimizedImage
           src={appLogo}
-          alt="Hakim Coaching"
+          alt="MAAKFIT"
           className="platform-home-header-v2__logo-img"
           width={52}
           height={30}
@@ -939,7 +939,7 @@ export function HomePersonalProgramCard() {
         <button
           type="button"
           className="platform-home-program__more"
-          onClick={() => openUpgrade("قارن باقات Hakim Coaching واختر ما يناسبك.")}
+          onClick={() => openUpgrade("قارن باقات MAAKFIT واختر ما يناسبك.")}
         >
           قارن الباقات
           <ChevronLeft className="h-4 w-4" aria-hidden />

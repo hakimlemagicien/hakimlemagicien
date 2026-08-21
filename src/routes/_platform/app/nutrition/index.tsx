@@ -47,7 +47,7 @@ const MACRO_EMOJI: Record<MacroTone, string> = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/")({
-  head: () => ({ meta: [{ title: "التغذية | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "التغذية | MAAKFIT" }] }),
   component: NutritionDashboardPage,
 });
 

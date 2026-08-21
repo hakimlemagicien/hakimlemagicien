@@ -22,6 +22,8 @@ import {
 import { getLeadCredentials } from "@/lib/lead-storage";
 import { mapBankToPaymentMethod } from "@/lib/payment-method-map";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
+import { buildCheckoutDisclosure, CHECKOUT_DISCLOSURE_COPY, resolvePaidTierId } from "@/lib/legal/billing";
+import { recordCheckoutConsent } from "@/lib/legal/legal-api";
 import { AgreementCheckbox } from "./AgreementCheckbox";
 import { BankTransferModal } from "./BankTransferModal";
 import { CheckoutFooter } from "./CheckoutFooter";
@@ -99,6 +101,18 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
   const amount = Number(tier.totalPrice);
   const credentials = getLeadCredentials();
+  const planId = resolvePaidTierId(tier.id);
+  const months = tier.billingPeriodMonths ?? 3;
+  const disclosure = planId ? buildCheckoutDisclosure(planId, months) : null;
+
+  const persistConsent = async () => {
+    if (!disclosure) return;
+    try {
+      await recordCheckoutConsent(disclosure);
+    } catch (error) {
+      console.warn("[checkout consent]", error);
+    }
+  };
 
   const handleTransferDone = async (bankId: BankId) => {
     setBankModalOpen(false);
@@ -119,6 +133,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
         amount,
         currency: "USD",
       });
+      await persistConsent();
     } catch (error) {
       console.error(error);
     } finally {
@@ -206,6 +221,12 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         <CheckoutSummaryCard tier={tier} />
 
+        {disclosure ? (
+          <p className="mt-3 rounded-2xl border border-[#FFE0CC] bg-[#FFF8F3] px-3.5 py-3 text-[11.5px] leading-[1.7] text-neutral-700">
+            {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)} الضرائب قد تُضاف حسب الموقع ومزود الدفع لاحقاً. رسوم تحويل البنك ليست تحت سيطرة MAAKFIT.
+          </p>
+        ) : null}
+
         <section className="mt-6" aria-labelledby="payment-methods-title">
           <div className="mb-3 flex items-center justify-center gap-2">
             <Lock className="h-4 w-4 text-[#FF5A1F]" aria-hidden />
@@ -274,8 +295,8 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         <TrustFeatures
           items={[
-            { icon: Headphones, title: "دعم مباشر", description: "نرد خلال 24 ساعة", tone: "orange" },
-            { icon: Shield, title: "تحويل آمن", description: "حسابات رسمية للشركة", tone: "green" },
+            { icon: Headphones, title: "دعم الحساب", description: "متاح لكل الباقات", tone: "orange" },
+            { icon: Shield, title: "تحويل بمراجعة", description: "لا تُفعَّل المزايا قبل التأكيد", tone: "green" },
             { icon: Clock, title: "تفعيل سريع", description: "بعد تأكيد الدفع", tone: "blue" },
           ]}
         />

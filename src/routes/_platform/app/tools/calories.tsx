@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
 
 export const Route = createFileRoute("/_platform/app/tools/calories")({
-  head: () => ({ meta: [{ title: "حاسبة السعرات | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "حاسبة السعرات | MAAKFIT" }] }),
   component: CalorieCalculatorDeepLink,
 });
 

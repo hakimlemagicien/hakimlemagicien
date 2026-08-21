@@ -88,6 +88,14 @@ export type QuizProgressBarState = {
   segmentFill: number;
 };
 
+/** Deprecated Dubai/in-person quiz steps — never show as a purchasable offering. */
+const DEPRECATED_OFFLINE_QUIZ_STEPS = ["trainingType", "pricingDubai", "offlinePackages"] as const;
+
+export function resolveActiveQuizStep(step: string): string {
+  if ((DEPRECATED_OFFLINE_QUIZ_STEPS as readonly string[]).includes(step)) return "pricing";
+  return step;
+}
+
 export function getQuizStepProgress(step: string): number {
   return DISPLAY_STEP[step] ?? 1;
 }

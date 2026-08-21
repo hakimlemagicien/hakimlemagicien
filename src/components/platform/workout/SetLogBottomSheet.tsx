@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Droplets, Minus, Plus } from "lucide-react";
 import type { ReactNode } from "react";
@@ -7,6 +8,14 @@ import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { formatExerciseVolume, formatRestTime } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
 import { AnimatedMetricValue, AnimatedRepRange } from "./AnimatedMetricValue";
+import {
+  remainingRestSeconds,
+  pendingRestCues,
+  type RestCueId,
+} from "@/lib/platform/workout-runtime/wall-clock-rest";
+import { hapticPulse, playWorkoutCue, primeWorkoutAudio } from "@/lib/platform/workout-runtime/audio";
+import { V2_EFFORTS } from "@/lib/platform/workout-runtime/effort";
+import type { TrainingV2Effort } from "@/lib/platform/training-v2-contracts";
 
 type SetLogBottomSheetProps = {
   player: WorkoutPlayerState;
@@ -26,7 +35,7 @@ function StepperButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid h-10 w-10 place-items-center rounded-xl border border-border/50 bg-background/50 text-foreground shadow-sm transition-transform duration-[120ms] active:scale-95"
+      className="grid h-11 w-11 place-items-center rounded-xl border border-border/50 bg-background/50 text-foreground shadow-sm transition-transform duration-[120ms] active:scale-95"
     >
       {children}
     </button>
@@ -34,7 +43,26 @@ function StepperButton({
 }
 
 function ReportForm({ player }: { player: WorkoutPlayerState }) {
-  const { currentExercise, currentSetNumber, setDraft, setSetDraft, effortLabels, saveSet, currentSetTargets } = player;
+  const {
+    currentExercise,
+    currentSetNumber,
+    setDraft,
+    setSetDraft,
+    effortLabels,
+    saveSet,
+    currentSetTargets,
+    runtimeMode,
+    prescription,
+    isTimed,
+    isBodyweight,
+    saveError,
+    v2Targets,
+    calibrationAction,
+  } = player;
+  const isV2 = runtimeMode === "v2";
+  const hideLoad = isV2 && (isBodyweight || isTimed);
+  const calibration = prescription?.status === "CALIBRATION_REQUIRED" || prescription?.status === "RECALIBRATION_REQUIRED";
+  const loadKnown = isV2 ? v2Targets.loadKnown && !calibration : currentSetTargets.weightKg > 0;
 
   return (
     <>
@@ -43,67 +71,173 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
         <p className="mt-0.5 text-lg font-black text-foreground">
           {currentSetNumber} من {currentExercise.sets}
         </p>
-        {currentSetNumber > 1 ? (
+        <p className="mt-1 text-[10px] font-bold text-primary">مجموعة عمل</p>
+        {isV2 && calibration ? (
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">معايرة — أدخل ما استخدمته فعلياً</p>
+        ) : null}
+        {!isV2 && currentSetNumber > 1 ? (
           <p className="mt-1 text-[10px] font-bold text-primary">الوزن +10% · التكرارات أقل</p>
+        ) : null}
+        {isV2 && calibrationAction === "KEEP" ? (
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">الإبقاء على نفس الحمل</p>
+        ) : null}
+        {isV2 && calibrationAction === "SMALL_INCREASE" ? (
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">يمكن زيادة خفيفة للحمل التالي</p>
+        ) : null}
+        {isV2 && calibrationAction === "REDUCE" ? (
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">خفّف الحمل في المجموعة التالية</p>
+        ) : null}
+        {isV2 && calibrationAction === "SAFETY_REVIEW" ? (
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">توقف عن زيادة الحمل — راعِ سلامتك</p>
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
-        <p className="text-center text-xs font-bold text-muted-foreground">الوزن (كجم)</p>
-        <div className="mt-2 flex items-center justify-center gap-3">
-          <StepperButton
-            label="تقليل الوزن"
-            onClick={() =>
-              setSetDraft((draft) => ({
-                ...draft,
-                weightKg: Math.max(0, draft.weightKg - 2.5),
-              }))
-            }
-          >
-            <Minus className="h-4 w-4" />
-          </StepperButton>
-          <p className="min-w-[72px] text-center text-2xl font-black text-foreground">{setDraft.weightKg}</p>
-          <StepperButton
-            label="زيادة الوزن"
-            onClick={() =>
-              setSetDraft((draft) => ({
-                ...draft,
-                weightKg: draft.weightKg + 2.5,
-              }))
-            }
-          >
-            <Plus className="h-4 w-4" />
-          </StepperButton>
+      {!hideLoad ? (
+        <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
+          <p className="text-center text-xs font-bold text-muted-foreground">
+            {isV2 && !loadKnown ? "الحمل المستخدم (كجم)" : "الوزن (كجم)"}
+          </p>
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <StepperButton
+              label="تقليل الوزن"
+              onClick={() =>
+                setSetDraft((draft) => ({
+                  ...draft,
+                  weightKg: Math.max(0, draft.weightKg - 2.5),
+                }))
+              }
+            >
+              <Minus className="h-4 w-4" />
+            </StepperButton>
+            <p className="min-w-[72px] text-center text-2xl font-black text-foreground">
+              {isV2 && !loadKnown && setDraft.weightKg <= 0 ? "—" : setDraft.weightKg}
+            </p>
+            <StepperButton
+              label="زيادة الوزن"
+              onClick={() =>
+                setSetDraft((draft) => ({
+                  ...draft,
+                  weightKg: draft.weightKg + 2.5,
+                }))
+              }
+            >
+              <Plus className="h-4 w-4" />
+            </StepperButton>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
-        <p className="text-center text-xs font-bold text-muted-foreground">عدد التكرارات</p>
-        <p className="mt-2 text-center text-2xl font-black tabular-nums text-foreground">
-          {currentSetTargets.repsMin}–{currentSetTargets.repsMax}
-        </p>
-      </div>
+      {isTimed ? (
+        <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
+          <p className="text-center text-xs font-bold text-muted-foreground">المدة (ثانية)</p>
+          <p className="mt-1 text-center text-[11px] text-muted-foreground">
+            الهدف: {v2Targets.durationMin ?? currentExercise.durationSeconds}–
+            {v2Targets.durationMax ?? currentExercise.durationSeconds}
+          </p>
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <StepperButton
+              label="تقليل المدة"
+              onClick={() =>
+                setSetDraft((draft) => ({
+                  ...draft,
+                  durationSeconds: Math.max(0, draft.durationSeconds - 5),
+                }))
+              }
+            >
+              <Minus className="h-4 w-4" />
+            </StepperButton>
+            <p className="min-w-[72px] text-center text-2xl font-black tabular-nums text-foreground">
+              {setDraft.durationSeconds}
+            </p>
+            <StepperButton
+              label="زيادة المدة"
+              onClick={() => setSetDraft((draft) => ({ ...draft, durationSeconds: draft.durationSeconds + 5 }))}
+            >
+              <Plus className="h-4 w-4" />
+            </StepperButton>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
+          <p className="text-center text-xs font-bold text-muted-foreground">التكرارات المنفَّذة</p>
+          <p className="mt-1 text-center text-[11px] text-muted-foreground">
+            الهدف: {currentSetTargets.repsMin}–{currentSetTargets.repsMax}
+          </p>
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <StepperButton
+              label="تقليل التكرارات"
+              onClick={() => setSetDraft((draft) => ({ ...draft, reps: Math.max(0, draft.reps - 1) }))}
+            >
+              <Minus className="h-4 w-4" />
+            </StepperButton>
+            <p className="min-w-[72px] text-center text-2xl font-black tabular-nums text-foreground">{setDraft.reps}</p>
+            <StepperButton
+              label="زيادة التكرارات"
+              onClick={() => setSetDraft((draft) => ({ ...draft, reps: draft.reps + 1 }))}
+            >
+              <Plus className="h-4 w-4" />
+            </StepperButton>
+          </div>
+        </div>
+      )}
 
       <div>
         <p className="mb-2 text-center text-xs font-bold text-muted-foreground">مستوى الجهد</p>
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(effortLabels) as Array<keyof typeof effortLabels>).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setSetDraft((draft) => ({ ...draft, effort: level }))}
-              className={cn(
-                "rounded-xl border px-2 py-2 text-[11px] font-bold transition-colors duration-150",
-                setDraft.effort === level
-                  ? "border-primary bg-primary/15 text-primary"
-                  : "border-border/50 bg-background/40 text-muted-foreground",
-              )}
-            >
-              {effortLabels[level]}
-            </button>
-          ))}
-        </div>
+        {isV2 ? (
+          <div className="grid grid-cols-2 gap-2">
+            {V2_EFFORTS.map((level) => (
+              <button
+                key={level}
+                type="button"
+                onClick={() => setSetDraft((draft) => ({ ...draft, effortV2: level }))}
+                className={cn(
+                  "min-h-11 rounded-xl border px-2 py-2 text-[11px] font-bold transition-colors duration-150",
+                  setDraft.effortV2 === level
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border/50 bg-background/40 text-muted-foreground",
+                )}
+              >
+                {effortLabels[level as TrainingV2Effort]}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {(Object.keys(effortLabels) as Array<keyof typeof effortLabels>).map((level) => (
+              <button
+                key={String(level)}
+                type="button"
+                onClick={() =>
+                  setSetDraft((draft) => ({
+                    ...draft,
+                    effort: level as typeof draft.effort,
+                  }))
+                }
+                className={cn(
+                  "rounded-xl border px-2 py-2 text-[11px] font-bold transition-colors duration-150",
+                  setDraft.effort === level
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border/50 bg-background/40 text-muted-foreground",
+                )}
+              >
+                {effortLabels[level]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {isV2 ? (
+        <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-border/50 bg-background/35 px-3 text-xs font-bold text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={setDraft.safetyFlag}
+            onChange={(event) => setSetDraft((draft) => ({ ...draft, safetyFlag: event.target.checked }))}
+            className="h-4 w-4 accent-primary"
+          />
+          شعرت بألم أو تنفيذ غير آمن
+        </label>
+      ) : null}
 
       <div>
         <label htmlFor="set-notes" className="mb-2 block text-center text-xs font-bold text-muted-foreground">
@@ -118,6 +252,8 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
           className="w-full resize-none rounded-2xl border border-border/50 bg-background/40 px-3 py-2 text-sm text-foreground outline-none ring-primary/30 placeholder:text-muted-foreground focus:ring-2"
         />
       </div>
+
+      {saveError ? <p className="text-center text-[11px] font-bold text-destructive">{saveError}</p> : null}
 
       <div className="space-y-2 pt-1">
         <button
@@ -150,8 +286,6 @@ function RestWaterCue() {
         onClick={() => {
           if (water) void water.registerWater(250);
         }}
-        animate={{ scale: [1, 1.08, 1], y: [0, -3, 0] }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         className="grid h-12 w-12 place-items-center rounded-2xl bg-sky-500/15 text-sky-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] ring-1 ring-sky-500/25"
       >
         <Droplets className="h-6 w-6" strokeWidth={1.9} />
@@ -162,18 +296,76 @@ function RestWaterCue() {
 }
 
 function RestTimer({ player }: { player: WorkoutPlayerState }) {
-  const { restSecondsLeft, restTotalSeconds, restUpcoming, skipRest, addRestTime } = player;
-  const progress =
-    restTotalSeconds > 0 ? ((restTotalSeconds - restSecondsLeft) / restTotalSeconds) * 100 : 0;
+  const {
+    restClock,
+    restTotalSeconds,
+    restUpcoming,
+    skipRest,
+    addRestTime,
+    finishRest,
+    runtimeMode,
+    hydrationVisible,
+    dismissHydration,
+    syncStatus,
+  } = player;
+  const firedRef = useRef<Set<RestCueId>>(new Set());
+  const expiredRef = useRef(false);
+  const [left, setLeft] = useState(() => (restClock ? remainingRestSeconds(restClock) : 0));
+
+  useEffect(() => {
+    firedRef.current = new Set();
+    expiredRef.current = false;
+    primeWorkoutAudio();
+  }, [restClock?.rest_started_at]);
+
+  useEffect(() => {
+    if (!restClock) return undefined;
+    const tick = () => {
+      const remaining = remainingRestSeconds(restClock);
+      setLeft(remaining);
+      const pending = pendingRestCues(restClock, firedRef.current);
+      pending.forEach((cue) => {
+        firedRef.current.add(cue);
+        playWorkoutCue(cue);
+        if (cue === "start") hapticPulse();
+      });
+      if (remaining <= 0 && !expiredRef.current) {
+        expiredRef.current = true;
+        finishRest();
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 250);
+    const onVis = () => tick();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
+  }, [finishRest, restClock]);
+
+  const progress = restTotalSeconds > 0 ? ((restTotalSeconds - left) / restTotalSeconds) * 100 : 0;
+  const isV2 = runtimeMode === "v2";
 
   return (
     <>
       <div className="text-center">
         <p className="text-xs font-bold text-muted-foreground">راحة بين الجولات</p>
+        {left <= 0 ? (
+          <p className="mt-1 text-sm font-black text-primary" aria-live="polite">
+            جاهز للبدء
+          </p>
+        ) : left <= 3 ? (
+          <p className="mt-1 text-lg font-black text-primary" aria-live="polite">
+            {left}
+          </p>
+        ) : null}
       </div>
 
       <div className="relative mx-auto grid h-28 w-28 place-items-center">
-        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120">
+        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden>
           <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" className="text-muted/30" strokeWidth="8" />
           <circle
             cx="60"
@@ -181,17 +373,32 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
             r="52"
             fill="none"
             stroke="currentColor"
-            className="text-primary transition-all duration-500"
+            className="text-primary"
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 52}`}
-            strokeDashoffset={`${2 * Math.PI * 52 * (1 - progress / 100)}`}
+            strokeDashoffset={`${2 * Math.PI * 52 * (1 - Math.min(progress, 100) / 100)}`}
           />
         </svg>
-        <p className="text-2xl font-black tracking-tight text-foreground">{formatRestTime(restSecondsLeft)}</p>
+        <p className="text-2xl font-black tracking-tight text-foreground" aria-live="polite">
+          {formatRestTime(left)}
+        </p>
       </div>
 
       <RestWaterCue />
+
+      {hydrationVisible ? (
+        <div className="flex items-center justify-between gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-3 py-2 text-right">
+          <p className="text-[11px] font-bold text-sky-800">وقت لشرب بعض الماء 💧</p>
+          <button type="button" onClick={dismissHydration} className="text-[10px] font-bold text-sky-700">
+            إغلاق
+          </button>
+        </div>
+      ) : null}
+
+      {syncStatus === "PENDING_SYNC" ? (
+        <p className="text-center text-[10px] font-bold text-muted-foreground">سيتم حفظ النتيجة عند عودة الاتصال</p>
+      ) : null}
 
       {restUpcoming ? (
         <div className="rounded-2xl border border-border/50 bg-background/35 p-3 text-right">
@@ -229,7 +436,7 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
                       initialMax={restUpcoming.from.repsMax}
                     />
                   </div>
-                  {restUpcoming.to.weightKg > 0 ? (
+                  {!isV2 && restUpcoming.to.weightKg > 0 ? (
                     <p className="mt-0.5 text-[10px] font-bold text-primary">رفع الوزن +10%</p>
                   ) : null}
                 </div>
@@ -266,7 +473,7 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
           onClick={skipRest}
           className="flex h-11 items-center justify-center rounded-2xl border border-border/50 bg-background/40 text-xs font-bold text-foreground transition-transform duration-[120ms] active:scale-[0.97]"
         >
-          تخطي الراحة
+          ابدأ مبكراً
         </button>
         <button
           type="button"

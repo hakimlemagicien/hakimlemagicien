@@ -16,8 +16,8 @@ import { useMembership } from "@/hooks/useMembership";
 import { cn } from "@/lib/utils";
 
 export function SupportHub() {
-  const { features } = useMembership();
-  const canChat = canUseCoachChat(features);
+  const { features, tier } = useMembership();
+  const canChat = canUseCoachChat(features, tier);
   const [openFaq, setOpenFaq] = useState<string>("");
   const available = isCoachAvailableAt();
 
@@ -65,14 +65,27 @@ export function SupportHub() {
         ) : (
           <div className="support-coach-card__locked">
             <p className="text-xs leading-relaxed text-muted-foreground">
-              الدردشة مع الكوتش متاحة حسب صلاحيات عضويتك.
+              دردشة الكوتش متاحة في باقتي Premium وVIP فقط. Essential والعضوية المجانية تستخدمان دعم الحساب والفوترة من صفحة التواصل.
             </p>
             <UpgradeCta
               className="mt-3 w-full"
-              reason="فعّل برنامجك الشخصي لفتح الدردشة المباشرة مع الكوتش حكيم."
+              reason="فعّل Premium أو VIP لمتابعة Coach Hakim داخل الدردشة."
             />
           </div>
         )}
+      </section>
+
+      <section className="rounded-3xl border border-border bg-card p-4">
+        <h2 className="text-sm font-black text-foreground">دعم الحساب والفوترة والخصوصية</h2>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          متاح لكل الباقات بما فيها المجانية وEssential. ليست قناة طوارئ طبية وليست دردشة كوتش.
+        </p>
+        <Link
+          to="/contact"
+          className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-xs font-black text-primary-foreground"
+        >
+          فتح نموذج التواصل
+        </Link>
       </section>
 
       <section className="support-faq" aria-labelledby="support-faq-title">

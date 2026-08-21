@@ -243,7 +243,7 @@ function buildJourneyStats(userId: string, snapshot: PlatformActivitySnapshot): 
     { id: "workouts", label: "تمارين", value: String(totalWorkouts), icon: "🏋️" },
     { id: "meals", label: "وجبات", value: String(totalMeals), icon: "🍽" },
     { id: "water", label: "ماء", value: `${totalWaterLiters.toFixed(0)}L`, icon: "💧" },
-    { id: "points", label: "Hakim Points", value: snapshot.hakimPoints.toLocaleString("en-US"), icon: "⭐" },
+    { id: "points", label: "MAAKFIT Points", value: snapshot.hakimPoints.toLocaleString("en-US"), icon: "⭐" },
     { id: "streak", label: "أطول سلسلة", value: `${snapshot.bestStreak} يوم`, icon: "🔥" },
     { id: "days", label: "أيام نشطة", value: String(Math.max(activeDays, snapshot.daysIn)), icon: "📅" },
   ];

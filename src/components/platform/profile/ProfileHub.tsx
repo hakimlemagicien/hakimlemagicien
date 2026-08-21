@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ChevronLeft,
+  CreditCard,
   Crown,
   Droplets,
   Headphones,
@@ -185,6 +186,7 @@ export function ProfileClientMenu({
     <nav className="profile-nav" aria-label="بيانات العميل">
       <ProfileNavRow icon={<HeartPulse className="h-5 w-5" />} title="بياناتي الصحية" onClick={onHealth} />
       <ProfileNavRow icon={<Crown className="h-5 w-5" />} title="عضويتي" onClick={onMembership} />
+      <ProfileNavRow icon={<CreditCard className="h-5 w-5" />} title="الاشتراك والفوترة" to="/app/billing" />
       <ProfileNavRow icon={<Images className="h-5 w-5" />} title="صور التقدم" onClick={onPhotos} />
       <ProfileNavRow icon={<Watch className="h-5 w-5" />} title="الأجهزة المتصلة" onClick={onDevices} />
     </nav>
@@ -204,6 +206,11 @@ export function ProfileSupportMenu({
         <h2>الدعم والإعدادات</h2>
       </div>
       <nav className="profile-nav" aria-label="الدعم والإعدادات">
+        <ProfileNavRow
+          icon={<Headphones className="h-5 w-5" />}
+          title="دعم الحساب والفوترة"
+          to="/contact"
+        />
         <ProfileNavRow
           icon={<Headphones className="h-5 w-5" />}
           title="محادثة الكوتش"

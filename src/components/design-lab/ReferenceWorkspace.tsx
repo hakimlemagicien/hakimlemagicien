@@ -215,7 +215,7 @@ export function PhonePreviewFrame({
         <iframe
           ref={iframeRef}
           key={`${selectedScreen}-${previewNonce}`}
-          title="Hakim Studio Preview"
+          title="MAAKFIT Studio Preview"
           src={selectedScreen}
           className="border-0 bg-white"
           style={{ width: viewportWidth, height: viewportHeight }}
