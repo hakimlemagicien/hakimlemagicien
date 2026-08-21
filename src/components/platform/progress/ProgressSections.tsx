@@ -232,7 +232,10 @@ export function BodyProgressSection({
 
   return (
     <section className={cn(progressCardClass, "space-y-3 p-4")}>
-      <h2 className="text-[12px] font-black text-foreground">تطور القياسات</h2>
+      <h2 className="text-[12px] font-black text-foreground">تكوين الجسم</h2>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        القياسات منفصلة عن تقدم التدريب. تقلبات الوزن اليومية ليست نجاحًا أو فشلاً، ولا نقدّر نسبة الدهون هنا.
+      </p>
 
       <div className="rounded-2xl bg-muted/45 p-3">
         <div className="flex items-center justify-between gap-2">
@@ -275,7 +278,9 @@ export function BodyProgressSection({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {otherItems.map((item) => (
+        {otherItems
+          .filter((item) => item.recorded)
+          .map((item) => (
           <div key={item.key} className="rounded-2xl bg-muted/40 px-3 py-2.5 text-right">
             <p className="text-[10px] font-bold text-muted-foreground">{item.label}</p>
             <p className="mt-0.5 text-sm font-black text-foreground">

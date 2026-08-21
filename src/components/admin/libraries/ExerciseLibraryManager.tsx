@@ -33,8 +33,19 @@ import {
   listToCsv,
   translateLibraryError,
   validateExerciseDraft,
+  validateExerciseV2Draft,
   type LibrarySaveState,
 } from "@/lib/admin/admin-libraries";
+import {
+  COMPLEXITY_LEVELS,
+  EQUIPMENT_STATES,
+  EXECUTION_SIDES,
+  LOADING_TYPES,
+  MECHANICS,
+  MOVEMENT_ROLES,
+  PRESCRIPTION_MODES,
+  V2_METADATA_STATUSES,
+} from "@/lib/platform/exercise-library-v2";
 import {
   emptyExerciseDraft,
   fetchExerciseFilterOptions,
@@ -175,14 +186,28 @@ export function ExerciseLibraryManager() {
 
   const save = async () => {
     if (!draft) return;
-    const errors = validateExerciseDraft({
-      name_ar: draft.name_ar,
-      name_en: draft.name_en,
-      muscle_group_id: draft.muscle_group_id,
-      exercise_type: draft.exercise_type,
-      difficulty: draft.difficulty,
-      duration_seconds: Number(draft.duration_seconds),
-    });
+    const errors = {
+      ...validateExerciseDraft({
+        name_ar: draft.name_ar,
+        name_en: draft.name_en,
+        muscle_group_id: draft.muscle_group_id,
+        exercise_type: draft.exercise_type,
+        difficulty: draft.difficulty,
+        duration_seconds: Number(draft.duration_seconds),
+      }),
+      ...validateExerciseV2Draft({
+        v2_metadata_status: draft.v2_metadata_status,
+        primary_muscle_canonical: draft.primary_muscle_canonical,
+        primary_movement_role: draft.primary_movement_role,
+        equipment_state: draft.equipment_state,
+        required_equipment: draft.required_equipment,
+        mechanics: draft.mechanics,
+        is_bodyweight: draft.is_bodyweight,
+        is_unilateral: draft.is_unilateral,
+        prescription_mode: draft.prescription_mode,
+        supports_timed_prescription: draft.supports_timed_prescription,
+      }),
+    };
     setFieldErrors(errors);
     if (Object.keys(errors).length) {
       setSaveState("failed");
@@ -212,6 +237,25 @@ export function ExerciseLibraryManager() {
           video_status: draft.video_status,
           instructions_status: draft.instructions_status,
           sort_order: draft.sort_order,
+          v2_metadata_status: draft.v2_metadata_status,
+          primary_muscle_canonical: draft.primary_muscle_canonical,
+          secondary_muscles_canonical: draft.secondary_muscles_canonical,
+          primary_movement_role: draft.primary_movement_role,
+          secondary_movement_roles: draft.secondary_movement_roles,
+          substitution_group: draft.substitution_group,
+          mechanics: draft.mechanics,
+          loading_type: draft.loading_type,
+          required_equipment: draft.required_equipment,
+          equipment_state: draft.equipment_state,
+          location_compatibility: draft.location_compatibility,
+          is_bodyweight: draft.is_bodyweight,
+          is_unilateral: draft.is_unilateral,
+          execution_sides: draft.execution_sides,
+          supports_timed_prescription: draft.supports_timed_prescription,
+          prescription_mode: draft.prescription_mode,
+          conditioning_class: draft.conditioning_class,
+          complexity: draft.complexity,
+          beginner_eligible: draft.beginner_eligible,
         },
         draft.updated_at,
       );
@@ -347,6 +391,7 @@ export function ExerciseLibraryManager() {
                     <th>المعدات</th>
                     <th>الحالة</th>
                     <th>الوسائط</th>
+                    <th>V2</th>
                     <th>تحديث</th>
                   </tr>
                 </thead>
@@ -374,6 +419,7 @@ export function ExerciseLibraryManager() {
                         />
                       </td>
                       <td>{row.video_status}</td>
+                      <td>{row.v2_metadata_status}</td>
                       <td>{formatAdminDate(row.updated_at)}</td>
                     </tr>
                   ))}
@@ -424,8 +470,20 @@ export function ExerciseLibraryManager() {
                 <AdminField label="English name" htmlFor="name_en" error={fieldErrors.name_en}>
                   <AdminTextInput id="name_en" dir="ltr" value={draft.name_en} error={fieldErrors.name_en} onChange={(value) => setDraft({ ...draft, name_en: value })} />
                 </AdminField>
-                <AdminField label="المعرّف" htmlFor="external_id">
-                  <AdminTextInput id="external_id" dir="ltr" value={draft.external_id} onChange={(value) => setDraft({ ...draft, external_id: value })} />
+                <AdminField
+                  label="المعرّف"
+                  htmlFor="external_id"
+                  hint={draft.id ? "ثابت بعد الإنشاء. لا يُستخدم الاسم كهوية." : "مطلوب عند الإنشاء. مثال CH-001"}
+                >
+                  <AdminTextInput
+                    id="external_id"
+                    dir="ltr"
+                    value={draft.external_id}
+                    onChange={(value) => {
+                      if (draft.id) return;
+                      setDraft({ ...draft, external_id: value });
+                    }}
+                  />
                 </AdminField>
                 <AdminField label="Slug" htmlFor="slug">
                   <AdminTextInput id="slug" dir="ltr" value={draft.slug} onChange={(value) => setDraft({ ...draft, slug: value })} />
@@ -505,6 +563,193 @@ export function ExerciseLibraryManager() {
                     <option value="ready">ready</option>
                     <option value="missing">missing</option>
                   </AdminSelect>
+                </AdminField>
+              </div>
+              <p className="cc-muted">بيانات التدريب V2 — منفصلة عن حالة الفيديو. لا تُخمّن في وقت التشغيل.</p>
+              <div className="cc-form-grid">
+                <AdminField label="حالة بيانات V2" htmlFor="v2_metadata_status" error={fieldErrors.v2_metadata_status}>
+                  <AdminSelect
+                    id="v2_metadata_status"
+                    value={draft.v2_metadata_status}
+                    onChange={(value) => setDraft({ ...draft, v2_metadata_status: value })}
+                  >
+                    {V2_METADATA_STATUSES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="العضلة الأساسية (canonical)" htmlFor="primary_muscle_canonical" error={fieldErrors.primary_muscle_canonical}>
+                  <AdminTextInput
+                    id="primary_muscle_canonical"
+                    dir="ltr"
+                    value={draft.primary_muscle_canonical ?? ""}
+                    onChange={(value) => setDraft({ ...draft, primary_muscle_canonical: value })}
+                  />
+                </AdminField>
+                <AdminField label="دور الحركة الأساسي" htmlFor="primary_movement_role" error={fieldErrors.primary_movement_role}>
+                  <AdminSelect
+                    id="primary_movement_role"
+                    value={draft.primary_movement_role ?? ""}
+                    onChange={(value) => setDraft({ ...draft, primary_movement_role: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {MOVEMENT_ROLES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="الميكانيكا" htmlFor="mechanics" error={fieldErrors.mechanics}>
+                  <AdminSelect
+                    id="mechanics"
+                    value={draft.mechanics ?? ""}
+                    onChange={(value) => setDraft({ ...draft, mechanics: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {MECHANICS.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="نوع التحميل" htmlFor="loading_type">
+                  <AdminSelect
+                    id="loading_type"
+                    value={draft.loading_type ?? ""}
+                    onChange={(value) => setDraft({ ...draft, loading_type: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {LOADING_TYPES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="حالة المعدات" htmlFor="equipment_state" error={fieldErrors.equipment_state} hint="NO_EQUIPMENT ≠ UNKNOWN">
+                  <AdminSelect
+                    id="equipment_state"
+                    value={draft.equipment_state}
+                    onChange={(value) => setDraft({ ...draft, equipment_state: value })}
+                  >
+                    {EQUIPMENT_STATES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="المعدات المطلوبة" htmlFor="required_equipment" hint="مفاتيح canonical مفصولة بفاصلة" error={fieldErrors.required_equipment}>
+                  <AdminTextInput
+                    id="required_equipment"
+                    dir="ltr"
+                    value={listToCsv(draft.required_equipment)}
+                    onChange={(value) => setDraft({ ...draft, required_equipment: csvToList(value) })}
+                  />
+                </AdminField>
+                <AdminField label="توافق المكان" htmlFor="location_compatibility" hint="GYM, HOME, NO_EQUIPMENT">
+                  <AdminTextInput
+                    id="location_compatibility"
+                    dir="ltr"
+                    value={listToCsv(draft.location_compatibility)}
+                    onChange={(value) => setDraft({ ...draft, location_compatibility: csvToList(value) })}
+                  />
+                </AdminField>
+                <AdminField label="وزن الجسم" htmlFor="is_bodyweight" error={fieldErrors.is_bodyweight}>
+                  <AdminSelect
+                    id="is_bodyweight"
+                    value={draft.is_bodyweight == null ? "" : String(draft.is_bodyweight)}
+                    onChange={(value) =>
+                      setDraft({ ...draft, is_bodyweight: value === "" ? null : value === "true" })
+                    }
+                  >
+                    <option value="">غير معروف</option>
+                    <option value="true">نعم</option>
+                    <option value="false">لا</option>
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="أحادي الجانب" htmlFor="is_unilateral" error={fieldErrors.is_unilateral}>
+                  <AdminSelect
+                    id="is_unilateral"
+                    value={draft.is_unilateral == null ? "" : String(draft.is_unilateral)}
+                    onChange={(value) =>
+                      setDraft({ ...draft, is_unilateral: value === "" ? null : value === "true" })
+                    }
+                  >
+                    <option value="">غير معروف</option>
+                    <option value="true">نعم</option>
+                    <option value="false">لا</option>
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="تنفيذ الجانبين" htmlFor="execution_sides">
+                  <AdminSelect
+                    id="execution_sides"
+                    value={draft.execution_sides ?? ""}
+                    onChange={(value) => setDraft({ ...draft, execution_sides: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {EXECUTION_SIDES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="وضع الوصفة" htmlFor="prescription_mode" error={fieldErrors.prescription_mode}>
+                  <AdminSelect
+                    id="prescription_mode"
+                    value={draft.prescription_mode ?? ""}
+                    onChange={(value) => setDraft({ ...draft, prescription_mode: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {PRESCRIPTION_MODES.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="وصفة زمنية" htmlFor="supports_timed_prescription">
+                  <AdminSelect
+                    id="supports_timed_prescription"
+                    value={draft.supports_timed_prescription == null ? "" : String(draft.supports_timed_prescription)}
+                    onChange={(value) =>
+                      setDraft({
+                        ...draft,
+                        supports_timed_prescription: value === "" ? null : value === "true",
+                      })
+                    }
+                  >
+                    <option value="">غير معروف</option>
+                    <option value="true">نعم</option>
+                    <option value="false">لا</option>
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="التعقيد التقني" htmlFor="complexity">
+                  <AdminSelect
+                    id="complexity"
+                    value={draft.complexity ?? ""}
+                    onChange={(value) => setDraft({ ...draft, complexity: value || null })}
+                  >
+                    <option value="">غير محدد</option>
+                    {COMPLEXITY_LEVELS.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </AdminField>
+                <AdminField label="مجموعة الاستبدال" htmlFor="substitution_group" hint="مفتاح دلالي وليس قائمة بدائل يدوية">
+                  <AdminTextInput
+                    id="substitution_group"
+                    dir="ltr"
+                    value={draft.substitution_group ?? ""}
+                    onChange={(value) => setDraft({ ...draft, substitution_group: value })}
+                  />
                 </AdminField>
               </div>
               <AdminField label="ملاحظات الكوتش / التعليمات" htmlFor="coach_notes">

@@ -50,6 +50,7 @@ const clientFiles = [
 for (const file of clientFiles) {
   const source = readFileSync(join(root, file), "utf8");
   assert(!source.includes("admin_assign_client_program"), `${file} cannot assign`);
+  assert(!source.includes("admin_assign_generated_v2_program"), `${file} cannot assign generated V2`);
   assert(!source.includes("admin_save_client_assignment_exercises"), `${file} cannot mutate assignment`);
   assert(!source.includes("service_role"), `${file} has no service_role`);
 }

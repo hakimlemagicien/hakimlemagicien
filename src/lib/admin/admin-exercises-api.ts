@@ -17,6 +17,7 @@ export type AdminExerciseListItem = {
   thumbnail_path: string | null;
   muscle_group_name_ar: string | null;
   updated_at: string;
+  v2_metadata_status: string;
 };
 
 export type AdminExerciseDetail = AdminExerciseListItem & {
@@ -29,6 +30,24 @@ export type AdminExerciseDetail = AdminExerciseListItem & {
   instructions_video_path: string | null;
   sort_order: number;
   muscle_group?: { id: string; code: string; name_ar: string; name_en: string };
+  primary_muscle_canonical: string | null;
+  secondary_muscles_canonical: string[];
+  primary_movement_role: string | null;
+  secondary_movement_roles: string[];
+  substitution_group: string | null;
+  mechanics: string | null;
+  loading_type: string | null;
+  required_equipment: string[];
+  equipment_state: string;
+  location_compatibility: string[];
+  is_bodyweight: boolean | null;
+  is_unilateral: boolean | null;
+  execution_sides: string | null;
+  supports_timed_prescription: boolean | null;
+  prescription_mode: string | null;
+  conditioning_class: string | null;
+  complexity: string | null;
+  beginner_eligible: boolean | null;
 };
 
 export type AdminExerciseFilters = {
@@ -63,6 +82,7 @@ function mapList(row: Record<string, unknown>): AdminExerciseListItem {
     thumbnail_path: (row.thumbnail_path as string | null) ?? null,
     muscle_group_name_ar: (row.muscle_group_name_ar as string | null) ?? null,
     updated_at: String(row.updated_at),
+    v2_metadata_status: String(row.v2_metadata_status ?? "UNREVIEWED"),
   };
 }
 
@@ -111,6 +131,25 @@ export async function getAdminExercise(id: string): Promise<AdminExerciseDetail>
     instructions_video_path: (row.instructions_video_path as string | null) ?? null,
     sort_order: Number(row.sort_order ?? 0),
     muscle_group: muscle,
+    primary_muscle_canonical: (row.primary_muscle_canonical as string | null) ?? null,
+    secondary_muscles_canonical: (row.secondary_muscles_canonical as string[]) ?? [],
+    primary_movement_role: (row.primary_movement_role as string | null) ?? null,
+    secondary_movement_roles: (row.secondary_movement_roles as string[]) ?? [],
+    substitution_group: (row.substitution_group as string | null) ?? null,
+    mechanics: (row.mechanics as string | null) ?? null,
+    loading_type: (row.loading_type as string | null) ?? null,
+    required_equipment: (row.required_equipment as string[]) ?? [],
+    equipment_state: String(row.equipment_state ?? "UNKNOWN"),
+    location_compatibility: (row.location_compatibility as string[]) ?? [],
+    is_bodyweight: typeof row.is_bodyweight === "boolean" ? row.is_bodyweight : null,
+    is_unilateral: typeof row.is_unilateral === "boolean" ? row.is_unilateral : null,
+    execution_sides: (row.execution_sides as string | null) ?? null,
+    supports_timed_prescription:
+      typeof row.supports_timed_prescription === "boolean" ? row.supports_timed_prescription : null,
+    prescription_mode: (row.prescription_mode as string | null) ?? null,
+    conditioning_class: (row.conditioning_class as string | null) ?? null,
+    complexity: (row.complexity as string | null) ?? null,
+    beginner_eligible: typeof row.beginner_eligible === "boolean" ? row.beginner_eligible : null,
   };
 }
 
@@ -157,5 +196,24 @@ export function emptyExerciseDraft(muscleGroupId = ""): Omit<AdminExerciseDetail
     video_path: "",
     instructions_video_path: "",
     sort_order: 0,
+    v2_metadata_status: "UNREVIEWED",
+    primary_muscle_canonical: "",
+    secondary_muscles_canonical: [],
+    primary_movement_role: "",
+    secondary_movement_roles: [],
+    substitution_group: "",
+    mechanics: null,
+    loading_type: null,
+    required_equipment: [],
+    equipment_state: "UNKNOWN",
+    location_compatibility: [],
+    is_bodyweight: null,
+    is_unilateral: null,
+    execution_sides: "BILATERAL",
+    supports_timed_prescription: null,
+    prescription_mode: "REPS",
+    conditioning_class: null,
+    complexity: null,
+    beginner_eligible: null,
   };
 }

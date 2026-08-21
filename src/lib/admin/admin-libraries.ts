@@ -43,6 +43,12 @@ const LIBRARY_ERROR_MESSAGES: Record<string, string> = {
   duplicate_ingredient: "لا يمكن تكرار نفس المكوّن داخل الوجبة.",
   duplicate_exercise: "تمرين بنفس المعرّف أو الرابط موجود مسبقاً.",
   duplicate_external_id: "وجبة بنفس المعرّف موجودة مسبقاً.",
+  external_id_immutable: "معرّف التمرين ثابت ولا يمكن تغييره بعد الإنشاء.",
+  invalid_v2_metadata: "بيانات التدريب V2 غير مكتملة أو غير صالحة للموافقة.",
+  duration_requires_timed: "وضع المدة يتطلب تفعيل الوصفة الزمنية.",
+  bodyweight_loading_conflict: "تمرين وزن الجسم لا يمكن أن يستخدم تحميلاً يناقض ذلك.",
+  no_equipment_with_requirements: "حالة بلا معدات لا تقبل قائمة متطلبات.",
+  has_equipment_without_requirements: "حدد المعدات المطلوبة أو غيّر الحالة إلى غير معروف.",
   duplicate_slug: "هذا المعرّف النصي مستخدم مسبقاً.",
   allergens_review_required: "بعد تغيير المكوّنات راجع قائمة مسببات الحساسية ثم أكّد الحفظ.",
   stale_update: "تم تعديل هذا العنصر من جلسة أخرى. أعد التحميل قبل الحفظ.",
@@ -66,6 +72,17 @@ const LIBRARY_ERROR_MESSAGES: Record<string, string> = {
   invalid_assignment_status: "حالة البرنامج غير صالحة.",
   invalid_sets: "عدد المجموعات يجب أن يكون أكبر من صفر.",
   invalid_rest: "وقت الراحة لا يمكن أن يكون سالباً.",
+  meal_required: "اختر وجبة من المكتبة.",
+  meal_not_assignable: "لا يمكن تعيين وجبة غير منشورة أو مؤرشفة.",
+  slots_required: "الخطة تحتاج أربع وجبات يومية.",
+  invalid_slot: "فترة الوجبة غير صالحة.",
+  invalid_servings: "الحصة يجب أن تكون أكبر من صفر.",
+  active_nutrition_exists: "يوجد خطة تغذية نشطة. أكّد الاستبدال أولاً.",
+  scheduled_nutrition_exists: "يوجد خطة تغذية مجدولة. أكّد الاستبدال أولاً.",
+  program_invalid: "المرشّح غير صالح. لا يمكن تعيينه. يبقى البرنامج الحالي كما هو.",
+  program_generation_blocked: "توليد البرنامج محظور. لم يُغيَّر البرنامج النشط.",
+  active_workout_in_progress: "العميل لديه حصة قيد التنفيذ. انتظر اكتمالها قبل استبدال البرنامج.",
+  unknown_exercise: "تمرين في المرشّح غير موجود في المكتبة.",
 };
 
 export function clampAdminLibraryLimit(limit: number, max = ADMIN_LIBRARY_PAGE_SIZE): number {
@@ -114,6 +131,42 @@ export function validateExerciseDraft(input: {
   }
   if (!Number.isFinite(input.duration_seconds) || input.duration_seconds < 1) {
     errors.duration_seconds = "المدة يجب أن تكون ثانية واحدة على الأقل.";
+  }
+  return errors;
+}
+
+export function validateExerciseV2Draft(input: {
+  v2_metadata_status?: string;
+  primary_muscle_canonical?: string | null;
+  primary_movement_role?: string | null;
+  equipment_state?: string | null;
+  required_equipment?: string[];
+  mechanics?: string | null;
+  is_bodyweight?: boolean | null;
+  is_unilateral?: boolean | null;
+  prescription_mode?: string | null;
+  supports_timed_prescription?: boolean | null;
+}): FieldErrors {
+  const errors: FieldErrors = {};
+  const status = input.v2_metadata_status ?? "UNREVIEWED";
+  if (!["UNREVIEWED", "REVIEW_REQUIRED", "APPROVED", "BLOCKED"].includes(status)) {
+    errors.v2_metadata_status = "حالة مراجعة البيانات غير صالحة.";
+  }
+  if (input.prescription_mode === "DURATION" && input.supports_timed_prescription !== true) {
+    errors.prescription_mode = "وضع المدة يتطلب وصفة زمنية.";
+  }
+  if (status !== "APPROVED") return errors;
+  if (!input.primary_muscle_canonical?.trim()) errors.primary_muscle_canonical = "العضلة الأساسية مطلوبة للموافقة.";
+  if (!input.primary_movement_role?.trim()) errors.primary_movement_role = "دور الحركة مطلوب للموافقة.";
+  if (!input.mechanics) errors.mechanics = "الميكانيكا مطلوبة للموافقة.";
+  if (input.is_bodyweight == null) errors.is_bodyweight = "حدد إن كان التمرين بوزن الجسم.";
+  if (input.is_unilateral == null) errors.is_unilateral = "حدد إن كان التمرين أحادي الجانب.";
+  if (!input.prescription_mode) errors.prescription_mode = "وضع الوصفة مطلوب للموافقة.";
+  if (input.equipment_state === "UNKNOWN" || !input.equipment_state) {
+    errors.equipment_state = "لا يمكن الموافقة مع معدات غير معروفة.";
+  }
+  if (input.equipment_state === "HAS_EQUIPMENT" && !(input.required_equipment ?? []).length) {
+    errors.required_equipment = "حدد المعدات المطلوبة.";
   }
   return errors;
 }

@@ -27,6 +27,7 @@ export type WeekdayWorkoutPlan = {
   durationMin: number;
   calories: number;
   points: number;
+  programDayId?: string;
 };
 
 const WEEKDAY_IDS: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];

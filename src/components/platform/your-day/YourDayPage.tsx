@@ -18,7 +18,11 @@ import { useWater } from "@/components/platform/water/WaterContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDailyReadiness } from "@/hooks/useDailyReadiness";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { useMembership } from "@/hooks/useMembership";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { trackReadinessEvent } from "@/lib/platform/readiness-analytics";
+import { trackTrainingEvent } from "@/lib/platform/training-progress/analytics";
 import { shouldAutoOpenReadiness, hasStartedToday, type ReadinessAnswers } from "@/lib/platform/readiness";
 import { buildYourDayScore, formatYourDayDate } from "@/lib/platform/your-day";
 import { cn } from "@/lib/utils";
@@ -86,6 +90,9 @@ function DayScoreGauge({
 export function YourDayPage({ search }: { search: YourDaySearch }) {
   const navigate = useNavigate();
   const { userId, snapshot, refresh } = usePlatformActivity();
+  const { features } = useMembership();
+  const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program));
+  const continuity = useProgramContinuity(runtimeQuery.data, Boolean(features?.workout_program));
   const water = useWater();
   const upgrade = useUpgradeFlow();
   const { record, ready, saving, error, save, saveAdjustment, clearError } =
@@ -95,9 +102,22 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
   const [answers, setAnswers] = useState<Partial<ReadinessAnswers>>({});
   const [manualOpen, setManualOpen] = useState(false);
   const autoOpenedRef = useRef(false);
+  const programViewedRef = useRef(false);
 
-  const dayScore = useMemo(() => buildYourDayScore(snapshot), [snapshot]);
+  const todayPlan = continuity.assignedPlans?.[continuity.todayId];
+  const workoutTotal =
+    todayPlan && !todayPlan.isRestDay ? todayPlan.prescriptions.length : snapshot.workoutTotal;
+  const dayScore = useMemo(
+    () => buildYourDayScore(snapshot, snapshot.workoutDone, Math.max(workoutTotal, 0)),
+    [snapshot, workoutTotal],
+  );
   const authenticated = Boolean(userId && userId !== "guest");
+
+  useEffect(() => {
+    if (programViewedRef.current) return;
+    programViewedRef.current = true;
+    trackTrainingEvent("training_program_viewed", { has_runtime: runtimeQuery.data?.reason === "ok" });
+  }, [runtimeQuery.data?.reason]);
 
   useEffect(() => {
     if (!authenticated || !ready || autoOpenedRef.current) return;

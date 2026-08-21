@@ -23,7 +23,7 @@ import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
-import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import {
   buildWeeklySchedule,
   formatWorkoutDayLabel,
@@ -383,6 +383,8 @@ function TodayWorkoutBriefCard({
   lockedPreview = false,
   lockedPreviewIntensity = "medium",
   onLockedClick,
+  ctaLabel,
+  notice,
 }: {
   dateLabel: string;
   muscleTitle: string;
@@ -394,6 +396,8 @@ function TodayWorkoutBriefCard({
   lockedPreview?: boolean;
   lockedPreviewIntensity?: "light" | "medium" | "strong";
   onLockedClick?: () => void;
+  ctaLabel?: string;
+  notice?: string;
 }) {
   const fullyLocked = lockedPreview && lockedPreviewIntensity === "strong";
   const startClassName =
@@ -406,7 +410,7 @@ function TodayWorkoutBriefCard({
         className="workout-start-cta__streak pointer-events-none absolute inset-y-[-30%] left-0 w-[38%] bg-gradient-to-r from-transparent via-yellow-200/90 to-transparent"
       />
       <Zap className="workout-start-cta__zap relative h-4 w-4 fill-current" strokeWidth={2.4} />
-      <span className="relative">ابدأ تمرين</span>
+      <span className="relative">{ctaLabel ?? "ابدأ تمرين"}</span>
     </>
   );
 
@@ -512,6 +516,9 @@ function TodayWorkoutBriefCard({
           {startLabel}
         </Link>
       )}
+      {notice ? (
+        <p className="text-center text-[11px] font-medium leading-relaxed text-muted-foreground">{notice}</p>
+      ) : null}
     </div>
   );
 }
@@ -754,9 +761,10 @@ function WorkoutDayPage() {
     : "فعّل برنامجك الآن لفتح كل تمارين الأسبوع — التمرين الأول للصدر متاح للمعاينة.";
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
-      ? runtimeToWeekdayPlans(runtimeQuery.data)
+      ? continuity.assignedPlans
       : null;
 
   const weeklySchedule = useMemo(
@@ -778,7 +786,7 @@ function WorkoutDayPage() {
   );
   const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? selectedPlan : null);
   const sessionExercises = sessionQuery.data?.exercises ?? [];
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = continuity.todayKey;
   const applyStoredProgress = selectedEntry.dateKey === todayKey;
   const sessionViews = buildSessionExerciseViews(sessionExercises, applyStoredProgress);
   const workoutStats = {
@@ -909,6 +917,20 @@ function WorkoutDayPage() {
             lockedPreview={freePreview && !selectedPlan.isRestDay}
             lockedPreviewIntensity={freeDayFullyLocked ? "strong" : "light"}
             onLockedClick={() => openUpgrade(lockedReason)}
+            ctaLabel={
+              isSelectedToday && continuity.decision?.action === "RESUME_SESSION"
+                ? "استكمل التمرين"
+                : undefined
+            }
+            notice={
+              isSelectedToday &&
+              continuity.decision &&
+              ["RESCHEDULE_SESSION", "DEFER_SESSION", "ADVANCE_AFTER_PARTIAL", "ENTER_RECONDITIONING", "SCHEDULE_REVIEW_REQUIRED"].includes(
+                continuity.decision.action,
+              )
+                ? continuity.decision.client_explanation
+                : undefined
+            }
           />
 
           {selectedPlan.isRestDay ? (

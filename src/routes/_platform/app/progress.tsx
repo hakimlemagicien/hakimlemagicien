@@ -16,12 +16,14 @@ import {
   WeeklyProgressSection,
   type ComparisonPair,
 } from "@/components/platform/progress/ProgressSections";
+import { TrainingProgressCards } from "@/components/platform/progress/TrainingProgressCards";
 import {
   ProgressDashboardSkeleton,
   ProgressHeader,
   ProgressMotionSection,
 } from "@/components/platform/progress/ProgressShared";
 import { useProgressExperience, useOnlineStatus } from "@/hooks/useProgressExperience";
+import { useTrainingProgressSummary } from "@/hooks/useTrainingProgressSummary";
 import {
   dismissPhotoOnboarding,
   getMarketingPhotoConsent,
@@ -51,6 +53,7 @@ function ProgressDashboardPage() {
   const displayName = useProgressDisplayName();
   const online = useOnlineStatus();
   const { userId, snapshot, data, refresh, logWeight } = useProgressExperience();
+  const { summary: trainingSummary, loading: trainingLoading } = useTrainingProgressSummary(true);
 
   const [booting, setBooting] = useState(true);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
@@ -134,6 +137,10 @@ function ProgressDashboardPage() {
           onOpenPoints={() => setDetailSheet("points")}
           onOpenWeekly={() => setDetailSheet("weekly")}
         />
+      </ProgressMotionSection>
+
+      <ProgressMotionSection delay={0.04}>
+        <TrainingProgressCards summary={trainingSummary} loading={trainingLoading} />
       </ProgressMotionSection>
 
       <ProgressMotionSection delay={0.06}>

@@ -1,5 +1,8 @@
 import { TODAY_WORKOUT_PRESCRIPTIONS } from "@/lib/platform/today-workout";
 import type { EffortLevel } from "@/lib/platform/workout-session";
+import type { TrainingV2Effort } from "@/lib/platform/training-v2-contracts";
+import type { WorkoutSetType } from "@/lib/platform/training-v2-contracts";
+import type { WallClockRest } from "@/lib/platform/workout-runtime/wall-clock-rest";
 
 export type StoredExerciseProgress = {
   completedSets: number;
@@ -10,25 +13,47 @@ export type StoredSetLog = {
   exerciseExternalId: string;
   exerciseId: string;
   setNumber: number;
-  weightKg: number;
-  reps: number;
-  effort: EffortLevel;
+  weightKg: number | null;
+  reps: number | null;
+  durationSeconds?: number | null;
+  effort: EffortLevel | null;
+  effortV2?: TrainingV2Effort | null;
   notes: string;
   skipped: boolean;
+  setCompleted?: boolean;
+  setType?: WorkoutSetType;
+  prescribedLoad?: number | null;
+  prescribedRepsMin?: number | null;
+  prescribedRepsMax?: number | null;
+  prescribedDurationSeconds?: number | null;
+  prescribedRestSeconds?: number | null;
+  actualRestSeconds?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  syncStatus?: "SAVED" | "PENDING_SYNC";
   loggedAt: string;
 };
 
 export type StoredWorkoutSession = {
-  version: 2;
+  version: 2 | 3;
   sessionKey: string;
+  sessionId?: string | null;
   exerciseIndex: number;
   progress: StoredExerciseProgress[];
   setLogs: StoredSetLog[];
+  rest?: WallClockRest | null;
+  hydrationLastShownAt?: string | null;
+  startedAt?: string | null;
   updatedAt: string;
 };
 
 const STORAGE_KEY = "hakim:today-workout-session:v2";
 const LEGACY_STORAGE_KEY = "hakim:today-workout-progress:v1";
+export const WORKOUT_STORAGE_KEYS = {
+  SESSION: STORAGE_KEY,
+  LEGACY_PROGRESS: LEGACY_STORAGE_KEY,
+  PENDING_SETS: "hakim:workout-pending-sets:v1",
+} as const;
 
 export function getTodayWorkoutSessionKey(externalIds?: string[]): string {
   const date = new Date().toISOString().slice(0, 10);
@@ -60,15 +85,17 @@ export function loadWorkoutSession(
     if (raw) {
       const parsed = JSON.parse(raw) as StoredWorkoutSession;
       if (
-        parsed?.version === 2 &&
+        (parsed?.version === 2 || parsed?.version === 3) &&
         parsed.sessionKey === sessionKey &&
         Array.isArray(parsed.progress) &&
         parsed.progress.length === length
       ) {
         return {
           ...parsed,
+          version: 3,
           setLogs: Array.isArray(parsed.setLogs) ? parsed.setLogs : [],
           exerciseIndex: Math.min(Math.max(parsed.exerciseIndex ?? 0, 0), length - 1),
+          rest: parsed.rest ?? null,
         };
       }
     }
@@ -80,11 +107,12 @@ export function loadWorkoutSession(
   if (!legacy) return null;
 
   return {
-    version: 2,
+    version: 3,
     sessionKey,
     exerciseIndex: 0,
     progress: legacy,
     setLogs: [],
+    rest: null,
     updatedAt: new Date().toISOString(),
   };
 }
@@ -101,6 +129,7 @@ export function saveWorkoutSession(state: StoredWorkoutSession) {
       STORAGE_KEY,
       JSON.stringify({
         ...state,
+        version: 3,
         updatedAt: new Date().toISOString(),
       }),
     );
@@ -114,14 +143,16 @@ export function saveWorkoutProgress(
   exerciseIndex: number,
   progress: StoredExerciseProgress[],
   setLogs: StoredSetLog[],
+  extra: Partial<StoredWorkoutSession> = {},
 ) {
   saveWorkoutSession({
-    version: 2,
+    version: 3,
     sessionKey,
     exerciseIndex,
     progress,
     setLogs,
     updatedAt: new Date().toISOString(),
+    ...extra,
   });
 }
 

@@ -44,6 +44,140 @@
 
 ---
 
+## Training Engine V2 — Phase 3 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_3_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_3_REPORT.md) |
+| تقرير جودة المكتبة | [`EXERCISE_LIBRARY_V2_QA_REPORT.md`](./EXERCISE_LIBRARY_V2_QA_REPORT.md) |
+| العقود | `src/lib/platform/exercise-library-v2.ts` |
+| الهجرة | `supabase/migrations/20260821140000_exercise_library_v2_compatibility.sql` |
+
+---
+
+## Training Engine V2 — Phase 4 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_4_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_4_REPORT.md) |
+| المحرك | `src/lib/platform/prescription/` |
+| الاختبار | `src/lib/platform/prescription/prescription-engine.test.ts` |
+
+---
+
+## Training Engine V2 — Phase 5 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_5_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_5_REPORT.md) |
+| التشغيل | `src/lib/platform/workout-runtime/` · `src/hooks/useWorkoutPlayer.ts` |
+| الصوت | `public/audio/workout/` |
+
+---
+
+## Training Engine V2 — Phase 6 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_6_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_6_REPORT.md) |
+| المحرك | `src/lib/platform/progression/` |
+| الاختبار | `src/lib/platform/progression/progression-engine.test.ts` |
+| الهجرة | `supabase/migrations/20260821160000_progression_history_duration.sql` |
+
+---
+
+## Training Engine V2 — Phase 7 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_7_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_7_REPORT.md) |
+| المحرك | `src/lib/platform/volume/` |
+| الاختبار | `src/lib/platform/volume/volume-engine.test.ts` |
+
+---
+
+## Training Engine V2 — Phase 8 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_8_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_8_REPORT.md) |
+| المحرك | `src/lib/platform/continuity/` |
+| الاختبار | `src/lib/platform/continuity/continuity-engine.test.ts` |
+| الحالة | `PHASE_8_IMPLEMENTED_READY_FOR_QA` |
+
+---
+
+## Training Engine V2 — Phase 9 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_9_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_9_REPORT.md) |
+| المحرك | `src/lib/platform/goal-intelligence/` |
+| الاختبار | `src/lib/platform/goal-intelligence/goal-intelligence.test.ts` |
+| الحالة | `PHASE_9_IMPLEMENTED_READY_FOR_QA` |
+
+---
+
+## Training Engine V2 — Phase 10 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_10_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_10_REPORT.md) |
+| المحرك | `src/lib/platform/program-generation/` |
+| الاختبار | `src/lib/platform/program-generation/program-generation.test.ts` |
+| الحالة | `PHASE_10_IMPLEMENTED_READY_FOR_QA` |
+
+---
+
+## Training Engine V2 — Phase 11 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_11_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_11_REPORT.md) |
+| الطبقة | `src/lib/platform/training-progress/` |
+| شاشة التقدّم | `src/routes/_platform/app/progress.tsx` |
+| الاختبار | `src/lib/platform/training-progress/training-progress.test.ts` |
+| الحالة | `PHASE_11_IMPLEMENTED_READY_FOR_QA` |
+
+---
+
+## Training Engine V2 — Phase 12 (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير بوابة الإطلاق | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_12_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_12_REPORT.md) |
+| محاكاة النظام | `src/lib/platform/training-v2-release/` |
+| الاختبار | `src/lib/platform/training-v2-release/training-v2-release.test.ts` (ضمن `npm test`) |
+| تقرير المراجعة الشاملة 1–12 | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_FULL_STRATEGY_REVIEW.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_FULL_STRATEGY_REVIEW.md) |
+| الحالة | `READY_FOR_CONTROLLED_RELEASE_WITH_KNOWN_RISKS` |
+| النشر | **غير منفَّذ** — بانتظار بوابة Staging |
+| مراجعة الإغلاق | حلقة العميل موصولة تطبيقياً — انظر تقرير الإغلاق |
+
+---
+
+## Training Engine V2 — Client Loop Integration Closure (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| تقرير إغلاق الحلقة | [`TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md`](./TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md) |
+| التوصيل | `src/lib/platform/client-loop/` |
+| الهجرة | `supabase/migrations/20260821180000_client_loop_integration.sql` |
+| الاختبار | `src/lib/platform/client-loop/client-loop.test.ts` (ضمن `npm test`) |
+| الحالة | `CLIENT_LOOP_CLOSED_WITH_EXTERNAL_RELEASE_GATES` |
+| النشر | **غير منفَّذ** |
+
+---
+
+## Nutrition Library V2 — قواعد الموظف (2026-08-21)
+
+| الموضوع | المرجع |
+|---------|--------|
+| قواعد بناء/توسيع المكتبة بنفس نظام المنصة | [`NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md`](./NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md) |
+| الهوية | `external_id` = `MEAL-NNN` (ثابت) |
+| العقد في الكود | `src/lib/platform/meal-library.ts` · Nutrition Data Contract v1.1 |
+
+---
+
 ## قاعدة التحديث
 
 عند كل milestone:

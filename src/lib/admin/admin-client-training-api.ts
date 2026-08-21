@@ -3,7 +3,7 @@ import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-librari
 
 export type AdminAssignmentSummary = {
   id: string;
-  source_template_id: string;
+  source_template_id: string | null;
   template_version: number;
   status: string;
   name_ar: string | null;
@@ -79,7 +79,7 @@ function mapDetail(row: Record<string, unknown>): AdminAssignmentDetail {
   return {
     id: String(row.id),
     client_id: String(row.client_id),
-    source_template_id: String(row.source_template_id),
+    source_template_id: row.source_template_id ? String(row.source_template_id) : null,
     template_version: Number(row.template_version ?? 1),
     status: String(row.status),
     name_ar: (row.name_ar as string | null) ?? null,
@@ -133,7 +133,7 @@ export async function listAdminClientAssignments(clientId: string, offset = 0) {
   if (error) throw error;
   const rows = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
     id: String(row.id),
-    source_template_id: String(row.source_template_id),
+    source_template_id: row.source_template_id ? String(row.source_template_id) : null,
     template_version: Number(row.template_version),
     status: String(row.status),
     name_ar: (row.name_ar as string | null) ?? null,
@@ -146,6 +146,58 @@ export async function listAdminClientAssignments(clientId: string, offset = 0) {
     rows,
     totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
   };
+}
+
+export async function assignGeneratedV2Program(input: {
+  clientId: string;
+  startsOn: string;
+  replace: boolean;
+  generationStatus: string;
+  validationStatus: string;
+  payload: Record<string, unknown>;
+}): Promise<AdminAssignmentDetail> {
+  const { data, error } = await supabase.rpc("admin_assign_generated_v2_program", {
+    p_client_id: input.clientId,
+    p_starts_on: input.startsOn,
+    p_replace: input.replace,
+    p_generation_status: input.generationStatus,
+    p_validation_status: input.validationStatus,
+    p_payload: input.payload,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function recordAdminAdaptiveDecision(input: {
+  clientId: string;
+  decisionType: string;
+  evaluationKey: string;
+  reasonCode: string;
+  confidence: string;
+  snapshot: Record<string, unknown>;
+  assignmentId?: string | null;
+  programVersion?: number | null;
+}) {
+  const { error } = await supabase.rpc("admin_record_adaptive_decision", {
+    p_client_id: input.clientId,
+    p_decision_type: input.decisionType,
+    p_evaluation_key: input.evaluationKey,
+    p_reason_code: input.reasonCode,
+    p_confidence: input.confidence,
+    p_input_snapshot: input.snapshot,
+    p_assignment_id: input.assignmentId ?? null,
+    p_program_version: input.programVersion ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function listAdminClientAdaptiveDecisions(clientId: string, limit = 20) {
+  const { data, error } = await supabase.rpc("admin_list_client_adaptive_decisions", {
+    p_client_id: clientId,
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function endAdminClientProgram(id: string, status: "completed" | "cancelled") {

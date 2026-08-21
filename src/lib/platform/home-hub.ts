@@ -964,6 +964,7 @@ export function buildNextSession(input: {
   date?: Date;
   assignedPlan?: WeekdayWorkoutPlan | null;
   assignmentReason?: "ok" | "no_program" | "scheduled" | "ended" | "legacy_incomplete" | "error";
+  workoutCta?: string;
 }): NextSessionState {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const date = input.date ?? new Date();
@@ -1022,7 +1023,7 @@ export function buildNextSession(input: {
       title: plan.muscleTitle,
       meta: `${plan.durationMin} دقيقة · ${exerciseCount} ${exerciseCount === 1 ? "تمرين" : "تمارين"}`,
       href: "/app/program/workout",
-      cta: "ابدأ الآن",
+      cta: input.workoutCta ?? "ابدأ الآن",
     };
   }
 

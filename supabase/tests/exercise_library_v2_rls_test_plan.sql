@@ -1,0 +1,14 @@
+-- Exercise Library V2 RLS / authorization test plan.
+-- Manual / staging. Do not weaken existing exercise policies.
+
+-- 1. Client SELECT of active exercises still works.
+-- 2. Client cannot UPDATE public.exercises (no client write policy besides admin).
+-- 3. Client cannot call admin_save_exercise.
+-- 4. Admin can SELECT inactive exercises and save V2 metadata.
+-- 5. Admin UPDATE that changes external_id raises external_id_immutable.
+-- 6. Admin APPROVED save without primary_movement_role raises invalid_v2_metadata.
+-- 7. v2_metadata_status is independent from video_status:
+--    APPROVED + placeholder video is allowed.
+-- 8. No new tables with open INSERT to authenticated besides existing exercises admin policy.
+-- 9. exercise_v2_is_eligible is STABLE/read-only.
+-- 10. Sync service_role may UPDATE V2 columns; anon cannot.

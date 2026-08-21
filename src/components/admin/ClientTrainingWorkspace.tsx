@@ -20,10 +20,12 @@ import { type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog"
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import {
   assignAdminClientProgram,
+  assignGeneratedV2Program,
   endAdminClientProgram,
   getAdminClientAssignment,
   listAdminClientAssignments,
   listAdminClientSetLogs,
+  recordAdminAdaptiveDecision,
   saveAdminClientAssignmentExercises,
   type AdminAssignmentDetail,
   type AdminAssignmentExercise,
@@ -40,6 +42,7 @@ import {
   validateClientPrescription,
 } from "@/lib/admin/admin-client-training";
 import { listAdminExercises, type AdminExerciseListItem } from "@/lib/admin/admin-exercises-api";
+import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import {
   getAdminProgramTemplate,
   listAdminProgramTemplates,
@@ -56,7 +59,14 @@ import {
 } from "@/lib/admin/admin-libraries";
 import { formatAdminDate, formatRelativeAge } from "@/lib/admin/admin-status";
 import { PROGRAM_BOUNDARIES } from "@/lib/admin/admin-architecture";
-import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
+import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
+import { mapLegacyGoalId } from "@/lib/platform/training-v2-contracts";
+import {
+  assignmentPayloadFromResult,
+  generateAuthorizedProgramCandidate,
+} from "@/lib/platform/client-loop";
+import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
+import { getCoachTrainingOverview, type ReviewFlag } from "@/lib/platform/training-progress";
 
 const GOAL_LABELS: Record<string, string> = {
   cut: "تنشيف",
@@ -97,6 +107,17 @@ export function ClientTrainingWorkspace({
   const [saveState, setSaveState] = useState<LibrarySaveState>("saved");
   const [editing, setEditing] = useState(false);
   const [assignStep, setAssignStep] = useState<AssignStep>("closed");
+  const [v2Busy, setV2Busy] = useState(false);
+  const [v2Preview, setV2Preview] = useState<{
+    assignable: boolean;
+    blockReason: string | null;
+    generationStatus: string;
+    validationStatus: string;
+    explanation: string;
+    errors: string[];
+    sessionCount: number;
+    payload: Record<string, unknown> | null;
+  } | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   const [pickerGoal, setPickerGoal] = useState("");
   const [pickerLevel, setPickerLevel] = useState("");
@@ -241,6 +262,93 @@ export function ClientTrainingWorkspace({
     }
   };
 
+  const generateV2 = async () => {
+    setV2Busy(true);
+    setError(null);
+    try {
+      const catalog = await listV2ExerciseCandidates();
+      const mapped = mapLegacyGoalId(overview.goal ?? "");
+      const goalId = mapped.canonicalId ?? "FAT_LOSS";
+      const requestedDays = Number(pickerDays) || 3;
+      const daysPerWeek = Math.min(5, Math.max(2, requestedDays === 6 ? 5 : requestedDays));
+      const location = (overview.training_type ?? "").toLowerCase().includes("home") ? "HOME" : "GYM";
+      const generated = generateAuthorizedProgramCandidate({
+        goalId,
+        trainingLevel: "UNASSESSED",
+        daysPerWeek,
+        availableMinutes: 50,
+        location,
+        exercises: catalog,
+        reason: "COACH_REQUEST",
+      });
+      const payload = assignmentPayloadFromResult(generated.result, `برنامج V2 · ${goalId}`);
+      setV2Preview({
+        assignable: generated.assignable,
+        blockReason: generated.blockReason,
+        generationStatus: generated.result.status,
+        validationStatus: generated.result.validation.status,
+        explanation: generated.result.client_explanation,
+        errors: generated.result.validation.errors.map((row) => row.message),
+        sessionCount: generated.result.candidate?.sessions.length ?? 0,
+        payload,
+      });
+      if (!generated.assignable) {
+        void recordAdminAdaptiveDecision({
+          clientId,
+          decisionType: CLIENT_LOOP_PROGRAM_BLOCKED,
+          evaluationKey: `program-block:${clientId}:${startsOn}`,
+          reasonCode: generated.blockReason ?? "PROGRAM_GENERATION_BLOCKED",
+          confidence: "HIGH",
+          snapshot: {
+            validation_status: generated.result.validation.status,
+            generation_status: generated.result.status,
+            errors: generated.result.validation.errors.map((row) => row.code),
+          },
+        }).catch(() => undefined);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(translateLibraryError(err));
+    } finally {
+      setV2Busy(false);
+    }
+  };
+
+  const confirmGeneratedAssign = (replace: boolean) => {
+    if (!v2Preview?.assignable || !v2Preview.payload) return;
+    onConfirm({
+      title: replace ? "استبدال ببرنامج V2 المُصادق" : "تعيين برنامج V2 المُصادق",
+      body: replace
+        ? "البرنامج الحالي سيصبح تاريخاً. اللقطة الجديدة مستقرة ولن تُعاد توليدها عند فتح التطبيق."
+        : "سيتم تعيين لقطة البرنامج المولَّد والمُصادق. التوليد لا يتجاوز صلاحية المدرب.",
+      confirmLabel: replace ? "استبدال وتعيين" : "تعيين",
+      tone: replace ? "danger" : "primary",
+      onConfirm: () => {
+        void assignGeneratedV2Program({
+          clientId,
+          startsOn,
+          replace,
+          generationStatus: v2Preview.generationStatus,
+          validationStatus: v2Preview.validationStatus,
+          payload: v2Preview.payload!,
+        })
+          .then(async (row) => {
+            setDetail(row);
+            setDraft(row);
+            setV2Preview(null);
+            const list = await listAdminClientAssignments(clientId, 0);
+            setHistory(list.rows);
+            setHistoryTotal(list.totalCount);
+            await onOverviewRefresh();
+          })
+          .catch((err) => {
+            console.error(err);
+            setError(translateLibraryError(err));
+          });
+      },
+    });
+  };
+
   const confirmAssign = (replace: boolean) => {
     if (!preview) return;
     onConfirm({
@@ -366,10 +474,11 @@ export function ClientTrainingWorkspace({
             </div>
             <div>
               <dt>نسبة الالتزام</dt>
-              <dd>غير معتمدة — لا تُحسب في هذه المرحلة.</dd>
+              <dd>غير معتمدة كدرجة رقمية — نعرض إشارات المحرك بدل نسبة مخترعة.</dd>
             </div>
           </dl>
         </AdminCard>
+        <CoachTrainingObservabilityCard overview={overview} />
         <AdminCard>
           <h2 className="cc-section__title">سجل التمرين</h2>
           <label className="cc-filter">
@@ -504,6 +613,9 @@ export function ClientTrainingWorkspace({
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => setAssignStep("pick")}>
             تعيين برنامج
           </button>
+          <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
+            {v2Busy ? "جاري توليد V2…" : "توليد برنامج V2"}
+          </button>
           {detail?.snapshot_complete && (detail.status === "active" || detail.status === "scheduled") ? (
             <button type="button" className="cc-btn" onClick={() => setEditing(true)}>
               تعديل نسخة العميل
@@ -527,6 +639,58 @@ export function ClientTrainingWorkspace({
           {editing ? <AdminSaveState state={dirty ? "unsaved" : saveState} /> : null}
         </div>
       </AdminCard>
+
+      {v2Preview ? (
+        <AdminCard>
+          <h2 className="cc-section__title">مرشّح البرنامج التكيّفي V2</h2>
+          <dl className="cc-dl">
+            <div>
+              <dt>التوليد</dt>
+              <dd>{v2Preview.generationStatus}</dd>
+            </div>
+            <div>
+              <dt>التحقق</dt>
+              <dd>{v2Preview.validationStatus}</dd>
+            </div>
+            <div>
+              <dt>الحصص</dt>
+              <dd>{v2Preview.sessionCount}</dd>
+            </div>
+          </dl>
+          <p>{v2Preview.explanation}</p>
+          {!v2Preview.assignable ? (
+            <p className="cc-field__error" role="alert">
+              البرنامج غير صالح للتعيين. السبب: {v2Preview.blockReason ?? "INVALID"}. البرنامج الحالي يبقى كما هو.
+            </p>
+          ) : (
+            <p>المرشّح صالح. التعيين يتطلب تأكيد المدرب ولن يُفعَّل تلقائياً.</p>
+          )}
+          {v2Preview.errors.length ? (
+            <ul>
+              {v2Preview.errors.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          ) : null}
+          <div className="cc-editor-toolbar">
+            <button type="button" className="cc-btn" onClick={() => setV2Preview(null)}>
+              إغلاق
+            </button>
+            <button
+              type="button"
+              className="cc-btn cc-btn--primary"
+              disabled={!v2Preview.assignable}
+              onClick={() =>
+                confirmGeneratedAssign(
+                  overview.assignment?.status === "active" || overview.assignment?.status === "scheduled",
+                )
+              }
+            >
+              تعيين المرشّح الصالح
+            </button>
+          </div>
+        </AdminCard>
+      ) : null}
 
       {assignStep !== "closed" ? (
         <AdminCard>
@@ -875,6 +1039,31 @@ export function ClientTrainingWorkspace({
         </div>
       ) : null}
     </AdminSection>
+  );
+}
+
+function CoachTrainingObservabilityCard({ overview }: { overview: AdminClientOverview }) {
+  const flags: ReviewFlag[] = [];
+  if (!overview.assignment) {
+    flags.push({ code: "PROGRAM_REVIEW_REQUIRED", severity: "high", label_ar: "لا برنامج نشط", open: true });
+  } else if (overview.assignment.snapshot_complete === false) {
+    flags.push({ code: "PROGRAM_REVIEW_REQUIRED", severity: "high", label_ar: "تعيين بلا لقطة بنية", open: true });
+  }
+  const coach = getCoachTrainingOverview(flags);
+  return (
+    <AdminCard>
+      <h2 className="cc-section__title">إشارات المحرك للمراجعة</h2>
+      <p className="cc-meta">للمدرب/الجودة فقط. لا تُغلق المراجعة بمجرد عرض هذه البطاقة.</p>
+      {!coach.has_open_review ? <p>لا إشارات مفتوحة من الحالة الحالية.</p> : null}
+      {coach.flags.map((flag) => (
+        <p key={flag.code}>
+          <AdminStatusBadge tone={flag.severity === "safety" ? "danger" : flag.severity === "high" ? "review" : "neutral"}>
+            {flag.label_ar}
+          </AdminStatusBadge>{" "}
+          <span className="cc-meta">{flag.code}</span>
+        </p>
+      ))}
+    </AdminCard>
   );
 }
 

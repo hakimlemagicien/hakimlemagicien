@@ -16,6 +16,12 @@ export const PROGRAM_BOUNDARIES = {
   assigned: "CLIENT_ASSIGNED_PROGRAM",
 } as const;
 
+export const NUTRITION_BOUNDARIES = {
+  library: "MEAL_LIBRARY_RECORD",
+  assigned: "CLIENT_ASSIGNED_MEAL",
+  plan: "CLIENT_NUTRITION_ASSIGNMENT",
+} as const;
+
 export const CONTENT_PUBLISHING_STATES = ["draft", "review", "published", "archived"] as const;
 
 export const NOTIFICATION_CHANNELS = {
@@ -47,6 +53,9 @@ export const ATTENTION_SIGNAL_CONTRACTS = [
   { id: "stalled_progress", status: "DOMAIN_RULE_REQUIRED" },
   { id: "injury_flag", status: "DOMAIN_RULE_REQUIRED" },
   { id: "program_adjustment_due", status: "DOMAIN_RULE_REQUIRED" },
+  { id: "training_review_flags", status: "LIVE", source: "getCoachTrainingOverview" },
+  { id: "no_active_nutrition", status: "LIVE", source: "admin_get_client_overview" },
+  { id: "nutrition_allergen_conflict", status: "LIVE", source: "client_nutrition_assignments" },
   { id: "nutrition_issue", status: "DOMAIN_RULE_REQUIRED" },
   { id: "subscription_issue", status: "DOMAIN_RULE_REQUIRED" },
   { id: "support_escalation", status: "DOMAIN_RULE_REQUIRED" },

@@ -7,6 +7,7 @@ import { ToolsProvider, useTools } from "@/components/platform/tools/ToolsContex
 import { WaterBottomSheet } from "@/components/platform/water/WaterBottomSheet";
 import { WaterGoalFeedback, WaterUndoToast } from "@/components/platform/water/WaterFeedback";
 import { WaterReminderOverlay } from "@/components/platform/water/WaterReminderOverlay";
+import { TrainingReminderOverlay } from "@/components/platform/workout/TrainingReminderOverlay";
 import { WaterProvider } from "@/components/platform/water/WaterContext";
 import { ShellErrorBoundary } from "@/components/platform/shared/ShellErrorBoundary";
 import {
@@ -84,6 +85,7 @@ function PlatformShellFrame({ children }: PlatformShellProps) {
         <ShellErrorBoundary>
           <WaterBottomSheet />
           <WaterReminderOverlay />
+          <TrainingReminderOverlay />
           <WaterUndoToast />
           <WaterGoalFeedback />
         </ShellErrorBoundary>

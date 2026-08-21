@@ -18,7 +18,7 @@ import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
-import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import {
   buildDailySnapshot,
   buildDiscoverPreviewItems,
@@ -63,9 +63,9 @@ function PlatformHomePage() {
   const hakimPoints = activity.hakimPoints;
   const isOnline = useOnlineStatus();
   const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program) && !loading);
-  const assignedPlans =
-    runtimeQuery.data?.reason === "ok" ? runtimeToWeekdayPlans(runtimeQuery.data) : null;
-  const assignedPlan = assignedPlans?.[getWeekdayIdFromDate()] ?? null;
+  const continuity = useProgramContinuity(runtimeQuery.data, Boolean(features?.workout_program) && !loading);
+  const assignedPlans = continuity.assignedPlans;
+  const assignedPlan = assignedPlans?.[continuity.todayId ?? getWeekdayIdFromDate()] ?? null;
   const assignmentReason = !features?.workout_program
     ? undefined
     : runtimeQuery.isError
@@ -94,6 +94,7 @@ function PlatformHomePage() {
         activity,
         assignedPlan,
         assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
+        workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
       }),
       discover: buildDiscoverPreviewItems(goal),
     };
@@ -110,6 +111,7 @@ function PlatformHomePage() {
     assignedPlan,
     assignmentReason,
     runtimeQuery.isLoading,
+    continuity.decision?.action,
   ]);
 
   if (loading) {

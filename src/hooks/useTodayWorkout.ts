@@ -63,6 +63,7 @@ async function buildSessionExercise(
     coachNotes: prescription.notes_ar ?? details.coach_notes,
     assignmentId: prescription.assignmentId,
     assignmentExerciseId: prescription.assignmentExerciseId,
+    assignmentDayId: prescription.assignmentDayId,
   };
 }
 

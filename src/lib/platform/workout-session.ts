@@ -29,6 +29,7 @@ export type WorkoutSessionExercise = {
   coachNotes: string | null;
   assignmentId?: string;
   assignmentExerciseId?: string;
+  assignmentDayId?: string;
 };
 
 export const EFFORT_LABELS: Record<EffortLevel, string> = {
@@ -57,7 +58,12 @@ export function formatExerciseVolume(exercise: Pick<WorkoutSessionExercise, "rep
   return "—";
 }
 
-/** Placeholder load rule — later replaced by per-goal progression. */
+/**
+ * Placeholder load rule — later replaced by per-goal progression.
+ * KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_5_6 — intra-set +10% is not V2 Double Progression.
+ * Isolated legacy intra-set +10% helper for free-preview only.
+ * V2 Workout Player must not call this. Phase 6 replaces remaining usage.
+ */
 export const SET_WEIGHT_INCREMENT = 0.1;
 
 export const SET_REP_RANGES = [

@@ -401,6 +401,26 @@ export type Database = {
           video_updated_at: string | null
           video_version: number
           youtube_url: string | null
+          beginner_eligible: boolean | null
+          complexity: string | null
+          conditioning_class: string | null
+          equipment_state: string
+          execution_sides: string | null
+          is_bodyweight: boolean | null
+          is_unilateral: boolean | null
+          loading_type: string | null
+          location_compatibility: string[]
+          mechanics: string | null
+          muscle_contributions: Json
+          prescription_mode: string | null
+          primary_movement_role: string | null
+          primary_muscle_canonical: string | null
+          required_equipment: string[]
+          secondary_movement_roles: string[]
+          secondary_muscles_canonical: string[]
+          substitution_group: string | null
+          supports_timed_prescription: boolean | null
+          v2_metadata_status: string
         }
         Insert: {
           coach_notes?: string | null
@@ -410,6 +430,26 @@ export type Database = {
           equipment?: string | null
           exercise_type?: Database["public"]["Enums"]["exercise_type"]
           external_id: string
+          beginner_eligible?: boolean | null
+          complexity?: string | null
+          conditioning_class?: string | null
+          equipment_state?: string
+          execution_sides?: string | null
+          is_bodyweight?: boolean | null
+          is_unilateral?: boolean | null
+          loading_type?: string | null
+          location_compatibility?: string[]
+          mechanics?: string | null
+          muscle_contributions?: Json
+          prescription_mode?: string | null
+          primary_movement_role?: string | null
+          primary_muscle_canonical?: string | null
+          required_equipment?: string[]
+          secondary_movement_roles?: string[]
+          secondary_muscles_canonical?: string[]
+          substitution_group?: string | null
+          supports_timed_prescription?: boolean | null
+          v2_metadata_status?: string
           id?: string
           instructions_file_size?: number | null
           instructions_mime_type?: string | null
@@ -477,6 +517,26 @@ export type Database = {
           video_updated_at?: string | null
           video_version?: number
           youtube_url?: string | null
+          beginner_eligible?: boolean | null
+          complexity?: string | null
+          conditioning_class?: string | null
+          equipment_state?: string
+          execution_sides?: string | null
+          is_bodyweight?: boolean | null
+          is_unilateral?: boolean | null
+          loading_type?: string | null
+          location_compatibility?: string[]
+          mechanics?: string | null
+          muscle_contributions?: Json
+          prescription_mode?: string | null
+          primary_movement_role?: string | null
+          primary_muscle_canonical?: string | null
+          required_equipment?: string[]
+          secondary_movement_roles?: string[]
+          secondary_muscles_canonical?: string[]
+          substitution_group?: string | null
+          supports_timed_prescription?: boolean | null
+          v2_metadata_status?: string
         }
         Relationships: [
           {
@@ -1414,6 +1474,7 @@ export type Database = {
           timezone: string
           updated_at: string
           user_id: string
+          workout_session_id: string | null
         }
         Insert: {
           adjustment_choice?: string | null
@@ -1431,6 +1492,7 @@ export type Database = {
           timezone: string
           updated_at?: string
           user_id: string
+          workout_session_id?: string | null
         }
         Update: {
           adjustment_choice?: string | null
@@ -1448,6 +1510,7 @@ export type Database = {
           timezone?: string
           updated_at?: string
           user_id?: string
+          workout_session_id?: string | null
         }
         Relationships: []
       }
@@ -1483,6 +1546,23 @@ export type Database = {
           weight_kg: number | null
           assignment_id: string | null
           assignment_exercise_id: string | null
+          workout_session_id: string | null
+          set_type: string | null
+          prescribed_load: number | null
+          actual_load: number | null
+          prescribed_reps_min: number | null
+          prescribed_reps_max: number | null
+          actual_reps: number | null
+          prescribed_duration_seconds: number | null
+          actual_duration_seconds: number | null
+          prescribed_rest_seconds: number | null
+          actual_rest_seconds: number | null
+          effort_v2: string | null
+          set_completed: boolean | null
+          started_at: string | null
+          completed_at: string | null
+          rest_started_at: string | null
+          rest_completed_at: string | null
         }
         Insert: {
           created_at?: string
@@ -1500,6 +1580,23 @@ export type Database = {
           weight_kg?: number | null
           assignment_id?: string | null
           assignment_exercise_id?: string | null
+          workout_session_id?: string | null
+          set_type?: string | null
+          prescribed_load?: number | null
+          actual_load?: number | null
+          prescribed_reps_min?: number | null
+          prescribed_reps_max?: number | null
+          actual_reps?: number | null
+          prescribed_duration_seconds?: number | null
+          actual_duration_seconds?: number | null
+          prescribed_rest_seconds?: number | null
+          actual_rest_seconds?: number | null
+          effort_v2?: string | null
+          set_completed?: boolean | null
+          started_at?: string | null
+          completed_at?: string | null
+          rest_started_at?: string | null
+          rest_completed_at?: string | null
         }
         Update: {
           created_at?: string
@@ -1517,6 +1614,23 @@ export type Database = {
           weight_kg?: number | null
           assignment_id?: string | null
           assignment_exercise_id?: string | null
+          workout_session_id?: string | null
+          set_type?: string | null
+          prescribed_load?: number | null
+          actual_load?: number | null
+          prescribed_reps_min?: number | null
+          prescribed_reps_max?: number | null
+          actual_reps?: number | null
+          prescribed_duration_seconds?: number | null
+          actual_duration_seconds?: number | null
+          prescribed_rest_seconds?: number | null
+          actual_rest_seconds?: number | null
+          effort_v2?: string | null
+          set_completed?: boolean | null
+          started_at?: string | null
+          completed_at?: string | null
+          rest_started_at?: string | null
+          rest_completed_at?: string | null
         }
         Relationships: [
           {
@@ -1527,6 +1641,300 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workout_sessions: {
+        Row: {
+          assignment_day_id: string | null
+          assignment_id: string | null
+          completed_at: string | null
+          completed_exercise_count: number | null
+          completed_working_sets: number | null
+          counters_authority: string
+          created_at: string
+          id: string
+          last_activity_at: string
+          prescribed_exercise_count: number | null
+          prescribed_working_sets: number | null
+          program_template_id: string | null
+          session_date: string
+          session_key: string
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_day_id?: string | null
+          assignment_id?: string | null
+          completed_at?: string | null
+          completed_exercise_count?: number | null
+          completed_working_sets?: number | null
+          counters_authority?: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          prescribed_exercise_count?: number | null
+          prescribed_working_sets?: number | null
+          program_template_id?: string | null
+          session_date?: string
+          session_key: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_day_id?: string | null
+          assignment_id?: string | null
+          completed_at?: string | null
+          completed_exercise_count?: number | null
+          completed_working_sets?: number | null
+          counters_authority?: string
+          created_at?: string
+          id?: string
+          last_activity_at?: string
+          prescribed_exercise_count?: number | null
+          prescribed_working_sets?: number | null
+          program_template_id?: string | null
+          session_date?: string
+          session_key?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_training_levels: {
+        Row: {
+          created_at: string
+          level_confidence: string | null
+          prescription_state: string | null
+          training_level: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          level_confidence?: string | null
+          prescription_state?: string | null
+          training_level?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          level_confidence?: string | null
+          prescription_state?: string | null
+          training_level?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_exercise_experience: {
+        Row: {
+          baseline_established_at: string | null
+          created_at: string
+          exercise_external_id: string
+          exercise_id: string | null
+          experience_state: string
+          first_exposure_at: string | null
+          id: string
+          last_calibrated_at: string | null
+          last_exposure_at: string | null
+          successful_exposure_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          baseline_established_at?: string | null
+          created_at?: string
+          exercise_external_id: string
+          exercise_id?: string | null
+          experience_state?: string
+          first_exposure_at?: string | null
+          id?: string
+          last_calibrated_at?: string | null
+          last_exposure_at?: string | null
+          successful_exposure_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          baseline_established_at?: string | null
+          created_at?: string
+          exercise_external_id?: string
+          exercise_id?: string | null
+          experience_state?: string
+          first_exposure_at?: string | null
+          id?: string
+          last_calibrated_at?: string | null
+          last_exposure_at?: string | null
+          successful_exposure_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      training_goal_profiles: {
+        Row: {
+          body_composition_dependency: boolean
+          canonical_id: string
+          created_at: string
+          label_ar: string
+          status: string
+        }
+        Insert: {
+          body_composition_dependency?: boolean
+          canonical_id: string
+          created_at?: string
+          label_ar: string
+          status?: string
+        }
+        Update: {
+          body_composition_dependency?: boolean
+          canonical_id?: string
+          created_at?: string
+          label_ar?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      training_goal_legacy_map: {
+        Row: {
+          canonical_id: string | null
+          created_at: string
+          legacy_id: string
+          mapping_status: string
+          notes: string | null
+        }
+        Insert: {
+          canonical_id?: string | null
+          created_at?: string
+          legacy_id: string
+          mapping_status: string
+          notes?: string | null
+        }
+        Update: {
+          canonical_id?: string | null
+          created_at?: string
+          legacy_id?: string
+          mapping_status?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      client_goal_history: {
+        Row: {
+          canonical_goal_id: string | null
+          changed_at: string
+          id: string
+          legacy_goal_id: string | null
+          previous_canonical_goal_id: string | null
+          previous_legacy_goal_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          canonical_goal_id?: string | null
+          changed_at?: string
+          id?: string
+          legacy_goal_id?: string | null
+          previous_canonical_goal_id?: string | null
+          previous_legacy_goal_id?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          canonical_goal_id?: string | null
+          changed_at?: string
+          id?: string
+          legacy_goal_id?: string | null
+          previous_canonical_goal_id?: string | null
+          previous_legacy_goal_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_training_safety_signals: {
+        Row: {
+          created_at: string
+          exercise_external_id: string | null
+          id: string
+          safety_reason: string | null
+          safety_signal: string
+          set_log_id: string | null
+          user_id: string
+          workout_session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          exercise_external_id?: string | null
+          id?: string
+          safety_reason?: string | null
+          safety_signal: string
+          set_log_id?: string | null
+          user_id: string
+          workout_session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          exercise_external_id?: string | null
+          id?: string
+          safety_reason?: string | null
+          safety_signal?: string
+          set_log_id?: string | null
+          user_id?: string
+          workout_session_id?: string | null
+        }
+        Relationships: []
+      }
+      adaptive_decision_logs: {
+        Row: {
+          confidence: string | null
+          created_at: string
+          decision_type: string
+          exercise_external_id: string | null
+          id: string
+          input_snapshot: Json
+          reason_code: string | null
+          evaluation_key: string | null
+          assignment_id: string | null
+          program_version: number | null
+          user_id: string
+          workout_session_id: string | null
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string
+          decision_type: string
+          exercise_external_id?: string | null
+          id?: string
+          input_snapshot?: Json
+          reason_code?: string | null
+          evaluation_key?: string | null
+          assignment_id?: string | null
+          program_version?: number | null
+          user_id: string
+          workout_session_id?: string | null
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string
+          decision_type?: string
+          exercise_external_id?: string | null
+          id?: string
+          input_snapshot?: Json
+          reason_code?: string | null
+          evaluation_key?: string | null
+          assignment_id?: string | null
+          program_version?: number | null
+          user_id?: string
+          workout_session_id?: string | null
+        }
+        Relationships: []
       }
       audit_events: {
         Row: {
@@ -1600,7 +2008,8 @@ export type Database = {
           level: string | null
           name_ar: string | null
           name_en: string | null
-          source_template_id: string
+          source_template_id: string | null
+          generation_source: string
           starts_on: string | null
           status: string
           template_version: number
@@ -1620,7 +2029,8 @@ export type Database = {
           level?: string | null
           name_ar?: string | null
           name_en?: string | null
-          source_template_id: string
+          source_template_id?: string | null
+          generation_source?: string
           starts_on?: string | null
           status?: string
           template_version: number
@@ -1640,7 +2050,8 @@ export type Database = {
           level?: string | null
           name_ar?: string | null
           name_en?: string | null
-          source_template_id?: string
+          source_template_id?: string | null
+          generation_source?: string
           starts_on?: string | null
           status?: string
           template_version?: number
@@ -1771,6 +2182,171 @@ export type Database = {
           sort_order?: number
           suggested_weight_kg?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      client_nutrition_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          client_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          name_ar: string | null
+          notes_ar: string | null
+          starts_on: string | null
+          status: string
+          updated_at: string
+          watch_allergens: string[]
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          name_ar?: string | null
+          notes_ar?: string | null
+          starts_on?: string | null
+          status?: string
+          updated_at?: string
+          watch_allergens?: string[]
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          client_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          name_ar?: string | null
+          notes_ar?: string | null
+          starts_on?: string | null
+          status?: string
+          updated_at?: string
+          watch_allergens?: string[]
+        }
+        Relationships: []
+      }
+      client_nutrition_slots: {
+        Row: {
+          allergens: string[]
+          assignment_id: string
+          calories: number
+          carbs_g: number
+          created_at: string
+          fat_g: number
+          hour: number
+          id: string
+          meal_type: string | null
+          minute: number
+          name_ar: string
+          name_en: string | null
+          notes_ar: string | null
+          protein_g: number
+          serving_size: number | null
+          serving_unit: string | null
+          servings: number
+          slot_key: string
+          slot_label: string
+          sort_order: number
+          source_external_id: string
+          source_meal_id: string | null
+          time_label: string
+          updated_at: string
+        }
+        Insert: {
+          allergens?: string[]
+          assignment_id: string
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          hour: number
+          id?: string
+          meal_type?: string | null
+          minute: number
+          name_ar: string
+          name_en?: string | null
+          notes_ar?: string | null
+          protein_g?: number
+          serving_size?: number | null
+          serving_unit?: string | null
+          servings?: number
+          slot_key: string
+          slot_label: string
+          sort_order?: number
+          source_external_id: string
+          source_meal_id?: string | null
+          time_label: string
+          updated_at?: string
+        }
+        Update: {
+          allergens?: string[]
+          assignment_id?: string
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          fat_g?: number
+          hour?: number
+          id?: string
+          meal_type?: string | null
+          minute?: number
+          name_ar?: string
+          name_en?: string | null
+          notes_ar?: string | null
+          protein_g?: number
+          serving_size?: number | null
+          serving_unit?: string | null
+          servings?: number
+          slot_key?: string
+          slot_label?: string
+          sort_order?: number
+          source_external_id?: string
+          source_meal_id?: string | null
+          time_label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_nutrition_meal_logs: {
+        Row: {
+          assignment_id: string | null
+          created_at: string
+          id: string
+          session_date: string
+          slot_id: string | null
+          slot_key: string
+          source_external_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string
+          id?: string
+          session_date?: string
+          slot_id?: string | null
+          slot_key: string
+          source_external_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string
+          id?: string
+          session_date?: string
+          slot_id?: string | null
+          slot_key?: string
+          source_external_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1957,6 +2533,7 @@ export type Database = {
           total_count: number
           updated_at: string
           video_status: Database["public"]["Enums"]["exercise_media_status"]
+          v2_metadata_status: string
         }[]
       }
       admin_get_exercise: { Args: { p_id: string }; Returns: Json }
@@ -2055,7 +2632,7 @@ export type Database = {
           id: string
           name_ar: string | null
           snapshot_complete: boolean
-          source_template_id: string
+          source_template_id: string | null
           starts_on: string | null
           status: string
           template_version: number
@@ -2097,6 +2674,133 @@ export type Database = {
         }[]
       }
       client_get_my_training_runtime: { Args: never; Returns: Json }
+      client_ensure_training_level: { Args: never; Returns: Json }
+      client_ensure_exercise_experience: { Args: { p_external_id: string }; Returns: Json }
+      client_ensure_workout_session: {
+        Args: {
+          p_assignment_day_id?: string | null
+          p_assignment_id?: string | null
+          p_prescribed_exercise_count?: number | null
+          p_prescribed_working_sets?: number | null
+          p_session_date?: string
+          p_session_key: string
+        }
+        Returns: Json
+      }
+      client_get_active_workout_session: { Args: never; Returns: Json }
+      client_update_workout_session_status: {
+        Args: { p_session_id: string; p_status: string }
+        Returns: Json
+      }
+      client_list_exercise_set_history: {
+        Args: { p_external_id: string; p_limit?: number }
+        Returns: Json
+      }
+      client_map_legacy_goal: { Args: { p_legacy_id: string }; Returns: Json }
+      client_upsert_adaptive_decision: {
+        Args: {
+          p_decision_type: string
+          p_evaluation_key: string
+          p_reason_code: string
+          p_confidence?: string | null
+          p_input_snapshot: Json
+          p_assignment_id?: string | null
+          p_program_version?: number | null
+          p_workout_session_id?: string | null
+          p_exercise_external_id?: string | null
+        }
+        Returns: Json
+      }
+      client_list_own_adaptive_decisions: {
+        Args: { p_decision_types?: string[]; p_limit?: number }
+        Returns: Json
+      }
+      admin_list_client_adaptive_decisions: {
+        Args: { p_client_id: string; p_limit?: number }
+        Returns: Json
+      }
+      admin_record_adaptive_decision: {
+        Args: {
+          p_client_id: string
+          p_decision_type: string
+          p_evaluation_key: string
+          p_reason_code: string
+          p_confidence: string
+          p_input_snapshot: Json
+          p_assignment_id?: string | null
+          p_program_version?: number | null
+        }
+        Returns: Json
+      }
+      admin_assign_generated_v2_program: {
+        Args: {
+          p_client_id: string
+          p_starts_on: string
+          p_replace?: boolean
+          p_generation_status: string
+          p_validation_status: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      map_legacy_effort_to_v2: {
+        Args: { p_effort: Database["public"]["Enums"]["workout_effort_level"] }
+        Returns: string
+      }
+      admin_assign_client_nutrition: {
+        Args: {
+          p_client_id: string
+          p_payload: Json
+          p_replace?: boolean
+          p_starts_on?: string
+        }
+        Returns: Json
+      }
+      admin_get_client_nutrition_assignment: { Args: { p_assignment_id: string }; Returns: Json }
+      admin_list_client_nutrition_assignments: {
+        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          allergen_conflict: boolean
+          assigned_at: string
+          ended_at: string | null
+          id: string
+          name_ar: string | null
+          snapshot_complete: boolean
+          starts_on: string | null
+          status: string
+          total_count: number
+        }[]
+      }
+      admin_end_client_nutrition: {
+        Args: { p_assignment_id: string; p_status?: string }
+        Returns: Json
+      }
+      admin_save_client_nutrition_slots: {
+        Args: {
+          p_assignment_id: string
+          p_expected_updated_at?: string | null
+          p_payload: Json
+        }
+        Returns: Json
+      }
+      admin_list_client_nutrition_logs: {
+        Args: { p_client_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          assignment_id: string | null
+          created_at: string
+          id: string
+          session_date: string
+          slot_key: string
+          source_external_id: string
+          status: string
+          total_count: number
+        }[]
+      }
+      client_get_my_nutrition_runtime: { Args: never; Returns: Json }
+      client_log_nutrition_meal: {
+        Args: { p_session_date?: string; p_slot_id: string; p_status: string }
+        Returns: Json
+      }
       admin_list_discover_categories: { Args: never; Returns: Json }
       admin_list_discover_content: {
         Args: {

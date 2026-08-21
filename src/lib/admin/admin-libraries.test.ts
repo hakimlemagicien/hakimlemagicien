@@ -12,6 +12,7 @@ import {
   translateLibraryError,
   validateContentDraft,
   validateExerciseDraft,
+  validateExerciseV2Draft,
   validateMealDraft,
   validateProgramDraft,
 } from "./admin-libraries";
@@ -43,6 +44,22 @@ assert(Object.keys(validateExerciseDraft({
   difficulty: "beginner",
   duration_seconds: 30,
 })).length === 0, "valid exercise passes");
+
+assert(validateExerciseV2Draft({
+  v2_metadata_status: "APPROVED",
+  primary_movement_role: "",
+  primary_muscle_canonical: "CHEST",
+  equipment_state: "HAS_EQUIPMENT",
+  required_equipment: ["BARBELL"],
+  mechanics: "COMPOUND",
+  is_bodyweight: false,
+  is_unilateral: false,
+  prescription_mode: "REPS",
+}).primary_movement_role, "approved V2 metadata requires movement role");
+
+assert(Object.keys(validateExerciseV2Draft({
+  v2_metadata_status: "REVIEW_REQUIRED",
+})).length === 0, "review-required drafts can be incomplete");
 
 const mealErrors = validateMealDraft({
   external_id: "MEAL-001",
@@ -159,6 +176,12 @@ for (const file of [
 const exerciseUi = readFileSync(join(root, "src/components/admin/libraries/ExerciseLibraryManager.tsx"), "utf8");
 assert(!exerciseUi.includes("hard delete") && !exerciseUi.includes(".from(\"exercises\").delete"), "exercise UI has no hard delete");
 assert(exerciseUi.includes("أرشفة"), "exercise archive exists");
+assert(exerciseUi.includes("v2_metadata_status"), "exercise manager exposes V2 metadata");
+assert(exerciseUi.includes("if (draft.id) return"), "external_id is locked after create");
+
+const v2Migration = readFileSync(join(root, "supabase/migrations/20260821140000_exercise_library_v2_compatibility.sql"), "utf8");
+assert(v2Migration.includes("external_id_immutable"), "exercise identity cannot be rewritten");
+assert(!/CREATE TABLE[\s\S]*exercises_v2/.test(v2Migration), "no parallel exercises_v2 table");
 
 const mealUi = readFileSync(join(root, "src/components/admin/libraries/NutritionLibraryManager.tsx"), "utf8");
 assert(mealUi.includes("allergensConfirmed"), "allergen confirmation exists");

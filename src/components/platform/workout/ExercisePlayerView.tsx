@@ -219,6 +219,14 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
     handlePrimaryAction,
     jumpToExercise,
     currentSetTargets,
+    runtimeMode,
+    prescription,
+    isTimed,
+    isBodyweight,
+    v2Targets,
+    finishWorkoutEarly,
+    editLastSet,
+    syncStatus,
   } = player;
 
   const sessionActive = videoOpen || player.setInProgress;
@@ -351,9 +359,17 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
             >
               <ExerciseRxStrip
                 sets={currentExercise.sets}
-                reps={`${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`}
-                weightLabel={formatWeightLabel(currentSetTargets.weightKg)}
-                restLabel={formatRestSeconds(currentExercise.restSeconds)}
+                reps={
+                  isTimed
+                    ? `${v2Targets.durationMin ?? currentExercise.durationSeconds} ث`
+                    : `${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`
+                }
+                weightLabel={
+                  isBodyweight || isTimed || (runtimeMode === "v2" && !v2Targets.loadKnown)
+                    ? "—"
+                    : formatWeightLabel(currentSetTargets.weightKg)
+                }
+                restLabel={formatRestSeconds(v2Targets.restSeconds ?? currentExercise.restSeconds)}
               />
 
               <section className="mt-3 rounded-[24px] border border-border/60 bg-card p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.14)]">
@@ -401,8 +417,16 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
             >
               <ExerciseRxStrip
                 sets={currentExercise.sets}
-                reps={volumeLabel}
-                weightLabel={formatWeightLabel(currentExercise.suggestedWeightKg)}
+                reps={
+                  isTimed
+                    ? `${currentExercise.durationSeconds ?? volumeLabel} ث`
+                    : volumeLabel
+                }
+                weightLabel={
+                  runtimeMode === "v2" && (isBodyweight || isTimed || prescription?.status === "CALIBRATION_REQUIRED")
+                    ? "—"
+                    : formatWeightLabel(currentExercise.suggestedWeightKg)
+                }
                 restLabel={formatRestSeconds(currentExercise.restSeconds)}
               />
 
@@ -475,14 +499,39 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
 
       {phase === "rest" || phase === "set-sheet" || phase === "complete" ? null : (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--platform-nav-h,64px)+env(safe-area-inset-bottom)+30px)] z-40 mx-auto max-w-[var(--platform-frame-w)] px-[var(--platform-gutter)] pb-2">
-          <button
-            type="button"
-            disabled={isBlocked}
-            onClick={sessionActive ? handlePrimaryAction : startSession}
-            className="pointer-events-auto flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-[0_12px_28px_-10px_rgba(249,115,22,0.55)] transition-transform duration-[120ms] active:scale-[0.97] disabled:opacity-50"
-          >
-            {sessionActive ? primaryActionLabel : "ابدأ الجولة"}
-          </button>
+          <div className="space-y-2">
+            {syncStatus === "PENDING_SYNC" ? (
+              <p className="pointer-events-auto text-center text-[10px] font-bold text-muted-foreground">
+                سيتم حفظ النتيجة عند عودة الاتصال
+              </p>
+            ) : null}
+            <button
+              type="button"
+              disabled={isBlocked}
+              onClick={sessionActive ? handlePrimaryAction : startSession}
+              className="pointer-events-auto flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-[0_12px_28px_-10px_rgba(249,115,22,0.55)] transition-transform duration-[120ms] active:scale-[0.97] disabled:opacity-50"
+            >
+              {sessionActive ? primaryActionLabel : "ابدأ الجولة"}
+            </button>
+            {sessionActive ? (
+              <div className="pointer-events-auto grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={editLastSet}
+                  className="flex h-11 items-center justify-center rounded-2xl border border-border/60 bg-card text-[11px] font-bold text-foreground"
+                >
+                  تعديل آخر مجموعة
+                </button>
+                <button
+                  type="button"
+                  onClick={finishWorkoutEarly}
+                  className="flex h-11 items-center justify-center rounded-2xl border border-border/60 bg-card text-[11px] font-bold text-foreground"
+                >
+                  إنهاء الحصة
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
 

@@ -4,7 +4,9 @@ import { useWorkoutPlayer } from "@/hooks/useWorkoutPlayer";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
+import { toProgressionRecoveryHold } from "@/lib/platform/continuity";
 import {
   getWeekdayIdFromDate,
   isFreeUnlockedExerciseIndex,
@@ -51,9 +53,12 @@ function ExercisePlayerPage() {
   const freePreview = !hasWorkoutProgram;
   const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
-      ? runtimeToWeekdayPlans(runtimeQuery.data)
+      ? day === continuity.todayId
+        ? continuity.assignedPlans
+        : runtimeToWeekdayPlans(runtimeQuery.data)
       : null;
   const plan = resolveWeekdayPlan(day, hasWorkoutProgram, hasWorkoutProgram ? assignedPlans : undefined);
   const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? plan : null);
@@ -140,7 +145,12 @@ function ExercisePlayerPage() {
     : index;
   const initialIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
 
-  const player = useWorkoutPlayer(exercises, meta, initialIndex);
+  const player = useWorkoutPlayer(exercises, meta, initialIndex, {
+    runtimeMode: hasWorkoutProgram ? "v2" : "legacy_free",
+    assignmentId: exercises[0]?.assignmentId ?? null,
+    recoveryHold: continuity.decision ? toProgressionRecoveryHold(continuity.decision) : "NORMAL",
+    prescriptionState: continuity.decision?.prescription_state ?? null,
+  });
 
   if (sessionQuery.isLoading) {
     return (

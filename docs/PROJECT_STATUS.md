@@ -99,14 +99,14 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 
 | المجال | الحالة |
 |--------|--------|
-| تخصيص البرنامج حسب هدف الكويز | 🚧 جزئي — جداول/مكتبات موجودة، التخصيص العميق غير مكتمل |
-| التغذية اليومية | 🚧 مكتبة كبيرة + لوحة؛ ليست خطة كوتش كاملة لكل عميل |
-| التقدم `/app/progress` | 🚧 واجهة مبنية — جزء من البيانات محلي |
+| تخصيص البرنامج حسب هدف الكويز | ✅ محرّكات V2 (Phases 2–11) موصولة بحلقة العميل. الحالة: `CLIENT_LOOP_CLOSED_WITH_EXTERNAL_RELEASE_GATES`. **ليست** مفعّلة إنتاجياً. التقرير: [`TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md`](./TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md) |
+| التغذية اليومية | 🚧 مكتبة كبيرة + لوحة؛ ليست خطة كوتش كاملة لكل عميل. عقد Training↔Nutrition: `PENDING_SHARED_CONTRACT` |
+| التقدم `/app/progress` | ✅ ترقية Phase 11 على نفس المسار. بطاقة الهدف قد تبقى `INSUFFICIENT_DATA` حتى تُحفظ قرارات Phase 9 |
 | دردشة الكوتش Realtime | ⚠️ في الكود — تحقق migration + RLS + Resend على الإنتاج |
 | Checkout البنكي | ⚠️ legacy — قرار استخدام إنتاجي معلّق |
 | Legal/Billing V1 على الإنتاج | ⚠️ migration + QA + قرار الكيان القانوني (TBD) |
 | جلسة بدون إكمال onboarding | ⚠️ `/` يوجّه إلى `/app` دون فحص `get_my_onboarding_state` |
-| Push notifications | ❌ غير موجودة |
+| Push notifications | 🚧 تذكير تدريب داخل التطبيق (Phase 11 overlay) — **لا** يوجد OS push |
 | دفع إلكتروني (بطاقة/PSP) | 🚧 جاهزية عقد V1 — لا مزود دفع نهائي مفعّل |
 
 ---
