@@ -9,6 +9,7 @@ import {
   isWorkingSetHistoryRow,
   mapLegacyEffortToV2,
   mapLegacyGoalId,
+  trainingGoalLabelAr,
 } from "./training-v2-contracts";
 import { SET_WEIGHT_INCREMENT } from "./workout-session";
 
@@ -22,7 +23,10 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
   }
 }
 
-assertEqual(mapLegacyGoalId("fat").canonicalId, "FAT_LOSS", "fat → FAT_LOSS");
+assertEqual(trainingGoalLabelAr("GLUTE_GROWTH"), "أريد تكبير المؤخرة", "canonical glute label");
+assertEqual(trainingGoalLabelAr("glutes"), "أريد تكبير المؤخرة", "legacy glutes label");
+assertEqual(trainingGoalLabelAr("fat"), "أريد خسارة الدهون", "legacy fat label");
+assertEqual(trainingGoalLabelAr(null), "برنامجك التدريبي", "missing goal fallback");
 assertEqual(mapLegacyGoalId("glutes").canonicalId, "GLUTE_GROWTH", "glutes → GLUTE_GROWTH");
 assertEqual(mapLegacyGoalId("waist").canonicalId, "SLIM_TONED_WAIST", "waist → SLIM_TONED_WAIST");
 assertEqual(mapLegacyGoalId("body").canonicalId, "FEMININE_BALANCED_BODY", "body → FEMININE_BALANCED_BODY");

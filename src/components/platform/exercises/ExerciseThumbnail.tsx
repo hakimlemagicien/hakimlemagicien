@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Dumbbell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -35,6 +36,7 @@ export function ExerciseThumbnail({
   });
 
   const url = signedUrl ?? mediaQuery.data ?? null;
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   if (mediaQuery.isLoading && !signedUrl) {
     return (
@@ -45,7 +47,7 @@ export function ExerciseThumbnail({
     );
   }
 
-  if (url) {
+  if (url && !mediaFailed) {
     return (
       <video
         src={url}
@@ -54,6 +56,7 @@ export function ExerciseThumbnail({
         preload="metadata"
         aria-label={alt}
         className={cn("h-full w-full object-cover object-center", className)}
+        onError={() => setMediaFailed(true)}
       />
     );
   }

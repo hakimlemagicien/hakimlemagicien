@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import {
@@ -38,6 +39,8 @@ import {
   type WorkoutSessionExercise,
 } from "@/lib/platform/workout-session";
 import { loadWorkoutProgress } from "@/lib/platform/workout-progress-storage";
+import { trainingGoalLabelAr } from "@/lib/platform/training-v2-contracts";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
 import workoutGoalStack1 from "@/assets/workout-goal-stack-1.webp";
@@ -308,9 +311,11 @@ function GoalHeroPhotoStack({
 function WorkoutGoalHero({
   overallProgress,
   showPremiumBadge,
+  goalLabel,
 }: {
   overallProgress: number;
   showPremiumBadge: boolean;
+  goalLabel: string;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
 
@@ -348,7 +353,7 @@ function WorkoutGoalHero({
               <Target className="h-3.5 w-3.5" strokeWidth={2.4} />
               هدفك
             </p>
-            <h2 className="workout-goal-hero__title">خسارة الدهون</h2>
+            <h2 className="workout-goal-hero__title">{goalLabel}</h2>
             <p className="workout-goal-hero__desc">
               برنامجك مصمم خصيصاً لك بناءً على بياناتك وسيتم تحديثه كل أسبوع.
             </p>
@@ -761,6 +766,18 @@ function WorkoutDayPage() {
     : "فعّل برنامجك الآن لفتح كل تمارين الأسبوع — التمرين الأول للصدر متاح للمعاينة.";
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const profileGoalQuery = useQuery({
+    queryKey: ["workout-profile-goal", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase.from("profiles").select("goal").eq("id", userId).maybeSingle();
+      if (error) throw error;
+      return data?.goal ?? null;
+    },
+    enabled: Boolean(userId),
+    staleTime: 60 * 1000,
+  });
+  const goalLabel = trainingGoalLabelAr(profileGoalQuery.data);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
@@ -820,6 +837,7 @@ function WorkoutDayPage() {
         <WorkoutGoalHero
           overallProgress={overallProgress}
           showPremiumBadge={showPremiumBadge}
+          goalLabel={goalLabel}
         />
 
         {hasWorkoutProgram && runtimeQuery.isLoading ? (

@@ -1,3 +1,5 @@
+# PRODUCTION Supabase identity. Do not retarget this file to Staging.
+# Staging project: dxerwrdpcflpnjvsnrjq (hakim-coaching-staging). See docs/ENVIRONMENTS.md.
 project_id = "ufgrbpakuemamggwypdh"
 
 [auth]

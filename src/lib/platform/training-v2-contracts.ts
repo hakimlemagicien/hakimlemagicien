@@ -57,6 +57,16 @@ export const LEGACY_GOAL_MAP: Record<string, LegacyGoalMapping> = {
   gain: { legacyId: "gain", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
 };
 
+export function trainingGoalLabelAr(goalId: string | null | undefined): string {
+  const raw = goalId?.trim() ?? "";
+  if ((TRAINING_V2_CANONICAL_GOALS as readonly string[]).includes(raw)) {
+    return TRAINING_V2_GOAL_LABELS_AR[raw as TrainingV2CanonicalGoal];
+  }
+  const mapped = mapLegacyGoalId(raw);
+  if (mapped.canonicalId) return TRAINING_V2_GOAL_LABELS_AR[mapped.canonicalId];
+  return "برنامجك التدريبي";
+}
+
 export function mapLegacyGoalId(legacyId: string | null | undefined): LegacyGoalMapping {
   const key = legacyId?.trim() ?? "";
   if (!key) {

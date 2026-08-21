@@ -13,6 +13,7 @@
 | الترتيب | الملف | الغرض |
 |---------|--------|--------|
 | 1 | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) | أين وصلنا الآن — الحالة الحية |
+| 1b | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) | PRODUCTION vs STAGING vs LOCAL — عزل قواعد البيانات |
 | 2 | [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md) | معمارية المنتج: تسويق منفصل عن التطبيق |
 | 3 | [`PROJECT_REPORT.md`](./PROJECT_REPORT.md) | تقرير مراجعة كامل + فرص تحسين تجربة المستخدم |
 | 4 | [`../AGENTS.md`](../AGENTS.md) | قواعد العمل للـ AI: Git، Build، المناطق المحمية |
@@ -41,6 +42,18 @@
 | كود | `src/lib/legal/` · `src/lib/pricing-presentation.ts` |
 | قاعدة البيانات | `supabase/migrations/20260820120000_legal_billing_privacy_v1.sql` |
 | اختبار | `src/lib/legal/legal-pricing-v1.test.ts` (ضمن `npm test`) |
+
+---
+
+## Training Engine V2 — Staging / Pre-Production closure (2026-08-22)
+
+| الموضوع | المرجع |
+|---------|--------|
+| قرار CEO + PF-1…PF-4 | [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md) |
+| Dry-run / rollback | [`TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md`](./TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md) |
+| البيئات | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) |
+| SHA المعتمد | `4d80f8d` + closure commit on `release/training-v2-4d80f8d` |
+| الحالة | Staging cohort — **لا** دمج `main`، **لا** Production |
 
 ---
 
