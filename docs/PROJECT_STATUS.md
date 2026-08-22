@@ -1,7 +1,7 @@
 # MAAKFIT — حالة المشروع الحالية
 
-**الإصدار:** 2.1  
-**التاريخ:** 2026-08-20  
+**الإصدار:** 2.2  
+**التاريخ:** 2026-08-22  
 **الحالة:** مرجع حي — يُحدَّث عند كل milestone  
 **الجمهور:** موظفون، مطورون، أي أداة ذكاء اصطناعي
 
@@ -29,8 +29,11 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 | مسار `/onboarding` مستقل | — | ❌ غير موجود |
 
 **الإنتاج:** https://hakimlemagicien.com  
-**Supabase:** `ufgrbpakuemamggwypdh`  
-**الفرع الحالي للعمل:** `feat/legal-pricing-billing-v1` (يُراجع مقابل `main`)
+**PRODUCTION Supabase:** `ufgrbpakuemamggwypdh` (`hakim-coaching`)  
+**STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — لا يُستخدم Production كـ Staging. الخريطة: [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)  
+**الفرع الحالي للعمل:** `feat/admin-command-center-foundation`  
+**Training V2 pin:** `4d80f8d366909a2a6cf9217803c9c62277b66954` — Staging cohort only  
+**CEO 2026-08-22:** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED` — انظر [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md)
 
 ---
 
@@ -159,8 +162,8 @@ Quiz: gender → goals → … → contact → reveal
 3. `/quiz` يبقى للتوافق (روابط، OTP). لا تحذفه.
 4. Onboarding داخل Quiz — لا تُنشئ `/onboarding`.
 5. اللون التنفيذي للتطبيق: `#F97316`. الأخضر للحالات المكتملة الإيجابية فقط.
-6. مصدر الحقيقة: GitHub `main` + Supabase `ufgrbpakuemamggwypdh`.
+6. مصدر الحقيقة: GitHub `main` + **PRODUCTION** Supabase `ufgrbpakuemamggwypdh`. Staging منفصل: `dxerwrdpcflpnjvsnrjq`. انظر [`ENVIRONMENTS.md`](./ENVIRONMENTS.md).
 
 ---
 
-**آخر مراجعة:** 2026-08-20 — Legal/Pricing/Billing/Privacy V1 + تحديث التسعير الرسمي (Essential $87/$149 · Premium $147/$249 · VIP $397/$647).
+**آخر مراجعة:** 2026-08-22 — CEO: Staging cohort لـ Training Engine V2 على `4d80f8d` + `dxerwrdpcflpnjvsnrjq`. الإنتاج غير معتمد. بوابات PF-1…PF-4 مفتوحة.

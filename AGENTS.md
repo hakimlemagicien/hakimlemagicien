@@ -1,10 +1,12 @@
 <!-- PROJECT:BEGIN -->
 > [!IMPORTANT]
-> **Source of truth:** GitHub (`main`) + official Supabase project (`ufgrbpakuemamggwypdh`).
+> **Source of truth:** GitHub (`main`) + official **PRODUCTION** Supabase (`ufgrbpakuemamggwypdh`).
 >
+> - **STAGING** Supabase is `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`). See [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md).
+> - Never use Production as Staging. Never point a Staging app at `ufgrbpakuemamggwypdh`.
 > - The **product** is the authenticated app (`/app`). `/coaching` is marketing only.
 > - All migrations, schema changes, and RPCs land in this repository first.
-> - Apply database changes via `supabase/migrations/` and test on staging before production.
+> - Apply database changes via `supabase/migrations/` and test on **Staging** before Production.
 > - Avoid rewriting published git history on `main` (no force-push, no rebasing/amending pushed commits).
 > - Keep `main` deployable: run `npm run build` before merging significant changes.
 > - **Performance is mandatory** — follow [`docs/v1/PERFORMANCE.md`](docs/v1/PERFORMANCE.md) for all screens. Use `OptimizedImage`, skeletons, and code splitting. Lighthouse Performance ≥ 90 on main pages.

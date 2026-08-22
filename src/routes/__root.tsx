@@ -17,6 +17,9 @@ import { MotionProvider } from "../components/motion/MotionProvider";
 import { startVisualPropertiesEngine } from "../lib/design-lab/visual-editor";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/pwa";
+import { assertEnvironmentIsolation } from "../lib/env/assert-environment";
+
+assertEnvironmentIsolation();
 
 function NotFoundComponent() {
   return (
