@@ -15,7 +15,14 @@ import {
 } from "lucide-react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
+import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import {
+  getExerciseStageCover,
+  getExerciseStageGuide,
+  getExerciseStageListThumb,
+} from "@/lib/platform/exercise-stage-media";
 import { formatExerciseVolume, formatWeightKg } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
 import { SetLogBottomSheet } from "./SetLogBottomSheet";
@@ -98,6 +105,7 @@ function ExercisePlayerStage({
   videoAutoPlay: boolean;
   onStart: () => void;
 }) {
+  const stillPoster = getExerciseStageCover(currentExercise.external_id);
   return (
     <div className="bg-background pb-2">
       <header className="space-y-2 px-1 pt-1">
@@ -173,13 +181,34 @@ function ExercisePlayerStage({
                   onClick={onStart}
                   className="relative flex aspect-square w-full items-center justify-center"
                 >
-                  <ExerciseThumbnail
-                    signedUrl={currentExercise.thumbnailUrl}
-                    status={currentExercise.videoStatus}
-                    mediaPath={currentExercise.videoPath}
-                    alt={currentExercise.name}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
+                  {stillPoster ? (
+                    <OptimizedImage
+                      src={stillPoster.src}
+                      alt={stillPoster.alt}
+                      width={960}
+                      height={720}
+                      sizes="(max-width: 430px) 100vw, 390px"
+                      objectFit="cover"
+                      className="absolute inset-0 h-full w-full"
+                      fallback={
+                        <ExerciseThumbnail
+                          signedUrl={currentExercise.thumbnailUrl}
+                          status={currentExercise.videoStatus}
+                          mediaPath={currentExercise.videoPath}
+                          alt={currentExercise.name}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      }
+                    />
+                  ) : (
+                    <ExerciseThumbnail
+                      signedUrl={currentExercise.thumbnailUrl}
+                      status={currentExercise.videoStatus}
+                      mediaPath={currentExercise.videoPath}
+                      alt={currentExercise.name}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  )}
                   <span className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(249,115,22,0.65)] transition-transform duration-[120ms] active:scale-95">
                     <Play className="h-6 w-6 fill-current" />
                   </span>
@@ -287,6 +316,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
   }
 
   const volumeLabel = formatExerciseVolume(currentExercise);
+  const stageGuide = getExerciseStageGuide(currentExercise.external_id);
   const startSession = () => {
     beginSet();
     openVideo();
@@ -372,6 +402,12 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                 restLabel={formatRestSeconds(v2Targets.restSeconds ?? currentExercise.restSeconds)}
               />
 
+              {stageGuide ? (
+                <div className="mt-3">
+                  <ExerciseStageGuide guide={stageGuide} variant="session" />
+                </div>
+              ) : null}
+
               <section className="mt-3 rounded-[24px] border border-border/60 bg-card p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.14)]">
                   <p className="text-center text-[10px] font-bold text-primary">طريقة الأداء الصحيح</p>
                   <h2 className="mt-1 text-center text-[16px] font-black leading-snug text-foreground">
@@ -430,6 +466,12 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                 restLabel={formatRestSeconds(currentExercise.restSeconds)}
               />
 
+              {stageGuide ? (
+                <div className="mt-3">
+                  <ExerciseStageGuide guide={stageGuide} variant="session" />
+                </div>
+              ) : null}
+
               <section className="mt-4">
                 <h2 className="mb-2 text-[10px] font-black text-foreground">تمارين الحصة</h2>
                 <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
@@ -437,6 +479,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     const item = progress[index];
                     const isCurrent = index === exerciseIndex;
                     const isDone = item?.status === "done";
+                    const stillThumb = getExerciseStageListThumb(exercise.external_id);
 
                     return (
                       <button
@@ -461,13 +504,34 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                           {index + 1}
                         </span>
                         <div className="aspect-square size-16 shrink-0 overflow-hidden rounded-2xl border border-border/60 bg-card">
-                          <ExerciseThumbnail
-                            signedUrl={exercise.thumbnailUrl}
-                            status={exercise.videoStatus}
-                            mediaPath={exercise.videoPath}
-                            alt={exercise.name}
-                            className="h-full w-full object-cover"
-                          />
+                          {stillThumb ? (
+                            <OptimizedImage
+                              src={stillThumb}
+                              alt=""
+                              width={112}
+                              height={84}
+                              sizes="64px"
+                              objectFit="cover"
+                              className="h-full w-full object-cover object-center"
+                              fallback={
+                                <ExerciseThumbnail
+                                  signedUrl={exercise.thumbnailUrl}
+                                  status={exercise.videoStatus}
+                                  mediaPath={exercise.videoPath}
+                                  alt={exercise.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              }
+                            />
+                          ) : (
+                            <ExerciseThumbnail
+                              signedUrl={exercise.thumbnailUrl}
+                              status={exercise.videoStatus}
+                              mediaPath={exercise.videoPath}
+                              alt={exercise.name}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p

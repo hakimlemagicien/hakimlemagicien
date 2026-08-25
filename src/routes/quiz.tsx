@@ -1,6 +1,8 @@
 import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
 import { createOnboardingDraft } from "@/lib/quiz-onboarding-api";
+import { userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { supabase } from "@/integrations/supabase/client";
 import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
 import { QuizProgressHeader, QuizProgressStrip } from "@/components/quiz/QuizProgressHeader";
 import { HAPTIC_NAV_DELAY_MS, triggerSelectionHaptic } from "@/lib/haptic";
@@ -54,18 +56,18 @@ import avatar1 from "@/assets/avatar1.jpg";
 import avatar2 from "@/assets/avatar2.jpg";
 import avatar3 from "@/assets/avatar3.jpg";
 import avatar4 from "@/assets/avatar4.jpg";
-import goalFatImg from "@/assets/خسارة الدهون.jpg";
-import goalMuscleImg from "@/assets/بناء العضلات.webp";
-import goalFitnessImg from "@/assets/تحسين اللياقة والطاقة.PNG";
-import goalAthleticImg from "@/assets/جسم رياضي ومتناسق.PNG";
-import goalShapeImg from "@/assets/تغير شكل الجسم.jpg";
-import goalGainImg from "@/assets/زيادة وزن صحي.jpg";
-import challengeBellyImg from "@/assets/مشكلة دهون البطن للرجال.png";
-import challengeMuscleImg from "@/assets/صعوبة في بناء العضلات.jpeg";
-import challengeEnergyImg from "@/assets/قلة.الطاقة والحيوية.png";
-import challengeGoalImg from "@/assets/عدم وضوح الهدف.png";
-import challengeCommitmentImg from "@/assets/الالتزام والاستمرارية.png";
-import challengeConfidenceImg from "@/assets/الثقة بالنفس والمظهر.png";
+import goalFatImg from "@/assets/صور الاهداف الاهداف الاساسية/خسارة الدهون.webp";
+import goalMuscleImg from "@/assets/صور الاهداف الاهداف الاساسية/بناء العضلات.webp";
+import goalFitnessImg from "@/assets/صور الاهداف الاهداف الاساسية/تحسين اللياقة و الطاقة.webp";
+import goalAthleticImg from "@/assets/صور الاهداف الاهداف الاساسية/جسم رياضي ومتناسق.webp";
+import goalShapeImg from "@/assets/صور الاهداف الاهداف الاساسية/تحسين شكل الجسم.webp";
+import goalGainImg from "@/assets/صور الاهداف الاهداف الاساسية/زيادة الوزن صحي.webp";
+import challengeMuscleImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/01-muscle-building-difficulty.webp";
+import challengeBellyImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/02-abdominal-fat.webp";
+import challengeGoalImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/03-unclear-goal.webp";
+import challengeEnergyImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/04-low-energy-vitality.webp";
+import challengeConfidenceImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/05-low-self-confidence-appearance.webp";
+import challengeCommitmentImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/06-commitment-consistency.webp";
 import femaleChallengeBellyImg from "@/assets/الكرش و الدهون البطن.jpg";
 import femaleChallengeGlutesImg from "@/assets/شكل المؤخرة.JPG";
 import femaleChallengeSaggingImg from "@/assets/ترهلات الجسم للبنات.jpg";
@@ -138,6 +140,7 @@ export function QuizPage() {
     transitionTo,
     selectAndGo,
     goBack,
+    replaceStep,
     gender,
     setGender,
     userName,
@@ -173,6 +176,14 @@ export function QuizPage() {
     setSelectedTierId,
   } = useQuizProgress();
 
+  useEffect(() => {
+    if (step !== "profilePhoto" && step !== "platformWelcome") return;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (userNeedsPasswordSetup(data.user)) replaceStep("createPassword");
+    })();
+  }, [step, replaceStep]);
+
   const quizAnswers: QuizAnswersInput = {
     gender,
     goalId,
@@ -187,7 +198,6 @@ export function QuizPage() {
   };
 
   const totalSteps = QUIZ_PROGRESS_TOTAL;
-  const afterReveal = () => selectAndGo("verifyEmail");
 
   return (
     <div
@@ -203,7 +213,9 @@ export function QuizPage() {
         style={{ fontFamily: FONT, backgroundColor: "#FAF8F5" }}
         className="relative h-full w-full overflow-hidden md:max-w-lg lg:max-w-xl md:shadow-2xl md:ring-1 md:ring-black/5"
       >
-      <QuizLoginEntry />
+      {step !== "createPassword" && step !== "profilePhoto" && step !== "platformWelcome" ? (
+        <QuizLoginEntry />
+      ) : null}
       <MotionStepView phase={phase}>
       {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
       {step === "gender" && (
@@ -214,7 +226,7 @@ export function QuizPage() {
         />
       )}
       {step === "goals" && (
-        <GoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
+        <GoalsScreen onBack={() => goBack("gender")} onNext={() => replaceStep("age")} onSelect={setGoalId} />
       )}
       {step === "femaleGoals" && (
         <FemaleGoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
@@ -320,24 +332,14 @@ export function QuizPage() {
         />
       )}
       {step === "congrats" && (
-        <CongratsScreen name={userName} gender={gender} total={totalSteps} onNext={() => selectAndGo("reveal")} />
-      )}
-      {step === "reveal" && (
-        <ProgramRevealScreen
-          name={userName}
-          gender={gender}
-          goalId={goalId}
-          challengeId={challengeId}
-          total={totalSteps}
-          onNext={afterReveal}
-        />
+        <CongratsScreen name={userName} goalId={goalId} total={totalSteps} onNext={() => selectAndGo("verifyEmail")} />
       )}
       {step === "verifyEmail" && (
         <VerifyEmailScreen
           email={userEmail}
           name={userName}
           step="verifyEmail"
-          onBack={() => goBack("reveal")}
+          onBack={() => goBack("congrats")}
           onVerified={() => selectAndGo("createPassword")}
           onEmailChange={setUserEmail}
         />
@@ -371,7 +373,7 @@ export function QuizPage() {
         <PricingScreen
           name={userName}
           total={totalSteps}
-          onBack={() => goBack("reveal")}
+          onBack={() => goBack("congrats")}
           onSelectTier={(id) => transitionTo("payment", () => setSelectedTierId(id))}
         />
       )}
@@ -788,72 +790,74 @@ type StyledImageOption = ImageOption & {
   imageClassName: string;
 };
 
-const GOALS: StyledImageOption[] = [
-  {
-    id: "fat",
-    label: "خسارة الدهون",
-    image: goalFatImg,
-    imageWrapClassName: "male-goal-fat-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-fat-img h-full w-full object-cover",
-  },
-  {
-    id: "muscle",
-    label: "بناء العضلات",
-    image: goalMuscleImg,
-    imageWrapClassName: "male-goal-muscle-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-muscle-img h-full w-full object-cover",
-  },
-  {
-    id: "fitness",
-    label: "تحسين اللياقة والطاقة",
-    image: goalFitnessImg,
-    imageWrapClassName: "male-goal-fitness-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-fitness-img h-full w-full object-cover",
-  },
-  {
-    id: "athletic",
-    label: "جسم رياضي ومتناسق",
-    image: goalAthleticImg,
-    imageWrapClassName: "male-goal-athletic-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-athletic-img h-full w-full object-cover",
-  },
-  {
-    id: "shape",
-    label: "تغيير شكل الجسم",
-    image: goalShapeImg,
-    imageWrapClassName: "male-goal-shape-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-shape-img h-full w-full object-cover",
-  },
-  {
-    id: "gain",
-    label: "زيادة وزن صحي",
-    image: goalGainImg,
-    imageWrapClassName: "male-goal-gain-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "male-goal-gain-img h-full w-full object-cover",
-  },
+const GOALS: ImageOption[] = [
+  { id: "fat", label: "خسارة الدهون", image: goalFatImg },
+  { id: "muscle", label: "بناء العضلات", image: goalMuscleImg },
+  { id: "fitness", label: "تحسين اللياقة والطاقة", image: goalFitnessImg },
+  { id: "athletic", label: "جسم رياضي ومتناسق", image: goalAthleticImg },
+  { id: "shape", label: "تغيير شكل الجسم", image: goalShapeImg },
+  { id: "gain", label: "زيادة وزن صحي", image: goalGainImg },
 ];
+
+function MaleGoalPopCard({
+  label,
+  sub,
+  image,
+  active,
+  index,
+  onClick,
+}: {
+  label: string;
+  sub?: string;
+  image: string;
+  active: boolean;
+  index: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`male-goal-pop${active ? " is-active" : ""}`}
+      style={{ animation: `fadeUp .5s ease-out ${index * 70}ms both` }}
+    >
+      <span
+        className="male-goal-pop__figure"
+        aria-hidden
+        style={{ ["--goal-img" as string]: `url("${image}")` }}
+      >
+        <img src={image} alt="" />
+        <span className="male-goal-pop__scanner" />
+      </span>
+      <span className="male-goal-pop__label">
+        {label}
+        {sub ? <span className="male-goal-pop__sub">{sub}</span> : null}
+      </span>
+    </button>
+  );
+}
+
+const MALE_GOAL_LEAVE_MS = 480;
 
 function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [touched, setTouched] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
-    if (!touched || !selected) return;
+    if (!leaving || !selected) return;
     onSelect?.(selected);
-    const t = setTimeout(onNext, HAPTIC_NAV_DELAY_MS);
+    const t = setTimeout(onNext, MALE_GOAL_LEAVE_MS);
     return () => clearTimeout(t);
-  }, [touched, selected, onNext, onSelect]);
-
-
+  }, [leaving, selected, onNext, onSelect]);
 
   return (
-    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+    <div className={`male-goal-pop-screen relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]${leaving ? " is-leaving" : ""}`}>
       <GymBackdrop />
 
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
         <ProgressHeader step="goals" onBack={onBack} />
 
         {/* Hero */}
-        <div className="mt-4 text-center">
+        <div className="male-goal-pop-hero mt-4 text-center">
           <p className="text-xl font-black" style={{ color: "#FF6B00" }}>
             ممتاز <span className="inline-block align-middle">🤩</span>
           </p>
@@ -866,27 +870,26 @@ function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext:
         </div>
 
         {/* Grid */}
-        <div className="mt-4 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+        <div className="male-goal-pop-grid mt-1 grid grid-cols-2 gap-x-2 gap-y-2 flex-1 min-h-0 content-start overflow-y-auto overflow-x-hidden pt-2 pb-3">
           {GOALS.map((g, i) => (
-            <QuizImageOptionCard
+            <MaleGoalPopCard
               key={g.id}
               label={g.label}
               image={g.image}
               active={selected === g.id}
               index={i}
-              imageWrapClassName={g.imageWrapClassName}
-              imageClassName={g.imageClassName}
               onClick={() => {
+                if (leaving) return;
                 triggerSelectionHaptic();
                 setSelected(g.id);
-                setTouched(true);
+                setLeaving(true);
               }}
             />
           ))}
         </div>
 
         {/* Bottom badge */}
-        <div className="mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
+        <div className="male-goal-pop-badge mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
           <span className="text-base">🎯</span>
           <p className="text-[13px] font-bold text-neutral-800">كل هدف يحتاج خطة مختلفة</p>
         </div>
@@ -1120,9 +1123,9 @@ function AgeScreen({
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+    <div className="relative w-full h-full flex flex-col">
       <GymBackdrop />
-      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3 animate-[fadeIn_.5s_ease-out]">
         <ProgressHeader step="age" onBack={onBack} />
 
         {/* Hero */}
@@ -1261,6 +1264,20 @@ function HorizontalWheel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const scrollToValue = (next: number) => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollTo({ left: (next - min) * ITEM_W, behavior: "smooth" });
+  };
+
+  const stepBy = (delta: number) => {
+    const next = Math.max(min, Math.min(max, value + delta));
+    if (next === value) return;
+    triggerSelectionHaptic();
+    onChange(next);
+    scrollToValue(next);
+  };
+
   const handle = () => {
     const el = ref.current;
     if (!el) return;
@@ -1285,6 +1302,27 @@ function HorizontalWheel({
       {/* fades */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-16 z-20" style={{ background: "linear-gradient(90deg,#fff,rgba(255,255,255,0))" }} />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-20" style={{ background: "linear-gradient(270deg,#fff,rgba(255,255,255,0))" }} />
+
+      <button
+        type="button"
+        aria-label="إنقاص القيمة"
+        disabled={value <= min}
+        onClick={() => stepBy(-1)}
+        className="absolute left-0 top-1/2 z-30 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/95 ring-1 ring-black/5 disabled:opacity-25"
+        style={{ boxShadow: "0 6px 14px -8px rgba(0,0,0,0.28)" }}
+      >
+        <ChevronLeft className="h-5 w-5 text-neutral-900" strokeWidth={2.8} />
+      </button>
+      <button
+        type="button"
+        aria-label="زيادة القيمة"
+        disabled={value >= max}
+        onClick={() => stepBy(1)}
+        className="absolute right-0 top-1/2 z-30 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/95 ring-1 ring-black/5 disabled:opacity-25"
+        style={{ boxShadow: "0 6px 14px -8px rgba(0,0,0,0.28)" }}
+      >
+        <ChevronRight className="h-5 w-5 text-neutral-900" strokeWidth={2.8} />
+      </button>
 
       <div
         ref={ref}
@@ -1841,9 +1879,9 @@ function ChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => void; onN
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+        <div className="male-goal-pop-grid mt-1 grid grid-cols-2 gap-x-2 gap-y-2 flex-1 min-h-0 content-start overflow-y-auto overflow-x-hidden pt-2 pb-3">
           {CHALLENGES.map((c, i) => (
-            <QuizImageOptionCard
+            <MaleGoalPopCard
               key={c.id}
               label={c.label}
               image={c.image}
@@ -2194,29 +2232,6 @@ function PiggyBankIcon({ size = 48 }: { size?: number }) {
   );
 }
 
-function MagnifyingGlassIcon({ size = 48 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size}>
-      <defs>
-        <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E8E8E8" />
-          <stop offset="50%" stopColor="#F5F5F5" />
-          <stop offset="100%" stopColor="#D0D0D0" />
-        </linearGradient>
-        <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#888" />
-          <stop offset="100%" stopColor="#555" />
-        </linearGradient>
-      </defs>
-      <rect x="42" y="42" width="8" height="20" rx="4" fill="url(#handleGrad)" transform="rotate(45 46 52)" />
-      <circle cx="28" cy="28" r="18" fill="none" stroke="url(#handleGrad)" strokeWidth="4" />
-      <circle cx="28" cy="28" r="15" fill="url(#glassGrad)" />
-      <ellipse cx="22" cy="20" rx="6" ry="4" fill="white" opacity="0.5" transform="rotate(-45 22 20)" />
-      <ellipse cx="24" cy="22" rx="3" ry="2" fill="white" opacity="0.7" transform="rotate(-45 24 22)" />
-    </svg>
-  );
-}
-
 function TargetIconSmall({ size = 22 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#FF6B00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -2235,112 +2250,81 @@ const INVESTMENT_OPTIONS = [
   {
     id: "premium" as const,
     title: "مستعد لفعل كل ما يلزم",
-    highlight: "أريد أسرع وأفضل نتيجة ممكنة.",
-    description: "أنا جاد وأؤمن أن الاستثمار في نفسي هو أفضل قرار سأتخذه.",
+    highlight: "برنامج غذائي متنوع وبمكونات أغنى",
+    description: "تناسبك الوجبات المتنوعة والمكونات الأفضل، لأنك تريد نتيجة أسرع ولا تمانع الاستثمار في أكلك.",
     Icon: TrophyIcon,
     iconBg: "#FFF8E7",
   },
   {
     id: "standard" as const,
     title: "مستعد لكن بميزانية متوسطة",
-    highlight: "أبحث عن خطة مناسبة أستطيع الالتزام بها.",
-    description: "أريد نتائج قوية مع خطة تناسب ميزانيتي الحالية.",
+    highlight: "تنوع في بعض الوجبات حسب ميزانيتك",
+    description: "سننوّع بعض الأطباق مع الإبقاء على خطة عملية تستطيع الالتزام بها.",
     Icon: CoinIcon,
     iconBg: "#FFF8E7",
   },
   {
     id: "budget" as const,
     title: "أبحث عن أرخص خيار",
-    highlight: "أريد البدء بأقل تكلفة ممكنة.",
-    description: "ميزانيتي محدودة حالياً وأبحث عن خيار اقتصادي.",
+    highlight: "وجبات اقتصادية بأقل تكلفة",
+    description: "سنحدد لك الوجبات الأرخص لتبقى ضمن ميزانيتك دون الخروج عن خطتك.",
     Icon: PiggyBankIcon,
     iconBg: "#FFF0F3",
-  },
-  {
-    id: "price_only" as const,
-    title: "أريد فقط معرفة السعر",
-    highlight: "لست متأكداً بعد.",
-    description: "أحتاج معلومات أكثر قبل أن أقرر إذا كنت سأبدأ أم لا.",
-    Icon: MagnifyingGlassIcon,
-    iconBg: "#F0F0F0",
   },
 ];
 
 function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (investment: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const ORANGE = "#FF6B00";
 
   return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{
-        backgroundColor: "#FAF8F5",
-        backgroundImage: `url(${gymBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        animation: "fadeIn .35s ease-out",
-      }}
-    >
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(250,248,245,0.88) 0%, rgba(250,248,245,0.94) 60%, rgba(250,248,245,0.98) 100%)",
-        }}
-      />
-
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
       <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
         <ProgressHeader step="investment" onBack={onBack} />
 
-        {/* Title */}
-        <div className="mt-4 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
-          <div className="inline-flex items-center justify-center gap-2">
+        <div className="mt-3 text-center">
+          <div className="flex items-center justify-center gap-2">
             <TargetIconSmall size={22} />
-            <span className="text-[20px] font-extrabold" style={{ color: ORANGE }}>كن صريحاً معي</span>
-            <span className="text-[20px]">👇</span>
+            <p className="text-xl font-black" style={{ color: "#FF6B00" }}>استثمار في جسمك</p>
           </div>
-          <h1 className="mt-2 text-[24px] font-extrabold text-[#1F1F1F] leading-tight">
-            كم أنت مستعد للاستثمار في تغيير جسمك؟
+          <h1 className="mt-1 text-[22px] font-black text-neutral-900 leading-tight">
+            كم أنت مستعد للاستثمار في تحسن جسمك؟
           </h1>
-          <p className="mt-2 text-[13px] text-gray-500 font-medium leading-relaxed px-4">
-            النتائج الحقيقية تحتاج التزاماً واستثماراً حقيقياً.
+          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed px-4">
+            هذا سيساعدنا في تجهيز برنامج غذائي يناسب ميزانيتك.
           </p>
         </div>
 
-        {/* Cards */}
-        <div className="mt-4 flex flex-col gap-2.5 flex-1 min-h-0 overflow-hidden">
+        <div className="mt-4 flex flex-col gap-3 flex-1 min-h-0 justify-center">
           {INVESTMENT_OPTIONS.map((opt, i) => {
             const active = selected === opt.id;
             return (
               <button
                 key={opt.id}
+                type="button"
                 onClick={() => {
                   triggerSelectionHaptic();
                   setSelected(opt.id);
                 }}
-                className="relative w-full rounded-[22px] bg-white text-right overflow-hidden transition-all duration-250 active:scale-[0.98]"
+                className="relative w-full rounded-[28px] bg-white/90 backdrop-blur-sm ring-1 ring-black/5 text-right overflow-hidden transition-all active:scale-[0.98]"
                 style={{
-                  border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
                   boxShadow: active
-                    ? "0 14px 36px -14px rgba(255,107,0,0.4), 0 6px 16px -8px rgba(0,0,0,0.08)"
-                    : "0 8px 22px -14px rgba(0,0,0,0.14), 0 2px 6px -2px rgba(0,0,0,0.05)",
-                  transform: active ? "scale(1.02)" : "scale(1)",
+                    ? "0 14px 30px -10px rgba(255,107,0,0.35), 0 0 0 2px #FF6B00 inset"
+                    : "0 8px 22px -14px rgba(0,0,0,0.12)",
                   animation: `fadeUp .5s ease-out ${i * 70}ms both`,
                 }}
               >
                 <div className="flex flex-row-reverse items-stretch">
-                  {/* Icon - right side in RTL */}
                   <div
                     className="w-[72px] shrink-0 self-stretch flex items-center justify-center"
                     style={{ background: opt.iconBg }}
                   >
                     <opt.Icon size={48} />
                   </div>
-                  {/* Text */}
-                  <div className="flex-1 px-4 py-3 flex flex-col justify-center gap-0.5 text-right">
-                    <h3 className="text-[15px] font-extrabold text-[#2A2A2A] leading-tight">{opt.title}</h3>
-                    <p className="text-[12.5px] font-bold" style={{ color: ORANGE }}>{opt.highlight}</p>
-                    <p className="text-[11.5px] text-[#4A4A4A] font-medium leading-snug">{opt.description}</p>
+                  <div className="flex-1 px-4 py-3.5 flex flex-col justify-center gap-0.5 text-right">
+                    <h3 className="text-[15px] font-black text-neutral-900 leading-tight">{opt.title}</h3>
+                    <p className="text-[12.5px] font-bold" style={{ color: "#FF6B00" }}>{opt.highlight}</p>
+                    <p className="text-[11.5px] text-neutral-600 font-medium leading-snug">{opt.description}</p>
                   </div>
                 </div>
               </button>
@@ -2348,27 +2332,27 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
           })}
         </div>
 
-        <QuizImportantInfoNote text="كلما كان استثمارك أعلى، كانت نتائجك أسرع وأفضل." />
+        <QuizImportantInfoNote text="هذا سيساعدنا في تجهيز برنامج غذائي يناسب ميزانيتك." />
 
-        {/* CTA */}
-        <div className="mt-auto pt-2.5">
-          <button
-            disabled={!selected}
-            onClick={() => selected && onNext(selected)}
-            className="w-full h-[56px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
-            style={{
-              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
-              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
-              opacity: selected ? 1 : 0.7,
-            }}
-          >
-            <span>متابعة</span>
-            <ArrowLeft size={20} />
-          </button>
-          <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
-            <Lock size={12} />
-            <span>معلوماتك تبقى خاصة وآمنة</span>
-          </div>
+        <button
+          type="button"
+          onClick={() => selected && onNext(selected)}
+          disabled={!selected}
+          className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: selected
+              ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+              : "none",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
         </div>
       </div>
 
@@ -2382,20 +2366,20 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
 
 
 
-import bodyVerySkinny from "@/assets/body-very-skinny.jpg";
-import bodyLean from "@/assets/body-lean.jpg";
-import bodySkinnyFat from "@/assets/body-skinny-fat.jpg";
-import bodyAverage from "@/assets/body-average.jpg";
-import bodyOverweight from "@/assets/body-overweight.jpg";
-import bodyMuscular from "@/assets/body-muscular.jpg";
+import bodyVerySkinny from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/01-very-thin.webp";
+import bodyLean from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/02-lean-athletic.webp";
+import bodySkinnyFat from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/03-skinny-fat-slight-belly.webp";
+import bodyAverage from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/04-average-body.webp";
+import bodyOverweight from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/05-overweight-full.webp";
+import bodyMuscular from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/06-muscular.webp";
 
 const BODY_TYPES = [
-  { id: "skinny_fat", title: "دهون بسيطة بالبطن", sub: "بطن بارز وعضلات خفيفة", img: bodySkinnyFat },
-  { id: "lean", title: "نحيف رياضي", sub: "جسم رشيق وعضلات قليلة", img: bodyLean },
   { id: "very_skinny", title: "نحيف جداً", sub: "وزن أقل من الطبيعي", img: bodyVerySkinny },
-  { id: "muscular", title: "عضلي", sub: "كتلة عضلية واضحة", img: bodyMuscular },
-  { id: "overweight", title: "ممتلئ", sub: "زيادة في الوزن والدهون", img: bodyOverweight },
+  { id: "lean", title: "نحيف رياضي", sub: "جسم رشيق وعضلات قليلة", img: bodyLean },
+  { id: "skinny_fat", title: "دهون بسيطة بالبطن", sub: "بطن بارز وعضلات خفيفة", img: bodySkinnyFat },
   { id: "average", title: "جسم متوسط", sub: "وزن طبيعي وكتلة معتدلة", img: bodyAverage },
+  { id: "overweight", title: "ممتلئ", sub: "زيادة في الوزن والدهون", img: bodyOverweight },
+  { id: "muscular", title: "عضلي", sub: "كتلة عضلية واضحة", img: bodyMuscular },
 ];
 
 function DelayedExplainBubble({
@@ -2490,65 +2474,37 @@ function DelayedExplainBubble({
 
 function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyType: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const ORANGE = "#FF6B00";
 
   return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{ backgroundColor: "#FAF8F5", animation: "fadeIn .35s ease-out" }}
-    >
-      <div className="relative h-full flex flex-col px-5 pt-3 pb-3">
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
         <ProgressHeader step="bodyType" onBack={onBack} />
 
-        {/* Title */}
-        <div className="mt-3 text-center" style={{ animation: "fadeUp .5s ease-out" }}>
-          <h1 className="text-[22px] font-extrabold text-[#1F1F1F] leading-tight">
+        <div className="mt-3 text-center">
+          <h1 className="text-[24px] font-black text-neutral-900 leading-tight">
             أي شكل أقرب لجسمك الحالي؟
           </h1>
-          <p className="mt-1.5 text-[12.5px] text-gray-500 font-medium">
+          <p className="mt-1.5 text-[12.5px] text-neutral-500 leading-relaxed px-2">
             اختر الشكل الأقرب لك حتى أخصص لك الخطة المناسبة.
           </p>
-          <div className="mx-auto mt-1.5 h-[3px] w-10 rounded-full" style={{ background: ORANGE }} />
         </div>
 
-        {/* Grid */}
-        <div className="mt-3 grid grid-cols-3 gap-2 flex-1 min-h-0">
-          {BODY_TYPES.map((b, i) => {
-            const active = selected === b.id;
-            return (
-              <button
-                key={b.id}
-                onClick={() => {
-                  triggerSelectionHaptic();
-                  setSelected(b.id);
-                }}
-                className="relative rounded-[18px] bg-white p-1.5 flex flex-col items-center transition-all duration-250"
-                style={{
-                  border: `2px solid ${active ? ORANGE : "rgba(0,0,0,0.04)"}`,
-                  boxShadow: active
-                    ? "0 12px 28px -12px rgba(255,107,0,0.45), 0 4px 12px -6px rgba(0,0,0,0.08)"
-                    : "0 6px 16px -10px rgba(0,0,0,0.14), 0 2px 4px -2px rgba(0,0,0,0.05)",
-                  transform: active ? "scale(1.03)" : "scale(1)",
-                  animation: `fadeUp .5s ease-out ${i * 50}ms both`,
-                }}
-              >
-                <div className="w-full rounded-[12px] overflow-hidden bg-[#F2EDE6] aspect-[3/4]">
-                  <img
-                    src={b.img}
-                    alt={b.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="mt-1 text-[11.5px] font-extrabold text-[#1F1F1F] text-center leading-tight">
-                  {b.title}
-                </div>
-                <div className="text-[9.5px] text-gray-500 font-medium text-center leading-tight px-0.5 line-clamp-2">
-                  {b.sub}
-                </div>
-              </button>
-            );
-          })}
+        <div className="male-goal-pop-grid mt-1 grid grid-cols-2 gap-x-2 gap-y-2 flex-1 min-h-0 content-start overflow-y-auto overflow-x-hidden pt-2 pb-3">
+          {BODY_TYPES.map((b, i) => (
+            <MaleGoalPopCard
+              key={b.id}
+              label={b.title}
+              sub={b.sub}
+              image={b.img}
+              active={selected === b.id}
+              index={i}
+              onClick={() => {
+                triggerSelectionHaptic();
+                setSelected(b.id);
+              }}
+            />
+          ))}
         </div>
 
         <DelayedExplainBubble
@@ -2556,27 +2512,32 @@ function BodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: (bodyT
           body="اختبارك يساعدنا على تحليل حالتك بدقة وبناء خطة مناسبة لجسمك وهدفك."
         />
 
-        {/* CTA */}
-        <div className="mt-2.5">
-          <button
-            disabled={!selected}
-            onClick={() => selected && onNext(selected)}
-            className="w-full h-[54px] rounded-[18px] flex items-center justify-center gap-2 text-white text-[17px] font-extrabold transition-all duration-200 active:scale-[0.98]"
-            style={{
-              background: selected ? `linear-gradient(135deg, #FF8A3D 0%, ${ORANGE} 100%)` : "#E5D9CC",
-              boxShadow: selected ? "0 14px 30px -10px rgba(255,107,0,0.55)" : "none",
-              opacity: selected ? 1 : 0.7,
-            }}
-          >
-            <span>متابعة</span>
-            <ArrowLeft size={20} />
-          </button>
-          <div className="mt-1.5 flex items-center justify-center gap-1.5 text-[11.5px] text-gray-500">
-            <Lock size={12} />
-            <span>معلوماتك تبقى خاصة وآمنة</span>
-          </div>
+        <button
+          type="button"
+          disabled={!selected}
+          onClick={() => selected && onNext(selected)}
+          className={`mt-2.5 w-full rounded-full py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${selected ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow: selected
+              ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+              : "none",
+          }}
+        >
+          <span>متابعة</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+        </button>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+      `}</style>
     </div>
   );
 }
@@ -3068,15 +3029,27 @@ const COUNTRIES: { code: string; name: string; dial: string; flag: string; citie
   { code: "fr", name: "فرنسا", dial: "+33", flag: "🇫🇷", cities: ["باريس", "مرسيليا", "ليون", "تولوز", "نيس"] },
 ];
 
+const OTHER_COUNTRY = {
+  code: "other",
+  name: "دولة أخرى",
+  dial: "+",
+  flag: "🌍",
+  cities: [] as string[],
+};
+
+function isQuizEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, email: string, isDubai: boolean, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
+  const [phase, setPhase] = useState<"identity" | "phone">("identity");
   const [showOverlay, setShowOverlay] = useState(true);
   const [fadingOverlay, setFadingOverlay] = useState(false);
   const [overlayProgress, setOverlayProgress] = useState(0);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", country: "ae", city: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", country: "ae", customDial: "" });
   const [submitting, setSubmitting] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
-  const [cityOpen, setCityOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
 
   useEffect(() => {
@@ -3092,19 +3065,78 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
     return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
 
-  const country = COUNTRIES.find((c) => c.code === form.country) ?? COUNTRIES[0];
+  const isOtherCountry = form.country === "other";
+  const country = isOtherCountry
+    ? OTHER_COUNTRY
+    : (COUNTRIES.find((c) => c.code === form.country) ?? COUNTRIES[0]);
   const filteredCountries = countryQuery
     ? COUNTRIES.filter((c) => c.name.includes(countryQuery) || c.dial.includes(countryQuery))
     : COUNTRIES;
-  const cities = country.cities;
+  const showOtherCountry =
+    !countryQuery
+    || OTHER_COUNTRY.name.includes(countryQuery)
+    || "اخرى".includes(countryQuery)
+    || "أخرى".includes(countryQuery)
+    || "other".includes(countryQuery.toLowerCase());
 
-  const canSubmit = form.name.trim() && form.email.trim() && form.phone.trim() && form.city.trim();
+  const canContinueIdentity = form.name.trim().length >= 2 && isQuizEmail(form.email);
+  const canSubmitPhone = form.phone.trim().length >= 7 && (!isOtherCountry || form.customDial.trim().length >= 1);
+
+  const submitLead = async () => {
+    if (!canSubmitPhone || submitting) return;
+    setSubmitting(true);
+
+    const selectedCountry = isOtherCountry ? OTHER_COUNTRY : COUNTRIES.find((c) => c.code === form.country);
+    const dial = isOtherCountry ? `+${form.customDial.trim()}` : (selectedCountry?.dial ?? "");
+    const fullPhone = `${dial} ${form.phone.trim()}`.trim();
+
+    try {
+      const contactPayload = {
+        fullName: form.name.trim(),
+        email: form.email.trim(),
+        phone: fullPhone,
+        city: "",
+        country: selectedCountry?.name ?? form.country,
+        locationPreference: "remote" as const,
+      };
+
+      await createLead(buildLeadInsertFromQuiz(quizAnswers, contactPayload));
+
+      await createOnboardingDraft({
+        email: contactPayload.email,
+        full_name: contactPayload.fullName,
+        phone: contactPayload.phone,
+        country: contactPayload.country,
+        city: contactPayload.city,
+        goal: quizAnswers.goalId ?? undefined,
+        location_preference: contactPayload.locationPreference,
+        answers: buildQuizAnswersPayload({
+          ...quizAnswers,
+          userLocation: contactPayload.locationPreference,
+          lastStep: "contact",
+        }),
+      });
+
+      onDone(
+        contactPayload.fullName,
+        contactPayload.email,
+        false,
+        fullPhone,
+        "",
+      );
+    } catch (error) {
+      console.error("Failed to save lead:", error);
+      alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div dir="rtl" className="relative h-full w-full overflow-y-auto" style={{ backgroundColor: "#FAF8F5" }}>
+    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+      <GymBackdrop />
       {showOverlay && (
         <div
-          className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
+          className={`absolute inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
           style={{ background: "linear-gradient(180deg, #FFF8F1 0%, #FAF8F5 100%)" }}
         >
           <div className="grid h-20 w-20 place-items-center rounded-full mb-6 animate-scale-in" style={{ background: "rgba(255,107,0,0.12)" }}>
@@ -3127,174 +3159,169 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         </div>
       )}
 
-      {/* Header */}
-      <div className="px-5 pt-5">
-        <ProgressHeader step="contact" onBack={onBack} />
-      </div>
-
-      {/* Title */}
-      <div className="px-5 pt-4 text-center">
-        <h1 className="font-[Tajawal] text-[25px] font-black leading-[1.25] text-neutral-900">
-          لقد وجدت
-          <br />
-          <span className="program-match-title relative inline-block pb-2" style={{ color: ORANGE }}>
-            البرنامج المناسب لك
-            <span className="program-match-lines" aria-hidden="true">
-              <span className="program-match-line program-match-line-1" />
-              <span className="program-match-line program-match-line-2" />
-            </span>
-          </span>
-        </h1>
-        <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-7 text-neutral-600">
-          بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
-        </p>
-      </div>
-
-      {/* Last step prompt */}
-      <div className="px-5 mt-7 text-center">
-        <div className="-translate-y-[10px] flex items-center justify-center gap-2">
-          <Target className="h-5 w-5" style={{ color: ORANGE }} />
-          <h3 className="text-[18px] font-black text-neutral-900">
-            بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
-          </h3>
-        </div>
-        <p className="-translate-y-[10px] mt-1.5 text-[13px] text-neutral-600">أدخل بياناتك لاستلام برنامجك الخاص.</p>
-      </div>
-
-      {/* Form */}
-      <div className="px-5 mt-4 space-y-3">
-        <FieldRow icon={<UserIcon />} label="الاسم">
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="مثال: أحمد" dir="rtl"
-            className="quiz-input w-full bg-transparent outline-none text-[14px] text-right placeholder:text-neutral-400" />
-        </FieldRow>
-
-        <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
-          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-            placeholder="example@email.com" dir="ltr"
-            className="quiz-input w-full bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
-        </FieldRow>
-
-        <FieldRow icon={<WhatsAppIcon />} label="واتساب للتواصل">
-          <div className="flex items-center gap-2 w-full" dir="ltr">
-            <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center gap-1 rounded-lg bg-neutral-50 px-2 py-1.5 ring-1 ring-black/5">
-              <span className="text-base leading-none">{country.flag}</span>
-              <span className="text-[13px] font-semibold">{country.dial}</span>
-              <ChevronDown className="h-3 w-3 text-neutral-500" />
-            </button>
-            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
-              placeholder={form.country === "ma" ? "6X XXX XXXX" : "5X XXX XXXX"} dir="ltr" inputMode="numeric"
-              className="quiz-input flex-1 bg-transparent outline-none text-[14px] text-left placeholder:text-neutral-400" />
-          </div>
-        </FieldRow>
-
-        <FieldRow icon={<GlobeIcon />} label="الدولة">
-          <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center justify-between w-full">
-            <ChevronDown className="h-4 w-4 text-neutral-500" />
-            <div className="flex items-center gap-2">
-              <span className="text-[14px]">{country.name}</span>
-              <span className="text-base leading-none">{country.flag}</span>
-            </div>
-          </button>
-        </FieldRow>
-
-        <FieldRow icon={<PinIcon />} label="المدينة">
-          <button type="button" onClick={() => setCityOpen(true)} className="flex items-center justify-between w-full">
-            <ChevronDown className="h-4 w-4 text-neutral-500" />
-            <span className={`text-[14px] ${form.city ? "text-neutral-900" : "text-neutral-400"}`}>
-              {form.city || `اختر مدينة في ${country.name}`}
-            </span>
-          </button>
-        </FieldRow>
-      </div>
-
-      {/* Trust trio */}
-      <div className="mx-5 mt-5 rounded-2xl p-4" style={{ background: "rgba(255,107,0,0.06)" }}>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <TrustItem color="#22C55E" icon={<WhatsAppIcon small />} text="ستصلك رسالة الترحيب وخطة العمل مباشرة عبر الواتساب" signalDelay={0} />
-          <TrustItem color="#3B82F6" icon={<MailIcon small />} text="سأرسل برنامجك وتفاصيله على البريد الإلكتروني" signalDelay={450} />
-          <TrustItem color="#16A34A" icon={<ShieldIcon />} text="بياناتك خاصة ونستخدم ضمانات حماية معقولة" signalDelay={900} />
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="px-5 mt-5">
-        <button
-          disabled={!canSubmit || submitting}
-          onClick={async () => {
-            if (!canSubmit || submitting) return;
-          
-            setSubmitting(true);
-          
-            const selectedCountry = COUNTRIES.find((c) => c.code === form.country);
-            const isDubai = form.country === "ae" && form.city === "دبي";
-            const fullPhone = `${selectedCountry?.dial ?? ""} ${form.phone.trim()}`.trim();
-          
-            try {
-              const contactPayload = {
-                fullName: form.name.trim(),
-                email: form.email.trim(),
-                phone: fullPhone,
-                city: form.city,
-                country: selectedCountry?.name ?? form.country,
-                locationPreference: isDubai ? "dubai" as const : "remote" as const,
-              };
-
-              await createLead(buildLeadInsertFromQuiz(quizAnswers, contactPayload));
-
-              await createOnboardingDraft({
-                email: contactPayload.email,
-                full_name: contactPayload.fullName,
-                phone: contactPayload.phone,
-                country: contactPayload.country,
-                city: contactPayload.city,
-                goal: quizAnswers.goalId ?? undefined,
-                location_preference: contactPayload.locationPreference,
-                answers: buildQuizAnswersPayload({
-                  ...quizAnswers,
-                  userLocation: contactPayload.locationPreference,
-                  lastStep: "contact",
-                }),
-              });
-
-              onDone(
-                contactPayload.fullName,
-                contactPayload.email,
-                isDubai,
-                fullPhone,
-                form.city,
-              );
-            } catch (error) {
-              console.error("Failed to save lead:", error);
-              alert("حدث خطأ في حفظ بياناتك. حاول مرة أخرى.");
-              setSubmitting(false);
-            }
+      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+        <ProgressHeader
+          step="contact"
+          onBack={() => {
+            if (phase === "phone") setPhase("identity");
+            else onBack();
           }}
-          className="cta-pulse w-full h-14 rounded-2xl font-black text-white text-[17px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60 disabled:animate-none"
-          style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)` }}
+        />
+
+        <div className="mt-4 text-center">
+          <h1 className="font-[Tajawal] text-[25px] font-black leading-[1.25] text-neutral-900">
+            لقد وجدت
+            <br />
+            <span className="program-match-title relative inline-block pb-2" style={{ color: ORANGE }}>
+              البرنامج المناسب لك
+              <span className="program-match-lines" aria-hidden="true">
+                <span className="program-match-line program-match-line-1" />
+                <span className="program-match-line program-match-line-2" />
+              </span>
+            </span>
+          </h1>
+          <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-7 text-neutral-600">
+            بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
+          </p>
+        </div>
+
+        <div className="mt-6 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Target className="h-5 w-5" style={{ color: ORANGE }} />
+            <h3 className="text-[18px] font-black text-neutral-900">
+              {phase === "identity" ? (
+                <>
+                  افتح <span style={{ color: ORANGE }}>خطتك</span> داخل التطبيق
+                </>
+              ) : (
+                <>
+                  بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
+                </>
+              )}
+            </h3>
+          </div>
+          <p className="mt-1.5 text-[13px] text-neutral-600 leading-relaxed px-2">
+            {phase === "identity"
+              ? "أدخل اسمك وبريدك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
+              : "أضف دولتك ورقم هاتفك للمتابعة داخل التطبيق."}
+          </p>
+        </div>
+
+        <div
+          key={phase}
+          className="mt-6 flex-1 min-h-0 flex flex-col justify-start gap-5 animate-[fadeIn_.35s_ease-out]"
         >
-          <span>🚀</span>
-          <span>استلم برنامجي الآن</span>
+          {phase === "identity" ? (
+            <>
+              <FieldRow icon={<UserIcon />} label="الاسم">
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="مثال: أحمد"
+                  dir="rtl"
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  enterKeyHint="next"
+                  className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-right placeholder:text-neutral-400"
+                />
+              </FieldRow>
+              <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="example@email.com"
+                  dir="ltr"
+                  autoComplete="email"
+                  enterKeyHint="next"
+                  className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                />
+              </FieldRow>
+            </>
+          ) : (
+            <>
+              <FieldRow icon={<GlobeIcon />} label="الدولة">
+                <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center justify-between w-full min-h-12">
+                  <ChevronDown className="h-4 w-4 text-neutral-500" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[16px]">{country.name}</span>
+                    <span className="text-base leading-none">{country.flag}</span>
+                  </div>
+                </button>
+              </FieldRow>
+              <FieldRow icon={<WhatsAppIcon />} label="رقم الهاتف">
+                <div className="flex items-center gap-2.5 w-full" dir="ltr">
+                  {isOtherCountry ? (
+                    <div className="flex min-h-12 items-center gap-0.5 rounded-md bg-neutral-50 px-2.5 ring-1 ring-black/5">
+                      <span className="text-[16px] font-semibold text-neutral-700">+</span>
+                      <input
+                        value={form.customDial}
+                        onChange={(e) => setForm({ ...form, customDial: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                        placeholder="xxx"
+                        dir="ltr"
+                        inputMode="numeric"
+                        autoComplete="tel-country-code"
+                        aria-label="رمز الدولة"
+                        className="w-[3.25rem] bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                        style={{ fontSize: 16, minHeight: 48 }}
+                      />
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => setCountryOpen(true)} className="flex min-h-12 items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-2 ring-1 ring-black/5">
+                      <span className="text-base leading-none">{country.flag}</span>
+                      <span className="text-[16px] font-semibold">{country.dial}</span>
+                      <ChevronDown className="h-3 w-3 text-neutral-500" />
+                    </button>
+                  )}
+                  <input
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                    placeholder={isOtherCountry ? "رقم هاتفك" : form.country === "ma" ? "6X XXX XXXX" : "5X XXX XXXX"}
+                    dir="ltr"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    enterKeyHint="done"
+                    className="quiz-input min-h-12 flex-1 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                  />
+                </div>
+                {isOtherCountry && (
+                  <p className="mt-2 text-[12px] leading-5 text-neutral-500 text-right">أدخل رمز دولتك ثم رقم هاتفك.</p>
+                )}
+              </FieldRow>
+            </>
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={phase === "identity" ? !canContinueIdentity : !canSubmitPhone || submitting}
+          onClick={() => {
+            if (phase === "identity") {
+              if (!canContinueIdentity) return;
+              setPhase("phone");
+              return;
+            }
+            void submitLead();
+          }}
+          className={`mt-4 w-full rounded-[12px] py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${(phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting) ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+          style={{
+            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+            boxShadow:
+              (phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting)
+                ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+                : "none",
+          }}
+        >
+          <span>{phase === "identity" ? "متابعة" : submitting ? "جاري الحفظ..." : "متابعة"}</span>
+          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
         </button>
-        <div className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-neutral-500">
-          <Lock className="h-3 w-3" />
-          <span>لن تتم مشاركة بياناتك مع أي جهة خارجية</span>
+
+        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+          <span>معلوماتك تبقى خاصة وآمنة</span>
         </div>
       </div>
 
-      {/* Social proof */}
-      <div className="px-5 mt-4 pb-8 flex items-center justify-center gap-3">
-        <div className="flex -space-x-2 rtl:space-x-reverse">
-          {[avatar1, avatar2, avatar3, avatar4].map((a, i) => (
-            <img key={i} src={a} alt="" className="h-7 w-7 rounded-full ring-2 ring-white object-cover" />
-          ))}
-        </div>
-        <p className="text-[12px] text-neutral-600">
-          أكثر من <span className="font-black" style={{ color: ORANGE }}>2500</span> شخص غيروا حياتهم مع البرنامج
-        </p>
-      </div>
-
-      {/* Country sheet */}
       {countryOpen && (
         <PickerSheet title="اختر الدولة" onClose={() => { setCountryOpen(false); setCountryQuery(""); }}>
           <div className="px-4 pb-3">
@@ -3302,7 +3329,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
               value={countryQuery}
               onChange={(e) => setCountryQuery(e.target.value)}
               placeholder="ابحث عن دولة..."
-              className="w-full rounded-xl bg-neutral-100 px-4 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[#FF6B00]/40 text-right"
+              className="w-full min-h-12 rounded-lg bg-neutral-100 px-4 py-3 text-[16px] outline-none focus:ring-2 focus:ring-[#FF6B00]/40 text-right"
               dir="rtl"
             />
           </div>
@@ -3310,8 +3337,8 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
             {filteredCountries.map((c) => (
               <button
                 key={c.code}
-                onClick={() => { setForm((f) => ({ ...f, country: c.code, city: "" })); setCountryOpen(false); setCountryQuery(""); }}
-                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-xl text-right hover:bg-neutral-50 ${c.code === form.country ? "bg-orange-50" : ""}`}
+                onClick={() => { setForm((f) => ({ ...f, country: c.code, customDial: "" })); setCountryOpen(false); setCountryQuery(""); }}
+                className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg text-right hover:bg-neutral-50 ${c.code === form.country ? "bg-orange-50" : ""}`}
               >
                 <span className="text-[12px] text-neutral-500" dir="ltr">{c.dial}</span>
                 <div className="flex items-center gap-2 flex-1 justify-end">
@@ -3320,59 +3347,35 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
                 </div>
               </button>
             ))}
-          </div>
-        </PickerSheet>
-      )}
-
-      {/* City sheet */}
-      {cityOpen && (
-        <PickerSheet title={`مدن ${country.name}`} onClose={() => setCityOpen(false)}>
-          <div className="max-h-[55vh] overflow-y-auto px-2 pb-4">
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => { setForm((f) => ({ ...f, city })); setCityOpen(false); }}
-                className={`w-full flex items-center justify-end gap-2 px-4 py-3 rounded-xl text-right hover:bg-neutral-50 ${city === form.city ? "bg-orange-50" : ""}`}
-              >
-                <span className="text-[14px] font-medium text-neutral-900">{city}</span>
-                <PinIcon />
-              </button>
-            ))}
+            {showOtherCountry && (
+              <>
+                <div className="mx-3 my-2 h-px bg-neutral-100" />
+                <button
+                  type="button"
+                  onClick={() => { setForm((f) => ({ ...f, country: "other", customDial: "" })); setCountryOpen(false); setCountryQuery(""); }}
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-3 rounded-lg text-right hover:bg-neutral-50 ${isOtherCountry ? "bg-orange-50" : ""}`}
+                >
+                  <span className="text-[12px] text-neutral-500">أدخل الرمز</span>
+                  <div className="flex items-center gap-2 flex-1 justify-end">
+                    <span className="text-[14px] font-medium text-neutral-900">{OTHER_COUNTRY.name}</span>
+                    <span className="text-xl leading-none">{OTHER_COUNTRY.flag}</span>
+                  </div>
+                </button>
+              </>
+            )}
           </div>
         </PickerSheet>
       )}
 
       <style>{`
-        .quiz-input { transition: box-shadow .2s ease; }
-        .quiz-input:focus { box-shadow: 0 0 0 3px rgba(255,107,0,0.18); border-radius: 8px; }
-        @keyframes cta-pulse-kf { 0%,100% { box-shadow: 0 8px 20px -6px rgba(255,107,0,0.5), 0 0 0 0 rgba(255,107,0,0.55); } 50% { box-shadow: 0 8px 24px -4px rgba(255,107,0,0.6), 0 0 0 10px rgba(255,107,0,0); } }
-        .cta-pulse { animation: cta-pulse-kf 2.2s ease-in-out infinite; }
-        .trust-signal-ring {
-          border: 1.5px solid var(--trust-signal-color);
-          opacity: 0;
-          animation: trustSignalPing 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+        .quiz-input {
+          font-size: 16px;
+          min-height: 48px;
+          line-height: 1.5;
+          transition: box-shadow .2s ease;
         }
-        .trust-signal-ring-2 { animation-delay: calc(var(--trust-signal-delay, 0ms) + 800ms); }
-        .trust-signal-dot {
-          animation: trustSignalDot 1.8s ease-in-out infinite;
-          animation-delay: var(--trust-signal-delay, 0ms);
-        }
-        .trust-signal-icon {
-          animation: trustSignalGlow 2.5s ease-in-out infinite;
-          animation-delay: var(--trust-signal-delay, 0ms);
-        }
-        @keyframes trustSignalPing {
-          0% { transform: scale(0.9); opacity: 0.5; }
-          75%, 100% { transform: scale(1.65); opacity: 0; }
-        }
-        @keyframes trustSignalDot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.35; transform: scale(0.72); }
-        }
-        @keyframes trustSignalGlow {
-          0%, 100% { box-shadow: 0 0 0 0 transparent; }
-          50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--trust-signal-color) 18%, transparent); }
-        }
+        .quiz-input:focus { box-shadow: 0 0 0 3px rgba(255,107,0,0.16); border-radius: 6px; }
         .program-match-lines {
           position: absolute;
           right: 0;
@@ -3412,6 +3415,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   );
 }
 
+
 function PickerSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={onClose}>
@@ -3436,49 +3440,12 @@ function PickerSheet({ title, onClose, children }: { title: string; onClose: () 
 
 function FieldRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 ring-1 ring-black/5 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] focus-within:ring-2 focus-within:ring-[#FF6B00]/40 focus-within:shadow-[0_4px_18px_-6px_rgba(255,107,0,0.35)] transition-all">
-      <div className="flex items-center gap-2 shrink-0">
-        <div className="grid h-7 w-7 place-items-center">{icon}</div>
-        <span className="text-[13px] font-bold text-neutral-800">{label}</span>
+    <div className="flex flex-col gap-2.5 rounded-[8px] bg-white px-4 py-4 ring-1 ring-black/[0.07] shadow-[0_1px_2px_rgba(15,23,42,0.04)] focus-within:ring-2 focus-within:ring-[#FF6B00]/35 focus-within:shadow-[0_4px_14px_-8px_rgba(255,107,0,0.35)] transition-all">
+      <div className="flex items-center gap-2">
+        <div className="grid h-6 w-6 place-items-center">{icon}</div>
+        <span className="text-[12.5px] font-bold text-neutral-700">{label}</span>
       </div>
-      <div className="flex-1 min-w-0 text-left">{children}</div>
-    </div>
-  );
-}
-
-function TrustItem({
-  icon,
-  text,
-  color,
-  signalDelay = 0,
-}: {
-  icon: React.ReactNode;
-  text: string;
-  color: string;
-  signalDelay?: number;
-}) {
-  const signalStyle = {
-    "--trust-signal-color": color,
-    "--trust-signal-delay": `${signalDelay}ms`,
-  } as React.CSSProperties;
-
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative grid h-8 w-8 place-items-center" style={signalStyle}>
-        <span className="trust-signal-ring absolute inset-0 rounded-full" style={{ animationDelay: `${signalDelay}ms` }} />
-        <span className="trust-signal-ring trust-signal-ring-2 absolute inset-0 rounded-full" />
-        <span
-          className="trust-signal-dot absolute -top-0.5 -left-0.5 h-2 w-2 rounded-full ring-2 ring-white"
-          style={{ background: color }}
-        />
-        <div
-          className="trust-signal-icon relative grid h-8 w-8 place-items-center rounded-full bg-white ring-1 ring-black/5"
-          style={{ color }}
-        >
-          {icon}
-        </div>
-      </div>
-      <div className="text-[10.5px] leading-snug text-neutral-700">{text}</div>
+      <div className="w-full min-w-0">{children}</div>
     </div>
   );
 }
@@ -3486,22 +3453,14 @@ function TrustItem({
 function UserIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>;
 }
-function MailIcon({ small }: { small?: boolean } = {}) {
-  const s = small ? 16 : 18;
-  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: small ? "#3B82F6" : "#FF6B00" }}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>;
+function MailIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>;
 }
-function WhatsAppIcon({ small }: { small?: boolean } = {}) {
-  const s = small ? 16 : 20;
-  return <svg width={s} height={s} viewBox="0 0 24 24" fill="#22C55E"><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.4A10 10 0 1012 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.2-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5.3.7 1 2.3 1 2.4.1.1.1.3 0 .5-.1.2-.2.3-.3.5l-.5.5c-.2.2-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.7.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>;
+function WhatsAppIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="#22C55E"><path d="M12 2a10 10 0 00-8.5 15.2L2 22l4.9-1.4A10 10 0 1012 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.2-.2-1.2-1.6-1.2-3.1s.8-2.2 1-2.5c.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5.3.7 1 2.3 1 2.4.1.1.1.3 0 .5-.1.2-.2.3-.3.5l-.5.5c-.2.2-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.7.3.1.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.8.9 2.1 1 .3.2.5.2.6.4.1.1.1.7-.1 1.3z"/></svg>;
 }
 function GlobeIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>;
-}
-function PinIcon() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF6B00" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-7-7.5-7-12a7 7 0 1114 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>;
-}
-function ShieldIcon() {
-  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>;
 }
 
 // ============================================================
@@ -3600,7 +3559,9 @@ const TIMELINE_STAGES = [
   { week: "الأسبوع 13+", title: "الشكل المثالي", desc: ["الوصول للهدف", "الاستمرارية والنتائج الدائمة"], color: "#3B82F6", bg: "#DBEAFE", Icon: Trophy },
 ];
 
+/** Kept for later: quiz funnel currently skips this expected-results screen until real platform results exist. */
 function ProgramRevealScreen({ name, gender, goalId, challengeId, total = QUIZ_PROGRESS_TOTAL, onNext }: { name: string; gender: "male" | "female" | null; goalId: string; challengeId: string; total?: number; onNext: () => void }) {
+  // Temporarily unused in the quiz funnel until real platform results exist.
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
@@ -3964,12 +3925,19 @@ function BeforeAfterTile({
 
 const GREEN_BADGE_COLOR = "#22C55E";
 
-function CongratsScreen({ name, gender, total = QUIZ_PROGRESS_TOTAL, onNext }: { name: string; gender: "male" | "female" | null; total?: number; onNext: () => void }) {
+function programTitleFromGoal(goalId: string): string {
+  const goal =
+    GOALS.find((g) => g.id === goalId) ??
+    FEMALE_GOALS.find((g) => g.id === goalId);
+  return goal ? `برنامج ${goal.label}` : "برنامجك المخصص";
+}
+
+function CongratsScreen({ name, goalId, total = QUIZ_PROGRESS_TOTAL, onNext }: { name: string; goalId: string; total?: number; onNext: () => void }) {
   const ORANGE = "#FF6B00";
   const GREEN = "#22C55E";
   const TEXT = "#0F172A";
   const HEADING_FONT = "'Cairo', 'Tajawal', sans-serif";
-  const programTitle = gender === "female" ? "برنامج شد القوام والتنحيف" : "برنامج بناء العضلات وحرق الدهون";
+  const programTitle = programTitleFromGoal(goalId);
 
   const [showBadge, setShowBadge] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
@@ -4126,9 +4094,6 @@ function CongratsScreen({ name, gender, total = QUIZ_PROGRESS_TOTAL, onNext }: {
               <span>مبروك انت مؤهل للمنصة من اجل برنامجك</span>
               <ChevronLeft className="h-5 w-5" strokeWidth={3} />
             </button>
-            <p className="text-center text-[11.5px] text-neutral-500 mt-3 leading-relaxed">
-              شاهد النتائج المتوقعة لبرنامجك قبل الاطلاع على الأسعار
-            </p>
           </div>
         )}
       </div>

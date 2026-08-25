@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { markPasswordRequiredIfUnset, markPasswordRequiredLocally, clearPasswordRequiredLocally, PASSWORD_SET_META_KEY } from "@/lib/auth-password-gate";
+import { clearLeadCredentials } from "@/lib/lead-storage";
+import { clearQuizProgress } from "@/lib/quiz-progress-storage";
 
 /** OTP length sent by Supabase Auth (production currently uses 8). */
 export const QUIZ_EMAIL_OTP_LENGTH = 8;
@@ -54,6 +57,20 @@ export function getStoredDraftToken(): string | null {
   return readDraftToken();
 }
 
+/** Drop local quiz/onboarding leftovers so a new account can start from the first step. */
+export function clearOnboardingClientState(): void {
+  clearQuizProgress();
+  clearDraftToken();
+  clearLeadCredentials();
+}
+
+export async function signOutAndResetClient(scope: "local" | "global" = "local"): Promise<void> {
+  clearOnboardingClientState();
+  clearPasswordRequiredLocally();
+  const { error } = await supabase.auth.signOut({ scope });
+  if (error) throw error;
+}
+
 export async function createOnboardingDraft(payload: OnboardingDraftPayload): Promise<string> {
   const { data, error } = await supabase.rpc("create_onboarding_draft", {
     p_payload: payload as Json,
@@ -105,40 +122,62 @@ export async function consumeQuizAuthCallback(): Promise<boolean> {
 
   const code = searchParams.get("code");
   if (code) {
+    markPasswordRequiredLocally();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     cleanAuthCallbackParams();
-    if (error) throw error;
+    if (error) {
+      clearPasswordRequiredLocally();
+      throw error;
+    }
+    await markPasswordRequiredIfUnset();
     return true;
   }
 
   const tokenHash = searchParams.get("token_hash") ?? hashParams.get("token_hash");
   const type = searchParams.get("type") ?? hashParams.get("type");
   if (tokenHash && type === "email") {
+    markPasswordRequiredLocally();
     const { error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type: "email",
     });
     cleanAuthCallbackParams();
-    if (error) throw error;
+    if (error) {
+      clearPasswordRequiredLocally();
+      throw error;
+    }
+    await markPasswordRequiredIfUnset();
     return true;
   }
 
   if (hashParams.has("access_token")) {
+    markPasswordRequiredLocally();
     const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
+    if (error) {
+      clearPasswordRequiredLocally();
+      throw error;
+    }
     if (data.session) {
       cleanAuthCallbackParams();
+      await markPasswordRequiredIfUnset();
       return true;
     }
+    clearPasswordRequiredLocally();
   }
 
   if (hadAuthParams) {
+    markPasswordRequiredLocally();
     const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
+    if (error) {
+      clearPasswordRequiredLocally();
+      throw error;
+    }
     if (data.session) {
       cleanAuthCallbackParams();
+      await markPasswordRequiredIfUnset();
       return true;
     }
+    clearPasswordRequiredLocally();
   }
 
   return false;
@@ -161,20 +200,29 @@ export async function sendEmailVerificationOtp(email: string): Promise<void> {
 }
 
 export async function verifyEmailOtp(email: string, token: string): Promise<void> {
+  markPasswordRequiredLocally();
   const { error } = await supabase.auth.verifyOtp({
     email: email.trim().toLowerCase(),
     token: token.trim(),
     type: "email",
   });
-  if (error) throw error;
+  if (error) {
+    clearPasswordRequiredLocally();
+    throw error;
+  }
+  await markPasswordRequiredIfUnset();
 }
 
 export async function setUserPassword(password: string, fullName?: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({
     password,
-    data: fullName ? { full_name: fullName } : undefined,
+    data: {
+      ...(fullName ? { full_name: fullName } : {}),
+      [PASSWORD_SET_META_KEY]: true,
+    },
   });
   if (error) throw error;
+  clearPasswordRequiredLocally();
 }
 
 function getFileExtension(file: File): string {

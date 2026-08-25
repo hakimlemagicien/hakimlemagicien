@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -31,16 +31,18 @@ export function UpgradeProvider({ children }: { children: ReactNode }) {
     setReason(null);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("is-upgrade-open");
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeUpgrade();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
+      document.body.classList.remove("is-upgrade-open");
       window.removeEventListener("keydown", onKey);
     };
   }, [open, closeUpgrade]);

@@ -198,6 +198,7 @@ assert(contentUi.includes("نشر"), "publish is a separate action");
 
 const mealApi = readFileSync(join(root, "src/lib/platform/meal-library-api.ts"), "utf8");
 assert(mealApi.includes("overlayMealCatalog"), "client meals overlay DB onto seed");
+assert(mealApi.includes("dbMealCatalogIsV2"), "stale V1 database meals cannot overlay V2 seed");
 assert(!mealApi.includes("meals.length >= seedCount"), "full-catalog replacement gate is removed");
 
 const discoverApi = readFileSync(join(root, "src/lib/platform/discover-content-api.ts"), "utf8");

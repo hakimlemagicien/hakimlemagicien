@@ -1,6 +1,8 @@
-import { createFileRoute, isRedirect, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
 import { useMembership } from "@/hooks/useMembership";
+import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { supabase } from "@/integrations/supabase/client";
 
 function errorDetail(error: unknown) {
@@ -50,6 +52,9 @@ export const Route = createFileRoute("/_platform")({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.user) throw redirect({ to: "/auth" });
+      if (userNeedsPasswordSetup(session.user)) {
+        throw redirect(CREATE_PASSWORD_LOCATION);
+      }
       return { user: session.user };
     } catch (error) {
       if (isRedirect(error)) throw error;
@@ -62,8 +67,27 @@ export const Route = createFileRoute("/_platform")({
 });
 
 function PlatformLayout() {
-  // Membership now uses placeholder Free data, so we never blank the whole /app shell.
+  const navigate = useNavigate();
   useMembership();
+
+  useEffect(() => {
+    function kickIfPasswordMissing(user: Parameters<typeof userNeedsPasswordSetup>[0]) {
+      if (!userNeedsPasswordSetup(user)) return;
+      void navigate(CREATE_PASSWORD_LOCATION);
+    }
+
+    void supabase.auth.getSession().then(({ data }) => {
+      kickIfPasswordMissing(data.session?.user);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      kickIfPasswordMissing(session?.user);
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   return (
     <PlatformShell>

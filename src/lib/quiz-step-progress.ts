@@ -93,6 +93,8 @@ const DEPRECATED_OFFLINE_QUIZ_STEPS = ["trainingType", "pricingDubai", "offlineP
 
 export function resolveActiveQuizStep(step: string): string {
   if ((DEPRECATED_OFFLINE_QUIZ_STEPS as readonly string[]).includes(step)) return "pricing";
+  // Temporarily skip expected-results reveal until real platform results are ready.
+  if (step === "reveal") return "verifyEmail";
   return step;
 }
 

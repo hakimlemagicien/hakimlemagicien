@@ -13,6 +13,7 @@
 | الترتيب | الملف | الغرض |
 |---------|--------|--------|
 | 1 | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) | أين وصلنا الآن — الحالة الحية |
+| 1b | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) | PRODUCTION vs STAGING vs LOCAL — عزل قواعد البيانات |
 | 2 | [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md) | معمارية المنتج: تسويق منفصل عن التطبيق |
 | 3 | [`PROJECT_REPORT.md`](./PROJECT_REPORT.md) | تقرير مراجعة كامل + فرص تحسين تجربة المستخدم |
 | 4 | [`../AGENTS.md`](../AGENTS.md) | قواعد العمل للـ AI: Git، Build، المناطق المحمية |
@@ -50,6 +51,8 @@
 |---------|--------|
 | تقرير المرحلة | [`GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_3_REPORT.md`](./GOAL_BASED_ADAPTIVE_TRAINING_ENGINE_V2_PHASE_3_REPORT.md) |
 | تقرير جودة المكتبة | [`EXERCISE_LIBRARY_V2_QA_REPORT.md`](./EXERCISE_LIBRARY_V2_QA_REPORT.md) |
+| جرد المكتبة الكامل (2026-08-25) | [`TRAINING_LIBRARY_INVENTORY_AUDIT.md`](./TRAINING_LIBRARY_INVENTORY_AUDIT.md) |
+| مجلد صور Pilot — عقود فقط | [`../TRAINING_LIBRARY_INVENTORY_AUDIT/00-README.md`](../TRAINING_LIBRARY_INVENTORY_AUDIT/00-README.md) |
 | العقود | `src/lib/platform/exercise-library-v2.ts` |
 | الهجرة | `supabase/migrations/20260821140000_exercise_library_v2_compatibility.sql` |
 
@@ -168,13 +171,27 @@
 
 ---
 
-## Nutrition Library V2 — قواعد الموظف (2026-08-21)
+## Training Engine V2 — Staging cohort (CEO 2026-08-22)
 
 | الموضوع | المرجع |
 |---------|--------|
-| قواعد بناء/توسيع المكتبة بنفس نظام المنصة | [`NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md`](./NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md) |
-| الهوية | `external_id` = `MEAL-NNN` (ثابت) |
-| العقد في الكود | `src/lib/platform/meal-library.ts` · Nutrition Data Contract v1.1 |
+| قرار CEO + مسار الدمج (PF-1) + رابط Staging (PF-4) | [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md) |
+| Dry-run / rollback (PF-2, PF-3) — بلا تطبيق إنتاج | [`TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md`](./TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md) |
+| البيئات | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) |
+| SHA المعتمد | `4d80f8d366909a2a6cf9217803c9c62277b66954` |
+| الحالة | `STAGING_COHORT_APPROVED` — **لا** دمج `main`، **لا** Production |
+
+---
+
+## Nutrition Library V2 — كتالوج التشغيل (2026-08-22)
+
+| الموضوع | المرجع |
+|---------|--------|
+| قواعد الموظف | [`NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md`](./NUTRITION_LIBRARY_V2_EMPLOYEE_RULES.md) |
+| المصدر | `nutrition-library/SOURCE.json` — حزم `nutrition_v2_MEAL-*` |
+| التشغيل | `src/lib/platform/data/nutrition-library-v2.json` |
+| الهوية | `external_id` = `MEAL-NNN` (ثابت؛ المحتوى V2 على نفس المفاتيح) |
+| V1 | موقوفة. لا تستورد `nutrition-pilot-20` ولا دفعات 021–300 القديمة |
 
 ---
 

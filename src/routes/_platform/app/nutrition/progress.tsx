@@ -28,23 +28,20 @@ function NutritionProgressPage() {
   const { openUpgrade } = useUpgradeFlow();
   const locked = !features.nutrition_plan;
   const online = useOnlineStatus();
-  const plan = useNutritionPlan();
+  const plan = useNutritionPlan(undefined, { catalogPreview: locked });
   const [range] = useState("هذا الأسبوع");
   const week = useMemo(() => {
     const base = buildNutritionProgressWeek();
     return base.map((day) =>
-      day.id === plan.dateKey ? { ...day, commitmentPct: plan.commitmentPct } : day,
+      day.id === plan.dateKey
+        ? { ...day, commitmentPct: plan.commitmentPct }
+        : { ...day, commitmentPct: day.isFuture ? 0 : 0 },
     );
   }, [plan.commitmentPct, plan.dateKey]);
 
-  const avgCommitment = Math.round(
-    week.filter((d) => !d.isFuture).reduce((sum, d) => sum + d.commitmentPct, 0) /
-      Math.max(week.filter((d) => !d.isFuture).length, 1),
-  );
-  const completedDays = week.filter((d) => !d.isFuture && d.commitmentPct >= 70).length;
-  const mealsCompleted = plan.completedCount + 24;
-  const mealsTotal = 35;
-  const hasData = week.some((d) => d.commitmentPct > 0 || plan.completedCount > 0);
+  const mealsCompleted = plan.completedCount;
+  const mealsTotal = Math.max(plan.meals.length, 1);
+  const hasData = plan.completedCount > 0 || plan.meals.length > 0;
 
   return (
     <PlatformStack className="gap-3.5 pb-4">
@@ -54,7 +51,7 @@ function NutritionProgressPage() {
       {!hasData ? (
         <NutritionEmptyState
           title="لا توجد بيانات تقدم."
-          description="سجّل وجباتك اليومية لتظهر نسب الالتزام والرسم البياني هنا."
+          description="سجّل وجباتك اليومية لتظهر أعداد اليوم هنا. لا تُعرض نسبة التزام عامة غير معتمدة."
         />
       ) : (
         <>
@@ -70,8 +67,8 @@ function NutritionProgressPage() {
             <section
               className={cn(nutritionCardClass, "relative flex flex-col items-center overflow-hidden p-5")}
             >
-              <CommitmentRingLarge pct={avgCommitment || plan.commitmentPct || 65} />
-              <p className="mt-2 text-[12px] font-bold text-muted-foreground">نسبة الالتزام</p>
+              <CommitmentRingLarge pct={plan.commitmentPct} />
+              <p className="mt-2 text-[12px] font-bold text-muted-foreground">تقدم اليوم (مكتمل / مخطط)</p>
               {locked ? (
                 <NutritionLockedOverlay
                   active
@@ -85,18 +82,17 @@ function NutritionProgressPage() {
 
           <NutritionMotionSection delay={0.1}>
             <div className="relative grid grid-cols-2 gap-2.5 overflow-hidden rounded-[24px]">
-              <StatCard label="متوسط السعرات" value={2100} />
-              <StatCard label="متوسط البروتين" value={150} suffix="غ" />
+              <StatCard label="مخطط السعرات اليوم" value={plan.goals.calories} />
+              <StatCard label="مخطط البروتين اليوم" value={plan.goals.protein} suffix="غ" />
               <StatCard
-                label="الوجبات المكتملة"
+                label="الوجبات المكتملة اليوم"
                 value={mealsCompleted}
                 suffix={` / ${mealsTotal}`}
                 animate={false}
               />
               <StatCard
-                label="أيام الالتزام"
-                value={completedDays}
-                suffix=" / 7"
+                label="الوجبات المتبقية اليوم"
+                value={Math.max(plan.meals.length - mealsCompleted, 0)}
                 animate={false}
               />
               {locked ? (
@@ -113,7 +109,7 @@ function NutritionProgressPage() {
           <NutritionMotionSection delay={0.16}>
             <section className={cn(nutritionCardClass, "relative overflow-hidden p-4")}>
               <h2 className="text-right text-[12px] font-black text-foreground">
-                الالتزام اليومي
+                تقدم الأيام المتاحة
               </h2>
               <div className="mt-4 flex h-36 items-end justify-between gap-1.5 px-1">
                 {week.map((day) => (

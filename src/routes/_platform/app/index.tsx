@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { HomeDashboardSkeleton } from "@/components/platform/home/HomeDashboardSkeleton";
 import { HomeStickyUpgradeFooter } from "@/components/platform/home/HomeStickyUpgradeFooter";
@@ -19,6 +20,8 @@ import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
+import { PROFILE_DETAILS_KEY, PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
+import { fetchMyProfileDetails, fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import {
   buildDailySnapshot,
   buildDiscoverPreviewItems,
@@ -72,7 +75,21 @@ function PlatformHomePage() {
       ? "error"
       : runtimeQuery.data?.reason;
 
-  const { gender, goalId, goal } = readHomeGoalContext("تنشيف");
+  const trainingQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    staleTime: 30_000,
+  });
+  const profileQuery = useQuery({
+    queryKey: PROFILE_DETAILS_KEY,
+    queryFn: fetchMyProfileDetails,
+    staleTime: 30_000,
+  });
+  const { gender, goalId, goal } = readHomeGoalContext({
+    gender: trainingQuery.data?.answers.gender,
+    goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal ?? profileQuery.data?.goal,
+    goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
+  });
   const clientName = resolveClientFirstName(displayName);
 
   const dashboard = useMemo(() => {

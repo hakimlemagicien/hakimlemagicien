@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type Ref } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Calculator,
@@ -18,10 +17,12 @@ import {
 } from "lucide-react";
 import { isToolsHubRoute, ToolsHubOverlay } from "@/components/platform/shared/ToolsHubOverlay";
 import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { triggerSelectionHaptic } from "@/lib/haptic";
 import { cn } from "@/lib/utils";
+
+const libraryAllowed = canAccessExerciseLibrary();
 
 const MOBILE_NAV_ITEMS = [
   { to: "/app/program/workout", label: "تماريني", icon: Dumbbell },
@@ -159,17 +160,12 @@ function NavItem({
 
 export function PlatformSidebar() {
   const tools = useToolsOptional();
-  const libraryAccessQuery = useQuery({
-    queryKey: ["exercise-library-access"],
-    queryFn: canAccessExerciseLibrary,
-    staleTime: 5 * 60 * 1000,
-  });
   const navItems = DESKTOP_NAV_ITEMS.filter(
-    (item) => item.to !== "/app/exercises" || libraryAccessQuery.data,
+    (item) => item.to !== "/app/exercises" || libraryAllowed,
   );
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     window.location.href = "/auth";
   }
 

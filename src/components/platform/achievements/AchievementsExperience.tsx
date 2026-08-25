@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   Dumbbell,
   Droplets,
@@ -25,7 +26,6 @@ import {
   HOW_TO_EARN_ROWS,
   buildAchievementsExperience,
   type AchievementsTab,
-  type BadgeFamily,
   type ChallengeCardModel,
   type JourneyNode,
 } from "@/lib/platform/achievements-experience";
@@ -112,6 +112,20 @@ function MilestoneSheet({
   );
 }
 
+function RatioText({ current, target }: { current: number; target: number }) {
+  return (
+    <b className="achv-ratio" dir="ltr">
+      {current} / {target}
+    </b>
+  );
+}
+
+const MAP_W = 360;
+const MAP_Y0 = 48;
+const MAP_GAP = 118;
+const MAP_CX = 180;
+const MAP_AMP = 52;
+
 function JourneyMap({
   nodes,
   reveal,
@@ -122,58 +136,165 @@ function JourneyMap({
   onSelect: (node: JourneyNode) => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const points = nodes.map((_, index) => ({
+    x: index % 2 === 0 ? MAP_CX + MAP_AMP : MAP_CX - MAP_AMP,
+    y: MAP_Y0 + index * MAP_GAP,
+  }));
+  const height = MAP_Y0 * 2 + Math.max(nodes.length - 1, 0) * MAP_GAP;
+  const path = points.reduce((d, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+    const prev = points[index - 1];
+    const lift = MAP_GAP * 0.38;
+    return `${d} C ${prev.x} ${prev.y + lift}, ${point.x} ${point.y - lift}, ${point.x} ${point.y}`;
+  }, "");
+  const lastCompleted = nodes.reduce((acc, node, index) => (node.status === "completed" ? index : acc), -1);
+  const currentIdx = nodes.findIndex((node) => node.status === "current");
+  const orangeUntil = currentIdx >= 0 ? currentIdx : Math.max(lastCompleted, 0);
+  const progress = nodes.length <= 1 ? 1 : orangeUntil / Math.max(nodes.length - 1, 1);
 
   return (
-    <ol className={cn("achv-map", reveal && "is-revealed")}>
-      <span className="achv-map__path" aria-hidden />
+    <div className={cn("achv-map", reveal && "is-revealed")} dir="ltr" style={{ aspectRatio: `${MAP_W} / ${height}` }}>
+      <svg className="achv-map__svg" viewBox={`0 0 ${MAP_W} ${height}`} preserveAspectRatio="xMidYMid meet" fill="none" aria-hidden>
+        <path
+          d={path}
+          pathLength={1}
+          stroke="#E5E7EB"
+          strokeWidth="2.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="0.014 0.022"
+        />
+        <path
+          className="achv-map__progress"
+          d={path}
+          pathLength={1}
+          stroke="#F97316"
+          strokeWidth="2.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray={`${progress} 1`}
+          style={{ ["--achv-draw" as string]: String(progress) }}
+        />
+        {points.map((point, index) => {
+          const node = nodes[index];
+          const done = node.status === "completed";
+          const current = node.status === "current";
+          return (
+            <g key={`dot-${node.id}`} transform={`translate(${point.x} ${point.y})`}>
+              {done ? (
+                <>
+                  <circle r="17" fill="#F97316" />
+                  <path d="M-6.5 0.5 L-2 5.5 L7.5 -6" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </>
+              ) : current ? (
+                <>
+                  <circle r="17" fill="#fff" stroke="#F97316" strokeWidth="2.4" />
+                  <circle r="7.5" fill="#F97316" />
+                </>
+              ) : (
+                <circle r="17" fill="#F3F4F6" stroke="#E5E7EB" strokeWidth="2" />
+              )}
+            </g>
+          );
+        })}
+      </svg>
       {nodes.map((node, index) => {
+        const point = points[index];
         const pct = node.target ? Math.min(100, Math.round(((node.current ?? 0) / node.target) * 100)) : 0;
+        const onEast = index % 2 === 0;
+        const showMeter = node.status === "current" && Boolean(node.target);
+        const showCount = Boolean(node.target) && (node.status === "current" || node.status === "upcoming");
+        const showIcon = node.status === "upcoming" || node.status === "locked" || node.status === "mystery";
         return (
-          <motion.li
+          <div
             key={node.id}
-            className={cn("achv-map__row", index % 2 === 1 && "is-alt")}
-            initial={reduceMotion || !reveal ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: reduceMotion ? 0 : index * 0.08, duration: 0.35 }}
+            className={cn("achv-pin", `is-${node.status}`, onEast ? "is-east" : "is-west")}
+            style={{ left: `${(point.x / MAP_W) * 100}%`, top: `${(point.y / height) * 100}%` }}
           >
-            <button
+            <motion.button
               type="button"
-              className={cn("achv-node", `is-${node.status}`)}
+              className="achv-pin__hit"
+              aria-label={node.title}
+              initial={reduceMotion || !reveal ? false : { opacity: 0, scale: 0.86 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: reduceMotion ? 0 : 0.08 + index * 0.06, duration: 0.28 }}
               onClick={() => {
                 hapticIfEnabled();
                 onSelect(node);
               }}
             >
-              <span className="achv-node__dot">
-                {node.status === "completed" ? (
-                  <Check className="h-4 w-4" strokeWidth={2.6} />
-                ) : node.status === "locked" ? (
-                  <Lock className="h-3.5 w-3.5" />
-                ) : node.status === "mystery" ? (
-                  <HelpCircle className="h-4 w-4" />
-                ) : (
-                  <FamilyIcon family={node.family} className="h-4 w-4" />
-                )}
-              </span>
-              <span className="achv-node__copy">
-                <strong>{node.title}</strong>
-                <small>{node.subtitle}</small>
-                {node.status === "current" && node.target ? (
-                  <>
-                    <b>
-                      {node.current ?? 0} / {node.target}
-                    </b>
-                    <span className="achv-bar" aria-hidden>
-                      <span style={{ width: `${pct}%` }} />
-                    </span>
-                  </>
-                ) : null}
-              </span>
-            </button>
-          </motion.li>
+              {showIcon ? (
+                <span className="achv-pin__glyph">
+                  {node.status === "locked" ? (
+                    <Lock className="h-3.5 w-3.5" />
+                  ) : node.status === "mystery" ? (
+                    <HelpCircle className="h-4 w-4" />
+                  ) : (
+                    <FamilyIcon family={node.family} className="h-4 w-4" />
+                  )}
+                </span>
+              ) : null}
+            </motion.button>
+            <span className="achv-pin__copy" dir="rtl">
+              <strong>{node.title}</strong>
+              {showCount && node.target != null ? <RatioText current={node.current ?? 0} target={node.target} /> : <small>{node.subtitle}</small>}
+              {showMeter ? (
+                <span className="achv-bar" aria-hidden>
+                  <span style={{ width: `${pct}%` }} />
+                </span>
+              ) : null}
+            </span>
+          </div>
         );
       })}
-    </ol>
+    </div>
+  );
+}
+
+function challengeHref(kind: ChallengeCardModel["kind"]) {
+  if (kind === "workout") return "/app/program/workout" as const;
+  if (kind === "water" || kind === "nutrition") return "/app/nutrition" as const;
+  return "/app" as const;
+}
+
+function ChallengeGlyph({ kind, done }: { kind: ChallengeCardModel["kind"]; done?: boolean }) {
+  if (done) return <Check className="h-4 w-4" strokeWidth={2.4} />;
+  if (kind === "workout") return <Dumbbell className="h-4 w-4" />;
+  if (kind === "water") return <Droplets className="h-4 w-4" />;
+  if (kind === "nutrition") return <UtensilsCrossed className="h-4 w-4" />;
+  return <Flame className="h-4 w-4" />;
+}
+
+function ChallengeCard({ item, done }: { item: ChallengeCardModel; done?: boolean }) {
+  const pct = done ? 100 : Math.min(100, Math.round((item.current / Math.max(item.target, 1)) * 100));
+  const inner = (
+    <>
+      <span className="geo-well" aria-hidden>
+        <ChallengeGlyph kind={item.kind} done={done} />
+      </span>
+      <span className="achv-challenge__body">
+        <strong>{item.title}</strong>
+        <span className="achv-challenge__meter">
+          <b className="achv-ratio" dir="ltr">
+            {item.current} / {item.target}
+          </b>
+          <span className="achv-bar" aria-hidden>
+            <span style={{ width: `${pct}%` }} />
+          </span>
+        </span>
+      </span>
+      <ChevronLeft className="achv-challenge__chevron" strokeWidth={1.8} aria-hidden />
+    </>
+  );
+
+  if (done) {
+    return <article className="achv-challenge is-complete">{inner}</article>;
+  }
+
+  return (
+    <Link to={challengeHref(item.kind)} className="achv-challenge">
+      {inner}
+    </Link>
   );
 }
 
@@ -193,63 +314,11 @@ function ChallengesList({ items, completed }: { items: ChallengeCardModel[]; com
       {active.length === 0 ? (
         <p className="achv-empty-copy">أحسنت — لا تحديات عالقة هذا الأسبوع.</p>
       ) : (
-        active.map((item) => {
-          const pct = Math.min(100, Math.round((item.current / Math.max(item.target, 1)) * 100));
-          return (
-            <article key={item.id} className="achv-challenge">
-              <span className="achv-challenge__icon">
-                {item.kind === "workout" ? (
-                  <Dumbbell className="h-5 w-5" />
-                ) : item.kind === "water" ? (
-                  <Droplets className="h-5 w-5" />
-                ) : item.kind === "nutrition" ? (
-                  <UtensilsCrossed className="h-5 w-5" />
-                ) : (
-                  <Flame className="h-5 w-5" />
-                )}
-              </span>
-              <div className="achv-challenge__body">
-                <h3>{item.title}</h3>
-                <p>
-                  {item.current} / {item.target}
-                </p>
-                <span className="achv-bar" aria-hidden>
-                  <span style={{ width: `${pct}%` }} />
-                </span>
-                <small>{item.remainingLabel}</small>
-              </div>
-              <div className="achv-challenge__side">
-                <Link
-                  to={item.kind === "workout" ? "/app/program/workout" : item.kind === "water" || item.kind === "nutrition" ? "/app/nutrition" : "/app"}
-                  className="achv-challenge__cta"
-                >
-                  التفاصيل
-                </Link>
-                <span>
-                  <Star className="h-3 w-3" />+{item.rewardPoints}
-                </span>
-              </div>
-            </article>
-          );
-        })
+        active.map((item) => <ChallengeCard key={item.id} item={item} />)
       )}
 
       {justDone.map((item) => (
-        <article key={`${item.id}-done`} className="achv-challenge is-complete">
-          <span className="achv-challenge__icon is-done">
-            <Check className="h-5 w-5" />
-          </span>
-          <div className="achv-challenge__body">
-            <h3>{item.title}</h3>
-            <p>اكتمل التحدي</p>
-            <small>
-              {item.current} / {item.target}
-            </small>
-          </div>
-          <span className="achv-challenge__side is-reward">
-            <Star className="h-3 w-3" />+{item.rewardPoints}
-          </span>
-        </article>
+        <ChallengeCard key={`${item.id}-done`} item={item} done />
       ))}
 
       {history.length ? (
@@ -277,11 +346,11 @@ export function AchievementsExperience() {
   const { avatarUrl, displayName } = useMembership();
   const model = useMemo(() => buildAchievementsExperience(userId, snapshot), [userId, snapshot]);
   const [tab, setTab] = useState<AchievementsTab>("badges");
-  const [family, setFamily] = useState<Exclude<BadgeFamily, "all">>("commitment");
+  const [family, setFamily] = useState<(typeof BADGE_FAMILIES)[number]["id"]>("commitment");
   const [selected, setSelected] = useState<JourneyNode | null>(null);
   const [revealMap, setRevealMap] = useState(false);
 
-  const nodes = family === "commitment" || family ? model.nodesByFamily[family] : model.nodesByFamily.commitment;
+  const nodes = model.nodesByFamily[family] ?? model.nodesByFamily.commitment;
 
   useEffect(() => {
     if (tab !== "badges") return;
@@ -318,21 +387,57 @@ export function AchievementsExperience() {
         </Link>
       </header>
 
-      <section className="achv-summary" aria-label="ملخص الإنجاز">
-        <div>
-          <Flame className="h-4 w-4" />
-          <strong>{model.streak} يوماً</strong>
-          <span>السلسلة الحالية</span>
-        </div>
-        <div>
-          <Star className="h-4 w-4" />
-          <strong>{model.pointsFormatted}</strong>
-          <span>{HAKIM_POINTS_LABEL}</span>
-        </div>
-        <div>
-          <Trophy className="h-4 w-4" />
-          <strong>{model.badgeCount}</strong>
-          <span>الشارات</span>
+      <section className="geo-stack achv-summary" aria-label="ملخص الإنجاز">
+        <div className="geo-stack__card">
+          <button
+            type="button"
+            className="geo-ticket achv-summary__ticket"
+            onClick={() => {
+              hapticIfEnabled();
+              setTab("points");
+              setSelected(null);
+            }}
+          >
+            <small>{HAKIM_POINTS_LABEL}</small>
+            <b dir="ltr">{model.pointsFormatted}</b>
+          </button>
+          <div className="achv-summary__metrics">
+            <button
+              type="button"
+              className="achv-summary__stat"
+              onClick={() => {
+                hapticIfEnabled();
+                setTab("challenges");
+                setSelected(null);
+              }}
+            >
+              <span className="geo-well" aria-hidden>
+                <Flame className="h-4 w-4" />
+              </span>
+              <span>
+                <strong dir="ltr">{model.activeChallenges.filter((item) => !item.completed).length}</strong>
+                <small>تحديات نشطة</small>
+              </span>
+            </button>
+            <span className="achv-summary__rule" aria-hidden />
+            <button
+              type="button"
+              className="achv-summary__stat"
+              onClick={() => {
+                hapticIfEnabled();
+                setTab("badges");
+                setSelected(null);
+              }}
+            >
+              <span className="geo-well" aria-hidden>
+                <Trophy className="h-4 w-4" />
+              </span>
+              <span>
+                <strong dir="ltr">{model.badgeCount}</strong>
+                <small>شارات مكتسبة</small>
+              </span>
+            </button>
+          </div>
         </div>
       </section>
 

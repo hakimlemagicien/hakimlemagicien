@@ -69,6 +69,16 @@ export type AdminClientOverview = {
     snapshot_complete?: boolean | null;
   } | null;
   last_workout_at: string | null;
+  last_nutrition_at?: string | null;
+  nutrition_assignment?: {
+    id: string;
+    status: string;
+    name_ar: string | null;
+    starts_on: string | null;
+    assigned_at: string;
+    snapshot_complete: boolean;
+    allergen_conflict: boolean;
+  } | null;
   notes_count: number;
   open_support_count?: number;
 };

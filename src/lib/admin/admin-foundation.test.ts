@@ -6,6 +6,7 @@ import {
   COMMAND_CENTER_PRODUCT,
   CONTENT_PUBLISHING_STATES,
   NOTIFICATION_CHANNELS,
+  NUTRITION_BOUNDARIES,
   PROGRAM_BOUNDARIES,
   isAdminAppPath,
   isClientAppPath,
@@ -59,6 +60,8 @@ assert(liveItems.some((item) => item.to === "/admin/audit"), "audit read is live
 assert(liveItems.some((item) => item.to === "/admin/support"), "support queue is live");
 
 assert(PROGRAM_BOUNDARIES.template !== PROGRAM_BOUNDARIES.assigned, "template ≠ assigned program");
+assert(NUTRITION_BOUNDARIES.library !== NUTRITION_BOUNDARIES.assigned, "meal library ≠ client assigned meal");
+assert(NUTRITION_BOUNDARIES.plan !== NUTRITION_BOUNDARIES.library, "nutrition plan ≠ meal library");
 assert(CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived", "publishing states");
 assert(NOTIFICATION_CHANNELS.admin !== NOTIFICATION_CHANNELS.client, "admin vs client notifications");
 assert(CLIENT_360_SECTIONS.includes("overview"), "client 360 has overview");

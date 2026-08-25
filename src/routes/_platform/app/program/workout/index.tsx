@@ -6,7 +6,6 @@ import {
   Check,
   ChevronLeft,
   Clock3,
-  Crown,
   Dumbbell,
   Lock,
   Star,
@@ -17,7 +16,9 @@ import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHead
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
 import { WorkoutCalendarOverlay } from "@/components/platform/workout/WorkoutCalendarOverlay";
+import { ExerciseLibraryPilotCard } from "@/components/platform/exercises/ExerciseLibraryPilotCard";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
@@ -33,6 +34,7 @@ import {
   type WeekDayEntry,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
+import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
 import {
   formatExerciseVolume,
   type WorkoutSessionExercise,
@@ -237,10 +239,8 @@ const GOAL_STACK_SLOTS = [
 
 function GoalHeroPhotoStack({
   active,
-  showPremiumBadge,
 }: {
   active: number;
-  showPremiumBadge: boolean;
 }) {
   const reduceMotion = useReducedMotion();
 
@@ -279,25 +279,6 @@ function GoalHeroPhotoStack({
               decoding="async"
               fetchPriority={isFront ? "high" : "low"}
             />
-            {isFront && showPremiumBadge ? (
-              <div className="absolute bottom-2 start-2 z-20 overflow-hidden rounded-2xl border border-[#E8D4A8]/70 bg-white/58 px-2.5 py-1.5 shadow-[0_10px_26px_-10px_rgba(184,146,74,0.38),inset_0_1px_0_rgba(255,255,255,0.95)] backdrop-blur-md">
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,120,0.32)_0%,transparent_62%)]"
-                />
-                <span
-                  aria-hidden
-                  className="vip-glass-shine pointer-events-none absolute inset-y-[-28%] left-0 w-[52%] bg-gradient-to-r from-transparent via-white/70 to-transparent"
-                />
-                <div className="relative z-[1] flex flex-col items-start">
-                  <p className="self-end text-[8px] font-semibold leading-none text-[#B8924A]">الباقة</p>
-                  <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-black leading-none text-[#1F2937]">
-                    <Crown className="h-3.5 w-3.5 text-[#D4AF37]" fill="currentColor" />
-                    Premium
-                  </p>
-                </div>
-              </div>
-            ) : null}
           </motion.div>
         );
       })}
@@ -307,10 +288,8 @@ function GoalHeroPhotoStack({
 
 function WorkoutGoalHero({
   overallProgress,
-  showPremiumBadge,
 }: {
   overallProgress: number;
-  showPremiumBadge: boolean;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
 
@@ -339,7 +318,7 @@ function WorkoutGoalHero({
       <div aria-hidden className="workout-goal-hero__veil" />
       <div className="workout-goal-hero__body">
         <div className="workout-goal-hero__media">
-          <GoalHeroPhotoStack active={activePhoto} showPremiumBadge={showPremiumBadge} />
+          <GoalHeroPhotoStack active={activePhoto} />
         </div>
 
         <div className="workout-goal-hero__copy" dir="rtl">
@@ -547,6 +526,11 @@ function SessionExercisePathRow({
     !freePreview || (!freeDayFullyLocked && isFreeUnlockedExerciseIndex(orderIndex));
   const isDone = exercise.status === "done";
   const isActive = exercise.status === "active";
+  const stillThumb = getExerciseStageListThumb(exercise.external_id);
+  const thumbClass = cn(
+    "h-full w-full object-cover object-center",
+    !isUnlocked && "opacity-45 saturate-50",
+  );
 
   const body = (
     <>
@@ -571,13 +555,34 @@ function SessionExercisePathRow({
             : "size-[74px] border-border/60",
         )}
       >
-        <ExerciseThumbnail
-          signedUrl={exercise.thumbnailUrl}
-          status={exercise.videoStatus}
-          mediaPath={exercise.videoPath}
-          alt={exercise.name}
-          className={cn("h-full w-full object-cover", !isUnlocked && "opacity-45 saturate-50")}
-        />
+        {stillThumb ? (
+          <OptimizedImage
+            src={stillThumb}
+            alt=""
+            width={176}
+            height={176}
+            sizes="88px"
+            objectFit="cover"
+            className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}
+            fallback={
+              <ExerciseThumbnail
+                signedUrl={exercise.thumbnailUrl}
+                status={exercise.videoStatus}
+                mediaPath={exercise.videoPath}
+                alt={exercise.name}
+                className={thumbClass}
+              />
+            }
+          />
+        ) : (
+          <ExerciseThumbnail
+            signedUrl={exercise.thumbnailUrl}
+            status={exercise.videoStatus}
+            mediaPath={exercise.videoPath}
+            alt={exercise.name}
+            className={thumbClass}
+          />
+        )}
         {!isUnlocked ? (
           <span className="absolute inset-0 grid place-items-center bg-black/35">
             <Lock className="h-4 w-4 text-white drop-shadow-sm" strokeWidth={2.4} />
@@ -745,12 +750,11 @@ function SessionExercisesSection({
 }
 
 function WorkoutDayPage() {
-  const { features, is_paid } = useMembership();
+  const { features } = useMembership();
   const { openUpgrade } = useUpgradeFlow();
   const { userId, snapshot } = usePlatformActivity();
   const hasWorkoutProgram = Boolean(features?.workout_program);
   const freePreview = !hasWorkoutProgram;
-  const showPremiumBadge = !is_paid;
   const todayId = getWeekdayIdFromDate();
   const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(todayId);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -817,10 +821,9 @@ function WorkoutDayPage() {
           <PlatformHeaderActions />
         </header>
 
-        <WorkoutGoalHero
-          overallProgress={overallProgress}
-          showPremiumBadge={showPremiumBadge}
-        />
+        <ExerciseLibraryPilotCard />
+
+        <WorkoutGoalHero overallProgress={overallProgress} />
 
         {hasWorkoutProgram && runtimeQuery.isLoading ? (
           <section className="platform-card space-y-3 rounded-3xl p-4">
@@ -834,6 +837,7 @@ function WorkoutDayPage() {
           <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
             <p className="text-sm font-black text-foreground">تعذر تحميل البرنامج.</p>
             <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+            <p className="text-xs text-muted-foreground">لاختبار صور الشرح افتح تجربة شاشة الحصة أعلى الصفحة.</p>
             <button
               type="button"
               className="text-[11px] font-black text-primary"

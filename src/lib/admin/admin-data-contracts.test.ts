@@ -30,6 +30,14 @@ assert(
   ATTENTION_SIGNAL_CONTRACTS.some((item) => item.id === "low_adherence" && item.status === "DOMAIN_RULE_REQUIRED"),
   "adherence is not invented",
 );
+assert(
+  ATTENTION_SIGNAL_CONTRACTS.some((item) => item.id === "nutrition_issue" && item.status === "DOMAIN_RULE_REQUIRED"),
+  "diet quality is not invented",
+);
+assert(
+  ATTENTION_SIGNAL_CONTRACTS.some((item) => item.id === "no_active_nutrition" && item.status === "LIVE"),
+  "missing nutrition plan is an objective live signal",
+);
 assert(!isClientAppPath("/admin/clients"), "admin clients is not the member app");
 assert(isClientAppPath(`${CLIENT_APP_PREFIX}/nutrition`), "member nutrition stays on /app");
 

@@ -2,6 +2,7 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { Bell, Menu, Search, X } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin/admin-nav";
 import {
   fetchAdminOperationsSnapshot,
@@ -71,7 +72,7 @@ export function AdminShell() {
   }, [pathname]);
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     await navigate({ to: "/auth" });
   }
 

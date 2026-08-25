@@ -42,7 +42,6 @@ import { useProfileExperience } from "@/hooks/useProfileExperience";
 import { useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
   removeMyAvatar,
-  signOutAllDevices,
   updateMyAvatar,
   updateMyEmail,
   updateMyPassword,
@@ -55,7 +54,7 @@ import {
 import { setMarketingPhotoConsent } from "@/lib/platform/progress-storage";
 import { requestAccountDeletion, recordMediaMarketingConsent } from "@/lib/legal/legal-api";
 import { canUseCoachChat } from "@/lib/platform/coaching-messaging";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 
 export const Route = createFileRoute("/_platform/app/profile")({
   head: () => ({ meta: [{ title: "الملف الشخصي | MAAKFIT" }] }),
@@ -156,13 +155,13 @@ function ProfilePage() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     window.location.href = "/auth";
   };
 
   const handleSignOutAll = async () => {
     try {
-      await signOutAllDevices();
+      await signOutAndResetClient("global");
       window.location.href = "/auth";
     } catch (err) {
       showToast(err instanceof Error ? err.message : "تعذر تسجيل الخروج", "error");

@@ -1,9 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Calculator, Timer } from "lucide-react";
+import { Calculator, Library, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HubOverlayShell, type HubOrigin } from "@/components/platform/shared/HubOverlayShell";
+import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 
-type ToolsRoute = "/app/tools/timer";
+type ToolsRoute = "/app/tools/timer" | "/app/exercises";
 
 type ToolsCard =
   | {
@@ -18,7 +19,7 @@ type ToolsCard =
       title: string;
       kind: "route";
       to: ToolsRoute;
-      icon: typeof Timer;
+      icon: typeof Timer | typeof Library;
       tone: string;
     };
 
@@ -39,6 +40,14 @@ export const TOOLS_HUB_CARDS: ToolsCard[] = [
     icon: Timer,
     tone: "bg-primary-soft text-primary",
   },
+  {
+    id: "exercise-library",
+    title: "مكتبة التمارين",
+    kind: "route",
+    to: "/app/exercises",
+    icon: Library,
+    tone: "bg-primary-soft text-primary",
+  },
 ];
 
 type ToolsHubOverlayProps = {
@@ -55,6 +64,9 @@ export function ToolsHubOverlay({
   onOpenCalories,
 }: ToolsHubOverlayProps) {
   const navigate = useNavigate();
+  const cards = TOOLS_HUB_CARDS.filter(
+    (card) => card.id !== "exercise-library" || canAccessExerciseLibrary(),
+  );
 
   const handleCard = (card: ToolsCard) => {
     onClose();
@@ -81,7 +93,7 @@ export function ToolsHubOverlay({
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-        {TOOLS_HUB_CARDS.map((card, index) => {
+        {cards.map((card, index) => {
           const Icon = card.icon;
           return (
             <button

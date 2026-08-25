@@ -16,7 +16,6 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
-  findMealSlot,
   getMealByAlternativeId,
   getTodayDateKey,
   isFreeUnlockedMealSlot,
@@ -45,8 +44,8 @@ function MealAlternativesPage() {
   const online = useOnlineStatus();
   const navigate = useNavigate();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const plan = useNutritionPlan(date);
-  const slot = findMealSlot(mealId);
+  const plan = useNutritionPlan(date, { catalogPreview: freePreview });
+  const slot = plan.meals.find((item) => item.slot.id === mealId)?.slot;
   const unlocked = isFreeUnlockedMealSlot({
     slotId: mealId,
     dateKey: plan.dateKey,

@@ -1,6 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizPage } from "@/routes/quiz";
+import { AuthExperience } from "@/components/auth/AuthExperience";
 
 function AppEntryPending() {
   return (
@@ -16,6 +19,28 @@ function AppEntryPending() {
   );
 }
 
+function shouldOpenQuizImmediately(step?: string) {
+  if (step) return true;
+  if (typeof window === "undefined") return false;
+  const blob = `${window.location.search}${window.location.hash}`;
+  return /[?&#](code|type|access_token|token_hash)=/.test(blob);
+}
+
+function AppEntry() {
+  const { step } = Route.useSearch();
+  const [showQuiz, setShowQuiz] = useState(Boolean(step));
+
+  useEffect(() => {
+    if (shouldOpenQuizImmediately(step)) setShowQuiz(true);
+  }, [step]);
+
+  if (showQuiz) {
+    return <QuizPage />;
+  }
+
+  return <AuthExperience />;
+}
+
 export const Route = createFileRoute("/")({
   validateSearch: (search: Record<string, unknown>) => ({
     step: typeof search.step === "string" ? search.step : undefined,
@@ -23,6 +48,9 @@ export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) {
+      if (userNeedsPasswordSetup(data.user)) {
+        throw redirect(CREATE_PASSWORD_LOCATION);
+      }
       throw redirect({ to: "/app" });
     }
   },
@@ -30,13 +58,13 @@ export const Route = createFileRoute("/")({
   pendingMs: 0,
   head: () => ({
     meta: [
-      { title: "ابدأ تقييمك المجاني — MAAKFIT" },
+      { title: "MAAKFIT — ابدأ رحلتك" },
       {
         name: "description",
-        content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة.",
+        content: "سجّل دخولك أو ابدأ تقييمك المجاني للحصول على خطتك المخصصة.",
       },
     ],
     links: [{ rel: "canonical", href: "https://hakimlemagicien.com/" }],
   }),
-  component: QuizPage,
+  component: AppEntry,
 });

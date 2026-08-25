@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Normalize MEAL-021–MEAL-100 batch packages into the runtime Meal Library contract."""
+"""RETIRED. Normalize MEAL-021–MEAL-100 batch packages into the runtime Meal Library contract."""
 
 from __future__ import annotations
+
+raise SystemExit("RETIRED: Nutrition Library V1. Use scripts/integrate-nutrition-library-v2.py")
 
 import json
 import re

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   AdminCard,
   AdminEmptyState,
@@ -38,6 +38,17 @@ import {
   planLabel,
   planStatusKind,
 } from "@/lib/admin/admin-status";
+import {
+  nutritionAttentionSignals,
+  nutritionSignalLabel,
+  nutritionStatusLabel,
+} from "@/lib/platform/nutrition-assignment";
+
+const ClientNutritionWorkspace = lazy(() =>
+  import("@/components/admin/ClientNutritionWorkspace").then((module) => ({
+    default: module.ClientNutritionWorkspace,
+  })),
+);
 
 const SECTION_LABELS: Record<Client360Section, string> = {
   overview: "نظرة عامة",
@@ -305,6 +316,22 @@ function AdminClient360Page() {
                       </dd>
                     </div>
                     <div>
+                      <dt>تغذية معيَّنة</dt>
+                      <dd>
+                        {overview.nutrition_assignment
+                          ? `${overview.nutrition_assignment.name_ar ?? "خطة"} · ${nutritionStatusLabel(overview.nutrition_assignment.status)}`
+                          : "لا تعيين تغذية"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>آخر نشاط غذائي</dt>
+                      <dd>
+                        {overview.last_nutrition_at
+                          ? formatRelativeAge(overview.last_nutrition_at)
+                          : "لا سجل تغذية في قاعدة البيانات"}
+                      </dd>
+                    </div>
+                    <div>
                       <dt>بداية البرنامج</dt>
                       <dd>{overview.assignment?.starts_on ? formatAdminDate(overview.assignment.starts_on) : "—"}</dd>
                     </div>
@@ -454,6 +481,22 @@ function AdminClient360Page() {
             />
           ) : null}
 
+          {tab === "nutrition" || tab === "progress" ? (
+            <Suspense fallback={<AdminSkeletonRows rows={5} />}>
+              <ClientNutritionWorkspace
+                clientId={clientId}
+                conversationId={conversationId}
+                overview={overview}
+                tab={tab === "progress" ? "progress" : "nutrition"}
+                onOverviewRefresh={async () => {
+                  const next = await fetchAdminClientOverview(clientId);
+                  if (next) setOverview(next);
+                }}
+                onConfirm={setConfirm}
+              />
+            </Suspense>
+          ) : null}
+
           {tab === "history" ? (
             <AdminSection>
               {historyLoading ? <AdminSkeletonRows rows={4} /> : null}
@@ -472,12 +515,6 @@ function AdminClient360Page() {
             </AdminSection>
           ) : null}
 
-          {tab === "nutrition" ? (
-            <AdminEmptyState
-              title="إدارة تغذية العميل ستتوفر ضمن مرحلة إدارة التغذية."
-              body="لا توجد خطة تغذية معيَّنة في عقود التشغيل الحالية، ولا تُعرض وحدات ماكرو أو التزام وهمية."
-            />
-          ) : null}
         </>
       ) : null}
 
@@ -498,6 +535,14 @@ function attentionSummary(overview: AdminClientOverview): string {
     snapshotComplete: overview.assignment?.snapshot_complete ?? null,
   })) {
     parts.push(objectiveSignalLabel(signal));
+  }
+  for (const signal of nutritionAttentionSignals({
+    status: overview.nutrition_assignment?.status ?? null,
+    startsOn: overview.nutrition_assignment?.starts_on ?? null,
+    snapshotComplete: overview.nutrition_assignment?.snapshot_complete ?? null,
+    allergenConflict: overview.nutrition_assignment?.allergen_conflict ?? null,
+  })) {
+    parts.push(nutritionSignalLabel(signal));
   }
   return parts.length > 0 ? parts.join(" · ") : "لا إشارات معتمدة حالياً";
 }

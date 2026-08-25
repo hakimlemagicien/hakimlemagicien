@@ -1,3 +1,8 @@
+-- RETIRED 2026-08-22 — Nutrition Library V1. Do not run.
+DO $$ BEGIN
+  RAISE EXCEPTION 'RETIRED: use scripts/upsert-meal-library-v2.sql';
+END $$;
+
 -- Idempotent upsert for Nutrition Library MEAL-021..MEAL-100
 BEGIN;
 

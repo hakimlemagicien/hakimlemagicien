@@ -79,7 +79,7 @@ function CommitmentRing({ pct }: { pct: number }) {
         <p className="text-lg font-black leading-none text-primary">
           <CountUpNumber value={pct} />%
         </p>
-        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">من الهدف</p>
+        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">من المخطط</p>
       </div>
     </div>
   );
@@ -96,7 +96,7 @@ function NutritionDashboardPage() {
   const [booting, setBooting] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  const plan = useNutritionPlan(selectedDateKey);
+  const plan = useNutritionPlan(selectedDateKey, { catalogPreview: freePreview });
   const isSelectedToday = selectedDateKey === todayKey;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const lockedReason = freeDayFullyLocked
@@ -124,10 +124,35 @@ function NutritionDashboardPage() {
     plan.meals.find((item) => item.status === "current")?.slot.id ??
     plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
 
-  if (booting) {
+  if (booting || plan.runtimeLoading) {
     return (
       <PlatformStack>
         <NutritionDashboardSkeleton />
+      </PlatformStack>
+    );
+  }
+
+  if (plan.runtimeError) {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionErrorCard onRetry={retry} />
+      </PlatformStack>
+    );
+  }
+
+  if (!freePreview && plan.assignmentReason && plan.assignmentReason !== "ok") {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionEmptyState
+          title={
+            plan.assignmentReason === "scheduled"
+              ? "خطتك الغذائية مجدولة ولم تبدأ بعد"
+              : "لا توجد خطة غذائية مخصصة حالياً"
+          }
+          description="لا تُعرض مكتبة الوجبات كخطة شخصية. سيظهر يومك هنا بعد أن يعيّن المدرب الخطة."
+        />
       </PlatformStack>
     );
   }
@@ -145,7 +170,9 @@ function NutritionDashboardPage() {
             <section className={cn(nutritionCardClass, "relative overflow-hidden p-4")}>
               <div className="flex items-center justify-between gap-3" dir="rtl">
                 <div className="min-w-0 flex-1 text-center">
-                  <p className="text-[11px] font-bold text-muted-foreground">الهدف اليومي</p>
+                  <p className="text-[11px] font-bold text-muted-foreground">
+                    {freePreview ? "معاينة المكتبة" : "مخطط اليوم من وجباتك"}
+                  </p>
                   <p className="mt-1 text-[28px] font-black leading-none tracking-tight text-primary tabular-nums">
                     <CountUpNumber value={plan.goals.calories} />
                   </p>

@@ -22,8 +22,10 @@ const DEFAULT_SOURCE = join(
 );
 
 const sourceArg = process.argv.find((arg) => arg.startsWith("--source="));
+const masterSubdirArg = process.argv.find((arg) => arg.startsWith("--master-subdir="));
 const SOURCE_DIR = sourceArg ? sourceArg.slice("--source=".length) : DEFAULT_SOURCE;
-const IMAGES_DIR = join(SOURCE_DIR, "images");
+const MASTER_SUBDIR = masterSubdirArg ? masterSubdirArg.slice("--master-subdir=".length) : "";
+const IMAGES_DIR = MASTER_SUBDIR ? join(SOURCE_DIR, "images", MASTER_SUBDIR) : join(SOURCE_DIR, "images");
 const OUT_DIR = join(ROOT, "public/nutrition/meals");
 
 const COVER_SIZE = 800;

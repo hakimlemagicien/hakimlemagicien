@@ -13,6 +13,7 @@ import {
   resolveWeekdayPlan,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
+import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LoaderCircle, Lock } from "lucide-react";
 
@@ -54,14 +55,20 @@ function ExercisePlayerPage() {
   const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
+  const assignedOk = hasWorkoutProgram && runtimeQuery.data?.reason === "ok";
+  const runtimeFailed =
+    hasWorkoutProgram &&
+    !runtimeQuery.isLoading &&
+    (runtimeQuery.isError || (runtimeQuery.isFetched && runtimeQuery.data?.reason !== "ok"));
+  const sessionPilot = canAccessExerciseLibrary() && runtimeFailed;
   const assignedPlans =
-    hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
+    assignedOk
       ? day === continuity.todayId
         ? continuity.assignedPlans
         : runtimeToWeekdayPlans(runtimeQuery.data)
       : null;
-  const plan = resolveWeekdayPlan(day, hasWorkoutProgram, hasWorkoutProgram ? assignedPlans : undefined);
-  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? plan : null);
+  const plan = resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot, assignedPlans);
+  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans || sessionPilot ? plan : null);
 
   const exercises = sessionQuery.data?.exercises ?? [];
   const meta = sessionQuery.data?.meta ?? {
@@ -84,7 +91,7 @@ function ExercisePlayerPage() {
     );
   }
 
-  if (hasWorkoutProgram && (runtimeQuery.isError || runtimeQuery.data?.reason !== "ok")) {
+  if (runtimeFailed && !sessionPilot) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 px-6 text-center">
         <p className="text-sm font-black text-foreground">
@@ -146,8 +153,8 @@ function ExercisePlayerPage() {
   const initialIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
 
   const player = useWorkoutPlayer(exercises, meta, initialIndex, {
-    runtimeMode: hasWorkoutProgram ? "v2" : "legacy_free",
-    assignmentId: exercises[0]?.assignmentId ?? null,
+    runtimeMode: assignedOk ? "v2" : "legacy_free",
+    assignmentId: assignedOk ? exercises[0]?.assignmentId ?? null : null,
     recoveryHold: continuity.decision ? toProgressionRecoveryHold(continuity.decision) : "NORMAL",
     prescriptionState: continuity.decision?.prescription_state ?? null,
   });

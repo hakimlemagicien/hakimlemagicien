@@ -388,16 +388,25 @@ export function HomeHeader({
 function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
   const [loaded, setLoaded] = useState(false);
 
+  useEffect(() => {
+    setLoaded(false);
+  }, [image.src]);
+
   return (
-    <div className="platform-home-hero__figure">
+    <div className={cn("platform-home-hero__figure", image.gender === "female" ? "is-female" : "is-male")}>
       <img
+        key={image.src}
         src={image.src}
         alt={image.alt}
         loading="eager"
         fetchPriority="high"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        className={cn("platform-home-hero__coach", loaded ? "is-loaded" : null)}
+        className={cn(
+          "platform-home-hero__coach",
+          image.gender === "female" ? "is-female" : "is-male",
+          loaded ? "is-loaded" : null,
+        )}
       />
     </div>
   );

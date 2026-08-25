@@ -8,7 +8,7 @@ export type LibrarySaveState = "saved" | "saving" | "unsaved" | "failed";
 
 export const EXERCISE_TYPES = ["strength", "cardio", "mobility", "warmup", "other"] as const;
 export const EXERCISE_DIFFICULTIES = ["beginner", "intermediate", "advanced"] as const;
-export const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack", "pre_workout", "post_workout"] as const;
+export const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack", "pre_workout", "post_workout", "drinks"] as const;
 export const MEAL_STATUSES = ["pilot", "published", "archived"] as const;
 export const PROGRAM_GOALS = ["cut", "bulk", "fitness", "recomp"] as const;
 export const PROGRAM_LEVELS = ["beginner", "intermediate", "advanced"] as const;
@@ -306,6 +306,7 @@ export function mealTypeLabel(type: string): string {
     snack: "سناك",
     pre_workout: "قبل التمرين",
     post_workout: "بعد التمرين",
+    drinks: "مشروبات",
   };
   return labels[type] ?? type;
 }

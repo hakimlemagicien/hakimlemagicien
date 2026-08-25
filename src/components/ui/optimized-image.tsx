@@ -82,7 +82,7 @@ export function OptimizedImage({
           setFailed(true);
         }}
         className={cn(
-          "h-full w-full transition-opacity duration-300",
+          "h-full w-full object-center transition-opacity duration-300",
           objectFitClass,
           loaded && !failed ? "opacity-100" : "opacity-0",
         )}

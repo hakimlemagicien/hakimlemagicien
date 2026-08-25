@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Crown, Lock, X } from "lucide-react";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
@@ -23,7 +24,9 @@ const dialogMotion = {
 export function MembershipUpgradeSheet() {
   const { open, reason, closeUpgrade } = useUpgradeFlow();
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -147,6 +150,7 @@ export function MembershipUpgradeSheet() {
           </div>
         </motion.div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

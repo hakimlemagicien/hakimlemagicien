@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   setMealLibraryCatalog,
   getMealLibrarySeed,
+  dbMealCatalogIsV2,
   type MealLibraryIngredient,
   type MealLibraryRecord,
   type MealSubstitutionProfile,
@@ -190,9 +191,10 @@ let lastHydratedSource: MealLibrarySource = "json";
 export async function hydrateMealLibraryFromSupabase(): Promise<MealLibrarySource> {
   try {
     const [meals, hidden] = await Promise.all([fetchMealLibraryFromSupabase(), fetchHiddenMealExternalIds()]);
-    const overlaid = overlayMealCatalog(getMealLibrarySeed(), meals, hidden);
+    const dbRows = dbMealCatalogIsV2(meals) ? meals : [];
+    const overlaid = overlayMealCatalog(getMealLibrarySeed(), dbRows, hidden);
     setMealLibraryCatalog(overlaid);
-    lastHydratedSource = meals.length > 0 || hidden.length > 0 ? "supabase" : "json";
+    lastHydratedSource = dbRows.length > 0 || hidden.length > 0 ? "supabase" : "json";
     return lastHydratedSource;
   } catch {
     setMealLibraryCatalog(null);
