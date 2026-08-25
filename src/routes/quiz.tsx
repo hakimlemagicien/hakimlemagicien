@@ -2,6 +2,7 @@ import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
 import { createOnboardingDraft } from "@/lib/quiz-onboarding-api";
 import { userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { quizMeasureCopy } from "@/lib/quiz-measure-copy";
 import { supabase } from "@/integrations/supabase/client";
 import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
 import { QuizProgressHeader, QuizProgressStrip } from "@/components/quiz/QuizProgressHeader";
@@ -241,6 +242,7 @@ export function QuizPage() {
       )}
       {step === "measure" && (
         <MeasureScreen
+          gender={gender}
           onBack={() => goBack("age")}
           initialHeight={heightCm ?? 164}
           initialWeight={weightKg ?? 63}
@@ -1365,6 +1367,7 @@ function HorizontalWheel({
 }
 
 function MeasureScreen({
+  gender,
   onBack,
   onNext,
   initialHeight = 164,
@@ -1372,6 +1375,7 @@ function MeasureScreen({
   onHeightChange,
   onWeightChange,
 }: {
+  gender?: "male" | "female" | null;
   onBack: () => void;
   onNext: (height: number, weight: number) => void;
   initialHeight?: number;
@@ -1381,6 +1385,7 @@ function MeasureScreen({
 }) {
   const [height, setHeight] = useState(initialHeight);
   const [weight, setWeight] = useState(initialWeight);
+  const measureCopy = quizMeasureCopy(gender);
 
   useEffect(() => {
     onHeightChange?.(height);
@@ -1403,10 +1408,10 @@ function MeasureScreen({
             <p className="text-xl font-black" style={{ color: "#FF6B00" }}>ممتاز</p>
           </div>
           <h1 className="mt-1 text-[22px] font-black text-neutral-900 leading-tight">
-            ما هو طوله و وزنك الحالي؟
+            {measureCopy.title}
           </h1>
           <p className="mt-1.5 text-[12px] text-neutral-500 leading-relaxed px-6">
-            أدخلي معلوماتك بدقة لتحصلي على خطة مخصصة لك.
+            {measureCopy.subtitle}
           </p>
         </div>
 

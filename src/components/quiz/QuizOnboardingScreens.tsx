@@ -24,6 +24,7 @@ import {
 } from "@/lib/quiz-onboarding-api";
 import { updateMyAvatar } from "@/lib/platform/profile-api";
 import { markPasswordRequiredIfUnset, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { quizOtpStatusCopy, translateAuthError } from "@/lib/auth-error-ar";
 import { getQuizProgressBarState } from "@/lib/quiz-step-progress";
 import { supabase } from "@/integrations/supabase/client";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -201,7 +202,7 @@ export function VerifyEmailScreen({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "تعذّر إكمال التحقق عبر الرابط.");
+          setError(translateAuthError(err, "تعذّر إكمال التحقق عبر الرابط."));
         }
       } finally {
         if (!cancelled) setAuthenticating(false);
@@ -227,12 +228,13 @@ export function VerifyEmailScreen({
       try {
         setError(null);
         setSending(true);
+        setSent(false);
         await sendEmailVerificationOtp(activeEmail);
         setSent(true);
         setCooldown(60);
       } catch (err) {
         lastOtpEmailRef.current = null;
-        setError(err instanceof Error ? err.message : "تعذّر إرسال رمز التحقق.");
+        setError(translateAuthError(err, "تعذّر إرسال رمز التحقق."));
       } finally {
         setSending(false);
       }
@@ -254,7 +256,7 @@ export function VerifyEmailScreen({
       setCooldown(60);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر إعادة الإرسال.");
+      setError(translateAuthError(err, "تعذّر إعادة الإرسال."));
     } finally {
       setResending(false);
     }
@@ -283,9 +285,10 @@ export function VerifyEmailScreen({
       setOtp("");
       setEditingEmail(false);
       lastOtpEmailRef.current = null;
+      setSent(false);
       setActiveEmail(nextEmail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر تحديث البريد الإلكتروني.");
+      setError(translateAuthError(err, "تعذّر تحديث البريد الإلكتروني."));
     } finally {
       setSavingEmail(false);
     }
@@ -299,7 +302,7 @@ export function VerifyEmailScreen({
       await verifyEmailOtp(activeEmail, otp.trim());
       onVerified();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "رمز التحقق غير صحيح.");
+      setError(translateAuthError(err, "رمز التحقق غير صحيح."));
     } finally {
       setLoading(false);
     }
@@ -313,15 +316,14 @@ export function VerifyEmailScreen({
           تحقق من <span style={{ color: ORANGE }}>بريدك الإلكتروني</span>
         </>
       }
-      subtitle={
-        authenticating
-          ? "جاري التحقق من الرابط..."
-          : sending
-            ? "جاري إرسال رمز التحقق إلى بريدك..."
-            : name
-              ? `مرحباً ${name}، أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك.`
-              : `أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك لإكمال التسجيل.`
-      }
+      subtitle={quizOtpStatusCopy({
+        authenticating,
+        sending,
+        sent,
+        hasError: Boolean(error),
+        name,
+        otpLength: QUIZ_EMAIL_OTP_LENGTH,
+      })}
       onBack={onBack}
       footer={
         <OnboardingCta
@@ -505,7 +507,7 @@ export function CreatePasswordScreen({
       }
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر حفظ كلمة المرور.");
+      setError(translateAuthError(err, "تعذّر حفظ كلمة المرور."));
     } finally {
       setLoading(false);
     }
@@ -622,7 +624,7 @@ export function ProfilePhotoScreen({
       }
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر إكمال التسجيل.");
+      setError(translateAuthError(err, "تعذّر إكمال التسجيل."));
     } finally {
       setLoading(false);
     }

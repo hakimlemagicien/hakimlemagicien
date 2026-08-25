@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CREATE_PASSWORD_LOCATION, PASSWORD_SET_META_KEY, clearPasswordRequiredLocally, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { translateAuthError } from "@/lib/auth-error-ar";
 import { clearOnboardingClientState } from "@/lib/quiz-onboarding-api";
 import appLogo from "@/assets/app-logo.png";
 import loginWelcome from "@/assets/app/login welcom.webp";
@@ -63,14 +64,14 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       const code = searchParams.get("code");
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError && !cancelled) setError(exchangeError.message);
+        if (exchangeError && !cancelled) setError(translateAuthError(exchangeError));
       }
 
       const callbackType = getAuthCallbackType();
       if (callbackType) {
         const { error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-          if (!cancelled) setError(sessionError.message);
+          if (!cancelled) setError(translateAuthError(sessionError));
         } else if (!cancelled) {
           setMode("set-password");
           setStage("login");
@@ -140,7 +141,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       if (signInError) throw signInError;
       clearPasswordRequiredLocally();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "حدث خطأ");
+      setError(translateAuthError(err, "حدث خطأ"));
     } finally {
       setLoading(false);
     }
@@ -161,7 +162,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       if (resetError) throw resetError;
       setNotice("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك.");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "تعذر إرسال الرابط");
+      setError(translateAuthError(err, "تعذر إرسال الرابط"));
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       });
       if (oauthError) throw oauthError;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "تعذر الدخول");
+      setError(translateAuthError(err, "تعذر الدخول"));
       setLoading(false);
     }
   }
