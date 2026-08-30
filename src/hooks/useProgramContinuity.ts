@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
 import type { ClientTrainingRuntime } from "@/lib/platform/assigned-program-api";
 import {
   factsFromSessionRecords,
@@ -8,13 +9,36 @@ import {
   programDaysFromRuntime,
   type ContinuityDecision,
 } from "@/lib/platform/continuity";
+import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { getLocalDateKey, getUserTimeZone } from "@/lib/platform/readiness";
+import { resolveTrainingStrategy, trainingStrategyInputFromProfileRow } from "@/lib/platform/strategy-matrix";
+import { buildWeekdayPlansForAssignedRuntime } from "@/lib/platform/strategy-matrix/calendar-runtime";
 import { listOwnRecentWorkoutSessions, updateWorkoutSessionStatus } from "@/lib/platform/training-v2-api";
 import { readPendingQueue } from "@/lib/platform/workout-runtime/pending-sync";
 import { getWeekdayIdFromDate, type WeekdayId, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
-import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 
 export function useProgramContinuity(runtime: ClientTrainingRuntime | undefined, enabled: boolean) {
+  const trainingQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    enabled,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
+  const resolvedStrategy = useMemo(() => {
+    const training = trainingQuery.data;
+    if (!training) return null;
+    const input = trainingStrategyInputFromProfileRow({
+      userId: "client",
+      goal: training.goal,
+      trainingType: training.trainingType,
+      answers: training.answers as Record<string, unknown>,
+    });
+    const resolved = resolveTrainingStrategy(input);
+    return resolved.ok ? resolved.strategy : null;
+  }, [trainingQuery.data]);
+
   const sessionsQuery = useQuery({
     queryKey: ["workout-sessions-recent", runtime?.assignment?.id ?? "none"],
     queryFn: () => listOwnRecentWorkoutSessions(24),
@@ -48,10 +72,10 @@ export function useProgramContinuity(runtime: ClientTrainingRuntime | undefined,
   const todayId = getWeekdayIdFromDate();
   const assignedPlans = useMemo(() => {
     if (!runtime || runtime.reason !== "ok") return null;
-    const base = runtimeToWeekdayPlans(runtime);
+    const base = buildWeekdayPlansForAssignedRuntime(runtime, resolvedStrategy);
     if (!decision) return base;
     return overlayTodayPlan({ assignedPlans: base, todayId, runtime, decision });
-  }, [runtime, decision, todayId]);
+  }, [runtime, decision, todayId, resolvedStrategy]);
 
   return {
     decision,
@@ -59,6 +83,7 @@ export function useProgramContinuity(runtime: ClientTrainingRuntime | undefined,
     todayId,
     todayKey: getLocalDateKey(),
     sessionsLoading: sessionsQuery.isLoading,
+    strategyLoading: trainingQuery.isLoading,
   };
 }
 

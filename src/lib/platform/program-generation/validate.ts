@@ -1,5 +1,6 @@
 import type { ExerciseV2Metadata } from "@/lib/platform/exercise-library-v2";
 import { explainEligibility } from "@/lib/platform/prescription/eligibility";
+import { isCore100PoolActive, isInCore100Pool } from "@/lib/platform/strategy-matrix/core-100";
 import { getGoalMuscleProfile } from "@/lib/platform/prescription/goal-profile";
 import { getGoalIntelligenceProfile, regionFamily } from "@/lib/platform/goal-intelligence/profiles";
 import type { TrainingV2CanonicalGoal } from "@/lib/platform/training-v2-contracts";
@@ -120,10 +121,19 @@ export function validateTrainingProgram(
       const eligibility = explainEligibility({
         exercise: meta,
         location: context.location,
+        permittedLocations: context.permittedLocations,
         availableEquipment: context.availableEquipment,
         trainingLevel: context.trainingLevel,
+        exercisePoolVersion: context.exercisePoolVersion,
+        injuryIds: context.injuryIds,
+        restrictedMuscles: context.restrictedMuscles,
+        excludedExternalIds: context.excludedExternalIds,
       });
-      if (eligibility === "EQUIPMENT_UNAVAILABLE") {
+      if (eligibility === "NOT_IN_CORE_100") {
+        add(issue("NOT_IN_CORE_100", "error", `${exercise.external_id} outside Core 100 pool`, session.sequence_index));
+      } else if (eligibility === "SAFETY_RESTRICTION") {
+        add(issue("SAFETY_RESTRICTION_VIOLATION", "error", `${exercise.external_id} is safety-excluded`, session.sequence_index));
+      } else if (eligibility === "EQUIPMENT_UNAVAILABLE") {
         add(issue("EQUIPMENT_MISMATCH", "error", `${exercise.external_id} equipment mismatch`, session.sequence_index));
       } else if (eligibility === "LOCATION_INCOMPATIBLE") {
         add(issue("LOCATION_MISMATCH", "error", `${exercise.external_id} location mismatch`, session.sequence_index));
@@ -132,6 +142,13 @@ export function validateTrainingProgram(
       }
       if ((context.excludedExternalIds ?? []).includes(exercise.external_id)) {
         add(issue("SAFETY_RESTRICTION_VIOLATION", "error", `${exercise.external_id} is safety-excluded`, session.sequence_index));
+      }
+      if (
+        context.exercisePoolVersion &&
+        isCore100PoolActive(context.exercisePoolVersion) &&
+        !isInCore100Pool(exercise.external_id)
+      ) {
+        add(issue("NOT_IN_CORE_100", "error", `${exercise.external_id} outside Core 100 pool`, session.sequence_index));
       }
       if (meta.primary_movement_role === "TRUNK_FLEXION") trunkFlexion += 1;
       if (meta.primary_movement_role === "INTERVAL_CONDITIONING" || meta.prescription_mode === "INTERVAL") intervalCount += 1;

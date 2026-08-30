@@ -11,6 +11,7 @@ import {
   type ProgressDashboardData,
 } from "@/lib/platform/progress-experience";
 import type { ProfileDetails, TrainingProfileSnapshot } from "@/lib/platform/profile-api";
+import { parseTrainingProfileAnswers } from "@/lib/platform/strategy-matrix/profile-source";
 
 export type MembershipDisplayStatus =
   | "free"
@@ -317,13 +318,18 @@ export function buildProgramSummary(
     training?.goal,
   );
 
+  const parsedTraining = training
+    ? parseTrainingProfileAnswers(training.answers as Record<string, unknown>)
+    : null;
+  const weeklyCount = parsedTraining?.trainingDaysPerWeek;
+
   return {
     currentGoal: goalLabel,
     programName: profile?.trainingType ? `برنامج ${profile.trainingType}` : "برنامج MAAKFIT المخصص",
     fitnessLevel: training?.answers.activityLevel
       ? (ACTIVITY_LABELS[training.answers.activityLevel] ?? "غير محدد")
       : "غير محدد",
-    weeklyDays: "4 أيام",
+    weeklyDays: weeklyCount && weeklyCount > 0 ? `${weeklyCount} أيام` : "حسب خطتك",
     calorieTarget: "حسب خطتك",
     nutritionGoal: goalLabel,
     programStart: formatProfileDate(profile?.programStartDate ?? training?.completedAt ?? profile?.createdAt),

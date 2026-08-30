@@ -102,9 +102,13 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
   const pool = filterProgramCandidates({
     exercises: context.exercises,
     location: context.location,
+    permittedLocations: context.permittedLocations,
     availableEquipment: context.availableEquipment,
     trainingLevel: context.trainingLevel,
     excludedExternalIds: context.excludedExternalIds,
+    exercisePoolVersion: context.exercisePoolVersion,
+    injuryIds: context.injuryIds,
+    restrictedMuscles: context.restrictedMuscles,
   });
   const previousIds = new Set(context.previousExternalIds ?? []);
   const locked = new Set(context.lockedExternalIds ?? []);
@@ -259,12 +263,17 @@ export function generateTrainingProgram(context: ProgramGenerationContext): Prog
     const eligible = filterProgramCandidates({
       exercises: context.exercises,
       location: context.location,
+      permittedLocations: context.permittedLocations,
       availableEquipment: context.availableEquipment,
       trainingLevel: context.trainingLevel,
       excludedExternalIds: context.excludedExternalIds,
+      exercisePoolVersion: context.exercisePoolVersion,
+      injuryIds: context.injuryIds,
+      restrictedMuscles: context.restrictedMuscles,
     }).some((exercise) => exercise.external_id === id);
     if (!eligible) {
       const validation = validateTrainingProgram(null, context);
+      const safetyBlocked = (context.excludedExternalIds ?? []).includes(id);
       return {
         status: "COACH_OVERRIDE_CONFLICT",
         candidate: null,
@@ -272,7 +281,13 @@ export function generateTrainingProgram(context: ProgramGenerationContext): Prog
           status: "INVALID",
           errors: [
             ...validation.errors,
-            { code: "NO_VALID_EXERCISE_CANDIDATE", severity: "error", message: `Locked exercise ${id} is not eligible.` },
+            {
+              code: safetyBlocked ? "SAFETY_RESTRICTION_VIOLATION" : "NO_VALID_EXERCISE_CANDIDATE",
+              severity: "error",
+              message: safetyBlocked
+                ? `Locked exercise ${id} is blocked by safety constraints.`
+                : `Locked exercise ${id} is not eligible.`,
+            },
           ],
           warnings: validation.warnings,
         },

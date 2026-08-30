@@ -1,6 +1,7 @@
 import type { ClientTrainingLevel, ExerciseExperienceState } from "@/lib/platform/training-v2-contracts";
 import type { TrainingV2CanonicalGoal } from "@/lib/platform/training-v2-contracts";
 import type { ExerciseV2Metadata, LocationCompatibility } from "@/lib/platform/exercise-library-v2";
+import type { ExercisePoolVersion } from "@/lib/platform/strategy-matrix/core-100";
 import type { MusclePriority, ExercisePriority } from "@/lib/platform/prescription/types";
 import type { RecoveryCapacityState } from "@/lib/platform/volume/types";
 import type { ReallocationRequest } from "@/lib/platform/goal-intelligence/types";
@@ -62,6 +63,8 @@ export const VALIDATION_ERROR_CODES = [
   "PROGRAM_CAPACITY_EXCEEDED",
   "UNSUPPORTED_FREQUENCY",
   "PROGRAM_GENERATION_BLOCKED",
+  "NOT_IN_CORE_100",
+  "INSUFFICIENT_SAFE_EXERCISE_COVERAGE",
 ] as const;
 export type ValidationErrorCode = (typeof VALIDATION_ERROR_CODES)[number];
 
@@ -147,10 +150,15 @@ export type ProgramGenerationContext = {
   daysPerWeek: number;
   availableMinutes: number;
   location: LocationCompatibility;
+  /** When set, exercise may match any listed environment (BOTH semantics — union, not intersection). */
+  permittedLocations?: LocationCompatibility[];
   availableEquipment?: string[] | null;
   excludedExternalIds?: string[];
   lockedExternalIds?: string[];
   restrictedMuscles?: string[];
+  /** Injury identifiers from profile — wired in Phase 1; exercise exclusions in Phase 3. */
+  injuryIds?: string[];
+  exercisePoolVersion?: ExercisePoolVersion;
   experienceById?: Record<string, ExerciseExperienceState>;
   previousExternalIds?: string[];
   previousProgram?: ProgramCandidate | null;

@@ -4,6 +4,7 @@ import { regionFamily } from "@/lib/platform/goal-intelligence/profiles";
 import { exerciseContributions } from "@/lib/platform/volume/contribution";
 import type { ClientTrainingLevel, ExerciseExperienceState } from "@/lib/platform/training-v2-contracts";
 import type { LocationCompatibility } from "@/lib/platform/exercise-library-v2";
+import type { ExercisePoolVersion } from "@/lib/platform/strategy-matrix/core-100";
 import type { ProgramSlot } from "./types";
 
 const BLOCKED_ROLES = new Set([
@@ -80,9 +81,13 @@ export function rankCandidates(input: {
 export function filterProgramCandidates(input: {
   exercises: ExerciseV2Metadata[];
   location: LocationCompatibility;
+  permittedLocations?: LocationCompatibility[];
   availableEquipment?: string[] | null;
   trainingLevel: ClientTrainingLevel;
   excludedExternalIds?: string[];
+  exercisePoolVersion?: ExercisePoolVersion;
+  injuryIds?: string[] | null;
+  restrictedMuscles?: string[] | null;
 }): ExerciseV2Metadata[] {
   const excluded = new Set(input.excludedExternalIds ?? []);
   return input.exercises.filter((exercise) => {
@@ -92,8 +97,13 @@ export function filterProgramCandidates(input: {
       explainEligibility({
         exercise,
         location: input.location,
+        permittedLocations: input.permittedLocations,
         availableEquipment: input.availableEquipment,
         trainingLevel: input.trainingLevel,
+        exercisePoolVersion: input.exercisePoolVersion,
+        injuryIds: input.injuryIds,
+        restrictedMuscles: input.restrictedMuscles,
+        excludedExternalIds: input.excludedExternalIds,
       }) == null
     );
   });

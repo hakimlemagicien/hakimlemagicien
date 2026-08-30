@@ -60,12 +60,15 @@ import {
 import { formatAdminDate, formatRelativeAge } from "@/lib/admin/admin-status";
 import { PROGRAM_BOUNDARIES } from "@/lib/admin/admin-architecture";
 import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
-import { mapLegacyGoalId } from "@/lib/platform/training-v2-contracts";
 import {
   assignmentPayloadFromResult,
   generateAuthorizedProgramCandidate,
 } from "@/lib/platform/client-loop";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
+import {
+  buildProgramGenerationContextFromProfile,
+  loadAdminClientTrainingStrategyInput,
+} from "@/lib/platform/strategy-matrix";
 import { getCoachTrainingOverview, type ReviewFlag } from "@/lib/platform/training-progress";
 
 const GOAL_LABELS: Record<string, string> = {
@@ -74,6 +77,27 @@ const GOAL_LABELS: Record<string, string> = {
   fitness: "لياقة",
   recomp: "إعادة تركيب",
 };
+
+function strategyResolutionErrorMessage(code: string): string {
+  switch (code) {
+    case "MISSING_GOAL":
+      return "لا يوجد هدف تدريبي معرّف للعميل. لا يمكن توليد برنامج بدون هدف واضح.";
+    case "UNMAPPED_LEGACY_GOAL":
+      return "هدف العميل غير مربوط بعد بعقد الأهداف الرسمي. التوليد متوقف حتى يُعتمد الربط.";
+    case "UNKNOWN_GOAL":
+      return "هدف العميل غير معروف. لا يُسمح بالتوليد التلقائي.";
+    case "MISSING_TRAINING_FREQUENCY":
+      return "حدّد عدد أيام التدريب في الأسبوع (2–5) قبل التوليد.";
+    case "UNSUPPORTED_TRAINING_FREQUENCY":
+      return "عدد أيام التدريب غير مدعوم. المسموح: 2 إلى 5 أيام.";
+    case "INVALID_SESSION_DURATION":
+      return "مدة الجلسة غير صالحة.";
+    case "UNKNOWN_TRAINING_LOCATION":
+      return "موقع التدريب غير محدد في ملف العميل. أكمل بيانات البيئة (نادي/منزل) أولاً.";
+    default:
+      return code;
+  }
+}
 
 type AssignStep = "closed" | "pick" | "preview" | "review";
 
@@ -267,20 +291,35 @@ export function ClientTrainingWorkspace({
     setError(null);
     try {
       const catalog = await listV2ExerciseCandidates();
-      const mapped = mapLegacyGoalId(overview.goal ?? "");
-      const goalId = mapped.canonicalId ?? "FAT_LOSS";
-      const requestedDays = Number(pickerDays) || 3;
-      const daysPerWeek = Math.min(5, Math.max(2, requestedDays === 6 ? 5 : requestedDays));
-      const location = (overview.training_type ?? "").toLowerCase().includes("home") ? "HOME" : "GYM";
-      const generated = generateAuthorizedProgramCandidate({
-        goalId,
-        trainingLevel: "UNASSESSED",
-        daysPerWeek,
-        availableMinutes: 50,
-        location,
+      const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
+      const requestedDays = Number(pickerDays);
+      const built = buildProgramGenerationContextFromProfile(strategyInput, {
         exercises: catalog,
-        reason: "COACH_REQUEST",
+        overrides: {
+          trainingDaysPerWeek:
+            Number.isFinite(requestedDays) && requestedDays > 0 ? requestedDays : undefined,
+          reason: "COACH_REQUEST",
+        },
       });
+      if (!built.ok) {
+        const messages = built.resolution.errors.map((row) =>
+          strategyResolutionErrorMessage(row.code),
+        );
+        setError(messages.join(" "));
+        setV2Preview({
+          assignable: false,
+          blockReason: built.resolution.errors[0]?.code ?? "STRATEGY_RESOLUTION_FAILED",
+          generationStatus: "PROGRAM_GENERATION_BLOCKED",
+          validationStatus: "INVALID",
+          explanation: messages.join(" "),
+          errors: messages,
+          sessionCount: 0,
+          payload: null,
+        });
+        return;
+      }
+      const generated = generateAuthorizedProgramCandidate(built.context);
+      const goalId = built.strategy.canonicalGoal;
       const payload = assignmentPayloadFromResult(generated.result, `برنامج V2 · ${goalId}`);
       setV2Preview({
         assignable: generated.assignable,
