@@ -61,6 +61,8 @@ assert(!workspace.includes("87%"), "no fake adherence");
 assert(workspace.includes("AdminConfirmDialog") || workspace.includes("onConfirm"), "sensitive actions confirm");
 assert(workspace.includes("تاريخ البرامج"), "program history exists");
 assert(workspace.includes("محرر نسخة العميل"), "client copy editor exists");
+assert(workspace.includes("prepareTrainingProgramAssignment"), "V2 orchestrator wired");
+assert(workspace.includes("رفض"), "reject action exists");
 
 const client360 = readFileSync(join(root, "src/routes/admin/clients/$clientId.tsx"), "utf8");
 assert(client360.includes("ClientTrainingWorkspace"), "client 360 training workspace is wired");

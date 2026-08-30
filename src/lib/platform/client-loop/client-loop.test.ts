@@ -478,9 +478,9 @@ assert(!hook.includes("evaluateGoalResponse("), "progress does not guess goal in
 assert(!hook.includes("getWeeklyVolumeDecision("), "progress does not recompute volume inline");
 
 const admin = readFileSync(join(root, "src/components/admin/ClientTrainingWorkspace.tsx"), "utf8");
-assert(admin.includes("generateAuthorizedProgramCandidate"), "admin uses canonical generator");
+assert(admin.includes("prepareTrainingProgramAssignment"), "admin uses assignment orchestrator");
 assert(admin.includes("assignGeneratedV2Program"), "admin uses authorized assignment");
-assert(admin.includes("disabled={!v2Preview.assignable}"), "invalid cannot be assigned");
+assert(admin.includes("disabled={!v2Preview.assignable"), "invalid cannot be assigned");
 
 const nutritionTouch = readFileSync(join(root, "src/lib/platform/client-loop/evaluate.ts"), "utf8");
 assert(!nutritionTouch.includes("calories"), "loop does not mutate calories");

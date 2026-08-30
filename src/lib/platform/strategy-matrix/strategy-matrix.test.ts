@@ -281,8 +281,8 @@ const adminWorkspace = readFileSync(
   "utf8",
 );
 assert(
-  adminWorkspace.includes("buildProgramGenerationContextFromProfile"),
-  "admin uses strategy resolver",
+  adminWorkspace.includes("prepareTrainingProgramAssignment"),
+  "admin uses assignment orchestrator",
 );
 assert(
   !adminWorkspace.includes('canonicalId ?? "FAT_LOSS"'),

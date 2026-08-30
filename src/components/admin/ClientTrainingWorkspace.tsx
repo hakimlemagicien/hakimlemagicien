@@ -60,13 +60,14 @@ import {
 import { formatAdminDate, formatRelativeAge } from "@/lib/admin/admin-status";
 import { PROGRAM_BOUNDARIES } from "@/lib/admin/admin-architecture";
 import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
-import {
-  assignmentPayloadFromResult,
-  generateAuthorizedProgramCandidate,
-} from "@/lib/platform/client-loop";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
 import {
-  buildProgramGenerationContextFromProfile,
+  approveAssignmentCandidate,
+  prepareTrainingProgramAssignment,
+  rejectAssignmentCandidate,
+  type TrainingAssignmentCandidate,
+} from "@/lib/platform/training-assignment-orchestrator";
+import {
   loadAdminClientTrainingStrategyInput,
 } from "@/lib/platform/strategy-matrix";
 import { getCoachTrainingOverview, type ReviewFlag } from "@/lib/platform/training-progress";
@@ -132,6 +133,7 @@ export function ClientTrainingWorkspace({
   const [editing, setEditing] = useState(false);
   const [assignStep, setAssignStep] = useState<AssignStep>("closed");
   const [v2Busy, setV2Busy] = useState(false);
+  const [v2Candidate, setV2Candidate] = useState<TrainingAssignmentCandidate | null>(null);
   const [v2Preview, setV2Preview] = useState<{
     assignable: boolean;
     blockReason: string | null;
@@ -293,55 +295,44 @@ export function ClientTrainingWorkspace({
       const catalog = await listV2ExerciseCandidates();
       const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
       const requestedDays = Number(pickerDays);
-      const built = buildProgramGenerationContextFromProfile(strategyInput, {
+      const candidate = prepareTrainingProgramAssignment({
+        clientId,
+        strategyInput,
         exercises: catalog,
+        assignmentMode: "ASSISTED",
+        membershipTier: overview.membership?.tier ?? null,
         overrides: {
           trainingDaysPerWeek:
             Number.isFinite(requestedDays) && requestedDays > 0 ? requestedDays : undefined,
           reason: "COACH_REQUEST",
         },
+        priorContextFingerprint: v2Candidate?.provenance?.contextFingerprint ?? null,
       });
-      if (!built.ok) {
-        const messages = built.resolution.errors.map((row) =>
-          strategyResolutionErrorMessage(row.code),
-        );
-        setError(messages.join(" "));
-        setV2Preview({
-          assignable: false,
-          blockReason: built.resolution.errors[0]?.code ?? "STRATEGY_RESOLUTION_FAILED",
-          generationStatus: "PROGRAM_GENERATION_BLOCKED",
-          validationStatus: "INVALID",
-          explanation: messages.join(" "),
-          errors: messages,
-          sessionCount: 0,
-          payload: null,
-        });
-        return;
-      }
-      const generated = generateAuthorizedProgramCandidate(built.context);
-      const goalId = built.strategy.canonicalGoal;
-      const payload = assignmentPayloadFromResult(generated.result, `برنامج V2 · ${goalId}`);
+      setV2Candidate(candidate);
       setV2Preview({
-        assignable: generated.assignable,
-        blockReason: generated.blockReason,
-        generationStatus: generated.result.status,
-        validationStatus: generated.result.validation.status,
-        explanation: generated.result.client_explanation,
-        errors: generated.result.validation.errors.map((row) => row.message),
-        sessionCount: generated.result.candidate?.sessions.length ?? 0,
-        payload,
+        assignable: candidate.assignable,
+        blockReason: candidate.blockingReasons[0] ?? null,
+        generationStatus: candidate.generation?.status ?? "PROGRAM_GENERATION_BLOCKED",
+        validationStatus: candidate.generation?.validation.status ?? "INVALID",
+        explanation: candidate.clientExplanation,
+        errors: [
+          ...candidate.blockingReasons.map((code) => strategyResolutionErrorMessage(code)),
+          ...(candidate.generation?.validation.errors.map((row) => row.message) ?? []),
+        ],
+        sessionCount: candidate.generation?.candidate?.sessions.length ?? 0,
+        payload: candidate.assignmentPayload,
       });
-      if (!generated.assignable) {
+      if (!candidate.assignable) {
         void recordAdminAdaptiveDecision({
           clientId,
           decisionType: CLIENT_LOOP_PROGRAM_BLOCKED,
           evaluationKey: `program-block:${clientId}:${startsOn}`,
-          reasonCode: generated.blockReason ?? "PROGRAM_GENERATION_BLOCKED",
+          reasonCode: candidate.blockingReasons[0] ?? "PROGRAM_GENERATION_BLOCKED",
           confidence: "HIGH",
           snapshot: {
-            validation_status: generated.result.validation.status,
-            generation_status: generated.result.status,
-            errors: generated.result.validation.errors.map((row) => row.code),
+            validation_status: candidate.generation?.validation.status ?? "INVALID",
+            generation_status: candidate.generation?.status ?? "PROGRAM_GENERATION_BLOCKED",
+            errors: candidate.blockingReasons,
           },
         }).catch(() => undefined);
       }
@@ -353,8 +344,29 @@ export function ClientTrainingWorkspace({
     }
   };
 
+  const rejectV2Candidate = () => {
+    if (!v2Candidate) return;
+    const rejected = rejectAssignmentCandidate(v2Candidate);
+    setV2Candidate(rejected);
+    setV2Preview((prev) =>
+      prev
+        ? {
+            ...prev,
+            assignable: false,
+            blockReason: rejected.rejectionReason,
+            explanation: "تم رفض المرشّح. البرنامج الحالي لم يتغيّر.",
+          }
+        : prev,
+    );
+  };
+
   const confirmGeneratedAssign = (replace: boolean) => {
-    if (!v2Preview?.assignable || !v2Preview.payload) return;
+    if (!v2Preview?.assignable || !v2Preview.payload || !v2Candidate) return;
+    const approved =
+      v2Candidate.state === "REVIEW_REQUIRED"
+        ? approveAssignmentCandidate(v2Candidate)
+        : v2Candidate;
+    if (!approved.assignable) return;
     onConfirm({
       title: replace ? "استبدال ببرنامج V2 المُصادق" : "تعيين برنامج V2 المُصادق",
       body: replace
@@ -375,6 +387,7 @@ export function ClientTrainingWorkspace({
             setDetail(row);
             setDraft(row);
             setV2Preview(null);
+            setV2Candidate(null);
             const list = await listAdminClientAssignments(clientId, 0);
             setHistory(list.rows);
             setHistoryTotal(list.totalCount);
@@ -682,6 +695,11 @@ export function ClientTrainingWorkspace({
       {v2Preview ? (
         <AdminCard>
           <h2 className="cc-section__title">مرشّح البرنامج التكيّفي V2</h2>
+          {v2Candidate ? (
+            <p className="cc-meta">
+              الحالة: {v2Candidate.state} · الوضع: {v2Candidate.assignmentMode}
+            </p>
+          ) : null}
           <dl className="cc-dl">
             <div>
               <dt>التوليد</dt>
@@ -696,7 +714,40 @@ export function ClientTrainingWorkspace({
               <dd>{v2Preview.sessionCount}</dd>
             </div>
           </dl>
+          {v2Candidate?.coachReview ? (
+            <dl className="cc-dl">
+              <div>
+                <dt>الهدف</dt>
+                <dd>{v2Candidate.coachReview.clientGoal}</dd>
+              </div>
+              <div>
+                <dt>المستوى</dt>
+                <dd>{v2Candidate.coachReview.trainingLevel}</dd>
+              </div>
+              <div>
+                <dt>أيام/أسبوع</dt>
+                <dd>{v2Candidate.coachReview.daysPerWeek}</dd>
+              </div>
+              <div>
+                <dt>البيئة</dt>
+                <dd>{v2Candidate.coachReview.trainingLocation}</dd>
+              </div>
+              <div>
+                <dt>التركيز الرئيسي</dt>
+                <dd>{v2Candidate.coachReview.mainEmphasis}</dd>
+              </div>
+            </dl>
+          ) : null}
           <p>{v2Preview.explanation}</p>
+          {v2Candidate?.recommendation.length ? (
+            <ul>
+              {v2Candidate.recommendation.map((item) => (
+                <li key={item.category}>
+                  {item.category}: {item.detail} {item.aligned ? "✓" : "—"}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {!v2Preview.assignable ? (
             <p className="cc-field__error" role="alert">
               البرنامج غير صالح للتعيين. السبب: {v2Preview.blockReason ?? "INVALID"}. البرنامج الحالي يبقى كما هو.
@@ -712,13 +763,19 @@ export function ClientTrainingWorkspace({
             </ul>
           ) : null}
           <div className="cc-editor-toolbar">
-            <button type="button" className="cc-btn" onClick={() => setV2Preview(null)}>
+            <button type="button" className="cc-btn" onClick={() => { setV2Preview(null); setV2Candidate(null); }}>
               إغلاق
+            </button>
+            <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
+              إعادة التوليد
+            </button>
+            <button type="button" className="cc-btn" disabled={!v2Candidate || v2Candidate.state === "REJECTED"} onClick={rejectV2Candidate}>
+              رفض
             </button>
             <button
               type="button"
               className="cc-btn cc-btn--primary"
-              disabled={!v2Preview.assignable}
+              disabled={!v2Preview.assignable || v2Candidate?.state === "REJECTED"}
               onClick={() =>
                 confirmGeneratedAssign(
                   overview.assignment?.status === "active" || overview.assignment?.status === "scheduled",
