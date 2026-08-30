@@ -3,6 +3,24 @@
 export const PRODUCTION_SUPABASE_REF = "ufgrbpakuemamggwypdh";
 export const STAGING_SUPABASE_REF = "dxerwrdpcflpnjvsnrjq";
 
+export const PRODUCTION_APP_ORIGIN = "https://hakimlemagicien.com";
+export const STAGING_APP_ORIGIN = "https://staging.hakimlemagicien.com";
+
+/** Auth email redirects must use the canonical Staging host, not a Preview *.vercel.app origin. */
+export function resolveAppOrigin(appEnv: string, windowOrigin?: string | null): string {
+  const env = String(appEnv || "").toLowerCase();
+  if (env === "staging") return STAGING_APP_ORIGIN;
+  if (windowOrigin) return windowOrigin.replace(/\/$/, "");
+  return PRODUCTION_APP_ORIGIN;
+}
+
+export function currentAppOrigin(): string {
+  const vite = import.meta.env as Record<string, string | undefined>;
+  const appEnv = String(vite.VITE_APP_ENV || process.env.VITE_APP_ENV || process.env.APP_ENV || "").toLowerCase();
+  const windowOrigin = typeof window !== "undefined" ? window.location.origin : null;
+  return resolveAppOrigin(appEnv, windowOrigin);
+}
+
 function readRuntimeUrl(): { appEnv: string; url: string } {
   const vite = import.meta.env as Record<string, string | undefined>;
   return {
