@@ -149,9 +149,12 @@ Core 100 generation does **not** require exercise media. Existing placeholder pa
 
 ## 10. Commit SHA
 
-> Populated after `git commit` — see command output below.
-
-**Message:** `feat(training): activate Strategy Matrix Core 100 V1`
+| Field | Value |
+|-------|-------|
+| **SHA** | `7b2efea5f6fe6c744420a216e19069a689c50746` |
+| **Branch** | `feat/admin-command-center-foundation` |
+| **Message** | `feat(training): activate Strategy Matrix Core 100 V1` |
+| **Files** | 43 files (+5529 / −23) |
 
 **Excluded from commit:** Auth, payments, exercise media/WebP assets, unrelated UI, nutrition, staging supabase drafts.
 
