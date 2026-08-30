@@ -2,11 +2,30 @@
 ## Hardening · Full System QA Preparation · Launch Gates
 
 **الحالة:** `PHASE_6_IMPLEMENTATION_PASSED_WITH_NONBLOCKING_RISKS`  
+**حالة التسليم:** `PHASE_6_FINAL_ARTIFACT_READY_FOR_FULL_QA`  
 **الفرع:** `feat/admin-command-center-foundation`  
 **Base SHA:** `74b1b0c5eeca670c985ba01c2280af62fb78f572`  
-**Final SHA:** *(يُحدَّد بعد commit هذه الوثيقة)*  
+**Final Commit SHA (QA artifact):** `6d2d31d029ca554baf0ddf85d00132fc45e9f611`  
 **Production:** لم يُمس  
-**FULL QA READY:** **نعم** (على Staging — انظر §51)
+**FULL QA READY:** **نعم** (Staging — `dxerwrdpcflpnjvsnrjq`)
+
+---
+
+## QA Handoff — سجل التسليم النهائي
+
+| البند | القيمة |
+|--------|--------|
+| **Final Commit SHA** | `6d2d31d029ca554baf0ddf85d00132fc45e9f611` |
+| **Branch** | `feat/admin-command-center-foundation` |
+| **Push** | **SUCCESS** — `af93b4e..6d2d31d` → `origin/feat/admin-command-center-foundation` |
+| **Remote** | `https://github.com/hakimlemagicien/hakimlemagicien.git` |
+| **`npm test`** | **PASS** (2026-08-31 — incl. phase-6, core-100 144/144, safety, orchestrator, override) |
+| **`npm run build`** | **PASS** — `[verify-vercel-build] OK` |
+| **Staging build** | **PASS** — `npm run build -- --mode staging` — `[verify-vercel-build] OK` |
+| **Merge to `main`** | **NOT DONE** |
+| **Production deploy** | **NOT DONE** |
+
+**ملفات commit Phase 6 فقط (13):** `training-strategy-hardening/*`, `admin-client-training-api.ts`, `ClientTrainingWorkspace.tsx`, `coach-override/*`, `package.json`, `PHASE_6_REPORT.md`, `QA_FIXTURES.md` — لا ملفات غير مرتبطة.
 
 ---
 
@@ -36,7 +55,7 @@
 | | SHA |
 |---|---|
 | **Base (Phase 5)** | `74b1b0c5eeca670c985ba01c2280af62fb78f572` |
-| **Final (Phase 6)** | *انظر commit message الأخير* |
+| **Final (Phase 6 — QA artifact)** | `6d2d31d029ca554baf0ddf85d00132fc45e9f611` |
 
 ---
 
@@ -304,7 +323,7 @@ Profile → Strategy → Calendar → Core 100 → Safety → Generate → Valid
 
 ## 49. حزمة تسليم QA الكاملة (§55)
 
-1. **SHA نهائي:** *بعد commit*
+1. **SHA نهائي:** `6d2d31d029ca554baf0ddf85d00132fc45e9f611`
 2. **فرع:** `feat/admin-command-center-foundation`
 3. **تقارير:** Phase 0–3 (موجودة) + Phase 4 (مستعادة) + Phase 5 + Phase 6
 4. **Core 100:** `MAAKFIT_V1_CORE_100` — 100/100
