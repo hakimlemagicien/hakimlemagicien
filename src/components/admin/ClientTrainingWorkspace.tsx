@@ -62,6 +62,13 @@ import { PROGRAM_BOUNDARIES } from "@/lib/admin/admin-architecture";
 import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
 import {
+  applyCoachOverride,
+  buildCoachOverrideRequest,
+  reviewCoachOverride,
+  type CoachOverrideReview,
+  type CoachOverrideType,
+} from "@/lib/platform/coach-override";
+import {
   approveAssignmentCandidate,
   prepareTrainingProgramAssignment,
   rejectAssignmentCandidate,
@@ -101,6 +108,14 @@ function strategyResolutionErrorMessage(code: string): string {
 }
 
 type AssignStep = "closed" | "pick" | "preview" | "review";
+type OverrideUiState =
+  | "idle"
+  | "editing"
+  | "reviewing"
+  | "confirming"
+  | "applying"
+  | "success"
+  | "error";
 
 export function ClientTrainingWorkspace({
   clientId,
@@ -134,6 +149,15 @@ export function ClientTrainingWorkspace({
   const [assignStep, setAssignStep] = useState<AssignStep>("closed");
   const [v2Busy, setV2Busy] = useState(false);
   const [v2Candidate, setV2Candidate] = useState<TrainingAssignmentCandidate | null>(null);
+  const [overrideUi, setOverrideUi] = useState<OverrideUiState>("idle");
+  const [overrideBusy, setOverrideBusy] = useState(false);
+  const [overrideType, setOverrideType] = useState<CoachOverrideType>("SESSION_DURATION_CHANGE");
+  const [overrideNote, setOverrideNote] = useState("");
+  const [overrideDays, setOverrideDays] = useState("3");
+  const [overrideDuration, setOverrideDuration] = useState("45");
+  const [overrideExerciseFrom, setOverrideExerciseFrom] = useState("CH-001");
+  const [overrideExerciseTo, setOverrideExerciseTo] = useState("CH-002");
+  const [overrideReview, setOverrideReview] = useState<CoachOverrideReview | null>(null);
   const [v2Preview, setV2Preview] = useState<{
     assignable: boolean;
     blockReason: string | null;
@@ -358,6 +382,145 @@ export function ClientTrainingWorkspace({
           }
         : prev,
     );
+  };
+
+  const runCoachOverrideReview = async () => {
+    if (!detail?.id) {
+      setError("لا يوجد برنامج نشط لتطبيق التعديل عليه.");
+      return;
+    }
+    setOverrideBusy(true);
+    setOverrideUi("reviewing");
+    setError(null);
+    try {
+      const catalog = await listV2ExerciseCandidates();
+      const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
+      const days = Number(overrideDays);
+      let payload: Parameters<typeof buildCoachOverrideRequest>[0]["payload"];
+      switch (overrideType) {
+        case "TRAINING_FREQUENCY_CHANGE":
+        case "TRAINING_DAYS_CHANGE":
+          payload = { trainingDaysPerWeek: Number.isFinite(days) ? days : 3 };
+          break;
+        case "SESSION_DURATION_CHANGE":
+          payload = { sessionDurationMinutes: Number(overrideDuration) || 45 };
+          break;
+        case "EXERCISE_REPLACE":
+          payload = { fromExternalId: overrideExerciseFrom, toExternalId: overrideExerciseTo };
+          break;
+        case "EXERCISE_EXCLUDE":
+        case "EXERCISE_LOCK":
+          payload = { externalId: overrideExerciseFrom };
+          break;
+        case "TRAINING_LOCATION_CHANGE":
+          payload = { trainingLocation: "HOME" };
+          break;
+        case "TEMPORARY_CONSTRAINT":
+          payload = {
+            trainingEnvironment: "home",
+            availableEquipment: ["DUMBBELLS", "RESISTANCE_BAND", "MAT"],
+            validUntil: null,
+          };
+          break;
+        case "PREFERRED_WEEKDAYS_CHANGE":
+          payload = { preferredWeekdays: ["mon", "tue", "thu"] };
+          break;
+        case "AVAILABLE_EQUIPMENT_CHANGE":
+          payload = { availableEquipment: ["DUMBBELLS", "RESISTANCE_BAND"] };
+          break;
+        default:
+          payload = { sessionDurationMinutes: Number(overrideDuration) || 45 };
+      }
+      const req = buildCoachOverrideRequest({
+        clientId,
+        currentAssignmentId: detail.id,
+        overrideType,
+        payload,
+        coachNote: overrideNote || null,
+        sourceAssignmentVersion: detail.updated_at,
+      });
+      const review = reviewCoachOverride({
+        request: req,
+        strategyInput,
+        exercises: catalog,
+        currentAssignmentVersion: detail.updated_at,
+        membershipTier: overview.membership?.tier ?? null,
+      });
+      setOverrideReview(review);
+      setOverrideUi(review.status === "BLOCKED" ? "error" : "confirming");
+    } catch (err) {
+      console.error(err);
+      setOverrideUi("error");
+      setError(translateLibraryError(err));
+    } finally {
+      setOverrideBusy(false);
+    }
+  };
+
+  const confirmCoachOverride = () => {
+    if (!overrideReview || !detail?.id) return;
+    setOverrideUi("applying");
+    void (async () => {
+      try {
+        const catalog = await listV2ExerciseCandidates();
+        const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
+        const req = buildCoachOverrideRequest({
+          clientId,
+          currentAssignmentId: detail.id,
+          overrideType,
+          payload:
+            overrideReview.suggestedPayload ??
+            (overrideType === "SESSION_DURATION_CHANGE"
+              ? { sessionDurationMinutes: Number(overrideDuration) || 45 }
+              : { trainingDaysPerWeek: Number(overrideDays) || 3 }),
+          coachNote: overrideNote || null,
+          sourceAssignmentVersion: detail.updated_at,
+        });
+        const applied = applyCoachOverride({
+          request: req,
+          review: overrideReview,
+          strategyInput,
+          exercises: catalog,
+          currentAssignmentVersion: detail.updated_at,
+          membershipTier: overview.membership?.tier ?? null,
+        });
+        if (!applied.ok || !applied.candidate.assignable) {
+          setOverrideUi("error");
+          setError("تعذر تطبيق التعديل. البرنامج الحالي لم يتغيّر.");
+          return;
+        }
+        setV2Candidate(applied.candidate);
+        setV2Preview({
+          assignable: applied.candidate.assignable,
+          blockReason: null,
+          generationStatus: applied.candidate.generation?.status ?? "READY",
+          validationStatus: applied.candidate.generation?.validation.status ?? "VALID",
+          explanation: applied.candidate.clientExplanation,
+          errors: [],
+          sessionCount: applied.candidate.generation?.candidate?.sessions.length ?? 0,
+          payload: applied.candidate.assignmentPayload,
+        });
+        void recordAdminAdaptiveDecision({
+          clientId,
+          decisionType: "PROGRAM_GENERATION",
+          evaluationKey: `coach-override:${req.id}`,
+          reasonCode: `COACH_OVERRIDE_${overrideReview.status}`,
+          confidence: "HIGH",
+          snapshot: {
+            change_source: "COACH_OVERRIDE",
+            override_type: overrideType,
+            review_status: overrideReview.status,
+            impact_codes: overrideReview.impacts.map((row) => row.code),
+            source_assignment_id: detail.id,
+          },
+        }).catch(() => undefined);
+        setOverrideUi("success");
+      } catch (err) {
+        console.error(err);
+        setOverrideUi("error");
+        setError(translateLibraryError(err));
+      }
+    })();
   };
 
   const confirmGeneratedAssign = (replace: boolean) => {
@@ -690,6 +853,105 @@ export function ClientTrainingWorkspace({
           ) : null}
           {editing ? <AdminSaveState state={dirty ? "unsaved" : saveState} /> : null}
         </div>
+      </AdminCard>
+
+      <AdminCard>
+        <h2 className="cc-section__title">تعديلات المدرب (Coach Override)</h2>
+        <p className="cc-muted">
+          اطلب تعديلاً على البرنامج الحالي — المحرك يراجع الأثر والسلامة قبل أي تعيين جديد. لا يتم تعديل اللقطة مباشرة.
+        </p>
+        {!detail ? (
+          <AdminEmptyState title="لا برنامج نشط" body="عيّن برنامجاً أولاً قبل طلب تعديلات مخصصة." />
+        ) : (
+          <>
+            <div className="cc-form-grid">
+              <AdminSelect value={overrideType} onChange={(v) => { setOverrideType(v as CoachOverrideType); setOverrideUi("editing"); }}>
+                <option value="SESSION_DURATION_CHANGE">مدة الجلسة</option>
+                <option value="TRAINING_FREQUENCY_CHANGE">تكرار أسبوعي</option>
+                <option value="PREFERRED_WEEKDAYS_CHANGE">أيام التفضيل</option>
+                <option value="EXERCISE_REPLACE">استبدال تمرين</option>
+                <option value="EXERCISE_EXCLUDE">استبعاد تمرين</option>
+                <option value="EXERCISE_LOCK">قفل تمرين</option>
+                <option value="TRAINING_LOCATION_CHANGE">بيئة التدريب (مؤقت)</option>
+                <option value="TEMPORARY_CONSTRAINT">قيود مؤقتة (منزل)</option>
+                <option value="AVAILABLE_EQUIPMENT_CHANGE">معدات متاحة</option>
+              </AdminSelect>
+              {(overrideType === "TRAINING_FREQUENCY_CHANGE" || overrideType === "TRAINING_DAYS_CHANGE") ? (
+                <AdminField label="أيام/أسبوع" htmlFor="override_days">
+                  <input id="override_days" className="cc-input" value={overrideDays} onChange={(e) => setOverrideDays(e.target.value)} />
+                </AdminField>
+              ) : null}
+              {overrideType === "SESSION_DURATION_CHANGE" ? (
+                <AdminField label="دقائق" htmlFor="override_duration">
+                  <input id="override_duration" className="cc-input" value={overrideDuration} onChange={(e) => setOverrideDuration(e.target.value)} />
+                </AdminField>
+              ) : null}
+              {(overrideType === "EXERCISE_REPLACE" || overrideType === "EXERCISE_EXCLUDE" || overrideType === "EXERCISE_LOCK") ? (
+                <>
+                  <AdminField label="من (external_id)" htmlFor="override_from">
+                    <input id="override_from" className="cc-input" dir="ltr" value={overrideExerciseFrom} onChange={(e) => setOverrideExerciseFrom(e.target.value)} />
+                  </AdminField>
+                  {overrideType === "EXERCISE_REPLACE" ? (
+                    <AdminField label="إلى (external_id)" htmlFor="override_to">
+                      <input id="override_to" className="cc-input" dir="ltr" value={overrideExerciseTo} onChange={(e) => setOverrideExerciseTo(e.target.value)} />
+                    </AdminField>
+                  ) : null}
+                </>
+              ) : null}
+              <AdminField label="ملاحظة المدرب (اختياري)" htmlFor="override_note">
+                <input id="override_note" className="cc-input" value={overrideNote} onChange={(e) => setOverrideNote(e.target.value)} />
+              </AdminField>
+            </div>
+            {overrideReview ? (
+              <div className="cc-meta">
+                <p>مراجعة المحرك: <strong>{overrideReview.status}</strong></p>
+                <ul>
+                  {overrideReview.impacts.map((item) => (
+                    <li key={`${item.code}-${item.dimension}`}>{item.dimension}: {item.detail}</li>
+                  ))}
+                </ul>
+                {overrideReview.alternatives.length ? (
+                  <ul>
+                    {overrideReview.alternatives.map((alt) => (
+                      <li key={alt.external_id} dir="ltr">{alt.external_id} — {alt.name_ar}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {overrideReview.nutritionReviewRecommended ? (
+                  <p className="cc-muted">يُوصى بمراجعة التغذية لاحقاً — بدون تعديل تلقائي.</p>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="cc-editor-toolbar">
+              <button type="button" className="cc-btn" disabled={overrideBusy} onClick={() => void runCoachOverrideReview()}>
+                {overrideBusy ? "جاري المراجعة…" : "مراجعة التعديل"}
+              </button>
+              <button
+                type="button"
+                className="cc-btn cc-btn--primary"
+                disabled={
+                  overrideBusy ||
+                  !overrideReview ||
+                  overrideReview.status === "BLOCKED" ||
+                  overrideUi === "applying"
+                }
+                onClick={confirmCoachOverride}
+              >
+                {overrideUi === "applying" ? "جاري التطبيق…" : "تأكيد وبناء مرشّح جديد"}
+              </button>
+              <button
+                type="button"
+                className="cc-btn cc-btn--ghost"
+                onClick={() => {
+                  setOverrideReview(null);
+                  setOverrideUi("idle");
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </>
+        )}
       </AdminCard>
 
       {v2Preview ? (
