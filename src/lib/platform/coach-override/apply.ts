@@ -39,10 +39,54 @@ export type ApplyCoachOverrideResult =
     };
 
 const appliedKeys = new Set<string>();
+const SESSION_STORAGE_KEY = "maakfit_coach_override_applied_keys";
+
+function readSessionAppliedKeys(): Set<string> {
+  if (typeof sessionStorage === "undefined") return new Set();
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as string[];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeSessionAppliedKeys(keys: Set<string>) {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify([...keys]));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+function hasAppliedKey(key: string): boolean {
+  return appliedKeys.has(key) || readSessionAppliedKeys().has(key);
+}
+
+function rememberAppliedKey(key: string) {
+  appliedKeys.add(key);
+  const sessionKeys = readSessionAppliedKeys();
+  sessionKeys.add(key);
+  writeSessionAppliedKeys(sessionKeys);
+}
 
 export function resetCoachOverrideApplyKeysForTests() {
   appliedKeys.clear();
+  if (typeof sessionStorage !== "undefined") {
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }
 }
+
+/** Phase 6: override apply idempotency is process + browser-session only; durable assign uses RPC guards. */
+export const COACH_OVERRIDE_DURABLE_IDEMPOTENCY =
+  "PHASE_6_DURABLE_IDEMPOTENCY_DECISION_REQUIRED" as const;
 
 /**
  * Confirms a reviewed override — returns validated candidate for existing assign RPC.
@@ -53,7 +97,7 @@ export function applyCoachOverride(input: ApplyCoachOverrideInput): ApplyCoachOv
     input.applyKey ??
     `${input.request.id}:${input.request.currentAssignmentId}:${input.review.requestId}`;
 
-  if (appliedKeys.has(applyKey)) {
+  if (hasAppliedKey(applyKey)) {
     const candidate = input.review.revisedCandidate;
     if (candidate?.assignable) {
       return {
@@ -103,6 +147,7 @@ export function applyCoachOverride(input: ApplyCoachOverrideInput): ApplyCoachOv
   }
 
   appliedKeys.add(applyKey);
+  rememberAppliedKey(applyKey);
 
   return {
     ok: true,
@@ -158,6 +203,8 @@ function buildProvenance(
     impactCodes: review.impacts.map((row) => row.code),
     coachNote: request.coachNote ?? null,
     appliedAt: new Date().toISOString(),
+    temporaryConstraint: request.overrideType === "TEMPORARY_CONSTRAINT",
+    changeSource: "COACH_OVERRIDE",
   };
 }
 

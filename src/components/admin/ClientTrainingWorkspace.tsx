@@ -70,10 +70,15 @@ import {
 } from "@/lib/platform/coach-override";
 import {
   approveAssignmentCandidate,
+  buildStrategyContextFingerprint,
   prepareTrainingProgramAssignment,
   rejectAssignmentCandidate,
   type TrainingAssignmentCandidate,
 } from "@/lib/platform/training-assignment-orchestrator";
+import {
+  validateCandidateBeforeAssign,
+  validateV2AssignmentPayload,
+} from "@/lib/platform/training-strategy-hardening";
 import {
   loadAdminClientTrainingStrategyInput,
 } from "@/lib/platform/strategy-matrix";
@@ -148,6 +153,7 @@ export function ClientTrainingWorkspace({
   const [editing, setEditing] = useState(false);
   const [assignStep, setAssignStep] = useState<AssignStep>("closed");
   const [v2Busy, setV2Busy] = useState(false);
+  const [assigningInFlight, setAssigningInFlight] = useState(false);
   const [v2Candidate, setV2Candidate] = useState<TrainingAssignmentCandidate | null>(null);
   const [overrideUi, setOverrideUi] = useState<OverrideUiState>("idle");
   const [overrideBusy, setOverrideBusy] = useState(false);
@@ -524,12 +530,17 @@ export function ClientTrainingWorkspace({
   };
 
   const confirmGeneratedAssign = (replace: boolean) => {
-    if (!v2Preview?.assignable || !v2Preview.payload || !v2Candidate) return;
+    if (!v2Preview?.assignable || !v2Preview.payload || !v2Candidate || assigningInFlight) return;
     const approved =
       v2Candidate.state === "REVIEW_REQUIRED"
         ? approveAssignmentCandidate(v2Candidate)
         : v2Candidate;
     if (!approved.assignable) return;
+    const payloadError = validateV2AssignmentPayload(v2Preview.payload);
+    if (payloadError) {
+      setError(`تعذر التعيين: ${payloadError}`);
+      return;
+    }
     onConfirm({
       title: replace ? "استبدال ببرنامج V2 المُصادق" : "تعيين برنامج V2 المُصادق",
       body: replace
@@ -538,15 +549,28 @@ export function ClientTrainingWorkspace({
       confirmLabel: replace ? "استبدال وتعيين" : "تعيين",
       tone: replace ? "danger" : "primary",
       onConfirm: () => {
-        void assignGeneratedV2Program({
-          clientId,
-          startsOn,
-          replace,
-          generationStatus: v2Preview.generationStatus,
-          validationStatus: v2Preview.validationStatus,
-          payload: v2Preview.payload!,
-        })
-          .then(async (row) => {
+        void (async () => {
+          setAssigningInFlight(true);
+          setError(null);
+          try {
+            const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
+            const fingerprint = buildStrategyContextFingerprint(strategyInput);
+            const staleError = validateCandidateBeforeAssign({
+              candidate: approved,
+              currentFingerprint: fingerprint,
+            });
+            if (staleError) {
+              setError("تغيّرت بيانات العميل — أعد توليد المرشّح قبل التعيين.");
+              return;
+            }
+            const row = await assignGeneratedV2Program({
+              clientId,
+              startsOn,
+              replace,
+              generationStatus: v2Preview.generationStatus,
+              validationStatus: v2Preview.validationStatus,
+              payload: v2Preview.payload!,
+            });
             setDetail(row);
             setDraft(row);
             setV2Preview(null);
@@ -555,11 +579,13 @@ export function ClientTrainingWorkspace({
             setHistory(list.rows);
             setHistoryTotal(list.totalCount);
             await onOverviewRefresh();
-          })
-          .catch((err) => {
+          } catch (err) {
             console.error(err);
             setError(translateLibraryError(err));
-          });
+          } finally {
+            setAssigningInFlight(false);
+          }
+        })();
       },
     });
   };
@@ -1037,7 +1063,7 @@ export function ClientTrainingWorkspace({
             <button
               type="button"
               className="cc-btn cc-btn--primary"
-              disabled={!v2Preview.assignable || v2Candidate?.state === "REJECTED"}
+              disabled={!v2Preview.assignable || v2Candidate?.state === "REJECTED" || assigningInFlight}
               onClick={() =>
                 confirmGeneratedAssign(
                   overview.assignment?.status === "active" || overview.assignment?.status === "scheduled",

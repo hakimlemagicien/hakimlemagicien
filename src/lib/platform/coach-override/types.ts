@@ -122,4 +122,6 @@ export type CoachOverrideProvenance = {
   impactCodes: string[];
   coachNote: string | null;
   appliedAt: string;
+  temporaryConstraint: boolean;
+  changeSource: "COACH_OVERRIDE";
 };

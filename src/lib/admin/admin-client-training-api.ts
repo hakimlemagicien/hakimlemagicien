@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import {
+  logTrainingStrategyEvent,
+  validateV2AssignmentPayload,
+  validateValidationStatuses,
+} from "@/lib/platform/training-strategy-hardening";
 
 export type AdminAssignmentSummary = {
   id: string;
@@ -156,6 +161,30 @@ export async function assignGeneratedV2Program(input: {
   validationStatus: string;
   payload: Record<string, unknown>;
 }): Promise<AdminAssignmentDetail> {
+  const statusError = validateValidationStatuses({
+    generationStatus: input.generationStatus,
+    validationStatus: input.validationStatus,
+  });
+  if (statusError) {
+    logTrainingStrategyEvent({
+      scope: "assignment",
+      action: "assign_blocked",
+      clientId: input.clientId,
+      validationStatus: input.validationStatus,
+      blockingReasons: [statusError],
+    });
+    throw new Error(statusError);
+  }
+  const payloadError = validateV2AssignmentPayload(input.payload);
+  if (payloadError) {
+    logTrainingStrategyEvent({
+      scope: "assignment",
+      action: "assign_blocked",
+      clientId: input.clientId,
+      blockingReasons: [payloadError],
+    });
+    throw new Error(payloadError);
+  }
   const { data, error } = await supabase.rpc("admin_assign_generated_v2_program", {
     p_client_id: input.clientId,
     p_starts_on: input.startsOn,
@@ -165,6 +194,14 @@ export async function assignGeneratedV2Program(input: {
     p_payload: input.payload,
   });
   if (error) throw error;
+  logTrainingStrategyEvent({
+    scope: "assignment",
+    action: "assign_success",
+    clientId: input.clientId,
+    assignmentId: String((data as Record<string, unknown>)?.id ?? ""),
+    validationStatus: input.validationStatus,
+    changeSource: "COACH_REQUEST",
+  });
   return mapDetail(data as Record<string, unknown>);
 }
 

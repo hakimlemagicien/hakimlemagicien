@@ -37,5 +37,6 @@ export {
   previewCoachOverrideCandidate,
   rejectCoachOverrideRequest,
   resetCoachOverrideApplyKeysForTests,
+  COACH_OVERRIDE_DURABLE_IDEMPOTENCY,
 } from "./apply";
 export type { ApplyCoachOverrideInput, ApplyCoachOverrideResult } from "./apply";
