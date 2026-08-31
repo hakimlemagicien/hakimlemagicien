@@ -35,7 +35,7 @@ assert(!hrefs.some((href) => href.startsWith("/app")), "nav never points at clie
 assert(hrefs.includes("/admin/messages"), "coaching inbox is in nav");
 assert(hrefs.includes("/admin/payments"), "payments is in nav");
 assert(hrefs.includes("/admin/clients"), "clients foundation is in nav");
-assert(ADMIN_NAV_GROUPS.length === 5, "five nav groups");
+assert(ADMIN_NAV_GROUPS.length === 7, "seven nav groups");
 
 const liveItems = ADMIN_NAV_GROUPS.flatMap((group) => group.items).filter((item) => item.status === "live");
 assert(

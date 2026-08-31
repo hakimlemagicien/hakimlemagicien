@@ -3,6 +3,7 @@ import { Bell, Menu, Search, X } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
+import { AdminEnvironmentBadge } from "@/components/admin/AdminEnvironmentBadge";
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin/admin-nav";
 import {
   fetchAdminOperationsSnapshot,
@@ -108,7 +109,10 @@ export function AdminShell() {
         aria-label="تنقل مركز التشغيل"
       >
         <div className="cc-sidebar__brand">
-          <p className="cc-kicker">MAAKFIT</p>
+          <div className="cc-sidebar__brand-row">
+            <p className="cc-kicker">MAAKFIT</p>
+            <AdminEnvironmentBadge compact />
+          </div>
           <strong>مركز التشغيل</strong>
           <span>Coach Hakim — تشغيل يومي</span>
         </div>
@@ -170,6 +174,7 @@ export function AdminShell() {
           </form>
 
           <div className="cc-topbar__actions">
+            <AdminEnvironmentBadge />
             <Link to="/admin/messages" className="cc-btn cc-btn--ghost cc-topbar__quick">
               الرسائل
             </Link>

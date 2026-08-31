@@ -66,8 +66,9 @@ const queue = buildAttentionQueue({
 
 assert(queue.length === 2, "waiting inbox + pending payment only");
 assert(queue[0]?.vip === true, "VIP waiting thread is ordered first");
+assert(queue.every((item) => item.type && item.statusLabel), "attention metadata");
 assert(queue.some((item) => item.href.includes("/admin/messages/")), "inbox action points at conversation");
-assert(queue.some((item) => item.href === "/admin/payments"), "payment action points at billing");
+assert(queue.some((item) => item.href.startsWith("/admin/payments")), "payment action points at billing");
 assert(!queue.some((item) => item.clientName === "Sara"), "replied threads are not attention items");
 
 assert(priorityLabel("high") === "عالٍ", "priority label");

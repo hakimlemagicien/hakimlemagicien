@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { MatrixImpactCard } from "@/components/admin/MatrixImpactCard";
 import {
   AdminCard,
   AdminEmptyState,
@@ -79,10 +80,18 @@ import {
   validateCandidateBeforeAssign,
   validateV2AssignmentPayload,
 } from "@/lib/platform/training-strategy-hardening";
-import {
-  loadAdminClientTrainingStrategyInput,
-} from "@/lib/platform/strategy-matrix";
+import type { ExerciseAlternative } from "@/lib/platform/coach-override/types";
+import { loadAdminClientTrainingStrategyInput } from "@/lib/platform/strategy-matrix";
+import type { TrainingStrategyLocation } from "@/lib/platform/strategy-matrix/types";
 import { getCoachTrainingOverview, type ReviewFlag } from "@/lib/platform/training-progress";
+
+function mapClientTrainingLocation(trainingType: string | null | undefined): TrainingStrategyLocation {
+  const value = String(trainingType ?? "").toLowerCase();
+  if (value.includes("gym") && value.includes("home")) return "BOTH";
+  if (value.includes("gym") || value === "gym_only") return "GYM";
+  if (value.includes("home") || value === "home_only") return "HOME";
+  return "HOME";
+}
 
 const GOAL_LABELS: Record<string, string> = {
   cut: "تنشيف",
@@ -164,6 +173,7 @@ export function ClientTrainingWorkspace({
   const [overrideExerciseFrom, setOverrideExerciseFrom] = useState("CH-001");
   const [overrideExerciseTo, setOverrideExerciseTo] = useState("CH-002");
   const [overrideReview, setOverrideReview] = useState<CoachOverrideReview | null>(null);
+  const [showOverrideAlternatives, setShowOverrideAlternatives] = useState(false);
   const [v2Preview, setV2Preview] = useState<{
     assignable: boolean;
     blockReason: string | null;
@@ -419,7 +429,7 @@ export function ClientTrainingWorkspace({
           payload = { externalId: overrideExerciseFrom };
           break;
         case "TRAINING_LOCATION_CHANGE":
-          payload = { trainingLocation: "HOME" };
+          payload = { trainingLocation: mapClientTrainingLocation(overview.training_type) };
           break;
         case "TEMPORARY_CONSTRAINT":
           payload = {
@@ -463,8 +473,9 @@ export function ClientTrainingWorkspace({
     }
   };
 
-  const confirmCoachOverride = () => {
+  const confirmCoachOverride = (payloadOverride?: CoachOverrideReview["suggestedPayload"]) => {
     if (!overrideReview || !detail?.id) return;
+    if (overrideReview.status === "BLOCKED") return;
     setOverrideUi("applying");
     void (async () => {
       try {
@@ -475,6 +486,7 @@ export function ClientTrainingWorkspace({
           currentAssignmentId: detail.id,
           overrideType,
           payload:
+            payloadOverride ??
             overrideReview.suggestedPayload ??
             (overrideType === "SESSION_DURATION_CHANGE"
               ? { sessionDurationMinutes: Number(overrideDuration) || 45 }
@@ -527,6 +539,25 @@ export function ClientTrainingWorkspace({
         setError(translateLibraryError(err));
       }
     })();
+  };
+
+  const applyOverrideAlternative = (alt: ExerciseAlternative) => {
+    if (!overrideReview || overrideReview.status === "BLOCKED") return;
+    if (overrideType === "EXERCISE_REPLACE") {
+      setOverrideExerciseTo(alt.external_id);
+    }
+    const suggested = overrideReview.suggestedPayload;
+    if (suggested) {
+      confirmCoachOverride(suggested);
+      return;
+    }
+    void runCoachOverrideReview();
+  };
+
+  const resetOverrideReview = () => {
+    setOverrideReview(null);
+    setOverrideUi("idle");
+    setShowOverrideAlternatives(false);
   };
 
   const confirmGeneratedAssign = (replace: boolean) => {
@@ -929,53 +960,26 @@ export function ClientTrainingWorkspace({
               </AdminField>
             </div>
             {overrideReview ? (
-              <div className="cc-meta">
-                <p>مراجعة المحرك: <strong>{overrideReview.status}</strong></p>
-                <ul>
-                  {overrideReview.impacts.map((item) => (
-                    <li key={`${item.code}-${item.dimension}`}>{item.dimension}: {item.detail}</li>
-                  ))}
-                </ul>
-                {overrideReview.alternatives.length ? (
-                  <ul>
-                    {overrideReview.alternatives.map((alt) => (
-                      <li key={alt.external_id} dir="ltr">{alt.external_id} — {alt.name_ar}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {overrideReview.nutritionReviewRecommended ? (
-                  <p className="cc-muted">يُوصى بمراجعة التغذية لاحقاً — بدون تعديل تلقائي.</p>
-                ) : null}
+              <MatrixImpactCard
+                review={overrideReview}
+                overrideType={overrideType}
+                coachNote={overrideNote}
+                busy={overrideBusy}
+                applying={overrideUi === "applying"}
+                showAlternatives={showOverrideAlternatives}
+                onApply={() => confirmCoachOverride()}
+                onUseAlternative={applyOverrideAlternative}
+                onToggleAlternatives={() => setShowOverrideAlternatives((open) => !open)}
+                onCancel={resetOverrideReview}
+              />
+            ) : null}
+            {!overrideReview ? (
+              <div className="cc-editor-toolbar">
+                <button type="button" className="cc-btn cc-btn--primary" disabled={overrideBusy} onClick={() => void runCoachOverrideReview()}>
+                  {overrideBusy ? "جاري المراجعة…" : "مراجعة التعديل"}
+                </button>
               </div>
             ) : null}
-            <div className="cc-editor-toolbar">
-              <button type="button" className="cc-btn" disabled={overrideBusy} onClick={() => void runCoachOverrideReview()}>
-                {overrideBusy ? "جاري المراجعة…" : "مراجعة التعديل"}
-              </button>
-              <button
-                type="button"
-                className="cc-btn cc-btn--primary"
-                disabled={
-                  overrideBusy ||
-                  !overrideReview ||
-                  overrideReview.status === "BLOCKED" ||
-                  overrideUi === "applying"
-                }
-                onClick={confirmCoachOverride}
-              >
-                {overrideUi === "applying" ? "جاري التطبيق…" : "تأكيد وبناء مرشّح جديد"}
-              </button>
-              <button
-                type="button"
-                className="cc-btn cc-btn--ghost"
-                onClick={() => {
-                  setOverrideReview(null);
-                  setOverrideUi("idle");
-                }}
-              >
-                إلغاء
-              </button>
-            </div>
           </>
         )}
       </AdminCard>

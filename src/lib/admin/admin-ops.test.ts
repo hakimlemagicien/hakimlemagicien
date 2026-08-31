@@ -100,12 +100,13 @@ const queue = buildAttentionQueue({
   now: new Date("2026-08-20T13:00:00.000Z"),
 });
 
-assert(queue.every((item) => item.priority === "high"), "no invented critical risk score");
+assert(queue.some((item) => item.priority === "critical" && item.vip), "VIP waiting uses critical priority");
+assert(queue.some((item) => item.priority === "high"), "standard items stay high");
 assert(!queue.some((item) => item.id === "support:t-closed"), "closed tickets are not attention");
 assert(!queue.some((item) => item.reason.includes("التزام") || item.reason.toLowerCase().includes("adherence")), "no fake adherence");
 assert(queue[0]?.category === "coaching" && queue[0]?.vip === true, "VIP coaching ranks first in coaching category");
 assert(compareAttentionItems(queue[0]!, queue[1]!) <= 0, "attention comparator is stable");
-assert(queue.some((item) => item.href === "/admin/payments"), "payment action");
+assert(queue.some((item) => item.href.startsWith("/admin/payments")), "payment action");
 assert(queue.some((item) => item.href.includes("/admin/support")), "support action");
 
 assert(SUPPORT_TRANSITIONS.received.join(",") === "in_review,closed", "received transitions");
