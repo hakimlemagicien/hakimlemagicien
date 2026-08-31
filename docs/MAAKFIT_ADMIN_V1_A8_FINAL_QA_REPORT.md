@@ -9,197 +9,203 @@
 
 ## A8_STATUS
 
-**IMPLEMENTED (QA suite + automated regression)** — **CLOSURE BLOCKED** on prerequisite gates, Staging migration, canonical alias, and authenticated live QA.
+**IMPLEMENTED** — automated QA + one P1 build fix. **NOT CLOSED.**
+
+Prerequisite gates A2–A7 remain BLOCKED. Canonical `staging.hakimlemagicien.com` is **STALE**. Authenticated daily-workflow QA was not executed.
 
 ---
 
-## Prerequisite Gates (Section 3)
+A8_STATUS: IMPLEMENTED — CLOSURE BLOCKED
 
-| Gate | Status | Notes |
-|------|--------|-------|
-| **A1_GATE** | **CLOSED** (audit) | `MAAKFIT_ADMIN_V1_A1_ARCHITECTURE_AUDIT_CLOSED` — architecture audit complete |
-| **A2_GATE** | **BLOCKED** | IA report: staging alias stale + live QA pending |
-| **A3_GATE** | **BLOCKED** | Dashboard implemented; alias + live QA pending |
-| **A4_GATE** | **BLOCKED** | Client 360 implemented; alias + live QA pending |
-| **A5_GATE** | **BLOCKED** | Training/Nutrition ops implemented; alias + live QA pending |
-| **A6_GATE** | **BLOCKED** | Membership/Payments ops implemented; alias + live QA pending |
-| **A7_GATE** | **BLOCKED** | RBAC implemented; **A7 migration not applied on Staging** + multi-role live QA pending |
+A1_GATE: CLOSED (architecture audit)
+A2_GATE: BLOCKED (alias + live QA)
+A3_GATE: BLOCKED (alias + live QA)
+A4_GATE: BLOCKED (alias + live QA)
+A5_GATE: BLOCKED (alias + live QA)
+A6_GATE: BLOCKED (alias + live QA)
+A7_GATE: BLOCKED (Staging migration pending + multi-role live QA)
 
-Per A8 rules: prerequisite BLOCKED → **A8 cannot be formally CLOSED**.
+DASHBOARD: PASS (automated)
+CLIENT_DIRECTORY: PASS (automated)
+CLIENT_360: PASS (automated)
 
----
+TRAINING_OPERATIONS: PASS (automated)
+MATRIX_SAFE: PASS
+MATRIX_SAFE_WITH_IMPACT: PASS
+MATRIX_ALTERNATIVE: PASS
+MATRIX_BLOCKED: PASS
+MATRIX_BYPASS: NO
+CORE_100: PASS
+TRAINING_VERSIONING: PASS
 
-## Functional QA (Automated + Static Regression)
+PROGRAM_LIBRARY: PASS
+EXERCISE_LIBRARY: PASS
+EXERCISE_SENSITIVE_PROTECTION: PASS
 
-| Area | Result | Evidence |
-|------|--------|----------|
-| **DASHBOARD** | **PASS** | `admin-a3.test.ts`, `admin-a8.test.ts` — AttentionCenter, QuickStatus, real snapshot, section errors isolated |
-| **CLIENT_DIRECTORY** | **PASS** | `admin-a4.test.ts`, `admin-a8.test.ts` — search, filters, pagination, mobile cards |
-| **CLIENT_360** | **PASS** | 7 tabs, independent workspaces, membership read-only boundary |
+NUTRITION_OPERATIONS: PASS
+ALLERGY_SAFETY: PASS
+MEAL_LIBRARY: PASS
+MEAL_SENSITIVE_PROTECTION: PASS
 
-| **TRAINING_OPERATIONS** | **PASS** | Ops hub, attention queue, review center, client deep links |
-| **MATRIX_SAFE** | **PASS** | `coach-override.test.ts`, `MatrixImpactCard`, `admin-a2-1.test.ts` |
-| **MATRIX_SAFE_WITH_IMPACT** | **PASS** | Impact explained before confirm |
-| **MATRIX_ALTERNATIVE** | **PASS** | Alternative recommendation UX |
-| **MATRIX_BLOCKED** | **PASS** | Confirm disabled; no bypass copy |
-| **MATRIX_BYPASS** | **NO** | `FORBIDDEN_ADMIN_ACTIONS`, engine + UI |
-| **CORE_100** | **PASS** | `core-100-safety.test.ts`, `core-100-qa.test.ts` |
-| **TRAINING_VERSIONING** | **PASS** | `program-assignment-snapshot.test.ts`, orchestrator tests |
+MEMBERSHIPS: PASS (automated)
+PAYMENTS: PASS (automated)
+PAYMENT_EXCEPTIONS: PASS
+PROVIDER_EVENTS: PASS
+LEGACY_PAYMENTS: PASS
+PSP_LEGACY_SEPARATION: PASS
+PAYMENT_TRUTH_PROTECTION: PASS
 
-| **PROGRAM_LIBRARY** | **PASS** | `admin-libraries.test.ts` |
-| **EXERCISE_LIBRARY** | **PASS** | Search, edit, impact warning |
-| **EXERCISE_SENSITIVE_PROTECTION** | **PASS** | `detectExerciseSensitiveChanges` + `LibraryImpactWarningCard` |
+SUPER_ADMIN: PASS (code)
+COACH_ROLE: PASS (code)
+NUTRITION_ROLE: PASS (code)
+SUPPORT_ROLE: PASS (code)
+FINANCE_ROLE: PASS (code)
+READ_ONLY_ROLE: PASS (code)
+SELF_ESCALATION: PASS (DB trigger)
 
-| **NUTRITION_OPERATIONS** | **PASS** | `admin-a5.test.ts`, nutrition ops hub |
-| **ALLERGY_SAFETY** | **PASS** | `allergenOverlap`, conflict labels (not color-only) |
-| **MEAL_LIBRARY** | **PASS** | Meal manager + metadata |
-| **MEAL_SENSITIVE_PROTECTION** | **PASS** | `detectMealSensitiveChanges` |
+CONFIRMATION_SYSTEM: PASS
+REASON_SYSTEM: PASS
+AUDIT: PASS (code)
 
-| **MEMBERSHIPS** | **PASS** | `admin-a6.test.ts`, filters, states, client deep links |
-| **PAYMENTS** | **PASS** | PSP / Exceptions / Provider / Legacy sections separated |
-| **PAYMENT_EXCEPTIONS** | **PASS** | `AdminPaymentExceptionsPanel` |
-| **PROVIDER_EVENTS** | **PASS** | Dedicated panel |
-| **LEGACY_PAYMENTS** | **PASS** | `legacy_payments.manage` gate |
-| **PSP_LEGACY_SEPARATION** | **PASS** | Distinct workflows and copy |
-| **PAYMENT_TRUTH_PROTECTION** | **PASS** | No Grant Premium, no PSP mark-paid, no manual activation |
+NAVIGATION: PASS
+ENVIRONMENT_INDICATOR: PASS
+RTL: PASS (static)
+MOBILE: PASS (static)
+TABLET: PASS (static)
+DESKTOP: PASS (static)
+ACCESSIBILITY: PASS (static)
+PERFORMANCE: PASS (structure)
+WEAK_NETWORK: PARTIAL (skeletons/errors exist; live throttle not run)
 
-| **SUPER_ADMIN** | **PASS** (code) | Full staff permissions; no matrix/PSP bypass |
-| **COACH_ROLE** | **PASS** (code) | Training allowed; payments blocked |
-| **NUTRITION_ROLE** | **PASS** (code) | Nutrition allowed; training override blocked |
-| **SUPPORT_ROLE** | **PASS** (code) | Support/messages; no legacy review |
-| **FINANCE_ROLE** | **PASS** (code) | Payments/legacy; no training mutation |
-| **READ_ONLY_ROLE** | **PASS** (code) | Read scopes only |
-| **SELF_ESCALATION** | **PASS** | DB trigger `prevent_staff_role_escalation` |
+CLIENT_SCALE_SIMULATION: PARTIAL (pagination/search exist; 20–100 live dataset not run)
+DAILY_WORKFLOW_SCENARIOS: PARTIAL (automated helpers) — live six scenarios PENDING
 
-| **CONFIRMATION_SYSTEM** | **PASS** | `AdminConfirmDialog` — subject, impact, diff |
-| **REASON_SYSTEM** | **PASS** | Required on sensitive actions |
-| **AUDIT** | **PASS** | `listAdminAuditEvents`, staff role audit metadata |
+P0_FOUND: 0
+P0_OPEN: 0
+P1_FOUND: 1
+P1_OPEN: 0
+P2_OPEN: 1
+P3_OPEN: 2
 
-| **NAVIGATION** | **PASS** | 7 sections, route guards |
-| **ENVIRONMENT_INDICATOR** | **PASS** | `AdminEnvironmentBadge` in shell |
-| **RTL** | **PASS** (static) | Shell, tables, dialogs CSS |
-| **MOBILE** | **PASS** (static) | `cc-mobile-cards`, responsive breakpoints |
-| **TABLET** | **PASS** (static) | Media queries present |
-| **DESKTOP** | **PASS** (static) | Full layout |
-| **ACCESSIBILITY** | **PASS** (static) | Dialog aria-modal, matrix icons + labels |
-| **PERFORMANCE** | **PASS** (structure) | Paginated lists, section loading, non-blocking images policy |
-| **WEAK_NETWORK** | **PARTIAL** | Skeletons/errors in dashboard; live throttling not executed by agent |
+FIXES_PERFORMED: YES — restore `billingStatusTone` export (`82524be`)
+RETEST_RESULT: PASS — `admin-a8.test.ts`; CI staging build after fix PASS
 
-| **CLIENT_SCALE_SIMULATION** | **PARTIAL** | Client directory supports pagination/search; no 100-row live dataset run |
-| **DAILY_WORKFLOW_SCENARIOS** | **PARTIAL** (automated) | Attention queue + quick status scenario tests; full 6 scenarios need authenticated live QA |
+SECURITY_RESULT: PASS (automated / static gates)
+RLS_RESULT: PASS (migration in repo; apply pending on Staging `dxerwrdpcflpnjvsnrjq`)
+
+TEST_RESULT: PASS
+BUILD_RESULT: PASS (local `npm run build -- --mode staging`; CI `npm ci && npm run build` after fix)
+
+FILES_CHANGED:
+- `src/lib/admin/admin-a8.test.ts` (new A8 suite)
+- `package.json` (register A8 suite)
+- `src/lib/payments/billing-present.ts` (missing export used by Admin membership UI)
+- `docs/MAAKFIT_ADMIN_V1_A8_FINAL_QA_REPORT.md`
+
+COMMIT_SHA: `82524be` (tested + preview-deployed code SHA)
+PUSH_RESULT: SUCCESS
+REMOTE_BRANCH_SYNC: `feat/admin-command-center-foundation` → `origin/feat/admin-command-center-foundation`
+
+STAGING_DEPLOY: PREVIEW SUCCESS — https://hakimlemagicien-dj165ekk3-hakim-le-magicien.vercel.app  
+Workflow: https://github.com/hakimlemagicien/hakimlemagicien/actions/runs/33449197062  
+STAGING_ALIAS: STALE
+STAGING_SHA: alias host is **not** `82524be`
+LIVE_ADMIN_QA: BLOCKED — no authenticated session
+
+PRODUCTION_TOUCHED: NO
+MAIN_TOUCHED: NO
+
+KNOWN_RISKS:
+- Canonical host still serves `admin-command-center-Be2dyezp.js` vs preview `admin-command-center-BPAt51eW.js`
+- A7 `staff_members` migration not applied on Staging — live RBAC uses `fallbackStaffSession`
+- Full six daily scenarios and 20–100 client live simulation not executed
+
+POST_V1_FOLLOWUPS:
+- Point `staging.hakimlemagicien.com` → `hakimlemagicien-dj165ekk3`
+- Apply A7 migration on Staging Supabase only
+- Authenticated Coach Hakim daily-workflow QA
+- Membership first-page-only filter (P2)
+- Incremental per-RPC permission coverage (A7 known)
+
+FINAL_DECISION:
+
+# **MAAKFIT_ADMIN_V1_FINAL_BLOCKED**
 
 ---
 
 ## Defects
 
-| Class | Found | Open |
-|-------|-------|------|
-| **P0_FOUND** | 0 | **P0_OPEN: 0** |
-| **P1_FOUND** | 0 (code) | **P1_OPEN: 0** (code); live workflow P1 possible until manual QA |
-| **P2_OPEN** | 1 | Membership server-side filters client-side on first RPC page (documented A6) |
-| **P3_OPEN** | 2 | Staging alias automation; incremental RPC permission coverage (A7 known) |
+| ID | Class | Status | Notes |
+|----|-------|--------|-------|
+| A8-P1-01 | P1 | **FIXED** | CI staging build failed: `billingStatusTone` missing from committed `billing-present.ts`. Admin membership pages import it. Restored export only. |
+| A8-P2-01 | P2 | OPEN | Membership filters still client-side on first RPC page (A6 known). |
+| A8-P3-01 | P3 | OPEN | CI `vercel alias set staging.hakimlemagicien.com` fails (token/user). |
+| A8-P3-02 | P3 | OPEN | Not all 62 admin RPCs have A7 permission wrappers. |
 
-**FIXES_PERFORMED:** None (QA-only milestone — no product defects requiring code fix)  
-**RETEST_RESULT:** N/A
-
----
-
-## Security
-
-| Check | Result |
-|-------|--------|
-| **SECURITY_RESULT** | **PASS** (automated gates) |
-| **RLS_RESULT** | **PASS** (migration defines staff RLS; apply pending on Staging) |
-
-Verified statically: no PSP truth mutation UI, no matrix bypass permission, no PAN/CVV, forbidden actions list, route + RPC guards for high-risk paths.
+No P0 found (no Matrix bypass, no PSP mutation UI, no PAN/CVV, no Production access).
 
 ---
 
-## Test & Build
+## Test evidence
 
-| Check | Result |
-|-------|--------|
-| **TEST_RESULT** | **PASS** — A1–A8 admin suites + remaining platform/training/payment suites. Full `npm test` reached `admin-data-contracts` then hit `npx` lock contention; remaining 27 files re-run via cached `tsx` — all PASS. |
-| **BUILD_RESULT** | **PASS** — `npm run build -- --mode staging` (exit 0) |
-
-**A8 test suite:** `src/lib/admin/admin-a8.test.ts` — aggregates A3–A7 surfaces, matrix, billing, roles, navigation, security gates, daily workflow helpers.
-
----
-
-## Delivery
-
-| Item | Value |
-|------|-------|
-| **FILES_CHANGED** | `src/lib/admin/admin-a8.test.ts`, `package.json`, `docs/MAAKFIT_ADMIN_V1_A8_FINAL_QA_REPORT.md` |
-| **COMMIT_SHA** | _(pending commit)_ |
-| **PUSH_RESULT** | PENDING |
-| **REMOTE_BRANCH_SYNC** | `feat/admin-command-center-foundation` |
+- A8 suite: `src/lib/admin/admin-a8.test.ts` — T1–T80 regression hooks (dashboard, clients, 360, matrix, libraries, billing, roles, nav, security).
+- First `npm test` run: passed through `admin-a8` + `admin-data-contracts`; later files blocked by `npx` lock contention (`ECOMPROMISED`).
+- Remaining 27 suites re-run via cached `tsx`: **all PASS** (ops, libraries, Core 100, coach-override, payments-adjacent training engines, env).
+- Local staging build: **PASS** (prior to A8 commit).
+- First CI deploy (`33449076427`): **FAIL** on missing export.
+- Second CI deploy (`33449197062`): **PASS** preview; **alias failed**.
 
 ---
 
-## Staging
+## Staging alias proof
 
-| Item | Value |
-|------|-------|
-| **STAGING_DEPLOY** | PENDING — push + Vercel deploy after A8 commit |
-| **STAGING_ALIAS** | **LIKELY STALE** — CI alias step historically fails; manual verification required |
-| **STAGING_SHA** | Not yet deployed with A8 artifacts |
-| **LIVE_ADMIN_QA** | **BLOCKED** — requires authenticated session on `staging.hakimlemagicien.com/admin` |
+| Host | Admin bundle |
+|------|----------------|
+| Preview `hakimlemagicien-dj165ekk3` | `admin-command-center-BPAt51eW.js` |
+| `staging.hakimlemagicien.com` | `admin-command-center-Be2dyezp.js` |
 
-**PRODUCTION_TOUCHED:** NO  
-**MAIN_TOUCHED:** NO
+**STAGING_ALIAS ≠ CURRENT.** A8 cannot close on Preview-only.
 
----
+Manual unblock:
 
-## Daily Workflow Scenarios (Manual — Pending)
-
-| # | Scenario | Automated | Live QA |
-|---|----------|-----------|---------|
-| 1 | New client → overview → note → training → nutrition | Partial | PENDING |
-| 2 | Training issue → Matrix → safe decision → audit | Partial | PENDING |
-| 3 | Nutrition safety → attention → safe action | Partial | PENDING |
-| 4 | Payment exception → investigate → no unsafe mutation | Partial | PENDING |
-| 5 | Support message → reply → return to client | Partial | PENDING |
-| 6 | Role-limited employee → forbidden blocked | Code PASS | PENDING post-migration |
+```text
+vercel alias set https://hakimlemagicien-dj165ekk3-hakim-le-magicien.vercel.app staging.hakimlemagicien.com
+```
 
 ---
 
-## Known Risks & Follow-ups
+## Daily workflow scenarios
 
-**KNOWN_RISKS:**
-- A7 `staff_members` migration not applied on Staging — RBAC live behavior uses `fallbackStaffSession` until applied
-- Canonical staging alias may not point to latest tested SHA
-- Full multi-role live QA not executed in this run
-
-**POST_V1_FOLLOWUPS:**
-- Apply A7 migration on Staging Supabase (`dxerwrdpcflpnjvsnrjq`)
-- Manual Vercel alias: `staging.hakimlemagicien.com` → latest deployment
-- Authenticated daily-workflow QA with Coach Hakim account
-- Expand per-RPC permission matrix (A7 incremental item)
-- Membership server-side filter pagination (P2)
+| # | Scenario | Result |
+|---|----------|--------|
+| 1 | New client → overview → note → training → nutrition | Automated structure PASS — live PENDING |
+| 2 | Training issue → Matrix → safe decision → audit | Code PASS — live PENDING |
+| 3 | Nutrition safety → attention → safe action | Code PASS — live PENDING |
+| 4 | Payment exception → no unsafe mutation | Code PASS — live PENDING |
+| 5 | Support message → reply → client | Code PASS — live PENDING |
+| 6 | Role-limited employee blocked | Code PASS — live PENDING post A7 migration |
 
 ---
 
-## Acceptance Checklist (Section 62)
+## Acceptance (Section 62)
 
 - [x] A1 CLOSED
-- [ ] A2–A7 CLOSED (all BLOCKED)
-- [x] Dashboard PASS (automated)
-- [x] Client Directory PASS (automated)
-- [x] Client 360 PASS (automated)
-- [x] Training / Matrix / Core 100 / Versioning PASS (automated)
-- [x] Nutrition / Allergy / Libraries PASS (automated)
-- [x] Memberships / Payments / PSP separation PASS (automated)
-- [x] Roles / Audit PASS (code); live multi-role PENDING
-- [x] RTL / Mobile / Desktop structure PASS (static)
-- [ ] 20–100 client simulation (live dataset PENDING)
-- [ ] Daily workflow scenarios (live PENDING)
+- [ ] A2–A7 CLOSED
+- [x] Dashboard / Clients / 360 / Training / Matrix / Core 100 / Versioning (automated)
+- [x] Nutrition / Allergy / Libraries (automated)
+- [x] Memberships / Payments / PSP separation / payment truth (automated)
+- [x] Roles / self-escalation / confirmations / audit (code)
+- [x] RTL / Mobile / Tablet / Desktop structure
+- [ ] 20–100 live client simulation
+- [ ] Daily workflow live scenarios
 - [x] P0 open = 0
-- [x] P1 open = 0 (code)
-- [x] npm test PASS
-- [x] build PASS
-- [ ] Final SHA deployed + alias current
-- [ ] Authenticated manual QA PASS
+- [x] P1 open = 0
+- [x] tests PASS
+- [x] build PASS (after fix)
+- [x] SHA pushed (`82524be`)
+- [x] Preview deployed
+- [ ] Alias current
+- [ ] Authenticated manual QA
 - [x] Production untouched
 - [x] main untouched
 
@@ -207,12 +213,16 @@ Verified statically: no PSP truth mutation UI, no matrix bypass permission, no P
 
 ## FINAL_DECISION
 
-# **MAAKFIT_ADMIN_V1_FINAL_BLOCKED**
+**MAAKFIT_ADMIN_V1_FINAL_BLOCKED**
 
-**Rationale:** Prerequisite milestones A2–A7 remain BLOCKED (staging alias + live QA + A7 migration). Automated regression, security static gates, tests, and staging build **PASS**. No P0/P1 code defects found. Admin V1 is **not** formally closed for daily operations until:
+Admin V1 is **not** ready to be declared closed for daily operations.
 
-1. A7 migration applied on Staging  
-2. `staging.hakimlemagicien.com` serves the tested SHA  
-3. Authenticated manual QA completes all six daily scenarios  
+Code + automated security gates + tests + staging **preview** are in place. Closure still requires:
 
-**Do not start Admin V2.** Hand off to PM/CEO for Client App / Commercial V1 readiness decision.
+1. Canonical staging alias = `82524be` / `hakimlemagicien-dj165ekk3`
+2. A7 migration applied on Staging only
+3. Authenticated live QA of the six daily scenarios
+
+**Do not start Admin V2. Do not add polish automatically.**
+
+Handoff: 📋 Project Manager / CEO — next decision is outside Admin (Client App / Commercial V1 readiness), after A8 unblock.
