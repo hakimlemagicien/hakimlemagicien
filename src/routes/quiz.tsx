@@ -2371,12 +2371,12 @@ function InvestmentScreen({ onBack, onNext }: { onBack: () => void; onNext: (inv
 
 
 
-import bodyVerySkinny from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/01-very-thin.webp";
-import bodyLean from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/02-lean-athletic.webp";
-import bodySkinnyFat from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/03-skinny-fat-slight-belly.webp";
-import bodyAverage from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/04-average-body.webp";
-import bodyOverweight from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/05-overweight-full.webp";
-import bodyMuscular from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/06-muscular.webp";
+import bodyVerySkinny from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/01-very-thin.webp";
+import bodyLean from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/02-lean-athletic.webp";
+import bodySkinnyFat from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/03-skinny-fat-slight-belly.webp";
+import bodyAverage from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/04-average-body.webp";
+import bodyOverweight from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/05-overweight-full.webp";
+import bodyMuscular from "@/assets/quiz/اي شكل آقرب لجسمك الحالي/06-muscular.webp";
 
 const BODY_TYPES = [
   { id: "very_skinny", title: "نحيف جداً", sub: "وزن أقل من الطبيعي", img: bodyVerySkinny },
