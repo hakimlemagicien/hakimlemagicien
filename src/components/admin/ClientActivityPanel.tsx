@@ -8,6 +8,7 @@ import {
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
 import { formatAdminDate, formatRelativeAge } from "@/lib/admin/admin-status";
+import { formatClientActivityEvent } from "@/lib/admin/admin-client-ops";
 
 type Props = {
   clientId: string;
@@ -47,18 +48,22 @@ export function ClientActivityPanel({ clientId, limit, compact = false }: Props)
 
   const content = (
     <ul className={compact ? "cc-timeline cc-timeline--compact" : "cc-timeline"}>
-      {rows.map((row) => (
-        <li key={row.id} className="cc-timeline__item">
-          <span className="cc-timeline__dot" aria-hidden />
-          <div className="cc-timeline__body">
-            <p className="cc-timeline__title">{row.eventType}</p>
-            <p className="cc-timeline__meta">
-              {formatRelativeAge(row.createdAt)} · {formatAdminDate(row.createdAt)}
-              {row.actorId ? ` · ${row.actorId.slice(0, 8)}` : ""}
-            </p>
-          </div>
-        </li>
-      ))}
+      {rows.map((row) => {
+        const event = formatClientActivityEvent(row);
+        return (
+          <li key={row.id} className="cc-timeline__item">
+            <span className="cc-timeline__dot" aria-hidden />
+            <div className="cc-timeline__body">
+              <p className="cc-timeline__title">{event.what}</p>
+              {event.who ? <p className="cc-timeline__entity">{event.who}</p> : null}
+              <p className="cc-timeline__meta">
+                {formatRelativeAge(row.createdAt)}
+                {event.source ? ` · ${event.source}` : ""}
+              </p>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 

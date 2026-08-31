@@ -16,7 +16,18 @@ import {
   type AdminClientListItem,
   type AdminClientSearchResult,
 } from "@/lib/admin/admin-clients-api";
-import { formatAdminDate, formatRelativeAge, onboardingStatus, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import {
+  buildClientDirectorySummary,
+  clientNeedsAttention,
+} from "@/lib/admin/admin-client-ops";
+import {
+  formatAdminDate,
+  formatRelativeAge,
+  onboardingStatus,
+  personInitials,
+  planLabel,
+  planStatusKind,
+} from "@/lib/admin/admin-status";
 
 type ClientsSearch = { q?: string };
 type ClientSort = "joined" | "activity" | "unread";
@@ -41,6 +52,7 @@ function AdminClientsPage() {
   const [offset, setOffset] = useState(0);
   const [onboardingFilter, setOnboardingFilter] = useState<"all" | "complete" | "incomplete">("all");
   const [planFilter, setPlanFilter] = useState<"all" | "vip" | "premium" | "essential" | "free">("all");
+  const [attentionFilter, setAttentionFilter] = useState(false);
   const [sort, setSort] = useState<ClientSort>("joined");
 
   useEffect(() => {
@@ -97,7 +109,28 @@ function AdminClientsPage() {
     };
   }, [q, onboardingFilter, planFilter, blocked]);
 
-  const rows = useMemo(() => sortClientRows(result?.rows ?? [], sort), [result, sort]);
+  const filteredRows = useMemo(() => {
+    const base = result?.rows ?? [];
+    if (!attentionFilter) return base;
+    return base.filter(clientNeedsAttention);
+  }, [result, attentionFilter]);
+
+  const rows = useMemo(() => sortClientRows(filteredRows, sort), [filteredRows, sort]);
+
+  const summary = useMemo(
+    () => buildClientDirectorySummary(result?.rows ?? [], result?.totalCount ?? 0),
+    [result],
+  );
+
+  const hasActiveFilters =
+    onboardingFilter !== "all" || planFilter !== "all" || attentionFilter || sort !== "joined";
+
+  const clearFilters = () => {
+    setOnboardingFilter("all");
+    setPlanFilter("all");
+    setAttentionFilter(false);
+    setSort("joined");
+  };
 
   const loadMore = async () => {
     if (!result) return;
@@ -128,8 +161,38 @@ function AdminClientsPage() {
     <>
       <AdminPageHeader
         title="العملاء"
-        subtitle="إدارة العملاء ومتابعة حالتهم وبرامجهم."
+        subtitle="إدارة ومتابعة جميع عملاء MAAKFIT من مكان واحد."
       />
+
+      {!blocked && result ? (
+        <div className="cc-directory-summary" aria-label="ملخص العملاء">
+          <article className="cc-directory-summary__card">
+            <span className="cc-directory-summary__label">إجمالي العملاء</span>
+            <strong className="cc-directory-summary__value">{summary.totalClients}</strong>
+          </article>
+          <article className="cc-directory-summary__card">
+            <span className="cc-directory-summary__label">عملاء جدد</span>
+            <strong className="cc-directory-summary__value">{summary.newClients}</strong>
+            {summary.fromVisibleRows ? (
+              <span className="cc-directory-summary__hint">من الصفحة المحمّلة</span>
+            ) : null}
+          </article>
+          <article className="cc-directory-summary__card">
+            <span className="cc-directory-summary__label">نشطون</span>
+            <strong className="cc-directory-summary__value">{summary.activeClients}</strong>
+            {summary.fromVisibleRows ? (
+              <span className="cc-directory-summary__hint">من الصفحة المحمّلة</span>
+            ) : null}
+          </article>
+          <article className="cc-directory-summary__card cc-directory-summary__card--attention">
+            <span className="cc-directory-summary__label">يحتاجون انتباهك</span>
+            <strong className="cc-directory-summary__value">{summary.needsAttention}</strong>
+            {summary.fromVisibleRows ? (
+              <span className="cc-directory-summary__hint">من الصفحة المحمّلة</span>
+            ) : null}
+          </article>
+        </div>
+      ) : null}
 
       <AdminSearchInput
         label="بحث العملاء"
@@ -143,7 +206,7 @@ function AdminClientsPage() {
           <span>الخطة</span>
           <select value={planFilter} onChange={(event) => setPlanFilter(event.target.value as typeof planFilter)}>
             <option value="all">الكل</option>
-            <option value="vip">VIP</option>
+            <option value="vip">Internal VIP</option>
             <option value="premium">Premium</option>
             <option value="essential">Essential</option>
             <option value="free">Free</option>
@@ -160,6 +223,14 @@ function AdminClientsPage() {
             <option value="incomplete">غير مكتمل</option>
           </select>
         </label>
+        <label className="cc-filter cc-filter--checkbox">
+          <input
+            type="checkbox"
+            checked={attentionFilter}
+            onChange={(event) => setAttentionFilter(event.target.checked)}
+          />
+          <span>يحتاج انتباهك</span>
+        </label>
         <label className="cc-filter">
           <span>ترتيب الصفحة</span>
           <select value={sort} onChange={(event) => setSort(event.target.value as ClientSort)}>
@@ -168,7 +239,11 @@ function AdminClientsPage() {
             <option value="unread">غير مقروء</option>
           </select>
         </label>
-        <span className="cc-filter-chip is-disabled">مراجعة مستحقة — غير معتمدة</span>
+        {hasActiveFilters ? (
+          <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={clearFilters}>
+            مسح الفلاتر
+          </button>
+        ) : null}
       </AdminFilterBar>
 
       {blocked ? <AdminEmptyState title="أكمل البحث" body="أدخل حرفين على الأقل أو امسح الحقل لتصفح الصفحة." /> : null}
@@ -183,66 +258,37 @@ function AdminClientsPage() {
         <>
           <p className="cc-muted">
             {result.totalCount} عميل مطابق — عرض {rows.length}
+            {attentionFilter ? " · فلتر الانتباه على الصفحة المحمّلة" : ""}
             {sort !== "joined" ? " · الترتيب على الصفحة المحمّلة فقط" : ""}
           </p>
-          <AdminTable>
-            <thead>
-              <tr>
-                <th>العميل</th>
-                <th>الخطة</th>
-                <th>الهدف</th>
-                <th>التسجيل</th>
-                <th>آخر نشاط</th>
-                <th>غير مقروء</th>
-                <th>انتباه</th>
-                <th>انضم</th>
-                <th>إجراء</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const status = onboardingStatus(row.onboardingCompletedAt);
-                const attention =
-                  row.unreadCoachingCount > 0
-                    ? `${row.unreadCoachingCount} رسالة`
-                    : row.waitingCoaching
-                      ? "بانتظار رد"
-                      : "—";
-                return (
-                  <tr key={row.id}>
-                    <td>
-                      <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-client-link">
-                        <strong>{row.fullName || "بدون اسم"}</strong>
-                        <span>{row.email || row.phone || "—"}</span>
-                      </Link>
-                    </td>
-                    <td>
-                      {row.membershipPlan ? (
-                        <AdminStatusBadge tone={planStatusKind(row.membershipPlan)}>
-                          {planLabel(row.membershipPlan)}
-                        </AdminStatusBadge>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td>{row.goal || "—"}</td>
-                    <td>
-                      <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
-                    </td>
-                    <td className="cc-meta">{row.lastActivityAt ? formatRelativeAge(row.lastActivityAt) : "—"}</td>
-                    <td>{row.unreadCoachingCount || "—"}</td>
-                    <td>{attention}</td>
-                    <td className="cc-meta">{formatAdminDate(row.createdAt)}</td>
-                    <td>
-                      <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-btn cc-btn--compact">
-                        فتح الملف
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </AdminTable>
+
+          <div className="cc-table-wrap cc-table-wrap--desktop">
+            <AdminTable>
+              <thead>
+                <tr>
+                  <th>العميل</th>
+                  <th>الحالة</th>
+                  <th>الخطة</th>
+                  <th>التسجيل</th>
+                  <th>آخر نشاط</th>
+                  <th>انتباه</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <ClientDirectoryRow key={row.id} row={row} />
+                ))}
+              </tbody>
+            </AdminTable>
+          </div>
+
+          <div className="cc-client-card-list">
+            {rows.map((row) => (
+              <ClientDirectoryCard key={row.id} row={row} />
+            ))}
+          </div>
+
           {result.truncated ? (
             <button type="button" className="cc-btn" disabled={loadingMore} onClick={() => void loadMore()}>
               {loadingMore ? "جاري التحميل…" : "المزيد"}
@@ -254,13 +300,108 @@ function AdminClientsPage() {
   );
 }
 
+function ClientDirectoryRow({ row }: { row: AdminClientListItem }) {
+  const status = onboardingStatus(row.onboardingCompletedAt);
+  const attention = attentionLabel(row);
+
+  return (
+    <tr>
+      <td>
+        <div className="cc-client-directory__identity">
+          <span className="cc-avatar" aria-hidden>
+            {personInitials(row.fullName)}
+          </span>
+          <div>
+            <strong>{row.fullName || "بدون اسم"}</strong>
+            <span className="cc-meta">{row.email || row.phone || "—"}</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <AdminStatusBadge tone={row.membershipActive ? "success" : "neutral"}>
+          {row.membershipActive ? "نشط" : row.membershipActive === false ? "غير نشط" : "—"}
+        </AdminStatusBadge>
+      </td>
+      <td>
+        {row.membershipPlan ? (
+          <AdminStatusBadge tone={planStatusKind(row.membershipPlan)}>
+            {planLabel(row.membershipPlan)}
+          </AdminStatusBadge>
+        ) : (
+          "—"
+        )}
+      </td>
+      <td>
+        <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
+      </td>
+      <td className="cc-meta">{row.lastActivityAt ? formatRelativeAge(row.lastActivityAt) : "—"}</td>
+      <td>
+        {attention ? (
+          <span className="cc-client-directory__attention">{attention}</span>
+        ) : (
+          <span className="cc-muted">—</span>
+        )}
+      </td>
+      <td>
+        <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-btn cc-btn--compact cc-btn--primary">
+          فتح العميل
+        </Link>
+      </td>
+    </tr>
+  );
+}
+
+function ClientDirectoryCard({ row }: { row: AdminClientListItem }) {
+  const status = onboardingStatus(row.onboardingCompletedAt);
+  const attention = attentionLabel(row);
+
+  return (
+    <article className="cc-client-card">
+      <div className="cc-client-card__head">
+        <span className="cc-avatar" aria-hidden>
+          {personInitials(row.fullName)}
+        </span>
+        <div>
+          <strong>{row.fullName || "بدون اسم"}</strong>
+          <p className="cc-meta">{row.email || row.phone || "—"}</p>
+        </div>
+      </div>
+      <div className="cc-client-card__meta">
+        {row.membershipPlan ? (
+          <AdminStatusBadge tone={planStatusKind(row.membershipPlan)}>
+            {planLabel(row.membershipPlan)}
+          </AdminStatusBadge>
+        ) : null}
+        <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
+        {attention ? <span className="cc-client-directory__attention">{attention}</span> : null}
+      </div>
+      <p className="cc-meta">
+        آخر نشاط: {row.lastActivityAt ? formatRelativeAge(row.lastActivityAt) : "—"} · انضم {formatAdminDate(row.createdAt)}
+      </p>
+      <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-btn cc-btn--primary">
+        فتح العميل
+      </Link>
+    </article>
+  );
+}
+
+function attentionLabel(row: AdminClientListItem): string | null {
+  if (row.unreadCoachingCount > 0) return `${row.unreadCoachingCount} رسالة`;
+  if (row.waitingCoaching) return "بانتظار رد";
+  return null;
+}
+
 function sortClientRows(rows: AdminClientListItem[], sort: ClientSort): AdminClientListItem[] {
   const copy = [...rows];
   if (sort === "activity") {
     return copy.sort((a, b) => (b.lastActivityAt ?? "").localeCompare(a.lastActivityAt ?? ""));
   }
   if (sort === "unread") {
-    return copy.sort((a, b) => b.unreadCoachingCount - a.unreadCoachingCount || Number(b.waitingCoaching) - Number(a.waitingCoaching));
+    return copy.sort(
+      (a, b) =>
+        b.unreadCoachingCount - a.unreadCoachingCount ||
+        Number(b.waitingCoaching) - Number(a.waitingCoaching),
+    );
   }
   return copy;
 }

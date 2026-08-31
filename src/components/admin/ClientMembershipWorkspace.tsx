@@ -65,6 +65,12 @@ export function ClientMembershipWorkspace({ clientId, overview }: Props) {
             </dd>
           </div>
           <div>
+            <dt>فترة الفوترة</dt>
+            <dd>
+              {membership.billing_period_months ? `${membership.billing_period_months} أشهر` : "—"}
+            </dd>
+          </div>
+          <div>
             <dt>التجديد القادم</dt>
             <dd>{membership.next_renewal_at ? formatAdminDate(membership.next_renewal_at) : "—"}</dd>
           </div>

@@ -17,6 +17,7 @@ function assert(condition: unknown, message: string): asserts condition {
 const styles = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
 const shellSource = readFileSync(resolve(process.cwd(), "src/components/admin/AdminShell.tsx"), "utf8");
 const clientRoute = readFileSync(resolve(process.cwd(), "src/routes/admin/clients/$clientId.tsx"), "utf8");
+const clientHeader = readFileSync(resolve(process.cwd(), "src/components/admin/Client360Header.tsx"), "utf8");
 const matrixSource = readFileSync(resolve(process.cwd(), "src/components/admin/MatrixImpactCard.tsx"), "utf8");
 const core100 = readFileSync(resolve(process.cwd(), "src/lib/platform/strategy-matrix/core-100.ts"), "utf8");
 const reviewSource = readFileSync(resolve(process.cwd(), "src/lib/platform/coach-override/review.ts"), "utf8");
@@ -76,7 +77,8 @@ assert(clientRoute.includes("listAdminClientNotes"), "notes api");
 
 // T15 — messages CTA (not tab)
 assert(!CLIENT_360_SECTIONS.includes("messages" as never), "no messages tab");
-assert(clientRoute.includes("مراسلة العميل"), "message CTA");
+assert(clientRoute.includes("Client360Header"), "message CTA component");
+assert(clientHeader.includes("إرسال رسالة"), "message CTA");
 
 // T16 — library/assignment separation
 assert(PROGRAM_BOUNDARIES.template !== PROGRAM_BOUNDARIES.assigned, "program boundary");

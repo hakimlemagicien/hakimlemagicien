@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import {
@@ -9,9 +9,9 @@ import {
   AdminSection,
   AdminStatusBadge,
 } from "@/components/admin/AdminPage";
-import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
-import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
-import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
+import { Client360Header } from "@/components/admin/Client360Header";
+import { ClientAttentionAlerts } from "@/components/admin/ClientAttentionAlerts";
+import { ClientHealthSnapshot } from "@/components/admin/ClientHealthSnapshot";
 import {
   AdminConfirmDialog,
   AdminSkeletonRows,
@@ -31,24 +31,11 @@ import {
   listAdminClientNotes,
   type AdminCoachNote,
 } from "@/lib/admin/admin-notes-api";
-import {
-  assignmentStatusLabel,
-  objectiveSignalLabel,
-  objectiveTrainingSignals,
-} from "@/lib/admin/admin-client-training";
-import {
-  formatAdminDate,
-  formatRelativeAge,
-  onboardingStatus,
-  personInitials,
-  planLabel,
-  planStatusKind,
-} from "@/lib/admin/admin-status";
-import {
-  nutritionAttentionSignals,
-  nutritionSignalLabel,
-  nutritionStatusLabel,
-} from "@/lib/platform/nutrition-assignment";
+import { buildClientAttentionAlerts, clientNutritionSummary, clientTrainingSummary } from "@/lib/admin/admin-client-ops";
+import { formatAdminDate, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
+import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
+import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
 
 const ClientNutritionWorkspace = lazy(() =>
   import("@/components/admin/ClientNutritionWorkspace").then((module) => ({
@@ -68,6 +55,7 @@ export const Route = createFileRoute("/admin/clients/$clientId")({
 function AdminClient360Page() {
   const { clientId } = Route.useParams();
   const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: "/admin/clients/$clientId" });
   const [overview, setOverview] = useState<AdminClientOverview | null>(null);
   const [notes, setNotes] = useState<AdminCoachNote[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +65,15 @@ function AdminClient360Page() {
   const [includeArchived, setIncludeArchived] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
+  const [notesPreview, setNotesPreview] = useState<AdminCoachNote[]>([]);
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
+
+  useEffect(() => {
+    if (tab !== "overview") return;
+    void listAdminClientNotes(clientId, { includeArchived: false })
+      .then((rows) => setNotesPreview(rows.slice(0, 1)))
+      .catch(() => setNotesPreview([]));
+  }, [clientId, tab]);
 
   useEffect(() => {
     setLoading(true);
@@ -107,8 +103,8 @@ function AdminClient360Page() {
       .finally(() => setNotesLoading(false));
   }, [clientId, tab, includeArchived]);
 
-  const status = onboardingStatus(overview?.onboarding_completed_at);
   const conversationId = overview?.coaching?.conversation_id;
+  const attentionAlerts = overview ? buildClientAttentionAlerts(overview, clientId) : [];
 
   const saveNote = async () => {
     if (!isValidCoachNoteBody(draft) || saving) return;
@@ -161,7 +157,7 @@ function AdminClient360Page() {
 
       <AdminPageHeader
         title={overview?.full_name || "عميل"}
-        subtitle="ملف العميل — مركز إدارة التدريب والتغذية والعضوية."
+        subtitle="مركز عمليات العميل — تدريب، تغذية، عضوية، ونشاط."
         actions={
           <Link to="/admin/clients" className="cc-btn cc-btn--ghost">
             كل العملاء
@@ -177,38 +173,13 @@ function AdminClient360Page() {
 
       {overview ? (
         <>
-          <header className="cc-client-hero">
-            <span className="cc-avatar" aria-hidden>
-              {personInitials(overview.full_name)}
-            </span>
-            <div className="cc-client-hero__text">
-              <h2>{overview.full_name || "بدون اسم"}</h2>
-              <p>{overview.email || overview.phone || "بدون بريد"}</p>
-              <p>{overview.goal || "الهدف غير محدد"} · انضم {formatAdminDate(overview.created_at)}</p>
-              <div className="cc-client-hero__badges">
-                <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
-                {overview.membership?.tier ? (
-                  <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
-                    {planLabel(overview.membership.tier)}
-                    {overview.membership.is_active ? "" : " — غير نشطة"}
-                  </AdminStatusBadge>
-                ) : null}
-              </div>
-            </div>
-            <div className="cc-client-hero__actions">
-              {conversationId ? (
-                <Link
-                  to="/admin/messages/$conversationId"
-                  params={{ conversationId }}
-                  className="cc-btn cc-btn--primary"
-                >
-                  مراسلة العميل
-                </Link>
-              ) : (
-                <span className="cc-muted">لا محادثة تدريب مسجّلة</span>
-              )}
-            </div>
-          </header>
+          <Client360Header
+            overview={overview}
+            conversationId={conversationId}
+            onAddNote={() => {
+              void navigate({ search: { tab: "notes" } });
+            }}
+          />
 
           <nav className="cc-tabs" aria-label="أقسام العميل">
             {CLIENT_360_SECTIONS.map((section) => (
@@ -227,18 +198,20 @@ function AdminClient360Page() {
 
           {tab === "overview" ? (
             <AdminSection>
+              <h2 className="cc-section__title">يحتاج انتباهك</h2>
+              <ClientAttentionAlerts alerts={attentionAlerts} />
+
+              <h2 className="cc-section__title cc-section__title--spaced">اللقطة الصحية</h2>
+              <ClientHealthSnapshot clientId={clientId} overview={overview} />
+
+              <h2 className="cc-section__title cc-section__title--spaced">ملخص الخطط الحالية</h2>
               <div className="cc-client-overview-grid">
                 <AdminCard>
-                  <h2 className="cc-section__title">يحتاج انتباه</h2>
-                  <p>{attentionSummary(overview)}</p>
-                </AdminCard>
-                <AdminCard>
-                  <h2 className="cc-section__title">التدريب الحالي</h2>
-                  <p>
-                    {overview.assignment
-                      ? `${overview.assignment.name_ar ?? "برنامج"} · ${assignmentStatusLabel(overview.assignment.status)}`
-                      : "لا تعيين تدريب"}
-                  </p>
+                  <h3 className="cc-section__title">التدريب</h3>
+                  <p>{clientTrainingSummary(overview)}</p>
+                  {overview.assignment?.starts_on ? (
+                    <p className="cc-meta">بدأ {formatAdminDate(overview.assignment.starts_on)}</p>
+                  ) : null}
                   <Link
                     to="/admin/clients/$clientId"
                     params={{ clientId }}
@@ -249,12 +222,11 @@ function AdminClient360Page() {
                   </Link>
                 </AdminCard>
                 <AdminCard>
-                  <h2 className="cc-section__title">التغذية الحالية</h2>
-                  <p>
-                    {overview.nutrition_assignment
-                      ? `${overview.nutrition_assignment.name_ar ?? "خطة"} · ${nutritionStatusLabel(overview.nutrition_assignment.status)}`
-                      : "لا تعيين تغذية"}
-                  </p>
+                  <h3 className="cc-section__title">التغذية</h3>
+                  <p>{clientNutritionSummary(overview)}</p>
+                  {overview.nutrition_assignment?.starts_on ? (
+                    <p className="cc-meta">بدأ {formatAdminDate(overview.nutrition_assignment.starts_on)}</p>
+                  ) : null}
                   <Link
                     to="/admin/clients/$clientId"
                     params={{ clientId }}
@@ -265,62 +237,61 @@ function AdminClient360Page() {
                   </Link>
                 </AdminCard>
                 <AdminCard>
-                  <h2 className="cc-section__title">العضوية</h2>
+                  <h3 className="cc-section__title">العضوية</h3>
                   <p>
-                    {overview.membership
-                      ? `${planLabel(overview.membership.tier)}${overview.membership.is_active ? " — نشطة" : " — غير نشطة"}`
-                      : "لا عضوية مسجّلة"}
+                    {overview.membership ? (
+                      <>
+                        <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
+                          {planLabel(overview.membership.tier)}
+                        </AdminStatusBadge>{" "}
+                        {overview.membership.is_active ? "نشطة" : "غير نشطة"}
+                      </>
+                    ) : (
+                      "لا عضوية مسجّلة"
+                    )}
                   </p>
+                  {overview.membership?.paid_period_end ? (
+                    <p className="cc-meta">الفترة المدفوعة حتى {formatAdminDate(overview.membership.paid_period_end)}</p>
+                  ) : null}
                   <Link
                     to="/admin/clients/$clientId"
                     params={{ clientId }}
                     search={{ tab: "membership" }}
                     className="cc-btn cc-btn--compact"
                   >
-                    العضوية والفوترة
+                    الاشتراك والفوترة
                   </Link>
                 </AdminCard>
               </div>
 
-              <div className="cc-grid-2">
-                <AdminCard>
-                  <h2 className="cc-section__title">اللقطة التشغيلية</h2>
-                  <dl className="cc-dl">
-                    <div>
-                      <dt>الهدف</dt>
-                      <dd>{overview.goal || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>موقع التدريب</dt>
-                      <dd>{overview.training_type || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>دعم مفتوح</dt>
-                      <dd>{overview.open_support_count ?? 0}</dd>
-                    </div>
-                    <div>
-                      <dt>آخر تمرين</dt>
-                      <dd>{overview.last_workout_at ? formatRelativeAge(overview.last_workout_at) : "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>ملاحظات الطاقم</dt>
-                      <dd>{overview.notes_count}</dd>
-                    </div>
-                  </dl>
-                </AdminCard>
-                <AdminCard>
-                  <h2 className="cc-section__title">آخر النشاطات</h2>
-                  <ClientActivityPanel clientId={clientId} limit={5} compact />
+              {notesPreview.length > 0 ? (
+                <AdminCard className="cc-client-notes-preview">
+                  <h3 className="cc-section__title">آخر ملاحظة</h3>
+                  <p>{notesPreview[0]?.body}</p>
+                  <p className="cc-meta">{formatAdminDate(notesPreview[0]?.createdAt ?? "")}</p>
                   <Link
                     to="/admin/clients/$clientId"
                     params={{ clientId }}
-                    search={{ tab: "activity" }}
+                    search={{ tab: "notes" }}
                     className="cc-btn cc-btn--compact"
                   >
-                    عرض كل النشاط
+                    كل الملاحظات
                   </Link>
                 </AdminCard>
-              </div>
+              ) : null}
+
+              <AdminCard>
+                <h3 className="cc-section__title">آخر النشاطات</h3>
+                <ClientActivityPanel clientId={clientId} limit={5} compact />
+                <Link
+                  to="/admin/clients/$clientId"
+                  params={{ clientId }}
+                  search={{ tab: "activity" }}
+                  className="cc-btn cc-btn--compact"
+                >
+                  عرض كل النشاط
+                </Link>
+              </AdminCard>
             </AdminSection>
           ) : null}
 
@@ -331,6 +302,7 @@ function AdminClient360Page() {
                 <p className="cc-muted">لا يمكن إرسال ملاحظة فارغة. الحد 8000 حرف. الأرشفة تخفي العرض التشغيلي دون حذف السجل.</p>
                 <div className="cc-thread__draft">
                   <textarea
+                    id="client-note-draft"
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     rows={3}
@@ -419,28 +391,4 @@ function AdminClient360Page() {
       <AdminConfirmDialog request={confirm} onClose={() => setConfirm(null)} />
     </>
   );
-}
-
-function attentionSummary(overview: AdminClientOverview): string {
-  const parts: string[] = [];
-  if ((overview.coaching?.unread_count ?? 0) > 0) parts.push(`${overview.coaching?.unread_count} رسالة غير مقروءة`);
-  if (overview.coaching?.status === "waiting_for_reply") parts.push("محادثة بانتظار رد");
-  if ((overview.open_support_count ?? 0) > 0) parts.push(`${overview.open_support_count} تذكرة دعم`);
-  for (const signal of objectiveTrainingSignals({
-    status: overview.assignment?.status ?? null,
-    startsOn: overview.assignment?.starts_on ?? null,
-    durationWeeks: overview.assignment?.duration_weeks ?? null,
-    snapshotComplete: overview.assignment?.snapshot_complete ?? null,
-  })) {
-    parts.push(objectiveSignalLabel(signal));
-  }
-  for (const signal of nutritionAttentionSignals({
-    status: overview.nutrition_assignment?.status ?? null,
-    startsOn: overview.nutrition_assignment?.starts_on ?? null,
-    snapshotComplete: overview.nutrition_assignment?.snapshot_complete ?? null,
-    allergenConflict: overview.nutrition_assignment?.allergen_conflict ?? null,
-  })) {
-    parts.push(nutritionSignalLabel(signal));
-  }
-  return parts.length > 0 ? parts.join(" · ") : "لا إشارات معتمدة حالياً";
 }
