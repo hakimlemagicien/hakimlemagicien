@@ -72,7 +72,7 @@
 **BUILD_RESULT:** PASS (`npm run build -- --mode staging`)  
 
 **FILES_CHANGED:** billing overview route, BillingOpsSubnav, memberships/payments panels, ClientMembershipWorkspace, `admin-billing-ops-surfaces.ts`, tests, styles  
-**COMMIT_SHA:** `dafa9b7`  
+**COMMIT_SHA:** `c36aa5d`  
 **PUSH_RESULT:** _(after push)_  
 **REMOTE_BRANCH_SYNC:** `feat/admin-command-center-foundation`  
 
