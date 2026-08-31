@@ -75,6 +75,29 @@ export function formatBillingPrice(plan: string, amount: number | null, currency
   return `$${amount} ${currency}`;
 }
 
+
+export function billingStatusTone(
+  state: BillingLifecycleState,
+): "neutral" | "success" | "warning" | "danger" | "info" {
+  switch (state) {
+    case "ACTIVE":
+      return "success";
+    case "CANCEL_AT_PERIOD_END":
+    case "PROVIDER_CONFIRMATION_PENDING":
+      return "info";
+    case "PAST_DUE":
+    case "PAYMENT_PROVIDER_UNAVAILABLE":
+      return "warning";
+    case "EXPIRED":
+    case "CANCELLED":
+    case "REFUNDED":
+    case "SUSPENDED":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
 export function billingStatusLabel(state: BillingLifecycleState): string {
   switch (state) {
     case "FREE":

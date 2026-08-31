@@ -23,6 +23,7 @@ import { ADMIN_NAV_GROUPS, listAdminNavHrefs } from "./admin-nav";
 import { CLIENT_360_SECTIONS } from "./admin-architecture";
 import { resolveAdminEnvironment } from "./admin-environment";
 import { detectExerciseSensitiveChanges, detectMealSensitiveChanges } from "./admin-library-safety";
+import { billingStatusTone } from "../payments/billing-present";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -109,6 +110,7 @@ assert(
 );
 
 // T32–T42 Billing
+assert(billingStatusTone("ACTIVE") === "success", "T32 billingStatusTone export");
 assert(billing.includes("buildBillingQuickStatus"), "T32 billing overview");
 assert(memberships.includes("filterMembershipRows"), "T32 memberships");
 assert(payments.includes("legacy_payments") || payments.includes("canLegacyReview"), "T41 legacy gate");
