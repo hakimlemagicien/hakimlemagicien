@@ -22,7 +22,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "clients",
-    label: "العملاء",
+    label: "إدارة العملاء",
     items: [
       { id: "clients", to: "/admin/clients", label: "العملاء", status: "live" },
       { id: "coaching", to: "/admin/messages", label: "الرسائل", status: "live" },

@@ -2,18 +2,30 @@ import type { AdminClientListItem } from "@/lib/admin/admin-clients-api";
 import type { AdminOperationsSnapshot } from "@/lib/admin/admin-ops-api";
 import { snapshotAttentionCount } from "@/lib/admin/admin-ops-api";
 
+export type DashboardKpiIcon = "users" | "messages" | "subscriptions" | "payments" | "attention";
+
 export type DashboardQuickStatusMetric = {
   id: string;
   label: string;
   value: number;
   hint: string;
   tone: "neutral" | "attention" | "positive";
+  icon: DashboardKpiIcon;
   href?: string;
+  zeroHint?: string;
 };
 
 const NEW_CLIENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Real-data KPIs only — no invented counts. */
+const KPI_ORDER = [
+  "new_clients",
+  "coaching_waiting",
+  "subscription_attention",
+  "payment_issues",
+  "needs_attention",
+] as const;
+
+/** Real-data KPIs only — max 5, no fake trends. */
 export function buildDashboardQuickStatus(input: {
   snapshot: AdminOperationsSnapshot;
   recentClients?: AdminClientListItem[];
@@ -34,19 +46,13 @@ export function buildDashboardQuickStatus(input: {
 
   const metrics: DashboardQuickStatusMetric[] = [
     {
-      id: "total_clients",
-      label: "إجمالي العملاء",
-      value: input.totalClients ?? 0,
-      hint: input.totalClients != null ? "من سجل العملاء" : "غير متاح",
-      tone: "neutral",
-      href: "/admin/clients",
-    },
-    {
       id: "new_clients",
-      label: "عملاء جدد (7 أيام)",
+      label: "العملاء الجدد",
       value: newClients ?? 0,
-      hint: newClients != null ? "من أحدث الصفحة المعروضة" : "غير متاح",
+      hint: "آخر 7 أيام",
+      zeroHint: "لا عملاء جدد في آخر 7 أيام",
       tone: newClients && newClients > 0 ? "positive" : "neutral",
+      icon: "users",
       href: "/admin/clients",
     },
     {
@@ -54,7 +60,9 @@ export function buildDashboardQuickStatus(input: {
       label: "رسائل بانتظار الرد",
       value: coachingWaiting,
       hint: "صندوق التدريب",
+      zeroHint: "لا توجد رسائل تحتاج ردًا الآن",
       tone: coachingWaiting > 0 ? "attention" : "neutral",
+      icon: "messages",
       href: "/admin/messages",
     },
     {
@@ -62,7 +70,9 @@ export function buildDashboardQuickStatus(input: {
       label: "اشتراكات تحتاج انتباه",
       value: snapshot.subscriptionAttention,
       hint: "past_due أو إيقاف تجديد",
+      zeroHint: "لا اشتراكات تحتاج انتباه",
       tone: snapshot.subscriptionAttention > 0 ? "attention" : "neutral",
+      icon: "subscriptions",
       href: "/admin/memberships",
     },
     {
@@ -70,20 +80,26 @@ export function buildDashboardQuickStatus(input: {
       label: "استثناءات الدفع",
       value: paymentIssues,
       hint: "تحويلات معلّقة + أحداث فاشلة",
+      zeroHint: "لا استثناءات دفع مفتوحة",
       tone: paymentIssues > 0 ? "attention" : "neutral",
+      icon: "payments",
       href: "/admin/payments",
     },
     {
       id: "needs_attention",
-      label: "يحتاج تدخلاً",
+      label: "يحتاج تدخلك",
       value: needsAttention,
       hint: "مجموع الإشارات الحية",
+      zeroHint: "كل شيء تحت السيطرة",
       tone: needsAttention > 0 ? "attention" : "positive",
+      icon: "attention",
       href: "/admin#attention",
     },
   ];
 
-  return metrics.filter((metric) => metric.id !== "total_clients" || input.totalClients != null);
+  return KPI_ORDER.map((id) => metrics.find((metric) => metric.id === id)).filter(
+    (metric): metric is DashboardQuickStatusMetric => Boolean(metric),
+  );
 }
 
 export function isRecentClient(row: AdminClientListItem, now = new Date()): boolean {

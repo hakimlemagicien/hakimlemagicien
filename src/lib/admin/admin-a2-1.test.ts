@@ -79,8 +79,11 @@ const quick = buildDashboardQuickStatus({
   totalClients: 42,
 });
 assert(quick.some((metric) => metric.id === "needs_attention"), "needs attention metric");
+assert(quick.length <= 5, "max five KPI cards");
+assert(quick.every((metric) => metric.icon), "kpi icons present");
 assert(quick.every((metric) => Number.isFinite(metric.value)), "numeric metrics only");
 assert(!quick.some((metric) => metric.label.includes("fake")), "no fake labels");
+assert(!quick.some((metric) => String(metric.hint).includes("%")), "no fake trend analytics");
 
 // T7/T8 Attention rendering + CTA routing
 const queue = buildAttentionQueue({
@@ -135,6 +138,7 @@ const matrixCardSource = readFileSync(
 );
 assert(!matrixCardSource.includes("random"), "no random alternatives in UI");
 assert(matrixCardSource.includes("BLOCKED"), "blocked state handled");
+assert(matrixCardSource.includes("مراجعة تأثير التعديل"), "matrix impact header");
 assert(!matrixCardSource.includes("متابعة رغم"), "no bypass copy");
 
 // T14/T15 Matrix engine unchanged — no edits under coach-override in this task scope check via git-less file presence

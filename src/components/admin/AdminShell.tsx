@@ -1,10 +1,11 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bell, Menu, Search, X } from "lucide-react";
+import { Bell, ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { AdminEnvironmentBadge } from "@/components/admin/AdminEnvironmentBadge";
 import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin/admin-nav";
+import { adminNavIcon } from "@/lib/admin/admin-nav-icons";
 import {
   fetchAdminOperationsSnapshot,
   snapshotAttentionCount,
@@ -95,7 +96,7 @@ export function AdminShell() {
   }
 
   return (
-    <div className="cc-shell" dir="rtl" lang="ar">
+    <div className="cc-shell cc-shell--dark-nav" dir="rtl" lang="ar">
       <a className="cc-skip" href="#cc-workspace">
         تخطي إلى المحتوى
       </a>
@@ -110,17 +111,14 @@ export function AdminShell() {
 
       <aside
         id={drawerId}
-        className={drawerOpen ? "cc-sidebar is-open" : "cc-sidebar"}
+        className={drawerOpen ? "cc-sidebar cc-sidebar--dark is-open" : "cc-sidebar cc-sidebar--dark"}
         aria-label="تنقل مركز التشغيل"
       >
         <div className="cc-sidebar__brand">
-          <div className="cc-sidebar__brand-row">
-            <p className="cc-kicker">MAAKFIT</p>
-            <AdminEnvironmentBadge compact />
-          </div>
-          <strong>مركز التشغيل</strong>
-          <span>Coach Hakim — تشغيل يومي</span>
+          <p className="cc-sidebar__logo">MAAKFIT</p>
+          <p className="cc-sidebar__logo-sub">ADMIN</p>
         </div>
+
         <nav className="cc-sidebar__nav">
           {ADMIN_NAV_GROUPS.map((group) => (
             <div key={group.id} className="cc-nav-group">
@@ -129,6 +127,7 @@ export function AdminShell() {
                 const active = isAdminNavActive(pathname, item.to);
                 const later = item.status === "foundation";
                 const count = navCount(item.to, snapshot);
+                const Icon = adminNavIcon(item.id);
                 return (
                   <Link
                     key={item.id}
@@ -138,15 +137,18 @@ export function AdminShell() {
                       .filter(Boolean)
                       .join(" ")}
                     aria-current={active ? "page" : undefined}
-                    aria-label={later ? `${item.label} — أساس غير مكتمل` : item.label}
+                    aria-label={later ? `${item.label} — قريبًا` : item.label}
                   >
-                    <span>{item.label}</span>
+                    <span className="cc-nav-link__main">
+                      <Icon className="cc-nav-link__icon" aria-hidden />
+                      <span>{item.label}</span>
+                    </span>
                     {count > 0 ? (
                       <b className="cc-nav-badge" title="يحتاج انتباهاً">
                         {count > 9 ? "9+" : count}
                       </b>
                     ) : later ? (
-                      <em>أساس</em>
+                      <em className="cc-nav-soon">قريبًا</em>
                     ) : null}
                   </Link>
                 );
@@ -154,10 +156,23 @@ export function AdminShell() {
             </div>
           ))}
         </nav>
+
+        <footer className="cc-sidebar__footer">
+          <div className="cc-sidebar__profile">
+            <span className="cc-sidebar__avatar" aria-hidden>
+              CH
+            </span>
+            <div>
+              <strong>Coach Hakim</strong>
+              <span>مدير المنصة</span>
+            </div>
+          </div>
+          <AdminEnvironmentBadge />
+        </footer>
       </aside>
 
       <div className="cc-main">
-        <header className="cc-topbar">
+        <header className="cc-topbar cc-topbar--light">
           <button
             type="button"
             className="cc-icon-btn cc-topbar__menu"
@@ -174,21 +189,17 @@ export function AdminShell() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="بحث سريع: عميل، اسم، بريد، هاتف"
+              placeholder="ابحث عن عميل، اسم أو بريد..."
               aria-label="البحث الإداري — العملاء"
             />
           </form>
 
           <div className="cc-topbar__actions">
-            <AdminEnvironmentBadge />
-            <Link to="/admin/messages" className="cc-btn cc-btn--ghost cc-topbar__quick" preload={false}>
-              الرسائل
-            </Link>
             <a
               href="/admin#attention"
-              className="cc-icon-btn"
+              className="cc-icon-btn cc-topbar__bell"
               aria-label={
-                attention > 0 ? `عناصر الانتباه اليوم: ${attention}` : "لا عناصر انتباه حالياً — مركز التشغيل"
+                attention > 0 ? `عناصر الانتباه اليوم: ${attention}` : "لا عناصر انتباه حالياً"
               }
             >
               <Bell className="h-4 w-4" />
@@ -202,12 +213,12 @@ export function AdminShell() {
                 aria-controls={menuId}
                 onClick={() => setMenuOpen((open) => !open)}
               >
-                <span className="cc-account__name">{accountLabel}</span>
-                <span className="cc-account__role">Admin</span>
+                <span className="cc-account__name">Admin</span>
+                <ChevronDown className="h-4 w-4" aria-hidden />
               </button>
               {menuOpen ? (
                 <div id={menuId} className="cc-account__menu" role="menu">
-                  <p className="cc-account__menu-label">حساب التشغيل</p>
+                  <p className="cc-account__menu-label">{accountLabel}</p>
                   <button type="button" role="menuitem" className="cc-btn cc-btn--ghost" onClick={() => void signOut()}>
                     خروج
                   </button>
@@ -217,7 +228,7 @@ export function AdminShell() {
           </div>
         </header>
 
-        <main id="cc-workspace" className="cc-workspace">
+        <main id="cc-workspace" className="cc-workspace cc-workspace--dashboard">
           <Outlet />
         </main>
       </div>

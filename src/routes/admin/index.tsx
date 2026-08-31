@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Dumbbell,
+  MessageSquare,
+  UtensilsCrossed,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AttentionCenter } from "@/components/admin/AttentionCenter";
 import { DashboardQuickStatus } from "@/components/admin/DashboardQuickStatus";
 import {
   AdminEmptyState,
-  AdminErrorState,
   AdminPageHeader,
   AdminSection,
   AdminStatusBadge,
@@ -26,13 +32,7 @@ import {
   type AdminSupportTicketListItem,
 } from "@/lib/admin/admin-ops-api";
 import { searchAdminClients, type AdminClientListItem } from "@/lib/admin/admin-clients-api";
-import {
-  dayGreeting,
-  formatRelativeAge,
-  planLabel,
-  planStatusKind,
-  todayContextLabel,
-} from "@/lib/admin/admin-status";
+import { dayGreeting, formatRelativeAge, planLabel, planStatusKind } from "@/lib/admin/admin-status";
 import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
 import type { CoachingInboxRow } from "@/lib/platform/coaching-messaging";
 
@@ -60,6 +60,14 @@ const emptySupport: LoadState<AdminSupportTicketListItem[]> = { rows: [], error:
 const emptyAudit: LoadState<AdminAuditEvent[]> = { rows: [], error: null, loading: true };
 const emptyClients: LoadState<AdminClientListItem[]> = { rows: [], error: null, loading: true };
 const emptyExceptions: LoadState<AdminPaymentExceptionRow[]> = { rows: [], error: null, loading: true };
+
+const QUICK_ACTIONS = [
+  { to: "/admin/clients", label: "فتح العملاء", icon: Users },
+  { to: "/admin/messages", label: "فتح الرسائل", icon: MessageSquare },
+  { to: "/admin/payments", label: "مراجعة المدفوعات", icon: Wallet },
+  { to: "/admin/exercises", label: "مكتبة التمارين", icon: Dumbbell },
+  { to: "/admin/nutrition", label: "مكتبة الوجبات", icon: UtensilsCrossed },
+] as const;
 
 function CommandCenterPage() {
   const [snapshot, setSnapshot] = useState<AdminOperationsSnapshot>(EMPTY_SNAPSHOT);
@@ -218,15 +226,20 @@ function CommandCenterPage() {
   const attentionLoading = !booting && (inbox.loading || payments.loading || support.loading || exceptions.loading);
   const quickStatusLoading = !booting && (snapshotLoading || clients.loading);
   const now = nowRef.current;
+  const attentionError = inbox.error || payments.error || support.error || exceptions.error;
+
+  function retryAttention() {
+    void loadInbox();
+    void loadPayments();
+    void loadSupport();
+    void loadExceptions();
+    void loadSnapshot();
+  }
 
   if (booting) {
     return (
       <>
-        <AdminPageHeader
-          kicker={`${todayContextLabel(now)} · MAAKFIT Command Center`}
-          title={`${dayGreeting(now)}، Coach Hakim`}
-          subtitle="ما الذي يحتاج انتباهك اليوم؟"
-        />
+        <AdminPageHeader title={`${dayGreeting(now)}، Coach Hakim 👋`} subtitle="إليك أهم ما يحتاج انتباهك اليوم." />
         <div className="cc-workspace-boot" aria-busy="true" aria-label="جاري تحميل مركز التشغيل">
           <AdminSkeletonRows rows={14} />
         </div>
@@ -250,172 +263,144 @@ function CommandCenterPage() {
   });
 
   const newClients = clients.rows.filter((row) => isRecentClient(row, now));
-  const clientActivity = inbox.rows
-    .filter((row) => row.lastMessageAt)
-    .slice()
-    .sort((a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime())
-    .slice(0, 6);
+  const paymentIssues = snapshot.legacyPendingPayments + snapshot.pspFailedEvents;
 
   return (
-    <>
-      <AdminPageHeader
-        kicker={`${todayContextLabel(now)} · MAAKFIT Command Center`}
-        title={`${dayGreeting(now)}، Coach Hakim`}
-        subtitle="ما الذي يحتاج انتباهك اليوم؟"
-      />
+    <div className="cc-dashboard">
+      <AdminPageHeader title={`${dayGreeting(now)}، Coach Hakim 👋`} subtitle="إليك أهم ما يحتاج انتباهك اليوم." />
 
-      <AdminSection title="ملخص سريع">
-        <DashboardQuickStatus metrics={quickStatus} loading={quickStatusLoading} />
-      </AdminSection>
+      <DashboardQuickStatus metrics={quickStatus} loading={quickStatusLoading} />
 
-      <AdminSection title="يحتاج انتباهك">
-        {inbox.error || payments.error || support.error || exceptions.error ? (
-          <AdminErrorState
-            message="تعذر تحميل بعض إشارات الانتباه."
-            onRetry={() => {
-              void loadInbox();
-              void loadPayments();
-              void loadSupport();
-              void loadExceptions();
-              void loadSnapshot();
-            }}
-          />
+      <section className="cc-dashboard__attention" aria-labelledby="attention-heading">
+        <div className="cc-section-head">
+          <h2 id="attention-heading" className="cc-section__title">
+            يحتاج انتباهك
+          </h2>
+          {queue.length > 0 ? (
+            <a href="#attention" className="cc-section-head__link">
+              عرض الكل
+            </a>
+          ) : null}
+        </div>
+        {attentionError ? (
+          <div className="cc-inline-alert" role="alert">
+            <span>تعذر تحديث بعض البيانات.</span>
+            <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={retryAttention}>
+              إعادة المحاولة
+            </button>
+          </div>
         ) : null}
         <AttentionCenter items={queue} loading={attentionLoading} />
-      </AdminSection>
+      </section>
 
-      <div className="cc-ops-split">
-        <AdminSection title="عملاء جدد">
-          {clients.error ? <AdminErrorState message={clients.error} onRetry={() => void loadClients()} /> : null}
-          {!clients.loading && !clients.error && newClients.length === 0 ? (
-            <AdminEmptyState title="لا عملاء جدد في آخر 7 أيام." body="يُعرض هنا من الصفحة الحالية فقط." />
+      <div className="cc-dash-grid">
+        <AdminSection title="العملاء الجدد">
+          {clients.error ? (
+            <div className="cc-inline-alert" role="alert">
+              <span>{clients.error}</span>
+              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadClients()}>
+                إعادة المحاولة
+              </button>
+            </div>
           ) : null}
-          {!clients.loading && newClients.length > 0 ? (
-            <ul className="cc-queue">
-              {newClients.slice(0, 6).map((row) => (
+          {!clients.loading && !clients.error && newClients.length === 0 ? (
+            <AdminEmptyState title="لا عملاء جدد في آخر 7 أيام." body="يُعرض هنا من السجل الحالي فقط." />
+          ) : null}
+          {newClients.length > 0 ? (
+            <ul className="cc-compact-list">
+              {newClients.slice(0, 5).map((row) => (
                 <li key={row.id}>
-                  <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-queue__item">
-                    <span className="cc-queue__main">
-                      <strong>{row.fullName || row.email || "عميل"}</strong>
-                      <span>{row.onboardingCompletedAt ? "اكتمل الإعداد" : "إعداد قيد الإكمال"}</span>
+                  <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-compact-list__item">
+                    <span className="cc-compact-list__avatar" aria-hidden>
+                      {(row.fullName || row.email || "ع").slice(0, 1)}
                     </span>
-                    <span className="cc-queue__meta">
+                    <span className="cc-compact-list__body">
+                      <strong>{row.fullName || row.email || "عميل"}</strong>
                       {row.membershipPlan ? (
                         <AdminStatusBadge tone={planStatusKind(row.membershipPlan)}>
                           {planLabel(row.membershipPlan)}
                         </AdminStatusBadge>
                       ) : null}
-                      <em>{formatRelativeAge(row.createdAt)}</em>
                     </span>
+                    <em>{formatRelativeAge(row.createdAt)}</em>
                   </Link>
                 </li>
               ))}
             </ul>
           ) : null}
+          <Link to="/admin/clients" className="cc-card-footer-link" preload={false}>
+            عرض جميع العملاء ←
+          </Link>
         </AdminSection>
 
-        <AdminSection title="نشاط العملاء">
-          {!inbox.loading && clientActivity.length === 0 ? (
-            <AdminEmptyState title="لا نشاط رسائل حديث" body="يظهر هنا آخر نشاط من صندوق التدريب فقط." />
+        <AdminSection title="الاشتراكات والمدفوعات">
+          <ul className="cc-stat-list">
+            <li>
+              <span>اشتراكات نشطة</span>
+              <strong>{membershipSnapshot.active.toLocaleString("ar-AE")}</strong>
+            </li>
+            <li>
+              <span>تحتاج انتباه</span>
+              <strong>{snapshot.subscriptionAttention.toLocaleString("ar-AE")}</strong>
+            </li>
+            <li>
+              <span>استثناءات الدفع</span>
+              <strong>{paymentIssues.toLocaleString("ar-AE")}</strong>
+            </li>
+            <li>
+              <span>مدفوعات للمراجعة</span>
+              <strong>{payments.rows.length.toLocaleString("ar-AE")}</strong>
+            </li>
+          </ul>
+          <Link to="/admin/payments" className="cc-card-footer-link" preload={false}>
+            عرض جميع المدفوعات ←
+          </Link>
+        </AdminSection>
+
+        <AdminSection title="آخر النشاطات">
+          {audit.error ? (
+            <div className="cc-inline-alert" role="alert">
+              <span>{audit.error}</span>
+              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadAudit()}>
+                إعادة المحاولة
+              </button>
+            </div>
           ) : null}
-          {clientActivity.length > 0 ? (
-            <ul className="cc-activity">
-              {clientActivity.map((row) => (
+          {!audit.loading && !audit.error && audit.rows.length === 0 ? (
+            <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة." />
+          ) : null}
+          {audit.rows.length > 0 ? (
+            <ul className="cc-timeline">
+              {audit.rows.slice(0, 5).map((row) => (
                 <li key={row.id}>
-                  <Link to="/admin/messages/$conversationId" params={{ conversationId: row.id }}>
-                    <span>
-                      {row.memberName} — {row.lastMessagePreview || "رسالة"}
-                    </span>
-                    <em>{formatRelativeAge(row.lastMessageAt)}</em>
-                  </Link>
+                  <span className="cc-timeline__dot" aria-hidden />
+                  <div>
+                    <strong>{row.eventType}</strong>
+                    <em>{formatRelativeAge(row.createdAt)}</em>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : null}
+          <Link to="/admin/audit" className="cc-card-footer-link" preload={false}>
+            عرض جميع النشاطات ←
+          </Link>
         </AdminSection>
       </div>
 
-      <AdminSection title="العضويات والمدفوعات">
-        {!membershipSnapshot.loading ? (
-          <div className="cc-snapshot-row">
-            <div className="cc-snapshot-card">
-              <span className="cc-snapshot-card__value">
-                {membershipSnapshot.active.toLocaleString("ar-AE")}
-              </span>
-              <span className="cc-snapshot-card__label">اشتراكات نشطة (الصفحة الحالية)</span>
-            </div>
-            <div className="cc-snapshot-card cc-snapshot-card--attention">
-              <span className="cc-snapshot-card__value">
-                {snapshot.subscriptionAttention.toLocaleString("ar-AE")}
-              </span>
-              <span className="cc-snapshot-card__label">اشتراكات تحتاج انتباه</span>
-            </div>
-            <div className="cc-snapshot-card cc-snapshot-card--attention">
-              <span className="cc-snapshot-card__value">
-                {(snapshot.legacyPendingPayments + snapshot.pspFailedEvents).toLocaleString("ar-AE")}
-              </span>
-              <span className="cc-snapshot-card__label">مشاكل دفع مفتوحة</span>
-            </div>
-            <Link to="/admin/payments" className="cc-btn cc-btn--ghost">
-              فتح المدفوعات
-            </Link>
-            <Link to="/admin/memberships" className="cc-btn cc-btn--ghost">
-              فتح العضويات
-            </Link>
-          </div>
-        ) : null}
-        {!exceptions.loading && exceptions.rows.length > 0 ? (
-          <ul className="cc-activity cc-activity--compact">
-            {exceptions.rows.slice(0, 4).map((row) => (
-              <li key={row.exceptionId}>
-                <a href={row.href}>
-                  <span>{row.subjectLabel}</span>
-                  <em>{formatRelativeAge(row.occurredAt)}</em>
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </AdminSection>
-
-      <AdminSection title="آخر نشاط إداري">
-        {audit.error ? <AdminErrorState message={audit.error} onRetry={() => void loadAudit()} /> : null}
-        {!audit.loading && !audit.error && audit.rows.length === 0 ? (
-          <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة فقط." />
-        ) : null}
-        {audit.rows.length > 0 ? (
-          <ul className="cc-activity">
-            {audit.rows.map((row) => (
-              <li key={row.id}>
-                <Link to="/admin/audit">
-                  <span>{row.eventType}</span>
-                  <em>{formatRelativeAge(row.createdAt)}</em>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </AdminSection>
-
       <AdminSection title="إجراءات سريعة">
-        <div className="cc-actions cc-actions--compact">
-          <Link to="/admin/clients" className="cc-btn cc-btn--primary">
-            البحث عن عميل
-          </Link>
-          <Link to="/admin/messages" className="cc-btn">
-            فتح الصندوق
-          </Link>
-          <Link to="/admin/payments" className="cc-btn">
-            مراجعة المدفوعات
-          </Link>
-          <Link to="/admin/support" className="cc-btn">
-            فتح الدعم
-          </Link>
-          <Link to="/admin/audit" className="cc-btn">
-            سجل العمليات
-          </Link>
+        <div className="cc-quick-actions">
+          {QUICK_ACTIONS.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link key={action.to} to={action.to} className="cc-quick-action" preload={false}>
+                <Icon className="h-4 w-4" aria-hidden />
+                <span>{action.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </AdminSection>
-    </>
+    </div>
   );
 }

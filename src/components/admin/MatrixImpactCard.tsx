@@ -51,7 +51,7 @@ export function MatrixImpactCard({
       <header className="cc-matrix-impact__header">
         <StatusIcon status={review.status} />
         <div>
-          <p className="cc-kicker">مراجعة استراتيجية التدريب</p>
+          <p className="cc-kicker">مراجعة تأثير التعديل</p>
           <h3 className="cc-matrix-impact__title">{reviewStatusLabelAr(review.status)}</h3>
           <p className="cc-muted">التعديل المطلوب: {overrideTypeLabelAr(overrideType)}</p>
         </div>
