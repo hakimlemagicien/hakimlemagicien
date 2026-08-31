@@ -59,6 +59,9 @@ import {
 } from "@/lib/admin/admin-exercises-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
 import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
+import { detectExerciseSensitiveChanges } from "@/lib/admin/admin-library-safety";
+import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
+import type { LibraryImpactWarning } from "@/lib/admin/admin-library-safety";
 
 export function ExerciseLibraryManager() {
   const [query, setQuery] = useState("");
@@ -80,6 +83,7 @@ export function ExerciseLibraryManager() {
   const [saveState, setSaveState] = useState<LibrarySaveState>("saved");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
+  const [pendingImpact, setPendingImpact] = useState<LibraryImpactWarning | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
@@ -184,7 +188,7 @@ export function ExerciseLibraryManager() {
     [rows, selectedId],
   );
 
-  const save = async () => {
+  const commitSave = async () => {
     if (!draft) return;
     const errors = {
       ...validateExerciseDraft({
@@ -281,6 +285,23 @@ export function ExerciseLibraryManager() {
     }
   };
 
+  const save = async (skipImpactCheck = false) => {
+    if (!skipImpactCheck && baseline && draft) {
+      try {
+        const before = JSON.parse(baseline) as Record<string, unknown>;
+        const warning = detectExerciseSensitiveChanges(before, draft as Record<string, unknown>);
+        if (warning) {
+          setPendingImpact(warning);
+          return;
+        }
+      } catch {
+        // baseline parse failure — proceed with save
+      }
+    }
+    setPendingImpact(null);
+    await commitSave();
+  };
+
   const archive = (makeActive: boolean) => {
     if (!draft?.id) return;
     if (!makeActive && !canActivateExercise(draft) && makeActive) return;
@@ -308,7 +329,7 @@ export function ExerciseLibraryManager() {
       <AdminPageHeader
         kicker="مكتبة التدريب"
         title="التمارين"
-        subtitle="إدارة مكتبة التمارين المعتمدة. المصدر هو جدول exercises نفسه الذي يقرأه التطبيق."
+        subtitle="مكتبة التمارين — تعديل التعريف قد يؤثر على Strategy Matrix. لا يعاد كتابة برامج العملاء تلقائيًا."
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
             تمرين جديد
@@ -769,6 +790,14 @@ export function ExerciseLibraryManager() {
         }
       />
       <AdminLibraryDialogs request={confirm} onClose={() => setConfirm(null)} />
+      {pendingImpact ? (
+        <LibraryImpactWarningCard
+          warning={pendingImpact}
+          busy={saveState === "saving"}
+          onConfirm={() => void save(true)}
+          onCancel={() => setPendingImpact(null)}
+        />
+      ) : null}
     </>
   );
 }

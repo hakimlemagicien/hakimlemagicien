@@ -60,6 +60,14 @@ import {
 } from "@/lib/admin/admin-libraries";
 import { formatAdminDate, formatRelativeAge } from "@/lib/admin/admin-status";
 import { PROGRAM_BOUNDARIES } from "@/lib/admin/admin-architecture";
+import {
+  buildCoachOverridePayload,
+  COACH_OVERRIDE_EQUIPMENT_OPTIONS,
+  WEEKDAY_LABELS_AR,
+  type CoachOverrideFormState,
+} from "@/lib/admin/coach-override-form";
+import { WeeklySchedulePreview } from "@/components/admin/WeeklySchedulePreview";
+import { PreferredWeekdayId, WEEKDAY_CALENDAR_ORDER } from "@/lib/platform/strategy-matrix/weekdays";
 import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
 import {
@@ -172,6 +180,12 @@ export function ClientTrainingWorkspace({
   const [overrideDuration, setOverrideDuration] = useState("45");
   const [overrideExerciseFrom, setOverrideExerciseFrom] = useState("CH-001");
   const [overrideExerciseTo, setOverrideExerciseTo] = useState("CH-002");
+  const [overrideLocation, setOverrideLocation] = useState<TrainingStrategyLocation>("HOME");
+  const [overridePreferredWeekdays, setOverridePreferredWeekdays] = useState<PreferredWeekdayId[]>([]);
+  const [overrideEquipment, setOverrideEquipment] = useState<string[]>([]);
+  const [overrideConstraintEnv, setOverrideConstraintEnv] = useState<"home" | "gym" | "anywhere">("home");
+  const [overrideConstraintEquipment, setOverrideConstraintEquipment] = useState<string[]>([]);
+  const [overrideConstraintUntil, setOverrideConstraintUntil] = useState("");
   const [overrideReview, setOverrideReview] = useState<CoachOverrideReview | null>(null);
   const [showOverrideAlternatives, setShowOverrideAlternatives] = useState(false);
   const [v2Preview, setV2Preview] = useState<{
@@ -197,6 +211,37 @@ export function ClientTrainingWorkspace({
   const templateQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(editing && draft && detail && JSON.stringify(draft.weeks) !== JSON.stringify(detail.weeks));
   const guard = useUnsavedNavigation(dirty, onConfirm);
+
+  useEffect(() => {
+    setOverrideLocation(mapClientTrainingLocation(overview.training_type));
+  }, [overview.training_type, clientId]);
+
+  const overrideFormState: CoachOverrideFormState = {
+    overrideDays,
+    overrideDuration,
+    overrideExerciseFrom,
+    overrideExerciseTo,
+    overrideLocation,
+    overridePreferredWeekdays,
+    overrideEquipment,
+    overrideConstraintEnv,
+    overrideConstraintEquipment,
+    overrideConstraintUntil,
+  };
+
+  const toggleWeekday = (day: PreferredWeekdayId) => {
+    setOverridePreferredWeekdays((current) =>
+      current.includes(day) ? current.filter((item) => item !== day) : [...current, day],
+    );
+  };
+
+  const toggleEquipment = (
+    value: string,
+    setter: (next: string[]) => void,
+    current: string[],
+  ) => {
+    setter(current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
+  };
 
   const signals = objectiveTrainingSignals({
     status: overview.assignment?.status ?? null,
@@ -411,42 +456,7 @@ export function ClientTrainingWorkspace({
     try {
       const catalog = await listV2ExerciseCandidates();
       const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
-      const days = Number(overrideDays);
-      let payload: Parameters<typeof buildCoachOverrideRequest>[0]["payload"];
-      switch (overrideType) {
-        case "TRAINING_FREQUENCY_CHANGE":
-        case "TRAINING_DAYS_CHANGE":
-          payload = { trainingDaysPerWeek: Number.isFinite(days) ? days : 3 };
-          break;
-        case "SESSION_DURATION_CHANGE":
-          payload = { sessionDurationMinutes: Number(overrideDuration) || 45 };
-          break;
-        case "EXERCISE_REPLACE":
-          payload = { fromExternalId: overrideExerciseFrom, toExternalId: overrideExerciseTo };
-          break;
-        case "EXERCISE_EXCLUDE":
-        case "EXERCISE_LOCK":
-          payload = { externalId: overrideExerciseFrom };
-          break;
-        case "TRAINING_LOCATION_CHANGE":
-          payload = { trainingLocation: mapClientTrainingLocation(overview.training_type) };
-          break;
-        case "TEMPORARY_CONSTRAINT":
-          payload = {
-            trainingEnvironment: "home",
-            availableEquipment: ["DUMBBELLS", "RESISTANCE_BAND", "MAT"],
-            validUntil: null,
-          };
-          break;
-        case "PREFERRED_WEEKDAYS_CHANGE":
-          payload = { preferredWeekdays: ["mon", "tue", "thu"] };
-          break;
-        case "AVAILABLE_EQUIPMENT_CHANGE":
-          payload = { availableEquipment: ["DUMBBELLS", "RESISTANCE_BAND"] };
-          break;
-        default:
-          payload = { sessionDurationMinutes: Number(overrideDuration) || 45 };
-      }
+      const payload = buildCoachOverridePayload(overrideType, overrideFormState);
       const req = buildCoachOverrideRequest({
         clientId,
         currentAssignmentId: detail.id,
@@ -488,9 +498,7 @@ export function ClientTrainingWorkspace({
           payload:
             payloadOverride ??
             overrideReview.suggestedPayload ??
-            (overrideType === "SESSION_DURATION_CHANGE"
-              ? { sessionDurationMinutes: Number(overrideDuration) || 45 }
-              : { trainingDaysPerWeek: Number(overrideDays) || 3 }),
+            buildCoachOverridePayload(overrideType, overrideFormState),
           coachNote: overrideNote || null,
           sourceAssignmentVersion: detail.updated_at,
         });
@@ -925,12 +933,13 @@ export function ClientTrainingWorkspace({
               <AdminSelect value={overrideType} onChange={(v) => { setOverrideType(v as CoachOverrideType); setOverrideUi("editing"); }}>
                 <option value="SESSION_DURATION_CHANGE">مدة الجلسة</option>
                 <option value="TRAINING_FREQUENCY_CHANGE">تكرار أسبوعي</option>
+                <option value="TRAINING_DAYS_CHANGE">عدد أيام التدريب</option>
                 <option value="PREFERRED_WEEKDAYS_CHANGE">أيام التفضيل</option>
                 <option value="EXERCISE_REPLACE">استبدال تمرين</option>
                 <option value="EXERCISE_EXCLUDE">استبعاد تمرين</option>
                 <option value="EXERCISE_LOCK">قفل تمرين</option>
-                <option value="TRAINING_LOCATION_CHANGE">بيئة التدريب (مؤقت)</option>
-                <option value="TEMPORARY_CONSTRAINT">قيود مؤقتة (منزل)</option>
+                <option value="TRAINING_LOCATION_CHANGE">بيئة التدريب</option>
+                <option value="TEMPORARY_CONSTRAINT">قيود مؤقتة</option>
                 <option value="AVAILABLE_EQUIPMENT_CHANGE">معدات متاحة</option>
               </AdminSelect>
               {(overrideType === "TRAINING_FREQUENCY_CHANGE" || overrideType === "TRAINING_DAYS_CHANGE") ? (
@@ -953,6 +962,89 @@ export function ClientTrainingWorkspace({
                       <input id="override_to" className="cc-input" dir="ltr" value={overrideExerciseTo} onChange={(e) => setOverrideExerciseTo(e.target.value)} />
                     </AdminField>
                   ) : null}
+                </>
+              ) : null}
+              {overrideType === "TRAINING_LOCATION_CHANGE" ? (
+                <AdminField label="الموقع المطلوب" htmlFor="override_location">
+                  <AdminSelect value={overrideLocation} onChange={(v) => setOverrideLocation(v as TrainingStrategyLocation)}>
+                    <option value="HOME">منزل</option>
+                    <option value="GYM">نادي</option>
+                    <option value="BOTH">منزل + نادي</option>
+                  </AdminSelect>
+                </AdminField>
+              ) : null}
+              {overrideType === "PREFERRED_WEEKDAYS_CHANGE" ? (
+                <div className="cc-weekday-picker">
+                  <span className="cc-filter__label">أيام التفضيل</span>
+                  <div className="cc-weekday-picker__options">
+                    {WEEKDAY_CALENDAR_ORDER.map((day) => (
+                      <label key={day} className="cc-filter cc-filter--checkbox">
+                        <input
+                          type="checkbox"
+                          checked={overridePreferredWeekdays.includes(day)}
+                          onChange={() => toggleWeekday(day)}
+                        />
+                        <span>{WEEKDAY_LABELS_AR[day]}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {overrideType === "AVAILABLE_EQUIPMENT_CHANGE" ? (
+                <div className="cc-equipment-picker">
+                  <span className="cc-filter__label">المعدات المتاحة</span>
+                  <div className="cc-equipment-picker__options">
+                    {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
+                      <label key={item} className="cc-filter cc-filter--checkbox">
+                        <input
+                          type="checkbox"
+                          checked={overrideEquipment.includes(item)}
+                          onChange={() => toggleEquipment(item, setOverrideEquipment, overrideEquipment)}
+                        />
+                        <span dir="ltr">{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {overrideType === "TEMPORARY_CONSTRAINT" ? (
+                <>
+                  <AdminField label="بيئة مؤقتة" htmlFor="override_constraint_env">
+                    <AdminSelect
+                      value={overrideConstraintEnv}
+                      onChange={(v) => setOverrideConstraintEnv(v as typeof overrideConstraintEnv)}
+                    >
+                      <option value="home">منزل</option>
+                      <option value="gym">نادي</option>
+                      <option value="anywhere">أي مكان</option>
+                    </AdminSelect>
+                  </AdminField>
+                  <AdminField label="صالح حتى" htmlFor="override_constraint_until">
+                    <input
+                      id="override_constraint_until"
+                      className="cc-input"
+                      type="date"
+                      value={overrideConstraintUntil}
+                      onChange={(e) => setOverrideConstraintUntil(e.target.value)}
+                    />
+                  </AdminField>
+                  <div className="cc-equipment-picker">
+                    <span className="cc-filter__label">معدات القيد المؤقت</span>
+                    <div className="cc-equipment-picker__options">
+                      {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
+                        <label key={item} className="cc-filter cc-filter--checkbox">
+                          <input
+                            type="checkbox"
+                            checked={overrideConstraintEquipment.includes(item)}
+                            onChange={() =>
+                              toggleEquipment(item, setOverrideConstraintEquipment, overrideConstraintEquipment)
+                            }
+                          />
+                          <span dir="ltr">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </>
               ) : null}
               <AdminField label="ملاحظة المدرب (اختياري)" htmlFor="override_note">
@@ -1030,6 +1122,8 @@ export function ClientTrainingWorkspace({
               </div>
             </dl>
           ) : null}
+          <h3 className="cc-section__title">معاينة الأسبوع</h3>
+          <WeeklySchedulePreview schedule={v2Candidate?.weeklySchedule ?? null} compact />
           <p>{v2Preview.explanation}</p>
           {v2Candidate?.recommendation.length ? (
             <ul>
@@ -1085,6 +1179,19 @@ export function ClientTrainingWorkspace({
           <h2 className="cc-section__title">تعيين برنامج</h2>
           {assignStep === "pick" ? (
             <>
+              <div className="cc-notice cc-notice--warning" role="alert">
+                <strong>مسار القالب الجاهز (Legacy)</strong>
+                <p>
+                  هذا المسار يستخدم قالبًا جاهزًا ولا يمر بكامل مراجعة Strategy Matrix الخاصة بالبرنامج المولَّد.
+                </p>
+                <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setAssignStep("closed"); void generateV2(); }}>
+                  إنشاء برنامج باستخدام MAAKFIT Strategy
+                </button>
+              </div>
+              <p className="cc-muted">
+                {PROGRAM_BOUNDARIES.template} — قالب قابل لإعادة الاستخدام. {PROGRAM_BOUNDARIES.assigned} — تعيين
+                مُنسَخ للعميل فقط.
+              </p>
               <div className="cc-form-grid">
                 <AdminSearchInput value={pickerQuery} onChange={setPickerQuery} placeholder="بحث في القوالب المنشورة" label="بحث" />
                 <AdminSelect value={pickerGoal} onChange={setPickerGoal}>

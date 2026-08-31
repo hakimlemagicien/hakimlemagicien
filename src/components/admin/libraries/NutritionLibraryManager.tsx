@@ -50,6 +50,10 @@ import {
 } from "@/lib/admin/admin-meals-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
 import { mealDeliveryPath } from "@/lib/platform/meal-library";
+import { detectMealSensitiveChanges } from "@/lib/admin/admin-library-safety";
+import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
+import type { LibraryImpactWarning } from "@/lib/admin/admin-library-safety";
+import { NUTRITION_BOUNDARIES } from "@/lib/admin/admin-architecture";
 
 export function NutritionLibraryManager() {
   const [query, setQuery] = useState("");
@@ -69,6 +73,7 @@ export function NutritionLibraryManager() {
   const [saveState, setSaveState] = useState<LibrarySaveState>("saved");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
+  const [pendingImpact, setPendingImpact] = useState<LibraryImpactWarning | null>(null);
   const [subJson, setSubJson] = useState("{}");
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
@@ -151,7 +156,7 @@ export function NutritionLibraryManager() {
     setTotal(result.totalCount);
   };
 
-  const save = async () => {
+  const commitSave = async () => {
     if (!draft) return;
     const errors = validateMealDraft(draft);
     try {
@@ -220,6 +225,23 @@ export function NutritionLibraryManager() {
     }
   };
 
+  const save = async (skipImpactCheck = false) => {
+    if (!skipImpactCheck && baseline && draft) {
+      try {
+        const before = JSON.parse(baseline) as Record<string, unknown>;
+        const warning = detectMealSensitiveChanges(before, draft as Record<string, unknown>, ingredientsDirty);
+        if (warning) {
+          setPendingImpact(warning);
+          return;
+        }
+      } catch {
+        // proceed
+      }
+    }
+    setPendingImpact(null);
+    await commitSave();
+  };
+
   const changeStatus = (next: "pilot" | "published" | "archived") => {
     if (!draft?.id) return;
     if (next === "published" && (!canPublishMeal(draft) || dirty)) return;
@@ -250,8 +272,8 @@ export function NutritionLibraryManager() {
     <>
       <AdminPageHeader
         kicker="مكتبة التغذية"
-        title="الوجبات"
-        subtitle="إدارة مكتبة الوجبات الحالية. لا تُخترع قيم غذائية أو مسببات حساسية."
+        title="مكتبة الوجبات"
+        subtitle={`${NUTRITION_BOUNDARIES.library} — منفصلة عن ${NUTRITION_BOUNDARIES.plan}. تعديل الوجبة لا يغيّر خطط العملاء تلقائيًا.`}
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
             وجبة جديدة
@@ -488,6 +510,14 @@ export function NutritionLibraryManager() {
         }
       />
       <AdminLibraryDialogs request={confirm} onClose={() => setConfirm(null)} />
+      {pendingImpact ? (
+        <LibraryImpactWarningCard
+          warning={pendingImpact}
+          busy={saveState === "saving"}
+          onConfirm={() => void save(true)}
+          onCancel={() => setPendingImpact(null)}
+        />
+      ) : null}
     </>
   );
 }

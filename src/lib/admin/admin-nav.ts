@@ -32,15 +32,19 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "training",
     label: "التدريب",
     items: [
+      { id: "training-ops", to: "/admin/training", label: "نظرة عامة", status: "live" },
+      { id: "training-reviews", to: "/admin/training/reviews", label: "مراجعات التدريب", status: "live" },
       { id: "programs", to: "/admin/programs", label: "البرامج", status: "live" },
-      { id: "exercises", to: "/admin/exercises", label: "التمارين", status: "live" },
-      { id: "progress", to: "/admin/progress", label: "التقدم", status: "foundation" },
+      { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live" },
     ],
   },
   {
     id: "nutrition",
     label: "التغذية",
-    items: [{ id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live" }],
+    items: [
+      { id: "nutrition-ops", to: "/admin/nutrition/operations", label: "نظرة عامة", status: "live" },
+      { id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live" },
+    ],
   },
   {
     id: "billing",
