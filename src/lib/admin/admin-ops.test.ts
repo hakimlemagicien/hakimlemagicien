@@ -115,7 +115,15 @@ assert(!isAllowedSupportTransition("closed", "received"), "closed cannot return 
 assert(isAllowedSupportTransition("received", "in_review"), "received can enter review");
 
 assert(
-  snapshotAttentionCount({ unreadThreads: 1, waitingThreads: 2, pendingPayments: 3, openSupport: 4 }) === 10,
+  snapshotAttentionCount({
+    unreadThreads: 1,
+    waitingThreads: 2,
+    pendingPayments: 3,
+    legacyPendingPayments: 3,
+    pspFailedEvents: 1,
+    subscriptionAttention: 2,
+    openSupport: 4,
+  }) === 13,
   "snapshot attention sums live counts only",
 );
 

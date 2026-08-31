@@ -36,6 +36,9 @@ export type AdminOperationsSnapshot = {
   unreadThreads: number;
   waitingThreads: number;
   pendingPayments: number;
+  legacyPendingPayments: number;
+  pspFailedEvents: number;
+  subscriptionAttention: number;
   openSupport: number;
 };
 
@@ -109,12 +112,22 @@ export async function fetchAdminOperationsSnapshot(): Promise<AdminOperationsSna
     unreadThreads: Number(row.unread_threads ?? 0),
     waitingThreads: Number(row.waiting_threads ?? 0),
     pendingPayments: Number(row.pending_payments ?? 0),
+    legacyPendingPayments: Number(row.legacy_pending_payments ?? row.pending_payments ?? 0),
+    pspFailedEvents: Number(row.psp_failed_events ?? 0),
+    subscriptionAttention: Number(row.subscription_attention ?? 0),
     openSupport: Number(row.open_support ?? 0),
   };
 }
 
 export function snapshotAttentionCount(snapshot: AdminOperationsSnapshot): number {
-  return snapshot.unreadThreads + snapshot.waitingThreads + snapshot.pendingPayments + snapshot.openSupport;
+  return (
+    snapshot.unreadThreads +
+    snapshot.waitingThreads +
+    snapshot.legacyPendingPayments +
+    snapshot.pspFailedEvents +
+    snapshot.subscriptionAttention +
+    snapshot.openSupport
+  );
 }
 
 export async function listAdminSupportTickets(opts?: {

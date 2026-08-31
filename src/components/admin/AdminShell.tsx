@@ -14,13 +14,19 @@ const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
   unreadThreads: 0,
   waitingThreads: 0,
   pendingPayments: 0,
+  legacyPendingPayments: 0,
+  pspFailedEvents: 0,
+  subscriptionAttention: 0,
   openSupport: 0,
 };
 
 function navCount(href: string, snapshot: AdminOperationsSnapshot): number {
   if (href === "/admin/messages") return snapshot.unreadThreads + snapshot.waitingThreads;
   if (href === "/admin/support") return snapshot.openSupport;
-  if (href === "/admin/payments") return snapshot.pendingPayments;
+  if (href === "/admin/payments") {
+    return snapshot.legacyPendingPayments + snapshot.pspFailedEvents;
+  }
+  if (href === "/admin/memberships") return snapshot.subscriptionAttention;
   return 0;
 }
 

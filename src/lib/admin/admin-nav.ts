@@ -42,7 +42,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "business",
     label: "الأعمال",
     items: [
-      { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "foundation" },
+      { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live" },
       { id: "billing", to: "/admin/payments", label: "الفوترة", status: "live" },
       { id: "support", to: "/admin/support", label: "الدعم", status: "live" },
     ],

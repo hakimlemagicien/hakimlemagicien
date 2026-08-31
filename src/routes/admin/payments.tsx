@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -28,16 +28,26 @@ import {
   AdminPageHeader,
   AdminTable,
 } from "@/components/admin/AdminPage";
+import { AdminPaymentExceptionsPanel } from "@/components/admin/AdminPaymentExceptionsPanel";
+import { AdminProviderEventsPanel } from "@/components/admin/AdminProviderEventsPanel";
+import { AdminPspPaymentsPanel } from "@/components/admin/AdminPspPaymentsPanel";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
+
+type PaymentsSection = "exceptions" | "psp" | "provider-events" | "legacy";
 
 export const Route = createFileRoute("/admin/payments")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: (search.section as PaymentsSection | undefined) ?? "exceptions",
+  }),
   head: () => ({ meta: [{ title: "المدفوعات | مركز التشغيل" }] }),
   component: AdminPaymentsPage,
 });
 
 function AdminPaymentsPage() {
   const queryClient = useQueryClient();
+  const search = useSearch({ from: "/admin/payments" });
+  const section = search.section ?? "exceptions";
   const [tab, setTab] = useState<"pending" | "approved">("pending");
   const [leads, setLeads] = useState<AdminSubmittedLead[]>([]);
   const [approvedLeads, setApprovedLeads] = useState<AdminApprovedLead[]>([]);
@@ -162,25 +172,57 @@ function AdminPaymentsPage() {
 
   const activeLeads = tab === "pending" ? leads : approvedLeads;
 
+  const sectionSubtitle: Record<PaymentsSection, string> = {
+    exceptions: "استثناءات تشغيلية حقيقية فقط — لا حوادث وهمية",
+    psp: "مدفوعات الاشتراك الرقمي عبر PSP — مسار V1 الأساسي",
+    "provider-events": "أحداث المزود التشغيلية — بدون payload حساس",
+    legacy: "تحويلات بنكية Legacy — مراجعة يدوية استثنائية",
+  };
+
   return (
     <>
       <AdminPageHeader
         kicker="الأعمال"
-        title="الفوترة"
-        subtitle={
-          tab === "pending"
-            ? "طلبات التحويل ذات الحالة submitted بانتظار المراجعة"
-            : "العملاء المقبولون — يمكن إعادة إرسال رابط الدخول"
-        }
+        title="الفوترة والمدفوعات"
+        subtitle={sectionSubtitle[section]}
         actions={
-          <button type="button" onClick={() => void loadLeads()} disabled={loading} className="cc-btn">
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            تحديث
-          </button>
+          section === "legacy" ? (
+            <button type="button" onClick={() => void loadLeads()} disabled={loading} className="cc-btn">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              تحديث
+            </button>
+          ) : null
         }
       />
 
-      <div className="cc-tabs" role="tablist" aria-label="حالات الفوترة">
+      <div className="cc-tabs" role="tablist" aria-label="أقسام الفوترة">
+        {(
+          [
+            ["exceptions", "الاستثناءات"],
+            ["psp", "PSP"],
+            ["provider-events", "أحداث المزود"],
+            ["legacy", "Legacy بنكي"],
+          ] as const
+        ).map(([id, label]) => (
+          <a
+            key={id}
+            href={`/admin/payments?section=${id}`}
+            className={section === id ? "is-active" : undefined}
+            role="tab"
+            aria-selected={section === id}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+
+      {section === "exceptions" ? <AdminPaymentExceptionsPanel /> : null}
+      {section === "psp" ? <AdminPspPaymentsPanel /> : null}
+      {section === "provider-events" ? <AdminProviderEventsPanel /> : null}
+
+      {section === "legacy" ? (
+        <>
+      <div className="cc-tabs" role="tablist" aria-label="حالات Legacy">
         <button type="button" className={tab === "pending" ? "is-active" : undefined} onClick={() => setTab("pending")}>
           بانتظار المراجعة ({leads.length})
         </button>
@@ -288,6 +330,8 @@ function AdminPaymentsPage() {
               />
             ))}
           </div>
+        </>
+      ) : null}
         </>
       ) : null}
 

@@ -45,6 +45,7 @@ assert(
       "/admin/clients",
       "/admin/messages",
       "/admin/payments",
+      "/admin/memberships",
       "/admin/audit",
       "/admin/support",
       "/admin/programs",
