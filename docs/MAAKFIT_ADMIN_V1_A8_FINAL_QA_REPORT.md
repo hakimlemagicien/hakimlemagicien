@@ -129,7 +129,13 @@ POST_V1_FOLLOWUPS:
 
 FINAL_DECISION:
 
-# **MAAKFIT_ADMIN_V1_FINAL_BLOCKED**
+# **MAAKFIT_ADMIN_V1_FINAL_CLOSED**
+
+Superseded 2026-09-01 after Staging alias + A7 migration + authenticated QA. See `docs/MAAKFIT_ADMIN_V1_FINAL_STAGING_CLOSURE_REPORT.md`.
+
+Previous snapshot below is historical:
+
+# **MAAKFIT_ADMIN_V1_FINAL_BLOCKED** (historical)
 
 ---
 
