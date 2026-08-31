@@ -156,9 +156,14 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function PwaRegistrar() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+
   useEffect(() => {
+    if (isAdmin) return;
     registerServiceWorker();
-  }, []);
+  }, [isAdmin]);
+
   return null;
 }
 
@@ -187,8 +192,9 @@ function RootComponent() {
   const isAuth = pathname === "/auth" || pathname.startsWith("/auth/");
 
   useEffect(() => {
+    if (isAdmin || isAuth) return;
     return startVisualPropertiesEngine(pathname);
-  }, [pathname]);
+  }, [pathname, isAdmin, isAuth]);
 
   return (
     <MotionProvider>

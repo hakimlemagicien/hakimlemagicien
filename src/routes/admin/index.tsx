@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AttentionCenter } from "@/components/admin/AttentionCenter";
 import { DashboardQuickStatus } from "@/components/admin/DashboardQuickStatus";
 import {
@@ -22,7 +22,6 @@ import { buildDashboardQuickStatus, isRecentClient } from "@/lib/admin/admin-das
 import {
   fetchAdminOperationsSnapshot,
   listAdminSupportTickets,
-  supportCategoryLabel,
   type AdminOperationsSnapshot,
   type AdminSupportTicketListItem,
 } from "@/lib/admin/admin-ops-api";
@@ -35,7 +34,7 @@ import {
   todayContextLabel,
 } from "@/lib/admin/admin-status";
 import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
-import { conversationStatusLabel, type CoachingInboxRow } from "@/lib/platform/coaching-messaging";
+import type { CoachingInboxRow } from "@/lib/platform/coaching-messaging";
 
 export const Route = createFileRoute("/admin/")({
   ssr: false,
@@ -78,10 +77,7 @@ function CommandCenterPage() {
     loading: boolean;
   }>({ active: 0, attention: 0, loading: true });
 
-  const now = useMemo(
-    () => new Date(),
-    [inbox.rows, payments.rows, support.rows, audit.rows, clients.rows, exceptions.rows],
-  );
+  const nowRef = useRef(new Date());
 
   const loadSnapshot = useCallback(async () => {
     setSnapshotLoading(true);
@@ -96,8 +92,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadInbox = useCallback(async () => {
-    setInbox((prev) => ({ ...prev, loading: true, error: null }));
+  const loadInbox = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setInbox((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const rows = sortCoachingInbox(await fetchCoachingInbox());
       setInbox({ rows, error: null, loading: false });
@@ -107,8 +103,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadPayments = useCallback(async () => {
-    setPayments((prev) => ({ ...prev, loading: true, error: null }));
+  const loadPayments = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setPayments((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const rows = await fetchSubmittedLeads();
       setPayments({ rows, error: null, loading: false });
@@ -118,8 +114,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadSupport = useCallback(async () => {
-    setSupport((prev) => ({ ...prev, loading: true, error: null }));
+  const loadSupport = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setSupport((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const [received, inReview] = await Promise.all([
         listAdminSupportTickets({ status: "received" }),
@@ -132,8 +128,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadAudit = useCallback(async () => {
-    setAudit((prev) => ({ ...prev, loading: true, error: null }));
+  const loadAudit = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setAudit((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const rows = await listAdminAuditEvents();
       setAudit({ rows: rows.slice(0, 8), error: null, loading: false });
@@ -143,8 +139,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadClients = useCallback(async () => {
-    setClients((prev) => ({ ...prev, loading: true, error: null }));
+  const loadClients = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setClients((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const result = await searchAdminClients("");
       setClients({ rows: result.rows, error: null, loading: false });
@@ -156,8 +152,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadExceptions = useCallback(async () => {
-    setExceptions((prev) => ({ ...prev, loading: true, error: null }));
+  const loadExceptions = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setExceptions((prev) => ({ ...prev, loading: true, error: null }));
     try {
       const rows = await fetchAdminPaymentExceptions();
       setExceptions({ rows, error: null, loading: false });
@@ -167,8 +163,8 @@ function CommandCenterPage() {
     }
   }, []);
 
-  const loadMembershipSnapshot = useCallback(async () => {
-    setMembershipSnapshot((prev) => ({ ...prev, loading: true }));
+  const loadMembershipSnapshot = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setMembershipSnapshot((prev) => ({ ...prev, loading: true }));
     try {
       const rows = await fetchAdminMemberSubscriptions();
       setMembershipSnapshot({
@@ -182,15 +178,32 @@ function CommandCenterPage() {
     }
   }, []);
 
+  const [booting, setBooting] = useState(true);
+
   useEffect(() => {
-    void loadSnapshot();
-    void loadInbox();
-    void loadPayments();
-    void loadSupport();
-    void loadAudit();
-    void loadClients();
-    void loadExceptions();
-    void loadMembershipSnapshot();
+    let cancelled = false;
+    setBooting(true);
+    const bootCap = window.setTimeout(() => {
+      if (!cancelled) setBooting(false);
+    }, 10_000);
+    const silent = { silent: true as const };
+    void Promise.allSettled([
+      loadSnapshot(),
+      loadInbox(silent),
+      loadPayments(silent),
+      loadSupport(silent),
+      loadAudit(silent),
+      loadClients(silent),
+      loadExceptions(silent),
+      loadMembershipSnapshot(silent),
+    ]).finally(() => {
+      window.clearTimeout(bootCap);
+      if (!cancelled) setBooting(false);
+    });
+    return () => {
+      cancelled = true;
+      window.clearTimeout(bootCap);
+    };
   }, [
     loadSnapshot,
     loadInbox,
@@ -201,6 +214,25 @@ function CommandCenterPage() {
     loadExceptions,
     loadMembershipSnapshot,
   ]);
+
+  const attentionLoading = !booting && (inbox.loading || payments.loading || support.loading || exceptions.loading);
+  const quickStatusLoading = !booting && (snapshotLoading || clients.loading);
+  const now = nowRef.current;
+
+  if (booting) {
+    return (
+      <>
+        <AdminPageHeader
+          kicker={`${todayContextLabel(now)} · MAAKFIT Command Center`}
+          title={`${dayGreeting(now)}، Coach Hakim`}
+          subtitle="ما الذي يحتاج انتباهك اليوم؟"
+        />
+        <div className="cc-workspace-boot" aria-busy="true" aria-label="جاري تحميل مركز التشغيل">
+          <AdminSkeletonRows rows={14} />
+        </div>
+      </>
+    );
+  }
 
   const queue = buildAttentionQueue({
     inbox: inbox.rows,
@@ -223,10 +255,6 @@ function CommandCenterPage() {
     .slice()
     .sort((a, b) => new Date(b.lastMessageAt ?? 0).getTime() - new Date(a.lastMessageAt ?? 0).getTime())
     .slice(0, 6);
-
-  const attentionLoading =
-    inbox.loading || payments.loading || support.loading || exceptions.loading || snapshotLoading;
-  const quickStatusLoading = snapshotLoading || clients.loading;
 
   return (
     <>
@@ -258,7 +286,6 @@ function CommandCenterPage() {
 
       <div className="cc-ops-split">
         <AdminSection title="عملاء جدد">
-          {clients.loading ? <AdminSkeletonRows rows={3} /> : null}
           {clients.error ? <AdminErrorState message={clients.error} onRetry={() => void loadClients()} /> : null}
           {!clients.loading && !clients.error && newClients.length === 0 ? (
             <AdminEmptyState title="لا عملاء جدد في آخر 7 أيام." body="يُعرض هنا من الصفحة الحالية فقط." />
@@ -288,7 +315,6 @@ function CommandCenterPage() {
         </AdminSection>
 
         <AdminSection title="نشاط العملاء">
-          {inbox.loading ? <AdminSkeletonRows rows={3} /> : null}
           {!inbox.loading && clientActivity.length === 0 ? (
             <AdminEmptyState title="لا نشاط رسائل حديث" body="يظهر هنا آخر نشاط من صندوق التدريب فقط." />
           ) : null}
@@ -310,7 +336,6 @@ function CommandCenterPage() {
       </div>
 
       <AdminSection title="العضويات والمدفوعات">
-        {membershipSnapshot.loading || exceptions.loading ? <AdminSkeletonRows rows={2} /> : null}
         {!membershipSnapshot.loading ? (
           <div className="cc-snapshot-row">
             <div className="cc-snapshot-card">
@@ -343,10 +368,10 @@ function CommandCenterPage() {
           <ul className="cc-activity cc-activity--compact">
             {exceptions.rows.slice(0, 4).map((row) => (
               <li key={row.exceptionId}>
-                <Link to={row.href}>
+                <a href={row.href}>
                   <span>{row.subjectLabel}</span>
                   <em>{formatRelativeAge(row.occurredAt)}</em>
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
@@ -354,7 +379,6 @@ function CommandCenterPage() {
       </AdminSection>
 
       <AdminSection title="آخر نشاط إداري">
-        {audit.loading ? <AdminSkeletonRows rows={3} /> : null}
         {audit.error ? <AdminErrorState message={audit.error} onRetry={() => void loadAudit()} /> : null}
         {!audit.loading && !audit.error && audit.rows.length === 0 ? (
           <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة فقط." />

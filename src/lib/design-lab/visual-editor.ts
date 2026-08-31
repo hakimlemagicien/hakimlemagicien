@@ -193,6 +193,16 @@ export function clearStudioInlineStyles(element: HTMLElement) {
   }
 }
 
+/** Remove design-lab artifacts from the live DOM (e.g. after entering /admin). */
+export function purgeDesignLabFromDocument(doc: Document = document) {
+  if (typeof doc === "undefined" || !doc.body) return;
+  doc.querySelectorAll<HTMLElement>("[data-hakim-studio-target], [data-designlab-applied]").forEach((element) => {
+    element.removeAttribute("data-hakim-studio-target");
+    element.removeAttribute("data-designlab-applied");
+    clearStudioInlineStyles(element);
+  });
+}
+
 export function applyRulesToDocument(path: string, doc: Document = document) {
   registerStudioTargetsForDocument(path, doc);
   const rules = getRulesForPath(path);
@@ -205,16 +215,45 @@ export function applyRulesToDocument(path: string, doc: Document = document) {
   }
 }
 
+/** Design-lab inline styles must not run on staff/admin surfaces. */
+export function isVisualPropertiesEnginePath(path: string): boolean {
+  const normalized = normalizePath(path);
+  if (normalized === "/admin" || normalized.startsWith("/admin/")) return false;
+  if (normalized === "/auth" || normalized.startsWith("/auth/")) return false;
+  return true;
+}
+
 export function startVisualPropertiesEngine(path: string) {
   if (typeof window === "undefined") return () => {};
-  const apply = () => applyRulesToDocument(path, document);
-  apply();
-  const observer = new MutationObserver(() => apply());
+  if (!isVisualPropertiesEnginePath(path)) return () => {};
+
+  let applying = false;
+  let scheduled = false;
+  const applyNow = () => {
+    if (applying) return;
+    applying = true;
+    try {
+      applyRulesToDocument(path, document);
+    } finally {
+      applying = false;
+    }
+  };
+  const scheduleApply = () => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      applyNow();
+    });
+  };
+
+  applyNow();
+  const observer = new MutationObserver(() => scheduleApply());
   if (document.body) {
     observer.observe(document.body, { subtree: true, childList: true });
   }
-  const onStorage = () => apply();
-  const onRulesChanged = () => apply();
+  const onStorage = () => applyNow();
+  const onRulesChanged = () => applyNow();
   window.addEventListener("storage", onStorage);
   window.addEventListener(DESIGN_LAB_RULES_CHANGED_EVENT, onRulesChanged);
   return () => {

@@ -10,6 +10,7 @@ import {
   snapshotAttentionCount,
   type AdminOperationsSnapshot,
 } from "@/lib/admin/admin-ops-api";
+import { purgeDesignLabFromDocument } from "@/lib/design-lab/visual-editor";
 
 const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
   unreadThreads: 0,
@@ -44,6 +45,10 @@ export function AdminShell() {
   const attention = snapshotAttentionCount(snapshot);
 
   useEffect(() => {
+    purgeDesignLabFromDocument();
+  }, []);
+
+  useEffect(() => {
     setDrawerOpen(false);
     setMenuOpen(false);
   }, [pathname]);
@@ -76,7 +81,7 @@ export function AdminShell() {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, []);
 
   async function signOut() {
     await signOutAndResetClient();
@@ -128,6 +133,7 @@ export function AdminShell() {
                   <Link
                     key={item.id}
                     to={item.to}
+                    preload={false}
                     className={["cc-nav-link", active ? "is-active" : "", later ? "is-later" : ""]
                       .filter(Boolean)
                       .join(" ")}
@@ -175,11 +181,11 @@ export function AdminShell() {
 
           <div className="cc-topbar__actions">
             <AdminEnvironmentBadge />
-            <Link to="/admin/messages" className="cc-btn cc-btn--ghost cc-topbar__quick">
+            <Link to="/admin/messages" className="cc-btn cc-btn--ghost cc-topbar__quick" preload={false}>
               الرسائل
             </Link>
-            <Link
-              to="/admin"
+            <a
+              href="/admin#attention"
               className="cc-icon-btn"
               aria-label={
                 attention > 0 ? `عناصر الانتباه اليوم: ${attention}` : "لا عناصر انتباه حالياً — مركز التشغيل"
@@ -187,7 +193,7 @@ export function AdminShell() {
             >
               <Bell className="h-4 w-4" />
               {attention > 0 ? <b className="cc-nav-badge cc-bell-count">{attention > 9 ? "9+" : attention}</b> : null}
-            </Link>
+            </a>
             <div className="cc-account">
               <button
                 type="button"

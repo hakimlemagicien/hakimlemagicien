@@ -50,10 +50,13 @@ function AdminClientsPage() {
   useEffect(() => {
     const query = value.trim();
     const timer = window.setTimeout(() => {
-      void navigate({ search: { q: query || undefined } });
+      const nextQ = query || undefined;
+      const currentQ = (q ?? "").trim() || undefined;
+      if (currentQ === nextQ) return;
+      void navigate({ search: { q: nextQ }, replace: true });
     }, 280);
     return () => window.clearTimeout(timer);
-  }, [value, navigate]);
+  }, [value, navigate, q]);
 
   const query = (q ?? "").trim();
   const blocked = query.length === 1;

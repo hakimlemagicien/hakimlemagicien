@@ -34,7 +34,7 @@ export function DashboardQuickStatus({ metrics, loading }: Props) {
           </>
         );
         if (metric.href) {
-          const useAnchor = metric.href.includes("#");
+          const useAnchor = metric.href.includes("#") || metric.href.includes("?");
           if (useAnchor) {
             return (
               <a

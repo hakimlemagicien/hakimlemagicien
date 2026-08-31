@@ -119,6 +119,8 @@ export function listAdminNavHrefs(): string[] {
 }
 
 export function isAdminNavActive(pathname: string, href: string): boolean {
-  if (href === "/admin") return pathname === "/admin";
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const path = pathname.replace(/\/+$/, "") || "/";
+  const target = href.replace(/\/+$/, "") || "/";
+  if (target === "/admin") return path === "/admin";
+  return path === target || path.startsWith(`${target}/`);
 }

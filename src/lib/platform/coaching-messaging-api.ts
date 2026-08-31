@@ -266,14 +266,30 @@ const inboxListeners = new Set<() => void>();
 let inboxRefCount = 0;
 let inboxChannels: Array<ReturnType<typeof supabase.channel>> = [];
 
+let inboxNotifyTimer: number | undefined;
+
 function notifyInboxListeners() {
-  inboxListeners.forEach((listener) => {
-    try {
-      listener();
-    } catch (error) {
-      console.error(error);
-    }
-  });
+  if (typeof window === "undefined") {
+    inboxListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    return;
+  }
+
+  window.clearTimeout(inboxNotifyTimer);
+  inboxNotifyTimer = window.setTimeout(() => {
+    inboxListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.error(error);
+      }
+    });
+  }, 900);
 }
 
 function startInboxChannels() {

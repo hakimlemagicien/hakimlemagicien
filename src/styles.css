@@ -13339,6 +13339,17 @@ body.is-membership-pass-open {
   background: #f0fdf4;
 }
 
+.cc-workspace-boot .cc-skeleton-row {
+  animation: none;
+  background: #f5f0e8;
+}
+
+.cc-shell .cc-kpi-card--skeleton,
+.cc-shell .cc-attention-card--skeleton {
+  animation: none;
+  background: #f5f0e8;
+}
+
 .cc-kpi-card--skeleton {
   min-height: 92px;
   background: linear-gradient(90deg, #f5f5f4 25%, #ece8e1 50%, #f5f5f4 75%);

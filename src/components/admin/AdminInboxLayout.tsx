@@ -60,7 +60,18 @@ export function AdminInboxLayout() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  useEffect(() => watchCoachingUpdates(() => void load({ silent: true })), [load]);
+  useEffect(() => {
+    let timer: number | undefined;
+    const debouncedSilentReload = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void load({ silent: true }), 600);
+    };
+    const stop = watchCoachingUpdates(debouncedSilentReload);
+    return () => {
+      window.clearTimeout(timer);
+      stop();
+    };
+  }, [load]);
 
   return (
     <div className={threadOpen ? "cc-inbox is-thread" : "cc-inbox"}>
