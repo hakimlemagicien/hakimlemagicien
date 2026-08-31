@@ -1,8 +1,9 @@
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Crown, Lock, X } from "lucide-react";
+import { Crown, X } from "lucide-react";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
+import { UpgradeContextHeader, UpgradeSurfaceLink } from "@/components/platform/upgrade/upgrade-ui";
 import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
 import { getPublicPaidTiers } from "@/lib/payments/catalog";
 import { useUpgradeFlow } from "./UpgradeContext";
@@ -22,7 +23,7 @@ const dialogMotion = {
 };
 
 export function MembershipUpgradeSheet() {
-  const { open, reason, closeUpgrade } = useUpgradeFlow();
+  const { open, reason, surface, closeUpgrade } = useUpgradeFlow();
 
   if (typeof document === "undefined") return null;
 
@@ -52,15 +53,8 @@ export function MembershipUpgradeSheet() {
               {...dialogMotion}
             >
               <div className="platform-upgrade-dialog__head">
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="platform-upgrade-dialog__badge">
-                    <Lock className="h-3 w-3" strokeWidth={2.4} aria-hidden />
-                    ميزة مقفلة
-                  </div>
-                  <h2 className="platform-upgrade-dialog__title">{ACTIVATE_PROGRAM_CTA}</h2>
-                  <p className="platform-upgrade-dialog__reason">
-                    {reason ?? "اختر باقتك أولاً، ثم حدد مدة الاشتراك لتفعيل برنامجك."}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <UpgradeContextHeader surface={surface} reason={reason} />
                 </div>
                 <button
                   type="button"
@@ -71,6 +65,13 @@ export function MembershipUpgradeSheet() {
                   <X className="h-4 w-4" strokeWidth={2.2} />
                 </button>
               </div>
+
+              <UpgradeSurfaceLink
+                surface={surface === "SWAP_LIMIT" ? "NUTRITION" : surface}
+                className="platform-upgrade-dialog__full-link mb-3 block text-center font-[Tajawal] text-[12px] font-extrabold text-primary underline-offset-2 hover:underline"
+              >
+                {ACTIVATE_PROGRAM_CTA} — صفحة الباقات الكاملة
+              </UpgradeSurfaceLink>
 
               <div className="platform-upgrade-dialog__plans">
                 {getPublicPaidTiers().map((plan, index) => {

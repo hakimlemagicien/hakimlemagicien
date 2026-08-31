@@ -14,10 +14,14 @@ function formatDate(value: string | null) {
 }
 
 function statusLabel(status: string, cancelAtPeriodEnd: boolean) {
+  if (status === "past_due") return "متأخر — يلزم تحديث طريقة الدفع";
+  if (status === "refunded") return "مسترد";
+  if (status === "expired" || status === "cancelled") return "منتهٍ / ملغى";
   if (status === "suspended") return "موقوف";
   if (cancelAtPeriodEnd || status === "cancel_at_period_end") return "سيتوقف التجديد — الوصول حتى نهاية الفترة المدفوعة";
   if (status === "active") return "نشط";
   if (status === "free") return "خطة مجانية";
+  if (status === "pending_confirmation") return "بانتظار تأكيد مزود الدفع";
   return status;
 }
 
@@ -134,7 +138,16 @@ export function BillingSettings() {
           )}
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">لا يوجد اشتراك مدفوع حالياً.</p>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">لا يوجد اشتراك مدفوع حالياً.</p>
+          <Link
+            to="/app/upgrade"
+            search={{ surface: "BILLING" }}
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-black text-primary-foreground"
+          >
+            عرض الباقات
+          </Link>
+        </div>
       )}
 
       <nav className="flex flex-wrap gap-3 text-xs font-black text-primary">

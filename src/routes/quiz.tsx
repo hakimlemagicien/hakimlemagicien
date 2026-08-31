@@ -4149,15 +4149,15 @@ const PRICING_TIERS: PricingTier[] = [
   {
     id: "pro",
     name: "Premium",
-    tagline: "كل مزايا Essential مع دردشة الكوتش ومراجعة كل أسبوعين.",
+    tagline: "كل مزايا Essential مع مرونة أعلى في التغذية وبدائل متعددة — بدون دردشة الكوتش.",
     pricePerDay: "1.63",
     totalPrice: "147",
     features: [
       "كل مزايا Essential",
-      "دردشة الكوتش مع Coach Hakim",
-      "مراجعة تقدم كل أسبوعين",
+      "مرونة أعلى في تغيير الوجبات",
+      "بدائل متعددة حيث تدعمها الخطة",
       "تحسينات مناسبة حسب التقدم",
-      "دعم الحساب والفوترة",
+      "بدون دردشة الكوتش البشرية",
     ],
     primary: "#2563EB",
     primarySoft: "#DBEAFE",
@@ -4201,10 +4201,11 @@ const PRICING_CTA_COPY: Record<PricingTier["id"], string> = {
   vip: "فعّل VIP — 3 أشهر",
 };
 
+const PUBLIC_PRICING_TIERS = PRICING_TIERS.filter((tier) => tier.id !== "vip");
+
 const PRICING_TIER_TABS: { id: PricingTier["id"]; label: string }[] = [
   { id: "transform", label: "Essential" },
   { id: "pro", label: "Premium" },
-  { id: "vip", label: "VIP" },
 ];
 
 function PricingTrustInline() {
@@ -4409,7 +4410,7 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
     triggerSelectionHaptic();
   };
 
-  const activeTier = PRICING_TIERS.find((t) => t.id === selected) ?? PRICING_TIERS[1];
+  const activeTier = PUBLIC_PRICING_TIERS.find((t) => t.id === selected) ?? PUBLIC_PRICING_TIERS[1];
 
   return (
     <div className="relative h-full w-full overflow-y-auto" dir="rtl" style={{ background: "#FFFFFF", fontFamily: FONT }}>
@@ -4740,7 +4741,7 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
         <div className="pri-in mt-5 border-b border-neutral-200/80" style={{ animationDelay: ".12s" }}>
           <div dir="rtl" className="pri-tier-tabs" role="tablist" aria-label="اختر الباقة">
             {PRICING_TIER_TABS.map((tab) => {
-              const tierMeta = PRICING_TIERS.find((t) => t.id === tab.id)!;
+              const tierMeta = PUBLIC_PRICING_TIERS.find((t) => t.id === tab.id)!;
               const TabIcon = tierMeta.Icon;
               const isActive = selected === tab.id;
               return (
@@ -4887,7 +4888,18 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
 }
 
 function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tierId: PricingTier["id"]; total?: number; onBack: () => void }) {
-  const tier = PRICING_TIERS.find((t) => t.id === tierId) ?? PRICING_TIERS[0];
+  if (tierId === "vip") {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center" dir="rtl">
+        <p className="text-sm font-black text-[#0F172A]">VIP غير متاح للبيع العام</p>
+        <p className="text-xs text-neutral-500">اختر Essential أو Premium للمتابعة.</p>
+        <button type="button" onClick={onBack} className="rounded-full bg-[#FF6B00] px-5 py-2.5 text-sm font-black text-white">
+          العودة للباقات
+        </button>
+      </div>
+    );
+  }
+  const tier = PUBLIC_PRICING_TIERS.find((t) => t.id === tierId) ?? PUBLIC_PRICING_TIERS[0];
   return (
     <CheckoutScreen
       name={name}

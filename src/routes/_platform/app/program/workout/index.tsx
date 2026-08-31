@@ -22,6 +22,10 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
+import {
+  isExerciseUnlockedByEntitlements,
+  isTrainingPreviewMode,
+} from "@/lib/platform/entitlements";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
@@ -29,7 +33,6 @@ import {
   buildWeeklySchedule,
   formatWorkoutDayLabel,
   getWeekdayIdFromDate,
-  isFreeUnlockedExerciseIndex,
   resolveWeekdayPlan,
   type WeekDayEntry,
   type WeekdayId,
@@ -509,6 +512,7 @@ function SessionExercisePathRow({
   dayId,
   freePreview,
   freeDayFullyLocked,
+  entitlements,
   isLast,
   onLockedClick,
 }: {
@@ -518,12 +522,15 @@ function SessionExercisePathRow({
   dayId: WeekdayId;
   freePreview: boolean;
   freeDayFullyLocked: boolean;
+  entitlements: ReturnType<typeof useMembership>["entitlements"];
   isLast: boolean;
   onLockedClick: () => void;
 }) {
   const volume = formatExerciseVolume(exercise);
   const isUnlocked =
-    !freePreview || (!freeDayFullyLocked && isFreeUnlockedExerciseIndex(orderIndex));
+    !freePreview ||
+    (!freeDayFullyLocked &&
+      isExerciseUnlockedByEntitlements(entitlements, orderIndex, { isToday: true }));
   const isDone = exercise.status === "done";
   const isActive = exercise.status === "active";
   const stillThumb = getExerciseStageListThumb(exercise.external_id);
@@ -654,12 +661,14 @@ function SessionExercisesSection({
   dayId,
   freePreview,
   freeDayFullyLocked,
+  entitlements,
   onLockedClick,
 }: {
   exercises: SessionExerciseView[];
   dayId: WeekdayId;
   freePreview: boolean;
   freeDayFullyLocked: boolean;
+  entitlements: ReturnType<typeof useMembership>["entitlements"];
   onLockedClick: () => void;
 }) {
   if (exercises.length === 0) {
@@ -723,6 +732,7 @@ function SessionExercisesSection({
             dayId={dayId}
             freePreview={freePreview}
             freeDayFullyLocked={freeDayFullyLocked}
+            entitlements={entitlements}
             isLast={exerciseIndex === exercises.length - 1}
             onLockedClick={onLockedClick}
           />
@@ -742,7 +752,7 @@ function SessionExercisesSection({
         <p className="text-[9px] font-medium leading-snug text-muted-foreground">
           {freeDayFullyLocked
             ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة التمرين المجاني أو فعّل برنامجك."
-            : "🔓 التمرين الأول للصدر متاح اليوم — باقي التمارين مقفلة حتى تفعّل برنامجك."}
+            : "🔓 التمرين الأول متاح اليوم — باقي التمارين مقفلة حتى تفعّل برنامجك الكامل."}
         </p>
       ) : null}
     </div>
@@ -750,11 +760,11 @@ function SessionExercisesSection({
 }
 
 function WorkoutDayPage() {
-  const { features } = useMembership();
-  const { openUpgrade } = useUpgradeFlow();
+  const { features, entitlements } = useMembership();
+  const { openUpgradeWithContext } = useUpgradeFlow();
   const { userId, snapshot } = usePlatformActivity();
   const hasWorkoutProgram = Boolean(features?.workout_program);
-  const freePreview = !hasWorkoutProgram;
+  const freePreview = isTrainingPreviewMode(entitlements);
   const todayId = getWeekdayIdFromDate();
   const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(todayId);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -762,7 +772,12 @@ function WorkoutDayPage() {
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const lockedReason = freeDayFullyLocked
     ? "فعّل برنامجك الآن لفتح تمارين كل أيام الأسبوع — يمكنك معاينة شكل البرنامج فقط."
-    : "فعّل برنامجك الآن لفتح كل تمارين الأسبوع — التمرين الأول للصدر متاح للمعاينة.";
+    : "أكمل حصتك التدريبية — التمرين الأول متاح للمعاينة اليوم.";
+  const openTrainingUpgrade = () =>
+    openUpgradeWithContext(
+      "TRAINING",
+      freeDayFullyLocked ? lockedReason : "بقية التمارين مختارة حسب هدفك ومستواك.",
+    );
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
@@ -920,7 +935,7 @@ function WorkoutDayPage() {
             )}
             lockedPreview={freePreview && !selectedPlan.isRestDay}
             lockedPreviewIntensity={freeDayFullyLocked ? "strong" : "light"}
-            onLockedClick={() => openUpgrade(lockedReason)}
+            onLockedClick={openTrainingUpgrade}
             ctaLabel={
               isSelectedToday && continuity.decision?.action === "RESUME_SESSION"
                 ? "استكمل التمرين"
@@ -964,7 +979,8 @@ function WorkoutDayPage() {
               dayId={selectedDayId}
               freePreview={freePreview}
               freeDayFullyLocked={freeDayFullyLocked}
-              onLockedClick={() => openUpgrade(lockedReason)}
+              entitlements={entitlements}
+              onLockedClick={openTrainingUpgrade}
             />
           )}
 
@@ -974,7 +990,7 @@ function WorkoutDayPage() {
               dayId={selectedDayId}
               freePreview={freePreview}
               freeTrialAvailable={freePreview && isSelectedToday}
-              onLockedClick={() => openUpgrade(lockedReason)}
+              onLockedClick={openTrainingUpgrade}
             />
           ) : null}
         </section>

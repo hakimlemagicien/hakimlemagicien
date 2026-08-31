@@ -3,13 +3,16 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutPlayer } from "@/hooks/useWorkoutPlayer";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
+import {
+  isExerciseUnlockedByEntitlements,
+  isTrainingPreviewMode,
+} from "@/lib/platform/entitlements";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 import { toProgressionRecoveryHold } from "@/lib/platform/continuity";
 import {
   getWeekdayIdFromDate,
-  isFreeUnlockedExerciseIndex,
   resolveWeekdayPlan,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
@@ -48,10 +51,10 @@ export const Route = createFileRoute("/_platform/app/program/workout/exercise")(
 });
 
 function ExercisePlayerPage() {
-  const { features } = useMembership();
-  const { openUpgrade } = useUpgradeFlow();
+  const { features, entitlements } = useMembership();
+  const { openUpgradeWithContext } = useUpgradeFlow();
   const hasWorkoutProgram = features.workout_program;
-  const freePreview = !hasWorkoutProgram;
+  const freePreview = isTrainingPreviewMode(entitlements);
   const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
@@ -112,30 +115,28 @@ function ExercisePlayerPage() {
     );
   }
 
-  if (freePreview && (freeDayFullyLocked || !isFreeUnlockedExerciseIndex(index))) {
+  if (freePreview && (freeDayFullyLocked || !isExerciseUnlockedByEntitlements(entitlements, index, { isToday: true }))) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
         <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary-soft text-primary">
           <Lock className="h-6 w-6" strokeWidth={2.2} />
         </span>
         <div>
-          <p className="text-sm font-black text-foreground">
-            {freeDayFullyLocked ? "تمارين هذا اليوم مقفلة" : "هذا التمرين مقفل"}
-          </p>
+          <p className="text-sm font-black text-foreground">أكمل حصتك التدريبية</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {freeDayFullyLocked
               ? "يمكنك معاينة شكل البرنامج — التمرين المجاني متاح في يوم اليوم فقط."
-              : "التمرين الأول للصدر متاح للمعاينة. فعّل برنامجك لفتح كل تمارين الأسبوع."}
+              : "التمرين الأول متاح للمعاينة. فعّل برنامجك لفتح كل تمارين الأسبوع."}
           </p>
         </div>
         <button
           type="button"
           onClick={() =>
-            openUpgrade("فعّل برنامجك الآن لفتح كل تمارين الأسبوع — معاينة الصدر متاحة مجاناً.")
+            openUpgradeWithContext("TRAINING", "بقية التمارين مختارة حسب هدفك ومستواك.")
           }
           className="rounded-xl cta-gradient px-5 py-2.5 text-xs font-black text-white shadow-cta"
         >
-          ترقية الآن
+          عرض الباقات
         </button>
         <Link
           to="/app/program/workout"

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAssignedNutritionRuntime } from "@/hooks/useAssignedNutritionRuntime";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
+import { recordNutritionMealSwap } from "@/lib/platform/nutrition-meal-swap-api";
 import { hydrateMealLibraryFromSupabase } from "@/lib/platform/meal-library-api";
 import { logMyNutritionMeal, runtimeToMealSlots } from "@/lib/platform/assigned-nutrition-api";
 import { scaleMacros } from "@/lib/platform/nutrition-assignment";
@@ -46,6 +49,7 @@ export function useNutritionPlan(
   selectedDateKey?: string,
   opts?: { catalogPreview?: boolean },
 ) {
+  const queryClient = useQueryClient();
   const { userId, snapshot } = usePlatformActivity();
   const dateKey = selectedDateKey ?? todayKey();
   const isSelectedToday = dateKey === todayKey();
@@ -168,8 +172,23 @@ export function useNutritionPlan(
     runtimeError: !catalogPreview && runtimeQuery.isError,
     markCompleted,
     markSkipped,
-    adoptAlternative: (slotId: string, alternativeId: string) =>
-      adoptMealAlternative(userId, dateKey, slotId, alternativeId),
+    adoptAlternative: async (slotId: string, alternativeId: string) => {
+      if (!catalogPreview) {
+        const slot = assignedSlots.find((item) => item.id === slotId);
+        const swapResult = await recordNutritionMealSwap({
+          fromMealId: slot?.assignmentSlotId ?? null,
+          toMealId: null,
+        });
+        if (!swapResult.ok) {
+          const err = new Error(swapResult.code);
+          (err as Error & { code?: string }).code = swapResult.code;
+          throw err;
+        }
+        await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
+      }
+      adoptMealAlternative(userId, dateKey, slotId, alternativeId);
+      refresh();
+    },
     toggleShopping: (itemId: string, checked?: boolean) =>
       toggleShoppingItem(userId, itemId, checked),
     purchaseAllShopping: (itemIds: string[]) => markAllShoppingPurchased(userId, itemIds),

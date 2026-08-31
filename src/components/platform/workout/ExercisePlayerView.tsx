@@ -14,6 +14,8 @@ import {
   Weight,
 } from "lucide-react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
+import { useMembership } from "@/hooks/useMembership";
+import { isTrainingPreviewMode } from "@/lib/platform/entitlements";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
 import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
@@ -227,6 +229,8 @@ function ExercisePlayerStage({
 }
 
 export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
+  const { entitlements } = useMembership();
+  const showFreeConversion = isTrainingPreviewMode(entitlements);
   const {
     meta,
     exercises,
@@ -404,7 +408,11 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
 
               {stageGuide ? (
                 <div className="mt-3">
-                  <ExerciseStageGuide guide={stageGuide} variant="session" />
+                  <ExerciseStageGuide
+                    guide={stageGuide}
+                    variant="session"
+                    muscles={{ primary: currentExercise.muscle, secondary: [] }}
+                  />
                 </div>
               ) : null}
 
@@ -468,7 +476,11 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
 
               {stageGuide ? (
                 <div className="mt-3">
-                  <ExerciseStageGuide guide={stageGuide} variant="session" />
+                  <ExerciseStageGuide
+                    guide={stageGuide}
+                    variant="session"
+                    muscles={{ primary: currentExercise.muscle, secondary: [] }}
+                  />
                 </div>
               ) : null}
 
@@ -603,7 +615,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
         ? createPortal(
             <>
               <SetLogBottomSheet player={player} />
-              <WorkoutCompleteScreen player={player} />
+              <WorkoutCompleteScreen player={player} showFreeConversion={showFreeConversion} />
             </>,
             document.body,
           )

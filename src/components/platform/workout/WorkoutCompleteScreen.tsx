@@ -1,18 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { Droplets, Layers, Star, Timer } from "lucide-react";
+import { useState } from "react";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
+import { TrainingFreeConversionPanel } from "@/components/platform/upgrade/upgrade-ui";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 
 type WorkoutCompleteScreenProps = {
   player: WorkoutPlayerState;
+  showFreeConversion?: boolean;
 };
 
-export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
+export function WorkoutCompleteScreen({ player, showFreeConversion = false }: WorkoutCompleteScreenProps) {
   const { phase, meta, resetSession, completedWorkingSets, sessionPartial, runtimeMode, progress } = player;
   const water = useWaterOptional();
   const open = phase === "complete";
   const exercisesDone = progress.filter((item) => item.status === "done").length;
+  const [dismissConversion, setDismissConversion] = useState(false);
 
   return (
     <AnimatePresence>
@@ -33,7 +37,7 @@ export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
             <p className="text-4xl">🎉</p>
             <h2 className="mt-3 text-2xl font-black text-foreground">أحسنت</h2>
             <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {sessionPartial ? "تم حفظ ما أنجزته من الحصة" : "لقد أكملت حصة اليوم"}
+              {sessionPartial ? "تم حفظ ما أنجزته من الحصة" : "لقد أكملت التمرين المتاح"}
             </p>
 
             <div className="mt-5 grid grid-cols-3 gap-2">
@@ -55,6 +59,12 @@ export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
                 <p className="text-[9px] text-muted-foreground">{runtimeMode === "v2" ? "تمارين" : "نقطة"}</p>
               </div>
             </div>
+
+            {showFreeConversion && !dismissConversion ? (
+              <div className="mt-4 text-right">
+                <TrainingFreeConversionPanel onLater={() => setDismissConversion(true)} />
+              </div>
+            ) : null}
 
             {runtimeMode !== "v2" ? (
               <div className="mt-4 space-y-2 rounded-2xl border border-[#22C55E]/25 bg-[#F0FAF4] p-3 text-right">

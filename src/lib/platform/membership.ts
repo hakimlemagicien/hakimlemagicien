@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarDisplayUrl } from "@/lib/platform/profile-api";
+import {
+  FREE_ENTITLEMENTS,
+  normalizeEntitlements,
+  type EntitlementsSnapshot,
+} from "@/lib/platform/entitlements";
 
 export type MembershipTier = "visitor" | "free" | "essential" | "premium" | "vip" | "admin";
 
@@ -40,6 +45,7 @@ export type MembershipState = MembershipResponse & {
   avatarPath: string | null;
   avatarUrl: string | null;
   isVisitor: boolean;
+  entitlements: EntitlementsSnapshot;
 };
 
 export const MEMBERSHIP_QUERY_KEY = ["membership", "current"] as const;
@@ -130,6 +136,7 @@ export const FREE_MEMBERSHIP_STATE: MembershipState = {
   avatarPath: null,
   avatarUrl: null,
   isVisitor: false,
+  entitlements: FREE_ENTITLEMENTS,
 };
 
 const LOCAL_FREE_FEATURES: MembershipFeatures = {
@@ -164,6 +171,7 @@ function withLocalFreeOverride(state: MembershipState): MembershipState {
     is_paid: false,
     is_active: true,
     features: LOCAL_FREE_FEATURES,
+    entitlements: FREE_ENTITLEMENTS,
   };
 }
 
@@ -181,12 +189,20 @@ function buildFounderReviewMembership(
     ends_at: base.ends_at,
     days_remaining: base.days_remaining ?? 3650,
     features: VIP_FEATURES,
+    entitlements: normalizeEntitlements({
+      tier: "vip",
+      is_paid: true,
+      subscription_status: "active",
+      training: { full_session: true, allowed_exercises_per_session: 99, preview_exercises: false },
+      nutrition: { full_day: true, daily_swap_limit: null, multiple_alternatives: true, unlocked_meal_strategy: "all_assigned" },
+      coach_chat: true,
+    }),
     isVisitor: false,
   };
 }
 
-function normalizeMembershipResponse(data: unknown): MembershipResponse {
-  const source = (data ?? {}) as Partial<MembershipResponse>;
+function normalizeMembershipResponse(data: unknown): MembershipResponse & { entitlements: EntitlementsSnapshot } {
+  const source = (data ?? {}) as Partial<MembershipResponse> & { entitlements?: unknown };
   const rawFeatures = (source.features ?? {}) as Partial<MembershipFeatures>;
 
   const tier = source.tier;
@@ -226,6 +242,7 @@ function normalizeMembershipResponse(data: unknown): MembershipResponse {
       program_adjustments: rawFeatures.program_adjustments ?? false,
       priority_contact: rawFeatures.priority_contact ?? false,
     },
+    entitlements: normalizeEntitlements(source.entitlements),
   };
 }
 
