@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { AdminPriorityBadge, AdminStatusBadge } from "@/components/admin/AdminPage";
 import type { AttentionItem } from "@/lib/admin/admin-attention";
 import { attentionCategoryLabel, attentionTypeLabel } from "@/lib/admin/admin-attention";
@@ -7,20 +8,39 @@ type Props = {
   loading?: boolean;
 };
 
+function ClientCell({ item }: { item: AttentionItem }) {
+  const content = (
+    <>
+      <span className="cc-attention-row__avatar" aria-hidden>
+        {item.clientName.slice(0, 1)}
+      </span>
+      <span>
+        <strong>{item.clientName}</strong>
+        {item.vip ? <AdminStatusBadge tone="vip">VIP</AdminStatusBadge> : null}
+      </span>
+    </>
+  );
+  if (item.clientId) {
+    return (
+      <Link
+        to="/admin/clients/$clientId"
+        params={{ clientId: item.clientId }}
+        className="cc-attention-row__client-link"
+        preload={false}
+      >
+        {content}
+      </Link>
+    );
+  }
+  return <div className="cc-attention-row__client">{content}</div>;
+}
+
 function AttentionRow({ item }: { item: AttentionItem }) {
   return (
     <>
       <div className="cc-attention-row cc-attention-row--desktop" role="row">
         <div className="cc-attention-row__cell cc-attention-row__client" role="cell">
-          <span className="cc-attention-row__avatar" aria-hidden>
-            {item.clientName.slice(0, 1)}
-          </span>
-          <span>
-            <strong>{item.clientName}</strong>
-            {item.vip ? (
-              <AdminStatusBadge tone="vip">VIP</AdminStatusBadge>
-            ) : null}
-          </span>
+          <ClientCell item={item} />
         </div>
         <div className="cc-attention-row__cell" role="cell">
           {attentionTypeLabel(item.type)}
@@ -43,12 +63,7 @@ function AttentionRow({ item }: { item: AttentionItem }) {
 
       <article className="cc-attention-row cc-attention-row--mobile">
         <header className="cc-attention-row__mobile-head">
-          <div className="cc-attention-row__client">
-            <span className="cc-attention-row__avatar" aria-hidden>
-              {item.clientName.slice(0, 1)}
-            </span>
-            <strong>{item.clientName}</strong>
-          </div>
+          <ClientCell item={item} />
           <AdminPriorityBadge priority={item.priority} />
         </header>
         <p className="cc-attention-row__mobile-meta">
@@ -83,7 +98,7 @@ export function AttentionCenter({ items, loading }: Props) {
     return (
       <div id="attention" className="cc-attention-panel cc-card cc-attention-empty">
         <AdminStatusBadge tone="positive">كل شيء تحت السيطرة</AdminStatusBadge>
-        <p className="cc-muted">لا توجد حالات تحتاج تدخلاً من الإشارات المعتمدة حالياً.</p>
+        <p className="cc-muted">لا توجد حالات تتطلب تدخلك حاليًا.</p>
       </div>
     );
   }

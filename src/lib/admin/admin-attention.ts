@@ -16,6 +16,7 @@ export type AttentionType =
 export type AttentionItem = {
   id: string;
   clientName: string;
+  clientId?: string | null;
   category: AttentionCategory;
   type: AttentionType;
   reason: string;
@@ -104,6 +105,7 @@ export function buildAttentionQueue(input: {
     items.push({
       id: `inbox:${row.id}`,
       clientName: row.memberName,
+      clientId: row.memberId,
       category: "coaching",
       type: "coaching_reply",
       reason: row.unreadCount > 0 ? "رسالة تنتظر الرد" : "محادثة بانتظار رد",
@@ -112,7 +114,7 @@ export function buildAttentionQueue(input: {
       occurredAt: row.lastMessageAt ? new Date(row.lastMessageAt).getTime() : Number.MAX_SAFE_INTEGER,
       planLabel: planLabel(row.membershipTier),
       href: `/admin/messages/${row.id}`,
-      actionLabel: "فتح المحادثة",
+      actionLabel: "فتح الرسائل",
       statusLabel: row.unreadCount > 0 ? "غير مقروء" : "بانتظار الرد",
       vip,
     });
@@ -141,6 +143,7 @@ export function buildAttentionQueue(input: {
     items.push({
       id: `support:${ticket.id}`,
       clientName: ticket.displayName || ticket.email || ticket.ticketCode,
+      clientId: ticket.userId,
       category: "support",
       type: "support_ticket",
       reason: ticket.category === "privacy" ? "تذكرة خصوصية تحتاج مراجعة" : "تذكرة دعم مفتوحة",
@@ -149,7 +152,7 @@ export function buildAttentionQueue(input: {
       occurredAt: ticket.createdAt ? new Date(ticket.createdAt).getTime() : Number.MAX_SAFE_INTEGER,
       planLabel: null,
       href: `/admin/support?ticket=${encodeURIComponent(ticket.id)}`,
-      actionLabel: "فتح التذكرة",
+      actionLabel: "فتح الدعم",
       statusLabel: ticket.status === "received" ? "مستلمة" : "قيد المراجعة",
       vip: false,
     });
@@ -167,7 +170,7 @@ export function buildAttentionQueue(input: {
       occurredAt: exception.occurredAt ? new Date(exception.occurredAt).getTime() : Number.MAX_SAFE_INTEGER,
       planLabel: null,
       href: exception.href || "/admin/payments?section=exceptions",
-      actionLabel: "معالجة الاستثناء",
+      actionLabel: "مراجعة",
       statusLabel: "مفتوح",
       vip: false,
     });

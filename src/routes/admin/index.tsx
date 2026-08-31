@@ -19,12 +19,14 @@ import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { fetchSubmittedLeads, type AdminSubmittedLead } from "@/lib/admin-payments-api";
 import { buildAttentionQueue, sortCoachingInbox } from "@/lib/admin/admin-attention";
 import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
-import {
-  fetchAdminPaymentExceptions,
-  fetchAdminMemberSubscriptions,
-  type AdminPaymentExceptionRow,
-} from "@/lib/admin/admin-billing-ops-api";
+import { fetchAdminPaymentExceptions, fetchAdminMemberSubscriptions, type AdminMemberSubscriptionRow, type AdminPaymentExceptionRow } from "@/lib/admin/admin-billing-ops-api";
 import { buildDashboardQuickStatus, isRecentClient } from "@/lib/admin/admin-dashboard";
+import {
+  auditEventEntityLabel,
+  buildMembershipOperationalSnapshot,
+  commercialTierLabel,
+  formatAuditEventLabel,
+} from "@/lib/admin/admin-dashboard-present";
 import {
   fetchAdminOperationsSnapshot,
   listAdminSupportTickets,
@@ -32,7 +34,7 @@ import {
   type AdminSupportTicketListItem,
 } from "@/lib/admin/admin-ops-api";
 import { searchAdminClients, type AdminClientListItem } from "@/lib/admin/admin-clients-api";
-import { dayGreeting, formatRelativeAge, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { dayGreeting, formatRelativeAge, personInitials, planLabel, planStatusKind } from "@/lib/admin/admin-status";
 import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
 import type { CoachingInboxRow } from "@/lib/platform/coaching-messaging";
 
@@ -79,11 +81,8 @@ function CommandCenterPage() {
   const [clients, setClients] = useState(emptyClients);
   const [totalClients, setTotalClients] = useState<number | null>(null);
   const [exceptions, setExceptions] = useState(emptyExceptions);
-  const [membershipSnapshot, setMembershipSnapshot] = useState<{
-    active: number;
-    attention: number;
-    loading: boolean;
-  }>({ active: 0, attention: 0, loading: true });
+  const [membershipRows, setMembershipRows] = useState<AdminMemberSubscriptionRow[]>([]);
+  const [membershipLoading, setMembershipLoading] = useState(true);
 
   const nowRef = useRef(new Date());
 
@@ -172,17 +171,15 @@ function CommandCenterPage() {
   }, []);
 
   const loadMembershipSnapshot = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) setMembershipSnapshot((prev) => ({ ...prev, loading: true }));
+    if (!opts?.silent) setMembershipLoading(true);
     try {
       const rows = await fetchAdminMemberSubscriptions();
-      setMembershipSnapshot({
-        active: rows.filter((row) => row.isActive).length,
-        attention: rows.filter((row) => row.exceptionState).length,
-        loading: false,
-      });
+      setMembershipRows(rows);
     } catch (err) {
       console.error(err);
-      setMembershipSnapshot({ active: 0, attention: 0, loading: false });
+      setMembershipRows([]);
+    } finally {
+      setMembershipLoading(false);
     }
   }, []);
 
@@ -264,6 +261,12 @@ function CommandCenterPage() {
 
   const newClients = clients.rows.filter((row) => isRecentClient(row, now));
   const paymentIssues = snapshot.legacyPendingPayments + snapshot.pspFailedEvents;
+  const membershipSnapshot = buildMembershipOperationalSnapshot({
+    subscriptions: membershipRows,
+    subscriptionAttention: snapshot.subscriptionAttention,
+    paymentExceptions: paymentIssues,
+    pendingReview: payments.rows.length,
+  });
 
   return (
     <div className="cc-dashboard">
@@ -273,9 +276,12 @@ function CommandCenterPage() {
 
       <section className="cc-dashboard__attention" aria-labelledby="attention-heading">
         <div className="cc-section-head">
-          <h2 id="attention-heading" className="cc-section__title">
-            يحتاج انتباهك
-          </h2>
+          <div>
+            <h2 id="attention-heading" className="cc-section__title">
+              يحتاج انتباهك
+            </h2>
+            <p className="cc-section-sub">الحالات التي تتطلب مراجعة أو إجراء.</p>
+          </div>
           {queue.length > 0 ? (
             <a href="#attention" className="cc-section-head__link">
               عرض الكل
@@ -308,11 +314,11 @@ function CommandCenterPage() {
           ) : null}
           {newClients.length > 0 ? (
             <ul className="cc-compact-list">
-              {newClients.slice(0, 5).map((row) => (
+              {newClients.slice(0, 7).map((row) => (
                 <li key={row.id}>
                   <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-compact-list__item">
                     <span className="cc-compact-list__avatar" aria-hidden>
-                      {(row.fullName || row.email || "ع").slice(0, 1)}
+                      {personInitials(row.fullName || row.email)}
                     </span>
                     <span className="cc-compact-list__body">
                       <strong>{row.fullName || row.email || "عميل"}</strong>
@@ -341,20 +347,41 @@ function CommandCenterPage() {
             </li>
             <li>
               <span>تحتاج انتباه</span>
-              <strong>{snapshot.subscriptionAttention.toLocaleString("ar-AE")}</strong>
+              <strong>{membershipSnapshot.needsAttention.toLocaleString("ar-AE")}</strong>
             </li>
             <li>
               <span>استثناءات الدفع</span>
-              <strong>{paymentIssues.toLocaleString("ar-AE")}</strong>
+              <strong>{membershipSnapshot.paymentExceptions.toLocaleString("ar-AE")}</strong>
             </li>
             <li>
               <span>مدفوعات للمراجعة</span>
-              <strong>{payments.rows.length.toLocaleString("ar-AE")}</strong>
+              <strong>{membershipSnapshot.pendingReview.toLocaleString("ar-AE")}</strong>
             </li>
           </ul>
-          <Link to="/admin/payments" className="cc-card-footer-link" preload={false}>
-            عرض جميع المدفوعات ←
-          </Link>
+          {!membershipLoading && membershipRows.length > 0 ? (
+            <ul className="cc-tier-list">
+              <li>
+                <span>{commercialTierLabel("free")}</span>
+                <strong>{membershipSnapshot.tierCounts.free.toLocaleString("ar-AE")}</strong>
+              </li>
+              <li>
+                <span>{commercialTierLabel("essential")}</span>
+                <strong>{membershipSnapshot.tierCounts.essential.toLocaleString("ar-AE")}</strong>
+              </li>
+              <li>
+                <span>{commercialTierLabel("premium")}</span>
+                <strong>{membershipSnapshot.tierCounts.premium.toLocaleString("ar-AE")}</strong>
+              </li>
+            </ul>
+          ) : null}
+          <div className="cc-card-footer-links">
+            <Link to="/admin/memberships" className="cc-card-footer-link" preload={false}>
+              فتح الاشتراكات ←
+            </Link>
+            <Link to="/admin/payments" className="cc-card-footer-link" preload={false}>
+              فتح المدفوعات ←
+            </Link>
+          </div>
         </AdminSection>
 
         <AdminSection title="آخر النشاطات">
@@ -371,15 +398,29 @@ function CommandCenterPage() {
           ) : null}
           {audit.rows.length > 0 ? (
             <ul className="cc-timeline">
-              {audit.rows.slice(0, 5).map((row) => (
-                <li key={row.id}>
-                  <span className="cc-timeline__dot" aria-hidden />
-                  <div>
-                    <strong>{row.eventType}</strong>
-                    <em>{formatRelativeAge(row.createdAt)}</em>
-                  </div>
-                </li>
-              ))}
+              {audit.rows.slice(0, 5).map((row) => {
+                const entity = auditEventEntityLabel(row);
+                return (
+                  <li key={row.id}>
+                    <span className="cc-timeline__dot" aria-hidden />
+                    <div>
+                      <strong>{formatAuditEventLabel(row)}</strong>
+                      {entity ? <span className="cc-timeline__entity">{entity}</span> : null}
+                      {row.subjectUserId && !entity ? (
+                        <Link
+                          to="/admin/clients/$clientId"
+                          params={{ clientId: row.subjectUserId }}
+                          className="cc-timeline__entity-link"
+                          preload={false}
+                        >
+                          فتح العميل
+                        </Link>
+                      ) : null}
+                      <em>{formatRelativeAge(row.createdAt)}</em>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
           <Link to="/admin/audit" className="cc-card-footer-link" preload={false}>
