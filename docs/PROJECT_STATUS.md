@@ -1,202 +1,169 @@
-# Hakim Coaching — Project Status
+# MAAKFIT — حالة المشروع الحالية
 
-**الإصدار:** 1.2  
-**التاريخ:** 2026-08-14  
-**الحالة:** مرجع حي — يُحدَّث عند كل milestone  
-**الجمهور:** موظفون، مطورون، Cloud Agents، أدوات AI
+**الإصدار:** 2.2  
+**التاريخ:** 2026-08-22  
+**الحالة:** مرجع حي — يُحدَّث عند كل milestone  
+**الجمهور:** موظفون، مطورون، أي أداة ذكاء اصطناعي
 
-> **اقرأ هذا الملف أولاً** إذا أردت معرفة *أين وصلنا* دون قراءة 1000+ سطر من Master Documentation.
+> اقرأ هذا الملف لمعرفة *أين وصلنا*. المعمارية في [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md). مراجعة UX في [`PROJECT_REPORT.md`](./PROJECT_REPORT.md).
 
 ---
 
-## 1. الملخص التنفيذي (30 ثانية)
+## 1. الملخص التنفيذي
 
-| الطبقة | الحالة |
+MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)، وليست صفحة هبوط.
+
+صفحة الهبوط `/coaching` طبقة تسويقية فقط. القيمة الحقيقية للعميل داخل `/app`: البرنامج، التغذية، التقدم، الملف، والدعم.
+
+| الطبقة | المسار | الحالة |
+|--------|--------|--------|
+| بوابة المنتج | `/` | ✅ Quiz للزائر — session → `/app` |
+| تسويق | `/coaching` | ✅ Landing مفصولة — لا قيمة يومية هنا |
+| تقييم + إنشاء حساب | `/` و `/quiz` | ✅ نفس `QuizPage` + onboarding مدمج |
+| التطبيق | `/app/*` | ✅ المنصة اليومية (الحقيقة للمنتج) |
+| دخول | `/auth` | ✅ |
+| قانوني / سياسات | `/privacy` · `/terms` · `/refund` · `/contact` | ✅ V1 — `policy-catalog` v1.0 |
+| فوترة العضو | `/app/billing` | 🚧 في الكود — يحتاج QA + تطبيق migration |
+| أدمن مدفوعات | `/admin/payments` | ✅ |
+| صندوق الكوتش | `/admin/messages` | ✅ في الكود — يحتاج تحقق إنتاج |
+| مسار `/onboarding` مستقل | — | ❌ غير موجود |
+
+**الإنتاج:** https://hakimlemagicien.com  
+**PRODUCTION Supabase:** `ufgrbpakuemamggwypdh` (`hakim-coaching`)  
+**STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — لا يُستخدم Production كـ Staging. الخريطة: [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)  
+**الفرع الحالي للعمل:** `feat/admin-command-center-foundation`  
+**Training V2 pin:** `4d80f8d366909a2a6cf9217803c9c62277b66954` — Staging cohort only  
+**CEO 2026-08-22:** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED` — انظر [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md)
+
+---
+
+## 2. ماذا تغيّر عن الجيل السابق؟
+
+| قبل (عقلية الموقع) | الآن (عقلية التطبيق) |
+|---------------------|----------------------|
+| `/` = صفحة هبوط تسويقية | `/` = بوابة المنتج (Quiz أو `/app`) |
+| العميل «يزور موقعاً» | العميل «يدخل تطبيقه» |
+| القيمة تُروى في Landing | القيمة تُعاش داخل `/app` |
+| Landing جزء من المنتج | Landing قناة اكتساب فقط |
+
+التوثيق السابق محفوظ في [`docs/v1/`](./v1/README.md) ولا يُستخدم لوصف المنتج الحالي.
+
+---
+
+## 3. ما تم إنجازه ويعمل في التطبيق
+
+### الدخول والتحويل
+- App-First: زائر بدون جلسة يرى Quiz على `/`
+- جلسة صالحة → `/app` مباشرة (بدون وميض Landing أو Quiz)
+- Landing على `/coaching` — CTAs نحو `/` فقط
+- إنشاء الحساب داخل Quiz: بريد OTP → كلمة مرور → صورة → ترحيب → `/app`
+- Checkout التحويل البنكي **legacy** — لا يُفتح بعد `reveal` في المسار الأمامي
+- تسعير V1 رسمي: Essential / Premium / VIP — 3 أو 6 أشهر فقط (لا اشتراك شهري)
+- موافقة checkout: `accept_checkout_policies` + نسخ إفصاح التجديد (`buildCheckoutDisclosure`)
+- صفحات قانونية ثنائية اللغة (ar/en عبر `?lang=`) — محتوى من `src/lib/legal/policy-content.ts`
+- `/contact` — دعم عام (حساب، فوترة، استرداد، خصوصية) منفصل عن دردشة الكوتش Premium/VIP
+- `/app/billing` — عرض الاشتراك، إلغاء التجديد (`cancel_my_renewal`)، روابط السياسات
+
+### هيكل `/app`
+- صدفة المنصة: شريط علوي (قائمة + ملف / إشعارات + رسائل)، درج قائمة، شريط سفلي للموبايل
+- الرئيسية: بطاقة هدف، لقطة اليوم، التمرين التالي، نصيحة الكوتش، اكتشف، ترقية للخطة المجانية
+- التمارين: جدول أسبوعي، مشغّل تمرين داخل التطبيق (فيديو مربع، راحة، تسجيل مجموعات)
+- التغذية: لوحة يومية + مكتبة وجبات MEAL-001–300 + ماء
+- اكتشف: تغذية محتوى / CMS
+- الملف: بطاقة عضو (هدف الكويز الحقيقي، عضوية، إنجازات) + رابط «الاشتراك والفوترة» → `/app/billing`
+- الأدوات: حاسبة سعرات، مؤقت فترات
+- الدعم: أسئلة شائعة + دردشة كوتش داخل التطبيق (صلاحية العضوية)
+- الماء: تذكير وبطاقة داخل الصدفة — لا مسار `/app/water`
+
+### بيانات وعضوية
+- عضوية Free / Essential / Premium / VIP عبر `get_my_membership` (موسّع بحقول billing lifecycle)
+- `get_my_billing` — لقطة فوترة للعضو (خطة، مدة، تجديد، إلغاء)
+- Essential: برنامج + تتبع — **بدون** دردشة كوتش
+- Premium/VIP: دردشة كوتش + متابعة (VIP أولوية أعلى — **ليس** 24/7)
+- حساب المراجعة المؤسس يُعامل VIP داخل التطبيق
+- هدف العميل على بطاقة البروفايل يُترجم من `goalId` في الكويز (مثل خسارة الدهون / تكبير المؤخرة)
+
+### قانوني / خصوصية / دعم (V1)
+- Migration: `20260820120000_legal_billing_privacy_v1.sql`
+- جداول: `policy_acceptances`, `support_tickets`, `account_deletion_requests`, `audit_events`, `renewal_reminders`, `media_consents`
+- RPCs: `accept_checkout_policies`, `accept_policy_version`, `create_support_ticket`, `cancel_my_renewal`, `get_my_billing`, `request_account_deletion`, `member_can_use_coach_chat`
+- الكود: `src/lib/legal/*` — catalog، billing، policy content، support guards
+- اختبار: `src/lib/legal/legal-pricing-v1.test.ts` ضمن `npm test`
+- **TBD:** الكيان القانوني، القانون الحاكم، تاريخ السريان العلني — مذكورة صراحة في `policy-catalog.ts`
+
+### بنية تحتية
+- TanStack Start + React 19 + Vite + Vercel
+- Supabase: auth، RLS، migrations، Edge Functions
+- أداء إلزامي: [`v1/PERFORMANCE.md`](./v1/PERFORMANCE.md)
+
+---
+
+## 4. جزئي أو يحتاج تحقق
+
+| المجال | الحالة |
 |--------|--------|
-| **App-First Entry** (`/`) | ✅ **منفّذ** — Quiz مباشرة؛ session → `/app` |
-| Marketing Landing (`/coaching`) | ✅ Landing منقولة كما هي — CTAs → `/` |
-| Quiz (legacy route `/quiz`) | ✅ backward-compatible — `?step=` + resume |
-| Onboarding (داخل Quiz) | ✅ verifyEmail → password → avatar → `/app` |
-| Login entry في Quiz | ✅ «لديك حساب؟ تسجيل الدخول» → `/auth` |
-| Checkout (تحويل بنكي) | ⚠️ **legacy** — لا يُفتح بعد `reveal` في المسار الأمامي |
-| Platform `/app` | ✅ Phase 1+ — Home, Workout, Discover, Profile, Tools |
-| `/onboarding` route | ❌ **غير موجود** |
-
-**Branch التنفيذ:** `feature/app-first-entry` — **Needs Verification:** حالة Production بعد merge/deploy (راجع §9).
-
----
-
-## 2. App-First Architecture (معتمد ومنفّذ)
-
-```
-hakimlemagicien.com/          = App-First Entry (Smart Gateway)
-hakimlemagicien.com/coaching  = Landing Page التسويقية
-hakimlemagicien.com/app/*     = المنصة (Auth required)
-hakimlemagicien.com/quiz      = Legacy route (deep links, ?step=, OTP callbacks)
-```
-
-| الحالة عند `/` | السلوك |
-|----------------|--------|
-| **بدون Session** | Quiz/Evaluation مباشرة (`QuizPage` — نفس `/quiz`) + «لديك حساب؟ تسجيل الدخول» |
-| **Session صالحة** | Redirect فوري إلى `/app` (`beforeLoad` — بدون flash Quiz) |
-| **`?step=`** | مدعوم على `/` و`/quiz` |
-
-**لا يوجد** route `/onboarding`.
+| تخصيص البرنامج حسب هدف الكويز | ✅ محرّكات V2 (Phases 2–11) موصولة بحلقة العميل. الحالة: `CLIENT_LOOP_CLOSED_WITH_EXTERNAL_RELEASE_GATES`. **ليست** مفعّلة إنتاجياً. التقرير: [`TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md`](./TRAINING_ENGINE_V2_CLIENT_LOOP_INTEGRATION_CLOSURE_REPORT.md) |
+| التغذية اليومية | 🚧 مكتبة كبيرة + لوحة؛ ليست خطة كوتش كاملة لكل عميل. عقد Training↔Nutrition: `PENDING_SHARED_CONTRACT` |
+| التقدم `/app/progress` | ✅ ترقية Phase 11 على نفس المسار. بطاقة الهدف قد تبقى `INSUFFICIENT_DATA` حتى تُحفظ قرارات Phase 9 |
+| دردشة الكوتش Realtime | ⚠️ في الكود — تحقق migration + RLS + Resend على الإنتاج |
+| Checkout البنكي | ⚠️ legacy — قرار استخدام إنتاجي معلّق |
+| Legal/Billing V1 على الإنتاج | ⚠️ migration + QA + قرار الكيان القانوني (TBD) |
+| جلسة بدون إكمال onboarding | ⚠️ `/` يوجّه إلى `/app` دون فحص `get_my_onboarding_state` |
+| Push notifications | 🚧 تذكير تدريب داخل التطبيق (Phase 11 overlay) — **لا** يوجد OS push |
+| دفع إلكتروني (بطاقة/PSP) | 🚧 جاهزية عقد V1 — لا مزود دفع نهائي مفعّل |
 
 ---
 
-## 3. User Flow الحالي (الحقيقة في الكود)
+## 5. User Flow المعتمد
 
-### A — زائر جديد (بدون Session)
-
+### زائر جديد
 ```
-/  (أو /quiz legacy)
-    loading → gender → … → contact → congrats → reveal
-        ▼  afterReveal() — دائماً
-    verifyEmail → createPassword → profilePhoto → platformWelcome → /app
-```
-
-### B — عميل لديه Session
-
-```
-/  →  /app  (مباشرة)
+/coaching (اختياري — تسويق فقط)
+    → CTA → /
+Quiz: gender → goals → … → contact → reveal
+    → verifyEmail → password → avatar → /app
 ```
 
-### C — عميل لديه حساب لكن بدون Session
-
+### عميل لديه جلسة
 ```
-/  →  Quiz (نفس الزائر) + «لديك حساب؟ تسجيل الدخول» → /auth → /app
-```
-
-### D — من Landing التسويقية
-
-```
-/coaching  →  CTA → /
+أي زيارة لـ /  →  /app
 ```
 
-### E — Checkout legacy (لا يُفتح من reveal)
-
+### عميل لديه حساب بدون جلسة
 ```
-trainingType → pricing → payment → Admin → /auth → /app
-(فقط: localStorage resume · ?step= · /quiz)
+/  →  Quiz + «لديك حساب؟»  →  /auth  →  /app
 ```
-
-**خطوة contact:** `createLead()` + `createOnboardingDraft()` معاً.
 
 ---
 
-## 4. Landing `/coaching` — CTAs
-
-| المكوّن | الوجهة |
-|---------|--------|
-| `Hero.tsx` | `/` |
-| `ProblemSection.tsx` | `/` |
-| `HowItWorks.tsx` | `/` |
-| `SuccessStories.tsx` | `/` |
-| `PricingTransparency.tsx` | `/` |
-| `FinalCTA.tsx` | `/` |
-| `Header.tsx` (الرئيسية) | `/coaching` |
-
-**Historical / Legacy:** قبل 2026-08-14 كانت Landing على `/` وCTAs → `/quiz`.
-
----
-
-## 5. Quiz — خطوات وملاحظات
-
-```
-loading | gender | goals | … | contact | congrats | reveal
-| verifyEmail | createPassword | profilePhoto | platformWelcome
-| trainingType | pricing | payment  (legacy)
-```
-
-- **Progress:** `quiz-step-progress.ts` + `localStorage` (`hakim_quiz_progress_v1`) — **لا يعتمد على pathname**
-- **Login entry:** `src/components/quiz/QuizLoginEntry.tsx` — أعلى `/` و`/quiz`
-- **OTP email redirect:** ما زال `/quiz?step=createPassword` (legacy صالح)
-
----
-
-## 6. Platform `/app`
-
-(بدون تغيير — راجع v1.1 للتفاصيل)
-
-| المسار | الحالة |
-|--------|--------|
-| `/app` | ✅ Home hub |
-| `/app/program/workout` | ✅ Workout player |
-| `/app/discover` | ✅ CMS |
-| `/app/profile` | ✅ Account + avatar |
-| `/app/nutrition/*` | 🚧 جزئي |
-| `/app/progress` | 🚧 UX مبني — بيانات محلية |
-| `/app/support` | ✅ FAQ + محادثة كوتش (Messaging V1 في الكود) |
-| `/app/support/chat` | ✅ دردشة خاصة — **Needs Verification:** migration على production |
-| `/admin/messages` | ✅ صندوق الكوتش — **Needs Verification:** RLS + Realtime + Resend |
-
----
-
-## 7. نقاط الدخول في الكود
+## 6. نقاط الدخول في الكود
 
 | الموضوع | الملف |
 |---------|-------|
-| App-First Gateway | `src/routes/index.tsx` |
-| Marketing Landing | `src/routes/coaching.tsx` |
-| Quiz (shared UI) | `export QuizPage` في `src/routes/quiz.tsx` |
-| Quiz login entry | `src/components/quiz/QuizLoginEntry.tsx` |
-| Platform shell | `src/routes/_platform/route.tsx` |
+| بوابة `/` | `src/routes/index.tsx` |
+| Landing | `src/routes/coaching.tsx` |
+| Quiz المشترك | `src/routes/quiz.tsx` (`QuizPage`) |
+| صدفة التطبيق | `src/routes/_platform/route.tsx` |
+| الرئيسية | `src/routes/_platform/app/index.tsx` |
+| الملف | `src/routes/_platform/app/profile.tsx` |
+| شريط التنقل | `src/components/platform/layout/PlatformNav.tsx` |
+| عضوية | `src/lib/platform/membership.ts` |
+| تسعير V1 | `src/lib/pricing-presentation.ts` |
+| قانوني / فوترة | `src/lib/legal/` · `src/routes/privacy.tsx` · `terms.tsx` · `refund.tsx` · `contact.tsx` |
+| فوترة داخل التطبيق | `src/routes/_platform/app/billing.tsx` · `BillingSettings.tsx` |
+| موافقة checkout | `src/components/checkout/CheckoutScreen.tsx` · `AgreementCheckbox.tsx` |
 
 ---
 
-## 8. Build & Deploy
+## 7. قواعد سريعة لأي AI
 
-```bash
-npm run dev
-npm run build
-```
-
-- **CI smoke tests:** `/`, `/coaching`, `/quiz`, `/auth`
-- **Production URL:** https://hakimlemagicien.com
-
----
-
-## 9. Production Deployment
-
-| البند | الحالة |
-|-------|--------|
-| Merge إلى `main` | **Needs Verification** — راجع PR/deploy logs |
-| Vercel deploy | تلقائي عند push `main` |
-| Smoke `/` | Quiz entry (ليس Landing) |
-| Smoke `/coaching` | Landing |
+1. المنتج = `/app`. ليس `/coaching`.
+2. لا تعدّل تصميم Landing أو Quiz أو الأدمن دون موافقة المالك.
+3. `/quiz` يبقى للتوافق (روابط، OTP). لا تحذفه.
+4. Onboarding داخل Quiz — لا تُنشئ `/onboarding`.
+5. اللون التنفيذي للتطبيق: `#F97316`. الأخضر للحالات المكتملة الإيجابية فقط.
+6. مصدر الحقيقة: GitHub `main` + **PRODUCTION** Supabase `ufgrbpakuemamggwypdh`. Staging منفصل: `dxerwrdpcflpnjvsnrjq`. انظر [`ENVIRONMENTS.md`](./ENVIRONMENTS.md).
 
 ---
 
-## 10. للـ AI Agents — قواعد سريعة
-
-1. **`/` = المنتج** — ليس Landing
-2. **`/coaching` = Landing** — محمية بصرياً (لا إعادة تصميم دون موافقة)
-3. **`/quiz` = legacy** — لا تحذف؛ deep links + OTP
-4. **Onboarding داخل Quiz** — لا `/onboarding`
-5. **Source of truth:** GitHub `main` + Supabase `ufgrbpakuemamggwypdh`
-
----
-
-## 11. Needs Verification
-
-| ID | السؤال |
-|----|--------|
-| D1 | Checkout legacy — استخدام إنتاجي؟ |
-| D5 | Migrations على Supabase prod |
-| D6 | `get_my_onboarding_state` — غير مستخدم في Frontend |
-| **D7** | **Session + onboarding غير مكتمل** — `get_my_onboarding_state` موجود؛ Frontend يوجّه session → `/app` دون فحص — **لم يُعتمد business logic جديد** |
-| **D8** | **Production post-deploy** — تحقق يدوي من `/`, `/coaching`, session redirect |
-
----
-
-## 12. فهرس الوثائق
-
-```
-README.md → docs/PROJECT_STATUS.md → docs/PROJECT_HANDBOOK.md
-→ docs/MASTER_PROJECT_DOCUMENTATION.md → AGENTS.md
-```
-
----
-
-**آخر مراجعة:** 2026-08-14 — App-First Entry Architecture
+**آخر مراجعة:** 2026-08-22 — CEO: Staging cohort لـ Training Engine V2 على `4d80f8d` + `dxerwrdpcflpnjvsnrjq`. الإنتاج غير معتمد. بوابات PF-1…PF-4 مفتوحة.

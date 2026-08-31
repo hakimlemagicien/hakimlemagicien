@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Headphones, Languages, LogOut, Settings, Sun, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { cn } from "@/lib/utils";
 
 type MenuDrawerContextValue = {
@@ -99,7 +99,7 @@ export function MenuDrawer() {
 
   async function signOut() {
     drawer.close();
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     window.location.href = "/auth";
   }
 

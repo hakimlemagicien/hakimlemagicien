@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveAvatarDisplayUrl } from "@/lib/platform/profile-api";
+import {
+  FREE_ENTITLEMENTS,
+  normalizeEntitlements,
+  type EntitlementsSnapshot,
+} from "@/lib/platform/entitlements";
 
 export type MembershipTier = "visitor" | "free" | "essential" | "premium" | "vip" | "admin";
 
@@ -26,6 +31,13 @@ export type MembershipResponse = {
   ends_at: string | null;
   days_remaining: number;
   features: MembershipFeatures;
+  billing_period_months?: 3 | 6 | null;
+  price_amount?: number | null;
+  currency?: string | null;
+  auto_renew?: boolean | null;
+  cancel_at_period_end?: boolean | null;
+  next_renewal_at?: string | null;
+  paid_period_end?: string | null;
 };
 
 export type MembershipState = MembershipResponse & {
@@ -33,6 +45,7 @@ export type MembershipState = MembershipResponse & {
   avatarPath: string | null;
   avatarUrl: string | null;
   isVisitor: boolean;
+  entitlements: EntitlementsSnapshot;
 };
 
 export const MEMBERSHIP_QUERY_KEY = ["membership", "current"] as const;
@@ -123,6 +136,7 @@ export const FREE_MEMBERSHIP_STATE: MembershipState = {
   avatarPath: null,
   avatarUrl: null,
   isVisitor: false,
+  entitlements: FREE_ENTITLEMENTS,
 };
 
 const LOCAL_FREE_FEATURES: MembershipFeatures = {
@@ -157,6 +171,7 @@ function withLocalFreeOverride(state: MembershipState): MembershipState {
     is_paid: false,
     is_active: true,
     features: LOCAL_FREE_FEATURES,
+    entitlements: FREE_ENTITLEMENTS,
   };
 }
 
@@ -174,12 +189,20 @@ function buildFounderReviewMembership(
     ends_at: base.ends_at,
     days_remaining: base.days_remaining ?? 3650,
     features: VIP_FEATURES,
+    entitlements: normalizeEntitlements({
+      tier: "vip",
+      is_paid: true,
+      subscription_status: "active",
+      training: { full_session: true, allowed_exercises_per_session: 99, preview_exercises: false },
+      nutrition: { full_day: true, daily_swap_limit: null, multiple_alternatives: true, unlocked_meal_strategy: "all_assigned" },
+      coach_chat: true,
+    }),
     isVisitor: false,
   };
 }
 
-function normalizeMembershipResponse(data: unknown): MembershipResponse {
-  const source = (data ?? {}) as Partial<MembershipResponse>;
+function normalizeMembershipResponse(data: unknown): MembershipResponse & { entitlements: EntitlementsSnapshot } {
+  const source = (data ?? {}) as Partial<MembershipResponse> & { entitlements?: unknown };
   const rawFeatures = (source.features ?? {}) as Partial<MembershipFeatures>;
 
   const tier = source.tier;
@@ -196,6 +219,16 @@ function normalizeMembershipResponse(data: unknown): MembershipResponse {
     subscription_id: source.subscription_id ?? null,
     starts_at: source.starts_at ?? null,
     ends_at: source.ends_at ?? null,
+    paid_period_end: source.paid_period_end ?? source.ends_at ?? null,
+    billing_period_months:
+      source.billing_period_months === 3 || source.billing_period_months === 6
+        ? source.billing_period_months
+        : null,
+    price_amount: source.price_amount ?? null,
+    currency: source.currency ?? "USD",
+    auto_renew: source.auto_renew ?? null,
+    cancel_at_period_end: source.cancel_at_period_end ?? null,
+    next_renewal_at: source.next_renewal_at ?? null,
     days_remaining: source.days_remaining ?? 0,
     features: {
       platform_access: rawFeatures.platform_access ?? true,
@@ -209,6 +242,7 @@ function normalizeMembershipResponse(data: unknown): MembershipResponse {
       program_adjustments: rawFeatures.program_adjustments ?? false,
       priority_contact: rawFeatures.priority_contact ?? false,
     },
+    entitlements: normalizeEntitlements(source.entitlements),
   };
 }
 

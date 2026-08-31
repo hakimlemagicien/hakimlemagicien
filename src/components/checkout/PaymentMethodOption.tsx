@@ -10,7 +10,7 @@ type PaymentMethodOptionProps = {
   description: string;
   selected: boolean;
   disabled?: boolean;
-  badge?: { label: string; tone: "available" | "soon" };
+  badge?: { label: string; tone: "available" | "soon" | "legacy" };
   icon: React.ReactNode;
   index?: number;
   onSelect: (id: CheckoutMethodId) => void;
@@ -56,7 +56,9 @@ export function PaymentMethodOption({
                 "rounded-md px-2 py-0.5 text-[10px] font-extrabold",
                 badge.tone === "available"
                   ? "bg-[#DCFCE7] text-[#16A34A]"
-                  : "bg-[#FFF1E6] text-[#FF6B00]",
+                  : badge.tone === "legacy"
+                    ? "bg-[#F3F4F6] text-[#64748B]"
+                    : "bg-[#FFF1E6] text-[#FF6B00]",
               )}
             >
               {badge.label}

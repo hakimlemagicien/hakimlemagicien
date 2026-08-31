@@ -586,7 +586,7 @@ function Disclaimer() {
   return (
     <p className="pb-2 pt-1 text-center text-[11px] font-medium leading-relaxed text-[#64748B]">
       هذه النتيجة تقديرية وتعتمد على بيانات ملفك الشخصي والمعادلة المستخدمة. لا تعد بديلاً عن
-      التقييم الطبي أو الخطة الغذائية الشخصية داخل Hakim Coaching Platform.
+      التقييم الطبي أو الخطة الغذائية الشخصية داخل MAAKFIT.
     </p>
   );
 }

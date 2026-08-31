@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { consumeQuizAuthCallback } from "@/lib/quiz-onboarding-api";
+import { consumeQuizAuthCallback, clearOnboardingClientState, getStoredDraftToken } from "@/lib/quiz-onboarding-api";
 import { readQuizProgress, writeQuizProgress, type QuizProgressSnapshot } from "@/lib/quiz-progress-storage";
 import { useQuizStepTransition } from "@/hooks/use-quiz-step-transition";
+import { resolveActiveQuizStep } from "@/lib/quiz-step-progress";
+import { supabase } from "@/integrations/supabase/client";
 
 const PERSIST_DEBOUNCE_MS = 280;
+
+/** These steps belong to an in-progress account, not an anonymous quiz. */
+const ACCOUNT_RESUME_STEPS = new Set(["createPassword", "profilePhoto", "platformWelcome"]);
 
 const QUIZ_STEPS = [
   "loading",
@@ -131,41 +136,60 @@ export function useQuizProgress() {
       if (cancelled) return;
 
       const previewStep = readPreviewStepFromUrl();
+      const { data: sessionData } = await supabase.auth.getUser();
+      if (cancelled) return;
+      const hasUser = Boolean(sessionData.user);
+
       if (previewStep) {
-        const nextStep =
-          verifiedViaLink && previewStep === "verifyEmail" ? "createPassword" : previewStep;
-        replaceStep(nextStep);
-        hydratedRef.current = true;
-        return;
+        const previewNeedsAccount =
+          ACCOUNT_RESUME_STEPS.has(previewStep) || previewStep === "verifyEmail";
+        const allowPreview = !previewNeedsAccount || hasUser || verifiedViaLink;
+        if (allowPreview) {
+          const nextStep =
+            verifiedViaLink && previewStep === "verifyEmail"
+              ? "createPassword"
+              : resolveActiveQuizStep(previewStep);
+          replaceStep(nextStep as QuizStep);
+          hydratedRef.current = true;
+          return;
+        }
       }
 
       const saved = readQuizProgress();
       if (saved) {
-        applySnapshot(saved, {
-          setGender,
-          setUserName,
-          setUserEmail,
-          setUserPhone,
-          setUserCity,
-          setGoalId,
-          setChallengeId,
-          setInjuryIds,
-          setAge,
-          setHeightCm,
-          setWeightKg,
-          setActivityLevel,
-          setInvestment,
-          setBodyType,
-          setTrainingEnvironment,
-          setUserLocation,
-          setSelectedTierId,
-        });
-        if (saved.step && saved.step !== "loading") {
-          const nextStep =
-            verifiedViaLink && saved.step === "verifyEmail" ? "createPassword" : saved.step;
-          replaceStep(nextStep as QuizStep);
-        } else if (verifiedViaLink) {
-          replaceStep("createPassword");
+        const resumeNeedsSession = ACCOUNT_RESUME_STEPS.has(saved.step);
+        const staleVerifyEmail = saved.step === "verifyEmail" && !hasUser && !getStoredDraftToken();
+        if ((resumeNeedsSession && !hasUser) || staleVerifyEmail) {
+          clearOnboardingClientState();
+        } else {
+          applySnapshot(saved, {
+            setGender,
+            setUserName,
+            setUserEmail,
+            setUserPhone,
+            setUserCity,
+            setGoalId,
+            setChallengeId,
+            setInjuryIds,
+            setAge,
+            setHeightCm,
+            setWeightKg,
+            setActivityLevel,
+            setInvestment,
+            setBodyType,
+            setTrainingEnvironment,
+            setUserLocation,
+            setSelectedTierId,
+          });
+          if (saved.step && saved.step !== "loading") {
+            const nextStep =
+              verifiedViaLink && saved.step === "verifyEmail"
+                ? "createPassword"
+                : resolveActiveQuizStep(saved.step);
+            replaceStep(nextStep as QuizStep);
+          } else if (verifiedViaLink) {
+            replaceStep("createPassword");
+          }
         }
       } else if (verifiedViaLink) {
         replaceStep("createPassword");
@@ -180,6 +204,7 @@ export function useQuizProgress() {
 
   useEffect(() => {
     if (!hydratedRef.current) return;
+    if (step === "loading" || step === "platformWelcome") return;
 
     const snapshot: Omit<QuizProgressSnapshot, "version" | "savedAt"> = {
       step,
@@ -231,6 +256,7 @@ export function useQuizProgress() {
     transitionTo,
     selectAndGo,
     goBack,
+    replaceStep,
     gender,
     setGender,
     userName,

@@ -11,7 +11,11 @@ export type QuizAnswersInput = {
   activityLevel?: string;
   investment?: string;
   bodyType?: string;
+  /** Quiz training environment — persisted for Strategy Matrix location resolution. */
+  trainingEnvironment?: "home" | "gym" | "anywhere" | null;
+  /** LEGACY_UNUSED_DATA_FIELD — not an active offering; do not surface as a service picker. */
   trainingType?: "online" | "inperson" | null;
+  /** LEGACY_UNUSED_DATA_FIELD — city inference only; not Dubai vs Remote service choice. */
   userLocation?: "dubai" | "remote" | null;
   selectedTierId?: "transform" | "pro" | "vip";
   lastStep?: string;
@@ -23,6 +27,7 @@ export type QuizContactInput = {
   phone: string;
   city: string;
   country: string;
+  /** LEGACY_UNUSED_DATA_FIELD — persisted from city; not an in-person offering. */
   locationPreference: "dubai" | "remote";
 };
 
@@ -38,6 +43,7 @@ export function buildQuizAnswersPayload(input: QuizAnswersInput): Json {
     activityLevel: input.activityLevel ?? null,
     investment: input.investment ?? null,
     bodyType: input.bodyType ?? null,
+    trainingEnvironment: input.trainingEnvironment ?? null,
     trainingType: input.trainingType ?? null,
     userLocation: input.userLocation ?? null,
     selectedTierId: input.selectedTierId ?? null,

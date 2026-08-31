@@ -13,13 +13,18 @@ import {
 } from "@/components/platform/nutrition/NutritionShared";
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
+import { MealSwapAllowance, PremiumAlternativeBadge } from "@/components/platform/upgrade/upgrade-ui";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
-  findMealSlot,
+  canRecordMealSwap,
+  isMealSlotUnlockedByEntitlements,
+  mealSwapAllowanceLabel,
+  shouldShowPremiumAlternatives,
+} from "@/lib/platform/entitlements";
+import {
   getMealByAlternativeId,
   getTodayDateKey,
-  isFreeUnlockedMealSlot,
 } from "@/lib/platform/nutrition-experience";
 import { formatNutritionNumber } from "@/lib/platform/meal-library";
 import { cn } from "@/lib/utils";
@@ -30,7 +35,7 @@ type AlternativesSearch = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/alternatives")({
-  head: () => ({ meta: [{ title: "بدائل الوجبة | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "بدائل الوجبة | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): AlternativesSearch => ({
     mealId: typeof search.mealId === "string" ? search.mealId : "breakfast",
     date: typeof search.date === "string" ? search.date : undefined,
@@ -39,23 +44,29 @@ export const Route = createFileRoute("/_platform/app/nutrition/alternatives")({
 });
 
 function MealAlternativesPage() {
-  const { features } = useMembership();
-  const { openUpgrade } = useUpgradeFlow();
-  const freePreview = !features.nutrition_plan;
+  const { entitlements } = useMembership();
+  const { openUpgradeWithContext } = useUpgradeFlow();
+  const freePreview = !entitlements.nutrition.fullDay;
   const online = useOnlineStatus();
   const navigate = useNavigate();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const plan = useNutritionPlan(date);
-  const slot = findMealSlot(mealId);
-  const unlocked = isFreeUnlockedMealSlot({
-    slotId: mealId,
-    dateKey: plan.dateKey,
-    hasNutritionPlan: !freePreview,
-    todayKey: getTodayDateKey(),
-  });
+  const plan = useNutritionPlan(date, { catalogPreview: freePreview });
+  const slot = plan.meals.find((item) => item.slot.id === mealId)?.slot;
+  const mealIndex = plan.meals.findIndex((item) => item.slot.id === mealId);
+  const todayKey = getTodayDateKey();
+  const unlocked = slot
+    ? isMealSlotUnlockedByEntitlements(entitlements, {
+        slotId: mealId,
+        slotIndex: Math.max(mealIndex, 0),
+        dateKey: plan.dateKey,
+        todayKey,
+      })
+    : false;
+  const swapLabel = mealSwapAllowanceLabel(entitlements);
+  const showPremiumCopy = shouldShowPremiumAlternatives(entitlements);
 
   const options = slot
-    ? [slot.defaultMeal, ...slot.alternatives].filter(
+    ? [slot.defaultMeal, ...(showPremiumCopy ? slot.alternatives : slot.alternatives.slice(0, 1))].filter(
         (item, index, list) => list.findIndex((x) => x.id === item.id) === index,
       )
     : [];
@@ -86,9 +97,13 @@ function MealAlternativesPage() {
       />
 
       <NutritionMotionSection>
-        <p className="px-0.5 text-right text-[12px] font-bold text-muted-foreground">
-          اختر أحد البدائل التالية
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
+          <p className="text-right text-[12px] font-bold text-muted-foreground">
+            {showPremiumCopy ? "اختر البديل المناسب لك" : "اختر أحد البدائل التالية"}
+          </p>
+          {swapLabel ? <MealSwapAllowance label={swapLabel} /> : null}
+          {showPremiumCopy ? <PremiumAlternativeBadge /> : null}
+        </div>
       </NutritionMotionSection>
 
       <div className="space-y-2.5">
@@ -100,7 +115,7 @@ function MealAlternativesPage() {
               type="button"
               onClick={() => {
                 if (!unlocked) {
-                  openUpgrade(NUTRITION_LOCKED_REASON);
+                  openUpgradeWithContext("NUTRITION", "أكمل خطتك الغذائية لفتح البدائل.");
                   return;
                 }
                 setSelectedId(option.id);
@@ -181,20 +196,35 @@ function MealAlternativesPage() {
         type="button"
         onClick={() => {
           if (!unlocked) {
-            openUpgrade(NUTRITION_LOCKED_REASON);
+            openUpgradeWithContext("NUTRITION", "أكمل خطتك الغذائية لفتح البدائل.");
+            return;
+          }
+          if (!canRecordMealSwap(entitlements)) {
+            openUpgradeWithContext(
+              "SWAP_LIMIT",
+              "Premium يمنحك مرونة أكبر في تغيير الوجبات وبدائل متعددة.",
+            );
             return;
           }
           if (!selectedId) return;
-          plan.adoptAlternative(slot.id, selectedId);
-          void navigate({
-            to: "/app/nutrition/meal",
-            search: { mealId: slot.id, date: plan.dateKey },
+          void plan.adoptAlternative(slot.id, selectedId).then(() => {
+            void navigate({
+              to: "/app/nutrition/meal",
+              search: { mealId: slot.id, date: plan.dateKey },
+            });
+          }).catch((error: Error & { code?: string }) => {
+            if (error.code === "daily_meal_swap_limit_reached") {
+              openUpgradeWithContext(
+                "SWAP_LIMIT",
+                "Premium يمنحك مرونة أكبر في تغيير الوجبات.",
+              );
+            }
           });
         }}
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-cta transition active:scale-[0.98]"
       >
         {!unlocked ? <Lock className="h-4 w-4" strokeWidth={2.2} /> : null}
-        {unlocked ? "اعتماد هذا البديل" : "فعّل البرنامج لاعتماد البديل"}
+        {unlocked ? "اعتماد هذا البديل" : "عرض الباقات"}
       </button>
     </PlatformStack>
   );

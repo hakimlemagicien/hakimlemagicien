@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
-import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import {
   ProfileAboutSection,
   ProfileAccountSecuritySection,
@@ -43,7 +42,6 @@ import { useProfileExperience } from "@/hooks/useProfileExperience";
 import { useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
   removeMyAvatar,
-  signOutAllDevices,
   updateMyAvatar,
   updateMyEmail,
   updateMyPassword,
@@ -54,10 +52,12 @@ import {
   updateProfileNotificationPrefs,
 } from "@/lib/platform/profile-settings-storage";
 import { setMarketingPhotoConsent } from "@/lib/platform/progress-storage";
-import { supabase } from "@/integrations/supabase/client";
+import { requestAccountDeletion, recordMediaMarketingConsent } from "@/lib/legal/legal-api";
+import { canUseCoachChat } from "@/lib/platform/coaching-messaging";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 
 export const Route = createFileRoute("/_platform/app/profile")({
-  head: () => ({ meta: [{ title: "الملف الشخصي | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "الملف الشخصي | MAAKFIT" }] }),
   component: ProfilePage,
 });
 
@@ -74,7 +74,6 @@ type SheetState =
 
 function ProfilePage() {
   const online = useOnlineStatus();
-  const { openUpgrade } = useUpgradeFlow();
   const {
     profile,
     training,
@@ -156,13 +155,13 @@ function ProfilePage() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     window.location.href = "/auth";
   };
 
   const handleSignOutAll = async () => {
     try {
-      await signOutAllDevices();
+      await signOutAndResetClient("global");
       window.location.href = "/auth";
     } catch (err) {
       showToast(err instanceof Error ? err.message : "تعذر تسجيل الخروج", "error");
@@ -170,13 +169,17 @@ function ProfilePage() {
   };
 
   const handleDeleteAccount = async () => {
-    showToast("تم تسجيل طلب الحذف — سيتم التواصل معك لإكمال العملية.", "success");
+    try {
+      await requestAccountDeletion("profile_settings");
+      showToast("تم تسجيل طلب الحذف. حذف الحساب ≠ إلغاء التجديد ≠ طلب استرداد. سنتواصل معك لإكمال العملية وفق سياسة الاحتفاظ.", "success");
+    } catch {
+      showToast("تعذر إرسال طلب الحذف. راسل الدعم من صفحة التواصل.", "error");
+    }
     setSheet(null);
     setDeleteStep(1);
   };
 
-  const canContactCoach =
-    membership?.features.limited_coach_contact || membership?.features.personal_followup;
+  const canContactCoach = canUseCoachChat(membership?.features ?? { limited_coach_contact: false, personal_followup: false }, membership?.tier);
 
   if (loading.profile && !profile) {
     return (
@@ -256,7 +259,7 @@ function ProfilePage() {
         tier={membershipUi.tier}
         onClose={() => setMembershipPass(false)}
         onRetry={() => void refresh()}
-        onManage={() => openUpgrade("إدارة العضوية — تواصل مع الدعم لتعديل اشتراكك.")}
+        onManage={() => setMembershipPass(false)}
       />
 
       <ProfileBottomSheet
@@ -297,6 +300,7 @@ function ProfilePage() {
           photoConsentAt={photoConsent.at}
           onTogglePhotoConsent={(granted) => {
             if (profile?.id) setMarketingPhotoConsent(profile.id, granted);
+            void recordMediaMarketingConsent(granted);
           }}
           onDeleteAccount={() => {
             setDeleteStep(1);

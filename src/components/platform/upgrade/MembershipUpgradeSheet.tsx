@@ -1,9 +1,11 @@
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Crown, Lock, X } from "lucide-react";
+import { Crown, X } from "lucide-react";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
-import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
-import { ACTIVATE_PROGRAM_CTA, PAID_TIERS } from "@/lib/pricing-presentation";
+import { UpgradeContextHeader, UpgradeSurfaceLink } from "@/components/platform/upgrade/upgrade-ui";
+import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
+import { getPublicPaidTiers } from "@/lib/payments/catalog";
 import { useUpgradeFlow } from "./UpgradeContext";
 
 const backdropMotion = {
@@ -21,9 +23,11 @@ const dialogMotion = {
 };
 
 export function MembershipUpgradeSheet() {
-  const { open, reason, closeUpgrade } = useUpgradeFlow();
+  const { open, reason, surface, closeUpgrade } = useUpgradeFlow();
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open ? (
         <motion.div
@@ -49,15 +53,8 @@ export function MembershipUpgradeSheet() {
               {...dialogMotion}
             >
               <div className="platform-upgrade-dialog__head">
-                <div className="min-w-0 flex-1 text-right">
-                  <div className="platform-upgrade-dialog__badge">
-                    <Lock className="h-3 w-3" strokeWidth={2.4} aria-hidden />
-                    ميزة مقفلة
-                  </div>
-                  <h2 className="platform-upgrade-dialog__title">{ACTIVATE_PROGRAM_CTA}</h2>
-                  <p className="platform-upgrade-dialog__reason">
-                    {reason ?? "اختر باقتك أولاً، ثم حدد مدة الاشتراك لتفعيل برنامجك."}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <UpgradeContextHeader surface={surface} reason={reason} />
                 </div>
                 <button
                   type="button"
@@ -69,8 +66,15 @@ export function MembershipUpgradeSheet() {
                 </button>
               </div>
 
+              <UpgradeSurfaceLink
+                surface={surface === "SWAP_LIMIT" ? "NUTRITION" : surface}
+                className="platform-upgrade-dialog__full-link mb-3 block text-center font-[Tajawal] text-[12px] font-extrabold text-primary underline-offset-2 hover:underline"
+              >
+                {ACTIVATE_PROGRAM_CTA} — صفحة الباقات الكاملة
+              </UpgradeSurfaceLink>
+
               <div className="platform-upgrade-dialog__plans">
-                {PAID_TIERS.map((plan, index) => {
+                {getPublicPaidTiers().map((plan, index) => {
                   const motionProps = {
                     initial: { opacity: 0, y: 18, scale: 0.97 },
                     animate: { opacity: 1, y: 0, scale: 1 },
@@ -81,29 +85,6 @@ export function MembershipUpgradeSheet() {
                       damping: 28,
                     },
                   };
-
-                  if (plan.id === "vip") {
-                    return (
-                      <motion.div key={plan.id} {...motionProps}>
-                        <VipGlassShell compact>
-                          <h3 className="bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text font-[Tajawal] text-[18px] font-extrabold text-transparent">
-                            {plan.name}
-                          </h3>
-                          <p className="mt-0.5 font-[Tajawal] text-[12px] font-medium text-white/70">
-                            {plan.tagline}
-                          </p>
-
-                          <ul className="mt-3 space-y-2 text-right">
-                            {plan.features.map((feature) => (
-                              <VipFeatureCheck key={feature} label={feature} compact />
-                            ))}
-                          </ul>
-
-                          <PlanActivateBlock plan={plan} compact onActivated={closeUpgrade} />
-                        </VipGlassShell>
-                      </motion.div>
-                    );
-                  }
 
                   return (
                     <motion.article
@@ -147,6 +128,7 @@ export function MembershipUpgradeSheet() {
           </div>
         </motion.div>
       ) : null}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

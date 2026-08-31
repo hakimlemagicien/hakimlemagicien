@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type Ref } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   Calculator,
@@ -18,10 +17,12 @@ import {
 } from "lucide-react";
 import { isToolsHubRoute, ToolsHubOverlay } from "@/components/platform/shared/ToolsHubOverlay";
 import { useToolsOptional } from "@/components/platform/tools/ToolsContext";
-import { supabase } from "@/integrations/supabase/client";
+import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { triggerSelectionHaptic } from "@/lib/haptic";
 import { cn } from "@/lib/utils";
+
+const libraryAllowed = canAccessExerciseLibrary();
 
 const MOBILE_NAV_ITEMS = [
   { to: "/app/program/workout", label: "تماريني", icon: Dumbbell },
@@ -159,24 +160,19 @@ function NavItem({
 
 export function PlatformSidebar() {
   const tools = useToolsOptional();
-  const libraryAccessQuery = useQuery({
-    queryKey: ["exercise-library-access"],
-    queryFn: canAccessExerciseLibrary,
-    staleTime: 5 * 60 * 1000,
-  });
   const navItems = DESKTOP_NAV_ITEMS.filter(
-    (item) => item.to !== "/app/exercises" || libraryAccessQuery.data,
+    (item) => item.to !== "/app/exercises" || libraryAllowed,
   );
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await signOutAndResetClient();
     window.location.href = "/auth";
   }
 
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col md:border-l md:border-border md:bg-sidebar md:px-4 md:py-6">
       <div className="mb-8 px-2">
-        <p className="text-xs font-bold tracking-[0.2em] text-primary">HAKIM</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-primary">MAAKFIT</p>
         <p className="text-lg font-black text-foreground">Platform</p>
       </div>
       <nav className="flex flex-1 flex-col gap-1">

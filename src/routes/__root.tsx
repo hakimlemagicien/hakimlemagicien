@@ -17,6 +17,9 @@ import { MotionProvider } from "../components/motion/MotionProvider";
 import { startVisualPropertiesEngine } from "../lib/design-lab/visual-editor";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/pwa";
+import { assertEnvironmentIsolation } from "../lib/env/assert-environment";
+
+assertEnvironmentIsolation();
 
 function NotFoundComponent() {
   return (
@@ -84,26 +87,28 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#FF6B00" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "author", content: "Hakim Coaching" },
+      { name: "apple-mobile-web-app-title", content: "MAAKFIT" },
+      { name: "application-name", content: "MAAKFIT" },
+      { name: "author", content: "MAAKFIT" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
-      { property: "og:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
-      { name: "twitter:title", content: "Hakim Coaching — منصة تدريب وتغذية مخصصة" },
+      { title: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
+      { property: "og:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
+      { name: "twitter:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
       {
         name: "description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         name: "twitter:description",
         content:
-          "منصة Hakim Coaching — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
+          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
       },
       {
         property: "og:image",
@@ -178,6 +183,8 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isQuizEntry = pathname === "/" || pathname.startsWith("/quiz");
   const isPlatform = pathname.startsWith("/app");
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isAuth = pathname === "/auth" || pathname.startsWith("/auth/");
 
   useEffect(() => {
     return startVisualPropertiesEngine(pathname);
@@ -190,8 +197,8 @@ function RootComponent() {
         <HashScrollHandler />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        {!isQuizEntry && !isPlatform && <FloatingWhatsApp />}
-        {!isQuizEntry && !isPlatform && <ScrollToTopButton />}
+        {!isQuizEntry && !isPlatform && !isAdmin && !isAuth && <FloatingWhatsApp />}
+        {!isQuizEntry && !isPlatform && !isAdmin && !isAuth && <ScrollToTopButton />}
       </QueryClientProvider>
     </MotionProvider>
   );

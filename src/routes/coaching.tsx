@@ -20,13 +20,13 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 export const Route = createFileRoute("/coaching")({
   head: () => ({
     meta: [
-      { title: "Hakim Coaching — برنامج تدريبي وغذائي مخصص لهدفك" },
+      { title: "MAAKFIT — برنامج تدريبي وغذائي مخصص لهدفك" },
       {
         name: "description",
         content:
           "احصل على برنامج تدريبي وغذائي مخصص 100% لهدفك. تحليل شخصي مجاني خلال دقائق مع متابعة دورية ونتائج قابلة للقياس.",
       },
-      { property: "og:title", content: "Hakim Coaching — برنامج تدريبي وغذائي مخصص" },
+      { property: "og:title", content: "MAAKFIT — برنامج تدريبي وغذائي مخصص" },
       {
         property: "og:description",
         content: "اكتشف الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.",

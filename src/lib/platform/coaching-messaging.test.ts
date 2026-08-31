@@ -7,11 +7,10 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-assert(
-  canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }),
-  "paid contact should unlock chat",
-);
-assert(!canUseCoachChat(FREE_MEMBERSHIP_STATE.features), "free should not have coach chat");
+assert(!canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "essential"), "essential should not have coach chat");
+assert(canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "premium"), "premium should have coach chat");
+assert(canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, personal_followup: true }, "vip"), "vip should have coach chat");
+assert(!canUseCoachChat(FREE_MEMBERSHIP_STATE.features, "free"), "free should not have coach chat");
 assert(SUPPORT_FAQS.length >= 6, "FAQ list should remain for support hub");
 
 const morning = new Date("2026-08-16T08:00:00+04:00");

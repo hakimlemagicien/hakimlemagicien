@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   auditMealLibrary,
+  dbMealCatalogIsV2,
   findContractAlternatives,
   getMealByExternalId,
   listMealLibrary,
@@ -33,7 +34,11 @@ export function runMealLibraryTests() {
   const audit = auditMealLibrary(meals);
   const publicRoot = join(process.cwd(), "public/nutrition/meals");
 
-  assertEqual(meals.length, 300, "full library MEAL-001–MEAL-300 catalog count");
+  assert(dbMealCatalogIsV2(meals), "current seed is recognized as Nutrition V2");
+  assert(
+    !dbMealCatalogIsV2([{ external_id: "MEAL-186", meal_type: "breakfast" }]),
+    "V1 type layout is not treated as V2",
+  );
   assertEqual(ids[0], MEAL_LIBRARY_PILOT_START, "first external_id");
   assertEqual(ids[ids.length - 1], MEAL_LIBRARY_EXTENDED_END, "last external_id");
   assertEqual(new Set(ids).size, 300, "unique external_id");
@@ -101,8 +106,9 @@ export function runMealLibraryTests() {
     "alternatives come from the library",
   );
 
-  const snack = getMealByExternalId("MEAL-015");
-  assert(snack, "MEAL-015 exists");
+  const snack = getMealByExternalId("MEAL-186");
+  assert(snack, "MEAL-186 exists");
+  assertEqual(snack.meal_type, "snack", "MEAL-186 is snack");
   const snackAlts = findContractAlternatives(snack);
   assert(
     snackAlts.every((item) => item.meal_type === "snack"),
@@ -112,17 +118,28 @@ export function runMealLibraryTests() {
   const meal021 = getMealByExternalId("MEAL-021");
   assert(meal021, "MEAL-021 exists");
   assertEqual(meal021.meal_type, "breakfast", "MEAL-021 is breakfast");
+  const meal056 = getMealByExternalId("MEAL-056");
+  assert(meal056, "MEAL-056 exists");
+  assertEqual(meal056.meal_type, "lunch", "MEAL-056 is lunch");
   const meal061 = getMealByExternalId("MEAL-061");
   assert(meal061, "MEAL-061 exists");
-  const meal098 = getMealByExternalId("MEAL-098");
-  assert(meal098, "MEAL-098 exists");
-  assertEqual(meal098.meal_type, "drinks", "MEAL-098 is drinks");
-  const meal101 = getMealByExternalId("MEAL-101");
-  assert(meal101, "MEAL-101 exists");
-  assertEqual(meal101.meal_type, "breakfast", "MEAL-101 is breakfast");
+  assertEqual(meal061.meal_type, "lunch", "MEAL-061 is lunch");
+  const meal126 = getMealByExternalId("MEAL-126");
+  assert(meal126, "MEAL-126 exists");
+  assertEqual(meal126.meal_type, "dinner", "MEAL-126 is dinner");
+  const meal281 = getMealByExternalId("MEAL-281");
+  assert(meal281, "MEAL-281 exists");
+  assertEqual(meal281.meal_type, "drinks", "MEAL-281 is drinks");
   const meal300 = getMealByExternalId("MEAL-300");
   assert(meal300, "MEAL-300 exists");
   assertEqual(meal300.meal_type, "drinks", "MEAL-300 is drinks");
+  assertEqual(listMealsByType("breakfast").length, 55, "v2 breakfast count");
+  assertEqual(listMealsByType("lunch").length, 70, "v2 lunch count");
+  assertEqual(listMealsByType("dinner").length, 60, "v2 dinner count");
+  assertEqual(listMealsByType("snack").length, 40, "v2 snack count");
+  assertEqual(listMealsByType("pre_workout").length, 25, "v2 pre_workout count");
+  assertEqual(listMealsByType("post_workout").length, 30, "v2 post_workout count");
+  assertEqual(listMealsByType("drinks").length, 20, "v2 drinks count");
 
   const fatLossBreakfast = listMealsByType("breakfast").filter((meal) =>
     meal.suitable_goals.includes("fat_loss"),
@@ -141,15 +158,16 @@ export function runMealLibraryTests() {
     "fat_loss list is ordered by calories",
   );
 
-  const beefBowl = getMealByExternalId("MEAL-007");
-  assert(beefBowl, "MEAL-007 exists");
-  assert(beefBowl.allergens.includes("gluten"), "bulgur must be tagged gluten");
+  const glutenMeal = getMealByExternalId("MEAL-019");
+  assert(glutenMeal, "MEAL-019 exists");
+  assert(glutenMeal.allergens.includes("gluten"), "wheat/gluten meals stay tagged gluten");
 
   assertEqual(NUTRITION_MEAL_SLOTS.length, 4, "dashboard keeps four plan slots");
   assertEqual(NUTRITION_MEAL_SLOTS[0]?.defaultMeal.id, "MEAL-001", "breakfast default");
-  assertEqual(NUTRITION_MEAL_SLOTS[1]?.defaultMeal.id, "MEAL-015", "snack default");
-  assertEqual(NUTRITION_MEAL_SLOTS[2]?.defaultMeal.id, "MEAL-005", "lunch default");
-  assertEqual(NUTRITION_MEAL_SLOTS[3]?.defaultMeal.id, "MEAL-011", "dinner default");
+  assertEqual(NUTRITION_MEAL_SLOTS[1]?.defaultMeal.id, "MEAL-186", "snack default");
+  assertEqual(NUTRITION_MEAL_SLOTS[2]?.defaultMeal.id, "MEAL-056", "lunch default");
+  assertEqual(NUTRITION_MEAL_SLOTS[3]?.defaultMeal.id, "MEAL-126", "dinner default");
+  assertEqual(NUTRITION_MEAL_SLOTS[0]?.defaultMeal.calories, meal001.calories, "slot calories follow V2");
 
   for (const slot of NUTRITION_MEAL_SLOTS) {
     const allowed = new Set([

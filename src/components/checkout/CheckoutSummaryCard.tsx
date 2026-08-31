@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { PRODUCT_SUMMARY } from "@/lib/site-legal";
+import { buildCheckoutDisclosure, resolvePaidTierId } from "@/lib/legal/billing";
 import type { CheckoutTier } from "./types";
 
 function TrophySvg() {
@@ -29,6 +30,10 @@ type CheckoutSummaryCardProps = {
 };
 
 export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
+  const planId = resolvePaidTierId(tier.id);
+  const months = tier.billingPeriodMonths ?? 3;
+  const disclosure = planId ? buildCheckoutDisclosure(planId, months) : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -56,7 +61,14 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
       <div className="relative shrink-0 border-r border-orange-200/80 pr-2 text-center">
         <div className="text-[10px] font-bold text-neutral-500">السعر الإجمالي</div>
         <div className="mt-1 text-[26px] font-extrabold leading-none text-[#FF6B00]">{tier.totalPrice}</div>
-        <div className="mt-1 text-[10px] font-bold text-neutral-500">USD · دفعة واحدة</div>
+        <div className="mt-1 text-[10px] font-bold text-neutral-500">
+          USD · {months} أشهر · تجديد تلقائي
+        </div>
+        {disclosure ? (
+          <div className="mt-1 max-w-[7.5rem] text-[9px] font-medium leading-snug text-neutral-400">
+            يتجدد بـ {disclosure.renewalAmount} {disclosure.currency}
+          </div>
+        ) : null}
         {tier.pricePerDay ? (
           <div className="mt-1 text-[9px] font-medium text-neutral-400">
             حوالي ${tier.pricePerDay} يومياً

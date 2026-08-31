@@ -34,7 +34,7 @@ type MealSearch = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/meal")({
-  head: () => ({ meta: [{ title: "تفاصيل الوجبة | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل الوجبة | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): MealSearch => ({
     mealId: typeof search.mealId === "string" ? search.mealId : "breakfast",
     date: typeof search.date === "string" ? search.date : undefined,
@@ -48,9 +48,9 @@ function MealDetailsPage() {
   const freePreview = !features.nutrition_plan;
   const online = useOnlineStatus();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const plan = useNutritionPlan(date);
-  const slot = findMealSlot(mealId);
+  const plan = useNutritionPlan(date, { catalogPreview: freePreview });
   const entry = plan.meals.find((item) => item.slot.id === mealId);
+  const slot = entry?.slot ?? (freePreview ? findMealSlot(mealId) : undefined);
   const unlocked = isFreeUnlockedMealSlot({
     slotId: mealId,
     dateKey: plan.dateKey,

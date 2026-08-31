@@ -16,12 +16,14 @@ import {
   WeeklyProgressSection,
   type ComparisonPair,
 } from "@/components/platform/progress/ProgressSections";
+import { TrainingProgressCards } from "@/components/platform/progress/TrainingProgressCards";
 import {
   ProgressDashboardSkeleton,
   ProgressHeader,
   ProgressMotionSection,
 } from "@/components/platform/progress/ProgressShared";
 import { useProgressExperience, useOnlineStatus } from "@/hooks/useProgressExperience";
+import { useTrainingProgressSummary } from "@/hooks/useTrainingProgressSummary";
 import {
   dismissPhotoOnboarding,
   getMarketingPhotoConsent,
@@ -32,7 +34,7 @@ import {
 } from "@/lib/platform/progress-storage";
 
 export const Route = createFileRoute("/_platform/app/progress")({
-  head: () => ({ meta: [{ title: "التقدم | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "التقدم | MAAKFIT" }] }),
   component: ProgressDashboardPage,
 });
 
@@ -51,6 +53,7 @@ function ProgressDashboardPage() {
   const displayName = useProgressDisplayName();
   const online = useOnlineStatus();
   const { userId, snapshot, data, refresh, logWeight } = useProgressExperience();
+  const { summary: trainingSummary, loading: trainingLoading } = useTrainingProgressSummary(true);
 
   const [booting, setBooting] = useState(true);
   const [timelineExpanded, setTimelineExpanded] = useState(false);
@@ -136,6 +139,10 @@ function ProgressDashboardPage() {
         />
       </ProgressMotionSection>
 
+      <ProgressMotionSection delay={0.04}>
+        <TrainingProgressCards summary={trainingSummary} loading={trainingLoading} />
+      </ProgressMotionSection>
+
       <ProgressMotionSection delay={0.06}>
         <TodayActivitySection
           events={data.todayEvents}
@@ -184,7 +191,7 @@ function ProgressDashboardPage() {
       />
       <ProgressDetailSheet
         open={detailSheet === "points"}
-        title="Hakim Points"
+        title="MAAKFIT Points"
         body="تُمنح النقاط عند إكمال التمارين، الالتزام الغذائي، تحقيق هدف الماء، تحديث القياسات، ورفع صور التقدم — وليس لتسجيل الدخول فقط."
         onClose={() => setDetailSheet(null)}
       />

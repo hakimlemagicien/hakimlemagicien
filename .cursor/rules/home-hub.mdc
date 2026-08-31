@@ -10,7 +10,7 @@ alwaysApply: false
 
 ## Page order
 
-1. `DailyMotivationCard` (streak / Hakim Points / next mission)
+1. `DailyMotivationCard` (streak / MAAKFIT Points / next mission)
 2. **رسالة اليوم** (personal)
 3. **مهامك اليوم** (dynamic)
 4. **فعّل برنامجك الآن** CTA — free users only, right after tasks

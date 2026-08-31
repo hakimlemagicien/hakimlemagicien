@@ -119,7 +119,7 @@ export function ProfileMembershipPass({
                       className="membership-pass__logo"
                     />
                     <span className="membership-pass__brand">
-                      HAKIM
+                      MAAKFIT
                       <small>MEMBER CARD</small>
                     </span>
                     <span className="membership-pass__nfc" aria-hidden>
@@ -136,7 +136,7 @@ export function ProfileMembershipPass({
                     <div>
                       <strong>{displayName}</strong>
                       <span className="membership-pass__code" dir="ltr">
-                        {memberId ? formatMemberCode(memberId) : "Hakim Member"}
+                        {memberId ? formatMemberCode(memberId) : "MAAKFIT Member"}
                       </span>
                     </div>
                   </div>

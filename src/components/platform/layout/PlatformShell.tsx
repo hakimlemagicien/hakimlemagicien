@@ -1,12 +1,13 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { MembershipUpgradeSheet } from "@/components/platform/upgrade/MembershipUpgradeSheet";
-import { UpgradeProvider } from "@/components/platform/upgrade/UpgradeContext";
+import { UpgradeProvider, useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { CalorieCalculatorSheet } from "@/components/platform/tools/CalorieCalculatorSheet";
 import { ToolsProvider, useTools } from "@/components/platform/tools/ToolsContext";
 import { WaterBottomSheet } from "@/components/platform/water/WaterBottomSheet";
 import { WaterGoalFeedback, WaterUndoToast } from "@/components/platform/water/WaterFeedback";
 import { WaterReminderOverlay } from "@/components/platform/water/WaterReminderOverlay";
+import { TrainingReminderOverlay } from "@/components/platform/workout/TrainingReminderOverlay";
 import { WaterProvider } from "@/components/platform/water/WaterContext";
 import { ShellErrorBoundary } from "@/components/platform/shared/ShellErrorBoundary";
 import {
@@ -32,8 +33,13 @@ function CalorieCalculatorHost() {
 function PlatformShellFrame({ children }: PlatformShellProps) {
   const location = useLocation();
   const drawer = useMenuDrawer();
+  const { open: upgradeOpen } = useUpgradeFlow();
   const isStudioRoute = location.pathname.startsWith("/app/studio");
   const isCoachChatRoute = location.pathname.startsWith("/app/support/chat");
+
+  useLayoutEffect(() => {
+    if (upgradeOpen) drawer?.close();
+  }, [upgradeOpen, drawer]);
 
   return (
     <div
@@ -84,6 +90,7 @@ function PlatformShellFrame({ children }: PlatformShellProps) {
         <ShellErrorBoundary>
           <WaterBottomSheet />
           <WaterReminderOverlay />
+          <TrainingReminderOverlay />
           <WaterUndoToast />
           <WaterGoalFeedback />
         </ShellErrorBoundary>

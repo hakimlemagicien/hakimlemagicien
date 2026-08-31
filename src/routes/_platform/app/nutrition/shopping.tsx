@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_platform/app/nutrition/shopping")({
-  head: () => ({ meta: [{ title: "قائمة التسوق | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "قائمة التسوق | MAAKFIT" }] }),
   component: ShoppingListPage,
 });
 
@@ -28,7 +28,7 @@ function ShoppingListPage() {
   const { openUpgrade } = useUpgradeFlow();
   const locked = !features.nutrition_plan;
   const online = useOnlineStatus();
-  const plan = useNutritionPlan();
+  const plan = useNutritionPlan(undefined, { catalogPreview: locked });
   const groups = groupShoppingByCategory(SHOPPING_LIST_SEED);
   const allIds = SHOPPING_LIST_SEED.map((item) => item.id);
   const checkedCount = allIds.filter((id) => plan.shoppingChecked[id]).length;
@@ -41,6 +41,9 @@ function ShoppingListPage() {
         subtitle={locked ? "معاينة" : `${checkedCount}/${allIds.length} عناصر`}
         backTo="/app/nutrition"
       />
+      <p className="px-1 text-[11px] font-medium text-muted-foreground">
+        القائمة الحالية عامة وليست مشتقة بعد من وجبات خطتك المعيَّنة.
+      </p>
 
       {groups.length === 0 ? (
         <NutritionEmptyState

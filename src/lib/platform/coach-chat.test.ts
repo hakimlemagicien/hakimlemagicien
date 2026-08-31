@@ -32,10 +32,10 @@ const store = {
 } as Storage;
 
 assert(
-  canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }),
+  canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "vip"),
   "VIP should have coach chat",
 );
-assert(!canUseCoachChat(FREE_MEMBERSHIP_STATE.features), "Free should not have coach chat");
+assert(!canUseCoachChat(FREE_MEMBERSHIP_STATE.features, "essential"), "Essential should not have coach chat");
 assert(canReviewCoachDrafts("hakimlemagicien@gmail.com", "free"), "founder email can review drafts");
 assert(canReviewCoachDrafts("other@example.com", "admin"), "admin tier can review drafts");
 assert(!canReviewCoachDrafts("other@example.com", "vip"), "regular VIP cannot review drafts");

@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
+/** @deprecated Use AdminShell + AdminPageHeader. Kept as a thin header alias. */
 export function AdminChrome({
   title,
   subtitle,
@@ -11,23 +12,9 @@ export function AdminChrome({
   children: ReactNode;
 }) {
   return (
-    <div className="admin-shell" dir="rtl">
-      <header className="admin-shell__top">
-        <div>
-          <p className="admin-shell__kicker">Hakim Admin</p>
-          <h1>{title}</h1>
-          {subtitle ? <p className="admin-shell__sub">{subtitle}</p> : null}
-        </div>
-        <nav className="admin-shell__nav">
-          <Link to="/admin/messages" className="admin-shell__link">
-            الرسائل
-          </Link>
-          <Link to="/admin/payments" className="admin-shell__link">
-            المدفوعات
-          </Link>
-        </nav>
-      </header>
+    <>
+      <AdminPageHeader title={title} subtitle={subtitle} />
       {children}
-    </div>
+    </>
   );
 }

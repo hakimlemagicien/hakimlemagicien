@@ -10,7 +10,7 @@ import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
 import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
 import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
 import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
-import { getWeekdayIdFromDate, resolveWeekdayPlan } from "@/lib/platform/weekly-workout-schedule";
+import { getWeekdayIdFromDate, resolveWeekdayPlan, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 
 /** User training goal used to personalize home content. */
@@ -962,14 +962,60 @@ export function buildNextSession(input: {
   features: MembershipFeatures;
   activity?: PlatformActivitySnapshot;
   date?: Date;
+  assignedPlan?: WeekdayWorkoutPlan | null;
+  assignmentReason?: "ok" | "no_program" | "scheduled" | "ended" | "legacy_incomplete" | "error";
+  workoutCta?: string;
 }): NextSessionState {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const date = input.date ?? new Date();
-  const plan = resolveWeekdayPlan(getWeekdayIdFromDate(date), input.features.workout_program);
+  const plan =
+    input.assignedPlan ??
+    resolveWeekdayPlan(getWeekdayIdFromDate(date), input.features.workout_program);
   const workoutDone = activity.workoutDone >= activity.workoutTotal && activity.workoutTotal > 0;
   const nextMeal = MEALS_SEED[activity.mealsDone];
 
-  if (input.features.workout_program && !plan.isRestDay && !workoutDone) {
+  if (input.features.workout_program && input.assignmentReason && input.assignmentReason !== "ok") {
+    if (input.assignmentReason === "scheduled") {
+      return {
+        kind: "rest",
+        eyebrow: "البرنامج",
+        title: "برنامجك يبدأ قريباً",
+        meta: "سيظهر تمرين اليوم عند تاريخ البداية",
+        href: "/app/program/workout",
+        cta: null,
+      };
+    }
+    if (input.assignmentReason === "ended") {
+      return {
+        kind: "done",
+        eyebrow: "البرنامج",
+        title: "انتهت مدة البرنامج الحالي",
+        meta: "لم يُعيَّن برنامج جديد بعد",
+        href: "/app/program/workout",
+        cta: null,
+      };
+    }
+    if (input.assignmentReason === "error") {
+      return {
+        kind: "done",
+        eyebrow: "البرنامج",
+        title: "تعذر تحميل البرنامج",
+        meta: "حاول مرة أخرى من شاشة التمرين",
+        href: "/app/program/workout",
+        cta: "إعادة المحاولة",
+      };
+    }
+    return {
+      kind: "done",
+      eyebrow: "البرنامج",
+      title: input.assignmentReason === "legacy_incomplete" ? "البرنامج يحتاج مراجعة" : "لا برنامج تدريبي معيَّن",
+      meta: "لا تُعرض تمارين افتراضية مكان برنامجك",
+      href: "/app/program/workout",
+      cta: null,
+    };
+  }
+
+  if (input.features.workout_program && !plan.isRestDay && !workoutDone && plan.prescriptions.length > 0) {
     const exerciseCount = plan.prescriptions.length;
     return {
       kind: "workout",
@@ -977,7 +1023,7 @@ export function buildNextSession(input: {
       title: plan.muscleTitle,
       meta: `${plan.durationMin} دقيقة · ${exerciseCount} ${exerciseCount === 1 ? "تمرين" : "تمارين"}`,
       href: "/app/program/workout",
-      cta: "ابدأ الآن",
+      cta: input.workoutCta ?? "ابدأ الآن",
     };
   }
 

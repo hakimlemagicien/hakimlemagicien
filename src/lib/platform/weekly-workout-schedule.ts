@@ -27,6 +27,7 @@ export type WeekdayWorkoutPlan = {
   durationMin: number;
   calories: number;
   points: number;
+  programDayId?: string;
 };
 
 const WEEKDAY_IDS: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -172,6 +173,19 @@ export function getWeekdayPlan(dayId: WeekdayId): WeekdayWorkoutPlan {
   return WEEKDAY_WORKOUT_PLANS[dayId];
 }
 
+export function emptyRestPlan(id: WeekdayId): WeekdayWorkoutPlan {
+  return {
+    id,
+    muscleTitle: "",
+    targetMuscle: "",
+    isRestDay: true,
+    prescriptions: [],
+    durationMin: 0,
+    calories: 0,
+    points: 0,
+  };
+}
+
 /** First chest exercise — the only unlocked slot for free members. */
 export const FREE_MEMBER_UNLOCKED_EXTERNAL_ID = "CH-001";
 
@@ -184,16 +198,18 @@ const FREE_CHEST_PREVIEW: TodayWorkoutPrescription = {
 };
 
 /**
- * Free members never see rest days: always a workout preview with chest first (unlocked).
- * Paid members get the canonical weekly plan including rest days.
+ * Free members see a catalog preview (not an assigned program).
+ * Paid members use an assignment snapshot when provided; otherwise rest/empty — never a fake assigned week.
  */
 export function resolveWeekdayPlan(
   dayId: WeekdayId,
   hasWorkoutProgram: boolean,
+  assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null,
 ): WeekdayWorkoutPlan {
-  const base = WEEKDAY_WORKOUT_PLANS[dayId];
-  if (hasWorkoutProgram) return base;
+  if (assignedPlans) return assignedPlans[dayId] ?? emptyRestPlan(dayId);
+  if (hasWorkoutProgram) return emptyRestPlan(dayId);
 
+  const base = WEEKDAY_WORKOUT_PLANS[dayId];
   const sourcePrescriptions =
     base.isRestDay || base.prescriptions.length === 0
       ? TODAY_WORKOUT_PRESCRIPTIONS
@@ -231,19 +247,22 @@ export function buildWeeklySchedule(input?: {
   referenceDate?: Date;
   userId?: string;
   freeMember?: boolean;
+  assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null;
 }): WeekDayEntry[] {
   const referenceDate = input?.referenceDate ?? new Date();
   const todayKey = dateKeyFromDate(referenceDate);
   const weekStart = startOfWeekSunday(referenceDate);
   const userId = input?.userId ?? "guest";
   const freeMember = input?.freeMember ?? false;
+  const assignedPlans = input?.assignedPlans ?? null;
 
   return WEEKDAY_IDS.map((id, index) => {
     const calendarDate = new Date(weekStart);
     calendarDate.setDate(weekStart.getDate() + index);
     const dateKey = dateKeyFromDate(calendarDate);
-    const plan = WEEKDAY_WORKOUT_PLANS[id];
-    const displayPlan = freeMember ? resolveWeekdayPlan(id, false) : plan;
+    const displayPlan = freeMember
+      ? resolveWeekdayPlan(id, false)
+      : resolveWeekdayPlan(id, true, assignedPlans);
     const names = WEEKDAY_NAMES[id];
     const isToday = dateKey === todayKey;
     const isPast = dateKey < todayKey;

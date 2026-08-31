@@ -1,14 +1,12 @@
-import nutritionPilotPackage from "./data/nutrition-pilot-20.json";
-import nutritionLibrary021100 from "./data/nutrition-library-021-100.json";
-import nutritionLibrary101300 from "./data/nutrition-library-101-300.json";
+import nutritionLibraryV2 from "./data/nutrition-library-v2.json";
 
 /**
- * Meal Library — managed catalog keyed by external_id.
- * Source of truth: Nutrition Data Contract v1.1 plus approved library batches.
- * User plan state (completed / skipped / current) must never live on these records.
+ * Meal Library V2 — managed catalog keyed by external_id.
+ * Source of truth: Nutrition Library V2 packages (MEAL-001–MEAL-300).
+ * V1 pilot/batch JSON must not be imported. User plan state must never live on these records.
  */
 export const MEAL_MEDIA_BUCKET = "meal-media";
-export const MEAL_LIBRARY_SCHEMA_VERSION = "1.1.0";
+export const MEAL_LIBRARY_SCHEMA_VERSION = "2.0.0";
 export const MEAL_LIBRARY_PILOT_START = "MEAL-001";
 export const MEAL_LIBRARY_PILOT_END = "MEAL-020";
 export const MEAL_LIBRARY_EXTENDED_START = "MEAL-021";
@@ -38,6 +36,8 @@ export type MealLibraryIngredient = {
   fat_g: number;
   source: string;
   source_query_url: string;
+  fiber_g?: number;
+  fdc_id?: number | string;
 };
 
 export type MealSubstitutionProfile = {
@@ -56,6 +56,8 @@ export type MealLibraryImage = {
   status: string;
   alt_ar: string;
   alt_en: string;
+  master_path?: string;
+  thumbnail_path?: string;
 };
 
 export type MealLibraryRecord = {
@@ -90,6 +92,16 @@ export type MealLibraryRecord = {
     macro_energy_kcal: number;
     macro_formula: string;
     macro_vs_ingredient_delta_pct: number;
+    source_energy_kcal?: number;
+    published_macro_energy_kcal?: number;
+    energy_delta_pct?: number;
+    derived_fiber_g?: number | null;
+    nutrition_check?: string;
+    ingredient_check?: string;
+    allergen_check?: string;
+    dietary_tag_check?: string;
+    goal_suitability_check?: string;
+    bilingual_check?: string;
   };
 };
 
@@ -128,15 +140,12 @@ export const UNIT_LABELS_AR: Record<string, string> = {
   ml: "مل",
 };
 
-const seedCatalog = {
-  ...(nutritionPilotPackage as MealLibraryPackage),
-  meals: [
-    ...(nutritionPilotPackage as MealLibraryPackage).meals,
-    ...(nutritionLibrary021100 as MealLibraryPackage).meals,
-    ...(nutritionLibrary101300 as MealLibraryPackage).meals,
-  ],
-};
+const seedCatalog = nutritionLibraryV2 as MealLibraryPackage;
 let runtimeCatalog: MealLibraryRecord[] | null = null;
+
+export function getMealLibrarySeed(): MealLibraryRecord[] {
+  return seedCatalog.meals;
+}
 
 export function getMealLibraryCatalog(): MealLibraryRecord[] {
   return runtimeCatalog ?? seedCatalog.meals;
@@ -156,6 +165,18 @@ export function getMealByExternalId(externalId: string): MealLibraryRecord | und
 
 export function getMealLibraryByExternalId(): Map<string, MealLibraryRecord> {
   return new Map(getMealLibraryCatalog().map((meal) => [meal.external_id, meal]));
+}
+
+/** True when a database catalog already carries Nutrition Library V2 type ranges. */
+export function dbMealCatalogIsV2(
+  meals: Array<{ external_id: string; meal_type: string }>,
+): boolean {
+  const byId = new Map(meals.map((meal) => [meal.external_id, meal]));
+  return (
+    byId.get("MEAL-186")?.meal_type === "snack" &&
+    byId.get("MEAL-056")?.meal_type === "lunch" &&
+    byId.get("MEAL-281")?.meal_type === "drinks"
+  );
 }
 
 export function listMealsByType(mealType: MealType): MealLibraryRecord[] {

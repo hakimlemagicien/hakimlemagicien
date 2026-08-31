@@ -6,7 +6,7 @@
  * - EMAIL_FROM — optional, defaults to support@hakimlemagicien.com
  * - ADMIN_NOTIFICATION_EMAIL — optional, defaults to support@hakimlemagicien.com
  */
-const DEFAULT_FROM = "Hakim Coaching <support@hakimlemagicien.com>";
+const DEFAULT_FROM = "MAAKFIT <support@hakimlemagicien.com>";
 
 export async function sendAdminNotificationEmail(options: {
   to: string;

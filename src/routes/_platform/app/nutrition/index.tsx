@@ -13,7 +13,6 @@ import {
   CountUpNumber,
   MealStatusIcon,
   NUTRITION_DAY_LOCKED_REASON,
-  NUTRITION_LOCKED_REASON,
   NutritionDashboardSkeleton,
   NutritionEmptyState,
   NutritionErrorCard,
@@ -27,13 +26,21 @@ import {
   staggerItem,
 } from "@/components/platform/nutrition/NutritionShared";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
+import {
+  MealSwapAllowance,
+  NutritionFreeConversionBanner,
+} from "@/components/platform/upgrade/upgrade-ui";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
+import {
+  isMealSlotUnlockedByEntitlements,
+  mealSwapAllowanceLabel,
+} from "@/lib/platform/entitlements";
 import { formatNutritionNumber } from "@/lib/platform/meal-library";
 import {
   MEAL_STATUS_LABELS,
   buildCurrentWeekDays,
-  isFreeUnlockedMealSlot,
+  getTodayDateKey,
   type MealStatus,
 } from "@/lib/platform/nutrition-experience";
 import { cn } from "@/lib/utils";
@@ -47,7 +54,7 @@ const MACRO_EMOJI: Record<MacroTone, string> = {
 };
 
 export const Route = createFileRoute("/_platform/app/nutrition/")({
-  head: () => ({ meta: [{ title: "التغذية | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "التغذية | MAAKFIT" }] }),
   component: NutritionDashboardPage,
 });
 
@@ -79,16 +86,16 @@ function CommitmentRing({ pct }: { pct: number }) {
         <p className="text-lg font-black leading-none text-primary">
           <CountUpNumber value={pct} />%
         </p>
-        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">من الهدف</p>
+        <p className="mt-0.5 text-[9px] font-bold text-muted-foreground">من المخطط</p>
       </div>
     </div>
   );
 }
 
 function NutritionDashboardPage() {
-  const { features } = useMembership();
-  const { openUpgrade } = useUpgradeFlow();
-  const freePreview = !features.nutrition_plan;
+  const { entitlements } = useMembership();
+  const { openUpgradeWithContext } = useUpgradeFlow();
+  const freePreview = !entitlements.nutrition.fullDay;
   const online = useOnlineStatus();
   const weekDays = useMemo(() => buildCurrentWeekDays(), []);
   const todayKey = weekDays.find((d) => d.isToday)?.dateKey ?? weekDays[0]!.dateKey;
@@ -96,12 +103,12 @@ function NutritionDashboardPage() {
   const [booting, setBooting] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
-  const plan = useNutritionPlan(selectedDateKey);
+  const plan = useNutritionPlan(selectedDateKey, { catalogPreview: freePreview });
   const isSelectedToday = selectedDateKey === todayKey;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
-  const lockedReason = freeDayFullyLocked
-    ? NUTRITION_DAY_LOCKED_REASON
-    : NUTRITION_LOCKED_REASON;
+  const openNutritionUpgrade = () =>
+    openUpgradeWithContext("NUTRITION", "الخطة الكاملة تنظّم بقية وجباتك حسب هدفك الغذائي.");
+  const swapLabel = mealSwapAllowanceLabel(entitlements);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setBooting(false), 280);
@@ -124,10 +131,35 @@ function NutritionDashboardPage() {
     plan.meals.find((item) => item.status === "current")?.slot.id ??
     plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
 
-  if (booting) {
+  if (booting || plan.runtimeLoading) {
     return (
       <PlatformStack>
         <NutritionDashboardSkeleton />
+      </PlatformStack>
+    );
+  }
+
+  if (plan.runtimeError) {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionErrorCard onRetry={retry} />
+      </PlatformStack>
+    );
+  }
+
+  if (!freePreview && plan.assignmentReason && plan.assignmentReason !== "ok") {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionEmptyState
+          title={
+            plan.assignmentReason === "scheduled"
+              ? "خطتك الغذائية مجدولة ولم تبدأ بعد"
+              : "لا توجد خطة غذائية مخصصة حالياً"
+          }
+          description="لا تُعرض مكتبة الوجبات كخطة شخصية. سيظهر يومك هنا بعد أن يعيّن المدرب الخطة."
+        />
       </PlatformStack>
     );
   }
@@ -145,7 +177,9 @@ function NutritionDashboardPage() {
             <section className={cn(nutritionCardClass, "relative overflow-hidden p-4")}>
               <div className="flex items-center justify-between gap-3" dir="rtl">
                 <div className="min-w-0 flex-1 text-center">
-                  <p className="text-[11px] font-bold text-muted-foreground">الهدف اليومي</p>
+                  <p className="text-[11px] font-bold text-muted-foreground">
+                    {freePreview ? "معاينة المكتبة" : "مخطط اليوم من وجباتك"}
+                  </p>
                   <p className="mt-1 text-[28px] font-black leading-none tracking-tight text-primary tabular-nums">
                     <CountUpNumber value={plan.goals.calories} />
                   </p>
@@ -268,6 +302,8 @@ function NutritionDashboardPage() {
             <section className="space-y-2.5">
               <div className="flex items-center justify-between gap-3 px-0.5">
                 <h2 className="text-[13px] font-black text-foreground">وجبات اليوم</h2>
+                <div className="flex items-center gap-2">
+                  {swapLabel ? <MealSwapAllowance label={swapLabel} /> : null}
                 {plan.meals.length > 0 ? (
                   <Link
                     to="/app/nutrition/meal"
@@ -282,7 +318,9 @@ function NutritionDashboardPage() {
                     + تسجيل وجبة
                   </Link>
                 ) : null}
+                </div>
               </div>
+              {freePreview && isSelectedToday ? <NutritionFreeConversionBanner /> : null}
               {plan.meals.length === 0 ? (
                 <NutritionEmptyState
                   title="لا توجد وجبات اليوم."
@@ -295,11 +333,11 @@ function NutritionDashboardPage() {
                   initial="hidden"
                   animate="show"
                 >
-                  {plan.meals.map(({ slot, meal, status }) => {
-                    const unlocked = isFreeUnlockedMealSlot({
+                  {plan.meals.map(({ slot, meal, status }, mealIndex) => {
+                    const unlocked = isMealSlotUnlockedByEntitlements(entitlements, {
                       slotId: slot.id,
+                      slotIndex: mealIndex,
                       dateKey: selectedDateKey,
-                      hasNutritionPlan: !freePreview,
                       todayKey,
                     });
                     return (
@@ -318,7 +356,7 @@ function NutritionDashboardPage() {
                           dateKey={selectedDateKey}
                           locked={!unlocked}
                           featured={slot.id === nextMealId}
-                          onLockedClick={() => openUpgrade(lockedReason)}
+                          onLockedClick={openNutritionUpgrade}
                         />
                       </motion.div>
                     );

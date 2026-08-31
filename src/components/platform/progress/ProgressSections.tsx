@@ -232,7 +232,10 @@ export function BodyProgressSection({
 
   return (
     <section className={cn(progressCardClass, "space-y-3 p-4")}>
-      <h2 className="text-[12px] font-black text-foreground">تطور القياسات</h2>
+      <h2 className="text-[12px] font-black text-foreground">تكوين الجسم</h2>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        القياسات منفصلة عن تقدم التدريب. تقلبات الوزن اليومية ليست نجاحًا أو فشلاً، ولا نقدّر نسبة الدهون هنا.
+      </p>
 
       <div className="rounded-2xl bg-muted/45 p-3">
         <div className="flex items-center justify-between gap-2">
@@ -275,7 +278,9 @@ export function BodyProgressSection({
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {otherItems.map((item) => (
+        {otherItems
+          .filter((item) => item.recorded)
+          .map((item) => (
           <div key={item.key} className="rounded-2xl bg-muted/40 px-3 py-2.5 text-right">
             <p className="text-[10px] font-bold text-muted-foreground">{item.label}</p>
             <p className="mt-0.5 text-sm font-black text-foreground">
@@ -463,7 +468,7 @@ export function MonthlySummarySection({ summary }: { summary: ProgressDashboardD
         <SummaryStat label="تمارين" value={String(summary.workouts)} />
         <SummaryStat label="وجبات" value={String(summary.meals)} />
         <SummaryStat label="أيام ماء" value={String(summary.waterDays)} />
-        <SummaryStat label="Hakim Points" value={summary.points.toLocaleString("en-US")} />
+        <SummaryStat label="MAAKFIT Points" value={summary.points.toLocaleString("en-US")} />
       </div>
       <div className="grid grid-cols-2 gap-2 text-right">
         <div className="rounded-2xl bg-muted/45 px-3 py-2.5">
@@ -623,8 +628,7 @@ export function PhotoCaptureFlow({
             <label className="mt-4 flex items-start gap-2 rounded-2xl bg-muted/45 p-3 text-[11px]">
               <input type="checkbox" checked={consent} onChange={(e) => onToggleConsent(e.target.checked)} className="mt-0.5" />
               <span>
-                أوافق على مراجعة صور تقدمي لاستخدامها المحتمل ضمن قصص نجاح Hakim Coaching. (اختياري — غير مفعّل
-                افتراضياً)
+                أوافق اختيارياً على استخدام صور تقدمي في حملات Before/After التسويقية. الرفض لا يؤثر على الحساب أو البرنامج أو الاشتراك أو الكوتش. الصور خاصة افتراضياً.
               </span>
             </label>
             <button type="button" onClick={onNext} className="mt-4 flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-xs font-black text-primary-foreground">

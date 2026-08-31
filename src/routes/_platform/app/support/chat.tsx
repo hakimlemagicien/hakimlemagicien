@@ -10,7 +10,7 @@ function isSafeAppReturnPath(path: string) {
 }
 
 export const Route = createFileRoute("/_platform/app/support/chat")({
-  head: () => ({ meta: [{ title: "دردشة الكوتش | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "دردشة الكوتش | MAAKFIT" }] }),
   validateSearch: (search: Record<string, unknown>): { from?: string } => {
     const from = typeof search.from === "string" ? search.from : undefined;
     return { from: from && isSafeAppReturnPath(from) ? from : undefined };

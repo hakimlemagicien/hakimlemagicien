@@ -34,3 +34,7 @@ dist-ssr
 
 # Supabase local CLI temp state
 supabase/.temp/
+
+# Raw training-library audit PNGs (app uses optimized copies in public/exercises)
+TRAINING_LIBRARY_INVENTORY_AUDIT/assets/
+TRAINING_LIBRARY_INVENTORY_AUDIT.zip

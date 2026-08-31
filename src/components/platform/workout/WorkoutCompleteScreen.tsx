@@ -1,17 +1,22 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
-import { Droplets, Flame, Star, Timer } from "lucide-react";
+import { Droplets, Layers, Star, Timer } from "lucide-react";
+import { useState } from "react";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
+import { TrainingFreeConversionPanel } from "@/components/platform/upgrade/upgrade-ui";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 
 type WorkoutCompleteScreenProps = {
   player: WorkoutPlayerState;
+  showFreeConversion?: boolean;
 };
 
-export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
-  const { phase, meta, resetSession } = player;
+export function WorkoutCompleteScreen({ player, showFreeConversion = false }: WorkoutCompleteScreenProps) {
+  const { phase, meta, resetSession, completedWorkingSets, sessionPartial, runtimeMode, progress } = player;
   const water = useWaterOptional();
   const open = phase === "complete";
+  const exercisesDone = progress.filter((item) => item.status === "done").length;
+  const [dismissConversion, setDismissConversion] = useState(false);
 
   return (
     <AnimatePresence>
@@ -31,7 +36,9 @@ export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
           >
             <p className="text-4xl">🎉</p>
             <h2 className="mt-3 text-2xl font-black text-foreground">أحسنت</h2>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">لقد أكملت حصة اليوم</p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {sessionPartial ? "تم حفظ ما أنجزته من الحصة" : "لقد أكملت التمرين المتاح"}
+            </p>
 
             <div className="mt-5 grid grid-cols-3 gap-2">
               <div className="rounded-2xl border border-border/60 bg-card p-3">
@@ -40,23 +47,31 @@ export function WorkoutCompleteScreen({ player }: WorkoutCompleteScreenProps) {
                 <p className="text-[9px] text-muted-foreground">دقيقة</p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-card p-3">
-                <Flame className="mx-auto h-4 w-4 text-primary" />
-                <p className="mt-1 text-sm font-black text-foreground">{meta.calories}</p>
-                <p className="text-[9px] text-muted-foreground">سعر حراري</p>
+                <Layers className="mx-auto h-4 w-4 text-primary" />
+                <p className="mt-1 text-sm font-black text-foreground">{completedWorkingSets}</p>
+                <p className="text-[9px] text-muted-foreground">مجموعات عمل</p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-card p-3">
                 <Star className="mx-auto h-4 w-4 fill-amber-400 text-amber-500" />
-                <p className="mt-1 text-sm font-black text-foreground">+{meta.points}</p>
-                <p className="text-[9px] text-muted-foreground">نقطة</p>
+                <p className="mt-1 text-sm font-black text-foreground">
+                  {runtimeMode === "v2" ? exercisesDone : `+${meta.points}`}
+                </p>
+                <p className="text-[9px] text-muted-foreground">{runtimeMode === "v2" ? "تمارين" : "نقطة"}</p>
               </div>
             </div>
 
-            <div className="mt-4 space-y-2 rounded-2xl border border-[#22C55E]/25 bg-[#F0FAF4] p-3 text-right">
-              <p className="text-xs font-bold text-[#2E7D32]">
-                سلسلة الإنجاز: {meta.streakDays} أيام متتالية
-              </p>
-              <p className="text-[11px] font-medium text-[#2E7D32]/85">التحدي اليومي مكتمل ✓</p>
-            </div>
+            {showFreeConversion && !dismissConversion ? (
+              <div className="mt-4 text-right">
+                <TrainingFreeConversionPanel onLater={() => setDismissConversion(true)} />
+              </div>
+            ) : null}
+
+            {runtimeMode !== "v2" ? (
+              <div className="mt-4 space-y-2 rounded-2xl border border-[#22C55E]/25 bg-[#F0FAF4] p-3 text-right">
+                <p className="text-xs font-bold text-[#2E7D32]">سلسلة الإنجاز: {meta.streakDays} أيام متتالية</p>
+                <p className="text-[11px] font-medium text-[#2E7D32]/85">التحدي اليومي مكتمل ✓</p>
+              </div>
+            ) : null}
 
             {water ? (
               <div className="mt-4 rounded-2xl border border-[#BFDBFE]/70 bg-[#EFF6FF] p-3 text-right">

@@ -11,6 +11,8 @@ import {
   Target,
 } from "lucide-react";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
+import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   PlatformSection,
   PlatformStack,
@@ -20,10 +22,11 @@ import {
   fetchExerciseDetails,
   formatExerciseDifficulty,
 } from "@/lib/platform/exercise-library";
+import { getExerciseStageGuide, getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
 import { guardExerciseLibraryRoute } from "@/lib/platform/exercise-library-route-guard";
 
 export const Route = createFileRoute("/_platform/app/exercises/$exerciseId")({
-  head: () => ({ meta: [{ title: "تفاصيل التمرين | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "تفاصيل التمرين | MAAKFIT" }] }),
   beforeLoad: guardExerciseLibraryRoute,
   component: ExerciseDetailsPage,
 });
@@ -69,6 +72,8 @@ function ExerciseDetailsPage() {
   }
 
   const exercise = exerciseQuery.data;
+  const stageGuide = getExerciseStageGuide(exercise.external_id);
+  const coverThumb = getExerciseStageListThumb(exercise.external_id);
 
   return (
     <PlatformStack>
@@ -80,8 +85,21 @@ function ExerciseDetailsPage() {
 
       <section className="platform-card overflow-hidden p-4">
         <div className="flex items-start gap-3">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-            <Dumbbell className="h-6 w-6" />
+          <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary-soft text-primary">
+            {coverThumb ? (
+              <OptimizedImage
+                src={coverThumb}
+                alt=""
+                width={112}
+                height={84}
+                sizes="56px"
+                objectFit="cover"
+                className="h-14 w-14"
+                fallback={<Dumbbell className="h-6 w-6" />}
+              />
+            ) : (
+              <Dumbbell className="h-6 w-6" />
+            )}
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-black text-foreground">{exercise.name_ar}</h1>
@@ -122,6 +140,16 @@ function ExerciseDetailsPage() {
         </div>
       </section>
 
+      {stageGuide ? (
+        <ExerciseStageGuide
+          guide={stageGuide}
+          muscles={{
+            primary: exercise.muscle_group.name_ar,
+            secondary: exercise.secondary_muscles,
+          }}
+        />
+      ) : null}
+
       <PlatformSection title="فيديو التمرين" icon={PlaySquare}>
         <ExerciseMedia
           status={exercise.video_status}
@@ -142,23 +170,9 @@ function ExerciseDetailsPage() {
         />
       </PlatformSection>
 
-      {exercise.coach_notes || exercise.secondary_muscles.length > 0 ? (
+      {exercise.coach_notes ? (
         <PlatformSection title="ملاحظات التمرين" icon={NotebookText} variant="card">
-          {exercise.coach_notes ? (
-            <p className="text-sm leading-7 text-foreground">{exercise.coach_notes}</p>
-          ) : null}
-          {exercise.secondary_muscles.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {exercise.secondary_muscles.map((muscle) => (
-                <span
-                  key={muscle}
-                  className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary"
-                >
-                  {muscle}
-                </span>
-              ))}
-            </div>
-          ) : null}
+          <p className="text-sm leading-7 text-foreground">{exercise.coach_notes}</p>
         </PlatformSection>
       ) : null}
     </PlatformStack>

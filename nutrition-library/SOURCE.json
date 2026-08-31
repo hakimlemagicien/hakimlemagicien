@@ -1,32 +1,28 @@
 {
-  "title": "Hakim Nutrition Library — Source of Truth",
+  "title": "Hakim Nutrition Library V2 — Source of Truth",
   "primary_key": "external_id",
-  "current_scope": "MEAL-001 → MEAL-060",
-  "do_not_create_here": "MEAL-061+",
+  "catalog": "nutrition_v2",
+  "current_scope": "MEAL-001 → MEAL-300",
+  "retired_catalog": "nutrition_v1 (pilot 001-020 + batches 021-300). Do not import or upsert.",
+  "runtime": "src/lib/platform/data/nutrition-library-v2.json",
+  "in_repo_copy": "nutrition-library/v2/nutrition-library-v2.json",
+  "db_upsert": "scripts/upsert-meal-library-v2.sql",
   "locations": {
-    "index": "nutrition-library/inventory/meal-001-060.inventory.json",
-    "batch_001_020_package": "nutrition-library/batches/001-020/",
-    "batch_021_060_package": "nutrition-library/batches/021-060/",
-    "reviewed_runtime_001_020": "src/lib/platform/data/nutrition-pilot-20.json",
+    "source_001_020": "Nutrition Library/source/nutrition_v2_MEAL-001-020",
+    "source_021_060": "Nutrition Library/source/nutrition_v2_MEAL-021-060",
+    "source_061_100": "Nutrition Library/source/nutrition_v2_MEAL-061-100",
+    "source_101_300": "Nutrition Library/source/nutrition_v2_MEAL-101-300",
     "delivery_images": "public/nutrition/meals/{external_id}/cover.webp",
     "delivery_thumbs": "public/nutrition/meals/{external_id}/cover-thumb.webp",
-    "master_png_001_020": "nutrition-library/batches/001-020/images/{external_id}.png",
-    "master_png_021_060": "nutrition-library/batches/021-060/images/{external_id}.png",
-    "contract_001_020": "nutrition-library/batches/001-020/NUTRITION_DATA_CONTRACT.md",
-    "contract_021_060": "nutrition-library/batches/021-060/NUTRITION_DATA_CONTRACT.md"
+    "master_png": "images/master/{external_id}.png (external source; not committed)"
   },
-  "next_batch_handoff": {
-    "create": "MEAL-061 → MEAL-100",
-    "owner": "Nutrition Library Manager / Work",
-    "required_outputs": [
-      "Meal Records",
-      "Master Images",
-      "Image Mapping",
-      "Contract-compatible data",
-      "QA Report",
-      "Manifest",
-      "Final Package / ZIP",
-      "Copy into nutrition-library/batches/"
-    ]
-  }
+  "do_not_use": [
+    "src/lib/platform/data/nutrition-pilot-20.json",
+    "src/lib/platform/data/nutrition-library-021-100.json",
+    "src/lib/platform/data/nutrition-library-101-300.json",
+    "scripts/upsert-meal-library.sql",
+    "scripts/upsert-meal-library-021-100.sql",
+    "scripts/upsert-meal-library-101-300.sql",
+    "nutrition-library/batches/"
+  ]
 }

@@ -1,0 +1,108 @@
+# Staging preview deploy — never production.
+# Trigger: push to branch `staging`, or workflow_dispatch.
+# Forbidden: vercel deploy --prod, branch main, Production Supabase.
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [staging]
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: "Git ref to deploy (default staging / pin 4d80f8d for cohort)"
+        required: false
+        default: "staging"
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse Production refs
+        run: |
+          REF="${{ github.event.inputs.git_ref || github.ref }}"
+          echo "Ref=$REF"
+          case "$REF" in
+            *main*|refs/heads/main)
+              echo "::error::STAGING workflow must not run for main"
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.git_ref || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Require Staging isolation secrets
+        run: |
+          missing=0
+          if [ -z "$VERCEL_TOKEN" ]; then echo "::error::Missing VERCEL_TOKEN"; missing=1; fi
+          if [ -z "$VITE_SUPABASE_URL" ]; then echo "::error::Missing STAGING_VITE_SUPABASE_URL"; missing=1; fi
+          if [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then echo "::error::Missing STAGING_VITE_SUPABASE_PUBLISHABLE_KEY"; missing=1; fi
+          case "$VITE_SUPABASE_URL" in
+            *ufgrbpakuemamggwypdh*)
+              echo "::error::STAGING_ISOLATION_FAILED Production Supabase URL"
+              missing=1
+              ;;
+            *dxerwrdpcflpnjvsnrjq*)
+              echo "OK Staging Supabase URL"
+              ;;
+            *)
+              echo "::error::Staging URL must be dxerwrdpcflpnjvsnrjq"
+              missing=1
+              ;;
+          esac
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VITE_SUPABASE_URL: ${{ secrets.STAGING_VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Install and build
+        run: npm ci && npm run build
+        env:
+          VITE_APP_ENV: staging
+          VITE_SUPABASE_URL: ${{ secrets.STAGING_VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.STAGING_VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Deploy preview (never --prod)
+        id: deploy
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::VERCEL_TOKEN missing — cannot create durable preview"
+            exit 1
+          fi
+          URL=$(npx vercel deploy --prebuilt --yes --token "$VERCEL_TOKEN")
+          echo "deployment_url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed preview $URL"
+          if npx vercel alias set "$URL" staging.hakimlemagicien.com --token "$VERCEL_TOKEN"; then
+            echo "Aliased staging.hakimlemagicien.com -> $URL"
+          else
+            echo "::warning::Could not alias staging.hakimlemagicien.com — set manually after deploy"
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Publish summary
+        run: |
+          {
+            echo "## Staging preview (not Production)"
+            echo ""
+            echo "- Ref: \`${{ github.sha }}\`"
+            echo "- URL: ${{ steps.deploy.outputs.deployment_url }}"
+            echo "- Supabase: \`dxerwrdpcflpnjvsnrjq\`"
+            echo "- Flag: never \`--prod\`"
+          } >> "$GITHUB_STEP_SUMMARY"

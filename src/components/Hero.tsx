@@ -36,7 +36,7 @@ const CLIENT_COUNT_LABEL = formatSocialProofClientCount();
 const HERO_CYCLING_PHRASES = [
   "مخصص لهدفك وجسدك 100% ",
   "مصمم ليصنع أفضل نسخة منك ",
-  "يضمن لك النتيجة خلال 90 يوماً ",
+  "يُصمَّم لهدفك خلال أشهر البرنامج ",
 ];
 
 const PHRASE_CYCLE_MS = 2500;

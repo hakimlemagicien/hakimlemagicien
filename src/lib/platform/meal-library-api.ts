@@ -1,12 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   setMealLibraryCatalog,
-  getMealLibraryCatalog,
+  getMealLibrarySeed,
+  dbMealCatalogIsV2,
   type MealLibraryIngredient,
   type MealLibraryRecord,
   type MealSubstitutionProfile,
   type MealType,
 } from "@/lib/platform/meal-library";
+import { overlayMealCatalog } from "@/lib/platform/library-overlays";
 
 export type MealLibrarySource = "supabase" | "json";
 
@@ -177,23 +179,28 @@ export async function fetchMealLibraryFromSupabase(): Promise<MealLibraryRecord[
   return ((data ?? []) as unknown as MealRow[]).map(mapMeal);
 }
 
+async function fetchHiddenMealExternalIds(): Promise<string[]> {
+  const { data, error } = await supabase.rpc("client_list_hidden_library_keys");
+  if (error) throw error;
+  const payload = (data ?? {}) as { meal_external_ids?: string[] };
+  return payload.meal_external_ids ?? [];
+}
+
 let lastHydratedSource: MealLibrarySource = "json";
 
 export async function hydrateMealLibraryFromSupabase(): Promise<MealLibrarySource> {
   try {
-    const meals = await fetchMealLibraryFromSupabase();
-    const seedCount = getMealLibraryCatalog().length;
-    if (meals.length >= seedCount && meals.length > 0) {
-      setMealLibraryCatalog(meals);
-      lastHydratedSource = "supabase";
-      return lastHydratedSource;
-    }
+    const [meals, hidden] = await Promise.all([fetchMealLibraryFromSupabase(), fetchHiddenMealExternalIds()]);
+    const dbRows = dbMealCatalogIsV2(meals) ? meals : [];
+    const overlaid = overlayMealCatalog(getMealLibrarySeed(), dbRows, hidden);
+    setMealLibraryCatalog(overlaid);
+    lastHydratedSource = dbRows.length > 0 || hidden.length > 0 ? "supabase" : "json";
+    return lastHydratedSource;
   } catch {
-    // Keep the reviewed JSON catalog until QA confirms the database path.
+    setMealLibraryCatalog(null);
+    lastHydratedSource = "json";
+    return lastHydratedSource;
   }
-  setMealLibraryCatalog(null);
-  lastHydratedSource = "json";
-  return lastHydratedSource;
 }
 
 export function getHydratedMealLibrarySource(): MealLibrarySource {

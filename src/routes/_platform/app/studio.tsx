@@ -38,7 +38,7 @@ import {
 } from "@/lib/design-lab/visual-editor";
 
 export const Route = createFileRoute("/_platform/app/studio")({
-  head: () => ({ meta: [{ title: "Hakim Studio | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "Studio | MAAKFIT" }] }),
   component: HakimStudioPage,
 });
 
@@ -853,7 +853,7 @@ function HakimStudioPage() {
     <div className="platform-stack hakim-studio">
       <header className="flex shrink-0 items-start justify-between gap-3">
         <div>
-          <h1 className="text-lg font-black text-foreground">Hakim Studio</h1>
+          <h1 className="text-lg font-black text-foreground">MAAKFIT Studio</h1>
           <p className="text-xs text-muted-foreground">
             محرر بصري مركزي لجميع شاشات المنصة · Reference Design + Live Preview
           </p>

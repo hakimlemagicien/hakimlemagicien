@@ -58,9 +58,10 @@ const FOOTER_COLUMNS = [
   {
     title: "الدعم",
     links: [
-      { label: "اتصل بنا", href: `mailto:${SITE_SUPPORT_EMAIL}` },
+      { label: "اتصل بنا", to: LEGAL_ROUTES.contact },
       { label: "سياسة الخصوصية", to: LEGAL_ROUTES.privacy },
       { label: "الشروط والأحكام", to: LEGAL_ROUTES.terms },
+      { label: "الاسترداد والإلغاء", to: LEGAL_ROUTES.refund },
     ],
   },
   {
@@ -118,12 +119,12 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
             <Link to={LEGAL_ROUTES.refund} className="hover:text-primary">
               الاسترجاع
             </Link>
-            <a href={SITE_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-              واتساب
-            </a>
+            <Link to={LEGAL_ROUTES.contact} className="hover:text-primary">
+              التواصل
+            </Link>
           </div>
           <p className="mt-4 text-center font-[Tajawal] text-[11px] text-neutral-400">
-            © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Hakim Coaching
+            © {new Date().getFullYear()} جميع الحقوق محفوظة لـ MAAKFIT
           </p>
         </div>
       </footer>
@@ -157,10 +158,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
         <div className="flex flex-col items-center text-center">
           <Link to="/" className="inline-flex flex-col items-center">
             <span className="font-[Cairo] text-[28px] font-black leading-none tracking-tight text-primary sm:text-[32px]">
-              HAKIM
-            </span>
-            <span className="mt-1 font-[Cairo] text-[11px] font-bold tracking-[0.35em] text-primary">
-              COACHING
+              MAAKFIT
             </span>
           </Link>
 
@@ -202,7 +200,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
         </div>
 
         <p className="mt-10 text-center font-[Tajawal] text-[12px] text-[#94A3B8]">
-          © {new Date().getFullYear()} جميع الحقوق محفوظة لـ Hakim Coaching
+          © {new Date().getFullYear()} جميع الحقوق محفوظة لـ MAAKFIT
         </p>
       </div>
     </footer>

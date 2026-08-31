@@ -16,7 +16,7 @@ type OptimizedImageProps = {
 };
 
 /**
- * Standard image component for Hakim Platform.
+ * Standard image component for MAAKFIT.
  * Enforces lazy loading, async decoding, shimmer placeholder, and stable dimensions (CLS).
  */
 export function OptimizedImage({
@@ -82,7 +82,7 @@ export function OptimizedImage({
           setFailed(true);
         }}
         className={cn(
-          "h-full w-full transition-opacity duration-300",
+          "h-full w-full object-center transition-opacity duration-300",
           objectFitClass,
           loaded && !failed ? "opacity-100" : "opacity-0",
         )}

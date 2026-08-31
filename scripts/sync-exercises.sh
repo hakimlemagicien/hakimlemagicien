@@ -3,6 +3,14 @@
 #
 # Sync exercises from scripts/exercise-library.json into Supabase public.exercises.
 #
+# Source of truth:
+#   AUTHORING_SOURCE = scripts/exercise-library.json (names/media) +
+#                      scripts/exercise-library-v2-metadata.json (V2 training metadata)
+#   RUNTIME_SOURCE   = public.exercises
+#   SYNC_DIRECTION   = JSON → DB upsert by external_id. Never deletes.
+#   CONFLICT         = empty JSON equipment/level must not wipe V2/populated DB values.
+#                      V2 columns are applied from the V2 metadata file, not from blank catalog fields.
+#
 # Schema (migration 20260710170000):
 #   - external_id  = JSON id (e.g. CH-001) — lookup key, not a "code" column
 #   - name_en / name_ar = locales (en + ar); no exercise_translations table
@@ -10,6 +18,7 @@
 # Safe:
 #   - Never deletes rows
 #   - Never uploads or modifies video/storage fields
+#   - Never overwrites V2 metadata with empty catalog equipment/level
 #   - Upserts only: create missing exercises, update existing ones
 #
 # Usage:
@@ -28,6 +37,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DEFAULT_JSON="${SCRIPT_DIR}/exercise-library.json"
+DEFAULT_V2_JSON="${SCRIPT_DIR}/exercise-library-v2-metadata.json"
 
 JSON_PATH="${DEFAULT_JSON}"
 DRY_RUN=0
@@ -438,6 +448,15 @@ class RestClient:
             prefer="return=minimal",
         )
 
+    def update_v2_metadata(self, external_id: str, payload: dict[str, Any]) -> None:
+        self._request(
+            "PATCH",
+            "exercises",
+            query={"external_id": f"eq.{external_id}"},
+            payload=payload,
+            prefer="return=minimal",
+        )
+
 
 class PostgresClient:
     def __init__(
@@ -791,6 +810,44 @@ class PostgresClient:
             f"WHERE id = {self._literal(exercise_id)}::uuid;"
         )
 
+    def update_v2_metadata(self, external_id: str, payload: dict[str, Any]) -> None:
+        def text_array(values: Any) -> str:
+            items = values or []
+            if not items:
+                return "'{}'::text[]"
+            return "ARRAY[" + ", ".join(self._literal(str(item)) for item in items) + "]::text[]"
+
+        def as_bool(value: Any) -> str:
+            if value is None:
+                return "NULL"
+            return "TRUE" if value else "FALSE"
+
+        contributions = json.dumps(payload.get("muscle_contributions") or [], ensure_ascii=False)
+        self._execute(
+            "UPDATE public.exercises SET "
+            f"primary_muscle_canonical = {self._literal(payload.get('primary_muscle_canonical'))}, "
+            f"secondary_muscles_canonical = {text_array(payload.get('secondary_muscles_canonical'))}, "
+            f"muscle_contributions = {self._literal(contributions)}::jsonb, "
+            f"primary_movement_role = {self._literal(payload.get('primary_movement_role'))}, "
+            f"secondary_movement_roles = {text_array(payload.get('secondary_movement_roles'))}, "
+            f"substitution_group = {self._literal(payload.get('substitution_group'))}, "
+            f"mechanics = {self._literal(payload.get('mechanics'))}, "
+            f"loading_type = {self._literal(payload.get('loading_type'))}, "
+            f"required_equipment = {text_array(payload.get('required_equipment'))}, "
+            f"equipment_state = {self._literal(payload.get('equipment_state') or 'UNKNOWN')}, "
+            f"location_compatibility = {text_array(payload.get('location_compatibility'))}, "
+            f"is_bodyweight = {as_bool(payload.get('is_bodyweight'))}, "
+            f"is_unilateral = {as_bool(payload.get('is_unilateral'))}, "
+            f"execution_sides = {self._literal(payload.get('execution_sides'))}, "
+            f"supports_timed_prescription = {as_bool(payload.get('supports_timed_prescription'))}, "
+            f"prescription_mode = {self._literal(payload.get('prescription_mode'))}, "
+            f"conditioning_class = {self._literal(payload.get('conditioning_class'))}, "
+            f"complexity = {self._literal(payload.get('complexity'))}, "
+            f"beginner_eligible = {as_bool(payload.get('beginner_eligible'))}, "
+            f"v2_metadata_status = {self._literal(payload.get('v2_metadata_status') or 'UNREVIEWED')} "
+            f"WHERE external_id = {self._literal(external_id)};"
+        )
+
 
 def build_payload(row: dict[str, Any], muscle_group_id: str) -> dict[str, Any]:
     return {
@@ -830,6 +887,13 @@ def sync_one(client: Any, row: dict[str, Any], counters: Counters) -> None:
     payload = build_payload(row, muscle_group_id)
     existing = client.get_exercise(row["external_id"])
 
+    if existing is not None:
+        # Empty catalog values must not erase populated DB / V2 equipment.
+        if not payload.get("equipment") and existing.get("equipment"):
+            payload["equipment"] = existing["equipment"]
+        if not payload.get("difficulty") and existing.get("difficulty"):
+            payload["difficulty"] = existing["difficulty"]
+
     if existing is None:
         created = client.insert_exercise(payload)
         counters.created += 1
@@ -847,6 +911,48 @@ def sync_one(client: Any, row: dict[str, Any], counters: Counters) -> None:
     client.update_exercise(str(existing["id"]), payload)
     counters.updated += 1
     print(f"UPDATE {row['external_id']} ({row['name_en']})")
+
+
+def v2_columns(rec: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "primary_muscle_canonical": rec.get("primary_muscle_canonical"),
+        "secondary_muscles_canonical": rec.get("secondary_muscles_canonical") or [],
+        "muscle_contributions": rec.get("muscle_contributions") or [],
+        "primary_movement_role": rec.get("primary_movement_role"),
+        "secondary_movement_roles": rec.get("secondary_movement_roles") or [],
+        "substitution_group": rec.get("substitution_group"),
+        "mechanics": rec.get("mechanics"),
+        "loading_type": rec.get("loading_type"),
+        "required_equipment": rec.get("required_equipment") or [],
+        "equipment_state": rec.get("equipment_state") or "UNKNOWN",
+        "location_compatibility": rec.get("location_compatibility") or [],
+        "is_bodyweight": rec.get("is_bodyweight"),
+        "is_unilateral": rec.get("is_unilateral"),
+        "execution_sides": rec.get("execution_sides"),
+        "supports_timed_prescription": rec.get("supports_timed_prescription"),
+        "prescription_mode": rec.get("prescription_mode"),
+        "conditioning_class": rec.get("conditioning_class"),
+        "complexity": rec.get("complexity"),
+        "beginner_eligible": rec.get("beginner_eligible"),
+        "v2_metadata_status": rec.get("v2_metadata_status") or "UNREVIEWED",
+    }
+
+
+def apply_v2_metadata(client: Any, v2_path: str) -> None:
+    if not v2_path or not os.path.exists(v2_path):
+        print("WARN V2 metadata file missing; skipping V2 apply")
+        return
+    with open(v2_path, encoding="utf-8") as fh:
+        records = json.load(fh)
+    if not isinstance(records, list):
+        raise ValueError("V2 metadata must be an array")
+    applied = 0
+    for rec in records:
+        if not isinstance(rec, dict) or not rec.get("external_id"):
+            continue
+        client.update_v2_metadata(str(rec["external_id"]), v2_columns(rec))
+        applied += 1
+    print(f"V2_METADATA_APPLIED={applied}")
 
 
 def make_client(dry_run: bool) -> Any:
@@ -883,13 +989,14 @@ def make_client(dry_run: bool) -> Any:
 
 
 def main() -> int:
-    if len(sys.argv) not in {3, 4}:
-        print("usage: python <json_path> <dry_run:0|1> [limit:0]", file=sys.stderr)
+    if len(sys.argv) < 3:
+        print("usage: python <json_path> <dry_run:0|1> [limit:0] [v2_json_path]", file=sys.stderr)
         return 2
 
     json_path = sys.argv[1]
     dry_run = sys.argv[2] == "1"
-    limit = int(sys.argv[3]) if len(sys.argv) == 4 else 0
+    limit = int(sys.argv[3]) if len(sys.argv) >= 4 and sys.argv[3] else 0
+    v2_path = sys.argv[4] if len(sys.argv) >= 5 else ""
     counters = Counters()
 
     try:
@@ -927,6 +1034,12 @@ def main() -> int:
     print(f"updated={counters.updated}")
     print(f"skipped={counters.skipped}")
     print(f"errors={counters.errors}")
+    if counters.errors == 0:
+        try:
+            apply_v2_metadata(client, v2_path)
+        except Exception as exc:  # noqa: BLE001
+            print(f"ERROR applying V2 metadata: {exc}", file=sys.stderr)
+            return 1
     return 1 if counters.errors else 0
 
 
@@ -934,7 +1047,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 PY
 
-python3 -c "$PYTHON_SYNC" "$JSON_PATH" "$DRY_RUN" "$SYNC_LIMIT"
+python3 -c "$PYTHON_SYNC" "$JSON_PATH" "$DRY_RUN" "$SYNC_LIMIT" "$DEFAULT_V2_JSON"
 exit_code=$?
 
 log "Done."

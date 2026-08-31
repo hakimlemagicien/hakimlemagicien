@@ -14,8 +14,17 @@ import {
   Weight,
 } from "lucide-react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
+import { useMembership } from "@/hooks/useMembership";
+import { isTrainingPreviewMode } from "@/lib/platform/entitlements";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
+import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import {
+  getExerciseStageCover,
+  getExerciseStageGuide,
+  getExerciseStageListThumb,
+} from "@/lib/platform/exercise-stage-media";
 import { formatExerciseVolume, formatWeightKg } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
 import { SetLogBottomSheet } from "./SetLogBottomSheet";
@@ -98,6 +107,7 @@ function ExercisePlayerStage({
   videoAutoPlay: boolean;
   onStart: () => void;
 }) {
+  const stillPoster = getExerciseStageCover(currentExercise.external_id);
   return (
     <div className="bg-background pb-2">
       <header className="space-y-2 px-1 pt-1">
@@ -173,13 +183,34 @@ function ExercisePlayerStage({
                   onClick={onStart}
                   className="relative flex aspect-square w-full items-center justify-center"
                 >
-                  <ExerciseThumbnail
-                    signedUrl={currentExercise.thumbnailUrl}
-                    status={currentExercise.videoStatus}
-                    mediaPath={currentExercise.videoPath}
-                    alt={currentExercise.name}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
+                  {stillPoster ? (
+                    <OptimizedImage
+                      src={stillPoster.src}
+                      alt={stillPoster.alt}
+                      width={960}
+                      height={720}
+                      sizes="(max-width: 430px) 100vw, 390px"
+                      objectFit="cover"
+                      className="absolute inset-0 h-full w-full"
+                      fallback={
+                        <ExerciseThumbnail
+                          signedUrl={currentExercise.thumbnailUrl}
+                          status={currentExercise.videoStatus}
+                          mediaPath={currentExercise.videoPath}
+                          alt={currentExercise.name}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      }
+                    />
+                  ) : (
+                    <ExerciseThumbnail
+                      signedUrl={currentExercise.thumbnailUrl}
+                      status={currentExercise.videoStatus}
+                      mediaPath={currentExercise.videoPath}
+                      alt={currentExercise.name}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  )}
                   <span className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(249,115,22,0.65)] transition-transform duration-[120ms] active:scale-95">
                     <Play className="h-6 w-6 fill-current" />
                   </span>
@@ -198,6 +229,8 @@ function ExercisePlayerStage({
 }
 
 export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
+  const { entitlements } = useMembership();
+  const showFreeConversion = isTrainingPreviewMode(entitlements);
   const {
     meta,
     exercises,
@@ -219,6 +252,14 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
     handlePrimaryAction,
     jumpToExercise,
     currentSetTargets,
+    runtimeMode,
+    prescription,
+    isTimed,
+    isBodyweight,
+    v2Targets,
+    finishWorkoutEarly,
+    editLastSet,
+    syncStatus,
   } = player;
 
   const sessionActive = videoOpen || player.setInProgress;
@@ -279,6 +320,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
   }
 
   const volumeLabel = formatExerciseVolume(currentExercise);
+  const stageGuide = getExerciseStageGuide(currentExercise.external_id);
   const startSession = () => {
     beginSet();
     openVideo();
@@ -351,10 +393,28 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
             >
               <ExerciseRxStrip
                 sets={currentExercise.sets}
-                reps={`${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`}
-                weightLabel={formatWeightLabel(currentSetTargets.weightKg)}
-                restLabel={formatRestSeconds(currentExercise.restSeconds)}
+                reps={
+                  isTimed
+                    ? `${v2Targets.durationMin ?? currentExercise.durationSeconds} ث`
+                    : `${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`
+                }
+                weightLabel={
+                  isBodyweight || isTimed || (runtimeMode === "v2" && !v2Targets.loadKnown)
+                    ? "—"
+                    : formatWeightLabel(currentSetTargets.weightKg)
+                }
+                restLabel={formatRestSeconds(v2Targets.restSeconds ?? currentExercise.restSeconds)}
               />
+
+              {stageGuide ? (
+                <div className="mt-3">
+                  <ExerciseStageGuide
+                    guide={stageGuide}
+                    variant="session"
+                    muscles={{ primary: currentExercise.muscle, secondary: [] }}
+                  />
+                </div>
+              ) : null}
 
               <section className="mt-3 rounded-[24px] border border-border/60 bg-card p-4 shadow-[0_8px_24px_-14px_rgba(15,23,42,0.14)]">
                   <p className="text-center text-[10px] font-bold text-primary">طريقة الأداء الصحيح</p>
@@ -401,10 +461,28 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
             >
               <ExerciseRxStrip
                 sets={currentExercise.sets}
-                reps={volumeLabel}
-                weightLabel={formatWeightLabel(currentExercise.suggestedWeightKg)}
+                reps={
+                  isTimed
+                    ? `${currentExercise.durationSeconds ?? volumeLabel} ث`
+                    : volumeLabel
+                }
+                weightLabel={
+                  runtimeMode === "v2" && (isBodyweight || isTimed || prescription?.status === "CALIBRATION_REQUIRED")
+                    ? "—"
+                    : formatWeightLabel(currentExercise.suggestedWeightKg)
+                }
                 restLabel={formatRestSeconds(currentExercise.restSeconds)}
               />
+
+              {stageGuide ? (
+                <div className="mt-3">
+                  <ExerciseStageGuide
+                    guide={stageGuide}
+                    variant="session"
+                    muscles={{ primary: currentExercise.muscle, secondary: [] }}
+                  />
+                </div>
+              ) : null}
 
               <section className="mt-4">
                 <h2 className="mb-2 text-[10px] font-black text-foreground">تمارين الحصة</h2>
@@ -413,6 +491,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     const item = progress[index];
                     const isCurrent = index === exerciseIndex;
                     const isDone = item?.status === "done";
+                    const stillThumb = getExerciseStageListThumb(exercise.external_id);
 
                     return (
                       <button
@@ -437,13 +516,34 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                           {index + 1}
                         </span>
                         <div className="aspect-square size-16 shrink-0 overflow-hidden rounded-2xl border border-border/60 bg-card">
-                          <ExerciseThumbnail
-                            signedUrl={exercise.thumbnailUrl}
-                            status={exercise.videoStatus}
-                            mediaPath={exercise.videoPath}
-                            alt={exercise.name}
-                            className="h-full w-full object-cover"
-                          />
+                          {stillThumb ? (
+                            <OptimizedImage
+                              src={stillThumb}
+                              alt=""
+                              width={112}
+                              height={84}
+                              sizes="64px"
+                              objectFit="cover"
+                              className="h-full w-full object-cover object-center"
+                              fallback={
+                                <ExerciseThumbnail
+                                  signedUrl={exercise.thumbnailUrl}
+                                  status={exercise.videoStatus}
+                                  mediaPath={exercise.videoPath}
+                                  alt={exercise.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              }
+                            />
+                          ) : (
+                            <ExerciseThumbnail
+                              signedUrl={exercise.thumbnailUrl}
+                              status={exercise.videoStatus}
+                              mediaPath={exercise.videoPath}
+                              alt={exercise.name}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p
@@ -475,14 +575,39 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
 
       {phase === "rest" || phase === "set-sheet" || phase === "complete" ? null : (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--platform-nav-h,64px)+env(safe-area-inset-bottom)+30px)] z-40 mx-auto max-w-[var(--platform-frame-w)] px-[var(--platform-gutter)] pb-2">
-          <button
-            type="button"
-            disabled={isBlocked}
-            onClick={sessionActive ? handlePrimaryAction : startSession}
-            className="pointer-events-auto flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-[0_12px_28px_-10px_rgba(249,115,22,0.55)] transition-transform duration-[120ms] active:scale-[0.97] disabled:opacity-50"
-          >
-            {sessionActive ? primaryActionLabel : "ابدأ الجولة"}
-          </button>
+          <div className="space-y-2">
+            {syncStatus === "PENDING_SYNC" ? (
+              <p className="pointer-events-auto text-center text-[10px] font-bold text-muted-foreground">
+                سيتم حفظ النتيجة عند عودة الاتصال
+              </p>
+            ) : null}
+            <button
+              type="button"
+              disabled={isBlocked}
+              onClick={sessionActive ? handlePrimaryAction : startSession}
+              className="pointer-events-auto flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-[0_12px_28px_-10px_rgba(249,115,22,0.55)] transition-transform duration-[120ms] active:scale-[0.97] disabled:opacity-50"
+            >
+              {sessionActive ? primaryActionLabel : "ابدأ الجولة"}
+            </button>
+            {sessionActive ? (
+              <div className="pointer-events-auto grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={editLastSet}
+                  className="flex h-11 items-center justify-center rounded-2xl border border-border/60 bg-card text-[11px] font-bold text-foreground"
+                >
+                  تعديل آخر مجموعة
+                </button>
+                <button
+                  type="button"
+                  onClick={finishWorkoutEarly}
+                  className="flex h-11 items-center justify-center rounded-2xl border border-border/60 bg-card text-[11px] font-bold text-foreground"
+                >
+                  إنهاء الحصة
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
 
@@ -490,7 +615,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
         ? createPortal(
             <>
               <SetLogBottomSheet player={player} />
-              <WorkoutCompleteScreen player={player} />
+              <WorkoutCompleteScreen player={player} showFreeConversion={showFreeConversion} />
             </>,
             document.body,
           )

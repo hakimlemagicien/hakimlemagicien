@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { uploadUserAvatar } from "@/lib/quiz-onboarding-api";
+import { signOutAndResetClient, uploadUserAvatar } from "@/lib/quiz-onboarding-api";
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
@@ -107,7 +107,12 @@ export async function fetchMyTrainingProfile(): Promise<TrainingProfileSnapshot 
       targetWeightKg: typeof answers.targetWeightKg === "number" ? answers.targetWeightKg : null,
       birthDate: typeof answers.birthDate === "string" ? answers.birthDate : null,
       activityLevel: typeof answers.activityLevel === "string" ? answers.activityLevel : null,
-      goalId: typeof answers.goalId === "string" ? answers.goalId : null,
+      goalId:
+        typeof answers.goalId === "string" && answers.goalId.trim()
+          ? answers.goalId.trim()
+          : typeof answers.goal_id === "string" && answers.goal_id.trim()
+            ? answers.goal_id.trim()
+            : null,
     },
   };
 }
@@ -283,6 +288,5 @@ export async function updateMyPassword(currentPassword: string, newPassword: str
 }
 
 export async function signOutAllDevices(): Promise<void> {
-  const { error } = await supabase.auth.signOut({ scope: "global" });
-  if (error) throw error;
+  await signOutAndResetClient("global");
 }

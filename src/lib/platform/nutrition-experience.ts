@@ -51,6 +51,7 @@ export type MealSlot = {
   minute: number;
   defaultMeal: MealAlternative;
   alternatives: MealAlternative[];
+  assignmentSlotId?: string;
 };
 
 export type ShoppingCategoryId =
@@ -173,6 +174,7 @@ function buildPilotSlot(input: {
   };
 }
 
+/** Catalog preview leftover. Not an official calorie/macro prescription. DOMAIN_RULE_REQUIRED. */
 export const NUTRITION_GOALS: MacroTotals = {
   calories: 2200,
   protein: 160,
@@ -199,7 +201,7 @@ const NUTRITION_PLAN_SLOT_DEFS = [
     timeLabel: "11:00 ص",
     hour: 11,
     minute: 0,
-    defaultExternalId: "MEAL-015",
+    defaultExternalId: "MEAL-186",
   },
   {
     id: "lunch",
@@ -207,7 +209,7 @@ const NUTRITION_PLAN_SLOT_DEFS = [
     timeLabel: "2:00 م",
     hour: 14,
     minute: 0,
-    defaultExternalId: "MEAL-005",
+    defaultExternalId: "MEAL-056",
   },
   {
     id: "dinner",
@@ -215,7 +217,7 @@ const NUTRITION_PLAN_SLOT_DEFS = [
     timeLabel: "8:00 م",
     hour: 20,
     minute: 0,
-    defaultExternalId: "MEAL-011",
+    defaultExternalId: "MEAL-126",
   },
 ] as const;
 

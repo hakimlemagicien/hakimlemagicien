@@ -1,4 +1,4 @@
-import { createFileRoute, isRedirect, redirect } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  checkAdminAccess,
   fetchApprovedLeads,
   fetchSubmittedLeads,
   formatDate,
@@ -22,30 +21,41 @@ import {
   type AdminApprovedLead,
   type AdminSubmittedLead,
 } from "@/lib/admin-payments-api";
+import { AdminConfirmDialog, AdminSkeletonRows, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
+import {
+  AdminEmptyState,
+  AdminErrorState,
+  AdminPageHeader,
+  AdminTable,
+} from "@/components/admin/AdminPage";
+import { AdminPaymentExceptionsPanel } from "@/components/admin/AdminPaymentExceptionsPanel";
+import { AdminProviderEventsPanel } from "@/components/admin/AdminProviderEventsPanel";
+import { AdminPspPaymentsPanel } from "@/components/admin/AdminPspPaymentsPanel";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
+
+type PaymentsSection = "exceptions" | "psp" | "provider-events" | "legacy";
 
 export const Route = createFileRoute("/admin/payments")({
   ssr: false,
-  head: () => ({ meta: [{ title: "مراجعة المدفوعات | Admin" }] }),
-  beforeLoad: async () => {
-    try {
-      return await checkAdminAccess();
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      throw redirect({ to: "/" });
-    }
-  },
+  validateSearch: (search: Record<string, unknown>) => ({
+    section: (search.section as PaymentsSection | undefined) ?? "exceptions",
+  }),
+  head: () => ({ meta: [{ title: "المدفوعات | مركز التشغيل" }] }),
   component: AdminPaymentsPage,
 });
 
 function AdminPaymentsPage() {
   const queryClient = useQueryClient();
+  const search = useSearch({ from: "/admin/payments" });
+  const section = search.section ?? "exceptions";
   const [tab, setTab] = useState<"pending" | "approved">("pending");
   const [leads, setLeads] = useState<AdminSubmittedLead[]>([]);
   const [approvedLeads, setApprovedLeads] = useState<AdminApprovedLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const loadLeads = useCallback(async () => {
     setLoading(true);
@@ -77,236 +87,256 @@ function AdminPaymentsPage() {
 
   const handleViewProof = async (proofPath: string | null) => {
     if (!proofPath) {
-      alert("لا يوجد مسار إيصال لهذا الطلب.");
+      setNotice("لا يوجد مسار إيصال لهذا الطلب.");
       return;
     }
     setActionId(`proof:${proofPath}`);
+    setNotice(null);
     try {
       await openProofInNewTab(proofPath);
     } catch (err) {
       console.error(err);
-      const detail =
-        err instanceof Error && err.message ? `\n\n${err.message}` : "";
-      alert(`تعذر فتح الإيصال. تأكد من صلاحيات Admin على التخزين.${detail}`);
+      setNotice("تعذر فتح الإيصال. تأكد من صلاحيات Admin على التخزين.");
     } finally {
       setActionId(null);
     }
   };
 
-  const handleDecision = async (leadId: string, status: "approved" | "rejected") => {
+  const runDecision = async (leadId: string, status: "approved" | "rejected", reason?: string) => {
     const label = status === "approved" ? "قبول" : "رفض";
-    if (!window.confirm(`هل تريد ${label} هذا الطلب؟`)) return;
-
     setActionId(leadId);
+    setNotice(null);
     try {
       if (status === "approved") {
         const result = await acceptLeadPayment(leadId);
         setLeads((prev) => prev.filter((row) => row.id !== leadId));
         await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
         if (result.warning === "lead_has_no_email") {
-          alert("تم قبول الدفع، لكن لا يوجد بريد للعميل — لم يُرسل دعوة حساب.");
+          setNotice("تم قبول الدفع، لكن لا يوجد بريد للعميل — لم يُرسل دعوة حساب.");
         } else if (result.message) {
-          alert(result.message);
+          setNotice(result.message);
         }
       } else {
-        await updateLeadPaymentStatus(leadId, status);
+        await updateLeadPaymentStatus(leadId, status, reason);
         setLeads((prev) => prev.filter((row) => row.id !== leadId));
       }
     } catch (err) {
       console.error(err);
-      const detail =
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: string }).message)
-          : err instanceof Error
-            ? err.message
-            : "";
-      alert(
-        detail
-          ? `تعذر ${label} الطلب.\n\n${detail}`
-          : `تعذر ${label} الطلب.`,
-      );
+      setNotice(`تعذر ${label} الطلب. أعد المحاولة.`);
     } finally {
       setActionId(null);
     }
   };
 
-  const handleResendAccess = async (leadId: string) => {
-    if (!window.confirm("هل تريد إعادة إرسال رابط الدخول لهذا العميل؟")) return;
+  const handleDecision = (leadId: string, status: "approved" | "rejected") => {
+    const isApprove = status === "approved";
+    setConfirm({
+      title: isApprove ? "قبول الدفع" : "رفض الدفع",
+      body: isApprove
+        ? "سيتم قبول هذا التحويل وتفعيل وصول العميل وفق منطق الفوترة الحالي. هذا إجراء حساس ولا يمكن التراجع عنه من هذه الشاشة."
+        : "سيتم رفض هذا الطلب. لن يُفعَّل وصول العميل من هذا الإيصال. سبب الرفض يُحفظ في سجل العمليات فقط.",
+      confirmLabel: isApprove ? "تأكيد القبول" : "تأكيد الرفض",
+      tone: isApprove ? "primary" : "danger",
+      reasonRequired: !isApprove,
+      reasonLabel: "سبب الرفض",
+      onConfirm: (reason) => {
+        void runDecision(leadId, status, reason);
+      },
+    });
+  };
 
+  const runResend = async (leadId: string) => {
     setActionId(`resend:${leadId}`);
+    setNotice(null);
     try {
       const result = await resendClientAccessLink(leadId);
-      alert(result.message ?? "تم إرسال الرابط.");
+      setNotice(result.message ?? "تم إرسال الرابط.");
     } catch (err) {
       console.error(err);
-      const detail =
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: string }).message)
-          : err instanceof Error
-            ? err.message
-            : "";
-      alert(detail ? `تعذر إرسال الرابط.\n\n${detail}` : "تعذر إرسال الرابط.");
+      setNotice("تعذر إرسال الرابط. أعد المحاولة.");
     } finally {
       setActionId(null);
     }
+  };
+
+  const handleResendAccess = (leadId: string) => {
+    setConfirm({
+      title: "إعادة إرسال رابط الدخول",
+      body: "سيتم إرسال رابط دخول جديد إلى بريد هذا العميل وفق منطق الفوترة الحالي.",
+      confirmLabel: "إرسال الرابط",
+      onConfirm: () => {
+        void runResend(leadId);
+      },
+    });
   };
 
   const activeLeads = tab === "pending" ? leads : approvedLeads;
 
+  const sectionSubtitle: Record<PaymentsSection, string> = {
+    exceptions: "استثناءات تشغيلية حقيقية فقط — لا حوادث وهمية",
+    psp: "مدفوعات الاشتراك الرقمي عبر PSP — مسار V1 الأساسي",
+    "provider-events": "أحداث المزود التشغيلية — بدون payload حساس",
+    legacy: "تحويلات بنكية Legacy — مراجعة يدوية استثنائية",
+  };
+
   return (
-    <PageShell>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-[Tajawal] text-2xl font-black text-[#0F172A] md:text-3xl">
-            مراجعة مدفوعات التحويل
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            {tab === "pending"
-              ? "الطلبات ذات الحالة submitted بانتظار المراجعة"
-              : "العملاء المقبولون — يمكن إعادة إرسال رابط الدخول"}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void loadLeads()}
-          disabled={loading}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-bold text-[#0F172A] disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          تحديث
-        </button>
+    <>
+      <AdminPageHeader
+        kicker="الأعمال"
+        title="الفوترة والمدفوعات"
+        subtitle={sectionSubtitle[section]}
+        actions={
+          section === "legacy" ? (
+            <button type="button" onClick={() => void loadLeads()} disabled={loading} className="cc-btn">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              تحديث
+            </button>
+          ) : null
+        }
+      />
+
+      <div className="cc-tabs" role="tablist" aria-label="أقسام الفوترة">
+        {(
+          [
+            ["exceptions", "الاستثناءات"],
+            ["psp", "PSP"],
+            ["provider-events", "أحداث المزود"],
+            ["legacy", "Legacy بنكي"],
+          ] as const
+        ).map(([id, label]) => (
+          <a
+            key={id}
+            href={`/admin/payments?section=${id}`}
+            className={section === id ? "is-active" : undefined}
+            role="tab"
+            aria-selected={section === id}
+          >
+            {label}
+          </a>
+        ))}
       </div>
 
-      <div className="mb-6 flex gap-2 rounded-xl border border-[#E5E7EB] bg-white p-1">
-        <button
-          type="button"
-          onClick={() => setTab("pending")}
-          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-            tab === "pending" ? "bg-[#FF6B00] text-white" : "text-neutral-600"
-          }`}
-        >
+      {section === "exceptions" ? <AdminPaymentExceptionsPanel /> : null}
+      {section === "psp" ? <AdminPspPaymentsPanel /> : null}
+      {section === "provider-events" ? <AdminProviderEventsPanel /> : null}
+
+      {section === "legacy" ? (
+        <>
+      <div className="cc-tabs" role="tablist" aria-label="حالات Legacy">
+        <button type="button" className={tab === "pending" ? "is-active" : undefined} onClick={() => setTab("pending")}>
           بانتظار المراجعة ({leads.length})
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("approved")}
-          className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-            tab === "approved" ? "bg-[#16A34A] text-white" : "text-neutral-600"
-          }`}
-        >
+        <button type="button" className={tab === "approved" ? "is-active" : undefined} onClick={() => setTab("approved")}>
           عملاء مفعّلون ({approvedLeads.length})
         </button>
       </div>
 
-      {error ? (
-        <div className="mb-6 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]">
-          {error}
-        </div>
+      {notice ? (
+        <p className="cc-notice" role="status">
+          {notice}
+        </p>
+      ) : null}
+      {error ? <AdminErrorState message={error} onRetry={() => void loadLeads()} /> : null}
+      {loading ? <AdminSkeletonRows rows={6} /> : null}
+
+      {!loading && activeLeads.length === 0 ? (
+        <AdminEmptyState
+          title={tab === "pending" ? "لا توجد طلبات بانتظار المراجعة" : "لا يوجد عملاء مفعّلون"}
+          body={
+            tab === "pending"
+              ? "عندما يصل تحويل بنكي بحالة submitted سيظهر هنا للمراجعة."
+              : "العملاء المقبولون يظهرون هنا لإعادة إرسال رابط الدخول."
+          }
+        />
       ) : null}
 
-      {loading ? (
-        <div className="flex min-h-[30vh] items-center justify-center text-neutral-500">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      ) : activeLeads.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-6 py-12 text-center text-neutral-500">
-          {tab === "pending"
-            ? "لا توجد طلبات بانتظار المراجعة حالياً."
-            : "لا يوجد عملاء مفعّلون حالياً."}
-        </div>
-      ) : tab === "pending" ? (
+      {!loading && tab === "pending" && leads.length > 0 ? (
         <>
-          <div className="hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block">
-            <table className="min-w-full text-right text-sm">
-              <thead className="bg-[#F9FAFB] text-xs font-bold text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">الاسم</th>
-                  <th className="px-4 py-3">البريد</th>
-                  <th className="px-4 py-3">الهاتف</th>
-                  <th className="px-4 py-3">المبلغ</th>
-                  <th className="px-4 py-3">العملة</th>
-                  <th className="px-4 py-3">طريقة الدفع</th>
-                  <th className="px-4 py-3">مسار الإيصال</th>
-                  <th className="px-4 py-3">التاريخ</th>
-                  <th className="px-4 py-3">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9]">
-                {leads.map((lead) => (
-                  <LeadTableRow
-                    key={lead.id}
-                    lead={lead}
-                    busy={actionId === lead.id || actionId === `proof:${lead.proof_path}`}
-                    onViewProof={() => void handleViewProof(lead.proof_path)}
-                    onAccept={() => void handleDecision(lead.id, "approved")}
-                    onReject={() => void handleDecision(lead.id, "rejected")}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable className="cc-table-wrap--desktop">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>البريد</th>
+                <th>الهاتف</th>
+                <th>المبلغ</th>
+                <th>العملة</th>
+                <th>طريقة الدفع</th>
+                <th>الإيصال</th>
+                <th>التاريخ</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead) => (
+                <LeadTableRow
+                  key={lead.id}
+                  lead={lead}
+                  busy={actionId === lead.id || actionId === `proof:${lead.proof_path}`}
+                  onViewProof={() => void handleViewProof(lead.proof_path)}
+                  onAccept={() => handleDecision(lead.id, "approved")}
+                  onReject={() => handleDecision(lead.id, "rejected")}
+                />
+              ))}
+            </tbody>
+          </AdminTable>
 
-          <div className="space-y-4 md:hidden">
+          <div className="cc-mobile-cards">
             {leads.map((lead) => (
               <LeadMobileCard
                 key={lead.id}
                 lead={lead}
                 busy={actionId === lead.id || actionId === `proof:${lead.proof_path}`}
                 onViewProof={() => void handleViewProof(lead.proof_path)}
-                onAccept={() => void handleDecision(lead.id, "approved")}
-                onReject={() => void handleDecision(lead.id, "rejected")}
+                onAccept={() => handleDecision(lead.id, "approved")}
+                onReject={() => handleDecision(lead.id, "rejected")}
               />
             ))}
           </div>
         </>
-      ) : (
-        <>
-          <div className="hidden overflow-x-auto rounded-2xl border border-[#E5E7EB] bg-white shadow-sm md:block">
-            <table className="min-w-full text-right text-sm">
-              <thead className="bg-[#F9FAFB] text-xs font-bold text-neutral-500">
-                <tr>
-                  <th className="px-4 py-3">الاسم</th>
-                  <th className="px-4 py-3">البريد</th>
-                  <th className="px-4 py-3">الهاتف</th>
-                  <th className="px-4 py-3">المبلغ</th>
-                  <th className="px-4 py-3">التاريخ</th>
-                  <th className="px-4 py-3">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F1F5F9]">
-                {approvedLeads.map((lead) => (
-                  <ApprovedTableRow
-                    key={lead.id}
-                    lead={lead}
-                    busy={actionId === `resend:${lead.id}`}
-                    onResend={() => void handleResendAccess(lead.id)}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+      ) : null}
 
-          <div className="space-y-4 md:hidden">
+      {!loading && tab === "approved" && approvedLeads.length > 0 ? (
+        <>
+          <AdminTable className="cc-table-wrap--desktop">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>البريد</th>
+                <th>الهاتف</th>
+                <th>المبلغ</th>
+                <th>التاريخ</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvedLeads.map((lead) => (
+                <ApprovedTableRow
+                  key={lead.id}
+                  lead={lead}
+                  busy={actionId === `resend:${lead.id}`}
+                  onResend={() => handleResendAccess(lead.id)}
+                />
+              ))}
+            </tbody>
+          </AdminTable>
+
+          <div className="cc-mobile-cards">
             {approvedLeads.map((lead) => (
               <ApprovedMobileCard
                 key={lead.id}
                 lead={lead}
                 busy={actionId === `resend:${lead.id}`}
-                onResend={() => void handleResendAccess(lead.id)}
+                onResend={() => handleResendAccess(lead.id)}
               />
             ))}
           </div>
         </>
-      )}
-    </PageShell>
-  );
-}
+      ) : null}
+        </>
+      ) : null}
 
-function PageShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-[#FAFAFA] font-[Tajawal,Cairo,sans-serif]">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
-    </div>
+      <AdminConfirmDialog request={confirm} onClose={() => setConfirm(null)} />
+    </>
   );
 }
 
@@ -434,38 +464,22 @@ function LeadActions({
   onReject: () => void;
   stacked?: boolean;
 }) {
-  const base =
-    "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold disabled:opacity-50";
+  const base = "cc-btn cc-btn--compact";
   const layout = stacked ? "flex flex-col gap-2" : "flex flex-wrap gap-2";
 
   return (
     <div className={layout}>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={onViewProof}
-        className={`${base} border border-[#E5E7EB] bg-white text-[#0F172A]`}
-      >
+      <button type="button" disabled={busy} onClick={onViewProof} className={base}>
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
         عرض الإيصال
       </button>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={onAccept}
-        className={`${base} bg-[#16A34A] text-white`}
-      >
+      <button type="button" disabled={busy} onClick={onAccept} className={`${base} cc-btn--success`}>
         <Check className="h-3.5 w-3.5" />
-        قبول الدفع
+        قبول
       </button>
-      <button
-        type="button"
-        disabled={busy}
-        onClick={onReject}
-        className={`${base} bg-[#DC2626] text-white`}
-      >
+      <button type="button" disabled={busy} onClick={onReject} className={`${base} cc-btn--danger`}>
         <X className="h-3.5 w-3.5" />
-        رفض الدفع
+        رفض
       </button>
     </div>
   );
@@ -556,9 +570,7 @@ function ResendAccessButton({
       type="button"
       disabled={busy}
       onClick={onResend}
-      className={`inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#FF6B00] px-3 text-xs font-bold text-white disabled:opacity-50 ${
-        stacked ? "w-full" : ""
-      }`}
+      className={`cc-btn cc-btn--primary cc-btn--compact ${stacked ? "w-full" : ""}`}
     >
       {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
       إعادة إرسال رابط الدخول

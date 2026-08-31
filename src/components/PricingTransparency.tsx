@@ -2,13 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
-import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
 import {
   ACTIVATE_PROGRAM_CTA,
   FREE_TIER,
-  PAID_TIERS,
   type PaidTierCatalog,
 } from "@/lib/pricing-presentation";
+import { getPublicPaidTiers } from "@/lib/payments/catalog";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
   const ref = useRef<T | null>(null);
@@ -43,28 +42,7 @@ function PaidPlanCard({
   const reveal = inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0";
   const delay = { transitionDelay: `${index * 90}ms` } as const;
 
-  if (plan.id === "vip") {
-    return (
-      <VipGlassShell
-        className={`transition-all duration-700 ${reveal}`}
-        style={delay}
-      >
-        <h3 className="bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text font-[Tajawal] text-[22px] font-extrabold text-transparent">
-          {plan.name}
-        </h3>
-        <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-white/70">{plan.tagline}</p>
-        <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#D4AF78]/80">{plan.role}</p>
-
-        <ul className="mt-5 space-y-3 text-right">
-          {plan.features.map((feature) => (
-            <VipFeatureCheck key={feature} label={feature} />
-          ))}
-        </ul>
-
-        <PlanActivateBlock plan={plan} />
-      </VipGlassShell>
-    );
-  }
+  if (plan.id === "vip") return null;
 
   return (
     <article
@@ -148,7 +126,7 @@ export default function PricingTransparency() {
           ref={cards.ref}
           className="mt-8 grid grid-cols-1 gap-4 lg:mt-10 lg:grid-cols-3 lg:gap-5"
         >
-          {PAID_TIERS.map((plan, index) => (
+          {getPublicPaidTiers().map((plan, index) => (
             <PaidPlanCard key={plan.id} plan={plan} index={index} inView={cards.inView} />
           ))}
         </div>

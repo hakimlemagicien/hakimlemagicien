@@ -1,0 +1,6 @@
+node_modules
+TRAINING_LIBRARY_INVENTORY_AUDIT
+.output
+dist
+.vinxi
+.tanstack

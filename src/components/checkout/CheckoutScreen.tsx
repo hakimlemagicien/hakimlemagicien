@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -22,6 +22,15 @@ import {
 import { getLeadCredentials } from "@/lib/lead-storage";
 import { mapBankToPaymentMethod } from "@/lib/payment-method-map";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
+import { buildCheckoutDisclosure, CHECKOUT_DISCLOSURE_COPY, resolvePaidTierId } from "@/lib/legal/billing";
+import { recordCheckoutConsent } from "@/lib/legal/legal-api";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  buildCheckoutReturnContext,
+  LEGACY_BANK_TRANSFER_MODE,
+  preparePaidCheckout,
+  startProviderCheckout,
+} from "@/lib/payments";
 import { AgreementCheckbox } from "./AgreementCheckbox";
 import { BankTransferModal } from "./BankTransferModal";
 import { CheckoutFooter } from "./CheckoutFooter";
@@ -40,23 +49,22 @@ const PAYMENT_METHODS: {
   name: string;
   description: string;
   disabled?: boolean;
-  badge?: { label: string; tone: "available" | "soon" };
+  badge?: { label: string; tone: "available" | "soon" | "legacy" };
   icon: React.ReactNode;
 }[] = [
   {
-    id: "bank",
-    name: "تحويل بنكي",
-    description: "حوّل المبلغ إلى حسابنا البنكي وارفع إيصال التحويل لتأكيد طلبك.",
-    badge: { label: "متاح الآن", tone: "available" },
-    icon: <Landmark className="h-5 w-5 text-[#64748B]" />,
+    id: "card",
+    name: "بطاقة بنكية / Apple Pay",
+    description: "الدفع الآلي عبر مزود الدفع — يتطلب حساباً مسجلاً.",
+    badge: { label: "الافتراضي", tone: "available" },
+    icon: <CreditCard className="h-5 w-5 text-[#64748B]" />,
   },
   {
-    id: "card",
-    name: "بطاقة بنكية",
-    description: "الدفع بالبطاقات الائتمانية قريباً",
-    disabled: true,
-    badge: { label: "قريباً", tone: "soon" },
-    icon: <CreditCard className="h-5 w-5 text-[#64748B]" />,
+    id: "bank",
+    name: "تحويل بنكي (Legacy)",
+    description: "مسار استثنائي قديم — مراجعة يدوية. ليس المسار التجاري الافتراضي.",
+    badge: { label: "Legacy", tone: "legacy" },
+    icon: <Landmark className="h-5 w-5 text-[#64748B]" />,
   },
   {
     id: "paypal",
@@ -89,16 +97,64 @@ type CheckoutScreenProps = {
 
 export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps) {
   const queryClient = useQueryClient();
-  const [method, setMethod] = useState<CheckoutMethodId>("bank");
+  const [method, setMethod] = useState<CheckoutMethodId>("card");
   const [bankModalOpen, setBankModalOpen] = useState(false);
   const [transferConfirmed, setTransferConfirmed] = useState(false);
   const [receiptSubmitted, setReceiptSubmitted] = useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [transferSaving, setTransferSaving] = useState(false);
   const [receiptSaving, setReceiptSaving] = useState(false);
+  const [providerMessage, setProviderMessage] = useState<string | null>(null);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const [cardBusy, setCardBusy] = useState(false);
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      setAuthUserId(data.session?.user?.id ?? null);
+    });
+  }, []);
 
   const amount = Number(tier.totalPrice);
   const credentials = getLeadCredentials();
+  const planId = resolvePaidTierId(tier.id);
+  const months = tier.billingPeriodMonths ?? 3;
+  const disclosure = planId ? buildCheckoutDisclosure(planId, months) : null;
+  const vipCheckoutBlocked = planId === "vip";
+
+  const cardProviderStatus = useMemo(() => {
+    if (vipCheckoutBlocked) {
+      return { disabled: true, note: "VIP غير متاح للبيع العام." };
+    }
+    const prepared = preparePaidCheckout({
+      userId: authUserId,
+      plan: planId ?? tier.id,
+      termMonths: months,
+      returnContext: buildCheckoutReturnContext("DIRECT_UPGRADE"),
+      legalAccepted: true,
+    });
+    if (!prepared.ok) {
+      if (prepared.code === "CHECKOUT_UNAUTHENTICATED") {
+        return { disabled: true, note: "سجّل الدخول أولاً لإتمام الدفع الآلي." };
+      }
+      if (prepared.code === "PAYMENT_PROVIDER_UNAVAILABLE") {
+        return { disabled: true, note: "PAYMENT_PROVIDER_UNAVAILABLE — متوقع قبل P4B." };
+      }
+      if (prepared.code === "PROVIDER_BINDING_PENDING") {
+        return { disabled: true, note: "PROVIDER_BINDING_PENDING — ربط Paddle في P4B." };
+      }
+      return { disabled: true, note: prepared.message };
+    }
+    return { disabled: false, note: null as string | null };
+  }, [authUserId, months, planId, tier.id, vipCheckoutBlocked]);
+
+  const persistConsent = async () => {
+    if (!disclosure) return;
+    try {
+      await recordCheckoutConsent(disclosure);
+    } catch (error) {
+      console.warn("[checkout consent]", error);
+    }
+  };
 
   const handleTransferDone = async (bankId: BankId) => {
     setBankModalOpen(false);
@@ -119,6 +175,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
         amount,
         currency: "USD",
       });
+      await persistConsent();
     } catch (error) {
       console.error(error);
     } finally {
@@ -145,22 +202,59 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
     }
   };
 
-  const handlePayClick = () => {
-    if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving) return;
+  const handlePayClick = async () => {
+    if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving || cardBusy) return;
+    if (vipCheckoutBlocked) {
+      setProviderMessage("VIP غير متاح للشراء العام في Commercial V1.");
+      return;
+    }
     if (method === "bank") {
+      if (LEGACY_BANK_TRANSFER_MODE !== "LEGACY_ONLY") return;
       setBankModalOpen(true);
+      return;
+    }
+    if (method === "card") {
+      setCardBusy(true);
+      setProviderMessage(null);
+      try {
+        await persistConsent();
+        const result = await startProviderCheckout({
+          userId: authUserId,
+          plan: planId ?? tier.id,
+          termMonths: months,
+          returnContext: buildCheckoutReturnContext("DIRECT_UPGRADE"),
+          legalAccepted,
+        });
+        if (!result.ok) {
+          setProviderMessage(result.message);
+        }
+      } catch (error) {
+        console.error(error);
+        setProviderMessage("تعذر بدء الدفع الآلي.");
+      } finally {
+        setCardBusy(false);
+      }
     }
   };
 
   const ctaDisabled =
-    !legalAccepted || transferSaving || receiptSaving || receiptSubmitted || transferConfirmed;
+    !legalAccepted ||
+    transferSaving ||
+    receiptSaving ||
+    receiptSubmitted ||
+    transferConfirmed ||
+    cardBusy ||
+    vipCheckoutBlocked ||
+    (method === "card" && cardProviderStatus.disabled);
   const ctaLabel = receiptSubmitted
     ? "قيد مراجعة الدفع"
     : transferSaving
       ? "جاري التسجيل..."
       : receiptSaving
         ? "جاري الإرسال..."
-        : "إتمام الدفع";
+        : cardBusy
+          ? "جاري تجهيز الدفع..."
+          : "إتمام الدفع";
 
   return (
     <div
@@ -206,6 +300,12 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         <CheckoutSummaryCard tier={tier} />
 
+        {disclosure ? (
+          <p className="mt-3 rounded-2xl border border-[#FFE0CC] bg-[#FFF8F3] px-3.5 py-3 text-[11.5px] leading-[1.7] text-neutral-700">
+            {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)} الضرائب قد تُضاف حسب الموقع ومزود الدفع لاحقاً. رسوم تحويل البنك ليست تحت سيطرة MAAKFIT.
+          </p>
+        ) : null}
+
         <section className="mt-6" aria-labelledby="payment-methods-title">
           <div className="mb-3 flex items-center justify-center gap-2">
             <Lock className="h-4 w-4 text-[#FF5A1F]" aria-hidden />
@@ -220,9 +320,17 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
                 key={option.id}
                 id={option.id}
                 name={option.name}
-                description={option.description}
+                description={
+                  option.id === "card" && cardProviderStatus.note
+                    ? cardProviderStatus.note
+                    : option.description
+                }
                 selected={method === option.id}
-                disabled={option.disabled}
+                disabled={
+                  option.disabled ||
+                  (option.id === "card" && cardProviderStatus.disabled) ||
+                  vipCheckoutBlocked
+                }
                 badge={option.badge}
                 icon={option.icon}
                 index={i}
@@ -231,6 +339,19 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
             ))}
           </div>
         </section>
+
+        {providerMessage ? (
+          <p className="mt-3 rounded-2xl border border-[#FECACA] bg-[#FEF2F2] px-3.5 py-3 text-[11.5px] leading-[1.7] text-[#991B1B]">
+            {providerMessage}
+          </p>
+        ) : null}
+
+        {vipCheckoutBlocked ? (
+          <p className="mt-3 rounded-2xl border border-[#E8E4DE] bg-white px-3.5 py-3 text-[11.5px] leading-[1.7] text-neutral-700">
+            باقة VIP ليست متاحة للشراء العام. Essential و Premium متاحان عبر /app/upgrade للمستخدمين
+            المسجّلين.
+          </p>
+        ) : null}
 
         <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-3.5 py-3">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#16A34A]" aria-hidden />
@@ -274,8 +395,8 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         <TrustFeatures
           items={[
-            { icon: Headphones, title: "دعم مباشر", description: "نرد خلال 24 ساعة", tone: "orange" },
-            { icon: Shield, title: "تحويل آمن", description: "حسابات رسمية للشركة", tone: "green" },
+            { icon: Headphones, title: "دعم الحساب", description: "متاح لكل الباقات", tone: "orange" },
+            { icon: Shield, title: "تحويل بمراجعة", description: "لا تُفعَّل المزايا قبل التأكيد", tone: "green" },
             { icon: Clock, title: "تفعيل سريع", description: "بعد تأكيد الدفع", tone: "blue" },
           ]}
         />

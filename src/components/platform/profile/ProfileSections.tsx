@@ -511,17 +511,17 @@ export function ProfilePrivacySection({
         <div className="rounded-2xl bg-muted/35 p-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-black">موافقة صور التقدم</p>
+              <p className="text-sm font-black">موافقة تسويق صور Before/After</p>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {photoConsentGranted
-                  ? `موافقة نشطة${photoConsentAt ? ` — ${formatProfileDate(photoConsentAt)}` : ""}`
-                  : "لا توجد موافقة حالية"}
+                  ? `موافقة تسويقية اختيارية نشطة${photoConsentAt ? ` — ${formatProfileDate(photoConsentAt)}` : ""}`
+                  : "الصور خاصة افتراضياً. الرفض لا يؤثر على الحساب أو البرنامج أو الاشتراك أو الكوتش."}
               </p>
             </div>
             <Switch
               checked={photoConsentGranted}
               onCheckedChange={onTogglePhotoConsent}
-              aria-label="موافقة صور التقدم"
+              aria-label="موافقة تسويق صور Before/After"
             />
           </div>
         </div>
@@ -579,7 +579,7 @@ export function ProfileAboutSection() {
   return (
     <ProfileSectionCard title="عن المنصة">
       <div className="space-y-2 text-sm">
-        <p className="font-black text-foreground">Hakim Coaching</p>
+        <p className="font-black text-foreground">MAAKFIT</p>
         <p className="text-xs font-bold text-muted-foreground">الإصدار {getAppBuildVersion()}</p>
       </div>
       <div className="mt-3 divide-y divide-border/50">
@@ -587,6 +587,11 @@ export function ProfileAboutSection() {
           icon={<ExternalLink className="h-4 w-4" />}
           title="الموقع الرسمي"
           href="https://hakimlemagicien.com"
+        />
+        <ProfileRowButton
+          icon={<Shield className="h-4 w-4" />}
+          title="سياسة الخصوصية"
+          href={LEGAL_ROUTES.privacy}
         />
         <ProfileRowButton
           icon={<FileText className="h-4 w-4" />}
@@ -599,12 +604,17 @@ export function ProfileAboutSection() {
           href={LEGAL_ROUTES.refund}
         />
         <ProfileRowButton
+          icon={<HelpCircle className="h-4 w-4" />}
+          title="التواصل والدعم"
+          href={LEGAL_ROUTES.contact}
+        />
+        <ProfileRowButton
           icon={<MessageCircle className="h-4 w-4" />}
           title="واتساب الدعم"
           href={SITE_WHATSAPP_URL}
         />
       </div>
-      <p className="mt-3 text-[10px] text-muted-foreground">© {new Date().getFullYear()} Hakim Coaching</p>
+      <p className="mt-3 text-[10px] text-muted-foreground">© {new Date().getFullYear()} MAAKFIT</p>
     </ProfileSectionCard>
   );
 }

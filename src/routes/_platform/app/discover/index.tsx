@@ -13,7 +13,7 @@ import { useOnlineStatus } from "@/hooks/useNutritionPlan";
 import { type DiscoverContentItem } from "@/lib/platform/discover-content";
 
 export const Route = createFileRoute("/_platform/app/discover/")({
-  head: () => ({ meta: [{ title: "اكتشف | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "اكتشف | MAAKFIT" }] }),
   component: DiscoverPage,
 });
 

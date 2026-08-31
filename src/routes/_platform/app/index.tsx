@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { HomeDashboardSkeleton } from "@/components/platform/home/HomeDashboardSkeleton";
 import { HomeStickyUpgradeFooter } from "@/components/platform/home/HomeStickyUpgradeFooter";
@@ -17,6 +18,10 @@ import {
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useProgramContinuity } from "@/hooks/useProgramContinuity";
+import { PROFILE_DETAILS_KEY, PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
+import { fetchMyProfileDetails, fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import {
   buildDailySnapshot,
   buildDiscoverPreviewItems,
@@ -27,9 +32,10 @@ import {
   shouldShowActivateCta,
 } from "@/lib/platform/home-hub";
 import { readHomeGoalContext, resolveHeroGoalImage } from "@/lib/platform/hero-goal-images";
+import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
 
 export const Route = createFileRoute("/_platform/app/")({
-  head: () => ({ meta: [{ title: "الرئيسية | Hakim Platform" }] }),
+  head: () => ({ meta: [{ title: "الرئيسية | MAAKFIT" }] }),
   component: PlatformHomePage,
 });
 
@@ -59,8 +65,31 @@ function PlatformHomePage() {
   const count = activity.activityStreak;
   const hakimPoints = activity.hakimPoints;
   const isOnline = useOnlineStatus();
+  const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program) && !loading);
+  const continuity = useProgramContinuity(runtimeQuery.data, Boolean(features?.workout_program) && !loading);
+  const assignedPlans = continuity.assignedPlans;
+  const assignedPlan = assignedPlans?.[continuity.todayId ?? getWeekdayIdFromDate()] ?? null;
+  const assignmentReason = !features?.workout_program
+    ? undefined
+    : runtimeQuery.isError
+      ? "error"
+      : runtimeQuery.data?.reason;
 
-  const { gender, goalId, goal } = readHomeGoalContext("تنشيف");
+  const trainingQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    staleTime: 30_000,
+  });
+  const profileQuery = useQuery({
+    queryKey: PROFILE_DETAILS_KEY,
+    queryFn: fetchMyProfileDetails,
+    staleTime: 30_000,
+  });
+  const { gender, goalId, goal } = readHomeGoalContext({
+    gender: trainingQuery.data?.answers.gender,
+    goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal ?? profileQuery.data?.goal,
+    goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
+  });
   const clientName = resolveClientFirstName(displayName);
 
   const dashboard = useMemo(() => {
@@ -77,10 +106,30 @@ function PlatformHomePage() {
       }),
       snapshot: buildDailySnapshot({ features, activity }),
       coach: buildMessageOfDay({ displayName, streak: count, goal, activity }),
-      session: buildNextSession({ features, activity }),
+      session: buildNextSession({
+        features,
+        activity,
+        assignedPlan,
+        assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
+        workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
+      }),
       discover: buildDiscoverPreviewItems(goal),
     };
-  }, [loading, displayName, goal, goalId, gender, features, count, hakimPoints, activity]);
+  }, [
+    loading,
+    displayName,
+    goal,
+    goalId,
+    gender,
+    features,
+    count,
+    hakimPoints,
+    activity,
+    assignedPlan,
+    assignmentReason,
+    runtimeQuery.isLoading,
+    continuity.decision?.action,
+  ]);
 
   if (loading) {
     return (

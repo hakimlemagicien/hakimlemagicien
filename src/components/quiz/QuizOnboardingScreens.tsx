@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   BadgeCheck,
   Camera,
   ChevronRight,
-  Gift,
   Lock,
   Mail,
   Pencil,
-  Sparkles,
   User,
 } from "lucide-react";
 import {
@@ -19,16 +18,18 @@ import {
   QUIZ_EMAIL_OTP_LENGTH,
   sendEmailVerificationOtp,
   setUserPassword,
-  updateDraftAvatar,
   updateDraftEmail,
-  uploadUserAvatar,
   verifyEmailOtp,
-  clearDraftToken,
+  clearOnboardingClientState,
 } from "@/lib/quiz-onboarding-api";
-import { clearQuizProgress } from "@/lib/quiz-progress-storage";
-import { QuizProgressStrip } from "@/components/quiz/QuizProgressHeader";
+import { updateMyAvatar } from "@/lib/platform/profile-api";
+import { markPasswordRequiredIfUnset, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { quizOtpStatusCopy, translateAuthError } from "@/lib/auth-error-ar";
 import { getQuizProgressBarState } from "@/lib/quiz-step-progress";
 import { supabase } from "@/integrations/supabase/client";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+import { premiumEase } from "@/lib/motion";
+import appLogo from "@/assets/app-logo.png";
 
 const ORANGE = "#FF6B00";
 const BG = "#FAF8F5";
@@ -119,11 +120,13 @@ function OnboardingCta({
   label,
   disabled,
   loading,
+  loadingLabel = "جاري المعالجة...",
   onClick,
 }: {
   label: string;
   disabled?: boolean;
   loading?: boolean;
+  loadingLabel?: string;
   onClick: () => void;
 }) {
   return (
@@ -134,7 +137,7 @@ function OnboardingCta({
       className="w-full h-14 rounded-2xl font-black text-white text-[16px] flex items-center justify-center gap-2 shadow-[0_8px_20px_-6px_rgba(255,107,0,0.5)] transition-transform active:scale-[0.98] disabled:opacity-60"
       style={{ background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)`, fontFamily: HEADING_FONT }}
     >
-      {loading ? "جاري المعالجة..." : label}
+      {loading ? loadingLabel : label}
     </button>
   );
 }
@@ -193,10 +196,13 @@ export function VerifyEmailScreen({
         }
 
         const { data } = await supabase.auth.getSession();
-        if (!cancelled && data.session) onVerified();
+        if (!cancelled && data.session) {
+          await markPasswordRequiredIfUnset();
+          onVerified();
+        }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "تعذّر إكمال التحقق عبر الرابط.");
+          setError(translateAuthError(err, "تعذّر إكمال التحقق عبر الرابط."));
         }
       } finally {
         if (!cancelled) setAuthenticating(false);
@@ -222,12 +228,13 @@ export function VerifyEmailScreen({
       try {
         setError(null);
         setSending(true);
+        setSent(false);
         await sendEmailVerificationOtp(activeEmail);
         setSent(true);
         setCooldown(60);
       } catch (err) {
         lastOtpEmailRef.current = null;
-        setError(err instanceof Error ? err.message : "تعذّر إرسال رمز التحقق.");
+        setError(translateAuthError(err, "تعذّر إرسال رمز التحقق."));
       } finally {
         setSending(false);
       }
@@ -249,7 +256,7 @@ export function VerifyEmailScreen({
       setCooldown(60);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر إعادة الإرسال.");
+      setError(translateAuthError(err, "تعذّر إعادة الإرسال."));
     } finally {
       setResending(false);
     }
@@ -278,9 +285,10 @@ export function VerifyEmailScreen({
       setOtp("");
       setEditingEmail(false);
       lastOtpEmailRef.current = null;
+      setSent(false);
       setActiveEmail(nextEmail);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر تحديث البريد الإلكتروني.");
+      setError(translateAuthError(err, "تعذّر تحديث البريد الإلكتروني."));
     } finally {
       setSavingEmail(false);
     }
@@ -294,7 +302,7 @@ export function VerifyEmailScreen({
       await verifyEmailOtp(activeEmail, otp.trim());
       onVerified();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "رمز التحقق غير صحيح.");
+      setError(translateAuthError(err, "رمز التحقق غير صحيح."));
     } finally {
       setLoading(false);
     }
@@ -308,15 +316,14 @@ export function VerifyEmailScreen({
           تحقق من <span style={{ color: ORANGE }}>بريدك الإلكتروني</span>
         </>
       }
-      subtitle={
-        authenticating
-          ? "جاري التحقق من الرابط..."
-          : sending
-            ? "جاري إرسال رمز التحقق إلى بريدك..."
-            : name
-              ? `مرحباً ${name}، أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك.`
-              : `أرسلنا رمزاً مكوّناً من ${QUIZ_EMAIL_OTP_LENGTH} أرقام إلى بريدك لإكمال التسجيل.`
-      }
+      subtitle={quizOtpStatusCopy({
+        authenticating,
+        sending,
+        sent,
+        hasError: Boolean(error),
+        name,
+        otpLength: QUIZ_EMAIL_OTP_LENGTH,
+      })}
       onBack={onBack}
       footer={
         <OnboardingCta
@@ -414,7 +421,7 @@ export function VerifyEmailScreen({
 
             {sent && !sending && !editingEmail ? (
               <p className="mt-2 text-[11.5px] text-neutral-600 leading-relaxed">
-                افتح بريدك من Hakim Coaching، أدخل الرمز المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام هنا، أو استخدم «متابعة عبر رابط التحقق» للانتقال مباشرة إلى إنشاء كلمة المرور.
+                افتح بريدك من MAAKFIT، أدخل الرمز المكوّن من {QUIZ_EMAIL_OTP_LENGTH} أرقام هنا، أو استخدم «متابعة عبر رابط التحقق» للانتقال مباشرة إلى إنشاء كلمة المرور.
               </p>
             ) : null}
           </div>
@@ -490,9 +497,17 @@ export function CreatePasswordScreen({
     setLoading(true);
     try {
       await setUserPassword(password, name || undefined);
+      const draftToken = getStoredDraftToken();
+      if (draftToken) {
+        try {
+          await finalizeOnboarding(draftToken);
+        } catch (finalizeError) {
+          console.error("[onboarding] finalize after password failed:", finalizeError);
+        }
+      }
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر حفظ كلمة المرور.");
+      setError(translateAuthError(err, "تعذّر حفظ كلمة المرور."));
     } finally {
       setLoading(false);
     }
@@ -510,9 +525,10 @@ export function CreatePasswordScreen({
       onBack={onBack}
       footer={
         <OnboardingCta
-          label="حفظ والمتابعة"
+          label="متابعة"
           disabled={!canSubmit}
           loading={loading}
+          loadingLabel="جاري التجهيز..."
           onClick={handleSubmit}
         />
       }
@@ -529,7 +545,8 @@ export function CreatePasswordScreen({
             onChange={(e) => setPassword(e.target.value)}
             placeholder="8 أحرف على الأقل"
             dir="ltr"
-            className="w-full bg-transparent text-[14px] outline-none"
+            autoComplete="new-password"
+            className="w-full min-h-12 bg-transparent text-[16px] outline-none"
           />
         </label>
 
@@ -544,7 +561,8 @@ export function CreatePasswordScreen({
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="أعد إدخال كلمة المرور"
             dir="ltr"
-            className="w-full bg-transparent text-[14px] outline-none"
+            autoComplete="new-password"
+            className="w-full min-h-12 bg-transparent text-[16px] outline-none"
           />
         </label>
       </div>
@@ -592,20 +610,21 @@ export function ProfilePhotoScreen({
     setError(null);
     setLoading(true);
     try {
-      const draftToken = getStoredDraftToken();
-      if (!draftToken) throw new Error("انتهت جلسة التسجيل. أعد المحاولة من البداية.");
-
       if (!skipPhoto && file) {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError || !userData.user) throw userError ?? new Error("يجب تسجيل الدخول أولاً.");
-        const avatarPath = await uploadUserAvatar(file, userData.user.id);
-        await updateDraftAvatar(draftToken, avatarPath);
+        await updateMyAvatar(file);
       }
 
-      await finalizeOnboarding(draftToken);
+      const draftToken = getStoredDraftToken();
+      if (draftToken) {
+        try {
+          await finalizeOnboarding(draftToken);
+        } catch (finalizeError) {
+          console.error("[onboarding] finalize after profile photo failed:", finalizeError);
+        }
+      }
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "تعذّر إكمال التسجيل.");
+      setError(translateAuthError(err, "تعذّر إكمال التسجيل."));
     } finally {
       setLoading(false);
     }
@@ -628,16 +647,14 @@ export function ProfilePhotoScreen({
             loading={loading}
             onClick={() => finish(!file)}
           />
-          {file ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => finish(true)}
-              className="w-full text-[12px] font-bold text-neutral-500 py-1"
-            >
-              تخطي الصورة والمتابعة
-            </button>
-          ) : null}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => finish(true)}
+            className="w-full text-[12px] font-bold text-neutral-500 py-1"
+          >
+            تخطي
+          </button>
         </div>
       }
     >
@@ -688,131 +705,176 @@ export function ProfilePhotoScreen({
   );
 }
 
+const CINEMA_BG = "#0B0B0C";
+const APP_SURFACE = "#FFFFFF";
+
 export function PlatformWelcomeScreen({
   name,
-  step,
 }: {
   name: string;
   step: string;
 }) {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<"closed" | "opening" | "open">("closed");
+  const reduceMotion = useReducedMotion();
+  const [irisOpen, setIrisOpen] = useState(false);
+  const firstName = name.trim().split(/\s+/)[0] ?? "";
 
   useEffect(() => {
-    const t1 = window.setTimeout(() => setPhase("opening"), 400);
-    const t2 = window.setTimeout(() => setPhase("open"), 1400);
-    const t3 = window.setTimeout(() => {
-      clearQuizProgress();
-      clearDraftToken();
-      navigate({ to: "/app" });
-    }, 4200);
+    let cancelled = false;
+    let tIris = 0;
+    let tGo = 0;
+
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled) return;
+
+      // Preview without a session: hold the cinematic welcome (no jump to /app).
+      if (!data.user) return;
+
+      const irisAt = reduceMotion ? 1600 : 3100;
+      const goAt = reduceMotion ? 2200 : 4200;
+
+      tIris = window.setTimeout(() => {
+        if (!cancelled) setIrisOpen(true);
+      }, irisAt);
+
+      tGo = window.setTimeout(() => {
+        void (async () => {
+          const latest = await supabase.auth.getUser();
+          if (userNeedsPasswordSetup(latest.data.user)) {
+            navigate({ to: "/quiz", search: { step: "createPassword" } });
+            return;
+          }
+          clearOnboardingClientState();
+          navigate({ to: "/app" });
+        })();
+      }, goAt);
+    })();
+
     return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      window.clearTimeout(t3);
+      cancelled = true;
+      window.clearTimeout(tIris);
+      window.clearTimeout(tGo);
     };
-  }, [navigate]);
+  }, [navigate, reduceMotion]);
+
+  const hold = reduceMotion ? 0 : undefined;
 
   return (
     <div
       dir="rtl"
-      className="relative h-full w-full overflow-hidden flex flex-col"
-      style={{ backgroundColor: BG }}
+      lang="ar"
+      className="relative z-[60] flex h-full w-full overflow-hidden"
+      style={{ backgroundColor: CINEMA_BG }}
     >
-      <div className="px-5 pt-5 shrink-0">
-        <QuizProgressStrip step={step} />
-      </div>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        initial={{ opacity: reduceMotion ? 0.55 : 0.2 }}
+        animate={{ opacity: reduceMotion ? 0.55 : [0.28, 0.62, 0.4] }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 3.2, times: [0, 0.45, 1], ease: "easeInOut" }
+        }
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at 50% 42%, rgba(255,107,0,0.38) 0%, rgba(255,107,0,0.08) 42%, transparent 72%)",
+        }}
+      />
 
-      <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-      <style>{`
-        @keyframes qw-gift-bounce {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-10px) scale(1.03); }
-        }
-        @keyframes qw-lid-open {
-          0% { transform: rotateX(0deg); }
-          100% { transform: rotateX(-118deg); }
-        }
-        @keyframes qw-burst {
-          0% { opacity: 0; transform: scale(0.4); }
-          40% { opacity: 1; transform: scale(1.15); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes qw-spark {
-          0% { opacity: 0; transform: translateY(12px) scale(0.6); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes qw-confetti {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(120px) rotate(280deg); opacity: 0; }
-        }
-        .qw-gift-box { animation: qw-gift-bounce 1.8s ease-in-out infinite; }
-        .qw-gift-lid { transform-origin: top center; transform-style: preserve-3d; }
-        .qw-gift-lid--open { animation: qw-lid-open .9s cubic-bezier(.2,.8,.2,1) forwards; }
-        .qw-burst { animation: qw-burst .8s cubic-bezier(.34,1.56,.64,1) both; }
-        .qw-spark { animation: qw-spark .7s ease-out both; }
-      `}</style>
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 text-center">
+        <motion.div
+          className="relative grid h-[120px] w-[120px] place-items-center"
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.78, filter: "blur(16px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          transition={{ duration: reduceMotion ? 0 : 0.85, ease: premiumEase }}
+        >
+          <span
+            aria-hidden
+            className="absolute inset-[-8px] rounded-full"
+            style={{ boxShadow: "0 0 56px 12px rgba(255,107,0,0.32)" }}
+          />
+          <OptimizedImage
+            src={appLogo}
+            alt="MAAKFIT"
+            width={120}
+            height={120}
+            priority
+            objectFit="contain"
+            className="h-[120px] w-[120px] mix-blend-screen"
+          />
+        </motion.div>
 
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {phase === "open"
-          ? Array.from({ length: 18 }).map((_, i) => (
-              <span
-                key={i}
-                className="absolute h-2 w-2 rounded-full"
-                style={{
-                  left: `${8 + (i * 5.2) % 84}%`,
-                  top: `${18 + (i * 7) % 30}%`,
-                  background: i % 3 === 0 ? ORANGE : i % 3 === 1 ? "#FFB547" : "#22C55E",
-                  animation: `qw-confetti 1.8s ease-out ${i * 0.05}s forwards`,
-                }}
-              />
-            ))
-          : null}
-      </div>
+        <motion.p
+          dir="ltr"
+          className="mt-7 text-[13px] font-black uppercase text-white"
+          style={{ fontFamily: HEADING_FONT }}
+          initial={reduceMotion ? false : { opacity: 0, letterSpacing: "0.72em" }}
+          animate={{ opacity: 1, letterSpacing: "0.38em" }}
+          transition={{ delay: hold ?? 0.4, duration: reduceMotion ? 0 : 0.75, ease: premiumEase }}
+        >
+          MAAKFIT
+        </motion.p>
 
-      <div className="qw-gift-box relative" style={{ perspective: "800px" }}>
-        <div
-          className={`qw-gift-lid absolute -top-8 left-1/2 -translate-x-1/2 w-[108px] h-8 rounded-t-xl ${phase !== "closed" ? "qw-gift-lid--open" : ""}`}
-          style={{ background: `linear-gradient(180deg, #FF8A33 0%, ${ORANGE} 100%)`, zIndex: 2 }}
-        />
-        <div
-          className="relative w-[108px] h-[88px] rounded-2xl grid place-items-center"
-          style={{
-            background: `linear-gradient(180deg, ${ORANGE} 0%, #E85F00 100%)`,
-            boxShadow: "0 20px 50px -16px rgba(255,107,0,.65)",
+        <motion.p
+          className="mt-2 text-[22px] font-black leading-none"
+          style={{ color: ORANGE, fontFamily: HEADING_FONT }}
+          initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: hold ?? 0.62, duration: reduceMotion ? 0 : 0.55, ease: premiumEase }}
+        >
+          معاك فيت
+        </motion.p>
+
+        <motion.h1
+          className="mt-8 text-[28px] font-black leading-snug text-white"
+          style={{ fontFamily: HEADING_FONT }}
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: irisOpen ? 0 : 1, y: irisOpen ? -6 : 0 }}
+          transition={{
+            delay: irisOpen || reduceMotion ? 0 : 1.05,
+            duration: reduceMotion ? 0 : 0.55,
+            ease: premiumEase,
           }}
         >
-          <div className="absolute inset-y-0 left-1/2 w-4 -translate-x-1/2 bg-white/25 rounded-full" />
-          <div className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 bg-white/25 rounded-full" />
-          {phase === "open" ? (
-            <Sparkles className="h-10 w-10 text-white qw-burst" strokeWidth={2.2} />
-          ) : (
-            <Gift className="h-10 w-10 text-white" strokeWidth={2.2} />
-          )}
-        </div>
+          {firstName ? `أهلاً ${firstName}` : "أهلاً بك"}
+        </motion.h1>
+
+        <motion.p
+          className="mt-3 max-w-[17rem] text-[15px] font-bold leading-8 text-white/78"
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: irisOpen ? 0 : 1, y: irisOpen ? -4 : 0 }}
+          transition={{
+            delay: irisOpen || reduceMotion ? 0 : 1.28,
+            duration: reduceMotion ? 0 : 0.55,
+            ease: premiumEase,
+          }}
+        >
+          معاك لكل خطوة
+          <br />
+          برنامجك جاهز — ابدأ أفضل نسخة منك
+        </motion.p>
       </div>
 
-      <h1
-        className="mt-10 font-[Tajawal] text-[26px] font-black leading-snug qw-spark"
-        style={{ color: TEXT, animationDelay: ".5s" }}
-      >
-        {phase === "open" ? (
-          <>
-            مرحباً{name ? ` ${name}` : ""}! 🎉
-            <br />
-            <span style={{ color: ORANGE }}>المنصة جاهزة لك</span>
-          </>
-        ) : (
-          <>جاري فتح منصتك...</>
-        )}
-      </h1>
-
-      <p className="mt-4 max-w-xs text-[13px] leading-7 text-neutral-600 qw-spark" style={{ animationDelay: ".75s" }}>
-        {phase === "open"
-          ? "تم تفعيل حسابك بنجاح. ستنتقل الآن إلى صفحتك الرئيسية داخل المنصة."
-          : "لحظات وستبدأ رحلتك التدريبية داخل المنصة."}
-      </p>
-      </div>
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/2 z-20 rounded-full"
+        style={{
+          width: "220vmax",
+          height: "220vmax",
+          marginLeft: "-110vmax",
+          marginTop: "-110vmax",
+          backgroundColor: APP_SURFACE,
+          willChange: "transform",
+        }}
+        initial={{ scale: 0 }}
+        animate={{ scale: irisOpen ? 1 : 0 }}
+        transition={{
+          duration: reduceMotion ? 0.2 : 0.95,
+          ease: premiumEase,
+        }}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   type ProgressDashboardData,
 } from "@/lib/platform/progress-experience";
 import type { ProfileDetails, TrainingProfileSnapshot } from "@/lib/platform/profile-api";
+import { parseTrainingProfileAnswers } from "@/lib/platform/strategy-matrix/profile-source";
 
 export type MembershipDisplayStatus =
   | "free"
@@ -62,13 +63,41 @@ export type ProfileHubAchievement = {
   unlocked: boolean;
 };
 
+/** Quiz goal IDs → the exact Arabic labels the client chose. */
 const GOAL_LABELS: Record<string, string> = {
+  fat: "خسارة الدهون",
+  muscle: "بناء العضلات",
+  fitness: "تحسين اللياقة والطاقة",
+  athletic: "جسم رياضي ومتناسق",
+  shape: "تغيير شكل الجسم",
+  gain: "زيادة وزن صحي",
+  glutes: "تكبير المؤخرة",
+  waist: "خصر أنحف ومشدود",
+  body: "جسم متناسق وأنثوي",
+  fit: "جسم صحي ورياضي",
+  tone: "تحسين شكل الصدر",
   cut: "خسارة الدهون",
   bulk: "بناء العضلات",
-  fitness: "تحسين اللياقة",
+  recomp: "إعادة تركيب الجسم",
   "fat-loss": "خسارة الدهون",
-  muscle: "بناء العضلات",
+  lose: "خسارة الوزن",
+  strength: "زيادة القوة",
+  weight_loss: "خسارة الوزن",
+  toning: "شد وتنسيق الجسم",
 };
+
+export function resolveClientGoalLabel(
+  ...sources: Array<string | null | undefined>
+): string {
+  for (const raw of sources) {
+    const key = raw?.trim();
+    if (!key) continue;
+    const mapped = GOAL_LABELS[key] ?? GOAL_LABELS[key.toLowerCase()];
+    if (mapped) return mapped;
+    if (/[\u0600-\u06FF]/.test(key)) return key;
+  }
+  return "غير محدد";
+}
 
 export const ACTIVITY_LABELS: Record<string, string> = {
   sedentary: "قليل الحركة",
@@ -158,10 +187,8 @@ export function resolveMembershipTerm(
   if (!Number.isFinite(endMs)) {
     if (days > 0) {
       endMs = Date.now() + days * MS_DAY;
-    } else if (Number.isFinite(startMs)) {
-      const assumed = new Date(startMs);
-      assumed.setFullYear(assumed.getFullYear() + 1);
-      endMs = assumed.getTime();
+    } else if (Number.isFinite(startMs) && membership?.billing_period_months) {
+      endMs = startMs + membership.billing_period_months * 30 * MS_DAY;
     }
   }
 
@@ -282,17 +309,27 @@ export function buildPersonalInfoFields(
 export function buildProgramSummary(
   profile: ProfileDetails | null,
   training: TrainingProfileSnapshot | null,
+  quizGoalId?: string | null,
 ): ProfileProgramSummary {
-  const goalKey = training?.answers.goalId ?? profile?.goal ?? training?.goal ?? "";
-  const goalLabel = GOAL_LABELS[goalKey] ?? profile?.goal ?? training?.goal ?? "غير محدد";
+  const goalLabel = resolveClientGoalLabel(
+    training?.answers.goalId,
+    quizGoalId,
+    profile?.goal,
+    training?.goal,
+  );
+
+  const parsedTraining = training
+    ? parseTrainingProfileAnswers(training.answers as Record<string, unknown>)
+    : null;
+  const weeklyCount = parsedTraining?.trainingDaysPerWeek;
 
   return {
     currentGoal: goalLabel,
-    programName: profile?.trainingType ? `برنامج ${profile.trainingType}` : "برنامج حكيم المخصص",
+    programName: profile?.trainingType ? `برنامج ${profile.trainingType}` : "برنامج MAAKFIT المخصص",
     fitnessLevel: training?.answers.activityLevel
       ? (ACTIVITY_LABELS[training.answers.activityLevel] ?? "غير محدد")
       : "غير محدد",
-    weeklyDays: "4 أيام",
+    weeklyDays: weeklyCount && weeklyCount > 0 ? `${weeklyCount} أيام` : "حسب خطتك",
     calorieTarget: "حسب خطتك",
     nutritionGoal: goalLabel,
     programStart: formatProfileDate(profile?.programStartDate ?? training?.completedAt ?? profile?.createdAt),
@@ -326,7 +363,7 @@ export function buildProfileActivityStats(
     },
     {
       id: "points",
-      label: "Hakim Points",
+      label: "MAAKFIT Points",
       value: `${dashboard.level.currentPoints}`,
       icon: "🔥",
       href: "/app/progress",

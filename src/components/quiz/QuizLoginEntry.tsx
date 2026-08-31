@@ -9,6 +9,7 @@ export function QuizLoginEntry() {
     >
       <Link
         to="/auth"
+        search={{ view: "login" }}
         className="pointer-events-auto rounded-full border border-black/8 bg-white/92 px-3.5 py-1.5 text-[12px] font-bold text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
       >
         لديك حساب؟{" "}
