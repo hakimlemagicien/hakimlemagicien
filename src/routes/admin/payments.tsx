@@ -33,6 +33,7 @@ import { AdminProviderEventsPanel } from "@/components/admin/AdminProviderEvents
 import { AdminPspPaymentsPanel } from "@/components/admin/AdminPspPaymentsPanel";
 import { BillingOpsSubnav } from "@/components/admin/BillingOpsSubnav";
 import { ProviderBindingBanner } from "@/components/admin/ProviderBindingBanner";
+import { useCanAdmin } from "@/components/admin/StaffPermissionsContext";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
 
 type PaymentsSection = "exceptions" | "psp" | "provider-events" | "legacy";
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/admin/payments")({
 
 function AdminPaymentsPage() {
   const queryClient = useQueryClient();
+  const canLegacyReview = useCanAdmin("legacy_payments.manage");
   const search = useSearch({ from: "/admin/payments" });
   const section = search.section ?? "exceptions";
   const [tab, setTab] = useState<"pending" | "approved">("pending");
@@ -279,6 +281,7 @@ function AdminPaymentsPage() {
                   onViewProof={() => void handleViewProof(lead.proof_path)}
                   onAccept={() => handleDecision(lead.id, "approved")}
                   onReject={() => handleDecision(lead.id, "rejected")}
+                  canReview={canLegacyReview}
                 />
               ))}
             </tbody>
@@ -293,6 +296,7 @@ function AdminPaymentsPage() {
                 onViewProof={() => void handleViewProof(lead.proof_path)}
                 onAccept={() => handleDecision(lead.id, "approved")}
                 onReject={() => handleDecision(lead.id, "rejected")}
+                canReview={canLegacyReview}
               />
             ))}
           </div>
@@ -354,12 +358,14 @@ function LeadTableRow({
   onViewProof,
   onAccept,
   onReject,
+  canReview,
 }: {
   lead: AdminSubmittedLead;
   busy: boolean;
   onViewProof: () => void;
   onAccept: () => void;
   onReject: () => void;
+  canReview?: boolean;
 }) {
   return (
     <tr className="text-[#0F172A]">
@@ -386,7 +392,7 @@ function LeadTableRow({
         {formatDate(lead.created_at)}
       </td>
       <td className="px-4 py-3">
-        <LeadActions busy={busy} onViewProof={onViewProof} onAccept={onAccept} onReject={onReject} />
+        <LeadActions busy={busy} onViewProof={onViewProof} onAccept={onAccept} onReject={onReject} canReview={canReview} />
       </td>
     </tr>
   );
@@ -398,12 +404,14 @@ function LeadMobileCard({
   onViewProof,
   onAccept,
   onReject,
+  canReview,
 }: {
   lead: AdminSubmittedLead;
   busy: boolean;
   onViewProof: () => void;
   onAccept: () => void;
   onReject: () => void;
+  canReview?: boolean;
 }) {
   return (
     <article className="rounded-2xl border border-[#E5E7EB] bg-white p-4 shadow-sm">
@@ -424,7 +432,7 @@ function LeadMobileCard({
         <InfoRow label="التاريخ" value={formatDate(lead.created_at)} />
       </div>
       <div className="mt-4 border-t border-[#F1F5F9] pt-4">
-        <LeadActions busy={busy} onViewProof={onViewProof} onAccept={onAccept} onReject={onReject} stacked />
+        <LeadActions busy={busy} onViewProof={onViewProof} onAccept={onAccept} onReject={onReject} canReview={canReview} stacked />
       </div>
     </article>
   );
@@ -460,16 +468,30 @@ function LeadActions({
   onViewProof,
   onAccept,
   onReject,
+  canReview = true,
   stacked,
 }: {
   busy: boolean;
   onViewProof: () => void;
   onAccept: () => void;
   onReject: () => void;
+  canReview?: boolean;
   stacked?: boolean;
 }) {
   const base = "cc-btn cc-btn--compact";
   const layout = stacked ? "flex flex-col gap-2" : "flex flex-wrap gap-2";
+
+  if (!canReview) {
+    return (
+      <div className={layout}>
+        <button type="button" disabled={busy} onClick={onViewProof} className={base}>
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
+          عرض الإيصال
+        </button>
+        <p className="cc-muted text-xs">مراجعة Legacy متاحة لصلاحية المالية فقط.</p>
+      </div>
+    );
+  }
 
   return (
     <div className={layout}>

@@ -1,3 +1,5 @@
+import type { AdminPermission } from "@/lib/admin/admin-permissions";
+
 export type AdminNavStatus = "live" | "foundation";
 
 export type AdminNavItem = {
@@ -5,6 +7,7 @@ export type AdminNavItem = {
   to: string;
   label: string;
   status: AdminNavStatus;
+  requiredPermission?: AdminPermission;
 };
 
 export type AdminNavGroup = {
@@ -18,57 +21,57 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "home",
     label: "الرئيسية",
-    items: [{ id: "home", to: "/admin", label: "مركز التشغيل", status: "live" }],
+    items: [{ id: "home", to: "/admin", label: "مركز التشغيل", status: "live", requiredPermission: "clients.basic_read" }],
   },
   {
     id: "clients",
     label: "العملاء",
     items: [
-      { id: "clients", to: "/admin/clients", label: "العملاء", status: "live" },
-      { id: "coaching", to: "/admin/messages", label: "الرسائل", status: "live" },
+      { id: "clients", to: "/admin/clients", label: "العملاء", status: "live", requiredPermission: "clients.read" },
+      { id: "coaching", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
     ],
   },
   {
     id: "training",
     label: "التدريب",
     items: [
-      { id: "training-ops", to: "/admin/training", label: "نظرة عامة", status: "live" },
-      { id: "training-reviews", to: "/admin/training/reviews", label: "مراجعات التدريب", status: "live" },
-      { id: "programs", to: "/admin/programs", label: "البرامج", status: "live" },
-      { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live" },
+      { id: "training-ops", to: "/admin/training", label: "نظرة عامة", status: "live", requiredPermission: "training.manage" },
+      { id: "training-reviews", to: "/admin/training/reviews", label: "مراجعات التدريب", status: "live", requiredPermission: "progress.read" },
+      { id: "programs", to: "/admin/programs", label: "البرامج", status: "live", requiredPermission: "training.manage" },
+      { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live", requiredPermission: "exercise.read" },
     ],
   },
   {
     id: "nutrition",
     label: "التغذية",
     items: [
-      { id: "nutrition-ops", to: "/admin/nutrition/operations", label: "نظرة عامة", status: "live" },
-      { id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live" },
+      { id: "nutrition-ops", to: "/admin/nutrition/operations", label: "نظرة عامة", status: "live", requiredPermission: "nutrition.manage" },
+      { id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live", requiredPermission: "meal_library.manage" },
     ],
   },
   {
     id: "billing",
     label: "الاشتراكات والمدفوعات",
     items: [
-      { id: "billing-overview", to: "/admin/billing", label: "نظرة عامة", status: "live" },
-      { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live" },
-      { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live" },
+      { id: "billing-overview", to: "/admin/billing", label: "نظرة عامة", status: "live", requiredPermission: "membership.read" },
+      { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live", requiredPermission: "membership.read" },
+      { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live", requiredPermission: "payments.read" },
     ],
   },
   {
     id: "content",
     label: "المحتوى والمكتبات",
-    items: [{ id: "content", to: "/admin/content", label: "المحتوى", status: "live" }],
+    items: [{ id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" }],
   },
   {
     id: "system",
     label: "الإدارة والنظام",
     items: [
-      { id: "support", to: "/admin/support", label: "الدعم", status: "live" },
-      { id: "audit", to: "/admin/audit", label: "سجل العمليات", status: "live" },
+      { id: "support", to: "/admin/support", label: "الدعم", status: "live", requiredPermission: "support.manage" },
+      { id: "audit", to: "/admin/audit", label: "سجل العمليات", status: "live", requiredPermission: "audit.read" },
       { id: "notifications", to: "/admin/notifications", label: "الإشعارات", status: "foundation" },
       { id: "analytics", to: "/admin/analytics", label: "التحليلات", status: "foundation" },
-      { id: "settings", to: "/admin/settings", label: "الإعدادات", status: "foundation" },
+      { id: "settings", to: "/admin/settings", label: "الإعدادات", status: "live", requiredPermission: "staff.manage" },
     ],
   },
 ];
@@ -108,11 +111,11 @@ export const ADMIN_PLACEHOLDER_MODULES = [
     id: "settings",
     path: "/admin/settings",
     title: "الإعدادات",
-    purpose: "إعدادات حساب الطاقم والتشغيل، دون تغيير الأدوار في قاعدة البيانات الآن.",
-    summary: "أساس بصري جاهز للحساب، الفريق، الصلاحيات، الإشعارات، والمنصة.",
-    later: "إدارة الفريق والصلاحيات عند اعتماد نموذج RBAC.",
-    source: "لا تغيير على أدوار قاعدة البيانات في هذه المرحلة.",
-    contract: "RBAC_FOUNDATION",
+    purpose: "إدارة أدوار الطاقم والصلاحيات التشغيلية.",
+    summary: "عرض الفريق وتغيير الأدوار مع تأكيد وسبب وتدقيق.",
+    later: "دعوات البريد وصلاحيات أدق عند الحاجة.",
+    source: "staff_members + admin_update_staff_role على Staging.",
+    contract: "RBAC_V1",
   },
 ] as const;
 

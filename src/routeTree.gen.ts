@@ -30,6 +30,7 @@ import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminNutritionRouteImport } from './routes/admin/nutrition'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminMembershipsRouteImport } from './routes/admin/memberships'
+import { Route as AdminForbiddenRouteImport } from './routes/admin/forbidden'
 import { Route as AdminExercisesRouteImport } from './routes/admin/exercises'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
 import { Route as AdminAuditRouteImport } from './routes/admin/audit'
@@ -173,6 +174,11 @@ const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
 const AdminMembershipsRoute = AdminMembershipsRouteImport.update({
   id: '/memberships',
   path: '/memberships',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminForbiddenRoute = AdminForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminExercisesRoute = AdminExercisesRouteImport.update({
@@ -414,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/forbidden': typeof AdminForbiddenRoute
   '/admin/memberships': typeof AdminMembershipsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/nutrition': typeof AdminNutritionRouteWithChildren
@@ -474,6 +481,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/forbidden': typeof AdminForbiddenRoute
   '/admin/memberships': typeof AdminMembershipsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/nutrition': typeof AdminNutritionRouteWithChildren
@@ -538,6 +546,7 @@ export interface FileRoutesById {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
+  '/admin/forbidden': typeof AdminForbiddenRoute
   '/admin/memberships': typeof AdminMembershipsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/nutrition': typeof AdminNutritionRouteWithChildren
@@ -602,6 +611,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/content'
     | '/admin/exercises'
+    | '/admin/forbidden'
     | '/admin/memberships'
     | '/admin/notifications'
     | '/admin/nutrition'
@@ -662,6 +672,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/content'
     | '/admin/exercises'
+    | '/admin/forbidden'
     | '/admin/memberships'
     | '/admin/notifications'
     | '/admin/nutrition'
@@ -725,6 +736,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/content'
     | '/admin/exercises'
+    | '/admin/forbidden'
     | '/admin/memberships'
     | '/admin/notifications'
     | '/admin/nutrition'
@@ -933,6 +945,13 @@ declare module '@tanstack/react-router' {
       path: '/memberships'
       fullPath: '/admin/memberships'
       preLoaderRoute: typeof AdminMembershipsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/forbidden': {
+      id: '/admin/forbidden'
+      path: '/forbidden'
+      fullPath: '/admin/forbidden'
+      preLoaderRoute: typeof AdminForbiddenRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/exercises': {
@@ -1341,6 +1360,7 @@ interface AdminRouteRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
   AdminContentRoute: typeof AdminContentRoute
   AdminExercisesRoute: typeof AdminExercisesRoute
+  AdminForbiddenRoute: typeof AdminForbiddenRoute
   AdminMembershipsRoute: typeof AdminMembershipsRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminNutritionRoute: typeof AdminNutritionRouteWithChildren
@@ -1363,6 +1383,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
   AdminContentRoute: AdminContentRoute,
   AdminExercisesRoute: AdminExercisesRoute,
+  AdminForbiddenRoute: AdminForbiddenRoute,
   AdminMembershipsRoute: AdminMembershipsRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminNutritionRoute: AdminNutritionRouteWithChildren,

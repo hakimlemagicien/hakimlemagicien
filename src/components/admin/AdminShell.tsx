@@ -12,6 +12,9 @@ import {
   type AdminOperationsSnapshot,
 } from "@/lib/admin/admin-ops-api";
 import { purgeDesignLabFromDocument } from "@/lib/design-lab/visual-editor";
+import { checkAdminAccess } from "@/lib/admin/admin-access";
+import { canAccessNavItem, canAccessRoute, STAFF_ROLE_LABELS, type StaffSession } from "@/lib/admin/admin-permissions";
+import { StaffPermissionsProvider } from "@/components/admin/StaffPermissionsContext";
 
 const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
   unreadThreads: 0,
@@ -41,6 +44,8 @@ export function AdminShell() {
   const [accountLabel, setAccountLabel] = useState("Admin");
   const [snapshot, setSnapshot] = useState<AdminOperationsSnapshot>(EMPTY_SNAPSHOT);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [staffSession, setStaffSession] = useState<StaffSession | null>(null);
+  const [staffLoading, setStaffLoading] = useState(true);
   const drawerId = useId();
   const menuId = useId();
   const attention = snapshotAttentionCount(snapshot);
@@ -72,6 +77,32 @@ export function AdminShell() {
 
   useEffect(() => {
     let cancelled = false;
+    setStaffLoading(true);
+    void checkAdminAccess()
+      .then((session) => {
+        if (!cancelled) setStaffSession(session);
+      })
+      .catch(() => {
+        if (!cancelled) setStaffSession(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStaffLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (staffLoading || !staffSession) return;
+    if (pathname.startsWith("/admin/forbidden")) return;
+    if (!canAccessRoute(staffSession, pathname)) {
+      void navigate({ to: "/admin/forbidden", search: { from: pathname } });
+    }
+  }, [pathname, staffSession, staffLoading, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
     void fetchAdminOperationsSnapshot()
       .then((next) => {
         if (!cancelled) setSnapshot(next);
@@ -96,6 +127,7 @@ export function AdminShell() {
   }
 
   return (
+    <StaffPermissionsProvider session={staffSession} loading={staffLoading}>
     <div className="cc-shell cc-shell--dark-nav" dir="rtl" lang="ar">
       <a className="cc-skip" href="#cc-workspace">
         تخطي إلى المحتوى
@@ -120,10 +152,15 @@ export function AdminShell() {
         </div>
 
         <nav className="cc-sidebar__nav">
-          {ADMIN_NAV_GROUPS.map((group) => (
+          {ADMIN_NAV_GROUPS.map((group) => {
+            const visibleItems = group.items.filter((item) =>
+              canAccessNavItem(staffSession, item.requiredPermission),
+            );
+            if (visibleItems.length === 0) return null;
+            return (
             <div key={group.id} className="cc-nav-group">
               <p className="cc-nav-group__label">{group.label}</p>
-              {group.items.map((item) => {
+              {visibleItems.map((item) => {
                 const active = isAdminNavActive(pathname, item.to);
                 const later = item.status === "foundation";
                 const count = navCount(item.to, snapshot);
@@ -154,7 +191,8 @@ export function AdminShell() {
                 );
               })}
             </div>
-          ))}
+            );
+          })}
         </nav>
 
         <footer className="cc-sidebar__footer">
@@ -164,7 +202,7 @@ export function AdminShell() {
             </span>
             <div>
               <strong>Coach Hakim</strong>
-              <span>مدير المنصة</span>
+              <span>{staffSession ? STAFF_ROLE_LABELS[staffSession.staffRole] : "مدير المنصة"}</span>
             </div>
           </div>
           <AdminEnvironmentBadge />
@@ -233,5 +271,6 @@ export function AdminShell() {
         </main>
       </div>
     </div>
+    </StaffPermissionsProvider>
   );
 }

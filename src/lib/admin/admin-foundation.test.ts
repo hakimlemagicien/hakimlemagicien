@@ -56,6 +56,7 @@ assert(
       "/admin/audit",
       "/admin/support",
       "/admin/content",
+      "/admin/settings",
     ].includes(item.to),
   ),
   "live nav is operational surfaces only",
@@ -79,7 +80,8 @@ assert(ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "DOMAIN_RULE_RE
 assert(CURRENT_STAFF_ROLE === "admin", "current role remains admin");
 assert(isCurrentStaffRole("admin"), "admin is staff");
 assert(!isCurrentStaffRole("user"), "member role is not staff");
-assert(PLANNED_STAFF_ROLES.includes("coach"), "future coach role is planned, not activated");
+assert(PLANNED_STAFF_ROLES.includes("coach"), "coach role in staff model");
+assert(PLANNED_STAFF_ROLES.includes("super_admin"), "super_admin role in staff model");
 assert(ADMIN_CLIENT_MIN_QUERY >= 2, "client search is not load-all");
 assert(ADMIN_CLIENT_PAGE_SIZE <= 25, "client search is paginated");
 

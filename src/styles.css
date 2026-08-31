@@ -13085,6 +13085,58 @@ body.is-membership-pass-open {
   font-weight: 600;
 }
 
+.cc-danger-zone {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px dashed #fecaca;
+  border-radius: 14px;
+  background: #fff7f7;
+}
+
+.cc-danger-zone__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #991b1b;
+}
+
+.cc-dialog__subject {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.cc-dialog__impact {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.cc-dialog__diff {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.cc-dialog__diff-row strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cc-dialog__diff-cols {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .cc-dialog__diff-cols {
+    gap: 8px;
+  }
+}
+
 .cc-ops-card-list {
   display: none;
   gap: 12px;

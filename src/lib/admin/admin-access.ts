@@ -1,15 +1,20 @@
 import { isRedirect, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  fallbackStaffSession,
+  resolveRoutePermission,
+  type StaffSession,
+} from "@/lib/admin/admin-permissions";
+import { fetchStaffSession } from "@/lib/admin/admin-staff-api";
+import { hasAdminPermission } from "@/lib/admin/admin-permissions";
 
-/** Current production staff role. Future RBAC expands the DB enum — do not invent roles here. */
+/** Legacy identifier — existing admins map to super_admin via staff_members backfill. */
 export const CURRENT_STAFF_ROLE = "admin" as const;
 
 export const PLANNED_STAFF_ROLES = [
-  "owner",
-  "head_coach",
+  "super_admin",
   "coach",
-  "nutrition_editor",
-  "content_editor",
+  "nutrition",
   "support",
   "finance",
   "read_only",
@@ -27,20 +32,17 @@ export class AdminAccessError extends Error {
   }
 }
 
-export type AdminSession = {
-  userId: string;
-  role: typeof CURRENT_STAFF_ROLE;
-};
+export type AdminSession = StaffSession;
 
 export function isCurrentStaffRole(role: string | null | undefined): boolean {
   return role === CURRENT_STAFF_ROLE;
 }
 
 /**
- * Authoritative client-side staff check against user_roles.
- * RLS still governs data. Hidden UI is not sufficient.
+ * Authoritative client-side staff check.
+ * Portal access: legacy user_roles.admin OR staff_members (via RPC when migrated).
  */
-export async function checkAdminAccess(): Promise<AdminSession> {
+export async function checkAdminAccess(): Promise<StaffSession> {
   const {
     data: { session },
     error: sessionError,
@@ -61,12 +63,20 @@ export async function checkAdminAccess(): Promise<AdminSession> {
     throw new AdminAccessError("forbidden");
   }
 
-  const isAdmin = roles?.some((row) => isCurrentStaffRole(row.role)) ?? false;
-  if (!isAdmin) {
-    throw new AdminAccessError("forbidden");
+  const isLegacyAdmin = roles?.some((row) => isCurrentStaffRole(row.role)) ?? false;
+
+  try {
+    const staffSession = await fetchStaffSession(userId);
+    if (staffSession.staffRole) return staffSession;
+  } catch (error) {
+    console.error("[checkAdminAccess] staff session:", error);
   }
 
-  return { userId, role: CURRENT_STAFF_ROLE };
+  if (isLegacyAdmin) {
+    return fallbackStaffSession(userId);
+  }
+
+  throw new AdminAccessError("forbidden");
 }
 
 export function resolveAdminGuardRedirect(error: unknown): never {
@@ -85,10 +95,22 @@ export function resolveAdminGuardRedirect(error: unknown): never {
   throw redirect({ to: "/app" });
 }
 
-export async function requireAdminRouteAccess(): Promise<AdminSession> {
+export async function requireAdminRouteAccess(): Promise<StaffSession> {
   try {
     return await checkAdminAccess();
   } catch (error) {
     resolveAdminGuardRedirect(error);
   }
+}
+
+export async function requireAdminRoutePermission(pathname: string): Promise<StaffSession> {
+  const session = await requireAdminRouteAccess();
+  const permission = resolveRoutePermission(pathname);
+  if (!hasAdminPermission(session, permission)) {
+    throw redirect({
+      to: "/admin/forbidden",
+      search: { from: pathname, permission },
+    });
+  }
+  return session;
 }
