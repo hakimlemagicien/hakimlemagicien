@@ -189,7 +189,7 @@ export function AdminShell() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="ابحث عن عميل، اسم أو بريد..."
+              placeholder="ابحث عن عميل بالاسم أو البريد..."
               aria-label="البحث الإداري — العملاء"
             />
           </form>

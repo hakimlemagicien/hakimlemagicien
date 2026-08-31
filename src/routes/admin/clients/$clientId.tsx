@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 import {
   AdminCard,
   AdminEmptyState,
@@ -9,14 +10,20 @@ import {
   AdminStatusBadge,
 } from "@/components/admin/AdminPage";
 import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
+import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
+import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
 import {
   AdminConfirmDialog,
   AdminSkeletonRows,
   type AdminConfirmRequest,
 } from "@/components/admin/AdminConfirmDialog";
 import { fetchAdminClientOverview, type AdminClientOverview } from "@/lib/admin/admin-clients-api";
-import { CLIENT_360_SECTIONS, type Client360Section } from "@/lib/admin/admin-architecture";
-import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
+import {
+  CLIENT_360_SECTIONS,
+  CLIENT_360_SECTION_LABELS,
+  normalizeClient360Tab,
+  type Client360Section,
+} from "@/lib/admin/admin-architecture";
 import {
   addAdminClientNote,
   archiveAdminClientNote,
@@ -26,7 +33,6 @@ import {
 } from "@/lib/admin/admin-notes-api";
 import {
   assignmentStatusLabel,
-  currentWeekNumber,
   objectiveSignalLabel,
   objectiveTrainingSignals,
 } from "@/lib/admin/admin-client-training";
@@ -50,41 +56,24 @@ const ClientNutritionWorkspace = lazy(() =>
   })),
 );
 
-const SECTION_LABELS: Record<Client360Section, string> = {
-  overview: "نظرة عامة",
-  training: "التدريب",
-  nutrition: "التغذية",
-  progress: "التقدم",
-  messages: "الرسائل",
-  notes: "ملاحظات",
-  history: "السجل",
-};
-
 export const Route = createFileRoute("/admin/clients/$clientId")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: isSection(search.tab) ? search.tab : "overview",
+    tab: normalizeClient360Tab(search.tab),
   }),
   head: () => ({ meta: [{ title: "ملف العميل | مركز التشغيل" }] }),
   component: AdminClient360Page,
 });
-
-function isSection(value: unknown): value is Client360Section {
-  return typeof value === "string" && CLIENT_360_SECTIONS.includes(value as Client360Section);
-}
 
 function AdminClient360Page() {
   const { clientId } = Route.useParams();
   const { tab } = Route.useSearch();
   const [overview, setOverview] = useState<AdminClientOverview | null>(null);
   const [notes, setNotes] = useState<AdminCoachNote[] | null>(null);
-  const [history, setHistory] = useState<AdminAuditEvent[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [notesLoading, setNotesLoading] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notesError, setNotesError] = useState<string | null>(null);
-  const [historyError, setHistoryError] = useState<string | null>(null);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -117,20 +106,6 @@ function AdminClient360Page() {
       })
       .finally(() => setNotesLoading(false));
   }, [clientId, tab, includeArchived]);
-
-  useEffect(() => {
-    if (tab !== "history") return;
-    setHistoryLoading(true);
-    setHistoryError(null);
-    void listAdminAuditEvents({ subjectUserId: clientId })
-      .then((rows) => setHistory(rows))
-      .catch((err) => {
-        console.error(err);
-        setHistoryError("تعذر تحميل سجل هذا العميل.");
-        setHistory(null);
-      })
-      .finally(() => setHistoryLoading(false));
-  }, [clientId, tab]);
 
   const status = onboardingStatus(overview?.onboarding_completed_at);
   const conversationId = overview?.coaching?.conversation_id;
@@ -174,10 +149,19 @@ function AdminClient360Page() {
 
   return (
     <>
+      <AdminBreadcrumb
+        items={[
+          { label: "العملاء", to: "/admin/clients" },
+          { label: overview?.full_name || "عميل" },
+          ...(tab !== "overview"
+            ? [{ label: CLIENT_360_SECTION_LABELS[tab as Client360Section] }]
+            : []),
+        ]}
+      />
+
       <AdminPageHeader
-        kicker="ملف العميل"
         title={overview?.full_name || "عميل"}
-        subtitle="بيانات التشغيل المتاحة حالياً لهذا العميل — بدون تخمين حالات غير موجودة."
+        subtitle="ملف العميل — مركز إدارة التدريب والتغذية والعضوية."
         actions={
           <Link to="/admin/clients" className="cc-btn cc-btn--ghost">
             كل العملاء
@@ -218,22 +202,11 @@ function AdminClient360Page() {
                   params={{ conversationId }}
                   className="cc-btn cc-btn--primary"
                 >
-                  فتح المحادثة
+                  مراسلة العميل
                 </Link>
               ) : (
                 <span className="cc-muted">لا محادثة تدريب مسجّلة</span>
               )}
-              <Link
-                to="/admin/clients/$clientId"
-                params={{ clientId }}
-                search={{ tab: "notes" }}
-                className="cc-btn"
-              >
-                إضافة ملاحظة
-              </Link>
-              <Link to="/admin/support" search={{ userId: clientId }} className="cc-btn">
-                تذاكر الدعم
-              </Link>
             </div>
           </header>
 
@@ -245,110 +218,89 @@ function AdminClient360Page() {
                 params={{ clientId }}
                 search={{ tab: section }}
                 className={tab === section ? "is-active" : undefined}
+                aria-current={tab === section ? "page" : undefined}
               >
-                {SECTION_LABELS[section]}
+                {CLIENT_360_SECTION_LABELS[section]}
               </Link>
             ))}
           </nav>
 
           {tab === "overview" ? (
             <AdminSection>
+              <div className="cc-client-overview-grid">
+                <AdminCard>
+                  <h2 className="cc-section__title">يحتاج انتباه</h2>
+                  <p>{attentionSummary(overview)}</p>
+                </AdminCard>
+                <AdminCard>
+                  <h2 className="cc-section__title">التدريب الحالي</h2>
+                  <p>
+                    {overview.assignment
+                      ? `${overview.assignment.name_ar ?? "برنامج"} · ${assignmentStatusLabel(overview.assignment.status)}`
+                      : "لا تعيين تدريب"}
+                  </p>
+                  <Link
+                    to="/admin/clients/$clientId"
+                    params={{ clientId }}
+                    search={{ tab: "training" }}
+                    className="cc-btn cc-btn--compact"
+                  >
+                    فتح التدريب
+                  </Link>
+                </AdminCard>
+                <AdminCard>
+                  <h2 className="cc-section__title">التغذية الحالية</h2>
+                  <p>
+                    {overview.nutrition_assignment
+                      ? `${overview.nutrition_assignment.name_ar ?? "خطة"} · ${nutritionStatusLabel(overview.nutrition_assignment.status)}`
+                      : "لا تعيين تغذية"}
+                  </p>
+                  <Link
+                    to="/admin/clients/$clientId"
+                    params={{ clientId }}
+                    search={{ tab: "nutrition" }}
+                    className="cc-btn cc-btn--compact"
+                  >
+                    فتح التغذية
+                  </Link>
+                </AdminCard>
+                <AdminCard>
+                  <h2 className="cc-section__title">العضوية</h2>
+                  <p>
+                    {overview.membership
+                      ? `${planLabel(overview.membership.tier)}${overview.membership.is_active ? " — نشطة" : " — غير نشطة"}`
+                      : "لا عضوية مسجّلة"}
+                  </p>
+                  <Link
+                    to="/admin/clients/$clientId"
+                    params={{ clientId }}
+                    search={{ tab: "membership" }}
+                    className="cc-btn cc-btn--compact"
+                  >
+                    العضوية والفوترة
+                  </Link>
+                </AdminCard>
+              </div>
+
               <div className="cc-grid-2">
                 <AdminCard>
-                  <h2 className="cc-section__title">اللقطة الحالية</h2>
+                  <h2 className="cc-section__title">اللقطة التشغيلية</h2>
                   <dl className="cc-dl">
                     <div>
                       <dt>الهدف</dt>
                       <dd>{overview.goal || "—"}</dd>
                     </div>
                     <div>
-                      <dt>العضوية</dt>
-                      <dd>
-                        {overview.membership
-                          ? `${planLabel(overview.membership.tier)}${overview.membership.is_active ? " — نشطة" : " — غير نشطة"}`
-                          : "لا عضوية مسجّلة"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>الفترة المدفوعة حتى</dt>
-                      <dd>{overview.membership?.paid_period_end ? formatAdminDate(overview.membership.paid_period_end) : "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>التجديد</dt>
-                      <dd>
-                        {overview.membership
-                          ? overview.membership.cancel_at_period_end
-                            ? "إلغاء عند نهاية الفترة"
-                            : overview.membership.auto_renew
-                              ? "تجديد تلقائي"
-                              : "—"
-                          : "—"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>انتباه حالي</dt>
-                      <dd>{attentionSummary(overview)}</dd>
+                      <dt>موقع التدريب</dt>
+                      <dd>{overview.training_type || "—"}</dd>
                     </div>
                     <div>
                       <dt>دعم مفتوح</dt>
                       <dd>{overview.open_support_count ?? 0}</dd>
                     </div>
                     <div>
-                      <dt>حالة التدريب</dt>
-                      <dd>
-                        {overview.coaching
-                          ? `${overview.coaching.status}${overview.coaching.unread_count > 0 ? ` — ${overview.coaching.unread_count} غير مقروء` : ""}`
-                          : "لا محادثة"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>آخر تمرين مسجّل</dt>
-                      <dd>
-                        {overview.last_workout_at ? formatRelativeAge(overview.last_workout_at) : "لا سجل تمرين في قاعدة البيانات"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>برنامج معيَّن</dt>
-                      <dd>
-                        {overview.assignment
-                          ? `${overview.assignment.name_ar ?? "برنامج"} · ${assignmentStatusLabel(overview.assignment.status)} · إصدار ${overview.assignment.template_version}`
-                          : "لا تعيين"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>تغذية معيَّنة</dt>
-                      <dd>
-                        {overview.nutrition_assignment
-                          ? `${overview.nutrition_assignment.name_ar ?? "خطة"} · ${nutritionStatusLabel(overview.nutrition_assignment.status)}`
-                          : "لا تعيين تغذية"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>آخر نشاط غذائي</dt>
-                      <dd>
-                        {overview.last_nutrition_at
-                          ? formatRelativeAge(overview.last_nutrition_at)
-                          : "لا سجل تغذية في قاعدة البيانات"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>بداية البرنامج</dt>
-                      <dd>{overview.assignment?.starts_on ? formatAdminDate(overview.assignment.starts_on) : "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>الأسبوع الحالي</dt>
-                      <dd>
-                        {overview.assignment?.starts_on &&
-                        currentWeekNumber({
-                          startsOn: overview.assignment.starts_on,
-                          durationWeeks: overview.assignment.duration_weeks ?? null,
-                        }).reason === "ok"
-                          ? currentWeekNumber({
-                              startsOn: overview.assignment.starts_on,
-                              durationWeeks: overview.assignment.duration_weeks ?? null,
-                            }).week
-                          : "غير محسوب بدقة"}
-                      </dd>
+                      <dt>آخر تمرين</dt>
+                      <dd>{overview.last_workout_at ? formatRelativeAge(overview.last_workout_at) : "—"}</dd>
                     </div>
                     <div>
                       <dt>ملاحظات الطاقم</dt>
@@ -357,61 +309,19 @@ function AdminClient360Page() {
                   </dl>
                 </AdminCard>
                 <AdminCard>
-                  <h2 className="cc-section__title">الهوية</h2>
-                  <dl className="cc-dl">
-                    <div>
-                      <dt>البريد</dt>
-                      <dd>{overview.email || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>الهاتف</dt>
-                      <dd>{overview.phone || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>المدينة</dt>
-                      <dd>{overview.city || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>بداية البرنامج</dt>
-                      <dd>{overview.program_start_date || "—"}</dd>
-                    </div>
-                    <div>
-                      <dt>اكتمال التسجيل</dt>
-                      <dd>
-                        {overview.onboarding_completed_at
-                          ? formatAdminDate(overview.onboarding_completed_at)
-                          : "غير مكتمل"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>تاريخ الإنشاء</dt>
-                      <dd>{formatAdminDate(overview.created_at)}</dd>
-                    </div>
-                  </dl>
+                  <h2 className="cc-section__title">آخر النشاطات</h2>
+                  <ClientActivityPanel clientId={clientId} limit={5} compact />
+                  <Link
+                    to="/admin/clients/$clientId"
+                    params={{ clientId }}
+                    search={{ tab: "activity" }}
+                    className="cc-btn cc-btn--compact"
+                  >
+                    عرض كل النشاط
+                  </Link>
                 </AdminCard>
               </div>
             </AdminSection>
-          ) : null}
-
-          {tab === "messages" ? (
-            conversationId ? (
-              <AdminCard>
-                <p className="cc-muted">محادثة التدريب الحالية مرتبطة بهذا العميل.</p>
-                <Link
-                  to="/admin/messages/$conversationId"
-                  params={{ conversationId }}
-                  className="cc-btn cc-btn--primary"
-                >
-                  فتح المحادثة
-                </Link>
-              </AdminCard>
-            ) : (
-              <AdminEmptyState
-                title="لا محادثة تدريب"
-                body="لا توجد محادثة مسجّلة لهذا العميل في صندوق الكوتش."
-                later="يبقى إنشاء المحادثة من مسار المراسلة الحالي دون اختراع مسار جديد هنا."
-              />
-            )
           ) : null}
 
           {tab === "notes" ? (
@@ -467,6 +377,12 @@ function AdminClient360Page() {
             </AdminSection>
           ) : null}
 
+          {tab === "membership" ? (
+            <ClientMembershipWorkspace clientId={clientId} overview={overview} />
+          ) : null}
+
+          {tab === "activity" ? <ClientActivityPanel clientId={clientId} /> : null}
+
           {tab === "training" || tab === "progress" ? (
             <ClientTrainingWorkspace
               clientId={clientId}
@@ -495,24 +411,6 @@ function AdminClient360Page() {
                 onConfirm={setConfirm}
               />
             </Suspense>
-          ) : null}
-
-          {tab === "history" ? (
-            <AdminSection>
-              {historyLoading ? <AdminSkeletonRows rows={4} /> : null}
-              {historyError ? <AdminErrorState message={historyError} /> : null}
-              {!historyLoading && history && history.length === 0 ? (
-                <AdminEmptyState title="لا سجل عمليات لهذا العميل" body="تُعرض هنا أحداث التدقيق المرتبطة بهذا المعرّف فقط." />
-              ) : null}
-              {history?.map((row) => (
-                <AdminCard key={row.id}>
-                  <p>{row.eventType}</p>
-                  <p className="cc-meta">
-                    {formatAdminDate(row.createdAt)} · فاعل {row.actorId ?? "—"}
-                  </p>
-                </AdminCard>
-              ))}
-            </AdminSection>
           ) : null}
 
         </>

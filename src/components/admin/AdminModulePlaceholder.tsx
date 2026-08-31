@@ -21,10 +21,9 @@ export function AdminModulePlaceholder({ moduleId }: { moduleId: string }) {
   return (
     <>
       <AdminPageHeader
-        kicker="أساس تشغيلي"
         title={module.title}
         subtitle={module.purpose}
-        actions={<AdminStatusBadge tone="foundation">أساس — غير مكتمل</AdminStatusBadge>}
+        actions={<AdminStatusBadge tone="foundation">قريبًا</AdminStatusBadge>}
       />
       <AdminCard>
         <dl className="cc-dl">

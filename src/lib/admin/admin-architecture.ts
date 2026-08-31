@@ -36,12 +36,40 @@ export const CLIENT_360_SECTIONS = [
   "training",
   "nutrition",
   "progress",
-  "messages",
+  "membership",
+  "activity",
   "notes",
-  "history",
 ] as const;
 
 export type Client360Section = (typeof CLIENT_360_SECTIONS)[number];
+
+export const CLIENT_360_SECTION_LABELS: Record<Client360Section, string> = {
+  overview: "نظرة عامة",
+  training: "التدريب",
+  nutrition: "التغذية",
+  progress: "التقدم",
+  membership: "العضوية والفوترة",
+  activity: "النشاط",
+  notes: "الملاحظات",
+};
+
+/** Legacy tab keys kept for deep links — mapped in client route search validation. */
+export const CLIENT_360_LEGACY_TABS = {
+  history: "activity",
+  messages: "overview",
+} as const;
+
+export function normalizeClient360Tab(value: unknown): Client360Section {
+  if (typeof value === "string") {
+    if (value in CLIENT_360_LEGACY_TABS) {
+      return CLIENT_360_LEGACY_TABS[value as keyof typeof CLIENT_360_LEGACY_TABS];
+    }
+    if (CLIENT_360_SECTIONS.includes(value as Client360Section)) {
+      return value as Client360Section;
+    }
+  }
+  return "overview";
+}
 
 export const ATTENTION_SIGNAL_CONTRACTS = [
   { id: "unread_coaching", status: "LIVE", source: "admin_list_coaching_inbox" },

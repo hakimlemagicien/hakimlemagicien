@@ -182,8 +182,7 @@ function AdminPaymentsPage() {
   return (
     <>
       <AdminPageHeader
-        kicker="الأعمال"
-        title="الفوترة والمدفوعات"
+        title="المدفوعات"
         subtitle={sectionSubtitle[section]}
         actions={
           section === "legacy" ? (

@@ -142,9 +142,8 @@ function AdminSupportPage() {
   return (
     <>
       <AdminPageHeader
-        kicker="الأعمال"
         title="الدعم"
-        subtitle="طابور تذاكر Legal/Billing الحالي. ليست دردشة التدريب."
+        subtitle="متابعة تذاكر الدعم والاستفسارات التشغيلية."
       />
 
       <AdminFilterBar>

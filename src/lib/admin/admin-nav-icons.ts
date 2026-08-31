@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  BarChart3,
   Bell,
   CreditCard,
   Dumbbell,
@@ -30,6 +31,7 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   content: Library,
   support: LifeBuoy,
   audit: ScrollText,
+  analytics: BarChart3,
   notifications: Bell,
   settings: Settings,
 };

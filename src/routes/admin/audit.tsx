@@ -95,9 +95,8 @@ function AdminAuditPage() {
   return (
     <>
       <AdminPageHeader
-        kicker="النظام"
         title="سجل العمليات"
-        subtitle="قراءة فقط. لا تحميل لكل السجل دفعة واحدة. لا تُعرض كلمات مرور أو بيانات بطاقة."
+        subtitle="سجل التدقيق والأحداث التشغيلية — قراءة فقط."
       />
 
       <AdminSearchInput

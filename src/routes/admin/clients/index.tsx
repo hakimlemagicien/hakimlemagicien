@@ -127,9 +127,8 @@ function AdminClientsPage() {
   return (
     <>
       <AdminPageHeader
-        kicker="العملاء والمتابعة"
         title="العملاء"
-        subtitle="دليل تشغيلي مرقّم. البحث اختياري — حرف واحد لا يُرسل. لا تحميل لكل العملاء دفعة واحدة."
+        subtitle="إدارة العملاء ومتابعة حالتهم وبرامجهم."
       />
 
       <AdminSearchInput

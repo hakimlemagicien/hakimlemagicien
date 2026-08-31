@@ -66,7 +66,9 @@ assert(NUTRITION_BOUNDARIES.plan !== NUTRITION_BOUNDARIES.library, "nutrition pl
 assert(CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived", "publishing states");
 assert(NOTIFICATION_CHANNELS.admin !== NOTIFICATION_CHANNELS.client, "admin vs client notifications");
 assert(CLIENT_360_SECTIONS.includes("overview"), "client 360 has overview");
-assert(CLIENT_360_SECTIONS.includes("history"), "client 360 has history");
+assert(CLIENT_360_SECTIONS.includes("activity"), "client 360 has activity");
+assert(CLIENT_360_SECTIONS.includes("membership"), "client 360 has membership");
+assert(CLIENT_360_SECTIONS.length === 7, "client 360 has seven tabs");
 assert(ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "LIVE"), "live signals exist");
 assert(ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "DOMAIN_RULE_REQUIRED"), "domain rules deferred");
 

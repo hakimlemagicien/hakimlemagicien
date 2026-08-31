@@ -22,7 +22,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: "clients",
-    label: "إدارة العملاء",
+    label: "العملاء",
     items: [
       { id: "clients", to: "/admin/clients", label: "العملاء", status: "live" },
       { id: "coaching", to: "/admin/messages", label: "الرسائل", status: "live" },
@@ -62,6 +62,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { id: "support", to: "/admin/support", label: "الدعم", status: "live" },
       { id: "audit", to: "/admin/audit", label: "سجل العمليات", status: "live" },
       { id: "notifications", to: "/admin/notifications", label: "الإشعارات", status: "foundation" },
+      { id: "analytics", to: "/admin/analytics", label: "التحليلات", status: "foundation" },
       { id: "settings", to: "/admin/settings", label: "الإعدادات", status: "foundation" },
     ],
   },
