@@ -43,6 +43,7 @@ import { Route as PlatformAppDiscoverRouteImport } from './routes/_platform/app/
 import { Route as PlatformAppProfileRouteImport } from './routes/_platform/app/profile'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
 import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
+import { Route as PlatformAppUpgradeRouteImport } from './routes/_platform/app/upgrade'
 import { Route as AdminClientsIndexRouteImport } from './routes/admin/clients/index'
 import { Route as AdminClientsClientIdRouteImport } from './routes/admin/clients/$clientId'
 import { Route as AdminMessagesIndexRouteImport } from './routes/admin/messages/index'
@@ -235,6 +236,11 @@ const PlatformAppStudioRoute = PlatformAppStudioRouteImport.update({
   path: '/app/studio',
   getParentRoute: () => PlatformRouteRoute,
 } as any)
+const PlatformAppUpgradeRoute = PlatformAppUpgradeRouteImport.update({
+  id: '/app/upgrade',
+  path: '/app/upgrade',
+  getParentRoute: () => PlatformRouteRoute,
+} as any)
 const AdminClientsIndexRoute = AdminClientsIndexRouteImport.update({
   id: '/clients/',
   path: '/clients/',
@@ -398,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
+  '/app/upgrade': typeof PlatformAppUpgradeRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app/': typeof PlatformAppIndexRoute
@@ -452,6 +459,7 @@ export interface FileRoutesByTo {
   '/app/profile': typeof PlatformAppProfileRoute
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
+  '/app/upgrade': typeof PlatformAppUpgradeRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/app': typeof PlatformAppIndexRoute
@@ -512,6 +520,7 @@ export interface FileRoutesById {
   '/_platform/app/profile': typeof PlatformAppProfileRoute
   '/_platform/app/progress': typeof PlatformAppProgressRoute
   '/_platform/app/studio': typeof PlatformAppStudioRoute
+  '/_platform/app/upgrade': typeof PlatformAppUpgradeRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
@@ -571,6 +580,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
+    | '/app/upgrade'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/app/'
@@ -625,6 +635,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/progress'
     | '/app/studio'
+    | '/app/upgrade'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/app'
@@ -684,6 +695,7 @@ export interface FileRouteTypes {
     | '/_platform/app/profile'
     | '/_platform/app/progress'
     | '/_platform/app/studio'
+    | '/_platform/app/upgrade'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/_platform/app/'
@@ -965,6 +977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlatformAppStudioRouteImport
       parentRoute: typeof PlatformRouteRoute
     }
+    '/_platform/app/upgrade': {
+      id: '/_platform/app/upgrade'
+      path: '/app/upgrade'
+      fullPath: '/app/upgrade'
+      preLoaderRoute: typeof PlatformAppUpgradeRouteImport
+      parentRoute: typeof PlatformRouteRoute
+    }
     '/admin/clients/': {
       id: '/admin/clients/'
       path: '/clients'
@@ -1166,6 +1185,7 @@ interface PlatformRouteRouteChildren {
   PlatformAppProfileRoute: typeof PlatformAppProfileRoute
   PlatformAppProgressRoute: typeof PlatformAppProgressRoute
   PlatformAppStudioRoute: typeof PlatformAppStudioRoute
+  PlatformAppUpgradeRoute: typeof PlatformAppUpgradeRoute
   PlatformAppIndexRoute: typeof PlatformAppIndexRoute
   PlatformAppExercisesExerciseIdRoute: typeof PlatformAppExercisesExerciseIdRoute
   PlatformAppNutritionAlternativesRoute: typeof PlatformAppNutritionAlternativesRoute
@@ -1190,6 +1210,7 @@ const PlatformRouteRouteChildren: PlatformRouteRouteChildren = {
   PlatformAppProfileRoute: PlatformAppProfileRoute,
   PlatformAppProgressRoute: PlatformAppProgressRoute,
   PlatformAppStudioRoute: PlatformAppStudioRoute,
+  PlatformAppUpgradeRoute: PlatformAppUpgradeRoute,
   PlatformAppIndexRoute: PlatformAppIndexRoute,
   PlatformAppExercisesExerciseIdRoute: PlatformAppExercisesExerciseIdRoute,
   PlatformAppNutritionAlternativesRoute: PlatformAppNutritionAlternativesRoute,

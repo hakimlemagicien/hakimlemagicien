@@ -14,15 +14,22 @@ export function resolveAppOrigin(appEnv: string, windowOrigin?: string | null): 
   return PRODUCTION_APP_ORIGIN;
 }
 
+function readViteEnv(): Record<string, string | undefined> {
+  if (typeof import.meta !== "undefined" && import.meta.env) {
+    return import.meta.env as Record<string, string | undefined>;
+  }
+  return {};
+}
+
 export function currentAppOrigin(): string {
-  const vite = import.meta.env as Record<string, string | undefined>;
+  const vite = readViteEnv();
   const appEnv = String(vite.VITE_APP_ENV || process.env.VITE_APP_ENV || process.env.APP_ENV || "").toLowerCase();
   const windowOrigin = typeof window !== "undefined" ? window.location.origin : null;
   return resolveAppOrigin(appEnv, windowOrigin);
 }
 
 function readRuntimeUrl(): { appEnv: string; url: string } {
-  const vite = import.meta.env as Record<string, string | undefined>;
+  const vite = readViteEnv();
   return {
     appEnv: String(vite.VITE_APP_ENV || process.env.VITE_APP_ENV || process.env.APP_ENV || "").toLowerCase(),
     url: String(vite.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || ""),

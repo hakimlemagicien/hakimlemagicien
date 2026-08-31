@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
+import { isPublicPaidTier } from "@/lib/payments/catalog";
 import {
   ACTIVATE_PROGRAM_CTA,
   formatIllustrativeDaily,
@@ -209,6 +210,7 @@ export function PlanActivateBlock({
 
   const isVip = plan.id === "vip";
   const isPremium = plan.id === "premium";
+  const isPublicPlan = isPublicPaidTier(plan.id);
 
   const ctaClass = cn(
     "flex w-full items-center justify-center rounded-xl px-4 font-[Tajawal] font-extrabold transition",
@@ -242,24 +244,40 @@ export function PlanActivateBlock({
       </AnimatePresence>
 
       {!upsellOpen ? (
-        <button
-          type="button"
-          onClick={() => {
-            setUpsellOpen(true);
-            setSelectedMonths(3);
-          }}
-          className={cn(ctaClass, compact ? "mt-4" : "mt-5")}
-        >
-          {ACTIVATE_PROGRAM_CTA}
-        </button>
-      ) : (
+        isVip ? (
+          <p
+            className={cn(
+              "mt-4 rounded-xl border border-[#D4AF78]/35 bg-white/5 px-3 py-2.5 text-center font-[Tajawal] text-[12px] font-semibold text-[#F0D9A8]",
+              compact ? "mt-4" : "mt-5",
+            )}
+          >
+            VIP متاحة بدعوة — ليست للبيع العام في Commercial V1
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setUpsellOpen(true);
+              setSelectedMonths(3);
+            }}
+            className={cn(ctaClass, compact ? "mt-4" : "mt-5")}
+          >
+            {ACTIVATE_PROGRAM_CTA}
+          </button>
+        )
+      ) : isPublicPlan ? (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
           className={cn(compact ? "mt-3" : "mt-4")}
         >
-          <Link to="/quiz" onClick={onActivated} className={ctaClass}>
+          <Link
+            to="/app/upgrade"
+            search={{ plan: plan.id, term: selectedMonths }}
+            onClick={onActivated}
+            className={ctaClass}
+          >
             {ACTIVATE_PROGRAM_CTA}
           </Link>
           <p
@@ -272,7 +290,7 @@ export function PlanActivateBlock({
             {selectedMonths === 3 ? " — السعر الأساسي" : " — عرض أفضل قيمة"}
           </p>
         </motion.div>
-      )}
+      ) : null}
     </div>
   );
 }

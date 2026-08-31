@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Crown, Lock, X } from "lucide-react";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
-import { VipFeatureCheck, VipGlassShell } from "@/components/platform/upgrade/VipGlassPlanCard";
-import { ACTIVATE_PROGRAM_CTA, PAID_TIERS } from "@/lib/pricing-presentation";
+import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
+import { getPublicPaidTiers } from "@/lib/payments/catalog";
 import { useUpgradeFlow } from "./UpgradeContext";
 
 const backdropMotion = {
@@ -73,7 +73,7 @@ export function MembershipUpgradeSheet() {
               </div>
 
               <div className="platform-upgrade-dialog__plans">
-                {PAID_TIERS.map((plan, index) => {
+                {getPublicPaidTiers().map((plan, index) => {
                   const motionProps = {
                     initial: { opacity: 0, y: 18, scale: 0.97 },
                     animate: { opacity: 1, y: 0, scale: 1 },
@@ -84,29 +84,6 @@ export function MembershipUpgradeSheet() {
                       damping: 28,
                     },
                   };
-
-                  if (plan.id === "vip") {
-                    return (
-                      <motion.div key={plan.id} {...motionProps}>
-                        <VipGlassShell compact>
-                          <h3 className="bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text font-[Tajawal] text-[18px] font-extrabold text-transparent">
-                            {plan.name}
-                          </h3>
-                          <p className="mt-0.5 font-[Tajawal] text-[12px] font-medium text-white/70">
-                            {plan.tagline}
-                          </p>
-
-                          <ul className="mt-3 space-y-2 text-right">
-                            {plan.features.map((feature) => (
-                              <VipFeatureCheck key={feature} label={feature} compact />
-                            ))}
-                          </ul>
-
-                          <PlanActivateBlock plan={plan} compact onActivated={closeUpgrade} />
-                        </VipGlassShell>
-                      </motion.div>
-                    );
-                  }
 
                   return (
                     <motion.article
