@@ -38,6 +38,7 @@ const requiredRoutes = [
   "/admin/nutrition/operations",
   "/admin/nutrition",
   "/admin/memberships",
+  "/admin/billing",
   "/admin/payments",
   "/admin/content",
   "/admin/support",

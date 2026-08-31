@@ -50,6 +50,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "billing",
     label: "الاشتراكات والمدفوعات",
     items: [
+      { id: "billing-overview", to: "/admin/billing", label: "نظرة عامة", status: "live" },
       { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live" },
       { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live" },
     ],

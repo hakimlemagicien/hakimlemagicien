@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import {
   fetchAdminProviderEvents,
   type AdminProviderEventRow,
 } from "@/lib/admin/admin-billing-ops-api";
+import { providerDisplayLabel } from "@/lib/admin/admin-billing-ops-surfaces";
 import { AdminEmptyState, AdminErrorState, AdminTable } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { formatBillingDate } from "@/lib/payments/billing-present";
+import { getPaymentProviderAvailability } from "@/lib/payments/provider-registry";
 
 const STATUS_OPTIONS = ["", "received", "processing", "processed", "failed", "skipped"] as const;
 
@@ -15,6 +18,7 @@ export function AdminProviderEventsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("");
+  const providerAvailable = getPaymentProviderAvailability().available;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,8 +59,12 @@ export function AdminProviderEventsPanel() {
 
       {!loading && !error && rows.length === 0 ? (
         <AdminEmptyState
-          title="لا توجد أحداث مزود"
-          body="عند ربط Webhook لاحقاً ستظهر هنا الحالات التشغيلية دون عرض payload حساس."
+          title="لا توجد أحداث مزود مسجلة."
+          body={
+            providerAvailable
+              ? "عند ربط Webhook لاحقاً ستظهر هنا الحالات التشغيلية دون عرض payload حساس."
+              : "ستظهر أحداث المزود هنا بعد ربط مزود الدفع."
+          }
         />
       ) : null}
 
@@ -71,18 +79,33 @@ export function AdminProviderEventsPanel() {
               <th>استُلم</th>
               <th>عُولج</th>
               <th>خطأ</th>
+              <th>إجراء</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.provider}</td>
+                <td>{providerDisplayLabel(row.provider, providerAvailable)}</td>
                 <td>{row.eventType}</td>
                 <td>{row.processingStatus}</td>
                 <td>{row.email || row.userId || "—"}</td>
                 <td>{formatBillingDate(row.receivedAt)}</td>
                 <td>{formatBillingDate(row.processedAt)}</td>
                 <td className="max-w-[200px] truncate">{row.errorSummary || row.errorCode || "—"}</td>
+                <td>
+                  {row.userId ? (
+                    <Link
+                      to="/admin/clients/$clientId"
+                      params={{ clientId: row.userId }}
+                      search={{ tab: "membership" }}
+                      className="cc-btn cc-btn--compact"
+                    >
+                      فتح العميل
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

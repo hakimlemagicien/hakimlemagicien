@@ -12977,6 +12977,114 @@ body.is-membership-pass-open {
   gap: 8px;
 }
 
+.cc-notice--info {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.cc-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cc-filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.cc-billing-exception-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cc-billing-exception-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e7e0d6;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.cc-billing-exception-card__client {
+  font-weight: 800;
+  margin: 0;
+}
+
+.cc-billing-exception-card__type,
+.cc-billing-exception-card__reason,
+.cc-billing-exception-card__action {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+.cc-billing-exception-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.cc-billing-exception-preview {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cc-mobile-membership-cards {
+  display: none;
+}
+
+.cc-section__title--spaced {
+  margin-top: 20px;
+}
+
+.cc-ops-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cc-ops-card__dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.cc-ops-card__dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cc-ops-card__dl dt {
+  color: #64748b;
+}
+
+.cc-ops-card__dl dd {
+  margin: 0;
+  font-weight: 600;
+}
+
 .cc-ops-card-list {
   display: none;
   gap: 12px;
@@ -13365,6 +13473,7 @@ body.is-membership-pass-open {
   }
 
   .cc-mobile-cards,
+  .cc-mobile-membership-cards,
   .cc-client-card-list {
     display: grid;
   }

@@ -189,3 +189,35 @@ export function subscriptionStatusLabel(status: string): string {
   if (status === "expired" || status === "inactive") return "منتهٍ";
   return status;
 }
+
+export async function fetchAdminClientPspPayments(userId: string): Promise<AdminPspPaymentRow[]> {
+  const collected: AdminPspPaymentRow[] = [];
+  for (let offset = 0; offset < 100; offset += 25) {
+    const page = await fetchAdminPspPayments(offset);
+    if (page.length === 0) break;
+    collected.push(...page.filter((row) => row.userId === userId));
+    if (page.length < 25) break;
+  }
+  return collected.sort((a, b) => {
+    const aTime = new Date(a.paidAt ?? a.createdAt).getTime();
+    const bTime = new Date(b.paidAt ?? b.createdAt).getTime();
+    return bTime - aTime;
+  });
+}
+
+export function exceptionSeverityLabel(priority: string): string {
+  if (priority === "high") return "عالية";
+  if (priority === "normal") return "متوسطة";
+  return "منخفضة";
+}
+
+export function formatExceptionAge(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "—";
+  const diffMs = Date.now() - then;
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 1) return "منذ دقائق";
+  if (hours < 24) return `منذ ${hours} ساعة`;
+  const days = Math.floor(hours / 24);
+  return `منذ ${days} يوم`;
+}

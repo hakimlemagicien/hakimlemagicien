@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import {
+  exceptionSeverityLabel,
   exceptionTypeLabel,
   fetchAdminPaymentExceptions,
+  formatExceptionAge,
   type AdminPaymentExceptionRow,
 } from "@/lib/admin/admin-billing-ops-api";
+import { exceptionRecommendedAction } from "@/lib/admin/admin-billing-ops-surfaces";
 import { AdminEmptyState, AdminErrorState } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { formatBillingDate } from "@/lib/payments/billing-present";
@@ -38,7 +41,7 @@ export function AdminPaymentExceptionsPanel() {
   if (rows.length === 0) {
     return (
       <AdminEmptyState
-        title="لا توجد استثناءات تشغيلية"
+        title="لا توجد استثناءات دفع تحتاج مراجعتك."
         body="يُعرض هنا فقط ما يأتي من بيانات حقيقية: تحويلات بنكية معلقة، تأخر اشتراك، أحداث مزود فاشلة، وغيرها."
       />
     );
@@ -52,20 +55,31 @@ export function AdminPaymentExceptionsPanel() {
           تحديث
         </button>
       </div>
-      <ul className="space-y-2">
+      <ul className="cc-billing-exception-list">
         {rows.map((row) => (
-          <li key={row.exceptionId} className="rounded-2xl border border-border bg-card p-3">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <p className="text-sm font-black">{row.subjectLabel}</p>
-                <p className="text-xs text-muted-foreground">{exceptionTypeLabel(row.exceptionType)}</p>
-                <p className="mt-1 text-xs">{row.detail}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{formatBillingDate(row.occurredAt)}</p>
+          <li key={row.exceptionId} className="cc-billing-exception-card">
+            <div className="cc-billing-exception-card__main">
+              <p className="cc-billing-exception-card__client">{row.subjectLabel}</p>
+              <p className="cc-billing-exception-card__type">{exceptionTypeLabel(row.exceptionType)}</p>
+              <p className="cc-billing-exception-card__reason">{row.detail}</p>
+              <div className="cc-billing-exception-card__meta">
+                <span>الأولوية: {exceptionSeverityLabel(row.priority)}</span>
+                <span>{formatExceptionAge(row.occurredAt)}</span>
+                <span>{formatBillingDate(row.occurredAt)}</span>
               </div>
-              <a href={row.href} className="cc-btn cc-btn--primary text-xs">
-                معالجة
-              </a>
+              <p className="cc-billing-exception-card__action">
+                الإجراء المقترح: {exceptionRecommendedAction(row.exceptionType)}
+              </p>
             </div>
+            {row.href.startsWith("/admin/clients/") ? (
+              <a href={row.href} className="cc-btn cc-btn--primary cc-btn--compact">
+                فتح العميل
+              </a>
+            ) : (
+              <a href={row.href} className="cc-btn cc-btn--primary cc-btn--compact">
+                {row.href.includes("legacy") ? "مراجعة Legacy" : "معالجة"}
+              </a>
+            )}
           </li>
         ))}
       </ul>

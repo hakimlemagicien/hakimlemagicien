@@ -39,6 +39,7 @@ import { Route as AdminMessagesRouteRouteImport } from './routes/admin/messages/
 import { Route as AdminTrainingIndexRouteImport } from './routes/admin/training/index'
 import { Route as AdminMessagesIndexRouteImport } from './routes/admin/messages/index'
 import { Route as AdminClientsIndexRouteImport } from './routes/admin/clients/index'
+import { Route as AdminBillingIndexRouteImport } from './routes/admin/billing/index'
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
 import { Route as AdminTrainingReviewsRouteImport } from './routes/admin/training/reviews'
 import { Route as AdminNutritionOperationsRouteImport } from './routes/admin/nutrition/operations'
@@ -217,6 +218,11 @@ const AdminMessagesIndexRoute = AdminMessagesIndexRouteImport.update({
 const AdminClientsIndexRoute = AdminClientsIndexRouteImport.update({
   id: '/clients/',
   path: '/clients/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBillingIndexRoute = AdminBillingIndexRouteImport.update({
+  id: '/billing/',
+  path: '/billing/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const PlatformAppIndexRoute = PlatformAppIndexRouteImport.update({
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/app/': typeof PlatformAppIndexRoute
+  '/admin/billing/': typeof AdminBillingIndexRoute
   '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
   '/admin/training/': typeof AdminTrainingIndexRoute
@@ -487,6 +494,7 @@ export interface FileRoutesByTo {
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/app': typeof PlatformAppIndexRoute
+  '/admin/billing': typeof AdminBillingIndexRoute
   '/admin/clients': typeof AdminClientsIndexRoute
   '/admin/messages': typeof AdminMessagesIndexRoute
   '/admin/training': typeof AdminTrainingIndexRoute
@@ -551,6 +559,7 @@ export interface FileRoutesById {
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
+  '/admin/billing/': typeof AdminBillingIndexRoute
   '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
   '/admin/training/': typeof AdminTrainingIndexRoute
@@ -614,6 +623,7 @@ export interface FileRouteTypes {
     | '/admin/nutrition/operations'
     | '/admin/training/reviews'
     | '/app/'
+    | '/admin/billing/'
     | '/admin/clients/'
     | '/admin/messages/'
     | '/admin/training/'
@@ -672,6 +682,7 @@ export interface FileRouteTypes {
     | '/admin/nutrition/operations'
     | '/admin/training/reviews'
     | '/app'
+    | '/admin/billing'
     | '/admin/clients'
     | '/admin/messages'
     | '/admin/training'
@@ -735,6 +746,7 @@ export interface FileRouteTypes {
     | '/admin/nutrition/operations'
     | '/admin/training/reviews'
     | '/_platform/app/'
+    | '/admin/billing/'
     | '/admin/clients/'
     | '/admin/messages/'
     | '/admin/training/'
@@ -984,6 +996,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/admin/clients/'
       preLoaderRoute: typeof AdminClientsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/billing/': {
+      id: '/admin/billing/'
+      path: '/billing'
+      fullPath: '/admin/billing/'
+      preLoaderRoute: typeof AdminBillingIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/_platform/app/': {
@@ -1333,6 +1352,7 @@ interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminClientsClientIdRoute: typeof AdminClientsClientIdRoute
   AdminTrainingReviewsRoute: typeof AdminTrainingReviewsRoute
+  AdminBillingIndexRoute: typeof AdminBillingIndexRoute
   AdminClientsIndexRoute: typeof AdminClientsIndexRoute
   AdminTrainingIndexRoute: typeof AdminTrainingIndexRoute
 }
@@ -1354,6 +1374,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminClientsClientIdRoute: AdminClientsClientIdRoute,
   AdminTrainingReviewsRoute: AdminTrainingReviewsRoute,
+  AdminBillingIndexRoute: AdminBillingIndexRoute,
   AdminClientsIndexRoute: AdminClientsIndexRoute,
   AdminTrainingIndexRoute: AdminTrainingIndexRoute,
 }

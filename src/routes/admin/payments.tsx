@@ -31,6 +31,8 @@ import {
 import { AdminPaymentExceptionsPanel } from "@/components/admin/AdminPaymentExceptionsPanel";
 import { AdminProviderEventsPanel } from "@/components/admin/AdminProviderEventsPanel";
 import { AdminPspPaymentsPanel } from "@/components/admin/AdminPspPaymentsPanel";
+import { BillingOpsSubnav } from "@/components/admin/BillingOpsSubnav";
+import { ProviderBindingBanner } from "@/components/admin/ProviderBindingBanner";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
 
 type PaymentsSection = "exceptions" | "psp" | "provider-events" | "legacy";
@@ -193,6 +195,9 @@ function AdminPaymentsPage() {
           ) : null
         }
       />
+
+      <BillingOpsSubnav />
+      <ProviderBindingBanner />
 
       <div className="cc-tabs" role="tablist" aria-label="أقسام الفوترة">
         {(
