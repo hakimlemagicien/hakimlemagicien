@@ -129,7 +129,7 @@ export function ClientMembershipWorkspace({ clientId, overview }: Props) {
 
       <AdminCard>
         <h2 className="cc-section__title">العضوية والفوترة</h2>
-        <p className="cc-muted">قراءة فقط — مصدر الحقيقة: {membershipSourceLabel(membership.source)}</p>
+        <p className="cc-muted">بيانات الاشتراك الحالية — دون تعديل يدوي للصلاحيات أو تفعيل وهمي. مصدر الحقيقة: {membershipSourceLabel(membership.source)}</p>
         <dl className="cc-dl">
           <div>
             <dt>الخطة</dt>

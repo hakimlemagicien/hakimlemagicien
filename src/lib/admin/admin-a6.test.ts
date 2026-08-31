@@ -119,7 +119,8 @@ assert(!membershipsPage.includes("Mark as Paid"), "no mark paid");
 // T35–T40 trusted boundaries
 assert(!membershipsPage.includes("Grant Premium"), "no grant premium");
 assert(!pspPanel.includes("updateLeadPaymentStatus"), "psp no legacy mutation");
-assert(!membershipWorkspace.includes("تعديل"), "no manual edit CTA");
+assert(!membershipWorkspace.includes("updateMembership"), "no membership mutation");
+assert(!membershipWorkspace.includes("Mark as Paid"), "no mark paid in workspace");
 
 // T41–T43 audit / source labels
 assert(membershipWorkspace.includes("سجل العمليات"), "audit link");
