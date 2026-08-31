@@ -88,8 +88,11 @@ jobs:
           URL=$(npx vercel deploy --prebuilt --yes --token "$VERCEL_TOKEN")
           echo "deployment_url=$URL" >> "$GITHUB_OUTPUT"
           echo "Deployed preview $URL"
-          npx vercel alias set "$URL" staging.hakimlemagicien.com --token "$VERCEL_TOKEN"
-          echo "Aliased staging.hakimlemagicien.com -> $URL"
+          if npx vercel alias set "$URL" staging.hakimlemagicien.com --token "$VERCEL_TOKEN"; then
+            echo "Aliased staging.hakimlemagicien.com -> $URL"
+          else
+            echo "::warning::Could not alias staging.hakimlemagicien.com — set manually after deploy"
+          fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
