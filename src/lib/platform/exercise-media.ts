@@ -81,6 +81,12 @@ export function buildRealInstructionsVideoPath(externalId: string): string {
   return `exercises/${externalId}/instructions.mp4`;
 }
 
+export type ThumbnailExtension = "webp" | "jpg" | "png";
+
+export function buildRealThumbnailPath(externalId: string, ext: ThumbnailExtension = "webp"): string {
+  return `exercises/${externalId}/thumbnail.${ext}`;
+}
+
 export function normalizeStorageObjectPath(path: string): string {
   return path
     .replace(/^\/+/, "")

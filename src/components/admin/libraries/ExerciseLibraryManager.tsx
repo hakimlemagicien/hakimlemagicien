@@ -58,7 +58,10 @@ import {
   type AdminExerciseListItem,
 } from "@/lib/admin/admin-exercises-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
-import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
+import { ExerciseListThumb } from "@/components/admin/libraries/ExerciseListThumb";
+import { ExerciseMediaPanel } from "@/components/admin/libraries/ExerciseMediaPanel";
+import { fetchExerciseThumbnailUrls, videoStatusLabel } from "@/lib/admin/admin-exercise-media";
+import { useCanAdmin } from "@/components/admin/StaffPermissionsContext";
 import { detectExerciseSensitiveChanges } from "@/lib/admin/admin-library-safety";
 import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
 import type { LibraryImpactWarning } from "@/lib/admin/admin-library-safety";
@@ -85,6 +88,9 @@ export function ExerciseLibraryManager() {
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
   const [pendingImpact, setPendingImpact] = useState<LibraryImpactWarning | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
+  const [thumbsLoading, setThumbsLoading] = useState(false);
+  const canUploadMedia = useCanAdmin("exercise.content_edit");
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
 
@@ -122,6 +128,27 @@ export function ExerciseLibraryManager() {
       cancelled = true;
     };
   }, [debouncedQuery, muscle, equipment, difficulty, type, active, offset]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const paths = rows.map((row) => row.thumbnail_path);
+    if (!paths.some(Boolean)) {
+      setThumbUrls({});
+      setThumbsLoading(false);
+      return;
+    }
+    setThumbsLoading(true);
+    void fetchExerciseThumbnailUrls(paths)
+      .then((map) => {
+        if (!cancelled) setThumbUrls(map);
+      })
+      .finally(() => {
+        if (!cancelled) setThumbsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [rows]);
 
   const openItem = (id: string | "new") => {
     guard(() => {
@@ -402,18 +429,18 @@ export function ExerciseLibraryManager() {
             ) : rows.length === 0 ? (
               <AdminEmptyState title="لا تمارين مطابقة" body="غيّر البحث أو أضف تمريناً جديداً." />
             ) : (
-              <AdminTable>
+              <>
+              <AdminTable className="cc-table-wrap--desktop cc-exercise-table">
                 <thead>
                   <tr>
+                    <th>الصورة</th>
                     <th>التمرين</th>
-                    <th>English</th>
-                    <th>النوع</th>
                     <th>العضلة</th>
                     <th>المعدات</th>
+                    <th>الصعوبة</th>
+                    <th>الفيديو</th>
                     <th>الحالة</th>
-                    <th>الوسائط</th>
-                    <th>V2</th>
-                    <th>تحديث</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -424,28 +451,55 @@ export function ExerciseLibraryManager() {
                       onClick={() => openItem(row.id)}
                     >
                       <td>
-                        <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
-                          {row.name_ar}
-                        </button>
-                        <div className="cc-muted">{row.external_id}</div>
+                        <ExerciseListThumb
+                          name={row.name_ar || row.name_en}
+                          src={row.thumbnail_path ? thumbUrls[row.thumbnail_path] : null}
+                          loading={thumbsLoading && Boolean(row.thumbnail_path) && !thumbUrls[row.thumbnail_path]}
+                        />
                       </td>
-                      <td dir="ltr">{row.name_en}</td>
-                      <td>{row.exercise_type}</td>
+                      <td>
+                        <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
+                          {row.external_id}
+                        </button>
+                        <div>{row.name_ar}</div>
+                        <div className="cc-muted" dir="ltr">{row.name_en}</div>
+                      </td>
                       <td>{row.muscle_group_name_ar || row.primary_muscle || "—"}</td>
                       <td>{row.equipment || "—"}</td>
+                      <td>{row.difficulty || "—"}</td>
+                      <td>{videoStatusLabel(row.video_status)}</td>
                       <td>
                         <AdminLibraryStatusBadge
                           status={row.is_active ? "active" : "archived"}
                           label={exerciseStatusLabel(row.is_active)}
                         />
                       </td>
-                      <td>{row.video_status}</td>
-                      <td>{row.v2_metadata_status}</td>
-                      <td>{formatAdminDate(row.updated_at)}</td>
+                      <td>
+                        <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => openItem(row.id)}>
+                          فتح
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </AdminTable>
+              <div className="cc-mobile-cards cc-exercise-card-list">
+                {rows.map((row) => (
+                  <button key={row.id} type="button" className="cc-exercise-card" onClick={() => openItem(row.id)}>
+                    <ExerciseListThumb
+                      name={row.name_ar || row.name_en}
+                      src={row.thumbnail_path ? thumbUrls[row.thumbnail_path] : null}
+                      loading={thumbsLoading && Boolean(row.thumbnail_path) && !thumbUrls[row.thumbnail_path]}
+                    />
+                    <span className="cc-exercise-card__body">
+                      <strong>{row.external_id}</strong>
+                      <span>{row.name_ar}</span>
+                      <span className="cc-muted">{videoStatusLabel(row.video_status)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              </>
             )}
             <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={setOffset} />
           </>
@@ -483,6 +537,33 @@ export function ExerciseLibraryManager() {
                   )
                 ) : null}
               </AdminEditorToolbar>
+              {draft.id ? (
+                <ExerciseMediaPanel
+                  draft={draft as AdminExerciseDetail}
+                  canUpload={canUploadMedia}
+                  onConfirm={setConfirm}
+                  onUpdated={(next) => {
+                    setDraft(next);
+                    setBaseline(JSON.stringify(next));
+                    setSaveState("saved");
+                    setRows((prev) =>
+                      prev.map((row) =>
+                        row.id === next.id
+                          ? {
+                              ...row,
+                              video_status: next.video_status,
+                              instructions_status: next.instructions_status,
+                              thumbnail_path: next.thumbnail_path,
+                              updated_at: next.updated_at,
+                            }
+                          : row,
+                      ),
+                    );
+                  }}
+                />
+              ) : (
+                <p className="cc-muted">احفظ التمرين أولاً قبل رفع الوسائط.</p>
+              )}
               {firstFieldError(fieldErrors) ? <p className="cc-field__error">{firstFieldError(fieldErrors)}</p> : null}
               <div className="cc-form-grid">
                 <AdminField label="الاسم العربي" htmlFor="name_ar" error={fieldErrors.name_ar}>
@@ -561,29 +642,6 @@ export function ExerciseLibraryManager() {
                 </AdminField>
                 <AdminField label="YouTube" htmlFor="youtube_url">
                   <AdminTextInput id="youtube_url" dir="ltr" value={draft.youtube_url ?? ""} onChange={(value) => setDraft({ ...draft, youtube_url: value })} />
-                </AdminField>
-                <AdminField label="مسار الفيديو" htmlFor="video_path" hint="مسار داخل bucket exercise-media">
-                  <AdminTextInput id="video_path" dir="ltr" value={draft.video_path ?? ""} onChange={(value) => setDraft({ ...draft, video_path: value })} />
-                </AdminField>
-                <AdminField label="مسار التعليمات" htmlFor="instructions_video_path">
-                  <AdminTextInput id="instructions_video_path" dir="ltr" value={draft.instructions_video_path ?? ""} onChange={(value) => setDraft({ ...draft, instructions_video_path: value })} />
-                </AdminField>
-                <AdminField label="الصورة المصغرة" htmlFor="thumbnail_path">
-                  <AdminTextInput id="thumbnail_path" dir="ltr" value={draft.thumbnail_path ?? ""} onChange={(value) => setDraft({ ...draft, thumbnail_path: value })} />
-                </AdminField>
-                <AdminField label="حالة الفيديو" htmlFor="video_status">
-                  <AdminSelect id="video_status" value={draft.video_status} onChange={(value) => setDraft({ ...draft, video_status: value })}>
-                    <option value="placeholder">placeholder</option>
-                    <option value="ready">ready</option>
-                    <option value="missing">missing</option>
-                  </AdminSelect>
-                </AdminField>
-                <AdminField label="حالة التعليمات" htmlFor="instructions_status">
-                  <AdminSelect id="instructions_status" value={draft.instructions_status} onChange={(value) => setDraft({ ...draft, instructions_status: value })}>
-                    <option value="placeholder">placeholder</option>
-                    <option value="ready">ready</option>
-                    <option value="missing">missing</option>
-                  </AdminSelect>
                 </AdminField>
               </div>
               <p className="cc-muted">بيانات التدريب V2 — منفصلة عن حالة الفيديو. لا تُخمّن في وقت التشغيل.</p>

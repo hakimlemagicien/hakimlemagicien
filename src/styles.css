@@ -13526,7 +13526,8 @@ body.is-membership-pass-open {
 
   .cc-mobile-cards,
   .cc-mobile-membership-cards,
-  .cc-client-card-list {
+  .cc-client-card-list,
+  .cc-exercise-card-list {
     display: grid;
   }
 
@@ -14606,5 +14607,123 @@ body.is-membership-pass-open {
   font-size: 12px;
   color: #f97316;
   text-decoration: none;
+}
+
+.cc-exercise-thumb {
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f4efe7;
+  color: #8a8174;
+  object-fit: cover;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.2;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-exercise-thumb--loading {
+  background: linear-gradient(90deg, #f4efe7, #fff, #f4efe7);
+}
+
+.cc-exercise-thumb--empty span {
+  max-width: 56px;
+}
+
+.cc-exercise-card-list {
+  display: none;
+}
+
+.cc-exercise-card {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e7e0d6;
+  border-radius: 14px;
+  background: #fff;
+  text-align: start;
+  cursor: pointer;
+}
+
+.cc-exercise-card__body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-media-panel {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 18px;
+  padding: 14px;
+  border: 1px solid #e7e0d6;
+  border-radius: 16px;
+  background: #fffaf4;
+}
+
+.cc-media-panel h3,
+.cc-media-card h4 {
+  margin: 0;
+}
+
+.cc-media-card {
+  padding: 12px;
+  border: 1px solid #efe8de;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.cc-media-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cc-media-card__status {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+.cc-media-card__preview {
+  min-height: 72px;
+  margin-bottom: 8px;
+}
+
+.cc-media-panel__img,
+.cc-media-panel__video {
+  width: 100%;
+  max-width: 320px;
+  max-height: 180px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #111;
+}
+
+.cc-media-card__path {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: #78716c;
+  overflow-wrap: anywhere;
+}
+
+.cc-media-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cc-media-card__actions .cc-btn {
+  min-height: 40px;
 }
 
