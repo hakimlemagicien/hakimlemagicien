@@ -14636,10 +14636,6 @@ body.is-membership-pass-open {
   max-width: 56px;
 }
 
-.cc-exercise-card-list {
-  display: none;
-}
-
 .cc-exercise-card {
   display: flex;
   gap: 12px;
