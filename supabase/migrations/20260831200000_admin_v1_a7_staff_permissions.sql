@@ -172,7 +172,7 @@ CREATE POLICY staff_members_admin_mutate ON public.staff_members
 INSERT INTO public.staff_members (user_id, staff_role, status, granted_at)
 SELECT ur.user_id, 'super_admin'::public.staff_role, 'active', now()
 FROM public.user_roles ur
-WHERE ur.role = 'admin'::public.app_role
+WHERE lower(ur.role::text) = 'admin'
 ON CONFLICT (user_id) DO UPDATE
 SET staff_role = EXCLUDED.staff_role,
     status = 'active',
@@ -246,7 +246,7 @@ SET search_path = public
 AS $$
 BEGIN
   IF auth.uid() IS NOT NULL
-     AND NEW.role = 'admin'::public.app_role
+     AND lower(NEW.role::text) = 'admin'
      AND NOT public.has_role(auth.uid(), 'admin') THEN
     RAISE EXCEPTION 'forbidden' USING ERRCODE = '42501';
   END IF;

@@ -16,7 +16,6 @@ import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHead
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
 import { WorkoutCalendarOverlay } from "@/components/platform/workout/WorkoutCalendarOverlay";
-import { ExerciseLibraryPilotCard } from "@/components/platform/exercises/ExerciseLibraryPilotCard";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
@@ -42,8 +41,14 @@ import {
   formatExerciseVolume,
   type WorkoutSessionExercise,
 } from "@/lib/platform/workout-session";
-import { loadWorkoutProgress } from "@/lib/platform/workout-progress-storage";
+import { loadWorkoutProgress, peekStoredWorkoutSession, isStoredWorkoutInterrupted } from "@/lib/platform/workout-progress-storage";
+import { workoutFitsGoalCopy } from "@/lib/platform/home-hub";
+import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
+import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
+import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
 import workoutGoalStack1 from "@/assets/workout-goal-stack-1.webp";
 import workoutGoalStack2 from "@/assets/workout-goal-stack-2.webp";
@@ -84,7 +89,8 @@ function buildSessionExerciseViews(
   exercises: WorkoutSessionExercise[],
   applyStoredProgress: boolean,
 ): SessionExerciseView[] {
-  const stored = applyStoredProgress ? loadWorkoutProgress(exercises.length) : null;
+  const externalIds = exercises.map((item) => item.external_id);
+  const stored = applyStoredProgress ? loadWorkoutProgress(exercises.length, externalIds) : null;
   return exercises.map((exercise, index) => {
     const saved = stored?.[index];
     return {
@@ -93,6 +99,38 @@ function buildSessionExerciseViews(
       status: saved?.status ?? (index === 0 ? "active" : "pending"),
     };
   });
+}
+
+const SELECTED_DAY_KEY = "hakim:workout-selected-day:v1";
+
+function readStoredSelectedDay(fallback: WeekdayId): WeekdayId {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.sessionStorage.getItem(SELECTED_DAY_KEY);
+    if (
+      raw === "sat" ||
+      raw === "sun" ||
+      raw === "mon" ||
+      raw === "tue" ||
+      raw === "wed" ||
+      raw === "thu" ||
+      raw === "fri"
+    ) {
+      return raw;
+    }
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
+function writeStoredSelectedDay(dayId: WeekdayId) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(SELECTED_DAY_KEY, dayId);
+  } catch {
+    // ignore
+  }
 }
 
 const WORKOUT_CARD_BLEED =
@@ -291,8 +329,10 @@ function GoalHeroPhotoStack({
 
 function WorkoutGoalHero({
   overallProgress,
+  goalLabel,
 }: {
   overallProgress: number;
+  goalLabel: string;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
 
@@ -330,7 +370,7 @@ function WorkoutGoalHero({
               <Target className="h-3.5 w-3.5" strokeWidth={2.4} />
               هدفك
             </p>
-            <h2 className="workout-goal-hero__title">خسارة الدهون</h2>
+            <h2 className="workout-goal-hero__title">{goalLabel}</h2>
             <p className="workout-goal-hero__desc">
               برنامجك مصمم خصيصاً لك بناءً على بياناتك وسيتم تحديثه كل أسبوع.
             </p>
@@ -367,6 +407,7 @@ function TodayWorkoutBriefCard({
   onLockedClick,
   ctaLabel,
   notice,
+  why,
 }: {
   dateLabel: string;
   muscleTitle: string;
@@ -380,6 +421,7 @@ function TodayWorkoutBriefCard({
   onLockedClick?: () => void;
   ctaLabel?: string;
   notice?: string;
+  why?: string;
 }) {
   const fullyLocked = lockedPreview && lockedPreviewIntensity === "strong";
   const startClassName =
@@ -498,6 +540,11 @@ function TodayWorkoutBriefCard({
           {startLabel}
         </Link>
       )}
+      {why && !isRestDay ? (
+        <p className="rounded-2xl border border-border/50 bg-muted/30 px-3 py-2 text-center text-[11px] font-medium leading-relaxed text-muted-foreground">
+          {why}
+        </p>
+      ) : null}
       {notice ? (
         <p className="text-center text-[11px] font-medium leading-relaxed text-muted-foreground">{notice}</p>
       ) : null}
@@ -766,7 +813,7 @@ function WorkoutDayPage() {
   const hasWorkoutProgram = Boolean(features?.workout_program);
   const freePreview = isTrainingPreviewMode(entitlements);
   const todayId = getWeekdayIdFromDate();
-  const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(todayId);
+  const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(() => readStoredSelectedDay(todayId));
   const [calendarOpen, setCalendarOpen] = useState(false);
   const isSelectedToday = selectedDayId === todayId;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
@@ -779,12 +826,27 @@ function WorkoutDayPage() {
       freeDayFullyLocked ? lockedReason : "بقية التمارين مختارة حسب هدفك ومستواك.",
     );
 
+  const trainingQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    staleTime: 30_000,
+  });
+  const goalLabel = resolveClientGoalLabel(
+    trainingQuery.data?.answers.goalId,
+    readQuizProgress()?.goalId,
+    trainingQuery.data?.goal,
+  );
+
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedPlans =
-    hasWorkoutProgram && runtimeQuery.data?.reason === "ok"
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
       ? continuity.assignedPlans
       : null;
+
+  useEffect(() => {
+    writeStoredSelectedDay(selectedDayId);
+  }, [selectedDayId]);
 
   const weeklySchedule = useMemo(
     () =>
@@ -817,6 +879,25 @@ function WorkoutDayPage() {
   const overallProgress = snapshot.overallProgressPct;
   const runtimeReason = runtimeQuery.data?.reason;
   const programName = runtimeQuery.data?.assignment?.name_ar;
+  const runtimeOk =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason === "ok";
+  const showFreeCatalogWeek = freePreview && !hasWorkoutProgram;
+  const showWeeklySchedule = showFreeCatalogWeek || runtimeOk;
+  const showRuntimeLoading = hasWorkoutProgram && runtimeQuery.isLoading;
+  const showRuntimeError =
+    hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
+  const showRuntimeBlocked =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason !== "ok";
+  const interrupted =
+    applyStoredProgress && isStoredWorkoutInterrupted(peekStoredWorkoutSession());
+  const resumeNotice =
+    interrupted || continuity.decision?.action === "RESUME_SESSION"
+      ? "جلسة سابقة غير مكتملة — يمكنك الاستكمال من حيث توقفت."
+      : undefined;
+  const whyCopy =
+    !selectedPlan.isRestDay && goalLabel !== "غير محدد"
+      ? workoutFitsGoalCopy(goalLabel, selectedPlan.muscleTitle)
+      : undefined;
 
   return (
     <PlatformStack>
@@ -836,11 +917,9 @@ function WorkoutDayPage() {
           <PlatformHeaderActions />
         </header>
 
-        <ExerciseLibraryPilotCard />
+        <WorkoutGoalHero overallProgress={overallProgress} goalLabel={goalLabel} />
 
-        <WorkoutGoalHero overallProgress={overallProgress} />
-
-        {hasWorkoutProgram && runtimeQuery.isLoading ? (
+        {showRuntimeLoading ? (
           <section className="platform-card space-y-3 rounded-3xl p-4">
             <div className="h-4 w-40 animate-pulse rounded bg-muted" />
             <div className="h-16 animate-pulse rounded-2xl bg-muted" />
@@ -848,11 +927,12 @@ function WorkoutDayPage() {
           </section>
         ) : null}
 
-        {hasWorkoutProgram && runtimeQuery.isError ? (
+        {showRuntimeError ? (
           <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
             <p className="text-sm font-black text-foreground">تعذر تحميل البرنامج.</p>
-            <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
-            <p className="text-xs text-muted-foreground">لاختبار صور الشرح افتح تجربة شاشة الحصة أعلى الصفحة.</p>
+            <p className="text-xs text-muted-foreground">
+              تحقق من اتصالك ثم أعد المحاولة. لا نعرض جدولاً افتراضياً مكان برنامجك.
+            </p>
             <button
               type="button"
               className="text-[11px] font-black text-primary"
@@ -863,7 +943,7 @@ function WorkoutDayPage() {
           </section>
         ) : null}
 
-        {hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason !== "ok" ? (
+        {showRuntimeBlocked ? (
           <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
             <p className="text-sm font-black text-foreground">
               {runtimeReason === "scheduled"
@@ -883,7 +963,7 @@ function WorkoutDayPage() {
           </section>
         ) : null}
 
-        {freePreview || (hasWorkoutProgram && runtimeReason === "ok") ? (
+        {showWeeklySchedule ? (
         <>
         <section
           className={cn(
@@ -937,18 +1017,21 @@ function WorkoutDayPage() {
             lockedPreviewIntensity={freeDayFullyLocked ? "strong" : "light"}
             onLockedClick={openTrainingUpgrade}
             ctaLabel={
-              isSelectedToday && continuity.decision?.action === "RESUME_SESSION"
+              isSelectedToday &&
+              (interrupted || continuity.decision?.action === "RESUME_SESSION")
                 ? "استكمل التمرين"
                 : undefined
             }
+            why={whyCopy}
             notice={
-              isSelectedToday &&
+              resumeNotice ??
+              (isSelectedToday &&
               continuity.decision &&
               ["RESCHEDULE_SESSION", "DEFER_SESSION", "ADVANCE_AFTER_PARTIAL", "ENTER_RECONDITIONING", "SCHEDULE_REVIEW_REQUIRED"].includes(
                 continuity.decision.action,
               )
                 ? continuity.decision.client_explanation
-                : undefined
+                : undefined)
             }
           />
 
