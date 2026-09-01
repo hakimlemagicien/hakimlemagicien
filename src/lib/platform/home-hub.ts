@@ -622,6 +622,14 @@ export function shouldShowActivateCta(tier: MembershipTier, isPaid: boolean): bo
   return !isPaid && tier !== "admin";
 }
 
+export function workoutFitsGoalCopy(goalLabel: string, muscleTitle?: string | null): string {
+  const goal = goalLabel.trim() || "هدفك";
+  if (muscleTitle?.trim()) {
+    return `هذه الحصة تركّز على ${muscleTitle.trim()} بما يناسب هدفك: ${goal}.`;
+  }
+  return `تمرين اليوم مختار حسب هدفك: ${goal}.`;
+}
+
 /* ── Home Dashboard v2 (CEO-approved layout) ───────────────────────────── */
 
 export type DailySnapshotItem = {

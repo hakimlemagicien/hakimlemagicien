@@ -122,6 +122,31 @@ export function loadWorkoutProgress(length: number, externalIds?: string[]): Sto
   return loadWorkoutSession(sessionKey, length)?.progress ?? null;
 }
 
+export function peekStoredWorkoutSession(): StoredWorkoutSession | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredWorkoutSession;
+    if (parsed?.version !== 2 && parsed?.version !== 3) return null;
+    if (!Array.isArray(parsed.progress) || parsed.progress.length === 0) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function isStoredWorkoutInterrupted(session: StoredWorkoutSession | null): boolean {
+  if (!session) return false;
+  const finished = session.progress.every((item) => item.status === "done");
+  if (finished) return false;
+  return (
+    session.progress.some((item) => item.completedSets > 0 || item.status === "done") ||
+    session.setLogs.length > 0 ||
+    Boolean(session.startedAt)
+  );
+}
+
 export function saveWorkoutSession(state: StoredWorkoutSession) {
   if (typeof window === "undefined") return;
   try {
