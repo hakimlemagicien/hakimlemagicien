@@ -10,6 +10,7 @@ import {
   AdminStatusBadge,
 } from "@/components/admin/AdminPage";
 import { Client360Header } from "@/components/admin/Client360Header";
+import { ClientAccountManagementPanel } from "@/components/admin/ClientAccountManagementPanel";
 import { ClientAttentionAlerts } from "@/components/admin/ClientAttentionAlerts";
 import { ClientHealthSnapshot } from "@/components/admin/ClientHealthSnapshot";
 import {
@@ -33,6 +34,7 @@ import {
 } from "@/lib/admin/admin-notes-api";
 import { buildClientAttentionAlerts, clientNutritionSummary, clientTrainingSummary } from "@/lib/admin/admin-client-ops";
 import { formatAdminDate, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
 import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
 import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
 import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
@@ -181,6 +183,24 @@ function AdminClient360Page() {
             }}
           />
 
+          {normalizeClientAccountStatus(overview.account_status) === "suspended" ? (
+            <div className="cc-account-banner cc-account-banner--suspended" role="status">
+              هذا الحساب موقوف مؤقتًا.
+            </div>
+          ) : null}
+          {normalizeClientAccountStatus(overview.account_status) === "archived" ? (
+            <div className="cc-account-banner" role="status">
+              هذا العميل مؤرشف ولا يظهر في التشغيل اليومي.
+            </div>
+          ) : null}
+          {normalizeClientAccountStatus(overview.account_status) === "deletion_pending" ? (
+            <div className="cc-account-banner cc-account-banner--danger" role="alert">
+              {overview.account_deleted_at
+                ? "تم تنفيذ حذف البيانات الشخصية. السجلات المحتفظ بها تبقى للفوترة والتدقيق."
+                : "طلب حذف الحساب قيد المعالجة."}
+            </div>
+          ) : null}
+
           <nav className="cc-tabs" aria-label="أقسام العميل">
             {CLIENT_360_SECTIONS.map((section) => (
               <Link
@@ -292,6 +312,14 @@ function AdminClient360Page() {
                   عرض كل النشاط
                 </Link>
               </AdminCard>
+
+              <ClientAccountManagementPanel
+                overview={overview}
+                onUpdated={async () => {
+                  const next = await fetchAdminClientOverview(clientId);
+                  if (next) setOverview(next);
+                }}
+              />
             </AdminSection>
           ) : null}
 

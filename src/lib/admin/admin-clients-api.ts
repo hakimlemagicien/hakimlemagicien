@@ -18,6 +18,7 @@ export type AdminClientListItem = {
   unreadCoachingCount: number;
   waitingCoaching: boolean;
   createdAt: string;
+  accountStatus?: string | null;
 };
 
 export type AdminClientSearchResult = {
@@ -81,6 +82,8 @@ export type AdminClientOverview = {
   } | null;
   notes_count: number;
   open_support_count?: number;
+  account_status?: string | null;
+  account_deleted_at?: string | null;
 };
 
 function mapListRow(row: {
@@ -98,6 +101,7 @@ function mapListRow(row: {
   unread_coaching_count: number;
   waiting_coaching: boolean;
   created_at: string;
+  account_status?: string | null;
   total_count: number;
 }): AdminClientListItem {
   return {
@@ -115,6 +119,7 @@ function mapListRow(row: {
     unreadCoachingCount: row.unread_coaching_count,
     waitingCoaching: row.waiting_coaching,
     createdAt: row.created_at,
+    accountStatus: row.account_status ?? "active",
   };
 }
 
@@ -125,7 +130,12 @@ export function clampAdminClientLimit(limit: number): number {
 
 export async function searchAdminClients(
   query: string,
-  opts?: { plan?: string; onboarding?: "complete" | "incomplete"; offset?: number },
+  opts?: {
+    plan?: string;
+    onboarding?: "complete" | "incomplete";
+    accountStatus?: "all" | "active" | "suspended" | "archived" | "deletion_pending";
+    offset?: number;
+  },
 ): Promise<AdminClientSearchResult> {
   const trimmed = query.trim();
   if (trimmed.length > 0 && trimmed.length < ADMIN_CLIENT_MIN_QUERY) {
@@ -138,6 +148,7 @@ export async function searchAdminClients(
     p_onboarding: opts?.onboarding || null,
     p_limit: clampAdminClientLimit(ADMIN_CLIENT_PAGE_SIZE),
     p_offset: Math.max(opts?.offset ?? 0, 0),
+    p_account_status: opts?.accountStatus ?? null,
   });
 
   if (error) throw error;
@@ -170,6 +181,7 @@ export async function fetchAdminClient(clientId: string): Promise<AdminClientLis
     unreadCoachingCount: overview.coaching?.unread_count ?? 0,
     waitingCoaching: overview.coaching?.status === "waiting_for_reply",
     createdAt: overview.created_at,
+    accountStatus: overview.account_status ?? "active",
   };
 }
 

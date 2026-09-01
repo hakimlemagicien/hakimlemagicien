@@ -1,9 +1,10 @@
 import { createFileRoute, isRedirect, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
 import { useMembership } from "@/hooks/useMembership";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
 
 function errorDetail(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/_platform")({
 function PlatformLayout() {
   const navigate = useNavigate();
   useMembership();
+  const [blocked, setBlocked] = useState(false);
+  const [blockStatus, setBlockStatus] = useState("active");
 
   useEffect(() => {
     function kickIfPasswordMissing(user: Parameters<typeof userNeedsPasswordSetup>[0]) {
@@ -88,6 +91,39 @@ function PlatformLayout() {
       sub.subscription.unsubscribe();
     };
   }, [navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchMyAccountLifecycle()
+      .then((lifecycle) => {
+        if (cancelled) return;
+        setBlocked(lifecycle.blocked);
+        setBlockStatus(lifecycle.status);
+      })
+      .catch(() => {
+        if (!cancelled) setBlocked(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (blocked) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-black text-foreground">
+            {blockStatus === "suspended" ? "الحساب موقوف مؤقتًا" : "الحساب غير متاح"}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {blockStatus === "suspended"
+              ? "تم إيقاف وصولك مؤقتًا. بياناتك محفوظة ويمكن إعادة التفعيل من الإدارة."
+              : "تم تقييد هذا الحساب وفق سياسة الحساب."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PlatformShell>

@@ -28,6 +28,11 @@ import {
   planLabel,
   planStatusKind,
 } from "@/lib/admin/admin-status";
+import {
+  clientAccountStatusLabel,
+  clientAccountStatusTone,
+  normalizeClientAccountStatus,
+} from "@/lib/admin/admin-client-account";
 
 type ClientsSearch = { q?: string };
 type ClientSort = "joined" | "activity" | "unread";
@@ -54,6 +59,7 @@ function AdminClientsPage() {
   const [planFilter, setPlanFilter] = useState<"all" | "vip" | "premium" | "essential" | "free">("all");
   const [attentionFilter, setAttentionFilter] = useState(false);
   const [sort, setSort] = useState<ClientSort>("joined");
+  const [accountFilter, setAccountFilter] = useState<"daily" | "all" | "active" | "suspended" | "archived">("daily");
 
   useEffect(() => {
     setValue(q ?? "");
@@ -88,6 +94,8 @@ function AdminClientsPage() {
     void searchAdminClients(query, {
       onboarding: onboardingFilter === "all" ? undefined : onboardingFilter,
       plan: planFilter === "all" ? undefined : planFilter,
+      accountStatus:
+        accountFilter === "daily" ? undefined : accountFilter === "all" ? "all" : accountFilter,
       offset: 0,
     })
       .then((next) => {
@@ -107,7 +115,7 @@ function AdminClientsPage() {
     return () => {
       cancelled = true;
     };
-  }, [q, onboardingFilter, planFilter, blocked]);
+  }, [q, onboardingFilter, planFilter, accountFilter, blocked]);
 
   const filteredRows = useMemo(() => {
     const base = result?.rows ?? [];
@@ -123,13 +131,18 @@ function AdminClientsPage() {
   );
 
   const hasActiveFilters =
-    onboardingFilter !== "all" || planFilter !== "all" || attentionFilter || sort !== "joined";
+    onboardingFilter !== "all" ||
+    planFilter !== "all" ||
+    attentionFilter ||
+    sort !== "joined" ||
+    accountFilter !== "daily";
 
   const clearFilters = () => {
     setOnboardingFilter("all");
     setPlanFilter("all");
     setAttentionFilter(false);
     setSort("joined");
+    setAccountFilter("daily");
   };
 
   const loadMore = async () => {
@@ -140,6 +153,8 @@ function AdminClientsPage() {
       const next = await searchAdminClients(query, {
         onboarding: onboardingFilter === "all" ? undefined : onboardingFilter,
         plan: planFilter === "all" ? undefined : planFilter,
+        accountStatus:
+          accountFilter === "daily" ? undefined : accountFilter === "all" ? "all" : accountFilter,
         offset: nextOffset,
       });
       setResult({
@@ -210,6 +225,19 @@ function AdminClientsPage() {
             <option value="premium">Premium</option>
             <option value="essential">Essential</option>
             <option value="free">Free</option>
+          </select>
+        </label>
+        <label className="cc-filter">
+          <span>الحالة</span>
+          <select
+            value={accountFilter}
+            onChange={(event) => setAccountFilter(event.target.value as typeof accountFilter)}
+          >
+            <option value="daily">التشغيل اليومي</option>
+            <option value="all">الكل</option>
+            <option value="active">نشط</option>
+            <option value="suspended">موقوف</option>
+            <option value="archived">مؤرشف</option>
           </select>
         </label>
         <label className="cc-filter">
@@ -318,8 +346,8 @@ function ClientDirectoryRow({ row }: { row: AdminClientListItem }) {
         </div>
       </td>
       <td>
-        <AdminStatusBadge tone={row.membershipActive ? "success" : "neutral"}>
-          {row.membershipActive ? "نشط" : row.membershipActive === false ? "غير نشط" : "—"}
+        <AdminStatusBadge tone={clientAccountStatusTone(normalizeClientAccountStatus(row.accountStatus))}>
+          {clientAccountStatusLabel(normalizeClientAccountStatus(row.accountStatus))}
         </AdminStatusBadge>
       </td>
       <td>
@@ -373,6 +401,9 @@ function ClientDirectoryCard({ row }: { row: AdminClientListItem }) {
           </AdminStatusBadge>
         ) : null}
         <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
+        <AdminStatusBadge tone={clientAccountStatusTone(normalizeClientAccountStatus(row.accountStatus))}>
+          {clientAccountStatusLabel(normalizeClientAccountStatus(row.accountStatus))}
+        </AdminStatusBadge>
         {attention ? <span className="cc-client-directory__attention">{attention}</span> : null}
       </div>
       <p className="cc-meta">

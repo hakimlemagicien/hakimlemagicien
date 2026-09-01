@@ -2413,6 +2413,7 @@ export type Database = {
           p_onboarding?: string | null
           p_plan?: string | null
           p_query?: string | null
+          p_account_status?: string | null
         }
         Returns: {
           avatar_path: string | null
@@ -2430,10 +2431,32 @@ export type Database = {
           total_count: number
           unread_coaching_count: number
           waiting_coaching: boolean
+          account_status: string | null
         }[]
       }
       admin_get_client_overview: {
         Args: { p_client_id: string }
+        Returns: Json
+      }
+      admin_set_client_account_status: {
+        Args: { p_client_id: string; p_action: string; p_reason: string }
+        Returns: Json
+      }
+      admin_preview_client_account_deletion: {
+        Args: { p_client_id: string }
+        Returns: Json
+      }
+      admin_execute_client_account_deletion: {
+        Args: {
+          p_client_id: string
+          p_reason: string
+          p_confirmation_email: string
+          p_idempotency_key: string
+        }
+        Returns: Json
+      }
+      get_my_account_lifecycle: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       admin_list_client_notes: {

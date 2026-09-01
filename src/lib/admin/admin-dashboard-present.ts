@@ -15,6 +15,12 @@ const AUDIT_EVENT_LABELS: Record<string, string> = {
   payment_approved: "تمت الموافقة على دفعة",
   support_ticket_updated: "تم تحديث تذكرة دعم",
   client_note_added: "تمت إضافة ملاحظة داخلية",
+  client_account_suspended: "تم إيقاف حساب عميل",
+  client_account_reactivated: "تم إعادة تفعيل حساب عميل",
+  client_account_archived: "تم أرشفة عميل",
+  client_account_restored: "تم استعادة عميل من الأرشيف",
+  client_account_deletion_requested: "طُلب حذف حساب عميل",
+  client_account_deletion_executed: "تم تنفيذ حذف بيانات حساب عميل",
 };
 
 const COMMERCIAL_TIERS = new Set(["free", "essential", "premium"]);
@@ -71,4 +77,15 @@ export function buildMembershipOperationalSnapshot(input: {
 
 export function commercialTierLabel(tier: "free" | "essential" | "premium"): string {
   return planLabel(tier);
+}
+
+/** Conic gradient from real membership counts — not a trend forecast. */
+export function membershipDonutGradient(counts: { premium: number; essential: number; free: number }): string {
+  const total = counts.premium + counts.essential + counts.free;
+  if (total <= 0) return "#e5e7eb";
+  const premiumDeg = (counts.premium / total) * 360;
+  const essentialDeg = (counts.essential / total) * 360;
+  const premiumEnd = premiumDeg;
+  const essentialEnd = premiumDeg + essentialDeg;
+  return `conic-gradient(#f97316 0deg ${premiumEnd}deg, #3b82f6 ${premiumEnd}deg ${essentialEnd}deg, #9ca3af ${essentialEnd}deg 360deg)`;
 }

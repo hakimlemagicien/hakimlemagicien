@@ -2,14 +2,8 @@ import { Link } from "@tanstack/react-router";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import { trainingLocationLabel } from "@/lib/admin/admin-client-ops";
 import { AdminStatusBadge } from "@/components/admin/AdminPage";
-import {
-  formatAdminDate,
-  formatRelativeAge,
-  onboardingStatus,
-  personInitials,
-  planLabel,
-  planStatusKind,
-} from "@/lib/admin/admin-status";
+import { formatAdminDate, formatRelativeAge, onboardingStatus, personInitials, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { clientAccountStatusLabel, clientAccountStatusTone, normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
 
 type Props = {
   overview: AdminClientOverview;
@@ -36,6 +30,9 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
         </p>
         <div className="cc-client-hero__badges">
           <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
+          <AdminStatusBadge tone={clientAccountStatusTone(normalizeClientAccountStatus(overview.account_status))}>
+            {clientAccountStatusLabel(normalizeClientAccountStatus(overview.account_status))}
+          </AdminStatusBadge>
           {overview.membership?.tier ? (
             <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
               {planLabel(overview.membership.tier)}
