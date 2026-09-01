@@ -47,6 +47,7 @@ assert(thumbnailStatusFromPath(null) === "missing", "T12 missing thumb");
 assert(thumbnailStatusFromPath("exercises/CH-001/thumbnail.webp") === "ready", "thumb ready from path");
 
 const manager = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseLibraryManager.tsx"), "utf8");
+assert(manager.includes("fetchResolvedExerciseMediaUrl"), "detail preview import");
 assert(manager.includes("ExerciseListThumb"), "T11 list thumbnail");
 assert(manager.includes("ExerciseMediaPanel"), "media panel");
 assert(manager.includes("cc-exercise-card"), "T21 mobile card");

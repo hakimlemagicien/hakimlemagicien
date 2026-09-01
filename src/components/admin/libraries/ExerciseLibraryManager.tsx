@@ -61,6 +61,7 @@ import { formatAdminDate } from "@/lib/admin/admin-status";
 import { ExerciseListThumb } from "@/components/admin/libraries/ExerciseListThumb";
 import { ExerciseMediaPanel } from "@/components/admin/libraries/ExerciseMediaPanel";
 import { fetchExerciseThumbnailUrls, videoStatusLabel } from "@/lib/admin/admin-exercise-media";
+import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
 import { useCanAdmin } from "@/components/admin/StaffPermissionsContext";
 import { detectExerciseSensitiveChanges } from "@/lib/admin/admin-library-safety";
 import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
