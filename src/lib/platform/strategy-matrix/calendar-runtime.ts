@@ -20,7 +20,7 @@ function inferRegions(muscleFocus: string | null, externalIds: string[]): string
   if (focus.includes("صدر")) regions.add("CHEST");
   if (focus.includes("ظهر")) regions.add("UPPER_BACK");
   if (focus.includes("كتف") || focus.includes("أكتاف")) regions.add("SHOULDERS");
-  if (focus.includes("رجل") || focus.includes("فخذ")) regions.add("QUADRICEPS");
+  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ")) regions.add("QUADRICEPS");
   if (focus.includes("باي")) regions.add("BICEPS");
   if (focus.includes("تراي")) regions.add("TRICEPS");
   for (const id of externalIds) {
@@ -107,10 +107,8 @@ export function buildWeekdayPlansForAssignedRuntime(
 ): Record<WeekdayId, WeekdayWorkoutPlan> {
   if (runtime.reason !== "ok") return runtimeToWeekdayPlans(runtime);
 
-  if (!strategy) return runtimeToWeekdayPlans(runtime);
-
   const schedule = buildWeeklyScheduleForRuntime(runtime, strategy);
-  if (!schedule) return runtimeToWeekdayPlans(runtime);
+  if (schedule) return applyWeeklyScheduleToWeekdayPlans(runtime, schedule);
 
-  return applyWeeklyScheduleToWeekdayPlans(runtime, schedule);
+  return runtimeToWeekdayPlans(runtime);
 }

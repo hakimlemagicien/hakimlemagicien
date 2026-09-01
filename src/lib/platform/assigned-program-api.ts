@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { formatRepsLabel, ISO_DAY_TO_WEEKDAY } from "@/lib/platform/training-assignment";
+import { applySessionPresentationToPlan } from "@/lib/platform/session-muscle-presentation";
 import type { TodayWorkoutPrescription } from "@/lib/platform/today-workout";
 import type { WeekdayId, WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 
@@ -108,7 +109,7 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
       assignmentDayId: day.day_id,
       notes_ar: exercise.notes_ar ?? undefined,
     }));
-    map[weekday] = {
+    map[weekday] = applySessionPresentationToPlan({
       id: weekday,
       muscleTitle: day.title_ar || day.muscle_focus || "",
       targetMuscle: day.muscle_focus || day.title_ar || "",
@@ -118,7 +119,7 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
       calories: day.estimated_calories ?? 0,
       points: isRest ? 0 : 100,
       programDayId: day.day_id,
-    };
+    });
   }
   return map;
 }

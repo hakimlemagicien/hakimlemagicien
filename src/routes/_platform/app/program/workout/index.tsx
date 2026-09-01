@@ -49,7 +49,11 @@ import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
-import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
+import { SessionAnatomyVisual } from "@/components/platform/workout/SessionAnatomyVisual";
+import {
+  resolveSessionAnatomyImageSrc,
+  resolveSessionPresentation,
+} from "@/lib/platform/session-muscle-presentation";
 import workoutGoalStack1 from "@/assets/workout-goal-stack-1.webp";
 import workoutGoalStack2 from "@/assets/workout-goal-stack-2.webp";
 import workoutGoalStack3 from "@/assets/workout-goal-stack-3.webp";
@@ -398,6 +402,8 @@ function TodayWorkoutBriefCard({
   dateLabel,
   muscleTitle,
   isRestDay,
+  anatomyVisualKey,
+  anatomyImageSrc,
   stats,
   dayId,
   startExerciseId,
@@ -412,6 +418,8 @@ function TodayWorkoutBriefCard({
   dateLabel: string;
   muscleTitle: string;
   isRestDay: boolean;
+  anatomyVisualKey: ReturnType<typeof resolveSessionPresentation>["visualKey"];
+  anatomyImageSrc?: string | null;
   stats?: { exercises: number; minutes: number; points: number };
   dayId: WeekdayId;
   startExerciseId?: string;
@@ -448,13 +456,10 @@ function TodayWorkoutBriefCard({
     >
       <div className="flex min-h-[148px] items-stretch" dir="rtl">
         <div className="relative w-[46%] min-w-[150px] shrink-0 self-stretch overflow-hidden bg-card">
-          <img
-            src={muscleAnatomyChestBicepsImg}
-            alt={isRestDay ? "يوم راحة" : "تشريح عضلي للمجموعة المستهدفة"}
-            className={cn(
-              "absolute inset-0 h-full w-full origin-center object-contain object-center",
-              isRestDay && "opacity-70",
-            )}
+          <SessionAnatomyVisual
+            visualKey={anatomyVisualKey}
+            imageSrc={anatomyImageSrc}
+            isRestDay={isRestDay}
           />
           <span
             aria-hidden
@@ -894,9 +899,22 @@ function WorkoutDayPage() {
     interrupted || continuity.decision?.action === "RESUME_SESSION"
       ? "جلسة سابقة غير مكتملة — يمكنك الاستكمال من حيث توقفت."
       : undefined;
+  const sessionPresentation = useMemo(
+    () =>
+      resolveSessionPresentation({
+        plan: selectedPlan,
+        exerciseMuscles: sessionExercises.map((exercise) => ({
+          external_id: exercise.external_id,
+          muscle: exercise.muscle,
+        })),
+      }),
+    [selectedPlan, sessionExercises],
+  );
+  const sessionTitle = sessionPresentation.displayNameAr || selectedPlan.muscleTitle;
+  const anatomyImageSrc = resolveSessionAnatomyImageSrc(sessionPresentation);
   const whyCopy =
     !selectedPlan.isRestDay && goalLabel !== "غير محدد"
-      ? workoutFitsGoalCopy(goalLabel, selectedPlan.muscleTitle)
+      ? workoutFitsGoalCopy(goalLabel, sessionTitle)
       : undefined;
 
   return (
@@ -1004,8 +1022,10 @@ function WorkoutDayPage() {
 
           <TodayWorkoutBriefCard
             dateLabel={selectedDayLabel}
-            muscleTitle={selectedPlan.muscleTitle}
+            muscleTitle={sessionTitle}
             isRestDay={selectedPlan.isRestDay}
+            anatomyVisualKey={sessionPresentation.visualKey}
+            anatomyImageSrc={anatomyImageSrc}
             stats={selectedPlan.isRestDay ? undefined : workoutStats}
             dayId={selectedDayId}
             startExerciseId={sessionViews.find((item) => item.status === "active")?.id ?? sessionViews[0]?.id}
