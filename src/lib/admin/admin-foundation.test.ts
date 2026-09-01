@@ -12,7 +12,7 @@ import {
   isClientAppPath,
 } from "./admin-architecture";
 import { CURRENT_STAFF_ROLE, PLANNED_STAFF_ROLES, isCurrentStaffRole } from "./admin-access";
-import { ADMIN_NAV_GROUPS, listAdminNavHrefs } from "./admin-nav";
+import { ADMIN_NAV_GROUPS, ADMIN_NAV_PRIMARY, listAdminNavHrefs } from "./admin-nav";
 import { ADMIN_CLIENT_MIN_QUERY, ADMIN_CLIENT_PAGE_SIZE } from "./admin-clients-api";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -35,22 +35,21 @@ assert(!hrefs.some((href) => href.startsWith("/app")), "nav never points at clie
 assert(hrefs.includes("/admin/messages"), "coaching inbox is in nav");
 assert(hrefs.includes("/admin/payments"), "payments is in nav");
 assert(hrefs.includes("/admin/clients"), "clients foundation is in nav");
-assert(ADMIN_NAV_GROUPS.length === 7, "seven nav groups");
+assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");
 
-const liveItems = ADMIN_NAV_GROUPS.flatMap((group) => group.items).filter((item) => item.status === "live");
+const liveItems = [ADMIN_NAV_PRIMARY, ...ADMIN_NAV_GROUPS.flatMap((group) => group.items)].filter(
+  (item) => item.status === "live",
+);
 assert(
   liveItems.every((item) =>
     [
       "/admin",
       "/admin/clients",
       "/admin/messages",
-      "/admin/training",
-      "/admin/training/reviews",
+      "/admin/progress",
       "/admin/programs",
       "/admin/exercises",
-      "/admin/nutrition/operations",
       "/admin/nutrition",
-      "/admin/billing",
       "/admin/payments",
       "/admin/memberships",
       "/admin/audit",

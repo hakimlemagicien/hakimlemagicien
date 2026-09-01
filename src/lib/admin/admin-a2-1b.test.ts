@@ -25,7 +25,7 @@ assert(shellSource.includes("cc-sidebar--dark"), "shell uses dark sidebar");
 assert(shellSource.includes("is-active"), "active nav state");
 
 // T3 Seven sections
-assert(ADMIN_NAV_GROUPS.length === 7, "seven nav sections");
+assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");
 
 // T4 Environment in sidebar footer
 assert(shellSource.includes("cc-sidebar__footer"), "sidebar footer");
@@ -91,6 +91,7 @@ assert(core100.includes("MAAKFIT_V1_CORE_100"), "core 100 intact");
 
 // Nav icons
 assert(Boolean(adminNavIcon("home")), "nav icons resolve");
+assert(Boolean(adminNavIcon("messages")), "messages icon");
 
 // Foundation badge copy
 assert(shellSource.includes("قريبًا"), "foundation soon badge");

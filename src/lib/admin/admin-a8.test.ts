@@ -134,10 +134,10 @@ assert(confirm.includes("submitting"), "T58 double submit");
 assert(audit.includes("listAdminAuditEvents"), "T59 audit");
 
 // T60–T70 Navigation / env / responsive
-assert(ADMIN_NAV_GROUPS.length === 7, "T60 seven sections");
+assert(ADMIN_NAV_GROUPS.length === 6, "T60 six daily-ops groups");
 const hrefs = listAdminNavHrefs();
 assert(hrefs.includes("/admin/clients"), "T60 clients route");
-assert(hrefs.includes("/admin/billing"), "T60 billing route");
+assert(hrefs.includes("/admin/memberships"), "T60 memberships route");
 assert(shell.includes("AdminEnvironmentBadge"), "T61 environment");
 assert(styles.includes("cc-shell--dark-nav"), "T62 rtl shell");
 assert(styles.includes("@media (max-width: 700px)"), "T63 mobile");

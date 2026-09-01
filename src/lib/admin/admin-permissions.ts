@@ -117,6 +117,7 @@ export const ROUTE_REQUIRED_PERMISSION: Record<string, AdminPermission> = {
   "/admin": "clients.basic_read",
   "/admin/clients": "clients.read",
   "/admin/messages": "messages.manage",
+  "/admin/progress": "progress.read",
   "/admin/training": "training.manage",
   "/admin/training/reviews": "progress.read",
   "/admin/programs": "training.manage",

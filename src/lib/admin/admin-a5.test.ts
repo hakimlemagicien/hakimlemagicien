@@ -143,14 +143,15 @@ assert(trainingOps.includes("لا توجد حالات تدريبية"), "trainin
 
 // Nav IA
 const trainingGroup = ADMIN_NAV_GROUPS.find((g) => g.id === "training");
-assert(trainingGroup?.items.some((item) => item.to === "/admin/training"), "training nav");
-assert(trainingGroup?.items.some((item) => item.to === "/admin/training/reviews"), "reviews nav");
+assert(trainingGroup?.items.some((item) => item.to === "/admin/programs"), "training programs nav");
+assert(trainingGroup?.items.some((item) => item.to === "/admin/exercises"), "exercises nav");
+assert(trainingOps.length > 0 && trainingReviews.length > 0, "training ops routes kept");
 
 const nutritionGroup = ADMIN_NAV_GROUPS.find((g) => g.id === "nutrition");
-assert(nutritionGroup?.items.some((item) => item.to === "/admin/nutrition/operations"), "nutrition ops nav");
+assert(nutritionGroup?.items.some((item) => item.to === "/admin/nutrition"), "nutrition library nav");
+assert(nutritionOps.length > 0, "nutrition ops route kept");
 
-// progress redirect
-assert(progressRoute.includes("/admin/training"), "progress redirects");
+assert(progressRoute.includes("AdminModulePlaceholder"), "progress surface");
 
 const exerciseWarning = detectExerciseSensitiveChanges(
   { location_compatibility: "GYM" },

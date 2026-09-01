@@ -11818,6 +11818,10 @@ body.is-membership-pass-open {
   font-weight: 900;
 }
 
+.cc-sidebar--dark .cc-sidebar__brand {
+  border-bottom-color: #1f2937;
+}
+
 .cc-sidebar__brand {
   display: grid;
   gap: 2px;
@@ -11851,6 +11855,7 @@ body.is-membership-pass-open {
 
 .cc-sidebar--dark .cc-nav-group__label {
   color: #6b7280;
+  pointer-events: none;
 }
 
 .cc-nav-link {
@@ -11861,9 +11866,12 @@ body.is-membership-pass-open {
   min-height: 40px;
   padding: 0 10px;
   border-radius: 10px;
+  border-inline-start: 3px solid transparent;
   font-size: 13px;
   font-weight: 600;
   color: #d1d5db;
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .cc-nav-link__main {
@@ -11880,19 +11888,37 @@ body.is-membership-pass-open {
   opacity: 0.9;
 }
 
-.cc-nav-link:hover,
+.cc-nav-link--command {
+  min-height: 44px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cc-nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f9fafb;
+}
+
 .cc-nav-link:focus-visible {
   background: rgba(255, 255, 255, 0.06);
-  outline: none;
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
 }
 
 .cc-nav-link.is-active {
-  background: #f97316;
-  color: #fff;
+  background: rgba(249, 115, 22, 0.16);
+  color: #fff7ed;
+  border-inline-start-color: #f97316;
 }
 
 .cc-nav-link.is-active .cc-nav-link__icon {
   opacity: 1;
+  color: #fdba74;
+}
+
+.cc-nav-link--command.is-active {
+  background: rgba(249, 115, 22, 0.22);
 }
 
 .cc-nav-link em,
@@ -11907,7 +11933,8 @@ body.is-membership-pass-open {
 }
 
 .cc-nav-link.is-later {
-  color: #78716c;
+  opacity: 0.72;
+  color: #9ca3af;
 }
 
 .cc-nav-link.is-later em {

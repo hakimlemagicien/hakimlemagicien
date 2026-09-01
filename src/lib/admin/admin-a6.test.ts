@@ -129,7 +129,9 @@ assert(membershipWorkspace.includes("مصدر الحقيقة"), "source of truth
 
 // T44 dashboard integration — nav billing overview
 const billingNav = ADMIN_NAV_GROUPS.find((group) => group.id === "billing");
-assert(billingNav?.items.some((item) => item.to === "/admin/billing"), "billing overview nav");
+assert(billingNav?.items.some((item) => item.to === "/admin/memberships"), "memberships nav");
+assert(billingNav?.items.some((item) => item.to === "/admin/payments"), "payments nav");
+assert(billingOverview.includes("createFileRoute"), "billing overview route kept");
 
 // T46–T48 RTL/mobile/a11y basics
 assert(styles.includes(".cc-mobile-membership-cards"), "mobile membership cards css");

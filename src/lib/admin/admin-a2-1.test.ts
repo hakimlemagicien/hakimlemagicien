@@ -18,36 +18,42 @@ assert(adminEnvironmentLabel("staging") === "STAGING", "staging label");
 assert(adminEnvironmentLabel("production") === "PRODUCTION", "production label");
 
 // T3 Seven navigation sections
-assert(ADMIN_NAV_GROUPS.length === 7, "seven nav sections");
+assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");
 assert(
   ADMIN_NAV_GROUPS.map((group) => group.id).join(",") ===
-    "home,clients,training,nutrition,billing,content,system",
+    "clients,training,nutrition,billing,content,system",
   "section ids",
 );
 
-// T4 Existing routes preserved
+// T4 Sidebar daily-ops hrefs + preserved operational routes as files
 const hrefs = listAdminNavHrefs();
-const requiredRoutes = [
+const sidebarRoutes = [
   "/admin",
   "/admin/clients",
   "/admin/messages",
+  "/admin/progress",
   "/admin/programs",
   "/admin/exercises",
-  "/admin/training",
-  "/admin/training/reviews",
-  "/admin/nutrition/operations",
   "/admin/nutrition",
   "/admin/memberships",
-  "/admin/billing",
   "/admin/payments",
   "/admin/content",
   "/admin/support",
+  "/admin/settings",
   "/admin/audit",
   "/admin/notifications",
-  "/admin/settings",
 ];
-for (const route of requiredRoutes) {
-  assert(hrefs.includes(route), `route preserved: ${route}`);
+for (const route of sidebarRoutes) {
+  assert(hrefs.includes(route), `sidebar route: ${route}`);
+}
+const preservedFiles = [
+  "src/routes/admin/training/index.tsx",
+  "src/routes/admin/training/reviews.tsx",
+  "src/routes/admin/nutrition/operations.tsx",
+  "src/routes/admin/billing/index.tsx",
+];
+for (const file of preservedFiles) {
+  assert(readFileSync(resolve(process.cwd(), file), "utf8").length > 0, `route file kept: ${file}`);
 }
 
 // T5/T6 Dashboard real-data contract — no fake KPIs

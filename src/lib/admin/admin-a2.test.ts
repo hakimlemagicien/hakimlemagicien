@@ -24,7 +24,7 @@ const reviewSource = readFileSync(resolve(process.cwd(), "src/lib/platform/coach
 const routeGuard = readFileSync(resolve(process.cwd(), "src/routes/admin/route.tsx"), "utf8");
 
 // T1 — 7 navigation sections
-assert(ADMIN_NAV_GROUPS.length === 7, "seven nav sections");
+assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");
 
 // T2 — no duplicate navigation hrefs
 const hrefs = listAdminNavHrefs();

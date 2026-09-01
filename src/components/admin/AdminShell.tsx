@@ -4,7 +4,7 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { AdminEnvironmentBadge } from "@/components/admin/AdminEnvironmentBadge";
-import { ADMIN_NAV_GROUPS, isAdminNavActive } from "@/lib/admin/admin-nav";
+import { ADMIN_NAV_GROUPS, ADMIN_NAV_PRIMARY, isAdminNavActive, type AdminNavItem } from "@/lib/admin/admin-nav";
 import { adminNavIcon } from "@/lib/admin/admin-nav-icons";
 import {
   fetchAdminOperationsSnapshot,
@@ -25,6 +25,46 @@ const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
   subscriptionAttention: 0,
   openSupport: 0,
 };
+
+function AdminNavLink({
+  item,
+  pathname,
+  snapshot,
+  command,
+}: {
+  item: AdminNavItem;
+  pathname: string;
+  snapshot: AdminOperationsSnapshot;
+  command?: boolean;
+}) {
+  const active = isAdminNavActive(pathname, item.to);
+  const later = item.status === "foundation";
+  const count = navCount(item.to, snapshot);
+  const Icon = adminNavIcon(item.id);
+  return (
+    <Link
+      to={item.to}
+      preload={false}
+      className={["cc-nav-link", command ? "cc-nav-link--command" : "", active ? "is-active" : "", later ? "is-later" : ""]
+        .filter(Boolean)
+        .join(" ")}
+      aria-current={active ? "page" : undefined}
+      aria-label={later ? `${item.label} — قريبًا` : item.label}
+    >
+      <span className="cc-nav-link__main">
+        <Icon className="cc-nav-link__icon" aria-hidden />
+        <span>{item.label}</span>
+      </span>
+      {count > 0 ? (
+        <b className="cc-nav-badge" title="يحتاج انتباهاً">
+          {count > 9 ? "9+" : count}
+        </b>
+      ) : later ? (
+        <em className="cc-nav-soon">قريبًا</em>
+      ) : null}
+    </Link>
+  );
+}
 
 function navCount(href: string, snapshot: AdminOperationsSnapshot): number {
   if (href === "/admin/messages") return snapshot.unreadThreads + snapshot.waitingThreads;
@@ -152,6 +192,9 @@ export function AdminShell() {
         </div>
 
         <nav className="cc-sidebar__nav">
+          {canAccessNavItem(staffSession, ADMIN_NAV_PRIMARY.requiredPermission) ? (
+            <AdminNavLink item={ADMIN_NAV_PRIMARY} pathname={pathname} snapshot={snapshot} command />
+          ) : null}
           {ADMIN_NAV_GROUPS.map((group) => {
             const visibleItems = group.items.filter((item) =>
               canAccessNavItem(staffSession, item.requiredPermission),
@@ -160,36 +203,9 @@ export function AdminShell() {
             return (
             <div key={group.id} className="cc-nav-group">
               <p className="cc-nav-group__label">{group.label}</p>
-              {visibleItems.map((item) => {
-                const active = isAdminNavActive(pathname, item.to);
-                const later = item.status === "foundation";
-                const count = navCount(item.to, snapshot);
-                const Icon = adminNavIcon(item.id);
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.to}
-                    preload={false}
-                    className={["cc-nav-link", active ? "is-active" : "", later ? "is-later" : ""]
-                      .filter(Boolean)
-                      .join(" ")}
-                    aria-current={active ? "page" : undefined}
-                    aria-label={later ? `${item.label} — قريبًا` : item.label}
-                  >
-                    <span className="cc-nav-link__main">
-                      <Icon className="cc-nav-link__icon" aria-hidden />
-                      <span>{item.label}</span>
-                    </span>
-                    {count > 0 ? (
-                      <b className="cc-nav-badge" title="يحتاج انتباهاً">
-                        {count > 9 ? "9+" : count}
-                      </b>
-                    ) : later ? (
-                      <em className="cc-nav-soon">قريبًا</em>
-                    ) : null}
-                  </Link>
-                );
-              })}
+              {visibleItems.map((item) => (
+                <AdminNavLink key={item.id} item={item} pathname={pathname} snapshot={snapshot} />
+              ))}
             </div>
             );
           })}
@@ -202,7 +218,13 @@ export function AdminShell() {
             </span>
             <div>
               <strong>Coach Hakim</strong>
-              <span>{staffSession ? STAFF_ROLE_LABELS[staffSession.staffRole] : "مدير المنصة"}</span>
+              <span>
+                {staffSession
+                  ? staffSession.staffRole === "super_admin"
+                    ? "مدير المنصة"
+                    : STAFF_ROLE_LABELS[staffSession.staffRole]
+                  : "مدير المنصة"}
+              </span>
             </div>
           </div>
           <AdminEnvironmentBadge />

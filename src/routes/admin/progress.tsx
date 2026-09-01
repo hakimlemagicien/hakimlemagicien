@@ -1,9 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { AdminModulePlaceholder } from "@/components/admin/AdminModulePlaceholder";
 
 export const Route = createFileRoute("/admin/progress")({
   ssr: false,
-  beforeLoad: () => {
-    throw redirect({ to: "/admin/training" });
-  },
-  head: () => ({ meta: [{ title: "عمليات التدريب | مركز التشغيل" }] }),
+  head: () => ({ meta: [{ title: "التقدم | مركز التشغيل" }] }),
+  component: () => <AdminModulePlaceholder moduleId="progress" />,
 });

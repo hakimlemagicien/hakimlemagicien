@@ -16,28 +16,31 @@ export type AdminNavGroup = {
   items: AdminNavItem[];
 };
 
-/** A2.1 — seven primary sections with sub-navigation. */
+/** Command Center is the daily entry — not nested under a section heading. */
+export const ADMIN_NAV_PRIMARY: AdminNavItem = {
+  id: "home",
+  to: "/admin",
+  label: "مركز التشغيل",
+  status: "live",
+  requiredPermission: "clients.basic_read",
+};
+
+/** Daily-ops groups. Section labels are visual only — never routes. */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
-  {
-    id: "home",
-    label: "الرئيسية",
-    items: [{ id: "home", to: "/admin", label: "مركز التشغيل", status: "live", requiredPermission: "clients.basic_read" }],
-  },
   {
     id: "clients",
     label: "العملاء",
     items: [
       { id: "clients", to: "/admin/clients", label: "العملاء", status: "live", requiredPermission: "clients.read" },
-      { id: "coaching", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
+      { id: "messages", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
+      { id: "progress", to: "/admin/progress", label: "التقدم", status: "live", requiredPermission: "progress.read" },
     ],
   },
   {
     id: "training",
     label: "التدريب",
     items: [
-      { id: "training-ops", to: "/admin/training", label: "نظرة عامة", status: "live", requiredPermission: "training.manage" },
-      { id: "training-reviews", to: "/admin/training/reviews", label: "مراجعات التدريب", status: "live", requiredPermission: "progress.read" },
-      { id: "programs", to: "/admin/programs", label: "البرامج", status: "live", requiredPermission: "training.manage" },
+      { id: "programs", to: "/admin/programs", label: "البرامج التدريبية", status: "live", requiredPermission: "training.manage" },
       { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live", requiredPermission: "exercise.read" },
     ],
   },
@@ -45,7 +48,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "nutrition",
     label: "التغذية",
     items: [
-      { id: "nutrition-ops", to: "/admin/nutrition/operations", label: "نظرة عامة", status: "live", requiredPermission: "nutrition.manage" },
       { id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live", requiredPermission: "meal_library.manage" },
     ],
   },
@@ -53,14 +55,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "billing",
     label: "الاشتراكات والمدفوعات",
     items: [
-      { id: "billing-overview", to: "/admin/billing", label: "نظرة عامة", status: "live", requiredPermission: "membership.read" },
       { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live", requiredPermission: "membership.read" },
       { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live", requiredPermission: "payments.read" },
     ],
   },
   {
     id: "content",
-    label: "المحتوى والمكتبات",
+    label: "المحتوى",
     items: [{ id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" }],
   },
   {
@@ -68,10 +69,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: "الإدارة والنظام",
     items: [
       { id: "support", to: "/admin/support", label: "الدعم", status: "live", requiredPermission: "support.manage" },
+      { id: "staff", to: "/admin/settings", label: "إدارة الفريق والصلاحيات", status: "live", requiredPermission: "staff.manage" },
       { id: "audit", to: "/admin/audit", label: "سجل العمليات", status: "live", requiredPermission: "audit.read" },
       { id: "notifications", to: "/admin/notifications", label: "الإشعارات", status: "foundation" },
       { id: "analytics", to: "/admin/analytics", label: "التحليلات", status: "foundation" },
-      { id: "settings", to: "/admin/settings", label: "الإعدادات", status: "live", requiredPermission: "staff.manage" },
     ],
   },
 ];
@@ -107,29 +108,30 @@ export const ADMIN_PLACEHOLDER_MODULES = [
     source: "ملخص اليوم يظهر في مركز التشغيل من الرسائل والمدفوعات فقط.",
     contract: "NO_FAKE_BI",
   },
-  {
-    id: "settings",
-    path: "/admin/settings",
-    title: "الإعدادات",
-    purpose: "إدارة أدوار الطاقم والصلاحيات التشغيلية.",
-    summary: "عرض الفريق وتغيير الأدوار مع تأكيد وسبب وتدقيق.",
-    later: "دعوات البريد وصلاحيات أدق عند الحاجة.",
-    source: "staff_members + admin_update_staff_role على Staging.",
-    contract: "RBAC_V1",
-  },
 ] as const;
 
 export function getAdminPlaceholder(moduleId: string) {
   return ADMIN_PLACEHOLDER_MODULES.find((item) => item.id === moduleId) ?? null;
 }
 
+export function listAdminNavItems(): AdminNavItem[] {
+  return [ADMIN_NAV_PRIMARY, ...ADMIN_NAV_GROUPS.flatMap((group) => group.items)];
+}
+
 export function listAdminNavHrefs(): string[] {
-  return ADMIN_NAV_GROUPS.flatMap((group) => group.items.map((item) => item.to));
+  return listAdminNavItems().map((item) => item.to);
 }
 
 export function isAdminNavActive(pathname: string, href: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
   const target = href.replace(/\/+$/, "") || "/";
   if (target === "/admin") return path === "/admin";
-  return path === target || path.startsWith(`${target}/`);
+  if (!(path === target || path.startsWith(`${target}/`))) return false;
+  const longerMatch = listAdminNavHrefs().some((other) => {
+    const candidate = other.replace(/\/+$/, "") || "/";
+    if (candidate === target || candidate === "/admin") return false;
+    if (candidate.length <= target.length) return false;
+    return path === candidate || path.startsWith(`${candidate}/`);
+  });
+  return !longerMatch;
 }
