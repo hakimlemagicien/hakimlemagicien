@@ -22,7 +22,7 @@ assert(styles.includes(".cc-sidebar--dark"), "dark sidebar class");
 assert(shellSource.includes("cc-sidebar--dark"), "shell uses dark sidebar");
 
 // T2 Active navigation
-assert(shellSource.includes("is-active"), "active nav state");
+assert(shellSource.includes("activeOptions"), "command center exact active");
 
 // T3 Seven sections
 assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");

@@ -45,6 +45,7 @@ function AdminNavLink({
     <Link
       to={item.to}
       preload={false}
+      activeOptions={item.to === "/admin" ? { exact: true } : undefined}
       className={["cc-nav-link", command ? "cc-nav-link--command" : "", active ? "is-active" : "", later ? "is-later" : ""]
         .filter(Boolean)
         .join(" ")}
