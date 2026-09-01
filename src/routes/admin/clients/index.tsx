@@ -59,7 +59,7 @@ function AdminClientsPage() {
   const [planFilter, setPlanFilter] = useState<"all" | "vip" | "premium" | "essential" | "free">("all");
   const [attentionFilter, setAttentionFilter] = useState(false);
   const [sort, setSort] = useState<ClientSort>("joined");
-  const [accountFilter, setAccountFilter] = useState<"daily" | "all" | "active" | "suspended" | "archived">("daily");
+  const [accountFilter, setAccountFilter] = useState<"daily" | "all" | "active" | "suspended" | "archived">("all");
 
   useEffect(() => {
     setValue(q ?? "");
@@ -135,14 +135,14 @@ function AdminClientsPage() {
     planFilter !== "all" ||
     attentionFilter ||
     sort !== "joined" ||
-    accountFilter !== "daily";
+    accountFilter !== "all";
 
   const clearFilters = () => {
     setOnboardingFilter("all");
     setPlanFilter("all");
     setAttentionFilter(false);
     setSort("joined");
-    setAccountFilter("daily");
+    setAccountFilter("all");
   };
 
   const loadMore = async () => {
@@ -319,7 +319,9 @@ function AdminClientsPage() {
 
           {result.truncated ? (
             <button type="button" className="cc-btn" disabled={loadingMore} onClick={() => void loadMore()}>
-              {loadingMore ? "جاري التحميل…" : "المزيد"}
+              {loadingMore
+                ? "جاري التحميل…"
+                : `تحميل المزيد (${result.rows.length.toLocaleString("ar-AE")} من ${result.totalCount.toLocaleString("ar-AE")})`}
             </button>
           ) : null}
         </>
