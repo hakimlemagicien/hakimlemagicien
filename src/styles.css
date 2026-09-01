@@ -14460,11 +14460,16 @@ body.is-membership-pass-open {
 
   .cc-sidebar--dark {
     position: fixed;
-    inset-inline-end: 0;
+    inset-inline-start: 0;
+    inset-inline-end: auto;
     top: 0;
-    transform: translateX(110%);
+    transform: translateX(-110%);
     transition: transform 0.2s ease;
     box-shadow: -12px 0 40px rgba(0, 0, 0, 0.2);
+  }
+
+  [dir="rtl"] .cc-sidebar--dark {
+    transform: translateX(110%);
   }
 
   .cc-sidebar--dark.is-open {
