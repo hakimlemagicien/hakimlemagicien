@@ -50,7 +50,7 @@ export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
       <AdminPageHeader
         kicker="المحتوى والتصميم"
         title="ستوديو"
-        subtitle="معاينة بطاقة الهيرو ومحرر الواجهة في مكان واحد — التعديلات المحلية تظهر فوراً في /app أثناء التطوير."
+        subtitle="معاينة بطاقة الهيرو ومحرر الواجهة — التعديلات المحفوظة تُطبَّق على جميع المستخدمين."
       />
 
       <div className="mb-6 flex flex-wrap gap-2">

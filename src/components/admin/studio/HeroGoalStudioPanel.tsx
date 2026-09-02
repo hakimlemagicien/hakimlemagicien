@@ -18,12 +18,21 @@ import {
 } from "lucide-react";
 import { AdminCard, AdminSection } from "@/components/admin/AdminPage";
 import {
+  adminResetHeroGoalCardTheme,
+  adminResetHeroGoalFraming,
+  adminSaveHeroGoalCardTheme,
+  adminSaveHeroGoalFraming,
+} from "@/lib/admin/admin-hero-goal-settings-api";
+import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
+import {
   HERO_APP_PREVIEW_HEIGHT,
   HERO_APP_PREVIEW_WIDTH,
   HeroAppFaithfulPreview,
 } from "@/components/admin/studio/HeroAppChromePreview";
 import type { HeroGender } from "@/lib/platform/hero-goal-images";
 import {
+  applyHeroGoalCardThemeToManifest,
+  applyHeroGoalFramingToManifest,
   buildHeroGoalCardThemeKey,
   buildHeroGoalFramingKey,
   DEFAULT_HERO_GOAL_CARD_THEME,
@@ -32,8 +41,11 @@ import {
   getHeroGoalFraming,
   HERO_CARD_COLOR_PRESETS,
   HERO_FRAMING_LIMITS,
+  HERO_GOAL_SETTINGS_CHANGED_EVENT,
   panHeroGoalFraming,
   panHeroGoalFramingVertical,
+  removeHeroGoalCardThemeFromManifest,
+  removeHeroGoalFramingFromManifest,
   resetHeroGoalCardTheme,
   resetHeroGoalFraming,
   saveHeroGoalCardTheme,
@@ -86,6 +98,7 @@ function HeroFramingPanel({
   onCardColor,
   onReset,
   onSave,
+  saving = false,
 }: {
   gender: HeroGender;
   framing: HeroGoalFraming;
@@ -93,6 +106,7 @@ function HeroFramingPanel({
   cardTheme: HeroGoalCardTheme;
   savedCardTheme: HeroGoalCardTheme;
   saveMessage: string | null;
+  saving?: boolean;
   onZoom: (direction: "in" | "out") => void;
   onPan: (direction: "left" | "right") => void;
   onPanVertical: (direction: "up" | "down") => void;
@@ -121,7 +135,7 @@ function HeroFramingPanel({
         <div>
           <p className="text-sm font-black text-foreground">ضبط موضع الصورة</p>
           <p className="text-xs font-medium text-muted-foreground">
-            كبّر / صغّر، حرّك، اعكس الصورة، أو غيّر لون البطاقة — ثم احفظ ليُطبَّق في /app
+            كبّر / صغّر، حرّك، اعكس الصورة، أو غيّر لون البطاقة — ثم احفظ ليُطبَّق على جميع المستخدمين
           </p>
         </div>
         <div className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[10px] font-mono text-muted-foreground">
@@ -259,7 +273,8 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-black"
+          disabled={saving}
+          className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-black disabled:opacity-50"
         >
           <RotateCcw className="h-4 w-4" aria-hidden />
           إعادة ضبط
@@ -267,14 +282,14 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={onSave}
-          disabled={!isDirty}
+          disabled={!isDirty || saving}
           className={cn(
             "platform-home-hero__cta inline-flex h-11 min-w-[180px] flex-[2] items-center justify-center gap-2 rounded-full px-5 text-sm font-black text-white disabled:opacity-50",
-            !isDirty && "opacity-70",
+            (!isDirty || saving) && "opacity-70",
           )}
         >
           <Save className="h-4 w-4" aria-hidden />
-          حفظ التعديل
+          {saving ? "جاري الحفظ…" : "حفظ التعديل"}
         </button>
       </div>
 
@@ -331,6 +346,7 @@ function HeroGridTile({
 
 export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }) {
   const navigate = useNavigate({ from: "/admin/studio" });
+  const settingsQuery = useHeroGoalSettings();
   const totalAssets = useMemo(() => countHeroReviewAssets(), []);
 
   const mode: ReviewMode = search.mode === "grid" ? "grid" : "single";
@@ -358,6 +374,7 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
   const [savedCardTheme, setSavedCardTheme] = useState<HeroGoalCardTheme>(DEFAULT_HERO_GOAL_CARD_THEME);
   const [draftCardTheme, setDraftCardTheme] = useState<HeroGoalCardTheme>(DEFAULT_HERO_GOAL_CARD_THEME);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [gridAssetIndex, setGridAssetIndex] = useState(0);
 
   useEffect(() => {
@@ -370,14 +387,29 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     setSavedFraming(loaded);
     setDraftFraming(loaded);
     setSaveMessage(null);
-  }, [framingKey]);
+  }, [framingKey, settingsQuery.dataUpdatedAt]);
 
   useEffect(() => {
     const loaded = getHeroGoalCardTheme(cardThemeKey);
     setSavedCardTheme(loaded);
     setDraftCardTheme(loaded);
     setSaveMessage(null);
-  }, [cardThemeKey]);
+  }, [cardThemeKey, settingsQuery.dataUpdatedAt]);
+
+  useEffect(() => {
+    function syncFromServer() {
+      if (framingKey) {
+        const loaded = getHeroGoalFraming(framingKey);
+        setSavedFraming(loaded);
+        setDraftFraming(loaded);
+      }
+      const loadedTheme = getHeroGoalCardTheme(cardThemeKey);
+      setSavedCardTheme(loadedTheme);
+      setDraftCardTheme(loadedTheme);
+    }
+    window.addEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, syncFromServer);
+    return () => window.removeEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, syncFromServer);
+  }, [framingKey, cardThemeKey]);
 
   const hero = useMemo(
     () =>
@@ -411,30 +443,74 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     patchSearch({ asset: index });
   }
 
-  function handleSaveFraming() {
-    if (framingKey) {
-      const saved = saveHeroGoalFraming(framingKey, draftFraming);
-      setSavedFraming(saved);
-      setDraftFraming(saved);
+  async function handleSaveFraming() {
+    if (saving) return;
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      if (framingKey && currentAsset) {
+        await adminSaveHeroGoalFraming({
+          gender,
+          goalId,
+          assetFileName: currentAsset.fileName,
+          framing: draftFraming,
+        });
+        const saved = applyHeroGoalFramingToManifest(framingKey, draftFraming);
+        if (import.meta.env.DEV) saveHeroGoalFraming(framingKey, saved);
+        setSavedFraming(saved);
+        setDraftFraming(saved);
+      }
+
+      await adminSaveHeroGoalCardTheme({
+        gender,
+        goalId,
+        theme: draftCardTheme,
+      });
+      const savedTheme = applyHeroGoalCardThemeToManifest(cardThemeKey, draftCardTheme);
+      if (import.meta.env.DEV) saveHeroGoalCardTheme(cardThemeKey, savedTheme);
+      setSavedCardTheme(savedTheme);
+      setDraftCardTheme(savedTheme);
+      window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+      setSaveMessage("تم حفظ التعديل — سيظهر لجميع المستخدمين");
+    } catch {
+      setSaveMessage("تعذر الحفظ — تحقق من الاتصال وحاول مرة أخرى");
+    } finally {
+      setSaving(false);
+      window.setTimeout(() => setSaveMessage(null), 3200);
     }
-    const savedTheme = saveHeroGoalCardTheme(cardThemeKey, draftCardTheme);
-    setSavedCardTheme(savedTheme);
-    setDraftCardTheme(savedTheme);
-    setSaveMessage("تم حفظ التعديل — سيظهر في التطبيق فوراً");
-    window.setTimeout(() => setSaveMessage(null), 2800);
   }
 
-  function handleResetFraming() {
-    if (framingKey) {
-      resetHeroGoalFraming(framingKey);
+  async function handleResetFraming() {
+    if (saving) return;
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      if (framingKey && currentAsset) {
+        await adminResetHeroGoalFraming({
+          gender,
+          goalId,
+          assetFileName: currentAsset.fileName,
+        });
+        removeHeroGoalFramingFromManifest(framingKey);
+        if (import.meta.env.DEV) resetHeroGoalFraming(framingKey);
+      }
+
+      await adminResetHeroGoalCardTheme({ gender, goalId });
+      removeHeroGoalCardThemeFromManifest(cardThemeKey);
+      if (import.meta.env.DEV) resetHeroGoalCardTheme(cardThemeKey);
+
       setSavedFraming(DEFAULT_HERO_GOAL_FRAMING);
       setDraftFraming(DEFAULT_HERO_GOAL_FRAMING);
+      setSavedCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
+      setDraftCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
+      window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+      setSaveMessage("تمت إعادة الضبط الافتراضي");
+    } catch {
+      setSaveMessage("تعذر إعادة الضبط — حاول مرة أخرى");
+    } finally {
+      setSaving(false);
+      window.setTimeout(() => setSaveMessage(null), 2400);
     }
-    resetHeroGoalCardTheme(cardThemeKey);
-    setSavedCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
-    setDraftCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
-    setSaveMessage("تمت إعادة الضبط الافتراضي");
-    window.setTimeout(() => setSaveMessage(null), 2200);
   }
 
   return (
@@ -571,6 +647,7 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                   cardTheme={draftCardTheme}
                   savedCardTheme={savedCardTheme}
                   saveMessage={saveMessage}
+                  saving={saving}
                   onZoom={(direction) => setDraftFraming((current) => zoomHeroGoalFraming(current, direction))}
                   onPan={(direction) => setDraftFraming((current) => panHeroGoalFraming(current, direction))}
                   onPanVertical={(direction) =>

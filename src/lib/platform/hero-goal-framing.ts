@@ -35,6 +35,13 @@ const OFFSET_STEP = 6;
 
 export const HERO_GOAL_FRAMING_MANIFEST: Record<string, HeroGoalFraming> = {};
 
+export const HERO_GOAL_SETTINGS_CHANGED_EVENT = "maakfit:hero-goal-settings-changed";
+
+function notifyHeroGoalSettingsChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+}
+
 function canUseStorage(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
@@ -74,11 +81,23 @@ function writeStorageMap(map: Record<string, HeroGoalFraming>): void {
 }
 
 export function getHeroGoalFraming(key: string): HeroGoalFraming {
-  const stored = readStorageMap()[key];
-  if (stored) return clampFraming(stored);
+  if (import.meta.env.DEV) {
+    const stored = readStorageMap()[key];
+    if (stored) return clampFraming(stored);
+  }
   const manifest = HERO_GOAL_FRAMING_MANIFEST[key];
   if (manifest) return clampFraming(manifest);
   return DEFAULT_HERO_GOAL_FRAMING;
+}
+
+export function applyHeroGoalFramingToManifest(key: string, framing: HeroGoalFraming): HeroGoalFraming {
+  const next = clampFraming(framing);
+  HERO_GOAL_FRAMING_MANIFEST[key] = next;
+  return next;
+}
+
+export function removeHeroGoalFramingFromManifest(key: string): void {
+  delete HERO_GOAL_FRAMING_MANIFEST[key];
 }
 
 export function saveHeroGoalFraming(key: string, framing: HeroGoalFraming): HeroGoalFraming {
@@ -213,11 +232,45 @@ function writeCardThemeMap(map: Record<string, HeroGoalCardTheme>): void {
 }
 
 export function getHeroGoalCardTheme(key: string): HeroGoalCardTheme {
-  const stored = readCardThemeMap()[key];
-  if (stored) return clampCardTheme(stored);
+  if (import.meta.env.DEV) {
+    const stored = readCardThemeMap()[key];
+    if (stored) return clampCardTheme(stored);
+  }
   const manifest = HERO_GOAL_CARD_THEME_MANIFEST[key];
   if (manifest) return clampCardTheme(manifest);
   return DEFAULT_HERO_GOAL_CARD_THEME;
+}
+
+export function applyHeroGoalCardThemeToManifest(key: string, theme: HeroGoalCardTheme): HeroGoalCardTheme {
+  const next = clampCardTheme(theme);
+  if (!next.color) delete HERO_GOAL_CARD_THEME_MANIFEST[key];
+  else HERO_GOAL_CARD_THEME_MANIFEST[key] = next;
+  return next;
+}
+
+export function removeHeroGoalCardThemeFromManifest(key: string): void {
+  delete HERO_GOAL_CARD_THEME_MANIFEST[key];
+}
+
+export function hydrateHeroGoalSettings(input: {
+  framing: Record<string, HeroGoalFraming>;
+  cardThemes: Record<string, HeroGoalCardTheme>;
+}): void {
+  for (const key of Object.keys(HERO_GOAL_FRAMING_MANIFEST)) {
+    delete HERO_GOAL_FRAMING_MANIFEST[key];
+  }
+  for (const key of Object.keys(HERO_GOAL_CARD_THEME_MANIFEST)) {
+    delete HERO_GOAL_CARD_THEME_MANIFEST[key];
+  }
+
+  for (const [key, framing] of Object.entries(input.framing)) {
+    applyHeroGoalFramingToManifest(key, framing);
+  }
+  for (const [key, theme] of Object.entries(input.cardThemes)) {
+    applyHeroGoalCardThemeToManifest(key, theme);
+  }
+
+  notifyHeroGoalSettingsChanged();
 }
 
 export function saveHeroGoalCardTheme(key: string, theme: HeroGoalCardTheme): HeroGoalCardTheme {

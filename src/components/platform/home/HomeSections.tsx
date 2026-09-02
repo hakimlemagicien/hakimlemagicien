@@ -79,6 +79,7 @@ import {
   getHeroGoalCardTheme,
   heroCardSurfaceStyle,
   heroCoachTransformStyle,
+  HERO_GOAL_SETTINGS_CHANGED_EVENT,
 } from "@/lib/platform/hero-goal-framing";
 import { useHourlyRotationIndex } from "@/lib/platform/hero-goals-asset-index";
 
@@ -431,7 +432,15 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
   const journeyDay = useCountUp(hero.journeyDay);
   const { userId } = usePlatformActivity();
   const [started, setStarted] = useState(false);
+  const [settingsVersion, setSettingsVersion] = useState(0);
   const hourlyRotation = useHourlyRotationIndex();
+
+  useEffect(() => {
+    const sync = () => setSettingsVersion((value) => value + 1);
+    window.addEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+  }, []);
+
   const heroVisual = useMemo(() => {
     if (hero.heroImage.previewLocked) return hero.heroImage;
     return resolveHeroGoalImage({
@@ -440,10 +449,14 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
       goalId: hero.heroImage.goalId,
       rotationIndex: hourlyRotation,
     });
-  }, [hero.heroImage, hourlyRotation]);
-  const cardTheme =
-    hero.heroCardTheme ??
-    getHeroGoalCardTheme(buildHeroGoalCardThemeKey(hero.heroImage.gender, hero.heroImage.goalId));
+  }, [hero.heroImage, hourlyRotation, settingsVersion]);
+
+  const cardTheme = useMemo(
+    () =>
+      hero.heroCardTheme ??
+      getHeroGoalCardTheme(buildHeroGoalCardThemeKey(hero.heroImage.gender, hero.heroImage.goalId)),
+    [hero.heroCardTheme, hero.heroImage.gender, hero.heroImage.goalId, settingsVersion],
+  );
   const cardSurfaceStyle = heroCardSurfaceStyle(cardTheme);
   const missionIsRoute = hero.missionHref.startsWith("/");
   const MissionIcon = hero.missionReward === 0 ? Check : ClipboardList;

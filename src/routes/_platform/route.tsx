@@ -2,6 +2,7 @@ import { createFileRoute, isRedirect, Outlet, redirect, useNavigate } from "@tan
 import { useEffect, useState } from "react";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { useMembership } from "@/hooks/useMembership";
 import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
@@ -72,6 +73,7 @@ export const Route = createFileRoute("/_platform")({
 
 function PlatformLayout() {
   const navigate = useNavigate();
+  useHeroGoalSettings();
   const membership = useMembership();
   const { userId } = usePlatformActivity();
   const hasWorkoutProgram = membership.features.workout_program;

@@ -4222,12 +4222,34 @@ export type Database = {
         Args: { p_expected_updated_at?: string; p_payload: Json }
         Returns: Json
       }
+      admin_save_hero_goal_card_theme: {
+        Args: { p_gender: string; p_goal_id: string; p_payload: Json }
+        Returns: Json
+      }
+      admin_save_hero_goal_framing: {
+        Args: {
+          p_asset_file_name: string
+          p_gender: string
+          p_goal_id: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
       admin_save_meal: {
         Args: { p_expected_updated_at?: string; p_payload: Json }
         Returns: Json
       }
       admin_save_program_template: {
         Args: { p_expected_updated_at?: string; p_payload: Json }
+        Returns: Json
+      }
+      admin_reset_hero_goal_setting: {
+        Args: {
+          p_asset_file_name?: string
+          p_gender: string
+          p_goal_id: string
+          p_kind: string
+        }
         Returns: Json
       }
       admin_set_client_account_status: {
@@ -4313,6 +4335,7 @@ export type Database = {
         }
         Returns: Json
       }
+      client_get_hero_goal_settings: { Args: never; Returns: Json }
       client_get_active_workout_session: { Args: never; Returns: Json }
       client_get_my_nutrition_runtime: { Args: never; Returns: Json }
       client_get_my_training_runtime: { Args: never; Returns: Json }
