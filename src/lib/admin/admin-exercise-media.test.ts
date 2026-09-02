@@ -10,6 +10,7 @@ import {
   validateExerciseMediaFile,
   videoStatusLabel,
 } from "./admin-exercise-media-contract";
+import { resolveAdminExerciseListThumbSrc } from "./admin-exercise-media";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -46,9 +47,47 @@ assert(videoStatusLabel("ready") === "جاهز", "arabic ready");
 assert(thumbnailStatusFromPath(null) === "missing", "T12 missing thumb");
 assert(thumbnailStatusFromPath("exercises/CH-001/thumbnail.webp") === "ready", "thumb ready from path");
 
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "CH-001",
+    thumbnailPath: null,
+    signedUrls: {},
+    storageFetchDone: true,
+  }) === "/exercises/CH-001/stages/stage-b-thumb.webp",
+  "T11 stage still fallback when no db thumb",
+);
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "CH-001",
+    thumbnailPath: "exercises/CH-001/thumbnail.webp",
+    signedUrls: { "exercises/CH-001/thumbnail.webp": "https://signed.example/thumb.webp" },
+    storageFetchDone: true,
+  }) === "https://signed.example/thumb.webp",
+  "storage override wins over stage still",
+);
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "CH-001",
+    thumbnailPath: "exercises/CH-001/thumbnail.webp",
+    signedUrls: {},
+    storageFetchDone: false,
+  }) === null,
+  "wait for signed url before fallback",
+);
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "CH-001",
+    thumbnailPath: "exercises/CH-001/thumbnail.webp",
+    signedUrls: {},
+    storageFetchDone: true,
+  }) === "/exercises/CH-001/stages/stage-b-thumb.webp",
+  "stage fallback when storage thumb missing",
+);
+
 const manager = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseLibraryManager.tsx"), "utf8");
+assert(manager.includes("resolveAdminExerciseListThumbSrc"), "T11 list thumbnail resolver");
 assert(manager.includes("fetchResolvedExerciseMediaUrl"), "detail preview import");
-assert(manager.includes("ExerciseListThumb"), "T11 list thumbnail");
+assert(manager.includes("ExerciseListThumb"), "T11 list thumbnail component");
 assert(manager.includes("ExerciseMediaPanel"), "media panel");
 assert(manager.includes("cc-exercise-card"), "T21 mobile card");
 assert(!manager.includes("htmlFor=\"video_path\""), "T22 no manual video path field");

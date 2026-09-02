@@ -272,13 +272,10 @@ const legacyRuntime: ClientTrainingRuntime = {
   ],
 };
 
-const legacyPlans = buildWeekdayPlansForAssignedRuntime(legacyRuntime, null);
-const legacyDirect = runtimeToWeekdayPlans(legacyRuntime);
-assertEqual(
-  legacyPlans.mon.programDayId,
-  legacyDirect.mon.programDayId,
-  "legacy assignment without strategy uses runtime mapping",
-);
+const calendarOnlyPlans = buildWeekdayPlansForAssignedRuntime(legacyRuntime, null);
+assert(calendarOnlyPlans.mon.programDayId, "assignment without strategy still uses weekly calendar");
+assert(calendarOnlyPlans.tue.isRestDay, "calendar rest day without strategy");
+assert(calendarOnlyPlans.wed.programDayId, "fallback weekday placement without strategy");
 
 const strategy = resolveTrainingStrategy(
   trainingStrategyInputFromProfileRow({

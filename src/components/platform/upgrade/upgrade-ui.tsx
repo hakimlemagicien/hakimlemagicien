@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Lock, Sparkles } from "lucide-react";
+import { ChevronDown, Lock, Sparkles } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import type { CheckoutReturnSurface } from "@/lib/payments/types";
 import { cn } from "@/lib/utils";
 
@@ -34,10 +35,10 @@ const SURFACE_COPY: Record<
     upgradeHeadline: "ترقية الاشتراك",
   },
   SWAP_LIMIT: {
-    title: "مزيد من المرونة مع Premium",
-    subtitle: "Premium يمنحك بدائل أكثر ومرونة أعلى في تغيير الوجبات.",
-    cta: "عرض Premium",
-    upgradeHeadline: "عرض Premium",
+    title: "استخدمت تغييرك اليومي",
+    subtitle: "هل تحتاج مرونة أكبر في اختياراتك الغذائية؟",
+    cta: "اكتشف Premium",
+    upgradeHeadline: "مرونة أكبر مع Premium",
   },
 };
 
@@ -64,15 +65,23 @@ export function UpgradeContextHeader({
 }
 
 export function TrainingFreeConversionPanel({
+  remainingExerciseCount,
   onLater,
 }: {
+  remainingExerciseCount: number;
   onLater: () => void;
 }) {
+  const remainingCopy =
+    remainingExerciseCount > 0
+      ? `بقيت ${remainingExerciseCount} ${remainingExerciseCount === 1 ? "تمرين" : "تمارين"} في حصة اليوم`
+      : "بقية حصتك جاهزة لك";
+
   return (
     <div className="rounded-2xl border border-primary/20 bg-[#FFF8F3] p-4 text-right" dir="rtl">
-      <p className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">أكملت تجربتك الأولى 💪</p>
+      <p className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">أكملت أول تمرين 💪</p>
+      <p className="mt-1 font-[Tajawal] text-[12px] font-extrabold text-primary">{remainingCopy}</p>
       <p className="mt-1 font-[Tajawal] text-[12px] leading-relaxed text-[#64748B]">
-        بقية حصتك جاهزة لك — تمارين إضافية مختارة حسب هدفك ومستواك ومكان التدريب.
+        تمارين إضافية مختارة حسب هدفك ومستواك ومكان التدريب.
       </p>
       <div className="mt-3 flex flex-col gap-2">
         <UpgradeSurfaceLink
@@ -175,6 +184,46 @@ export function RecommendedPlanBadge({ label }: { label: string }) {
   );
 }
 
+export function PromotedPlanBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#7C3AED] px-2.5 py-0.5 font-[Tajawal] text-[10px] font-bold text-white shadow-[0_6px_14px_-6px_rgba(124,58,237,0.55)]">
+      <Sparkles className="h-3 w-3" aria-hidden />
+      {label}
+    </span>
+  );
+}
+
+export function MealSwapLimitState({
+  onStay,
+}: {
+  onStay: () => void;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#E9D5FF] bg-gradient-to-b from-[#F7F1FF] to-white p-4 text-right" dir="rtl">
+      <p className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">استخدمت تغييرك اليومي</p>
+      <p className="mt-1 font-[Tajawal] text-[12px] leading-relaxed text-[#64748B]">
+        هل تحتاج مرونة أكبر في اختياراتك الغذائية؟ Premium يمنحك خيارات أوسع وبدائل أكثر.
+      </p>
+      <div className="mt-3 flex flex-col gap-2">
+        <UpgradeSurfaceLink
+          surface="DIRECT_UPGRADE"
+          plan="premium"
+          className="flex min-h-11 items-center justify-center rounded-xl bg-[#7C3AED] px-4 font-[Tajawal] text-[13px] font-extrabold text-white"
+        >
+          اكتشف Premium
+        </UpgradeSurfaceLink>
+        <button
+          type="button"
+          onClick={onStay}
+          className="flex min-h-10 items-center justify-center rounded-xl border border-[#E9D5FF] bg-white px-4 font-[Tajawal] text-[12px] font-bold text-[#64748B]"
+        >
+          ابقَ على وجبتي الحالية
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type ComparisonRow = {
   feature: string;
   free: string;
@@ -183,26 +232,36 @@ type ComparisonRow = {
 };
 
 const COMPARISON_ROWS: ComparisonRow[] = [
-  { feature: "دخول التطبيق", free: "✓", essential: "✓", premium: "✓" },
-  { feature: "الملف والأدوات", free: "أساسي", essential: "✓", premium: "✓" },
-  { feature: "التقدم", free: "—", essential: "✓", premium: "✓" },
-  { feature: "التدريب", free: "تمرين/حصة", essential: "كامل", premium: "كامل" },
-  { feature: "تمارين/حصة", free: "1", essential: "كل المعيّن", premium: "كل المعيّن" },
+  { feature: "الملف الشخصي", free: "✓", essential: "✓", premium: "✓" },
+  { feature: "التقدم", free: "✓", essential: "✓", premium: "✓" },
+  { feature: "الأدوات والمحتوى", free: "✓", essential: "✓", premium: "✓" },
+  { feature: "برنامج التدريب", free: "معاينة شخصية", essential: "برنامج مفعّل", premium: "برنامج مفعّل" },
+  { feature: "تمارين/حصة", free: "1", essential: "كامل", premium: "كامل" },
+  { feature: "تغيير تمرين/وجبة", free: "—", essential: "مدعوم", premium: "مرن" },
   { feature: "التغذية", free: "وجبة/يوم", essential: "خطة كاملة", premium: "خطة كاملة" },
-  { feature: "تغيير الوجبات", free: "—", essential: "1/يوم", premium: "مرن" },
-  { feature: "بدائل الوجبات", free: "—", essential: "مدعوم", premium: "متعدد" },
+  { feature: "بديل أي تمرين", free: "—", essential: "—", premium: "✓" },
+  { feature: "متابعة البرنامج", free: "—", essential: "أساسية", premium: "دورية" },
 ];
 
-export function FeatureComparison() {
+const COMPARISON_GROUPS: { title: string; rows: ComparisonRow[] }[] = [
+  {
+    title: "الأساسيات",
+    rows: COMPARISON_ROWS.slice(0, 3),
+  },
+  {
+    title: "التدريب",
+    rows: COMPARISON_ROWS.slice(3, 5),
+  },
+  {
+    title: "التغذية والمرونة",
+    rows: COMPARISON_ROWS.slice(5),
+  },
+];
+
+function ComparisonTable({ rows }: { rows: ComparisonRow[] }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#E8E4DE] bg-white">
-      <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] bg-[#FAF8F5] px-2 py-2 text-center font-[Tajawal] text-[10px] font-extrabold text-[#0F172A]">
-        <span className="text-right">الميزة</span>
-        <span>Free</span>
-        <span>Essential</span>
-        <span>Premium</span>
-      </div>
-      {COMPARISON_ROWS.map((row) => (
+    <>
+      {rows.map((row) => (
         <div
           key={row.feature}
           className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE]/80 px-2 py-2.5 text-center font-[Tajawal] text-[10px] last:border-0"
@@ -210,9 +269,89 @@ export function FeatureComparison() {
           <span className="text-right font-bold text-[#64748B]">{row.feature}</span>
           <span className="text-[#0F172A]">{row.free}</span>
           <span className="text-[#0F172A]">{row.essential}</span>
-          <span className="font-bold text-primary">{row.premium}</span>
+          <span className="font-bold text-[#7C3AED]">{row.premium}</span>
         </div>
       ))}
+    </>
+  );
+}
+
+export function FeatureComparison() {
+  const [expanded, setExpanded] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    الأساسيات: true,
+    التدريب: false,
+    "التغذية والمرونة": false,
+  });
+
+  const toggleGroup = (title: string) => {
+    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E8E4DE] bg-white">
+      <div className="hidden md:block">
+        <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] bg-[#FAF8F5] px-2 py-2 text-center font-[Tajawal] text-[10px] font-extrabold text-[#0F172A]">
+          <span className="text-right">الميزة</span>
+          <span>Free</span>
+          <span>Essential</span>
+          <span>Premium</span>
+        </div>
+        <ComparisonTable rows={COMPARISON_ROWS} />
+      </div>
+
+      <div className="md:hidden">
+        {COMPARISON_GROUPS.map((group) => {
+          const isOpen = openGroups[group.title];
+          return (
+            <div key={group.title} className="border-b border-[#E8E4DE]/80 last:border-0">
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.title)}
+                className="flex w-full items-center justify-between px-3 py-3 text-right font-[Tajawal] text-[12px] font-extrabold text-[#0F172A]"
+              >
+                <span>{group.title}</span>
+                <ChevronDown
+                  className={cn("h-4 w-4 text-[#64748B] transition-transform", isOpen && "rotate-180")}
+                  aria-hidden
+                />
+              </button>
+              {isOpen ? (
+                <div className="border-t border-[#E8E4DE]/60 bg-[#FAF8F5]/60">
+                  <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] px-2 py-1.5 text-center font-[Tajawal] text-[9px] font-extrabold text-[#94A3B8]">
+                    <span className="text-right">الميزة</span>
+                    <span>Free</span>
+                    <span>Ess.</span>
+                    <span>Prem.</span>
+                  </div>
+                  <ComparisonTable rows={group.rows} />
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="flex w-full items-center justify-center gap-1 px-3 py-2.5 font-[Tajawal] text-[11px] font-extrabold text-primary"
+        >
+          {expanded ? "إخفاء المقارنة الكاملة" : "عرض المقارنة الكاملة"}
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
+        </button>
+
+        {expanded ? (
+          <div className="border-t border-[#E8E4DE]">
+            <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] bg-[#FAF8F5] px-2 py-2 text-center font-[Tajawal] text-[9px] font-extrabold text-[#0F172A]">
+              <span className="text-right">الميزة</span>
+              <span>Free</span>
+              <span>Essential</span>
+              <span>Premium</span>
+            </div>
+            <ComparisonTable rows={COMPARISON_ROWS} />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

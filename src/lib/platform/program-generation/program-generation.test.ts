@@ -16,7 +16,9 @@ import {
 } from "@/lib/platform/program-generation";
 import { cloneCandidate } from "@/lib/platform/program-generation/apply";
 import { buildSessionBlueprints } from "@/lib/platform/program-generation/roles";
+import { expandBlueprintToTarget, resolveSessionExerciseTarget } from "@/lib/platform/program-generation/session-composition";
 import { estimateSessionMinutes } from "@/lib/platform/program-generation/duration";
+import { STANDARD_SESSION_EXERCISE_TARGET } from "@/lib/platform/program-generation/types";
 import type { ProgramCandidate, ProgramGenerationContext } from "@/lib/platform/program-generation/types";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -150,9 +152,50 @@ assert(beginnerCount <= intermediateCount + 2, "beginner is not more complex");
 
 const twoDay = generateTrainingProgram(base({ daysPerWeek: 2 }));
 assert(
-  twoDay.candidate!.sessions.every((session) => session.exercises.length <= 6),
+  twoDay.candidate!.sessions.every((session) => session.exercises.length <= STANDARD_SESSION_EXERCISE_TARGET),
   "2-day is not a giant catch-all",
 );
+
+const standardEligible = generateTrainingProgram(base({ goalId: "GLUTE_GROWTH", daysPerWeek: 3, availableMinutes: 60, location: "GYM" }));
+assert(standardEligible.candidate, "standard eligible candidate");
+const standardCounts = standardEligible.candidate.sessions.map((session) => session.exercises.length);
+assert(
+  standardCounts.every((count) => count >= 4 && count <= STANDARD_SESSION_EXERCISE_TARGET),
+  `standard eligible range: ${standardCounts.join(",")}`,
+);
+assert(
+  standardCounts.filter((count) => count === STANDARD_SESSION_EXERCISE_TARGET).length >= 1,
+  `expected at least one ${STANDARD_SESSION_EXERCISE_TARGET}-exercise session, got ${standardCounts.join(",")}`,
+);
+
+const durationConstrained = generateTrainingProgram(base({ availableMinutes: 35, daysPerWeek: 3 }));
+assert(durationConstrained.candidate, "duration constrained candidate");
+assert(
+  durationConstrained.candidate.sessions.every((session) => session.exercises.length >= 2 && session.exercises.length <= 5),
+  "duration constrained sessions shorten",
+);
+assert(
+  durationConstrained.candidate.sessions.every((session) => session.estimated_minutes <= 35),
+  "duration constrained fits budget",
+);
+assertEqual(durationConstrained.validation.status !== "INVALID", true, "duration constrained stays valid");
+
+const thinHome = generateTrainingProgram(
+  base({
+    location: "HOME",
+    availableEquipment: ["BAND"],
+    daysPerWeek: 3,
+    availableMinutes: 60,
+  }),
+);
+assert(thinHome.candidate, "thin home candidate");
+for (const session of thinHome.candidate.sessions) {
+  for (const exercise of session.exercises) {
+    const meta = byId.get(exercise.external_id);
+    assert(meta, `thin home unknown ${exercise.external_id}`);
+    assert(meta.location_compatibility.includes("HOME"), `${exercise.external_id} not home`);
+  }
+}
 
 const fiveDay = generateTrainingProgram(base({ daysPerWeek: 5 }));
 const threeDayVolume = first.regional_volume.GLUTES?.effective ?? 0;
@@ -213,6 +256,10 @@ assert(durationCap.candidate, "duration cap still generates");
 assert(
   durationCap.candidate.sessions.every((session) => session.estimated_minutes <= 45),
   "sessions fit 45",
+);
+assert(
+  durationCap.candidate.sessions.every((session) => session.exercises.length >= 4 && session.exercises.length <= STANDARD_SESSION_EXERCISE_TARGET),
+  "45-minute sessions stay within strategy range",
 );
 const durationPrimary = durationCap.candidate.sessions.some((session) =>
   session.exercises.some((item) => item.muscle_priority === "PRIMARY" || item.movement_role === "HIP_EXTENSION"),
@@ -442,6 +489,28 @@ const roles5 = buildSessionBlueprints({ goal: "GLUTE_GROWTH", days: 5 }).map((it
 assert(roles2.includes("FULL_BODY"), "2-day glute uses efficient full body");
 assert(roles5.includes("LOWER_GLUTE_PRIORITY"), "5-day allows specialization");
 assert(roles2.join() !== roles5.join(), "frequency changes structure");
+
+const expandedHigh = expandBlueprintToTarget(
+  buildSessionBlueprints({ goal: "GLUTE_GROWTH", days: 2 })[0],
+  STANDARD_SESSION_EXERCISE_TARGET,
+);
+assertEqual(expandedHigh.slots.length, STANDARD_SESSION_EXERCISE_TARGET, "full body expands to target");
+
+const coreSupportTarget = resolveSessionExerciseTarget({
+  availableMinutes: 60,
+  trainingLevel: "INTERMEDIATE",
+  daysPerWeek: 3,
+  demand: "LOW",
+});
+assertEqual(coreSupportTarget, 4, "low-demand core support stays shorter");
+
+const beginnerFiveTarget = resolveSessionExerciseTarget({
+  availableMinutes: 60,
+  trainingLevel: "BEGINNER",
+  daysPerWeek: 5,
+  demand: "HIGH",
+});
+assertEqual(beginnerFiveTarget, 5, "beginner 5-day reduces target");
 
 const durationEstimate = estimateSessionMinutes(first.candidate!.sessions[0].exercises);
 assert(durationEstimate === first.candidate!.sessions[0].estimated_minutes, "duration uses sets+rest not count alone");

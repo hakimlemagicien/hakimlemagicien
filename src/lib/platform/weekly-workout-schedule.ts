@@ -58,9 +58,9 @@ const AR_MONTHS = [
 ] as const;
 
 const LEG_DAY: TodayWorkoutPrescription[] = [
-  { external_id: "CH-010", sets: 4, reps: "12 - 15", rest_seconds: 90, suggested_weight_kg: 50 },
-  { external_id: "TR-001", sets: 3, reps: "10 - 12", rest_seconds: 75, suggested_weight_kg: 60 },
-  { external_id: "CH-007", sets: 3, reps: "12", rest_seconds: 60, suggested_weight_kg: 20 },
+  { external_id: "LE-001", sets: 4, reps: "8 - 10", rest_seconds: 120, suggested_weight_kg: 60 },
+  { external_id: "LE-004", sets: 3, reps: "10 - 12", rest_seconds: 90, suggested_weight_kg: 50 },
+  { external_id: "GL-001", sets: 3, reps: "12", rest_seconds: 75, suggested_weight_kg: 80 },
 ];
 
 const SHOULDER_DAY: TodayWorkoutPrescription[] = [
@@ -104,8 +104,8 @@ export const WEEKDAY_WORKOUT_PLANS: Record<WeekdayId, WeekdayWorkoutPlan> = {
   },
   tue: {
     id: "tue",
-    muscleTitle: "رجل",
-    targetMuscle: "رجل",
+    muscleTitle: "أرجل",
+    targetMuscle: "أرجل",
     isRestDay: false,
     prescriptions: LEG_DAY,
     durationMin: 50,
@@ -186,20 +186,9 @@ export function emptyRestPlan(id: WeekdayId): WeekdayWorkoutPlan {
   };
 }
 
-/** First chest exercise — the only unlocked slot for free members. */
-export const FREE_MEMBER_UNLOCKED_EXTERNAL_ID = "CH-001";
-
-const FREE_CHEST_PREVIEW: TodayWorkoutPrescription = {
-  external_id: FREE_MEMBER_UNLOCKED_EXTERNAL_ID,
-  sets: 4,
-  reps: "10 - 12",
-  rest_seconds: 90,
-  suggested_weight_kg: 40,
-};
-
 /**
- * Free members see a catalog preview (not an assigned program).
- * Paid members use an assignment snapshot when provided; otherwise rest/empty — never a fake assigned week.
+ * Resolve a weekday plan from assignment snapshot or personalized preview plans.
+ * No generic catalog fallback — free/paid without plans return empty rest day.
  */
 export function resolveWeekdayPlan(
   dayId: WeekdayId,
@@ -207,28 +196,7 @@ export function resolveWeekdayPlan(
   assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null,
 ): WeekdayWorkoutPlan {
   if (assignedPlans) return assignedPlans[dayId] ?? emptyRestPlan(dayId);
-  if (hasWorkoutProgram) return emptyRestPlan(dayId);
-
-  const base = WEEKDAY_WORKOUT_PLANS[dayId];
-  const sourcePrescriptions =
-    base.isRestDay || base.prescriptions.length === 0
-      ? TODAY_WORKOUT_PRESCRIPTIONS
-      : base.prescriptions;
-
-  const tail = sourcePrescriptions.filter(
-    (item) => item.external_id !== FREE_MEMBER_UNLOCKED_EXTERNAL_ID,
-  );
-
-  return {
-    ...base,
-    isRestDay: false,
-    muscleTitle: base.isRestDay ? "صدر" : base.muscleTitle,
-    targetMuscle: base.isRestDay ? "صدر" : base.targetMuscle,
-    prescriptions: [FREE_CHEST_PREVIEW, ...tail].slice(0, 6),
-    durationMin: base.isRestDay ? 45 : base.durationMin || 45,
-    calories: base.isRestDay ? 450 : base.calories || 400,
-    points: base.isRestDay ? 120 : base.points || 100,
-  };
+  return emptyRestPlan(dayId);
 }
 
 export function isFreeUnlockedExerciseIndex(orderIndex: number) {
@@ -260,9 +228,9 @@ export function buildWeeklySchedule(input?: {
     const calendarDate = new Date(weekStart);
     calendarDate.setDate(weekStart.getDate() + index);
     const dateKey = dateKeyFromDate(calendarDate);
-    const displayPlan = freeMember
-      ? resolveWeekdayPlan(id, false)
-      : resolveWeekdayPlan(id, true, assignedPlans);
+    const displayPlan = assignedPlans
+      ? assignedPlans[id] ?? emptyRestPlan(id)
+      : resolveWeekdayPlan(id, !freeMember);
     const names = WEEKDAY_NAMES[id];
     const isToday = dateKey === todayKey;
     const isPast = dateKey < todayKey;

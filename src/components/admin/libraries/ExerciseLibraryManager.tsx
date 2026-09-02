@@ -60,7 +60,11 @@ import {
 import { formatAdminDate } from "@/lib/admin/admin-status";
 import { ExerciseListThumb } from "@/components/admin/libraries/ExerciseListThumb";
 import { ExerciseMediaPanel } from "@/components/admin/libraries/ExerciseMediaPanel";
-import { fetchExerciseThumbnailUrls, videoStatusLabel } from "@/lib/admin/admin-exercise-media";
+import {
+  fetchExerciseThumbnailUrls,
+  resolveAdminExerciseListThumbSrc,
+  videoStatusLabel,
+} from "@/lib/admin/admin-exercise-media";
 import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
 import { useCanAdmin } from "@/components/admin/StaffPermissionsContext";
 import { detectExerciseSensitiveChanges } from "@/lib/admin/admin-library-safety";
@@ -454,8 +458,17 @@ export function ExerciseLibraryManager() {
                       <td>
                         <ExerciseListThumb
                           name={row.name_ar || row.name_en}
-                          src={row.thumbnail_path ? thumbUrls[row.thumbnail_path] : null}
-                          loading={thumbsLoading && Boolean(row.thumbnail_path) && !thumbUrls[row.thumbnail_path]}
+                          src={resolveAdminExerciseListThumbSrc({
+                            externalId: row.external_id,
+                            thumbnailPath: row.thumbnail_path,
+                            signedUrls: thumbUrls,
+                            storageFetchDone: !thumbsLoading,
+                          })}
+                          loading={
+                            Boolean(row.thumbnail_path) &&
+                            thumbsLoading &&
+                            !thumbUrls[row.thumbnail_path]
+                          }
                         />
                       </td>
                       <td>
@@ -489,8 +502,17 @@ export function ExerciseLibraryManager() {
                   <button key={row.id} type="button" className="cc-exercise-card" onClick={() => openItem(row.id)}>
                     <ExerciseListThumb
                       name={row.name_ar || row.name_en}
-                      src={row.thumbnail_path ? thumbUrls[row.thumbnail_path] : null}
-                      loading={thumbsLoading && Boolean(row.thumbnail_path) && !thumbUrls[row.thumbnail_path]}
+                      src={resolveAdminExerciseListThumbSrc({
+                        externalId: row.external_id,
+                        thumbnailPath: row.thumbnail_path,
+                        signedUrls: thumbUrls,
+                        storageFetchDone: !thumbsLoading,
+                      })}
+                      loading={
+                        Boolean(row.thumbnail_path) &&
+                        thumbsLoading &&
+                        !thumbUrls[row.thumbnail_path]
+                      }
                     />
                     <span className="cc-exercise-card__body">
                       <strong>{row.external_id}</strong>

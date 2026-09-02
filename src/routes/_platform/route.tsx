@@ -1,7 +1,10 @@
 import { createFileRoute, isRedirect, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
+import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useMembership } from "@/hooks/useMembership";
+import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
+import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
@@ -69,7 +72,18 @@ export const Route = createFileRoute("/_platform")({
 
 function PlatformLayout() {
   const navigate = useNavigate();
-  useMembership();
+  const membership = useMembership();
+  const { userId } = usePlatformActivity();
+  const hasWorkoutProgram = membership.features.workout_program;
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram && !membership.loading);
+  usePaidTrainingAutoAssign({
+    enabled: !membership.loading && Boolean(userId),
+    userId,
+    membershipTier: membership.tier,
+    hasWorkoutProgram,
+    runtimeReason: runtimeQuery.data?.reason,
+    runtimeLoading: runtimeQuery.isLoading,
+  });
   const [blocked, setBlocked] = useState(false);
   const [blockStatus, setBlockStatus] = useState("active");
 

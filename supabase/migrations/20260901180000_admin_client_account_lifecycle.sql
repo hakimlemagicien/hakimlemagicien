@@ -508,7 +508,7 @@ $$;
 
 DROP FUNCTION IF EXISTS public.admin_list_clients(TEXT, TEXT, TEXT, INTEGER, INTEGER);
 
-CREATE FUNCTION public.admin_list_clients(
+CREATE OR REPLACE FUNCTION public.admin_list_clients(
   p_query TEXT DEFAULT NULL,
   p_plan TEXT DEFAULT NULL,
   p_onboarding TEXT DEFAULT NULL,

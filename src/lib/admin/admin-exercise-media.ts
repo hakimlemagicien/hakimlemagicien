@@ -3,6 +3,7 @@ import {
   EXERCISE_MEDIA_BUCKET,
   fetchExerciseMediaUrl,
 } from "@/lib/platform/exercise-media";
+import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
 import { getAdminExercise, type AdminExerciseDetail } from "@/lib/admin/admin-exercises-api";
 import {
   canonicalPathForAsset,
@@ -28,6 +29,25 @@ export {
   type ExerciseMediaAssetType,
   type MediaValidationError,
 } from "@/lib/admin/admin-exercise-media-contract";
+
+/**
+ * Admin list thumbnails: Storage override first, then the same public stage still
+ * the member app uses (Core 100 / stage pilot pool).
+ */
+export function resolveAdminExerciseListThumbSrc(input: {
+  externalId: string;
+  thumbnailPath: string | null | undefined;
+  signedUrls: Record<string, string>;
+  storageFetchDone: boolean;
+}): string | null {
+  const path = input.thumbnailPath?.trim();
+  if (path) {
+    const signed = input.signedUrls[path];
+    if (signed) return signed;
+    if (!input.storageFetchDone) return null;
+  }
+  return getExerciseStageListThumb(input.externalId);
+}
 
 export async function fetchExerciseThumbnailUrls(
   paths: Array<string | null | undefined>,

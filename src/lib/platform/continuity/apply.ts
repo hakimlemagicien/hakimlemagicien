@@ -1,6 +1,7 @@
 import type { ClientTrainingRuntime } from "@/lib/platform/assigned-program-api";
 import { formatRepsLabel } from "@/lib/platform/training-assignment";
 import type { TodayWorkoutPrescription } from "@/lib/platform/today-workout";
+import { applySessionPresentationToPlan } from "@/lib/platform/session-muscle-presentation";
 import type { WeekdayId, WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 import { emptyRestPlan } from "@/lib/platform/weekly-workout-schedule";
 import type { ContinuityDecision, ContinuityProgramDay, ContinuitySessionFact } from "./types";
@@ -12,7 +13,7 @@ function inferRegions(muscleFocus: string | null, externalIds: string[]): string
   if (focus.includes("صدر")) regions.add("CHEST");
   if (focus.includes("ظهر")) regions.add("UPPER_BACK");
   if (focus.includes("كتف") || focus.includes("أكتاف")) regions.add("SHOULDERS");
-  if (focus.includes("رجل") || focus.includes("فخذ")) regions.add("QUADRICEPS");
+  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ")) regions.add("QUADRICEPS");
   if (focus.includes("باي")) regions.add("BICEPS");
   if (focus.includes("تراي")) regions.add("TRICEPS");
   for (const id of externalIds) {
@@ -77,7 +78,7 @@ export function runtimeDayToPlan(
     assignmentDayId: day.day_id,
     notes_ar: exercise.notes_ar ?? undefined,
   }));
-  return {
+  return applySessionPresentationToPlan({
     id: displayWeekday,
     muscleTitle: day.title_ar || day.muscle_focus || "",
     targetMuscle: day.muscle_focus || day.title_ar || "",
@@ -87,7 +88,7 @@ export function runtimeDayToPlan(
     calories: day.estimated_calories ?? 0,
     points: 100,
     programDayId: day.day_id ?? programDayId,
-  };
+  });
 }
 
 export function overlayTodayPlan(input: {

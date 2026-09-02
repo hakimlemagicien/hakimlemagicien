@@ -494,9 +494,15 @@ for (const file of clientFiles) {
   const source = readFileSync(join(root, file), "utf8");
   assert(
     !source.includes("admin_assign_generated_v2_program"),
-    `${file} cannot assign generated programs`,
+    `${file} cannot call admin assign RPC`,
   );
 }
+assert(
+  readFileSync(join(root, "src/lib/platform/client-training-assign-api.ts"), "utf8").includes(
+    "client_assign_generated_v2_program",
+  ),
+  "client uses entitled self-assign RPC",
+);
 
 console.log("client-loop integration tests passed");
 console.log(

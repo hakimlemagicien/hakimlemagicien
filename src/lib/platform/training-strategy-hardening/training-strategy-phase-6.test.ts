@@ -54,9 +54,9 @@ function baseInput(): TrainingStrategyInput {
   };
 }
 
-// --- Fail-closed gates ---
-assert(AUTOMATED_ASSIGNMENT_GLOBALLY_DISABLED, "automated globally disabled");
-assert(!assertAutomatedAssignmentAllowed("AUTOMATED").ok, "AUTOMATED blocked");
+// --- Assignment gates (V1 closure: paid auto-assign enabled) ---
+assert(!AUTOMATED_ASSIGNMENT_GLOBALLY_DISABLED, "automated assignment enabled for V1");
+assert(assertAutomatedAssignmentAllowed("AUTOMATED").ok, "AUTOMATED allowed");
 assert(assertAutomatedAssignmentAllowed("ASSISTED").ok, "ASSISTED allowed");
 
 assert(

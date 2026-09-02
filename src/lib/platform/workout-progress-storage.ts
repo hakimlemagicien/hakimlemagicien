@@ -140,11 +140,11 @@ export function isStoredWorkoutInterrupted(session: StoredWorkoutSession | null)
   if (!session) return false;
   const finished = session.progress.every((item) => item.status === "done");
   if (finished) return false;
-  return (
+  const progressed =
     session.progress.some((item) => item.completedSets > 0 || item.status === "done") ||
-    session.setLogs.length > 0 ||
-    Boolean(session.startedAt)
-  );
+    (Array.isArray(session.setLogs) && session.setLogs.length > 0) ||
+    Boolean(session.startedAt);
+  return progressed;
 }
 
 export function saveWorkoutSession(state: StoredWorkoutSession) {

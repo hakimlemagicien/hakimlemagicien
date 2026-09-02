@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutationState } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   CalendarDays,
@@ -16,6 +17,10 @@ import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHead
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
 import { WorkoutCalendarOverlay } from "@/components/platform/workout/WorkoutCalendarOverlay";
+import {
+  ExerciseLockedCard,
+  ExerciseUnlockedStatusIcon,
+} from "@/components/platform/workout/ExerciseLockedCard";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
@@ -28,6 +33,10 @@ import {
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
+import { useFreeTrainingStrategyPreview } from "@/hooks/useFreeTrainingStrategyPreview";
+import { PAID_TRAINING_AUTO_ASSIGN_KEY } from "@/hooks/usePaidTrainingAutoAssign";
+import type { PaidTrainingAutoAssignResult } from "@/lib/platform/paid-training-auto-assign";
+import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import {
   buildWeeklySchedule,
   formatWorkoutDayLabel,
@@ -49,10 +58,16 @@ import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
-import muscleAnatomyChestBicepsImg from "@/assets/muscle-anatomy-chest-biceps.png";
-import workoutGoalStack1 from "@/assets/workout-goal-stack-1.webp";
-import workoutGoalStack2 from "@/assets/workout-goal-stack-2.webp";
-import workoutGoalStack3 from "@/assets/workout-goal-stack-3.webp";
+import { readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import {
+  resolveWorkoutGoalHeroPhotos,
+  type WorkoutGoalHeroPhoto,
+} from "@/lib/platform/workout-goal-hero-images";
+import { SessionAnatomyVisual } from "@/components/platform/workout/SessionAnatomyVisual";
+import {
+  resolveSessionAnatomyImageSrc,
+  resolveSessionPresentation,
+} from "@/lib/platform/session-muscle-presentation";
 
 function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -266,12 +281,6 @@ function TodayWorkoutStatCell({
   );
 }
 
-const GOAL_STACK_PHOTOS = [
-  { src: workoutGoalStack1, alt: "جسم متناسق بعد الالتزام — خسارة الدهون" },
-  { src: workoutGoalStack2, alt: "تمرين بقوة وتركيز — بناء القوام الرياضي" },
-  { src: workoutGoalStack3, alt: "نتيجة صحية واثقة — جسم أحلامك" },
-] as const;
-
 const GOAL_STACK_SLOTS = [
   { x: 0, y: 0, rotate: 0, scale: 1 },
   { x: 10, y: 8, rotate: 6.5, scale: 0.95 },
@@ -280,21 +289,24 @@ const GOAL_STACK_SLOTS = [
 
 function GoalHeroPhotoStack({
   active,
+  photos,
 }: {
   active: number;
+  photos: WorkoutGoalHeroPhoto[];
 }) {
   const reduceMotion = useReducedMotion();
+  const stack = photos.length >= 3 ? photos.slice(0, 3) : photos;
 
   return (
     <div className="workout-goal-stack">
-      {GOAL_STACK_PHOTOS.map((photo, index) => {
-        const slot = (index - active + GOAL_STACK_PHOTOS.length) % GOAL_STACK_PHOTOS.length;
+      {stack.map((photo, index) => {
+        const slot = (index - active + stack.length) % stack.length;
         const pos = GOAL_STACK_SLOTS[slot]!;
         const isFront = slot === 0;
 
         return (
           <motion.div
-            key={photo.src}
+            key={`${photo.src}-${index}`}
             className="workout-goal-stack__card"
             aria-hidden={!isFront}
             initial={false}
@@ -330,18 +342,26 @@ function GoalHeroPhotoStack({
 function WorkoutGoalHero({
   overallProgress,
   goalLabel,
+  photos,
 }: {
   overallProgress: number;
   goalLabel: string;
+  photos: WorkoutGoalHeroPhoto[];
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
+  const photoCount = Math.max(photos.length, 1);
 
   useEffect(() => {
+    setActivePhoto(0);
+  }, [photos]);
+
+  useEffect(() => {
+    if (photoCount <= 1) return;
     const id = window.setInterval(() => {
-      setActivePhoto((current) => (current + 1) % GOAL_STACK_PHOTOS.length);
+      setActivePhoto((current) => (current + 1) % photoCount);
     }, 3000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [photoCount]);
 
   return (
     <section
@@ -349,7 +369,7 @@ function WorkoutGoalHero({
       style={{ height: "196px" }}
     >
       <div aria-hidden className="workout-goal-hero__fog">
-        {GOAL_STACK_PHOTOS.map((photo, index) => (
+        {photos.map((photo, index) => (
           <img
             key={photo.src}
             src={photo.src}
@@ -361,7 +381,7 @@ function WorkoutGoalHero({
       <div aria-hidden className="workout-goal-hero__veil" />
       <div className="workout-goal-hero__body">
         <div className="workout-goal-hero__media">
-          <GoalHeroPhotoStack active={activePhoto} />
+          <GoalHeroPhotoStack active={activePhoto} photos={photos} />
         </div>
 
         <div className="workout-goal-hero__copy" dir="rtl">
@@ -398,6 +418,8 @@ function TodayWorkoutBriefCard({
   dateLabel,
   muscleTitle,
   isRestDay,
+  anatomyVisualKey,
+  anatomyImageSrc,
   stats,
   dayId,
   startExerciseId,
@@ -412,6 +434,8 @@ function TodayWorkoutBriefCard({
   dateLabel: string;
   muscleTitle: string;
   isRestDay: boolean;
+  anatomyVisualKey: ReturnType<typeof resolveSessionPresentation>["visualKey"];
+  anatomyImageSrc?: string | null;
   stats?: { exercises: number; minutes: number; points: number };
   dayId: WeekdayId;
   startExerciseId?: string;
@@ -448,13 +472,10 @@ function TodayWorkoutBriefCard({
     >
       <div className="flex min-h-[148px] items-stretch" dir="rtl">
         <div className="relative w-[46%] min-w-[150px] shrink-0 self-stretch overflow-hidden bg-card">
-          <img
-            src={muscleAnatomyChestBicepsImg}
-            alt={isRestDay ? "يوم راحة" : "تشريح عضلي للمجموعة المستهدفة"}
-            className={cn(
-              "absolute inset-0 h-full w-full origin-center object-contain object-center",
-              isRestDay && "opacity-70",
-            )}
+          <SessionAnatomyVisual
+            visualKey={anatomyVisualKey}
+            imageSrc={anatomyImageSrc}
+            isRestDay={isRestDay}
           />
           <span
             aria-hidden
@@ -519,8 +540,8 @@ function TodayWorkoutBriefCard({
           intensity={lockedPreviewIntensity}
           message={
             lockedPreviewIntensity === "light"
-              ? "معاينة — فعّل برنامجك للوصول الكامل"
-              : "محتوى مقفل — فعّل برنامجك"
+              ? TRAINING_PRODUCT_COPY.lockedOverlayLight
+              : TRAINING_PRODUCT_COPY.lockedOverlayStrong
           }
           onUnlockClick={onLockedClick}
         />
@@ -586,6 +607,52 @@ function SessionExercisePathRow({
     !isUnlocked && "opacity-45 saturate-50",
   );
 
+  const thumbnail = stillThumb ? (
+    <OptimizedImage
+      src={stillThumb}
+      alt=""
+      width={176}
+      height={176}
+      sizes="88px"
+      objectFit="cover"
+      className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}
+      fallback={
+        <ExerciseThumbnail
+          signedUrl={exercise.thumbnailUrl}
+          status={exercise.videoStatus}
+          mediaPath={exercise.videoPath}
+          alt={exercise.name}
+          className={thumbClass}
+        />
+      }
+    />
+  ) : (
+    <ExerciseThumbnail
+      signedUrl={exercise.thumbnailUrl}
+      status={exercise.videoStatus}
+      mediaPath={exercise.videoPath}
+      alt={exercise.name}
+      className={thumbClass}
+    />
+  );
+
+  if (!isUnlocked) {
+    return (
+      <ExerciseLockedCard
+        index={index}
+        name={exercise.name}
+        sets={exercise.sets}
+        volume={volume}
+        restLabel={exercise.restLabel}
+        thumbnail={thumbnail}
+        isLast={isLast}
+        isActive={isActive}
+        isDone={isDone}
+        onUnlock={onLockedClick}
+      />
+    );
+  }
+
   const body = (
     <>
       <span className="relative z-[1] grid w-7 shrink-0 place-items-center">
@@ -609,42 +676,10 @@ function SessionExercisePathRow({
             : "size-[74px] border-border/60",
         )}
       >
-        {stillThumb ? (
-          <OptimizedImage
-            src={stillThumb}
-            alt=""
-            width={176}
-            height={176}
-            sizes="88px"
-            objectFit="cover"
-            className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}
-            fallback={
-              <ExerciseThumbnail
-                signedUrl={exercise.thumbnailUrl}
-                status={exercise.videoStatus}
-                mediaPath={exercise.videoPath}
-                alt={exercise.name}
-                className={thumbClass}
-              />
-            }
-          />
-        ) : (
-          <ExerciseThumbnail
-            signedUrl={exercise.thumbnailUrl}
-            status={exercise.videoStatus}
-            mediaPath={exercise.videoPath}
-            alt={exercise.name}
-            className={thumbClass}
-          />
-        )}
-        {!isUnlocked ? (
-          <span className="absolute inset-0 grid place-items-center bg-black/35">
-            <Lock className="h-4 w-4 text-white drop-shadow-sm" strokeWidth={2.4} />
-          </span>
-        ) : null}
+        {thumbnail}
       </div>
 
-      <div className={cn("min-w-0 flex-1 text-right", !isUnlocked && "opacity-70")}>
+      <div className="min-w-0 flex-1 text-right">
         <p
           className={cn(
             "font-black leading-snug text-foreground",
@@ -664,32 +699,15 @@ function SessionExercisePathRow({
         </p>
       </div>
 
-      {!isUnlocked ? (
-        <Lock className="h-4 w-4 shrink-0 text-primary" strokeWidth={2.2} />
-      ) : isDone ? (
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-success text-white">
-          <Check className="h-3.5 w-3.5" strokeWidth={3} />
-        </span>
-      ) : (
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-[1.5px] border-primary bg-card" />
-      )}
+      <ExerciseUnlockedStatusIcon isDone={isDone} />
     </>
   );
 
   const rowClass = cn(
-    "workout-exercise-row flex w-full items-center gap-2.5 px-3 py-3 text-right transition",
+    "workout-exercise-row flex w-full items-center gap-2.5 px-3 py-3 text-right transition active:bg-muted/25",
     !isLast && "border-b border-border/40",
-    isUnlocked && "active:bg-muted/25",
     isActive && "workout-exercise-row--current relative z-[1] py-3.5",
   );
-
-  if (!isUnlocked) {
-    return (
-      <button type="button" onClick={onLockedClick} className={rowClass} dir="rtl">
-        {body}
-      </button>
-    );
-  }
 
   return (
     <Link
@@ -789,7 +807,7 @@ function SessionExercisesSection({
           <WorkoutLockedPreviewOverlay
             active={freeDayFullyLocked}
             intensity="strong"
-            message="معاينة مقفلة — فعّل برنامجك"
+            message="معاينة مقفلة — اشترك لفتح برنامجك"
             onUnlockClick={onLockedClick}
           />
         ) : null}
@@ -798,8 +816,8 @@ function SessionExercisesSection({
       {freePreview ? (
         <p className="text-[9px] font-medium leading-snug text-muted-foreground">
           {freeDayFullyLocked
-            ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة التمرين المجاني أو فعّل برنامجك."
-            : "🔓 التمرين الأول متاح اليوم — باقي التمارين مقفلة حتى تفعّل برنامجك الكامل."}
+            ? TRAINING_PRODUCT_COPY.freePreviewOtherDay
+            : TRAINING_PRODUCT_COPY.freePreviewFooter(exercises.length)}
         </p>
       ) : null}
     </div>
@@ -818,12 +836,12 @@ function WorkoutDayPage() {
   const isSelectedToday = selectedDayId === todayId;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const lockedReason = freeDayFullyLocked
-    ? "فعّل برنامجك الآن لفتح تمارين كل أيام الأسبوع — يمكنك معاينة شكل البرنامج فقط."
-    : "أكمل حصتك التدريبية — التمرين الأول متاح للمعاينة اليوم.";
+    ? TRAINING_PRODUCT_COPY.freePreviewOtherDay
+    : TRAINING_PRODUCT_COPY.upgradeSheetTraining;
   const openTrainingUpgrade = () =>
     openUpgradeWithContext(
       "TRAINING",
-      freeDayFullyLocked ? lockedReason : "بقية التمارين مختارة حسب هدفك ومستواك.",
+      freeDayFullyLocked ? lockedReason : TRAINING_PRODUCT_COPY.upgradeSheetTraining,
     );
 
   const trainingQuery = useQuery({
@@ -836,13 +854,40 @@ function WorkoutDayPage() {
     readQuizProgress()?.goalId,
     trainingQuery.data?.goal,
   );
+  const { gender, goalId } = readHomeGoalContext({
+    gender: trainingQuery.data?.answers.gender,
+    goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal,
+    goalText: trainingQuery.data?.goal,
+  });
+  const goalHeroPhotos = useMemo(
+    () => resolveWorkoutGoalHeroPhotos({ gender, goalId, goalLabel }),
+    [gender, goalId, goalLabel],
+  );
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const paidAutoAssignMutation = useMutationState({
+    filters: { mutationKey: PAID_TRAINING_AUTO_ASSIGN_KEY },
+    select: (mutation) => ({
+      status: mutation.state.status,
+      data: mutation.state.data as PaidTrainingAutoAssignResult | undefined,
+    }),
+  });
+  const paidAutoAssignLatest = paidAutoAssignMutation[paidAutoAssignMutation.length - 1];
+  const paidAutoAssignRunning = paidAutoAssignLatest?.status === "pending";
+  const paidAutoAssignResult = paidAutoAssignLatest?.data;
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
       ? continuity.assignedPlans
       : null;
+
+  const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
+    enabled: freePreview && !hasWorkoutProgram,
+    userId,
+    training: trainingQuery.data,
+  });
+  const freeStrategyPreviewPlans = freeStrategyPreviewQuery.data ?? null;
+  const previewPlans = hasWorkoutProgram ? assignedPlans : freeStrategyPreviewPlans;
 
   useEffect(() => {
     writeStoredSelectedDay(selectedDayId);
@@ -853,19 +898,19 @@ function WorkoutDayPage() {
       buildWeeklySchedule({
         userId,
         freeMember: freePreview,
-        assignedPlans: hasWorkoutProgram ? assignedPlans : undefined,
+        assignedPlans: previewPlans ?? undefined,
       }),
-    [userId, freePreview, hasWorkoutProgram, assignedPlans, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
+    [userId, freePreview, previewPlans, snapshot.activityStreak, snapshot.hakimPoints, snapshot.workoutDone],
   );
 
   const selectedEntry =
     weeklySchedule.find((entry) => entry.id === selectedDayId) ?? weeklySchedule[0]!;
-  const selectedPlan = resolveWeekdayPlan(
-    selectedDayId,
-    hasWorkoutProgram,
-    hasWorkoutProgram ? assignedPlans : undefined,
+  const selectedPlan = previewPlans
+    ? previewPlans[selectedDayId] ?? resolveWeekdayPlan(selectedDayId, true, previewPlans)
+    : resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
+  const sessionQuery = useWorkoutDaySession(
+    (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
   );
-  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans ? selectedPlan : null);
   const sessionExercises = sessionQuery.data?.exercises ?? [];
   const todayKey = continuity.todayKey;
   const applyStoredProgress = selectedEntry.dateKey === todayKey;
@@ -881,8 +926,39 @@ function WorkoutDayPage() {
   const programName = runtimeQuery.data?.assignment?.name_ar;
   const runtimeOk =
     hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason === "ok";
-  const showFreeCatalogWeek = freePreview && !hasWorkoutProgram;
-  const showWeeklySchedule = showFreeCatalogWeek || runtimeOk;
+  const showFreeStrategyPreview =
+    freePreview && !hasWorkoutProgram && Boolean(freeStrategyPreviewPlans);
+  const showFreePreviewIncompleteProfile =
+    freePreview &&
+    !hasWorkoutProgram &&
+    trainingQuery.isFetched &&
+    !trainingQuery.data &&
+    !freeStrategyPreviewQuery.isLoading;
+  const showFreePreviewError =
+    freePreview &&
+    !hasWorkoutProgram &&
+    !showFreePreviewIncompleteProfile &&
+    !freeStrategyPreviewQuery.isLoading &&
+    (freeStrategyPreviewQuery.isError ||
+      (freeStrategyPreviewQuery.isFetched && !freeStrategyPreviewPlans));
+  const showWeeklySchedule = showFreeStrategyPreview || runtimeOk;
+  const showFreePreviewLoading =
+    freePreview && !hasWorkoutProgram && freeStrategyPreviewQuery.isLoading;
+  const showPaidAutoAssignLoading =
+    hasWorkoutProgram &&
+    !runtimeOk &&
+    (paidAutoAssignRunning || runtimeQuery.isLoading);
+  const showPaidReviewPending =
+    hasWorkoutProgram &&
+    !runtimeOk &&
+    !showPaidAutoAssignLoading &&
+    paidAutoAssignResult?.status === "review_required";
+  const showPaidProfileBlocked =
+    hasWorkoutProgram &&
+    !runtimeOk &&
+    !showPaidAutoAssignLoading &&
+    paidAutoAssignResult?.status === "blocked" &&
+    paidAutoAssignResult.reasonCode === "MISSING_PROFILE_DATA";
   const showRuntimeLoading = hasWorkoutProgram && runtimeQuery.isLoading;
   const showRuntimeError =
     hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
@@ -894,9 +970,25 @@ function WorkoutDayPage() {
     interrupted || continuity.decision?.action === "RESUME_SESSION"
       ? "جلسة سابقة غير مكتملة — يمكنك الاستكمال من حيث توقفت."
       : undefined;
+  const sessionPresentation = useMemo(
+    () =>
+      resolveSessionPresentation({
+        plan: selectedPlan,
+        exerciseMuscles: sessionExercises.map((exercise) => ({
+          external_id: exercise.external_id,
+          muscle: exercise.muscle,
+        })),
+      }),
+    [selectedPlan, sessionExercises],
+  );
+  const sessionTitle = sessionPresentation.displayNameAr || selectedPlan.muscleTitle;
+  const anatomyImageSrc = resolveSessionAnatomyImageSrc(
+    sessionPresentation,
+    sessionExercises.map((exercise) => exercise.external_id),
+  );
   const whyCopy =
     !selectedPlan.isRestDay && goalLabel !== "غير محدد"
-      ? workoutFitsGoalCopy(goalLabel, selectedPlan.muscleTitle)
+      ? workoutFitsGoalCopy(goalLabel, sessionTitle)
       : undefined;
 
   return (
@@ -917,7 +1009,11 @@ function WorkoutDayPage() {
           <PlatformHeaderActions />
         </header>
 
-        <WorkoutGoalHero overallProgress={overallProgress} goalLabel={goalLabel} />
+        <WorkoutGoalHero
+          overallProgress={overallProgress}
+          goalLabel={goalLabel}
+          photos={goalHeroPhotos}
+        />
 
         {showRuntimeLoading ? (
           <section className="platform-card space-y-3 rounded-3xl p-4">
@@ -963,6 +1059,66 @@ function WorkoutDayPage() {
           </section>
         ) : null}
 
+        {showFreePreviewLoading ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.freePreviewLoadingTitle}</p>
+            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.freePreviewLoadingBody}</p>
+          </section>
+        ) : null}
+
+        {showFreePreviewIncompleteProfile ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.completeProfileTitle}</p>
+            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.completeProfileBody}</p>
+            <Link
+              to="/app/profile"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-black text-primary-foreground"
+            >
+              {TRAINING_PRODUCT_COPY.completeProfileCta}
+            </Link>
+          </section>
+        ) : null}
+
+        {showFreePreviewError ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.previewErrorTitle}</p>
+            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.previewErrorBody}</p>
+            <button
+              type="button"
+              className="text-[11px] font-black text-primary"
+              onClick={() => void freeStrategyPreviewQuery.refetch()}
+            >
+              {TRAINING_PRODUCT_COPY.previewRetry}
+            </button>
+          </section>
+        ) : null}
+
+        {showPaidAutoAssignLoading ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.paidAutoAssignLoading}</p>
+          </section>
+        ) : null}
+
+        {showPaidReviewPending ? (
+          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.paidReviewPendingTitle}</p>
+            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.paidReviewPendingBody}</p>
+          </section>
+        ) : null}
+
+        {showPaidProfileBlocked ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
+            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.completeProfileTitle}</p>
+            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.completeProfileBody}</p>
+            <Link
+              to="/app/profile"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-black text-primary-foreground"
+            >
+              {TRAINING_PRODUCT_COPY.completeProfileCta}
+            </Link>
+          </section>
+        ) : null}
+
         {showWeeklySchedule ? (
         <>
         <section
@@ -1004,8 +1160,10 @@ function WorkoutDayPage() {
 
           <TodayWorkoutBriefCard
             dateLabel={selectedDayLabel}
-            muscleTitle={selectedPlan.muscleTitle}
+            muscleTitle={sessionTitle}
             isRestDay={selectedPlan.isRestDay}
+            anatomyVisualKey={sessionPresentation.visualKey}
+            anatomyImageSrc={anatomyImageSrc}
             stats={selectedPlan.isRestDay ? undefined : workoutStats}
             dayId={selectedDayId}
             startExerciseId={sessionViews.find((item) => item.status === "active")?.id ?? sessionViews[0]?.id}

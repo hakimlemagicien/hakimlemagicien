@@ -87,32 +87,47 @@ export function NutritionLockedOverlay({
   onUnlockClick,
   message = "محتوى مقفل — فعّل برنامجك",
   intensity = "medium",
+  asVisual = false,
 }: {
   active: boolean;
-  onUnlockClick: () => void;
+  onUnlockClick?: () => void;
   message?: string;
   intensity?: "light" | "medium" | "strong";
+  /** When true, renders a non-interactive layer (parent handles click). */
+  asVisual?: boolean;
 }) {
   if (!active) return null;
 
-  return (
-    <button
-      type="button"
-      onClick={onUnlockClick}
-      className={cn(
-        "absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-[inherit] transition active:scale-[0.995]",
-        intensity === "strong" && "bg-white/62 backdrop-blur-[2px]",
-        intensity === "medium" && "bg-white/48 backdrop-blur-[1px]",
-        intensity === "light" && "bg-white/28",
-      )}
-      aria-label={message}
-    >
+  const layerClass = cn(
+    "absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-[inherit] transition",
+    intensity === "strong" && "bg-white/62 backdrop-blur-[3px]",
+    intensity === "medium" && "bg-white/55 backdrop-blur-[2px]",
+    intensity === "light" && "bg-white/35 backdrop-blur-[1px]",
+    !asVisual && "active:scale-[0.995]",
+  );
+
+  const inner = (
+    <>
       <span className="grid h-10 w-10 place-items-center rounded-full bg-primary/12 shadow-[0_8px_20px_-10px_rgba(249,115,22,0.45)] ring-1 ring-primary/30">
         <Lock className="h-4 w-4 text-primary" strokeWidth={2.3} />
       </span>
       <span className="rounded-full border border-border/60 bg-card/95 px-3 py-1 text-[9px] font-black text-foreground shadow-sm">
         {message}
       </span>
+    </>
+  );
+
+  if (asVisual) {
+    return (
+      <span className={layerClass} aria-hidden>
+        {inner}
+      </span>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onUnlockClick} className={layerClass} aria-label={message}>
+      {inner}
     </button>
   );
 }

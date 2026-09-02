@@ -9,6 +9,10 @@ import {
 } from "@/lib/platform/entitlements";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
+import { useFreeTrainingStrategyPreview } from "@/hooks/useFreeTrainingStrategyPreview";
+import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
+import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 import { toProgressionRecoveryHold } from "@/lib/platform/continuity";
 import {
@@ -17,7 +21,9 @@ import {
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
+import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle, Lock } from "lucide-react";
 
 type ExercisePlayerSearch = {
@@ -53,9 +59,20 @@ export const Route = createFileRoute("/_platform/app/program/workout/exercise")(
 function ExercisePlayerPage() {
   const { features, entitlements } = useMembership();
   const { openUpgradeWithContext } = useUpgradeFlow();
+  const { userId } = usePlatformActivity();
   const hasWorkoutProgram = features.workout_program;
   const freePreview = isTrainingPreviewMode(entitlements);
   const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
+  const trainingQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    staleTime: 30_000,
+  });
+  const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
+    enabled: freePreview && !hasWorkoutProgram,
+    userId,
+    training: trainingQuery.data ?? undefined,
+  });
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
   const assignedOk = hasWorkoutProgram && runtimeQuery.data?.reason === "ok";
@@ -70,8 +87,13 @@ function ExercisePlayerPage() {
         ? continuity.assignedPlans
         : runtimeToWeekdayPlans(runtimeQuery.data)
       : null;
-  const plan = resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot, assignedPlans);
-  const sessionQuery = useWorkoutDaySession(freePreview || assignedPlans || sessionPilot ? plan : null);
+  const previewPlans = hasWorkoutProgram ? assignedPlans : freeStrategyPreviewQuery.data ?? null;
+  const plan = previewPlans
+    ? previewPlans[day] ?? resolveWeekdayPlan(day, true, previewPlans)
+    : resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot);
+  const sessionQuery = useWorkoutDaySession(
+    (freePreview || previewPlans || sessionPilot) && !plan.isRestDay ? plan : null,
+  );
 
   const exercises = sessionQuery.data?.exercises ?? [];
   const meta = sessionQuery.data?.meta ?? {
@@ -84,6 +106,7 @@ function ExercisePlayerPage() {
 
   const todayId = getWeekdayIdFromDate();
   const freeDayFullyLocked = freePreview && day !== todayId;
+  const prescribedExerciseCount = plan.prescriptions?.length ?? 0;
 
   if (hasWorkoutProgram && runtimeQuery.isLoading) {
     return (
@@ -115,6 +138,15 @@ function ExercisePlayerPage() {
     );
   }
 
+  if (freePreview && !hasWorkoutProgram && freeStrategyPreviewQuery.isLoading) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
+        <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm font-bold text-muted-foreground">{TRAINING_PRODUCT_COPY.freePreviewLoadingTitle}</p>
+      </div>
+    );
+  }
+
   if (freePreview && (freeDayFullyLocked || !isExerciseUnlockedByEntitlements(entitlements, index, { isToday: true }))) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
@@ -125,8 +157,10 @@ function ExercisePlayerPage() {
           <p className="text-sm font-black text-foreground">أكمل حصتك التدريبية</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {freeDayFullyLocked
-              ? "يمكنك معاينة شكل البرنامج — التمرين المجاني متاح في يوم اليوم فقط."
-              : "التمرين الأول متاح للمعاينة. فعّل برنامجك لفتح كل تمارين الأسبوع."}
+              ? TRAINING_PRODUCT_COPY.exerciseLockedTodayOnly
+              : prescribedExerciseCount > 1
+                ? TRAINING_PRODUCT_COPY.exerciseLockedOnePerDay(prescribedExerciseCount)
+                : TRAINING_PRODUCT_COPY.upgradeSheetTraining}
           </p>
         </div>
         <button

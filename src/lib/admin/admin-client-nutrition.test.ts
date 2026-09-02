@@ -38,6 +38,8 @@ assert(!nutritionLogIsLegacyUnlinked("n1"), "linked nutrition log");
 const root = process.cwd();
 const workspace = readFileSync(join(root, "src/components/admin/ClientNutritionWorkspace.tsx"), "utf8");
 assert(workspace.includes("تعيين خطة تغذية"), "assign action exists");
+assert(workspace.includes("توليد Strategy V1"), "strategy v1 assign action exists");
+assert(workspace.includes("generateAdminStrategyNutrition"), "strategy rpc wiring");
 assert(workspace.includes("استبدال الوجبة"), "meal substitution exists");
 assert(workspace.includes("محرر نسخة العميل"), "client copy editor exists");
 assert(workspace.includes("تاريخ التغذية"), "nutrition history exists");
