@@ -9,6 +9,7 @@ export type AdminNutritionSlot = {
   hour: number;
   minute: number;
   sort_order: number;
+  display_order?: number | null;
   source_meal_id: string | null;
   source_external_id: string;
   name_ar: string;
@@ -21,8 +22,14 @@ export type AdminNutritionSlot = {
   serving_size: number | null;
   serving_unit: string | null;
   servings: number;
+  planned_servings?: number | null;
   allergens: string[];
   notes_ar: string | null;
+  slot_state?: string | null;
+  slot_role?: string | null;
+  satisfied_by_slot_key?: string | null;
+  serving_policy?: string | null;
+  counts_toward_day_totals?: boolean | null;
 };
 
 export type AdminNutritionAssignment = {
@@ -37,6 +44,14 @@ export type AdminNutritionAssignment = {
   watch_allergens: string[];
   notes_ar: string | null;
   updated_at: string;
+  schema_version?: string | null;
+  assignment_version?: number | null;
+  target_id?: string | null;
+  strategy_version?: string | null;
+  library_version?: string | null;
+  validation_status?: string | null;
+  resolved_snapshot?: Record<string, unknown> | null;
+  target?: Record<string, unknown> | null;
   snapshot_complete: boolean;
   allergen_conflict: boolean;
   library_allergen_review: boolean;
@@ -82,6 +97,7 @@ function mapSlot(row: Record<string, unknown>): AdminNutritionSlot {
     hour: num(row.hour),
     minute: num(row.minute),
     sort_order: num(row.sort_order),
+    display_order: row.display_order == null ? null : num(row.display_order),
     source_meal_id: (row.source_meal_id as string | null) ?? null,
     source_external_id: String(row.source_external_id),
     name_ar: String(row.name_ar),
@@ -94,8 +110,14 @@ function mapSlot(row: Record<string, unknown>): AdminNutritionSlot {
     serving_size: row.serving_size == null ? null : num(row.serving_size),
     serving_unit: (row.serving_unit as string | null) ?? null,
     servings: num(row.servings) || 1,
+    planned_servings: row.planned_servings == null ? null : num(row.planned_servings),
     allergens: (row.allergens as string[]) ?? [],
     notes_ar: (row.notes_ar as string | null) ?? null,
+    slot_state: (row.slot_state as string | null) ?? null,
+    slot_role: (row.slot_role as string | null) ?? null,
+    satisfied_by_slot_key: (row.satisfied_by_slot_key as string | null) ?? null,
+    serving_policy: (row.serving_policy as string | null) ?? null,
+    counts_toward_day_totals: row.counts_toward_day_totals as boolean | null | undefined,
   };
 }
 
@@ -112,6 +134,14 @@ function mapDetail(row: Record<string, unknown>): AdminNutritionAssignment {
     watch_allergens: (row.watch_allergens as string[]) ?? [],
     notes_ar: (row.notes_ar as string | null) ?? null,
     updated_at: String(row.updated_at),
+    schema_version: (row.schema_version as string | null) ?? null,
+    assignment_version: row.assignment_version == null ? null : num(row.assignment_version),
+    target_id: (row.target_id as string | null) ?? null,
+    strategy_version: (row.strategy_version as string | null) ?? null,
+    library_version: (row.library_version as string | null) ?? null,
+    validation_status: (row.validation_status as string | null) ?? null,
+    resolved_snapshot: (row.resolved_snapshot as Record<string, unknown> | null) ?? null,
+    target: (row.target as Record<string, unknown> | null) ?? null,
     snapshot_complete: Boolean(row.snapshot_complete),
     allergen_conflict: Boolean(row.allergen_conflict),
     library_allergen_review: Boolean(row.library_allergen_review),
@@ -143,6 +173,31 @@ export async function assignAdminClientNutrition(input: {
   });
   if (error) throw error;
   return mapDetail(data as Record<string, unknown>);
+}
+
+export async function generateAdminStrategyNutrition(input: {
+  clientId: string;
+  payload: Record<string, unknown>;
+  startsOn: string;
+  replace: boolean;
+}): Promise<AdminNutritionAssignment> {
+  const { data, error } = await supabase.rpc("admin_generate_client_nutrition", {
+    p_client_id: input.clientId,
+    p_payload: input.payload,
+    p_starts_on: input.startsOn,
+    p_replace: input.replace,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function createAdminNutritionTarget(clientId: string, payload: Record<string, unknown>) {
+  const { data, error } = await supabase.rpc("nutrition_create_target", {
+    p_client_id: clientId,
+    p_payload: payload,
+  });
+  if (error) throw error;
+  return data as { target_id: string; version: number };
 }
 
 export async function getAdminClientNutritionAssignment(id: string): Promise<AdminNutritionAssignment> {

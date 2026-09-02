@@ -12,7 +12,6 @@ import { NutritionWaterCard } from "@/components/platform/water/NutritionWaterCa
 import {
   CountUpNumber,
   MealStatusIcon,
-  NUTRITION_DAY_LOCKED_REASON,
   NutritionDashboardSkeleton,
   NutritionEmptyState,
   NutritionErrorCard,
@@ -222,7 +221,7 @@ function NutritionDashboardPage() {
                   active={freeDayFullyLocked}
                   intensity="light"
                   message="معاينة — فعّل برنامجك للوصول الكامل"
-                  onUnlockClick={() => openUpgrade(lockedReason)}
+                  onUnlockClick={openNutritionUpgrade}
                 />
               ) : null}
             </section>
@@ -366,8 +365,8 @@ function NutritionDashboardPage() {
               {freePreview ? (
                 <p className="px-0.5 text-[9px] font-medium leading-snug text-muted-foreground">
                   {freeDayFullyLocked
-                    ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة وجبة الفطور المجانية أو فعّل برنامجك."
-                    : "🔓 وجبة الفطور متاحة اليوم — باقي الوجبات مقفلة حتى تفعّل برنامجك."}
+                    ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة وجبتك المجانية أو فعّل برنامجك."
+                    : "🔓 وجبتك المجانية لليوم جاهزة — باقي الوجبات مقفلة حتى تفعّل خطتك الغذائية."}
                 </p>
               ) : null}
             </section>
@@ -446,6 +445,50 @@ function MealTimelineCard({
   onLockedClick: () => void;
 }) {
   const imageSize = featured ? 138 : 92;
+
+  if (locked) {
+    return (
+      <button
+        type="button"
+        onClick={onLockedClick}
+        aria-label={`${slotLabel}: وجبة مقفلة. فعّل خطتك الغذائية للوصول.`}
+        className={cn(
+          nutritionCardClass,
+          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-0 py-0 text-right transition active:scale-[0.99] active:bg-muted/25",
+        )}
+      >
+        <div
+          className="relative shrink-0 overflow-hidden rounded-s-[24px] bg-gradient-to-br from-muted via-muted/80 to-muted/60"
+          style={{ width: imageSize, height: imageSize }}
+          aria-hidden
+        >
+          <span className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_8px,transparent_8px,transparent_16px)]" />
+        </div>
+
+        <div
+          className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right blur-[3px] select-none"
+          aria-hidden
+        >
+          <div className="h-2.5 w-16 rounded-full bg-muted-foreground/25" />
+          <div className="h-4 w-28 rounded-full bg-foreground/15" />
+          <div className="h-2.5 w-36 rounded-full bg-muted-foreground/20" />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1 blur-[2px]" aria-hidden>
+          <span className="grid h-7 w-7 place-items-center rounded-full border border-border/60 bg-muted" />
+          <ChevronLeft className="h-4 w-4 text-muted-foreground/50" />
+        </div>
+
+        <NutritionLockedOverlay
+          active
+          asVisual
+          intensity="medium"
+          message="وجبة إضافية — أكمل خطتك الغذائية"
+        />
+      </button>
+    );
+  }
+
   const body = (
     <>
       <div
@@ -458,19 +501,11 @@ function MealTimelineCard({
           width={imageSize * 2}
           height={imageSize * 2}
           sizes={`${imageSize}px`}
-          className={cn(
-            "h-full w-full object-cover transition-opacity duration-300 opacity-100",
-            locked && "opacity-45 saturate-50",
-          )}
+          className="h-full w-full object-cover transition-opacity duration-300 opacity-100"
         />
-        {locked ? (
-          <span className="absolute inset-0 grid place-items-center bg-black/35">
-            <Lock className="h-3.5 w-3.5 text-white drop-shadow-sm" strokeWidth={2.4} />
-          </span>
-        ) : null}
       </div>
 
-      <div className={cn("flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right", locked && "opacity-75")}>
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right">
         <div className="flex items-center gap-1.5">
           <p className={cn("font-bold text-muted-foreground", featured ? "text-[11px]" : "text-[10px]")}>
             {timeLabel}
@@ -494,33 +529,11 @@ function MealTimelineCard({
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {locked ? (
-          <span className="grid h-7 w-7 place-items-center rounded-full border border-primary/30 bg-primary-soft text-primary">
-            <Lock className="h-3.5 w-3.5" strokeWidth={2.4} />
-          </span>
-        ) : (
-          <MealStatusIcon status={status} />
-        )}
+        <MealStatusIcon status={status} />
         <ChevronLeft className="h-4 w-4 text-muted-foreground/70" />
       </div>
     </>
   );
-
-  if (locked) {
-    return (
-      <button
-        type="button"
-        onClick={onLockedClick}
-        aria-label={`${slotLabel}: ${mealName}. مقفلة`}
-        className={cn(
-          nutritionCardClass,
-          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-0 py-0 text-right transition active:scale-[0.99] active:bg-muted/25",
-        )}
-      >
-        {body}
-      </button>
-    );
-  }
 
   return (
     <Link

@@ -4,6 +4,9 @@ export const LEGAL_ENTITY_STATUS = "TBD" as const;
 export const GOVERNING_LAW_STATUS = "TBD" as const;
 export const REGISTERED_ADDRESS_STATUS = "TBD" as const;
 
+/** V1 launch: manual membership grant until Paddle provider validation completes. */
+export { V1_LAUNCH_MODE, CHECKOUT_SELF_SERVE_ENABLED } from "@/lib/platform/launch-config";
+
 /** Legacy string found in the repo — not the approved MAAKFIT legal entity. */
 export const LEGACY_LEGAL_ENTITY_UNVERIFIED = "Hakim Coaching FZ-LLC";
 

@@ -4,8 +4,16 @@ import { useAssignedNutritionRuntime } from "@/hooks/useAssignedNutritionRuntime
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
 import { recordNutritionMealSwap } from "@/lib/platform/nutrition-meal-swap-api";
+import { applyNutritionMealSwap } from "@/lib/platform/nutrition-apply-swap-api";
 import { hydrateMealLibraryFromSupabase } from "@/lib/platform/meal-library-api";
-import { logMyNutritionMeal, runtimeToMealSlots } from "@/lib/platform/assigned-nutrition-api";
+import {
+  logMyNutritionMeal,
+  runtimeDayContext,
+  runtimeMacroLayers,
+  runtimeToMealSlots,
+  runtimeToNutritionTarget,
+  runtimeToResolvedNutritionDay,
+} from "@/lib/platform/assigned-nutrition-api";
 import { scaleMacros } from "@/lib/platform/nutrition-assignment";
 import {
   computeCommitmentPct,
@@ -17,6 +25,7 @@ import {
   type MealStatus,
   type MacroTotals,
 } from "@/lib/platform/nutrition-experience";
+import type { NutritionSlotKey } from "@/lib/platform/nutrition-strategy";
 import {
   NUTRITION_PLAN_CHANGE_EVENT,
   adoptMealAlternative,
@@ -110,12 +119,36 @@ export function useNutritionPlan(
     [userId, tick],
   );
 
-  const consumed = useMemo(
-    () => sumConsumedMacros(assignedSlots, statuses, choices),
-    [assignedSlots, statuses, choices],
-  );
+  const macroLayers = useMemo(() => {
+    if (catalogPreview || runtimeQuery.data?.reason !== "ok") {
+      const planned = plannedFromSlots(assignedSlots);
+      return { target: null as MacroTotals | null, planned, consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 } };
+    }
+    return runtimeMacroLayers(runtimeQuery.data);
+  }, [assignedSlots, catalogPreview, runtimeQuery.data]);
 
-  const goals = plannedFromSlots(assignedSlots);
+  const target = macroLayers.target;
+  const planned = macroLayers.planned;
+  const consumedFromRuntime = macroLayers.consumed;
+
+  const consumed = useMemo(() => {
+    if (!catalogPreview && isSelectedToday && runtimeQuery.data?.reason === "ok") {
+      const hasServerConsumed = (runtimeQuery.data.consumed_totals?.calories ?? 0) > 0;
+      if (hasServerConsumed) return consumedFromRuntime;
+    }
+    return sumConsumedMacros(assignedSlots, statuses, choices);
+  }, [
+    assignedSlots,
+    catalogPreview,
+    choices,
+    consumedFromRuntime,
+    isSelectedToday,
+    runtimeQuery.data?.consumed_totals?.calories,
+    runtimeQuery.data?.reason,
+    statuses,
+  ]);
+  /** @deprecated Use `planned` for slot sums and `target` for approved prescription. */
+  const goals = target ?? planned;
   const completedCount = Object.values(statuses).filter((s) => s === "completed").length;
   const remainingMeals = Math.max(assignedSlots.length - completedCount, 0);
   const commitmentPct = computeCommitmentPct(completedCount, assignedSlots.length);
@@ -154,6 +187,8 @@ export function useNutritionPlan(
     dateKey,
     isSelectedToday,
     goals,
+    target,
+    planned,
     meals,
     statuses,
     choices,
@@ -170,11 +205,38 @@ export function useNutritionPlan(
     assignmentName: runtimeQuery.data?.assignment?.name_ar ?? null,
     runtimeLoading: !catalogPreview && runtimeQuery.isLoading,
     runtimeError: !catalogPreview && runtimeQuery.isError,
+    assignmentSchema: catalogPreview ? null : runtimeQuery.data?.schema ?? null,
     markCompleted,
     markSkipped,
     adoptAlternative: async (slotId: string, alternativeId: string) => {
       if (!catalogPreview) {
         const slot = assignedSlots.find((item) => item.id === slotId);
+        const runtime = runtimeQuery.data;
+        if (runtime?.reason === "ok" && runtime.schema === "STRATEGY_V1_DYNAMIC" && slot?.assignmentSlotId) {
+          const day = runtimeToResolvedNutritionDay(runtime);
+          const nutritionTarget = runtimeToNutritionTarget(runtime);
+          if (day && nutritionTarget) {
+            const swapResult = await applyNutritionMealSwap({
+              slotId: slot.assignmentSlotId,
+              day,
+              target: nutritionTarget,
+              slotKey: slotId as NutritionSlotKey,
+              toExternalId: alternativeId,
+              allergy: { status: "CONFIRMED_NONE", confirmed_at: new Date().toISOString() },
+              dayContext: runtimeDayContext(runtime),
+              sessionDate: dateKey,
+            });
+            if (!swapResult.ok) {
+              const err = new Error(swapResult.code);
+              (err as Error & { code?: string }).code = swapResult.code;
+              throw err;
+            }
+            await queryClient.invalidateQueries({ queryKey: MEMBERSHIP_QUERY_KEY });
+            refresh();
+            return;
+          }
+        }
+
         const swapResult = await recordNutritionMealSwap({
           fromMealId: slot?.assignmentSlotId ?? null,
           toMealId: null,
