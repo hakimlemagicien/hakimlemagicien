@@ -16,7 +16,7 @@ Platform Developer / Release Engineer (Cursor Agent)
 
 ## FINAL_COMMIT
 
-Pending at report generation — see **COMMIT_SHA** after scoped V1 closure commit.
+`ae115ff` — feat(v1): close product loop — paid auto-assign, free preview, no generic fallback
 
 ---
 
@@ -106,8 +106,9 @@ No for **manual membership grant / admin override** on Staging (existing ops pat
 
 Large unrelated WIP on branch (asset migration, nutrition, quiz). **V1 closure commit must be scoped** — do not include unrelated deletions/WIP.
 
-**GIT_STATUS:** Mixed — V1 closure files staged separately from WIP  
-**PUSH_RESULT:** Pending CEO gate / network
+**GIT_STATUS:** V1 closure committed (`ae115ff`); unrelated WIP remains unstaged  
+**COMMIT_SHA:** `ae115ff`  
+**PUSH_RESULT:** Pending
 
 ---
 
