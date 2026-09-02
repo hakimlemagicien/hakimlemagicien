@@ -62,7 +62,16 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     id: "content",
     label: "المحتوى",
-    items: [{ id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" }],
+    items: [
+      { id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" },
+      {
+        id: "studio",
+        to: "/admin/studio",
+        label: "ستوديو التصميم",
+        status: "live",
+        requiredPermission: "content.manage",
+      },
+    ],
   },
   {
     id: "system",

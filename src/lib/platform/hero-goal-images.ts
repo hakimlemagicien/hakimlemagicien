@@ -6,22 +6,20 @@ import {
 import type { UserGoal } from "@/lib/platform/home-hub";
 import { resolveUserGoal } from "@/lib/platform/home-hub";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
-import coachPhoto from "@/assets/V0/coach-photo.png";
+import coachPhoto from "@/assets/coach-photo.png";
+import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 import { attachHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 
 export type HeroGender = "male" | "female";
-
-import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 
 export type HeroGoalImage = {
   src: string;
   alt: string;
   gender: HeroGender;
   goalId: string;
-  /** Dev preview: skip hourly asset rotation in HomeHeroCard. */
-  previewLocked?: boolean;
-  /** Optional per-asset framing from admin review. */
   framing?: HeroGoalFraming;
+  /** Admin preview: skip hourly rotation and use explicit src/framing. */
+  previewLocked?: boolean;
 };
 
 const MALE_GOAL_IDS = ["fat", "muscle", "fitness", "athletic", "shape", "gain"] as const;
@@ -121,15 +119,10 @@ function resolveGoalId(gender: HeroGender, goal: UserGoal, goalId?: string | nul
   return defaultGoalIdForBucket(gender, goal);
 }
 
-/** Resolves a single hero image URL for a gender/goal pair (content catalog first). */
-export function getHeroGoalImageSrc(gender: HeroGender, goalId: string): string | null {
-  if (gender === "female" && !isFemaleGoalId(goalId)) return null;
-  if (gender === "male" && !isMaleGoalId(goalId)) return null;
-
+export function getHeroGoalImageSrc(gender: HeroGender, goalId: string, rotationIndex?: number): string | null {
   return (
-    resolveHomeGoalHeroImageSrc({ gender, goalId }) ??
-    pickHeroGoalAsset({ gender, goalId }) ??
-    null
+    pickHeroGoalAsset({ gender, goalId, rotationIndex }) ??
+    resolveHomeGoalHeroImageSrc({ gender, goalId, rotationIndex })
   );
 }
 
@@ -137,7 +130,6 @@ export function resolveHeroGoalImage(input: {
   goal: UserGoal;
   gender?: HeroGender | null;
   goalId?: string | null;
-  /** Hourly rotation when a goal folder has multiple images. */
   rotationIndex?: number;
 }): HeroGoalImage {
   const gender: HeroGender = input.gender === "female" ? "female" : "male";
@@ -158,7 +150,7 @@ export function resolveHeroGoalImage(input: {
   });
 
   return attachHeroGoalFraming({
-    src: contentSrc ?? folderSrc ?? coachPhoto,
+    src: folderSrc ?? contentSrc ?? coachPhoto,
     alt,
     gender,
     goalId: resolvedGoalId,

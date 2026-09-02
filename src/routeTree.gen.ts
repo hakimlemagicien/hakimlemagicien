@@ -23,6 +23,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
+import { Route as AdminStudioRouteImport } from './routes/admin/studio'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminProgressRouteImport } from './routes/admin/progress'
 import { Route as AdminProgramsRouteImport } from './routes/admin/programs'
@@ -139,6 +140,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStudioRoute = AdminStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
@@ -554,6 +562,7 @@ export interface FileRoutesById {
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/': typeof AdminIndexRoute
   '/_platform/app/achievements': typeof PlatformAppAchievementsRoute
@@ -619,6 +628,7 @@ export interface FileRouteTypes {
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/support'
     | '/admin/'
     | '/app/achievements'
@@ -680,6 +690,7 @@ export interface FileRouteTypes {
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/support'
     | '/admin'
     | '/app/achievements'
@@ -744,6 +755,7 @@ export interface FileRouteTypes {
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/support'
     | '/admin/'
     | '/_platform/app/achievements'
@@ -896,6 +908,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/admin/support'
       preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/studio': {
+      id: '/admin/studio'
+      path: '/studio'
+      fullPath: '/admin/studio'
+      preLoaderRoute: typeof AdminStudioRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/settings': {
@@ -1368,6 +1387,7 @@ interface AdminRouteRouteChildren {
   AdminProgramsRoute: typeof AdminProgramsRoute
   AdminProgressRoute: typeof AdminProgressRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStudioRoute: typeof AdminStudioRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminClientsClientIdRoute: typeof AdminClientsClientIdRoute
@@ -1391,6 +1411,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminProgramsRoute: AdminProgramsRoute,
   AdminProgressRoute: AdminProgressRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStudioRoute: AdminStudioRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminClientsClientIdRoute: AdminClientsClientIdRoute,

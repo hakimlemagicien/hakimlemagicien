@@ -128,6 +128,7 @@ export const ROUTE_REQUIRED_PERMISSION: Record<string, AdminPermission> = {
   "/admin/memberships": "membership.read",
   "/admin/payments": "payments.read",
   "/admin/content": "content.manage",
+  "/admin/studio": "content.manage",
   "/admin/support": "support.manage",
   "/admin/audit": "audit.read",
   "/admin/settings": "staff.manage",

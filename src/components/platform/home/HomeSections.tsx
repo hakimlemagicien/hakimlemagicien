@@ -24,7 +24,7 @@ import {
   User,
   UtensilsCrossed,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import appLogo from "@/assets/app-logo.png";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
@@ -73,6 +73,14 @@ import avatar3 from "@/assets/avatar3.jpg";
 import avatar4 from "@/assets/avatar4.jpg";
 import { cn } from "@/lib/utils";
 import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
+import { goalIdToUserGoal, resolveHeroGoalImage } from "@/lib/platform/hero-goal-images";
+import {
+  buildHeroGoalCardThemeKey,
+  getHeroGoalCardTheme,
+  heroCardSurfaceStyle,
+  heroCoachTransformStyle,
+} from "@/lib/platform/hero-goal-framing";
+import { useHourlyRotationIndex } from "@/lib/platform/hero-goals-asset-index";
 
 const FEATURED_IMAGES = {
   recipe: gymBg,
@@ -387,14 +395,18 @@ export function HomeHeader({
 
 function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
   const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     setLoaded(false);
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, [image.src]);
 
   return (
     <div className={cn("platform-home-hero__figure", image.gender === "female" ? "is-female" : "is-male")}>
       <img
+        ref={imgRef}
         key={image.src}
         src={image.src}
         alt={image.alt}
@@ -402,6 +414,7 @@ function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
         fetchPriority="high"
         decoding="async"
         onLoad={() => setLoaded(true)}
+        style={heroCoachTransformStyle({ framing: image.framing, loaded })}
         className={cn(
           "platform-home-hero__coach",
           image.gender === "female" ? "is-female" : "is-male",
@@ -418,6 +431,20 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
   const journeyDay = useCountUp(hero.journeyDay);
   const { userId } = usePlatformActivity();
   const [started, setStarted] = useState(false);
+  const hourlyRotation = useHourlyRotationIndex();
+  const heroVisual = useMemo(() => {
+    if (hero.heroImage.previewLocked) return hero.heroImage;
+    return resolveHeroGoalImage({
+      goal: goalIdToUserGoal(hero.heroImage.goalId) ?? "fitness",
+      gender: hero.heroImage.gender,
+      goalId: hero.heroImage.goalId,
+      rotationIndex: hourlyRotation,
+    });
+  }, [hero.heroImage, hourlyRotation]);
+  const cardTheme =
+    hero.heroCardTheme ??
+    getHeroGoalCardTheme(buildHeroGoalCardThemeKey(hero.heroImage.gender, hero.heroImage.goalId));
+  const cardSurfaceStyle = heroCardSurfaceStyle(cardTheme);
   const missionIsRoute = hero.missionHref.startsWith("/");
   const MissionIcon = hero.missionReward === 0 ? Check : ClipboardList;
 
@@ -444,7 +471,11 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
   );
 
   return (
-    <section className="platform-home-hero platform-home-enter platform-home-enter--d1" aria-label="بطاقة الترحيب">
+    <section
+      className="platform-home-hero platform-home-enter platform-home-enter--d1"
+      aria-label="بطاقة الترحيب"
+      style={cardSurfaceStyle}
+    >
       <div className="platform-home-hero__aura" aria-hidden />
       <div className="platform-home-hero__top">
         <div className="platform-home-hero__content">
@@ -482,7 +513,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
         </div>
 
         <div className="platform-home-hero__visual" aria-hidden>
-          <HeroGoalFigure image={hero.heroImage} />
+          <HeroGoalFigure image={heroVisual} />
         </div>
       </div>
 

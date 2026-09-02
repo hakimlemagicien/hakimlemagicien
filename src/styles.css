@@ -3130,10 +3130,15 @@ body.is-upgrade-open .platform-menu-drawer {
   inset: 0;
   z-index: 1;
   border-radius: 24px;
-  background: linear-gradient(165deg, #2a2a2e 0%, #1a1a1a 42%, #101012 100%);
+  background: linear-gradient(
+    165deg,
+    var(--hero-card-gradient-start, #2a2a2e) 0%,
+    var(--hero-card-gradient-mid, #1a1a1a) 42%,
+    var(--hero-card-gradient-end, #101012) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-    0 0 0 1px rgba(255, 140, 60, 0.06),
+    0 0 0 1px var(--hero-card-border-glow, rgba(255, 140, 60, 0.06)),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: home-hero-luxury-glow 5s ease-in-out infinite;
   pointer-events: none;
@@ -15340,5 +15345,108 @@ body.is-membership-pass-open {
 
 .cc-media-card__actions .cc-btn {
   min-height: 40px;
+}
+
+/* ── Admin studio: hero preview chrome @ 390×844 ── */
+.hero-review-app-chrome {
+  --platform-frame-w: 390px;
+  --platform-gutter: 16px;
+  --platform-gap: 16px;
+  --platform-gap-lg: 24px;
+  --hero-review-ref-h: 844px;
+  position: relative;
+  z-index: 0;
+  width: 390px;
+  max-width: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  box-shadow: 0 20px 44px rgba(31, 27, 24, 0.14);
+  background: var(--beige);
+}
+
+.hero-review-app-chrome .platform-shell::before,
+.hero-review-app-chrome .platform-shell::after {
+  display: none !important;
+}
+
+.hero-review-app-chrome__shell {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+}
+
+.hero-review-app-chrome__main {
+  padding-inline: var(--platform-gutter);
+  padding-top: var(--platform-gap);
+  padding-bottom: var(--platform-gap);
+  min-height: auto;
+}
+
+.hero-review-app-chrome .platform-home-hero {
+  min-height: calc(var(--hero-review-ref-h) * 0.5);
+  margin-top: 19px;
+  margin-bottom: -7px;
+}
+
+.hero-review-app-chrome .platform-home-enter,
+.hero-review-app-chrome .platform-home-hero,
+.hero-review-app-chrome .platform-home-hero__aura {
+  animation: none !important;
+}
+
+.hero-review-app-chrome .platform-home-hero__coach {
+  transition: opacity 160ms ease, transform 160ms ease !important;
+}
+
+.hero-review-app-chrome--hero-only {
+  height: 320px;
+}
+
+.hero-review-app-chrome--hero-only .hero-review-app-chrome__main {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+.hero-review-grid-scale {
+  width: 390px;
+  transform-origin: top center;
+  transform: scale(0.74);
+  margin-inline: auto;
+}
+
+.hero-review-grid-frame {
+  height: 236px;
+  overflow: hidden;
+  background: var(--beige);
+}
+
+.hero-review-studio__controls {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 24px;
+}
+
+.hero-review-studio__layout {
+  display: grid;
+  gap: 24px;
+}
+
+@media (min-width: 1100px) {
+  .hero-review-studio__layout--single {
+    grid-template-columns: minmax(0, 1fr) 420px;
+    align-items: start;
+  }
+
+  .hero-review-studio__layout--single .hero-review-studio__preview {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+.admin-studio-design-lab .hakim-studio__workspace {
+  min-height: min(72vh, 860px);
 }
 

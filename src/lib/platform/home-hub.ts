@@ -7,6 +7,7 @@ import {
   type NextMission,
 } from "@/lib/platform/daily-motivation";
 import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
+import type { HeroGoalCardTheme } from "@/lib/platform/hero-goal-framing";
 import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
 import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
 import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
@@ -666,6 +667,7 @@ export type HeroState = {
   hakimPoints: number;
   journeyDay: number;
   heroImage: HeroGoalImage;
+  heroCardTheme?: HeroGoalCardTheme | null;
 };
 
 export type NextSessionKind = "workout" | "meal" | "rest" | "done";

@@ -36,6 +36,7 @@ import {
   upsertDesignRule,
   type VisualStyleMap,
 } from "@/lib/design-lab/visual-editor";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_platform/app/studio")({
   head: () => ({ meta: [{ title: "Studio | MAAKFIT" }] }),
@@ -464,6 +465,10 @@ function ComponentTreePanel({
 }
 
 function HakimStudioPage() {
+  return <PlatformDesignStudioPanel />;
+}
+
+export function PlatformDesignStudioPanel({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [selectedScreen, setSelectedScreen] = useState("/app/program/workout");
@@ -850,7 +855,8 @@ function HakimStudioPage() {
   }px, 1fr) ${rightCollapsed ? "56px" : "minmax(280px, 320px)"}`;
 
   return (
-    <div className="platform-stack hakim-studio">
+    <div className={cn("platform-stack hakim-studio", embedded && "hakim-studio--embedded")}>
+      {!embedded ? (
       <header className="flex shrink-0 items-start justify-between gap-3">
         <div>
           <h1 className="text-lg font-black text-foreground">MAAKFIT Studio</h1>
@@ -869,6 +875,7 @@ function HakimStudioPage() {
           تراجع
         </button>
       </header>
+      ) : null}
       {isDesktop ? (
         <section
           dir="ltr"
