@@ -186,20 +186,9 @@ export function emptyRestPlan(id: WeekdayId): WeekdayWorkoutPlan {
   };
 }
 
-/** First chest exercise — the only unlocked slot for free members. */
-export const FREE_MEMBER_UNLOCKED_EXTERNAL_ID = "CH-001";
-
-const FREE_CHEST_PREVIEW: TodayWorkoutPrescription = {
-  external_id: FREE_MEMBER_UNLOCKED_EXTERNAL_ID,
-  sets: 4,
-  reps: "10 - 12",
-  rest_seconds: 90,
-  suggested_weight_kg: 40,
-};
-
 /**
- * Free members see a catalog preview (not an assigned program).
- * Paid members use an assignment snapshot when provided; otherwise rest/empty — never a fake assigned week.
+ * Resolve a weekday plan from assignment snapshot or personalized preview plans.
+ * No generic catalog fallback — free/paid without plans return empty rest day.
  */
 export function resolveWeekdayPlan(
   dayId: WeekdayId,
@@ -207,24 +196,7 @@ export function resolveWeekdayPlan(
   assignedPlans?: Record<WeekdayId, WeekdayWorkoutPlan> | null,
 ): WeekdayWorkoutPlan {
   if (assignedPlans) return assignedPlans[dayId] ?? emptyRestPlan(dayId);
-  if (hasWorkoutProgram) return emptyRestPlan(dayId);
-
-  const base = WEEKDAY_WORKOUT_PLANS[dayId];
-  if (base.isRestDay) return base;
-
-  const sourcePrescriptions = base.prescriptions.length > 0 ? base.prescriptions : TODAY_WORKOUT_PRESCRIPTIONS;
-  const tail = sourcePrescriptions.filter(
-    (item) => item.external_id !== FREE_MEMBER_UNLOCKED_EXTERNAL_ID,
-  );
-
-  return {
-    ...base,
-    isRestDay: false,
-    prescriptions: [FREE_CHEST_PREVIEW, ...tail].slice(0, 6),
-    durationMin: base.durationMin || 45,
-    calories: base.calories || 400,
-    points: base.points || 100,
-  };
+  return emptyRestPlan(dayId);
 }
 
 export function isFreeUnlockedExerciseIndex(orderIndex: number) {

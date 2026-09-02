@@ -1,10 +1,13 @@
 import type { ClientTrainingRuntime } from "@/lib/platform/assigned-program-api";
+import { overlayTodayPlan } from "@/lib/platform/continuity/apply";
+import type { ContinuityDecision } from "@/lib/platform/continuity/types";
 import {
   buildWeekdayPlansForAssignedRuntime,
   calendarSessionsFromRuntime,
 } from "@/lib/platform/strategy-matrix/calendar-runtime";
 import { resolveWeeklyTrainingSchedule } from "@/lib/platform/strategy-matrix/calendar-resolver";
 import {
+  resolveSessionAnatomyImageSrc,
   resolveSessionPresentation,
   summarizeSessionMuscles,
 } from "@/lib/platform/session-muscle-presentation";
@@ -153,10 +156,44 @@ const weeklyStrip = buildWeeklySchedule({ assignedPlans: calendarPlans });
 assert(countTrainingEntries(weeklyStrip) === 3, "weekly strip shows exactly 3 training days");
 assert(weeklyStrip.filter((entry) => entry.isRestDay).length === 4, "weekly strip shows 4 rest days");
 
+const runtimeWithoutDaysPerWeek: ClientTrainingRuntime = {
+  ...threeDayRuntime,
+  assignment: { ...threeDayRuntime.assignment!, days_per_week: null },
+};
+const inferredCalendarPlans = buildWeekdayPlansForAssignedRuntime(runtimeWithoutDaysPerWeek, null);
+assert(
+  countTrainingDays(inferredCalendarPlans) === 3,
+  "runtime session count infers 3 training days when days_per_week is missing",
+);
+
+const overlayDecision = {
+  next_program_day_id: "d1",
+} as ContinuityDecision;
+const overlayOnRestDay = overlayTodayPlan({
+  assignedPlans: calendarPlans,
+  todayId: "tue",
+  runtime: threeDayRuntime,
+  decision: overlayDecision,
+});
+assert(
+  countTrainingDays(overlayOnRestDay) === 3,
+  "today overlay on a calendar rest day does not add a 4th workout slot",
+);
+assert(overlayOnRestDay.tue.isRestDay, "Tuesday remains rest after overlay");
+
+const overlayOnWorkoutDay = overlayTodayPlan({
+  assignedPlans: calendarPlans,
+  todayId: "mon",
+  runtime: threeDayRuntime,
+  decision: { next_program_day_id: "d2" } as ContinuityDecision,
+});
+assert(!overlayOnWorkoutDay.mon.isRestDay, "scheduled workout day can still receive continuity overlay");
+assert(overlayOnWorkoutDay.mon.programDayId === "d2", "workout day overlay swaps active session");
+
 const freeSunday = resolveWeekdayPlan("sun", false);
-assert(freeSunday.isRestDay, "free preview keeps Sunday rest");
+assert(freeSunday.isRestDay, "no generic catalog — Sunday rest without preview plans");
 const freeMonday = resolveWeekdayPlan("mon", false);
-assert(!freeMonday.isRestDay, "free preview keeps Monday workout");
+assert(freeMonday.isRestDay, "no generic catalog — Monday rest without personalized preview");
 
 const legsSummary = summarizeSessionMuscles({
   externalIds: ["LE-001", "LE-004", "GL-001"],
@@ -164,6 +201,19 @@ const legsSummary = summarizeSessionMuscles({
 });
 assert(legsSummary.visualKey === "LEGS", "legs session maps to LEGS visual");
 assert(legsSummary.displayNameAr === "أرجل", "legs session display name");
+
+const lowerDominantSummary = summarizeSessionMuscles({
+  externalIds: ["BA-022", "GL-002", "LE-001"],
+  muscleFocus: "QUADRICEPS",
+});
+assert(lowerDominantSummary.visualKey === "LEGS", "lower-body dominant compound session maps to LEGS");
+assert(lowerDominantSummary.displayNameAr === "أرجل", "lower-body dominant session display name");
+const lowerAnatomySrc = resolveSessionAnatomyImageSrc(lowerDominantSummary, ["BA-022", "GL-002", "LE-001"]);
+assert(
+  lowerAnatomySrc === "/exercises/GL-002/anatomy/anatomy.webp" ||
+    lowerAnatomySrc === "/exercises/LE-001/anatomy/anatomy.webp",
+  "legs anatomy prefers lower-body exercise media",
+);
 
 const pushSummary = summarizeSessionMuscles({
   externalIds: ["CH-001", "CH-004", "TR-001"],

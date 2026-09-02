@@ -11,6 +11,7 @@ import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity"
 import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
 import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
 import { getWeekdayIdFromDate, resolveWeekdayPlan, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
+import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 
 /** User training goal used to personalize home content. */
@@ -383,9 +384,9 @@ export function buildDailyTasks(input: {
 
   const teaser =
     rotation === 0
-      ? { ...workout, subtitle: "معاينة شكل البرنامج" }
+      ? { ...workout, subtitle: TRAINING_PRODUCT_COPY.homeFreeWorkoutSubtitle }
       : rotation === 1
-        ? { ...nutrition, subtitle: "معاينة شكل خطة التغذية" }
+        ? { ...nutrition, subtitle: "معاينة مجانية — خطة التغذية الشخصية" }
         : { ...ROTATING_FREE_EXTRAS[dayIndex % ROTATING_FREE_EXTRAS.length] };
 
   const unlocked =
@@ -804,6 +805,13 @@ export function goalTitle(goal: UserGoal): string {
   return "خسارة الدهون";
 }
 
+/** Motivational outcome phrasing for hero subtext — consistent with goalTitle. */
+export function motivationalGoalPhrase(goal: UserGoal): string {
+  if (goal === "bulk") return "تضخيم عضلاتك وبناء قوة حقيقية";
+  if (goal === "fitness") return "تحسين لياقتك وطاقتك اليومية";
+  return "خسارة دهونك وبناء جسم أنحف";
+}
+
 const HERO_TRACKED_TASK_IDS = new Set(["workout", "nutrition", "water", "weight", "challenge"]);
 
 function isHeroTrackedTask(task: DailyTask, features: MembershipFeatures): boolean {
@@ -840,15 +848,16 @@ export function buildHeroState(input: {
   const todayTotal = Math.max(tracked.length, 1);
   const todayProgress = Math.round((todayDone / todayTotal) * 100);
   const mission = resolveNextMission(tasks);
+  const goalPhrase = motivationalGoalPhrase(input.goal);
   const streakCopy = resolveStreakMotivation(input.streak);
 
   return {
     greeting: buildTimeGreeting(input.displayName, input.date),
     subtext: isFirstVisit
-      ? "مرحباً بك في منصتك الشخصية — لنبدأ رحلتك اليوم."
+      ? `مرحباً بك — خطتك مخصصة لتحقيق ${goalPhrase}.`
       : todayProgress >= 100
         ? "أحسنت — مهام اليوم مكتملة"
-        : "مهمتك اليوم بانتظارك",
+        : `مهمتك اليوم بانتظارك لتحقيق ${goalPhrase}`,
     missionTitle: heroMissionTitle(mission),
     missionReward: mission.pointsReward,
     missionHref: mission.href,

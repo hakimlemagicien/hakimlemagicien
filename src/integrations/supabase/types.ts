@@ -2697,6 +2697,16 @@ export type Database = {
         }[]
       }
       client_get_my_training_runtime: { Args: never; Returns: Json }
+      client_assign_generated_v2_program: {
+        Args: {
+          p_starts_on: string
+          p_replace: boolean
+          p_generation_status: string
+          p_validation_status: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
       client_ensure_training_level: { Args: never; Returns: Json }
       client_ensure_exercise_experience: { Args: { p_external_id: string }; Returns: Json }
       client_ensure_workout_session: {

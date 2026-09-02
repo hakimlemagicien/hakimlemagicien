@@ -1,12 +1,12 @@
-import type { AssignmentMode } from "@/lib/platform/training-assignment-orchestrator";
+import type { AssignmentMode } from "@/lib/platform/training-assignment-orchestrator/types";
 import {
   isAssignmentCandidateStale,
   type TrainingAssignmentCandidate,
 } from "@/lib/platform/training-assignment-orchestrator";
 import { TRAINING_STRATEGY_ERROR_CODES } from "./error-taxonomy";
 
-/** V1 product policy — must remain true until separate release approval. */
-export const AUTOMATED_ASSIGNMENT_GLOBALLY_DISABLED = true;
+/** V1 product closure — paid auto-assign enabled; coach review for exceptions only. */
+export const AUTOMATED_ASSIGNMENT_GLOBALLY_DISABLED = false;
 
 export function assertAutomatedAssignmentAllowed(
   mode: AssignmentMode,
