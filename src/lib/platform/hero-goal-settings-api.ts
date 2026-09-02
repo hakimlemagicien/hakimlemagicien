@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   hydrateHeroGoalSettings,
@@ -6,6 +7,36 @@ import {
 } from "@/lib/platform/hero-goal-framing";
 
 export const HERO_GOAL_SETTINGS_QUERY_KEY = ["hero-goal-settings"] as const;
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  if (typeof error === "string" && error.trim()) return error.trim();
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message.trim();
+  }
+  return "";
+}
+
+export function formatHeroGoalSettingsError(error: unknown): string {
+  const msg = errorMessage(error).toLowerCase();
+  if (
+    msg.includes("does not exist") ||
+    msg.includes("could not find the function") ||
+    msg.includes("42883")
+  ) {
+    return "قاعدة البيانات غير جاهزة — طبّق migration إعدادات الهيرو على Supabase (انظر docs/HERO_GOAL_SETTINGS_DEPLOY.md)";
+  }
+  if (msg.includes("42501") || msg.includes("forbidden") || msg.includes("permission")) {
+    return "ليس لديك صلاحية الحفظ (content.manage)";
+  }
+  const raw = errorMessage(error);
+  return raw || "تعذر الاتصال بالسيرفر — حاول مرة أخرى";
+}
+
+export async function invalidateHeroGoalSettings(queryClient: QueryClient): Promise<void> {
+  await queryClient.invalidateQueries({ queryKey: HERO_GOAL_SETTINGS_QUERY_KEY });
+}
 
 export type HeroGoalSettingsSnapshot = {
   framing: Record<string, HeroGoalFraming>;

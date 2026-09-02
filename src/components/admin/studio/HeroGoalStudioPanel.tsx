@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowDown,
@@ -24,6 +25,10 @@ import {
   adminSaveHeroGoalFraming,
 } from "@/lib/admin/admin-hero-goal-settings-api";
 import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
+import {
+  formatHeroGoalSettingsError,
+  invalidateHeroGoalSettings,
+} from "@/lib/platform/hero-goal-settings-api";
 import {
   HERO_APP_PREVIEW_HEIGHT,
   HERO_APP_PREVIEW_WIDTH,
@@ -294,7 +299,14 @@ function HeroFramingPanel({
       </div>
 
       {saveMessage ? (
-        <p className="text-center text-xs font-bold text-primary">{saveMessage}</p>
+        <p
+          className={cn(
+            "text-center text-xs font-bold",
+            saveMessage.startsWith("تم") ? "text-primary" : "text-destructive",
+          )}
+        >
+          {saveMessage}
+        </p>
       ) : null}
     </AdminCard>
   );
@@ -346,8 +358,16 @@ function HeroGridTile({
 
 export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }) {
   const navigate = useNavigate({ from: "/admin/studio" });
+  const queryClient = useQueryClient();
   const settingsQuery = useHeroGoalSettings();
   const totalAssets = useMemo(() => countHeroReviewAssets(), []);
+  const draftDirtyRef = useRef(false);
+  const prevFramingKeyRef = useRef<string | null>(null);
+  const prevCardThemeKeyRef = useRef<string | null>(null);
+
+  const markDraftDirty = useCallback(() => {
+    draftDirtyRef.current = true;
+  }, []);
 
   const mode: ReviewMode = search.mode === "grid" ? "grid" : "single";
   const gender: HeroGender = search.gender === "female" ? "female" : "male";
@@ -377,39 +397,57 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
   const [saving, setSaving] = useState(false);
   const [gridAssetIndex, setGridAssetIndex] = useState(0);
 
-  useEffect(() => {
-    if (!framingKey) {
-      setSavedFraming(DEFAULT_HERO_GOAL_FRAMING);
-      setDraftFraming(DEFAULT_HERO_GOAL_FRAMING);
-      return;
-    }
-    const loaded = getHeroGoalFraming(framingKey);
-    setSavedFraming(loaded);
-    setDraftFraming(loaded);
-    setSaveMessage(null);
-  }, [framingKey, settingsQuery.dataUpdatedAt]);
+  const syncFramingFromStore = useCallback(
+    (force = false) => {
+      if (!framingKey) {
+        setSavedFraming(DEFAULT_HERO_GOAL_FRAMING);
+        if (force || !draftDirtyRef.current) setDraftFraming(DEFAULT_HERO_GOAL_FRAMING);
+        return;
+      }
+      const loaded = getHeroGoalFraming(framingKey);
+      setSavedFraming(loaded);
+      if (force || !draftDirtyRef.current) setDraftFraming(loaded);
+    },
+    [framingKey],
+  );
+
+  const syncCardThemeFromStore = useCallback(
+    (force = false) => {
+      const loaded = getHeroGoalCardTheme(cardThemeKey);
+      setSavedCardTheme(loaded);
+      if (force || !draftDirtyRef.current) setDraftCardTheme(loaded);
+    },
+    [cardThemeKey],
+  );
 
   useEffect(() => {
-    const loaded = getHeroGoalCardTheme(cardThemeKey);
-    setSavedCardTheme(loaded);
-    setDraftCardTheme(loaded);
-    setSaveMessage(null);
-  }, [cardThemeKey, settingsQuery.dataUpdatedAt]);
+    const framingKeyChanged = prevFramingKeyRef.current !== framingKey;
+    prevFramingKeyRef.current = framingKey;
+    if (framingKeyChanged) {
+      draftDirtyRef.current = false;
+      setSaveMessage(null);
+    }
+    syncFramingFromStore(framingKeyChanged);
+  }, [framingKey, settingsQuery.dataUpdatedAt, syncFramingFromStore]);
+
+  useEffect(() => {
+    const cardThemeKeyChanged = prevCardThemeKeyRef.current !== cardThemeKey;
+    prevCardThemeKeyRef.current = cardThemeKey;
+    if (cardThemeKeyChanged) {
+      draftDirtyRef.current = false;
+      setSaveMessage(null);
+    }
+    syncCardThemeFromStore(cardThemeKeyChanged);
+  }, [cardThemeKey, settingsQuery.dataUpdatedAt, syncCardThemeFromStore]);
 
   useEffect(() => {
     function syncFromServer() {
-      if (framingKey) {
-        const loaded = getHeroGoalFraming(framingKey);
-        setSavedFraming(loaded);
-        setDraftFraming(loaded);
-      }
-      const loadedTheme = getHeroGoalCardTheme(cardThemeKey);
-      setSavedCardTheme(loadedTheme);
-      setDraftCardTheme(loadedTheme);
+      syncFramingFromStore(false);
+      syncCardThemeFromStore(false);
     }
     window.addEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, syncFromServer);
     return () => window.removeEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, syncFromServer);
-  }, [framingKey, cardThemeKey]);
+  }, [syncFramingFromStore, syncCardThemeFromStore]);
 
   const hero = useMemo(
     () =>
@@ -470,13 +508,16 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
       if (import.meta.env.DEV) saveHeroGoalCardTheme(cardThemeKey, savedTheme);
       setSavedCardTheme(savedTheme);
       setDraftCardTheme(savedTheme);
+      draftDirtyRef.current = false;
       window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+      await invalidateHeroGoalSettings(queryClient);
       setSaveMessage("تم حفظ التعديل — سيظهر لجميع المستخدمين");
-    } catch {
-      setSaveMessage("تعذر الحفظ — تحقق من الاتصال وحاول مرة أخرى");
+      window.setTimeout(() => setSaveMessage(null), 3200);
+    } catch (error) {
+      setSaveMessage(formatHeroGoalSettingsError(error));
+      window.setTimeout(() => setSaveMessage(null), 8000);
     } finally {
       setSaving(false);
-      window.setTimeout(() => setSaveMessage(null), 3200);
     }
   }
 
@@ -503,18 +544,39 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
       setDraftFraming(DEFAULT_HERO_GOAL_FRAMING);
       setSavedCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
       setDraftCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
+      draftDirtyRef.current = false;
       window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+      await invalidateHeroGoalSettings(queryClient);
       setSaveMessage("تمت إعادة الضبط الافتراضي");
-    } catch {
-      setSaveMessage("تعذر إعادة الضبط — حاول مرة أخرى");
+      window.setTimeout(() => setSaveMessage(null), 3200);
+    } catch (error) {
+      setSaveMessage(formatHeroGoalSettingsError(error));
+      window.setTimeout(() => setSaveMessage(null), 8000);
     } finally {
       setSaving(false);
-      window.setTimeout(() => setSaveMessage(null), 2400);
     }
   }
 
   return (
     <div className="space-y-6" dir="rtl">
+      {settingsQuery.isError ? (
+        <AdminCard className="space-y-3 border-destructive/40 bg-destructive/5 p-4">
+          <p className="text-sm font-black text-destructive">تعذر تحميل إعدادات الهيرو من السيرفر</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            {formatHeroGoalSettingsError(settingsQuery.error)}
+          </p>
+          <button
+            type="button"
+            onClick={() => void settingsQuery.refetch()}
+            className="inline-flex h-9 items-center rounded-full border border-border bg-card px-4 text-xs font-black"
+          >
+            إعادة المحاولة
+          </button>
+        </AdminCard>
+      ) : settingsQuery.isLoading ? (
+        <p className="text-center text-xs font-medium text-muted-foreground">جاري تحميل الإعدادات المحفوظة…</p>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -648,13 +710,26 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                   savedCardTheme={savedCardTheme}
                   saveMessage={saveMessage}
                   saving={saving}
-                  onZoom={(direction) => setDraftFraming((current) => zoomHeroGoalFraming(current, direction))}
-                  onPan={(direction) => setDraftFraming((current) => panHeroGoalFraming(current, direction))}
-                  onPanVertical={(direction) =>
-                    setDraftFraming((current) => panHeroGoalFramingVertical(current, direction))
-                  }
-                  onFlip={() => setDraftFraming((current) => toggleHeroGoalFlip(current))}
-                  onCardColor={(color) => setDraftCardTheme({ color })}
+                  onZoom={(direction) => {
+                    markDraftDirty();
+                    setDraftFraming((current) => zoomHeroGoalFraming(current, direction));
+                  }}
+                  onPan={(direction) => {
+                    markDraftDirty();
+                    setDraftFraming((current) => panHeroGoalFraming(current, direction));
+                  }}
+                  onPanVertical={(direction) => {
+                    markDraftDirty();
+                    setDraftFraming((current) => panHeroGoalFramingVertical(current, direction));
+                  }}
+                  onFlip={() => {
+                    markDraftDirty();
+                    setDraftFraming((current) => toggleHeroGoalFlip(current));
+                  }}
+                  onCardColor={(color) => {
+                    markDraftDirty();
+                    setDraftCardTheme({ color });
+                  }}
                   onReset={handleResetFraming}
                   onSave={handleSaveFraming}
                 />
