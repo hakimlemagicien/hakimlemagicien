@@ -1,27 +1,27 @@
+import { resolveHomeGoalHeroImageSrc } from "@/lib/platform/home-goal-hero-images";
+import {
+  getHourlyRotationIndex,
+  pickHeroGoalAsset,
+} from "@/lib/platform/hero-goals-asset-index";
 import type { UserGoal } from "@/lib/platform/home-hub";
 import { resolveUserGoal } from "@/lib/platform/home-hub";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
-import maleGoalFat from "@/assets/hero-goals/hero-goal-male-fat.webp";
-import maleGoalMuscle from "@/assets/hero-goals/hero-goal-male-muscle.webp";
-import maleGoalFitness from "@/assets/hero-goals/hero-goal-male-fitness.webp";
-import maleGoalAthletic from "@/assets/hero-goals/hero-goal-male-athletic.webp";
-import maleGoalShape from "@/assets/hero-goals/hero-goal-male-shape.webp";
-import maleGoalGain from "@/assets/hero-goals/hero-goal-male-gain.webp";
-import femaleGoalFat from "@/assets/hero-goals/hero-goal-female-fat.webp";
-import femaleGoalGlutes from "@/assets/hero-goals/hero-goal-female-glutes.webp";
-import femaleGoalWaist from "@/assets/hero-goals/hero-goal-female-waist.webp";
-import femaleGoalBody from "@/assets/hero-goals/hero-goal-female-body.webp";
-import femaleGoalFit from "@/assets/hero-goals/hero-goal-female-fit.webp";
-import femaleGoalTone from "@/assets/hero-goals/hero-goal-female-tone.webp";
-import coachPhoto from "@/assets/coach-photo.png";
+import coachPhoto from "@/assets/V0/coach-photo.png";
+import { attachHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 
 export type HeroGender = "male" | "female";
+
+import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 
 export type HeroGoalImage = {
   src: string;
   alt: string;
   gender: HeroGender;
   goalId: string;
+  /** Dev preview: skip hourly asset rotation in HomeHeroCard. */
+  previewLocked?: boolean;
+  /** Optional per-asset framing from admin review. */
+  framing?: HeroGoalFraming;
 };
 
 const MALE_GOAL_IDS = ["fat", "muscle", "fitness", "athletic", "shape", "gain"] as const;
@@ -42,33 +42,6 @@ const GOAL_ID_ALTS: Record<string, string> = {
   body: "جسم أحلامك — قوام أنثوي متناسق",
   fit: "جسم أحلامك — جسم صحي ورياضي",
   tone: "جسم أحلامك — تحسين شكل الصدر",
-};
-
-const MALE_GOAL_IMAGES: Record<MaleGoalId, string> = {
-  fat: maleGoalFat,
-  muscle: maleGoalMuscle,
-  fitness: maleGoalFitness,
-  athletic: maleGoalAthletic,
-  shape: maleGoalShape,
-  gain: maleGoalGain,
-};
-
-const FEMALE_GOAL_IMAGES: Record<FemaleGoalId, string> = {
-  fat: femaleGoalFat,
-  glutes: femaleGoalGlutes,
-  waist: femaleGoalWaist,
-  body: femaleGoalBody,
-  fit: femaleGoalFit,
-  tone: femaleGoalTone,
-};
-
-const BUCKET_IMAGES: Record<`${HeroGender}-${UserGoal}`, string> = {
-  "male-cut": maleGoalFat,
-  "male-bulk": maleGoalMuscle,
-  "male-fitness": maleGoalFitness,
-  "female-cut": femaleGoalFat,
-  "female-bulk": femaleGoalTone,
-  "female-fitness": femaleGoalFit,
 };
 
 function isMaleGoalId(value: string): value is MaleGoalId {
@@ -136,36 +109,58 @@ export function readHomeGoalContext(input?: {
   return { gender, goalId, goal };
 }
 
-function imageForGoal(gender: HeroGender, goal: UserGoal, goalId?: string | null): { src: string; goalId: string } {
-  if (gender === "female" && goalId && isFemaleGoalId(goalId)) {
-    return { src: FEMALE_GOAL_IMAGES[goalId], goalId };
-  }
-  if (gender === "male" && goalId && isMaleGoalId(goalId)) {
-    return { src: MALE_GOAL_IMAGES[goalId], goalId };
-  }
+function defaultGoalIdForBucket(gender: HeroGender, goal: UserGoal): string {
+  if (goal === "cut") return "fat";
+  if (goal === "bulk") return gender === "female" ? "tone" : "muscle";
+  return gender === "female" ? "fit" : "fitness";
+}
 
-  const bucketGoalId =
-    goal === "cut" ? "fat" : goal === "bulk" ? (gender === "female" ? "body" : "muscle") : gender === "female" ? "fit" : "fitness";
+function resolveGoalId(gender: HeroGender, goal: UserGoal, goalId?: string | null): string {
+  if (gender === "female" && goalId && isFemaleGoalId(goalId)) return goalId;
+  if (gender === "male" && goalId && isMaleGoalId(goalId)) return goalId;
+  return defaultGoalIdForBucket(gender, goal);
+}
 
-  return {
-    src: BUCKET_IMAGES[`${gender}-${goal}`] ?? coachPhoto,
-    goalId: bucketGoalId,
-  };
+/** Resolves a single hero image URL for a gender/goal pair (content catalog first). */
+export function getHeroGoalImageSrc(gender: HeroGender, goalId: string): string | null {
+  if (gender === "female" && !isFemaleGoalId(goalId)) return null;
+  if (gender === "male" && !isMaleGoalId(goalId)) return null;
+
+  return (
+    resolveHomeGoalHeroImageSrc({ gender, goalId }) ??
+    pickHeroGoalAsset({ gender, goalId }) ??
+    null
+  );
 }
 
 export function resolveHeroGoalImage(input: {
   goal: UserGoal;
   gender?: HeroGender | null;
   goalId?: string | null;
+  /** Hourly rotation when a goal folder has multiple images. */
+  rotationIndex?: number;
 }): HeroGoalImage {
   const gender: HeroGender = input.gender === "female" ? "female" : "male";
-  const resolved = imageForGoal(gender, input.goal, input.goalId);
-  const alt = (resolved.goalId && GOAL_ID_ALTS[resolved.goalId]) || "جسم أحلامك حسب هدفك";
+  const resolvedGoalId = resolveGoalId(gender, input.goal, input.goalId);
+  const rotationIndex = input.rotationIndex ?? getHourlyRotationIndex();
+  const alt = GOAL_ID_ALTS[resolvedGoalId] || "جسم أحلامك حسب هدفك";
 
-  return {
-    src: resolved.src || coachPhoto,
+  const folderSrc = pickHeroGoalAsset({
+    gender,
+    goalId: resolvedGoalId,
+    rotationIndex,
+  });
+
+  const contentSrc = resolveHomeGoalHeroImageSrc({
+    gender,
+    goalId: resolvedGoalId,
+    rotationIndex,
+  });
+
+  return attachHeroGoalFraming({
+    src: contentSrc ?? folderSrc ?? coachPhoto,
     alt,
     gender,
-    goalId: resolved.goalId,
-  };
+    goalId: resolvedGoalId,
+  });
 }

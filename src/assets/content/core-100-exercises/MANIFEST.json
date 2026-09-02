@@ -1,0 +1,836 @@
+{
+  "generatedAt": "2026-09-01T05:06:51.973Z",
+  "count": 100,
+  "exercises": [
+    {
+      "externalId": "AB-006",
+      "repoDir": "src/assets/content/core-100-exercises/AB-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-001",
+      "repoDir": "src/assets/content/core-100-exercises/BA-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-010",
+      "repoDir": "src/assets/content/core-100-exercises/BA-010",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-013",
+      "repoDir": "src/assets/content/core-100-exercises/CH-013",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-001",
+      "repoDir": "src/assets/content/core-100-exercises/GL-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-001",
+      "repoDir": "src/assets/content/core-100-exercises/SH-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-001",
+      "repoDir": "src/assets/content/core-100-exercises/LE-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-013",
+      "repoDir": "src/assets/content/core-100-exercises/BA-013",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-002",
+      "repoDir": "src/assets/content/core-100-exercises/GL-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-002",
+      "repoDir": "src/assets/content/core-100-exercises/SH-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-001",
+      "repoDir": "src/assets/content/core-100-exercises/BI-001",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-017",
+      "repoDir": "src/assets/content/core-100-exercises/GL-017",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-023",
+      "repoDir": "src/assets/content/core-100-exercises/BA-023",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-022",
+      "repoDir": "src/assets/content/core-100-exercises/BA-022",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-008",
+      "repoDir": "src/assets/content/core-100-exercises/AB-008",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-003",
+      "repoDir": "src/assets/content/core-100-exercises/LE-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-001",
+      "repoDir": "src/assets/content/core-100-exercises/CH-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-002",
+      "repoDir": "src/assets/content/core-100-exercises/BI-002",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-010",
+      "repoDir": "src/assets/content/core-100-exercises/LE-010",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-003",
+      "repoDir": "src/assets/content/core-100-exercises/CH-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-007",
+      "repoDir": "src/assets/content/core-100-exercises/GL-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-009",
+      "repoDir": "src/assets/content/core-100-exercises/GL-009",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-004",
+      "repoDir": "src/assets/content/core-100-exercises/CH-004",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-006",
+      "repoDir": "src/assets/content/core-100-exercises/BA-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-014",
+      "repoDir": "src/assets/content/core-100-exercises/BA-014",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-005",
+      "repoDir": "src/assets/content/core-100-exercises/SH-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-001",
+      "repoDir": "src/assets/content/core-100-exercises/TR-001",
+      "imagesReady": false,
+      "imageCount": 10,
+      "missingImages": [
+        "anatomy/anatomy.webp",
+        "anatomy/anatomy-thumb.webp"
+      ],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-003",
+      "repoDir": "src/assets/content/core-100-exercises/TR-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-004",
+      "repoDir": "src/assets/content/core-100-exercises/LE-004",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-007",
+      "repoDir": "src/assets/content/core-100-exercises/LE-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-008",
+      "repoDir": "src/assets/content/core-100-exercises/LE-008",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-009",
+      "repoDir": "src/assets/content/core-100-exercises/LE-009",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-003",
+      "repoDir": "src/assets/content/core-100-exercises/GL-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CA-001",
+      "repoDir": "src/assets/content/core-100-exercises/CA-001",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-011",
+      "repoDir": "src/assets/content/core-100-exercises/AB-011",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-012",
+      "repoDir": "src/assets/content/core-100-exercises/AB-012",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-007",
+      "repoDir": "src/assets/content/core-100-exercises/AB-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-001",
+      "repoDir": "src/assets/content/core-100-exercises/AB-001",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-002",
+      "repoDir": "src/assets/content/core-100-exercises/AB-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-003",
+      "repoDir": "src/assets/content/core-100-exercises/BI-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-002",
+      "repoDir": "src/assets/content/core-100-exercises/CH-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-007",
+      "repoDir": "src/assets/content/core-100-exercises/CH-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-012",
+      "repoDir": "src/assets/content/core-100-exercises/CH-012",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-002",
+      "repoDir": "src/assets/content/core-100-exercises/BA-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-005",
+      "repoDir": "src/assets/content/core-100-exercises/BA-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-016",
+      "repoDir": "src/assets/content/core-100-exercises/BA-016",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-017",
+      "repoDir": "src/assets/content/core-100-exercises/BA-017",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-021",
+      "repoDir": "src/assets/content/core-100-exercises/BA-021",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-024",
+      "repoDir": "src/assets/content/core-100-exercises/BA-024",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-027",
+      "repoDir": "src/assets/content/core-100-exercises/BA-027",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-029",
+      "repoDir": "src/assets/content/core-100-exercises/BA-029",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-006",
+      "repoDir": "src/assets/content/core-100-exercises/SH-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-009",
+      "repoDir": "src/assets/content/core-100-exercises/SH-009",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-010",
+      "repoDir": "src/assets/content/core-100-exercises/SH-010",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-014",
+      "repoDir": "src/assets/content/core-100-exercises/SH-014",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-007",
+      "repoDir": "src/assets/content/core-100-exercises/SH-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-006",
+      "repoDir": "src/assets/content/core-100-exercises/BI-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-012",
+      "repoDir": "src/assets/content/core-100-exercises/BI-012",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-015",
+      "repoDir": "src/assets/content/core-100-exercises/BI-015",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-002",
+      "repoDir": "src/assets/content/core-100-exercises/TR-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-004",
+      "repoDir": "src/assets/content/core-100-exercises/TR-004",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-006",
+      "repoDir": "src/assets/content/core-100-exercises/TR-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-007",
+      "repoDir": "src/assets/content/core-100-exercises/TR-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-008",
+      "repoDir": "src/assets/content/core-100-exercises/TR-008",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "FO-003",
+      "repoDir": "src/assets/content/core-100-exercises/FO-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-005",
+      "repoDir": "src/assets/content/core-100-exercises/LE-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-013",
+      "repoDir": "src/assets/content/core-100-exercises/LE-013",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-028",
+      "repoDir": "src/assets/content/core-100-exercises/LE-028",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-031",
+      "repoDir": "src/assets/content/core-100-exercises/LE-031",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-042",
+      "repoDir": "src/assets/content/core-100-exercises/LE-042",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-043",
+      "repoDir": "src/assets/content/core-100-exercises/LE-043",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-004",
+      "repoDir": "src/assets/content/core-100-exercises/GL-004",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-008",
+      "repoDir": "src/assets/content/core-100-exercises/GL-008",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-010",
+      "repoDir": "src/assets/content/core-100-exercises/GL-010",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-014",
+      "repoDir": "src/assets/content/core-100-exercises/GL-014",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-015",
+      "repoDir": "src/assets/content/core-100-exercises/GL-015",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-020",
+      "repoDir": "src/assets/content/core-100-exercises/GL-020",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CA-002",
+      "repoDir": "src/assets/content/core-100-exercises/CA-002",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CA-012",
+      "repoDir": "src/assets/content/core-100-exercises/CA-012",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-009",
+      "repoDir": "src/assets/content/core-100-exercises/AB-009",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-005",
+      "repoDir": "src/assets/content/core-100-exercises/CH-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-010",
+      "repoDir": "src/assets/content/core-100-exercises/CH-010",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CH-014",
+      "repoDir": "src/assets/content/core-100-exercises/CH-014",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-009",
+      "repoDir": "src/assets/content/core-100-exercises/BA-009",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BA-018",
+      "repoDir": "src/assets/content/core-100-exercises/BA-018",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-003",
+      "repoDir": "src/assets/content/core-100-exercises/SH-003",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "SH-019",
+      "repoDir": "src/assets/content/core-100-exercises/SH-019",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-004",
+      "repoDir": "src/assets/content/core-100-exercises/BI-004",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "BI-007",
+      "repoDir": "src/assets/content/core-100-exercises/BI-007",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-005",
+      "repoDir": "src/assets/content/core-100-exercises/TR-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "TR-018",
+      "repoDir": "src/assets/content/core-100-exercises/TR-018",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-011",
+      "repoDir": "src/assets/content/core-100-exercises/LE-011",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "LE-016",
+      "repoDir": "src/assets/content/core-100-exercises/LE-016",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-006",
+      "repoDir": "src/assets/content/core-100-exercises/GL-006",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "GL-019",
+      "repoDir": "src/assets/content/core-100-exercises/GL-019",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CA-004",
+      "repoDir": "src/assets/content/core-100-exercises/CA-004",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "CA-005",
+      "repoDir": "src/assets/content/core-100-exercises/CA-005",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-016",
+      "repoDir": "src/assets/content/core-100-exercises/AB-016",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-023",
+      "repoDir": "src/assets/content/core-100-exercises/AB-023",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    },
+    {
+      "externalId": "AB-024",
+      "repoDir": "src/assets/content/core-100-exercises/AB-024",
+      "imagesReady": true,
+      "imageCount": 12,
+      "missingImages": [],
+      "videoReady": false
+    }
+  ]
+}

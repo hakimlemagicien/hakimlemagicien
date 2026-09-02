@@ -15,7 +15,10 @@
     "optimize-images": "node scripts/optimize-images.mjs",
     "optimize-images:dry": "node scripts/optimize-images.mjs --dry-run",
     "optimize-meal-images": "node scripts/optimize-meal-images.mjs",
-    "optimize-exercise-stage-images": "node scripts/optimize-exercise-stage-images.mjs"
+    "optimize-exercise-stage-images": "node scripts/optimize-exercise-stage-images.mjs",
+    "content:bootstrap-core-100": "node scripts/bootstrap-core-100-content.mjs",
+    "content:core-100-inventory": "node scripts/core-100-content-inventory.mjs",
+    "sync:core-100-media": "node scripts/sync-core-100-exercise-media.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
