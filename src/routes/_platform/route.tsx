@@ -7,6 +7,7 @@ import { useMembership } from "@/hooks/useMembership";
 import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { resolvePostAuthDestination } from "@/lib/auth-post-login";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
 
@@ -59,6 +60,10 @@ export const Route = createFileRoute("/_platform")({
       if (!session?.user) throw redirect({ to: "/auth" });
       if (userNeedsPasswordSetup(session.user)) {
         throw redirect(CREATE_PASSWORD_LOCATION);
+      }
+      const destination = await resolvePostAuthDestination(session.user);
+      if (destination.to !== "/app") {
+        throw redirect(destination);
       }
       return { user: session.user };
     } catch (error) {

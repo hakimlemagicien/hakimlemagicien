@@ -1,7 +1,7 @@
 import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
-import { createOnboardingDraft } from "@/lib/quiz-onboarding-api";
-import { userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { createOnboardingDraft, finalizeOnboarding, getStoredDraftToken } from "@/lib/quiz-onboarding-api";
+import { hasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { quizMeasureCopy } from "@/lib/quiz-measure-copy";
 import { supabase } from "@/integrations/supabase/client";
 import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
@@ -334,7 +334,31 @@ export function QuizPage() {
         />
       )}
       {step === "congrats" && (
-        <CongratsScreen name={userName} goalId={goalId} total={totalSteps} onNext={() => selectAndGo("verifyEmail")} />
+        <CongratsScreen
+          name={userName}
+          goalId={goalId}
+          total={totalSteps}
+          onNext={() => {
+            void (async () => {
+              const { data } = await supabase.auth.getUser();
+              const user = data.user;
+              // Social login users already have a verified session — skip OTP + password.
+              if (user && hasOAuthIdentity(user) && !userNeedsPasswordSetup(user)) {
+                const draftToken = getStoredDraftToken();
+                if (draftToken) {
+                  try {
+                    await finalizeOnboarding(draftToken);
+                  } catch (finalizeError) {
+                    console.error("[onboarding] finalize after oauth quiz failed:", finalizeError);
+                  }
+                }
+                selectAndGo("profilePhoto");
+                return;
+              }
+              selectAndGo("verifyEmail");
+            })();
+          }}
+        />
       )}
       {step === "verifyEmail" && (
         <VerifyEmailScreen
@@ -358,7 +382,16 @@ export function QuizPage() {
         <ProfilePhotoScreen
           name={userName}
           step="profilePhoto"
-          onBack={() => goBack("createPassword")}
+          onBack={() => {
+            void (async () => {
+              const { data } = await supabase.auth.getUser();
+              if (data.user && hasOAuthIdentity(data.user) && !userNeedsPasswordSetup(data.user)) {
+                goBack("congrats");
+                return;
+              }
+              goBack("createPassword");
+            })();
+          }}
           onDone={() => selectAndGo("platformWelcome")}
         />
       )}
@@ -3056,6 +3089,28 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   const [submitting, setSubmitting] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user || cancelled) return;
+      const metaName =
+        (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name) ||
+        (typeof user.user_metadata?.name === "string" && user.user_metadata.name) ||
+        "";
+      // Apple may omit full name after the first authorization — never fail signup for that.
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || metaName || "",
+        email: prev.email || user.email || "",
+      }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const DURATION = 10000;

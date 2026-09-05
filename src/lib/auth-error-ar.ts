@@ -60,9 +60,39 @@ export function translateAuthError(error: unknown, fallback = "تعذّر إكم
   if (haystack.includes("password") && (haystack.includes("weak") || haystack.includes("least") || haystack.includes("characters"))) {
     return "كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل.";
   }
+  if (
+    haystack.includes("provider is not enabled") ||
+    haystack.includes("unsupported provider") ||
+    (haystack.includes("validation_failed") && haystack.includes("provider"))
+  ) {
+    return "تسجيل الدخول بهذه الطريقة غير متاح حاليًا.";
+  }
+  if (haystack.includes("oauth") && (haystack.includes("google") || haystack.includes("apple"))) {
+    if (haystack.includes("apple")) return "تعذر تسجيل الدخول باستخدام Apple. حاول مرة أخرى.";
+    return "تعذر تسجيل الدخول باستخدام Google. حاول مرة أخرى.";
+  }
 
   if (message && !looksEnglish(message)) return message;
   return fallback;
+}
+
+export function translateOAuthError(provider: "google" | "apple", error: unknown): string {
+  const translated = translateAuthError(
+    error,
+    provider === "apple"
+      ? "تعذر تسجيل الدخول باستخدام Apple. حاول مرة أخرى."
+      : "تعذر تسجيل الدخول باستخدام Google. حاول مرة أخرى.",
+  );
+  const { message, code } = readAuthFields(error);
+  const haystack = `${code} ${message}`.toLowerCase();
+  if (
+    haystack.includes("provider is not enabled") ||
+    haystack.includes("unsupported provider") ||
+    (haystack.includes("validation_failed") && haystack.includes("provider"))
+  ) {
+    return "تسجيل الدخول بهذه الطريقة غير متاح حاليًا.";
+  }
+  return translated;
 }
 
 export function quizOtpStatusCopy(input: {

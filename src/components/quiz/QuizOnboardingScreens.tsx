@@ -23,7 +23,8 @@ import {
   clearOnboardingClientState,
 } from "@/lib/quiz-onboarding-api";
 import { updateMyAvatar } from "@/lib/platform/profile-api";
-import { markPasswordRequiredIfUnset, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { markPasswordRequiredIfUnset, hasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { resolvePostAuthDestination } from "@/lib/auth-post-login";
 import { quizOtpStatusCopy, translateAuthError } from "@/lib/auth-error-ar";
 import { getQuizProgressBarState } from "@/lib/quiz-step-progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -196,7 +197,13 @@ export function VerifyEmailScreen({
         }
 
         const { data } = await supabase.auth.getSession();
-        if (!cancelled && data.session) {
+        const user = data.session?.user;
+        if (!cancelled && user) {
+          // Already signed in (OTP callback or Google/Apple) — never re-send OTP.
+          if (hasOAuthIdentity(user)) {
+            onVerified();
+            return;
+          }
           await markPasswordRequiredIfUnset();
           onVerified();
         }
@@ -220,26 +227,39 @@ export function VerifyEmailScreen({
   }, [email, editingEmail]);
 
   useEffect(() => {
+    if (authenticating) return;
     if (!activeEmail) return;
     if (lastOtpEmailRef.current === activeEmail) return;
-    lastOtpEmailRef.current = activeEmail;
 
+    let cancelled = false;
     void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      // OAuth / existing session users never need a fresh OTP email.
+      if (data.session?.user) return;
+
+      lastOtpEmailRef.current = activeEmail;
       try {
         setError(null);
         setSending(true);
         setSent(false);
         await sendEmailVerificationOtp(activeEmail);
-        setSent(true);
-        setCooldown(60);
+        if (!cancelled) {
+          setSent(true);
+          setCooldown(60);
+        }
       } catch (err) {
         lastOtpEmailRef.current = null;
-        setError(translateAuthError(err, "تعذّر إرسال رمز التحقق."));
+        if (!cancelled) setError(translateAuthError(err, "تعذّر إرسال رمز التحقق."));
       } finally {
-        setSending(false);
+        if (!cancelled) setSending(false);
       }
     })();
-  }, [activeEmail]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeEmail, authenticating]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -491,6 +511,35 @@ export function CreatePasswordScreen({
 
   const canSubmit = password.length >= 8 && password === confirmPassword;
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+      if (!user || cancelled) return;
+      if (!hasOAuthIdentity(user) || userNeedsPasswordSetup(user)) return;
+
+      // Google/Apple accounts skip password creation; finalize draft then continue.
+      setLoading(true);
+      try {
+        const draftToken = getStoredDraftToken();
+        if (draftToken) {
+          try {
+            await finalizeOnboarding(draftToken);
+          } catch (finalizeError) {
+            console.error("[onboarding] finalize after oauth password-skip failed:", finalizeError);
+          }
+        }
+        if (!cancelled) onDone();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [onDone]);
+
   async function handleSubmit() {
     if (!canSubmit || loading) return;
     setError(null);
@@ -741,12 +790,15 @@ export function PlatformWelcomeScreen({
       tGo = window.setTimeout(() => {
         void (async () => {
           const latest = await supabase.auth.getUser();
-          if (userNeedsPasswordSetup(latest.data.user)) {
+          const user = latest.data.user;
+          if (!user) return;
+          if (userNeedsPasswordSetup(user)) {
             navigate({ to: "/quiz", search: { step: "createPassword" } });
             return;
           }
           clearOnboardingClientState();
-          navigate({ to: "/app" });
+          const destination = await resolvePostAuthDestination(user);
+          navigate(destination);
         })();
       }, goAt);
     })();

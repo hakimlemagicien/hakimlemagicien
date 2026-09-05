@@ -16,9 +16,10 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CREATE_PASSWORD_LOCATION, PASSWORD_SET_META_KEY, clearPasswordRequiredLocally, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
-import { translateAuthError } from "@/lib/auth-error-ar";
+import { PASSWORD_SET_META_KEY, clearPasswordRequiredLocally } from "@/lib/auth-password-gate";
+import { translateAuthError, translateOAuthError } from "@/lib/auth-error-ar";
 import { clearOnboardingClientState } from "@/lib/quiz-onboarding-api";
+import { getAuthCallbackRedirectUrl, resolvePostAuthDestination } from "@/lib/auth-post-login";
 import appLogo from "@/assets/app-logo.png";
 import loginWelcome from "@/assets/app/login welcom.webp";
 import { OptimizedImage } from "@/components/ui/optimized-image";
@@ -27,6 +28,7 @@ const QuizPage = lazy(() => import("@/routes/quiz").then((module) => ({ default:
 
 type AuthMode = "signin" | "set-password";
 type AuthStage = "welcome" | "login" | "quiz";
+type OAuthProvider = "google" | "apple";
 
 function getAuthCallbackType(): "invite" | "recovery" | null {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -34,6 +36,18 @@ function getAuthCallbackType(): "invite" | "recovery" | null {
   const type = hashParams.get("type") ?? searchParams.get("type");
   if (type === "invite" || type === "recovery") return type;
   return null;
+}
+
+function cleanOAuthSearchParams(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("code") && !url.searchParams.has("error") && !url.searchParams.has("error_description")) {
+    return;
+  }
+  url.searchParams.delete("code");
+  url.searchParams.delete("state");
+  url.searchParams.delete("error");
+  url.searchParams.delete("error_description");
+  window.history.replaceState(null, "", url.toString());
 }
 
 type AuthExperienceProps = {
@@ -50,21 +64,41 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const stageRef = useRef(stage);
   stageRef.current = stage;
 
+  async function routeAuthenticatedUser(user: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"]>) {
+    const destination = await resolvePostAuthDestination(user);
+    if (destination.to === "/quiz") {
+      clearOnboardingClientState();
+    }
+    navigate(destination);
+  }
+
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrap() {
       const searchParams = new URLSearchParams(window.location.search);
+      const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
+      if (oauthError && !cancelled) {
+        console.error("[auth] oauth callback error:", oauthError);
+        setError("تعذر إكمال تسجيل الدخول. حاول مرة أخرى.");
+        cleanOAuthSearchParams();
+      }
+
       const code = searchParams.get("code");
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError && !cancelled) setError(translateAuthError(exchangeError));
+        cleanOAuthSearchParams();
+        if (exchangeError && !cancelled) {
+          console.error("[auth] exchangeCodeForSession failed:", exchangeError);
+          setError(translateAuthError(exchangeError, "تعذر إكمال تسجيل الدخول. حاول مرة أخرى."));
+        }
       }
 
       const callbackType = getAuthCallbackType();
@@ -81,12 +115,8 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       }
 
       const { data } = await supabase.auth.getSession();
-      if (!cancelled && data.session && mode !== "set-password" && stageRef.current !== "quiz") {
-        if (userNeedsPasswordSetup(data.session.user)) {
-          navigate(CREATE_PASSWORD_LOCATION);
-        } else {
-          navigate({ to: "/app" });
-        }
+      if (!cancelled && data.session?.user && mode !== "set-password" && stageRef.current !== "quiz") {
+        await routeAuthenticatedUser(data.session.user);
       }
       if (!cancelled) setReady(true);
     }
@@ -102,12 +132,8 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       }
       // Quiz onboarding owns routing after email OTP. Do not dump the client into /app.
       if (stageRef.current === "quiz") return;
-      if (session && mode !== "set-password") {
-        if (userNeedsPasswordSetup(session.user)) {
-          navigate(CREATE_PASSWORD_LOCATION);
-        } else {
-          navigate({ to: "/app" });
-        }
+      if (session?.user && mode !== "set-password") {
+        void routeAuthenticatedUser(session.user);
       }
     });
 
@@ -133,13 +159,21 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
         if (updateError) throw updateError;
         clearPasswordRequiredLocally();
         window.history.replaceState(null, "", window.location.pathname);
-        navigate({ to: "/app" });
+        const { data } = await supabase.auth.getUser();
+        if (data.user) {
+          await routeAuthenticatedUser(data.user);
+        } else {
+          navigate({ to: "/app" });
+        }
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw signInError;
       clearPasswordRequiredLocally();
+      if (data.user) {
+        await routeAuthenticatedUser(data.user);
+      }
     } catch (err: unknown) {
       setError(translateAuthError(err, "حدث خطأ"));
     } finally {
@@ -157,7 +191,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
     setLoading(true);
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: getAuthCallbackRedirectUrl(),
       });
       if (resetError) throw resetError;
       setNotice("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك.");
@@ -168,19 +202,27 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
     }
   }
 
-  async function onOAuth(provider: "google" | "apple") {
+  async function onOAuth(provider: OAuthProvider) {
+    if (loading || oauthProvider) return;
     setError(null);
     setNotice(null);
+    setOauthProvider(provider);
     setLoading(true);
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/app` },
+        options: {
+          redirectTo: getAuthCallbackRedirectUrl(),
+          skipBrowserRedirect: false,
+        },
       });
       if (oauthError) throw oauthError;
+      // Browser navigates to the provider; keep loading until then.
     } catch (err: unknown) {
-      setError(translateAuthError(err, "تعذر الدخول"));
+      console.error(`[auth] ${provider} oauth failed:`, err);
+      setError(translateOAuthError(provider, err));
       setLoading(false);
+      setOauthProvider(null);
     }
   }
 
@@ -396,13 +438,23 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
               <>
                 <div className="auth-login__or">أو</div>
                 <div className="auth-login__social">
-                  <button type="button" disabled={loading} onClick={() => void onOAuth("google")}>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    aria-busy={oauthProvider === "google"}
+                    onClick={() => void onOAuth("google")}
+                  >
                     <GoogleMark />
-                    Google
+                    {oauthProvider === "google" ? "جاري التوجيه…" : "متابعة مع Google"}
                   </button>
-                  <button type="button" disabled={loading} onClick={() => void onOAuth("apple")}>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    aria-busy={oauthProvider === "apple"}
+                    onClick={() => void onOAuth("apple")}
+                  >
                     <AppleMark />
-                    Apple
+                    {oauthProvider === "apple" ? "جاري التوجيه…" : "متابعة مع Apple"}
                   </button>
                 </div>
                 <p className="auth-login__signup">

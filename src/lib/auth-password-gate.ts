@@ -42,7 +42,8 @@ function isPasswordRequiredLocally(): boolean {
   }
 }
 
-function hasOAuthIdentity(user: User): boolean {
+export function hasOAuthIdentity(user: User | null | undefined): boolean {
+  if (!user) return false;
   return (user.identities ?? []).some((identity) => identity.provider && identity.provider !== "email");
 }
 
