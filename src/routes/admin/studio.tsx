@@ -6,7 +6,8 @@ import {
 import type { HeroGender } from "@/lib/platform/hero-goal-images";
 
 function normalizeStudioSearch(search: Record<string, unknown>): AdminStudioSearch {
-  const tab = search.tab === "design" ? "design" : "hero";
+  const tab =
+    search.tab === "design" ? "design" : search.tab === "hero" ? "hero" : "goal-images";
   const mode = search.mode === "grid" ? "grid" : "single";
   const gender: HeroGender = search.gender === "female" ? "female" : "male";
   const goal = typeof search.goal === "string" ? search.goal : undefined;

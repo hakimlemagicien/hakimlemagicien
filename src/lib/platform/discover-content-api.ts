@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { parseDiscoverAudience } from "./discover-audience";
+import { parseDiscoverAudience, parseGalleryImages } from "./discover-audience";
 import {
   DISCOVER_CONTENT_SEED,
   setDiscoverCatalog,
@@ -62,6 +62,7 @@ function mapDiscoverRow(row: DiscoverRow): DiscoverContentItem {
     viewCount: row.view_count ?? undefined,
     sortPriority: row.sort_priority ?? undefined,
     audience: parseDiscoverAudience(row.type_payload?.audience),
+    galleryImages: parseGalleryImages(row.type_payload?.gallery_images),
     source: "cms",
   };
 }
@@ -78,6 +79,7 @@ function mergeDiscoverItem(seed: DiscoverContentItem | undefined, dbItem: Discov
     successStory: dbItem.successStory ?? seed.successStory,
     learnings: dbItem.learnings ?? seed.learnings,
     audience: dbItem.audience ?? seed.audience ?? null,
+    galleryImages: dbItem.galleryImages?.length ? dbItem.galleryImages : seed.galleryImages,
     source: "cms",
   };
 }

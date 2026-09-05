@@ -4,9 +4,10 @@ import {
   type GoalHeroFolder,
 } from "@/lib/platform/goal-hero-folder-catalog";
 import { CONTENT_ASSETS_ROOT } from "@/lib/platform/content/catalog";
-import { pickContentSlotAsset } from "@/lib/platform/content/asset-index";
+import { listContentSlotAssets, pickContentSlotAsset } from "@/lib/platform/content/asset-index";
 import type { HeroGender } from "@/lib/platform/hero-goal-images";
 import { inferGoalIdFromText, readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import { listHeroGoalImageOverrides } from "@/lib/platform/hero-goal-image-overrides";
 import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
 import workoutGoalStack1 from "@/assets/V0/workout-goal-stack-1.webp";
 import workoutGoalStack2 from "@/assets/V0/workout-goal-stack-2.webp";
@@ -18,9 +19,9 @@ export type WorkoutGoalHeroFolder = GoalHeroFolder;
 export const WORKOUT_GOAL_HERO_FOLDERS = GOAL_HERO_FOLDERS;
 
 const DEFAULT_STACK = [
-  { src: workoutGoalStack1, alt: "جسم متناسق بعد الالتزام" },
-  { src: workoutGoalStack2, alt: "تمرين بقوة وتركيز" },
-  { src: workoutGoalStack3, alt: "نتيجة صحية واثقة" },
+  { src: workoutGoalStack1, alt: "جسم متناسق بعد الالتزام", fileName: "workout-goal-stack-1.webp" },
+  { src: workoutGoalStack2, alt: "تمرين بقوة وتركيز", fileName: "workout-goal-stack-2.webp" },
+  { src: workoutGoalStack3, alt: "نتيجة صحية واثقة", fileName: "workout-goal-stack-3.webp" },
 ] as const;
 
 export type WorkoutGoalHeroPhoto = {
@@ -28,8 +29,53 @@ export type WorkoutGoalHeroPhoto = {
   alt: string;
 };
 
+export type WorkoutGoalCardStudioImage = {
+  url: string;
+  fileName: string;
+  id?: string;
+  source: "cms" | "content" | "default";
+};
+
 export function resolveWorkoutGoalHeroFolder(gender: HeroGender, goalId?: string | null): WorkoutGoalHeroFolder | null {
   return resolveGoalHeroFolder(gender, goalId);
+}
+
+/** Studio + runtime: images currently shown for a workout goal card. */
+export function listWorkoutGoalCardStudioImages(
+  gender: HeroGender,
+  goalId: string,
+): WorkoutGoalCardStudioImage[] {
+  const overrides = listHeroGoalImageOverrides("workout", gender, goalId);
+  if (overrides.length > 0) {
+    return overrides.map((item) => ({
+      url: item.url,
+      fileName: item.fileName,
+      id: item.id,
+      source: "cms" as const,
+    }));
+  }
+
+  const folder = resolveWorkoutGoalHeroFolder(gender, goalId);
+  if (folder) {
+    const contentUrls = listContentSlotAssets({
+      collection: "workout-goal-hero",
+      dirName: folder.dirName,
+      gender,
+    });
+    if (contentUrls.length > 0) {
+      return contentUrls.map((url, index) => ({
+        url,
+        fileName: url.split("/").pop() ?? `content-${index + 1}`,
+        source: "content" as const,
+      }));
+    }
+  }
+
+  return DEFAULT_STACK.map((photo) => ({
+    url: photo.src,
+    fileName: photo.fileName,
+    source: "default" as const,
+  }));
 }
 
 /** Up to 3 photos for the hero stack; only from the client's gender folder. */
@@ -54,6 +100,16 @@ export function resolveWorkoutGoalHeroPhotos(input: {
     input.goalLabel?.trim() ||
     (folder?.labelAr ?? (goalId ? resolveClientGoalLabel(goalId) : "هدفك"));
 
+  if (goalId) {
+    const overrides = listHeroGoalImageOverrides("workout", gender, goalId);
+    if (overrides.length > 0) {
+      return overrides.slice(0, 3).map((item, index) => ({
+        src: item.url,
+        alt: `${label} — صورة ${index + 1}`,
+      }));
+    }
+  }
+
   const custom = folder
     ? pickContentSlotAsset({
         collection: "workout-goal-hero",
@@ -64,7 +120,7 @@ export function resolveWorkoutGoalHeroPhotos(input: {
     : [];
 
   if (custom.length === 0) {
-    return DEFAULT_STACK.map((photo) => ({ ...photo, alt: `${label} — ${photo.alt}` }));
+    return DEFAULT_STACK.map((photo) => ({ src: photo.src, alt: `${label} — ${photo.alt}` }));
   }
 
   const picked =

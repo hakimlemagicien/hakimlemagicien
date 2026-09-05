@@ -1,7 +1,11 @@
 import { lazy, Suspense } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ImageIcon, LayoutPanelTop, Loader2 } from "lucide-react";
+import { ImageIcon, LayoutPanelTop, Loader2, SlidersHorizontal } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
+import {
+  GoalCardImagesStudioPanel,
+  type GoalCardImagesStudioSearch,
+} from "@/components/admin/studio/GoalCardImagesStudioPanel";
 import {
   HeroGoalStudioPanel,
   type HeroGoalStudioSearch,
@@ -14,11 +18,12 @@ const PlatformDesignStudioPanel = lazy(() =>
   })),
 );
 
-export type AdminStudioTab = "hero" | "design";
+export type AdminStudioTab = "goal-images" | "hero" | "design";
 
-export type AdminStudioSearch = HeroGoalStudioSearch & {
-  tab?: AdminStudioTab;
-};
+export type AdminStudioSearch = HeroGoalStudioSearch &
+  GoalCardImagesStudioSearch & {
+    tab?: AdminStudioTab;
+  };
 
 function DesignTabFallback() {
   return (
@@ -33,7 +38,8 @@ function DesignTabFallback() {
 
 export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
   const navigate = useNavigate({ from: "/admin/studio" });
-  const tab: AdminStudioTab = search.tab === "design" ? "design" : "hero";
+  const tab: AdminStudioTab =
+    search.tab === "design" ? "design" : search.tab === "hero" ? "hero" : "goal-images";
 
   function setTab(next: AdminStudioTab) {
     void navigate({
@@ -50,10 +56,23 @@ export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
       <AdminPageHeader
         kicker="المحتوى والتصميم"
         title="المحتوى وستوديو التصميم"
-        subtitle="معاينة بطاقة الهيرو ومحرر الواجهة — التعديلات المحفوظة تُطبَّق على جميع المستخدمين. ليست لوحة هوية وهمية."
+        subtitle="صور بطاقات الأهداف في صفحة التمارين، ضبط إطار بطاقة الهيرو، ومحرر الواجهة."
       />
 
       <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setTab("goal-images")}
+          className={cn(
+            "inline-flex h-11 items-center gap-2 rounded-full border px-5 text-sm font-black transition-colors",
+            tab === "goal-images"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border bg-card text-foreground hover:bg-muted/60",
+          )}
+        >
+          <ImageIcon className="h-4 w-4" />
+          صور بطاقة الهدف
+        </button>
         <button
           type="button"
           onClick={() => setTab("hero")}
@@ -64,8 +83,8 @@ export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
               : "border-border bg-card text-foreground hover:bg-muted/60",
           )}
         >
-          <ImageIcon className="h-4 w-4" />
-          بطاقة الهيرو
+          <SlidersHorizontal className="h-4 w-4" />
+          ضبط الإطار واللون
         </button>
         <button
           type="button"
@@ -82,7 +101,9 @@ export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
         </button>
       </div>
 
-      {tab === "hero" ? (
+      {tab === "goal-images" ? (
+        <GoalCardImagesStudioPanel search={search} />
+      ) : tab === "hero" ? (
         <HeroGoalStudioPanel search={search} />
       ) : (
         <div className="admin-studio-design-lab">

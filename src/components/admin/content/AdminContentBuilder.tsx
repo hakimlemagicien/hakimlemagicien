@@ -7,14 +7,18 @@ import {
   Megaphone,
   Newspaper,
   Trophy,
-  Upload,
+  Trash2,
   UserRound,
+  Users,
   UtensilsCrossed,
   Video,
+  X,
 } from "lucide-react";
 import { AdminLibraryStatusBadge, AdminSaveState, firstFieldError } from "@/components/admin/AdminLibraryKit";
 import { AdminContentAppPreview, AdminContentAppScreen } from "@/components/admin/content/AdminContentAppPreview";
 import {
+  getContentGallery,
+  setContentGallery,
   uploadContentCoverImage,
   validateContentCoverFile,
   type AdminContentCategory,
@@ -22,7 +26,6 @@ import {
 } from "@/lib/admin/admin-content-api";
 import {
   DISCOVER_TYPES,
-  canPublishContent,
   csvToList,
   discoverStatusLabel,
   discoverTypeLabel,
@@ -49,6 +52,7 @@ const TYPE_ICONS = {
 } as const;
 
 const PRIMARY_TYPES = ["article", "video", "recipe", "daily_tip", "challenge"] as const;
+const MAX_GALLERY_IMAGES = 10;
 
 type Props = {
   draft: AdminContentDetail;
@@ -96,55 +100,51 @@ export function AdminContentBuilder({
   const [previewMode, setPreviewMode] = useState<"mobile" | "desktop">("mobile");
   const [mediaTab, setMediaTab] = useState<"cover" | "video">("cover");
   const [appPreviewOpen, setAppPreviewOpen] = useState(false);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(draft.cover_image_path);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const slugTouched = useRef(Boolean(draft.slug));
   const wordCount = useMemo(() => countContentWords(draft.body), [draft.body]);
-  const coverSrc = coverPreview || draft.cover_image_path;
+  const gallery = useMemo(() => getContentGallery(draft), [draft]);
+  const coverSrc = gallery[0] ?? null;
   const extraTypes = DISCOVER_TYPES.filter((item) => !PRIMARY_TYPES.includes(item as (typeof PRIMARY_TYPES)[number]));
 
   useEffect(() => {
-    setCoverPreview(draft.cover_image_path);
-    setCoverFile(null);
+    setCoverError(null);
   }, [draft.id]);
 
-  useEffect(() => {
-    return () => {
-      if (coverPreview?.startsWith("blob:")) URL.revokeObjectURL(coverPreview);
-    };
-  }, [coverPreview]);
-
-  const pickCover = (file: File | null) => {
-    if (!file) return;
-    const err = validateContentCoverFile(file);
-    if (err) {
-      setCoverError(err);
-      return;
-    }
-    if (coverPreview?.startsWith("blob:")) URL.revokeObjectURL(coverPreview);
-    setCoverError(null);
-    setCoverFile(file);
-    setCoverPreview(URL.createObjectURL(file));
-  };
-
-  const uploadCover = async () => {
-    if (!coverFile) return;
+  const uploadImages = async (files: FileList | File[] | null) => {
+    const list = files ? Array.from(files) : [];
+    if (!list.length) return;
     setCoverUploading(true);
     setCoverError(null);
     try {
-      const url = await uploadContentCoverImage({ file: coverFile, contentId: draft.id || null });
-      setDraft({ ...draft, cover_image_path: url });
-      if (coverPreview?.startsWith("blob:")) URL.revokeObjectURL(coverPreview);
-      setCoverPreview(url);
-      setCoverFile(null);
+      const current = getContentGallery(draft);
+      const remaining = Math.max(0, MAX_GALLERY_IMAGES - current.length);
+      if (remaining === 0) {
+        setCoverError(`الحد الأقصى ${MAX_GALLERY_IMAGES} صور لكل منشور.`);
+        return;
+      }
+      const nextUrls = [...current];
+      for (const file of list.slice(0, remaining)) {
+        const err = validateContentCoverFile(file);
+        if (err) {
+          setCoverError(err);
+          continue;
+        }
+        const url = await uploadContentCoverImage({ file, contentId: draft.id || null });
+        if (!nextUrls.includes(url)) nextUrls.push(url);
+      }
+      setDraft(setContentGallery(draft, nextUrls));
     } catch (error) {
       setCoverError(error instanceof Error ? error.message : "فشل رفع الصورة.");
     } finally {
       setCoverUploading(false);
     }
+  };
+
+  const removeImage = (url: string) => {
+    setDraft(setContentGallery(draft, gallery.filter((item) => item !== url)));
   };
 
   const categoryName = categories.find((item) => item.id === draft.category_id)?.name_ar ?? "عام";
@@ -164,16 +164,19 @@ export function AdminContentBuilder({
           <button type="button" className="cc-btn cc-btn--primary" disabled={saveState === "saving"} onClick={onSave}>
             حفظ مسودة
           </button>
-          {draft.id ? (
-            <button type="button" className="cc-btn cc-btn--primary" disabled={dirty || !canPublishContent(draft)} onClick={onPublish}>
-              نشر
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="cc-btn cc-btn--primary"
+            disabled={saveState === "saving"}
+            onClick={onPublish}
+          >
+            نشر على التطبيق
+          </button>
         </div>
       </div>
 
       <p className="cc-muted">
-        إدارة المحتوى › {draft.id ? draft.title || "تعديل محتوى" : "إضافة محتوى جديد"} · المعاينة تستخدم شاشات التطبيق الحقيقية. بعد النشر يظهر المحتوى للعميل حسب الجمهور المختار.
+        إدارة المحتوى › {draft.id ? draft.title || "تعديل محتوى" : "إضافة محتوى جديد"} · «نشر على التطبيق» يحفظ ثم يظهر المحتوى للعميل مباشرة في الرئيسية واكتشف.
       </p>
       {firstFieldError(fieldErrors) ? <p className="cc-field__error">{firstFieldError(fieldErrors)}</p> : null}
 
@@ -280,7 +283,7 @@ export function AdminContentBuilder({
             <h3>الوسائط</h3>
             <div className="cc-cms-tabs">
               <button type="button" className={mediaTab === "cover" ? "is-active" : undefined} onClick={() => setMediaTab("cover")}>
-                صورة الغلاف
+                صور المنشور
               </button>
               <button type="button" className={mediaTab === "video" ? "is-active" : undefined} onClick={() => setMediaTab("video")}>
                 فيديو
@@ -288,40 +291,70 @@ export function AdminContentBuilder({
             </div>
             {mediaTab === "cover" ? (
               <div className="cc-cms-cover">
-                <button type="button" className="cc-cms-cover__frame" onClick={() => coverInputRef.current?.click()}>
+                <button
+                  type="button"
+                  className="cc-cms-cover__frame"
+                  disabled={coverUploading}
+                  onClick={() => coverInputRef.current?.click()}
+                >
                   {coverSrc ? <img src={coverSrc} alt="" /> : <span>اسحب صورة أو اختر من الجهاز</span>}
                   <span className="cc-builder__cover-btn">
-                    <ImagePlus size={14} /> {coverSrc ? "تغيير الصورة" : "اختيار من الجهاز"}
+                    <ImagePlus size={14} /> {coverUploading ? "جاري الرفع…" : coverSrc ? "إضافة / تغيير" : "اختيار من الجهاز"}
                   </span>
                 </button>
                 <input
                   ref={coverInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  multiple
                   hidden
                   onChange={(event) => {
-                    pickCover(event.target.files?.[0] ?? null);
+                    void uploadImages(event.target.files);
                     event.target.value = "";
                   }}
                 />
                 <p className="cc-muted">
-                  Instagram Post (4:5) · 1080 × 1350 px. المقاس المرجعي للغلاف يظهر بنفس نسبة بطاقة الرئيسية بعد الرفع.
+                  Instagram Post (4:5) · 1080 × 1350 px. يمكن رفع عدة صور لنفس المنشور (حتى {MAX_GALLERY_IMAGES}). في التطبيق تتحرك البطاقة كل 3 ثوانٍ، وبعد الفتح يمكن تمرير السلايدر.
                 </p>
-                {coverFile ? (
-                  <button type="button" className="cc-btn cc-btn--primary" disabled={coverUploading} onClick={() => void uploadCover()}>
-                    <Upload size={16} /> {coverUploading ? "جاري الرفع…" : "رفع الصورة"}
-                  </button>
+                {gallery.length > 0 ? (
+                  <div className="cc-cms-gallery">
+                    {gallery.map((url, index) => (
+                      <div key={url} className="cc-cms-gallery__item">
+                        <img src={url} alt="" />
+                        {index === 0 ? <span className="cc-cms-gallery__badge">غلاف</span> : null}
+                        <button
+                          type="button"
+                          className="cc-cms-gallery__remove"
+                          aria-label="حذف الصورة"
+                          onClick={() => removeImage(url)}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                    {gallery.length < MAX_GALLERY_IMAGES ? (
+                      <button
+                        type="button"
+                        className="cc-cms-gallery__add"
+                        disabled={coverUploading}
+                        onClick={() => coverInputRef.current?.click()}
+                      >
+                        <ImagePlus size={18} />
+                        إضافة
+                      </button>
+                    ) : null}
+                  </div>
                 ) : null}
                 <label className="cc-builder__field">
-                  أو رابط عام
+                  أو رابط عام للغلاف
                   <input
                     dir="ltr"
                     value={draft.cover_image_path ?? ""}
                     placeholder="https://"
                     onChange={(event) => {
-                      setCoverFile(null);
-                      setCoverPreview(event.target.value);
-                      setDraft({ ...draft, cover_image_path: event.target.value || null });
+                      const value = event.target.value.trim();
+                      const rest = gallery.slice(1);
+                      setDraft(setContentGallery(draft, value ? [value, ...rest] : rest));
                     }}
                   />
                 </label>
@@ -369,7 +402,7 @@ export function AdminContentBuilder({
             <h3>يظهر لمن؟</h3>
             <div className="cc-cms-audience">
               {DISCOVER_AUDIENCE_OPTIONS.map((item) => {
-                const Icon = item.id === "food" ? UtensilsCrossed : UserRound;
+                const Icon = item.id === "all" ? Users : UserRound;
                 return (
                   <button
                     key={item.id}
@@ -384,7 +417,7 @@ export function AdminContentBuilder({
               })}
             </div>
             <p className="cc-muted">
-              بنات للعميلات فقط · ذكور للعملاء فقط · الأكل يظهر للجميع في محتوى التغذية.
+              بنات للعميلات فقط · ذكور للعملاء فقط · الكل يظهر لجميع العملاء بغض النظر عن الجنس.
             </p>
           </section>
 
@@ -396,7 +429,7 @@ export function AdminContentBuilder({
                 checked={draft.featured}
                 onChange={(event) => setDraft({ ...draft, featured: event.target.checked })}
               />
-              محتوى مميّز
+              يظهر في الرئيسية (مميّز)
             </label>
             <label className="cc-cms-toggle">
               <input
@@ -405,6 +438,23 @@ export function AdminContentBuilder({
                 onChange={(event) => setDraft({ ...draft, access_level: event.target.checked ? "free" : "premium" })}
               />
               متاح للعضوية المجانية
+            </label>
+            <label className="cc-builder__field">
+              أولوية الظهور في التطبيق
+              <input
+                type="number"
+                min={1}
+                max={99}
+                dir="ltr"
+                value={String(draft.sort_priority || 1)}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    sort_priority: Math.max(1, Math.min(99, Number(event.target.value) || 1)),
+                  })
+                }
+              />
+              <span className="cc-muted">1 = الأهم في الأعلى · الرقم الأصغر يظهر أولاً في الرئيسية واكتشف</span>
             </label>
             <label className="cc-builder__field">
               وقت النشر
@@ -424,7 +474,7 @@ export function AdminContentBuilder({
                   إلغاء النشر
                 </button>
                 <button type="button" className="cc-btn cc-btn--ghost" disabled={dirty} onClick={onArchive}>
-                  أرشفة
+                  <Trash2 size={14} /> أرشفة
                 </button>
               </div>
             ) : (

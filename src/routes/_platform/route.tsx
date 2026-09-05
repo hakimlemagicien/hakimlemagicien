@@ -5,6 +5,7 @@ import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { useMembership } from "@/hooks/useMembership";
 import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
+import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,14 +79,26 @@ function PlatformLayout() {
   const { userId } = usePlatformActivity();
   const hasWorkoutProgram = membership.features.workout_program;
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram && !membership.loading);
+  const { hold, loading: holdLoading } = useProgramPreparationHold({
+    coachAssigned: runtimeQuery.data?.reason === "ok",
+  });
   usePaidTrainingAutoAssign({
-    enabled: !membership.loading && Boolean(userId),
+    enabled: !membership.loading && Boolean(userId) && !hold.active && !holdLoading,
     userId,
     membershipTier: membership.tier,
     hasWorkoutProgram,
     runtimeReason: runtimeQuery.data?.reason,
-    runtimeLoading: runtimeQuery.isLoading,
+    runtimeLoading: runtimeQuery.isLoading || hold.active || holdLoading,
   });
+
+  useEffect(() => {
+    if (!hold.active || !hasWorkoutProgram) return;
+    const timer = window.setInterval(() => {
+      void runtimeQuery.refetch();
+    }, 20_000);
+    return () => window.clearInterval(timer);
+  }, [hold.active, hasWorkoutProgram, runtimeQuery.refetch]);
+
   const [blocked, setBlocked] = useState(false);
   const [blockStatus, setBlockStatus] = useState("active");
 

@@ -27,7 +27,8 @@ import {
   directoryPlanTone,
   paginationPages,
 } from "@/lib/admin/admin-client-ops";
-import { formatAdminActivityStamp, formatAdminDate, personInitials } from "@/lib/admin/admin-status";
+import { formatAdminActivityStamp, formatAdminDate } from "@/lib/admin/admin-status";
+import { AdminClientAvatar } from "@/components/admin/AdminClientAvatar";
 
 type ClientsSearch = { q?: string };
 type ClientSort = "joined" | "activity" | "unread";
@@ -447,9 +448,7 @@ function ClientDirectoryRow({ row }: { row: AdminClientListItem }) {
           params={{ clientId: row.id }}
           className="cc-client-directory__identity"
         >
-          <span className="cc-avatar" aria-hidden>
-            {personInitials(row.fullName)}
-          </span>
+          <AdminClientAvatar name={row.fullName} avatarPath={row.avatarPath} />
           <div>
             <strong>{row.fullName || "بدون اسم"}</strong>
             <span className="cc-meta">{row.email || row.phone || "—"}</span>
@@ -490,9 +489,7 @@ function ClientDirectoryCard({ row }: { row: AdminClientListItem }) {
   return (
     <article className="cc-client-card">
       <div className="cc-client-card__head">
-        <span className="cc-avatar" aria-hidden>
-          {personInitials(row.fullName)}
-        </span>
+        <AdminClientAvatar name={row.fullName} avatarPath={row.avatarPath} />
         <div>
           <strong>{row.fullName || "بدون اسم"}</strong>
           <p className="cc-meta">{row.email || row.phone || "—"}</p>

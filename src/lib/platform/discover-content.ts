@@ -1,6 +1,10 @@
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import type { DiscoverPreviewItem } from "@/lib/platform/home-hub";
-import { contentVisibleToAudience, type DiscoverAudience } from "@/lib/platform/discover-audience";
+import {
+  contentGalleryImages,
+  contentVisibleToAudience,
+  type DiscoverAudience,
+} from "@/lib/platform/discover-audience";
 import homeNutritionHero from "@/assets/home-nutrition-hero.webp";
 import heroCoachDashboard from "@/assets/hero-coach-dashboard.png";
 import muscleBuild from "@/assets/بناء العضلات.webp";
@@ -32,8 +36,10 @@ export {
   CONTENT_COVER_SIZE,
   DISCOVER_AUDIENCES,
   DISCOVER_AUDIENCE_OPTIONS,
+  contentGalleryImages,
   contentVisibleToAudience,
   parseDiscoverAudience,
+  parseGalleryImages,
 } from "@/lib/platform/discover-audience";
 
 export type DiscoverCategory = {
@@ -103,6 +109,8 @@ export type DiscoverContentItem = {
   badge?: string;
   sortPriority?: number;
   audience?: DiscoverAudience | null;
+  /** Extra images after cover (Instagram-style carousel). */
+  galleryImages?: string[];
   source?: "cms";
 };
 
@@ -731,12 +739,17 @@ function homeBadgeTone(type: DiscoverContentType): DiscoverPreviewItem["badgeTon
 }
 
 export function discoverItemToHomePreview(item: DiscoverContentItem): DiscoverPreviewItem {
+  const gallery = contentGalleryImages({
+    coverImage: item.coverImage,
+    galleryImages: item.galleryImages,
+  });
   return {
     id: item.id,
     title: item.title,
     description: formatDiscoverHomeDuration(item),
     href: `/app/discover/${item.slug}`,
-    coverSrc: item.coverImage || undefined,
+    coverSrc: gallery[0] || item.coverImage || undefined,
+    gallerySrcs: gallery.length > 1 ? gallery : undefined,
     badge: getDiscoverTypeLabel(item.type),
     badgeTone: homeBadgeTone(item.type),
     showPlay: item.type === "video",
@@ -747,7 +760,7 @@ export function listHomeDiscoverPreview(gender: "male" | "female" | null = resol
   return publishedItems(gender)
     .filter((item) => item.source === "cms")
     .sort((a, b) => Number(b.featured) - Number(a.featured) || (a.sortPriority ?? 99) - (b.sortPriority ?? 99))
-    .slice(0, 6)
+    .slice(0, 4)
     .map(discoverItemToHomePreview);
 }
 

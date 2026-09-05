@@ -62,11 +62,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import { HERO_GOAL_SETTINGS_CHANGED_EVENT } from "@/lib/platform/hero-goal-framing";
 import {
   resolveWorkoutGoalHeroPhotos,
   type WorkoutGoalHeroPhoto,
 } from "@/lib/platform/workout-goal-hero-images";
+import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { ClientTrainingStrategySetupCard } from "@/components/platform/workout/ClientTrainingStrategySetupCard";
+import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
+import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
+import { isLocalProgramHoldPreview } from "@/lib/platform/program-preparation-hold";
 import { SessionAnatomyVisual } from "@/components/platform/workout/SessionAnatomyVisual";
 import {
   resolveSessionAnatomyImageSrc,
@@ -841,6 +846,8 @@ function WorkoutDayPage() {
   const todayId = getWeekdayIdFromDate();
   const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(() => readStoredSelectedDay(todayId));
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [goalHeroVersion, setGoalHeroVersion] = useState(0);
+  const goalSettingsQuery = useHeroGoalSettings();
   const isSelectedToday = selectedDayId === todayId;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const lockedReason = freeDayFullyLocked
@@ -891,9 +898,16 @@ function WorkoutDayPage() {
     goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal,
     goalText: trainingQuery.data?.goal,
   });
+
+  useEffect(() => {
+    const sync = () => setGoalHeroVersion((value) => value + 1);
+    window.addEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+  }, []);
+
   const goalHeroPhotos = useMemo(
     () => resolveWorkoutGoalHeroPhotos({ gender, goalId, goalLabel }),
-    [gender, goalId, goalLabel],
+    [gender, goalId, goalLabel, goalHeroVersion, goalSettingsQuery.dataUpdatedAt],
   );
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
@@ -908,13 +922,18 @@ function WorkoutDayPage() {
   const paidAutoAssignRunning = paidAutoAssignLatest?.status === "pending";
   const paidAutoAssignResult = paidAutoAssignLatest?.data;
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
+  const runtimeOkEarly =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok";
+  const { hold, loading: holdLoading } = useProgramPreparationHold({
+    coachAssigned: runtimeOkEarly,
+  });
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
       ? continuity.assignedPlans
       : null;
 
   const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
-    enabled: freePreview && !hasWorkoutProgram,
+    enabled: freePreview && !hasWorkoutProgram && !hold.active,
     userId,
     training: trainingQuery.data,
   });
@@ -941,7 +960,7 @@ function WorkoutDayPage() {
     ? previewPlans[selectedDayId] ?? resolveWeekdayPlan(selectedDayId, true, previewPlans)
     : resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
   const sessionQuery = useWorkoutDaySession(
-    (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
+    !hold.active && (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
   );
   const sessionExercises = sessionQuery.data?.exercises ?? [];
   const todayKey = continuity.todayKey;
@@ -973,10 +992,15 @@ function WorkoutDayPage() {
     !freeStrategyPreviewQuery.isLoading &&
     (freeStrategyPreviewQuery.isError ||
       (freeStrategyPreviewQuery.isFetched && !freeStrategyPreviewPlans));
-  const showWeeklySchedule = showFreeStrategyPreview || runtimeOk;
+  const showHoldRoom = hold.active;
+  const showWeeklySchedule = !showHoldRoom && (showFreeStrategyPreview || runtimeOk);
   const showFreePreviewLoading =
-    freePreview && !hasWorkoutProgram && freeStrategyPreviewQuery.isLoading;
+    !showHoldRoom &&
+    freePreview &&
+    !hasWorkoutProgram &&
+    freeStrategyPreviewQuery.isLoading;
   const showPaidAutoAssignLoading =
+    !showHoldRoom &&
     hasWorkoutProgram &&
     !runtimeOk &&
     (paidAutoAssignRunning || runtimeQuery.isLoading);
@@ -1004,11 +1028,13 @@ function WorkoutDayPage() {
     !showPaidClientSetup &&
     paidAutoAssignResult?.status === "review_required";
   const showStrategySetup =
-    showFreePreviewIncompleteProfile || showFreePreviewError || showPaidClientSetup;
-  const showRuntimeLoading = hasWorkoutProgram && runtimeQuery.isLoading;
+    !showHoldRoom &&
+    (showFreePreviewIncompleteProfile || showFreePreviewError || showPaidClientSetup);
+  const showRuntimeLoading = !showHoldRoom && hasWorkoutProgram && runtimeQuery.isLoading;
   const showRuntimeError =
-    hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
+    !showHoldRoom && hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
   const showRuntimeBlocked =
+    !showHoldRoom &&
     hasWorkoutProgram &&
     runtimeQuery.isSuccess &&
     runtimeReason !== "ok" &&
@@ -1081,13 +1107,31 @@ function WorkoutDayPage() {
           <PlatformHeaderActions />
         </header>
 
+        {holdLoading && !showHoldRoom ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4">
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-16 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+          </section>
+        ) : null}
+
         <WorkoutGoalHero
           overallProgress={overallProgress}
           goalLabel={goalLabel}
           photos={goalHeroPhotos}
         />
 
-        {showRuntimeLoading ? (
+        {showHoldRoom ? (
+          <ProgramPreparationHoldCard
+            hold={hold}
+            showUpgrade={!membership.is_paid || isLocalProgramHoldPreview()}
+            onUpgrade={() =>
+              openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.holdUpgradeTitle)
+            }
+          />
+        ) : null}
+
+        {!showHoldRoom && showRuntimeLoading ? (
           <section className="platform-card space-y-3 rounded-3xl p-4">
             <div className="h-4 w-40 animate-pulse rounded bg-muted" />
             <div className="h-16 animate-pulse rounded-2xl bg-muted" />

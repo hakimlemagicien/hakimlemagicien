@@ -716,6 +716,8 @@ export type DiscoverPreviewItem = {
   href: string;
   image?: FeaturedContentItem["image"];
   coverSrc?: string;
+  /** Multiple covers for auto-rotate on Home (3s) before open. */
+  gallerySrcs?: string[];
   badge?: string;
   badgeTone?: "article" | "recipe" | "workout";
   showPlay?: boolean;

@@ -2,8 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { MoreHorizontal, StickyNote } from "lucide-react";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
+import { AdminClientAvatar } from "@/components/admin/AdminClientAvatar";
 import { AdminStatusBadge } from "@/components/admin/AdminPage";
-import { formatAdminDate, personInitials } from "@/lib/admin/admin-status";
+import { formatAdminDate } from "@/lib/admin/admin-status";
 import {
   clientAccountStatusLabel,
   clientAccountStatusTone,
@@ -23,9 +24,7 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
 
   return (
     <header className="cc-client-hero cc-client-hero--a4">
-      <span className="cc-avatar cc-avatar--lg" aria-hidden>
-        {personInitials(overview.full_name)}
-      </span>
+      <AdminClientAvatar name={overview.full_name} avatarPath={overview.avatar_path} size="lg" />
       <div className="cc-client-hero__text">
         <h2>{overview.full_name || "بدون اسم"}</h2>
         <p>{overview.email || overview.phone || "بدون بريد"}</p>

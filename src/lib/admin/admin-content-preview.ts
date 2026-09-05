@@ -1,6 +1,12 @@
 import type { AdminContentDetail } from "@/lib/admin/admin-content-api";
 import { DISCOVER_TYPES, discoverTypeLabel } from "@/lib/admin/admin-libraries";
-import { CONTENT_COVER_SIZE, parseDiscoverAudience, type DiscoverAudience } from "@/lib/platform/discover-audience";
+import {
+  CONTENT_COVER_SIZE,
+  contentGalleryImages,
+  parseDiscoverAudience,
+  parseGalleryImages,
+  type DiscoverAudience,
+} from "@/lib/platform/discover-audience";
 import type { DiscoverContentItem, DiscoverContentType } from "@/lib/platform/discover-content";
 import type { DiscoverPreviewItem } from "@/lib/platform/home-hub";
 
@@ -44,6 +50,10 @@ export function contentDraftToPreviewItem(
   const now = draft.updated_at || new Date().toISOString();
   const minutes =
     draft.reading_time_minutes ?? Math.max(1, Math.round(countContentWords(draft.body) / 180));
+  const gallery = contentGalleryImages({
+    coverImage: coverOverride || draft.cover_image_path,
+    galleryImages: parseGalleryImages(draft.type_payload.gallery_images),
+  });
   return {
     id: draft.id || "preview",
     type,
@@ -52,7 +62,8 @@ export function contentDraftToPreviewItem(
     shortDescription: draft.short_description,
     body: draft.body,
     categoryId: draft.category_id || "general",
-    coverImage: coverOverride || draft.cover_image_path || "",
+    coverImage: gallery[0] || coverOverride || draft.cover_image_path || "",
+    galleryImages: gallery.slice(1),
     authorName: draft.author_name?.trim() || "Coach Hakim",
     publishDate: draft.publish_at || now,
     createdAt: now,
@@ -75,6 +86,10 @@ export function contentDraftToHomePreview(
   coverOverride?: string | null,
 ): DiscoverPreviewItem {
   const item = contentDraftToPreviewItem(draft, coverOverride);
+  const gallery = contentGalleryImages({
+    coverImage: item.coverImage,
+    galleryImages: item.galleryImages,
+  });
   const minutes =
     item.readingTimeMinutes ??
     (item.videoDurationSeconds ? Math.max(1, Math.round(item.videoDurationSeconds / 60)) : null);
@@ -83,7 +98,8 @@ export function contentDraftToHomePreview(
     title: item.title,
     description: minutes ? `${minutes} دقائق` : item.shortDescription.trim() || discoverTypeLabel(item.type),
     href: `/app/discover/${item.slug}`,
-    coverSrc: item.coverImage || undefined,
+    coverSrc: gallery[0] || undefined,
+    gallerySrcs: gallery.length > 1 ? gallery : undefined,
     badge: discoverTypeLabel(item.type),
     badgeTone: item.type === "recipe" ? "recipe" : item.type === "video" ? "workout" : "article",
     showPlay: item.type === "video",

@@ -4,6 +4,7 @@
  */
 
 import { EXERCISE_STAGE_BATCH_GUIDE_DRAFTS } from "./exercise-stage-batch-guides";
+import { isCore100ExerciseId, publicUrlForCore100Exercise } from "@/lib/platform/content/core-100-exercise-media";
 
 export const EXERCISE_STAGE_PILOT_EXTERNAL_IDS = [
   "CH-004",
@@ -679,8 +680,15 @@ export function getExerciseStageCover(externalId: string) {
   return guide?.stages.find((stage) => stage.key === EXERCISE_STAGE_COVER_KEY) ?? null;
 }
 
+/**
+ * List/cover thumb for admin + app.
+ * Prefer registered stage guides; otherwise Core 100 packs synced under public/exercises.
+ */
 export function getExerciseStageListThumb(externalId: string): string | null {
-  return getExerciseStageCover(externalId)?.thumbSrc ?? null;
+  const fromGuide = getExerciseStageCover(externalId)?.thumbSrc ?? null;
+  if (fromGuide) return fromGuide;
+  if (!isCore100ExerciseId(externalId)) return null;
+  return publicUrlForCore100Exercise(externalId, "stages/stage-b-thumb.webp");
 }
 
 export function listExerciseStagePublicFiles(guide: ExerciseStageGuide): string[] {
