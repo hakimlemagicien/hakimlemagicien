@@ -68,6 +68,8 @@ export type AdminClientOverview = {
     name_ar?: string | null;
     duration_weeks?: number | null;
     snapshot_complete?: boolean | null;
+    progression_status?: string | null;
+    progression_strategy?: string | null;
   } | null;
   last_workout_at: string | null;
   last_nutrition_at?: string | null;
@@ -192,4 +194,22 @@ export async function fetchAdminClientOverview(clientId: string): Promise<AdminC
   if (error) throw error;
   if (!data || typeof data !== "object") return null;
   return data as AdminClientOverview;
+}
+
+export async function setAdminClientTrainingGoal(input: {
+  clientId: string;
+  goal: string;
+  reason: string;
+}): Promise<{ goal: string; before: string | null }> {
+  const { data, error } = await supabase.rpc("admin_set_client_training_goal", {
+    p_client_id: input.clientId,
+    p_goal: input.goal,
+    p_reason: input.reason,
+  });
+  if (error) throw error;
+  const row = (data ?? {}) as { goal?: string; before?: string | null };
+  return {
+    goal: String(row.goal ?? input.goal),
+    before: row.before ?? null,
+  };
 }

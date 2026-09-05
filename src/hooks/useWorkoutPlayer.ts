@@ -34,6 +34,11 @@ import {
 import { getCoreExercisePrescription, getCalibrationAdjustment } from "@/lib/platform/prescription";
 import { getNextSessionProgression, excludeCurrentSession } from "@/lib/platform/progression";
 import type { RecoveryHoldState } from "@/lib/platform/progression/types";
+import {
+  parseProgressionStrategy,
+  progressionForRuntime,
+  type ProgressionStrategy,
+} from "@/lib/platform/progression-strategy";
 import type { CoreExercisePrescription } from "@/lib/platform/prescription";
 import type { CalibrationAction } from "@/lib/platform/prescription/types";
 import { fetchExercisesV2ByExternalIds } from "@/lib/platform/exercise-library-v2-api";
@@ -89,6 +94,7 @@ export type WorkoutPlayerOptions = {
   recoveryHold?: RecoveryHoldState;
   /** Phase 8 continuity → Phase 4 prescription_state. Does not change training_level. */
   prescriptionState?: PrescriptionState | null;
+  progressionStrategy?: ProgressionStrategy | string | null;
 };
 
 function createInitialProgress(
@@ -180,7 +186,6 @@ export function useWorkoutPlayer(
   );
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoAutoPlay, setVideoAutoPlay] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
   const [heroKey, setHeroKey] = useState(0);
   const [dbSession, setDbSession] = useState<WorkoutSessionRecord | null>(null);
   const [v2ById, setV2ById] = useState<Record<string, ExerciseV2Metadata>>({});
@@ -227,7 +232,7 @@ export function useWorkoutPlayer(
         historyById[currentExercise.external_id] ?? [],
         dbSession?.id ?? sessionIdRef.current,
       );
-      const progression = getNextSessionProgression({
+      const rawProgression = getNextSessionProgression({
         externalId: currentExercise.external_id,
         exercise: currentMeta,
         history: priorHistory,
@@ -243,6 +248,10 @@ export function useWorkoutPlayer(
         prescribedLoad: currentExercise.suggestedWeightKg || null,
         recoveryHold: options.recoveryHold ?? "NORMAL",
       });
+      const progression = progressionForRuntime(
+        parseProgressionStrategy(options.progressionStrategy),
+        rawProgression,
+      );
       return getCoreExercisePrescription({
         goalId: options.goalId ?? null,
         trainingLevel,
@@ -273,6 +282,7 @@ export function useWorkoutPlayer(
     options.goalId,
     options.recoveryHold,
     options.prescriptionState,
+    options.progressionStrategy,
     trainingLevel,
   ]);
 
@@ -1018,7 +1028,6 @@ export function useWorkoutPlayer(
       setHeroKey((value) => value + 1);
       setSetInProgress(false);
       setPhase("exercise");
-      setShowDetails(false);
       setCalibrationAction(null);
     },
     [exercises.length],
@@ -1038,7 +1047,6 @@ export function useWorkoutPlayer(
     setPhase("exercise");
     setSetInProgress(false);
     setCurrentSetNumber(1);
-    setShowDetails(false);
     setVideoOpen(false);
     setVideoAutoPlay(false);
     setHeroKey((value) => value + 1);
@@ -1072,8 +1080,6 @@ export function useWorkoutPlayer(
     setVideoOpen,
     openVideo,
     closeVideo,
-    showDetails,
-    setShowDetails,
     heroKey,
     sessionProgressPct,
     nextExercise,

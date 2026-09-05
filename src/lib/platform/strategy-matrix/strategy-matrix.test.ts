@@ -47,12 +47,24 @@ const mapped = resolveStrategyGoal({ rawGoalId: "glutes" });
 assert(mapped.ok, "known legacy goal resolves");
 assertEqual(mapped.ok ? mapped.canonicalGoal : null, "GLUTE_GROWTH", "glutes → GLUTE_GROWTH");
 
+const maleMapped = resolveStrategyGoal({ rawGoalId: "muscle" });
+assert(maleMapped.ok, "male muscle goal resolves");
+assertEqual(maleMapped.ok ? maleMapped.canonicalGoal : null, "MUSCLE_GROWTH", "muscle → MUSCLE_GROWTH");
+
 const canonical = resolveStrategyGoal({ rawGoalId: "FAT_LOSS" });
 assert(canonical.ok, "canonical id accepted");
 assertEqual(canonical.ok ? canonical.canonicalGoal : null, "FAT_LOSS", "canonical passthrough");
 
-const unknown = resolveStrategyGoal({ rawGoalId: "muscle" });
-assert(!unknown.ok, "male muscle goal fails closed");
+const toneMapped = resolveStrategyGoal({ rawGoalId: "tone" });
+assert(toneMapped.ok, "female tone quiz goal maps");
+assertEqual(toneMapped.ok ? toneMapped.canonicalGoal : null, "TONED_ARMS_UPPER_BODY", "tone → TONED_ARMS_UPPER_BODY");
+
+const fitMapped = resolveStrategyGoal({ rawGoalId: "fit" });
+assert(fitMapped.ok, "female fit quiz goal maps");
+assertEqual(fitMapped.ok ? fitMapped.canonicalGoal : null, "POSTURE_TONED_BACK", "fit → POSTURE_TONED_BACK");
+
+const unknown = resolveStrategyGoal({ rawGoalId: "not-a-real-goal" });
+assert(!unknown.ok, "unknown goal fails closed");
 assertEqual(unknown.ok ? null : unknown.reason, "UNMAPPED_LEGACY_GOAL", "unmapped reason");
 assert(
   !unknown.ok && unknown.reason !== "MISSING_GOAL",
@@ -88,12 +100,8 @@ assert(freqCoach.ok, "coach frequency override");
 assertEqual(freqCoach.ok ? freqCoach.strategy.trainingDaysPerWeek : null, 5, "coach days");
 
 const noFreq = resolveTrainingStrategy(baseInput({ trainingDaysPerWeek: null }));
-assert(!noFreq.ok, "missing frequency blocks");
-assertEqual(
-  noFreq.ok ? null : noFreq.errors[0]?.code,
-  "MISSING_TRAINING_FREQUENCY",
-  "missing frequency code",
-);
+assert(noFreq.ok, "missing frequency uses product default 5");
+assertEqual(noFreq.ok ? noFreq.strategy.trainingDaysPerWeek : null, 5, "default days is 5");
 
 // --- Preferred days separate from frequency ---
 
@@ -196,6 +204,12 @@ assertEqual(builtA.ok ? builtA.context.trainingLevel : null, "INTERMEDIATE", "co
 const genA = generateTrainingProgram(builtA.ok ? builtA.context : ({} as never));
 assert(genA.candidate != null, "scenario A generates candidate");
 
+const builtMale = buildProgramGenerationContextFromProfile(baseInput({ rawGoalId: "muscle" }), { exercises });
+assert(builtMale.ok, "male muscle builds context");
+assertEqual(builtMale.ok ? builtMale.context.goalId : null, "MUSCLE_GROWTH", "male context goal");
+const genMale = generateTrainingProgram(builtMale.ok ? builtMale.context : ({} as never));
+assert(genMale.status === "READY" && genMale.candidate != null, "male muscle generates READY program");
+
 const builtB = buildProgramGenerationContextFromProfile(
   baseInput({
     trainingEnvironment: "home",
@@ -235,7 +249,7 @@ if (gymOnlyExercise && builtC.ok) {
 }
 
 const builtD = buildProgramGenerationContextFromProfile(
-  baseInput({ rawGoalId: "muscle" }),
+  baseInput({ rawGoalId: "not-a-real-goal" }),
   { exercises },
 );
 assert(!builtD.ok, "scenario D blocks unknown goal");

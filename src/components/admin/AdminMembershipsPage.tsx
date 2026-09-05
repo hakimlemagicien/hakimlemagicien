@@ -8,6 +8,7 @@ import {
   type AdminMemberSubscriptionRow,
 } from "@/lib/admin/admin-billing-ops-api";
 import {
+  AdminConceptKpiRow,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -77,19 +78,60 @@ export function AdminMembershipsPage() {
   }, [load]);
 
   const filteredRows = useMemo(() => filterMembershipRows(rows, filters), [rows, filters]);
+  const activeCount = rows.filter((row) => row.isActive && row.subscriptionStatus === "active").length;
+  const attentionCount = rows.filter(membershipNeedsAttention).length;
+  const renewalsSoon = rows.filter((row) => {
+    const stamp = row.nextRenewalAt || row.currentPeriodEnd;
+    if (!stamp) return false;
+    const at = new Date(stamp).getTime();
+    const now = Date.now();
+    return Number.isFinite(at) && at >= now && at <= now + 7 * 24 * 60 * 60 * 1000;
+  }).length;
 
   return (
     <>
       <AdminPageHeader
         kicker="الاشتراكات والمدفوعات"
-        title="العضويات"
-        subtitle="قائمة تشغيلية للاشتراكات — قراءة فقط. لا تعديل يدوي لحقيقة الدفع."
+        title="العضويات والمدفوعات"
+        subtitle="إدارة الاشتراكات والتحصيل من البيانات الحقيقية — بدون إيراد شهري مخترع."
         actions={
           <button type="button" onClick={() => void load()} disabled={loading} className="cc-btn">
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             تحديث
           </button>
         }
+      />
+      <AdminConceptKpiRow
+        loading={loading}
+        metrics={[
+          {
+            id: "active",
+            label: "اشتراكات نشطة",
+            value: activeCount.toLocaleString("ar-AE"),
+            hint: "من القائمة المحمّلة",
+            tone: activeCount > 0 ? "positive" : "neutral",
+          },
+          {
+            id: "attention",
+            label: "تحتاج انتباه",
+            value: attentionCount.toLocaleString("ar-AE"),
+            hint: "past_due أو إيقاف تجديد",
+            tone: attentionCount > 0 ? "attention" : "neutral",
+          },
+          {
+            id: "renewals",
+            label: "تجديدات هذا الأسبوع",
+            value: renewalsSoon.toLocaleString("ar-AE"),
+            hint: "من تاريخ التجديد المسجّل",
+          },
+          {
+            id: "revenue",
+            label: "الإيراد الشهري",
+            value: "—",
+            hint: "لا MRR معتمد في هذه الشاشة",
+            tone: "unavailable",
+          },
+        ]}
       />
       <BillingOpsSubnav />
       <ProviderBindingBanner />

@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
+import { MoreHorizontal, StickyNote } from "lucide-react";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
-import { trainingLocationLabel } from "@/lib/admin/admin-client-ops";
+import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
 import { AdminStatusBadge } from "@/components/admin/AdminPage";
-import { formatAdminDate, formatRelativeAge, onboardingStatus, personInitials, planLabel, planStatusKind } from "@/lib/admin/admin-status";
-import { clientAccountStatusLabel, clientAccountStatusTone, normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
+import { formatAdminDate, personInitials } from "@/lib/admin/admin-status";
+import {
+  clientAccountStatusLabel,
+  clientAccountStatusTone,
+  normalizeClientAccountStatus,
+} from "@/lib/admin/admin-client-account";
+import { directoryPlanLabelAr, directoryPlanTone, trainingLocationLabel } from "@/lib/admin/admin-client-ops";
 
 type Props = {
   overview: AdminClientOverview;
@@ -12,9 +18,8 @@ type Props = {
 };
 
 export function Client360Header({ overview, conversationId, onAddNote }: Props) {
-  const status = onboardingStatus(overview.onboarding_completed_at);
-  const lastActivity =
-    overview.last_workout_at || overview.last_nutrition_at || overview.coaching?.last_message_at;
+  const account = normalizeClientAccountStatus(overview.account_status);
+  const plan = overview.membership?.tier;
 
   return (
     <header className="cc-client-hero cc-client-hero--a4">
@@ -25,39 +30,22 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
         <h2>{overview.full_name || "بدون اسم"}</h2>
         <p>{overview.email || overview.phone || "بدون بريد"}</p>
         <p>
-          {overview.goal || "الهدف غير محدد"} · {trainingLocationLabel(overview.training_type)} · انضم{" "}
+          {presentClientTrainingGoal(overview.goal).displayAr} · {trainingLocationLabel(overview.training_type)} · انضم{" "}
           {formatAdminDate(overview.created_at)}
         </p>
         <div className="cc-client-hero__badges">
-          <AdminStatusBadge tone={status.kind}>{status.label}</AdminStatusBadge>
-          <AdminStatusBadge tone={clientAccountStatusTone(normalizeClientAccountStatus(overview.account_status))}>
-            {clientAccountStatusLabel(normalizeClientAccountStatus(overview.account_status))}
+          <AdminStatusBadge tone={clientAccountStatusTone(account)}>
+            {clientAccountStatusLabel(account)}
           </AdminStatusBadge>
-          {overview.membership?.tier ? (
-            <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
-              {planLabel(overview.membership.tier)}
-              {overview.membership.is_active ? "" : " — غير نشطة"}
-            </AdminStatusBadge>
-          ) : null}
-          {lastActivity ? (
-            <span className="cc-meta">آخر نشاط {formatRelativeAge(lastActivity)}</span>
+          {plan ? (
+            <AdminStatusBadge tone={directoryPlanTone(plan)}>{directoryPlanLabelAr(plan)}</AdminStatusBadge>
           ) : null}
         </div>
       </div>
       <div className="cc-client-hero__actions">
-        {conversationId ? (
-          <Link
-            to="/admin/messages/$conversationId"
-            params={{ conversationId }}
-            className="cc-btn cc-btn--primary"
-          >
-            إرسال رسالة
-          </Link>
-        ) : (
-          <span className="cc-muted">لا محادثة تدريب مسجّلة</span>
-        )}
         {onAddNote ? (
-          <button type="button" className="cc-btn" onClick={onAddNote}>
+          <button type="button" className="cc-btn cc-btn--primary" onClick={onAddNote}>
+            <StickyNote size={15} aria-hidden />
             إضافة ملاحظة
           </button>
         ) : (
@@ -65,11 +53,46 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
             to="/admin/clients/$clientId"
             params={{ clientId: overview.id }}
             search={{ tab: "notes" }}
-            className="cc-btn"
+            className="cc-btn cc-btn--primary"
           >
             إضافة ملاحظة
           </Link>
         )}
+        {conversationId ? (
+          <Link
+            to="/admin/messages/$conversationId"
+            params={{ conversationId }}
+            className="cc-btn"
+          >
+            إرسال رسالة
+          </Link>
+        ) : null}
+        <details className="cc-row-menu">
+          <summary className="cc-row-menu__trigger" aria-label="المزيد">
+            <MoreHorizontal size={16} aria-hidden />
+          </summary>
+          <div className="cc-row-menu__panel">
+            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "training" }}>
+              التدريب
+            </Link>
+            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "nutrition" }}>
+              التغذية
+            </Link>
+            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "membership" }}>
+              العضوية والفوترة
+            </Link>
+            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "activity" }}>
+              النشاط
+            </Link>
+            {conversationId ? (
+              <Link to="/admin/messages/$conversationId" params={{ conversationId }}>
+                إرسال رسالة
+              </Link>
+            ) : (
+              <span className="cc-muted">لا محادثة تدريب مسجّلة</span>
+            )}
+          </div>
+        </details>
       </div>
     </header>
   );

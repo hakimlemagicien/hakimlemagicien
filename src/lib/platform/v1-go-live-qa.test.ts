@@ -78,6 +78,8 @@ assert(resolveWeekdayPlan("mon", false).isRestDay, "free without plans");
 
 const workoutIndex = readFileSync(join(root, "src/routes/_platform/app/program/workout/index.tsx"), "utf8");
 assert(workoutIndex.includes("showFreePreviewIncompleteProfile"), "incomplete profile UI");
+assert(workoutIndex.includes("ClientTrainingStrategySetupCard"), "strategy setup card wired");
+assert(workoutIndex.includes("showStrategySetup"), "unified strategy setup gate");
 assert(workoutIndex.includes("showFreePreviewError"), "error retry UI");
 assert(!workoutIndex.includes("showFreeCatalogWeek"), "no catalog week");
 

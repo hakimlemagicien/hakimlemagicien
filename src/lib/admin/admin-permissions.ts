@@ -207,7 +207,8 @@ export function classifyAdminAction(actionId: string): AdminActionLevel {
     actionId.includes("safety_edit") ||
     actionId.includes("allergen") ||
     actionId.includes("account_delete") ||
-    actionId.includes("client_account")
+    actionId.includes("client_account") ||
+    actionId.includes("client_training_goal")
   ) {
     return "SENSITIVE";
   }

@@ -116,9 +116,11 @@ assert(
   "E: Core 100 active when config valid",
 );
 
-// F — Missing profile field (frequency)
+// F — Missing frequency uses product default (5 days); assisted still review-gated
 const missingFreq = prepare({ trainingDaysPerWeek: null });
-assertEqual(missingFreq.state, "BLOCKED", "F: missing frequency → BLOCKED");
+assertEqual(missingFreq.state, "REVIEW_REQUIRED", "F: assisted + default days → REVIEW_REQUIRED");
+assertEqual(missingFreq.strategy?.trainingDaysPerWeek ?? null, 5, "F: default 5 days");
+assert(missingFreq.assignable, "F: still assignable for coach review");
 
 // G — HOME location
 const home = prepare({ trainingEnvironment: "home", availableEquipment: ["DUMBBELLS", "RESISTANCE_BAND", "PULL_UP_BAR", "MAT", "KETTLEBELL", "BENCH"] });
@@ -172,9 +174,9 @@ assert(regen.generation?.validation.status !== "INVALID" || regen.state === "BLO
 const staleFp = buildStrategyContextFingerprint(baseInput({ trainingDaysPerWeek: 4 }));
 assert(isAssignmentCandidateStale(first, staleFp), "stale when fingerprint changes");
 
-// Unresolved male goal — automated blocked
-const unmapped = prepare({ rawGoalId: "muscle", profileGoal: "muscle", gender: "male" });
-assertEqual(unmapped.state, "BLOCKED", "unmapped male goal blocked");
+// Unknown goal — automated blocked
+const unmapped = prepare({ rawGoalId: "not-a-real-goal", profileGoal: "not-a-real-goal", gender: "female" });
+assertEqual(unmapped.state, "BLOCKED", "unknown goal blocked");
 const autoUnmapped = evaluateAutomaticAssignmentEligibility({
   assignmentMode: "AUTOMATED",
   strategy: null,
@@ -185,6 +187,9 @@ const autoUnmapped = evaluateAutomaticAssignmentEligibility({
   strategyErrors: ["UNMAPPED_LEGACY_GOAL"],
 });
 assert(autoUnmapped.status === "BLOCKED", "automated unmapped goal blocked");
+
+const toneReady = prepare({ rawGoalId: "tone", profileGoal: "tone", gender: "female" });
+assert(toneReady.state !== "BLOCKED" || toneReady.assignable || Boolean(toneReady.generation), "tone quiz goal no longer blocked by mapping");
 
 // Free entitlement — automated blocked
 const freeAuto = prepare({}, "AUTOMATED", {

@@ -16,6 +16,7 @@ export type ClientTrainingRuntime = {
     template_version: number;
     duration_weeks: number | null;
     days_per_week: number | null;
+    progression_strategy?: string | null;
   } | null;
   days: Array<{
     day_id?: string;
@@ -70,6 +71,7 @@ export async function fetchMyTrainingRuntime(): Promise<ClientTrainingRuntime> {
       template_version: Number(assignment.template_version ?? 1),
       duration_weeks: assignment.duration_weeks == null ? null : Number(assignment.duration_weeks),
       days_per_week: assignment.days_per_week == null ? null : Number(assignment.days_per_week),
+      progression_strategy: (assignment.progression_strategy as string | null) ?? null,
     },
     days: ((row.days as ClientTrainingRuntime["days"]) ?? []).map((day) => ({
       ...day,

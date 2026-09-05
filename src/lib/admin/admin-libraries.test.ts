@@ -190,11 +190,28 @@ assert(!mealUi.includes(".from(\"meals\").delete"), "meal UI does not hard-delet
 const programUi = readFileSync(join(root, "src/components/admin/libraries/ProgramLibraryManager.tsx"), "utf8");
 assert(programUi.includes("PROGRAM_TEMPLATE"), "template ≠ assignment is shown");
 assert(programUi.includes("PROGRAM_VERSIONING_COMPLETION_REQUIRED"), "versioning gap is disclosed");
-assert(programUi.includes("اختيار تمرين"), "exercise picker uses library search");
+const programBuilderUi = readFileSync(join(root, "src/components/admin/programs/AdminProgramBuilder.tsx"), "utf8");
+assert(programBuilderUi.includes("اختيار تمرين"), "exercise picker uses library search");
+assert(programBuilderUi.includes("حفظ مسودة"), "program save is draft");
+assert(programBuilderUi.includes("معاينة كعميل"), "client preview exists");
+assert(programBuilderUi.includes("هدفك"), "client preview is goal-first not template-name");
 
 const contentUi = readFileSync(join(root, "src/components/admin/libraries/ContentLibraryManager.tsx"), "utf8");
-assert(contentUi.includes("حفظ مسودة"), "content save is draft");
-assert(contentUi.includes("نشر"), "publish is a separate action");
+assert(contentUi.includes("محتوى جديد"), "content list can create");
+const contentBuilderUi = readFileSync(join(root, "src/components/admin/content/AdminContentBuilder.tsx"), "utf8");
+assert(contentBuilderUi.includes("حفظ مسودة"), "content save is draft");
+assert(contentBuilderUi.includes("نشر"), "publish is a separate action");
+assert(contentBuilderUi.includes("معاينة في التطبيق"), "in-app preview exists before publish");
+assert(contentBuilderUi.includes("بنات"), "audience can target girls");
+assert(contentBuilderUi.includes("ذكور"), "audience can target boys");
+assert(contentBuilderUi.includes("الأكل"), "audience can target food");
+assert(contentBuilderUi.includes("إزالة المحتوى"), "content can be removed from the app");
+assert(contentBuilderUi.includes("1080"), "cover size follows Instagram 1080");
+assert(contentBuilderUi.includes("1350"), "cover size follows Instagram 1350");
+const contentPreviewUi = readFileSync(join(root, "src/components/admin/content/AdminContentAppPreview.tsx"), "utf8");
+assert(contentPreviewUi.includes("DiscoverContentDetailView"), "preview uses the real discover screen");
+assert(contentPreviewUi.includes("HomeDiscoverCard"), "preview uses the real home card");
+assert(contentPreviewUi.includes("تفاصيل المحتوى") || contentPreviewUi.includes("DiscoverContentDetailView"), "preview matches client discover screen");
 
 const mealApi = readFileSync(join(root, "src/lib/platform/meal-library-api.ts"), "utf8");
 assert(mealApi.includes("overlayMealCatalog"), "client meals overlay DB onto seed");
@@ -203,6 +220,7 @@ assert(!mealApi.includes("meals.length >= seedCount"), "full-catalog replacement
 
 const discoverApi = readFileSync(join(root, "src/lib/platform/discover-content-api.ts"), "utf8");
 assert(discoverApi.includes("overlayDiscoverCatalog"), "client discover overlay DB onto seed");
+assert(discoverApi.includes("type_payload"), "client catalog reads audience from type_payload");
 
 const kit = readFileSync(join(root, "src/components/admin/AdminLibraryKit.tsx"), "utf8");
 assert(kit.includes("useUnsavedNavigation"), "unsaved changes warning exists");

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { parseDiscoverAudience } from "./discover-audience";
 import {
   DISCOVER_CONTENT_SEED,
   setDiscoverCatalog,
@@ -32,6 +33,7 @@ type DiscoverRow = {
   view_count: number | null;
   tags: string[] | null;
   sort_priority: number | null;
+  type_payload?: Record<string, unknown> | null;
 };
 
 function mapDiscoverRow(row: DiscoverRow): DiscoverContentItem {
@@ -59,6 +61,8 @@ function mapDiscoverRow(row: DiscoverRow): DiscoverContentItem {
     videoSource: row.video_source ?? undefined,
     viewCount: row.view_count ?? undefined,
     sortPriority: row.sort_priority ?? undefined,
+    audience: parseDiscoverAudience(row.type_payload?.audience),
+    source: "cms",
   };
 }
 
@@ -73,6 +77,8 @@ function mergeDiscoverItem(seed: DiscoverContentItem | undefined, dbItem: Discov
     challenge: dbItem.challenge ?? seed.challenge,
     successStory: dbItem.successStory ?? seed.successStory,
     learnings: dbItem.learnings ?? seed.learnings,
+    audience: dbItem.audience ?? seed.audience ?? null,
+    source: "cms",
   };
 }
 
@@ -82,7 +88,7 @@ export async function hydrateDiscoverFromSupabase(): Promise<"supabase" | "json"
       supabase
         .from("discover_content")
         .select(
-          "id, content_type, title, slug, short_description, body, category_id, cover_image_path, author_name, publish_at, created_at, updated_at, featured, access_level, status, language, reading_time_minutes, video_duration_seconds, video_source, view_count, tags, sort_priority",
+          "id, content_type, title, slug, short_description, body, category_id, cover_image_path, author_name, publish_at, created_at, updated_at, featured, access_level, status, language, reading_time_minutes, video_duration_seconds, video_source, view_count, tags, sort_priority, type_payload",
         )
         .order("publish_at", { ascending: false }),
       supabase.rpc("client_list_hidden_library_keys"),

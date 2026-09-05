@@ -112,7 +112,7 @@ for (const goal of GOALS) {
   assert(new Set(roleSets.map((row) => row.join("|"))).size > 1, `${goal} must not use one template for every frequency`);
 }
 
-assertEqual(matrix.length, 24, "24 goal × frequency scenarios");
+assertEqual(matrix.length, TRAINING_V2_CANONICAL_GOALS.length * DAYS.length, "goal × frequency scenarios");
 
 const first = generateTrainingProgram(base({ daysPerWeek: 3 }));
 const second = generateTrainingProgram(base({ daysPerWeek: 3 }));

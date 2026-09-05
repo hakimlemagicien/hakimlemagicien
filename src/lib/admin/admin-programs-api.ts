@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import { hydrateProgramBuilder } from "./admin-program-builder";
+import { buildSevenDayWeek } from "./admin-program-ops";
 
 export type AdminProgramListItem = {
   id: string;
@@ -15,6 +17,7 @@ export type AdminProgramListItem = {
   archived_at: string | null;
   assignment_count: number;
   updated_at: string;
+  training_location: string | null;
 };
 
 export type AdminProgramExercise = {
@@ -31,6 +34,17 @@ export type AdminProgramExercise = {
   exercise_name_ar?: string;
   exercise_name_en?: string;
   exercise_external_id?: string;
+  rir?: number | null;
+  tempo?: string | null;
+  role?: "warmup" | "main" | "accessory" | "finisher";
+  pattern?: "none" | "superset" | "circuit" | "dropset";
+  pattern_group?: string | null;
+  alternatives?: Array<{
+    exercise_id: string;
+    name_ar: string;
+    name_en?: string;
+    external_id: string;
+  }>;
 };
 
 export type AdminProgramDay = {
@@ -41,6 +55,7 @@ export type AdminProgramDay = {
   muscle_focus: string | null;
   estimated_minutes: number | null;
   estimated_calories: number | null;
+  notes_ar?: string | null;
   exercises: AdminProgramExercise[];
 };
 
@@ -55,6 +70,9 @@ export type AdminProgramWeek = {
 export type AdminProgramDetail = AdminProgramListItem & {
   description_ar: string | null;
   versioning_complete: boolean;
+  session_minutes: number | null;
+  equipment: string;
+  metadata: Record<string, unknown>;
   weeks: AdminProgramWeek[];
 };
 
@@ -73,6 +91,7 @@ function mapList(row: Record<string, unknown>): AdminProgramListItem {
     archived_at: (row.archived_at as string | null) ?? null,
     assignment_count: Number(row.assignment_count ?? 0),
     updated_at: String(row.updated_at),
+    training_location: (row.training_location as string | null) ?? null,
   };
 }
 
@@ -103,18 +122,28 @@ export async function getAdminProgramTemplate(id: string): Promise<AdminProgramD
   const { data, error } = await supabase.rpc("admin_get_program_template", { p_id: id });
   if (error) throw error;
   const row = data as Record<string, unknown>;
-  return {
-    ...mapList(row),
+  const metadata = (row.metadata as Record<string, unknown> | null) ?? {};
+  const detail: AdminProgramDetail = {
+    ...mapList({
+      ...row,
+      training_location: row.training_location ?? metadata.training_location ?? null,
+    }),
     description_ar: (row.description_ar as string | null) ?? "",
-    versioning_complete: false,
+    versioning_complete: Boolean(row.versioning_complete),
+    session_minutes:
+      typeof metadata.session_minutes === "number" ? metadata.session_minutes : Number(metadata.session_minutes) || null,
+    equipment: typeof metadata.equipment === "string" ? metadata.equipment : "",
+    metadata,
     weeks: ((row.weeks as AdminProgramWeek[]) ?? []).map((week) => ({
       ...week,
       days: (week.days ?? []).map((day) => ({
         ...day,
+        notes_ar: day.notes_ar ?? null,
         exercises: day.exercises ?? [],
       })),
     })),
   };
+  return hydrateProgramBuilder(detail);
 }
 
 export async function saveAdminProgramTemplate(
@@ -141,6 +170,18 @@ export async function archiveAdminProgramTemplate(id: string): Promise<AdminProg
   return getAdminProgramTemplate(id);
 }
 
+export async function cloneAdminProgramTemplate(
+  id: string,
+  mode: "duplicate" | "new_version",
+): Promise<AdminProgramDetail> {
+  const { data, error } = await supabase.rpc("admin_clone_program_template", {
+    p_id: id,
+    p_mode: mode,
+  });
+  if (error) throw error;
+  return getAdminProgramTemplate(String((data as { id: string }).id));
+}
+
 export function emptyProgramExercise(exercise?: {
   id: string;
   name_ar: string;
@@ -154,12 +195,18 @@ export function emptyProgramExercise(exercise?: {
     reps_min: 8,
     reps_max: 12,
     reps_label: "",
-    rest_seconds: 60,
+    rest_seconds: 90,
     suggested_weight_kg: null,
     notes_ar: "",
     exercise_name_ar: exercise?.name_ar,
     exercise_name_en: exercise?.name_en,
     exercise_external_id: exercise?.external_id,
+    rir: 2,
+    tempo: "",
+    role: "main",
+    pattern: "none",
+    pattern_group: null,
+    alternatives: [],
   };
 }
 
@@ -171,16 +218,17 @@ export function emptyProgramDay(dayNumber = 1): AdminProgramDay {
     muscle_focus: "",
     estimated_minutes: 45,
     estimated_calories: null,
+    notes_ar: "",
     exercises: [],
   };
 }
 
-export function emptyProgramWeek(weekNumber = 1): AdminProgramWeek {
+export function emptyProgramWeek(weekNumber = 1, daysPerWeek = 3): AdminProgramWeek {
   return {
     week_number: weekNumber,
     title_ar: `الأسبوع ${weekNumber}`,
     notes_ar: "",
-    days: [emptyProgramDay(1)],
+    days: buildSevenDayWeek(daysPerWeek),
   };
 }
 
@@ -193,14 +241,73 @@ export function emptyProgramDraft(): AdminProgramDetail {
     goal: "fitness",
     level: "beginner",
     duration_weeks: 12,
-    days_per_week: 4,
+    days_per_week: 3,
     version: 1,
     is_published: false,
     archived_at: null,
     assignment_count: 0,
     updated_at: "",
+    training_location: "GYM",
     description_ar: "",
     versioning_complete: false,
-    weeks: [emptyProgramWeek(1)],
+    session_minutes: 45,
+    equipment: "",
+    metadata: { training_location: "GYM", session_minutes: 45 },
+    weeks: [emptyProgramWeek(1, 3)],
   };
+}
+
+export const PROGRAM_COVER_BUCKET = "program-covers";
+export const PROGRAM_COVER_MAX_BYTES = 5 * 1024 * 1024;
+export const PROGRAM_COVER_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
+
+export function validateProgramCoverFile(file: File): string | null {
+  if (!file.size) return "الملف فارغ.";
+  if (file.size > PROGRAM_COVER_MAX_BYTES) return "حجم الصورة أكبر من 5 ميغابايت.";
+  if (!PROGRAM_COVER_MIME.includes(file.type as (typeof PROGRAM_COVER_MIME)[number])) {
+    return "الصيغة المسموحة: JPG أو PNG أو WebP.";
+  }
+  return null;
+}
+
+function programCoverExtension(file: File): "jpg" | "png" | "webp" {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
+}
+
+/** Uploads a cover image and returns its public URL for metadata.builder.cover_image_url. */
+export async function uploadProgramCoverImage(input: {
+  file: File;
+  templateId?: string | null;
+}): Promise<string> {
+  const validation = validateProgramCoverFile(input.file);
+  if (validation) throw new Error(validation);
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error("يجب تسجيل الدخول لرفع الصورة.");
+
+  const folder = input.templateId?.trim() || `drafts/${user.id}`;
+  const ext = programCoverExtension(input.file);
+  const path = `${folder}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage.from(PROGRAM_COVER_BUCKET).upload(path, input.file, {
+    upsert: true,
+    contentType: input.file.type || undefined,
+    cacheControl: "3600",
+  });
+  if (uploadError) {
+    throw new Error(
+      uploadError.message.includes("Bucket not found") || uploadError.message.includes("not found")
+        ? "مخزن صور البرامج غير مفعّل بعد. طبّق هجرة program-covers ثم أعد المحاولة."
+        : "فشل رفع الصورة. أعد المحاولة.",
+    );
+  }
+
+  const { data } = supabase.storage.from(PROGRAM_COVER_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) throw new Error("تعذر الحصول على رابط الصورة بعد الرفع.");
+  return data.publicUrl;
 }

@@ -2,6 +2,7 @@ import {
   isStrategySupportedDaysPerWeek,
   type StrategySupportedDaysPerWeek,
 } from "./constants";
+import { CLIENT_DEFAULT_TRAINING_DAYS_PER_WEEK } from "./quiz-strategy-bridge";
 import type { StrategyFrequencySource } from "./types";
 
 export function resolveStrategyFrequency(input: {
@@ -40,5 +41,10 @@ export function resolveStrategyFrequency(input: {
     };
   }
 
-  return { ok: false, code: "MISSING_TRAINING_FREQUENCY" };
+  // Product default: 5 days/week. Admin can change later via coach override.
+  return {
+    ok: true,
+    trainingDaysPerWeek: CLIENT_DEFAULT_TRAINING_DAYS_PER_WEEK,
+    frequencySource: "CLIENT",
+  };
 }

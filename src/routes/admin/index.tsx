@@ -5,12 +5,14 @@ import {
   UtensilsCrossed,
   Users,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AttentionCenter } from "@/components/admin/AttentionCenter";
 import { DashboardQuickStatus } from "@/components/admin/DashboardQuickStatus";
 import {
   AdminEmptyState,
+  AdminHonestEmpty,
   AdminPageHeader,
   AdminSection,
   AdminStatusBadge,
@@ -236,7 +238,10 @@ function CommandCenterPage() {
   if (booting) {
     return (
       <>
-        <AdminPageHeader title={`${dayGreeting(now)}، Coach Hakim 👋`} subtitle="إليك أهم ما يحتاج انتباهك اليوم." />
+        <AdminPageHeader
+          title="مركز التشغيل"
+          subtitle={`${dayGreeting(now)}، Coach Hakim — نظرة يومية على ما يحتاج إجراءً.`}
+        />
         <div className="cc-workspace-boot" aria-busy="true" aria-label="جاري تحميل مركز التشغيل">
           <AdminSkeletonRows rows={14} />
         </div>
@@ -270,34 +275,67 @@ function CommandCenterPage() {
 
   return (
     <div className="cc-dashboard">
-      <AdminPageHeader title={`${dayGreeting(now)}، Coach Hakim 👋`} subtitle="إليك أهم ما يحتاج انتباهك اليوم." />
+      <AdminPageHeader
+        title="مركز التشغيل"
+        subtitle={`${dayGreeting(now)}، Coach Hakim — نظرة يومية على صحة وأداء التشغيل.`}
+        actions={
+          <details className="cc-quick-menu">
+            <summary className="cc-btn cc-btn--primary">
+              <Zap className="h-4 w-4" aria-hidden />
+              إجراء سريع
+            </summary>
+            <div className="cc-quick-menu__panel">
+              {QUICK_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link key={action.to} to={action.to} preload={false}>
+                    <Icon className="h-4 w-4" aria-hidden />
+                    <span>{action.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </details>
+        }
+      />
 
       <DashboardQuickStatus metrics={quickStatus} loading={quickStatusLoading} />
 
-      <section className="cc-dashboard__attention" aria-labelledby="attention-heading">
-        <div className="cc-section-head">
-          <div>
-            <h2 id="attention-heading" className="cc-section__title">
-              يحتاج انتباهك
-            </h2>
-            <p className="cc-section-sub">الحالات التي تتطلب مراجعة أو إجراء.</p>
+      <div className="cc-ops-split">
+        <section className="cc-dashboard__attention" aria-labelledby="attention-heading">
+          <div className="cc-section-head">
+            <div>
+              <h2 id="attention-heading" className="cc-section__title">
+                أولويات اليوم
+              </h2>
+              <p className="cc-section-sub">الحالات التي يحتاج انتباهك ومراجعة فورية.</p>
+            </div>
+            {queue.length > 0 ? (
+              <a href="#attention" className="cc-section-head__link">
+                عرض جميع الأولويات
+              </a>
+            ) : null}
           </div>
-          {queue.length > 0 ? (
-            <a href="#attention" className="cc-section-head__link">
-              عرض الكل
-            </a>
+          {attentionError ? (
+            <div className="cc-inline-alert" role="alert">
+              <span>تعذر تحديث بعض البيانات.</span>
+              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={retryAttention}>
+                إعادة المحاولة
+              </button>
+            </div>
           ) : null}
-        </div>
-        {attentionError ? (
-          <div className="cc-inline-alert" role="alert">
-            <span>تعذر تحديث بعض البيانات.</span>
-            <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={retryAttention}>
-              إعادة المحاولة
-            </button>
+          <AttentionCenter items={queue} loading={attentionLoading} />
+        </section>
+
+        <AdminSection title="نشاط المنصة">
+          <div className="cc-card cc-ops-card">
+            <AdminHonestEmpty
+              title="لا رسم بياني لآخر 30 يوماً"
+              body="لا سلسلة زمنية معتمدة للمستخدمين النشطين أو العمليات المنفذة. الأرقام الحية تظهر في بطاقات الملخص وأولويات اليوم."
+            />
           </div>
-        ) : null}
-        <AttentionCenter items={queue} loading={attentionLoading} />
-      </section>
+        </AdminSection>
+      </div>
 
       <div className="cc-dash-grid">
         <AdminSection title="العملاء الجدد">
@@ -384,7 +422,7 @@ function CommandCenterPage() {
           </div>
         </AdminSection>
 
-        <AdminSection title="آخر النشاطات">
+        <AdminSection title="آخر العمليات">
           {audit.error ? (
             <div className="cc-inline-alert" role="alert">
               <span>{audit.error}</span>
@@ -424,8 +462,25 @@ function CommandCenterPage() {
             </ul>
           ) : null}
           <Link to="/admin/audit" className="cc-card-footer-link" preload={false}>
-            عرض جميع النشاطات ←
+            عرض جميع العمليات ←
           </Link>
+        </AdminSection>
+
+        <AdminSection title="صحة النظام">
+          <ul className="cc-health-grid">
+            <li>
+              <strong>خدمات الدفع</strong>
+              <span>لا فحص صحة معتمد</span>
+            </li>
+            <li>
+              <strong>خدمة البريد</strong>
+              <span>لا فحص صحة معتمد</span>
+            </li>
+            <li>
+              <strong>الإشعارات</strong>
+              <span>لا فحص صحة معتمد</span>
+            </li>
+          </ul>
         </AdminSection>
       </div>
 

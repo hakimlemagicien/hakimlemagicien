@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { AdminConfirmDialog, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
-import { AdminEmptyState, AdminErrorState, AdminPageHeader, AdminStatusBadge, AdminTable } from "@/components/admin/AdminPage";
+import { AdminEmptyState, AdminErrorState, AdminPageHeader, AdminConceptTabs, AdminStatusBadge, AdminTable } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { STAFF_ROLE_LABELS, STAFF_ROLES, type StaffRole } from "@/lib/admin/admin-permissions";
 import { listStaffMembers, updateStaffRole, type StaffMemberRow } from "@/lib/admin/admin-staff-api";
@@ -57,8 +57,16 @@ export function AdminStaffManagementPanel() {
   return (
     <>
       <AdminPageHeader
-        title="إدارة الطاقم"
+        title="إدارة الفريق والصلاحيات"
         subtitle="تغيير الأدوار يتطلب سببًا ويُسجَّل في سجل العمليات. لا يمكن للموظف رفع صلاحياته بنفسه."
+      />
+      <AdminConceptTabs
+        items={[
+          { id: "tickets", label: "تذاكر الدعم", to: "/admin/support" },
+          { id: "team", label: "الفريق", to: "/admin/settings", active: true },
+          { id: "roles", label: "الأدوار والصلاحيات", to: "/admin/settings", active: true },
+          { id: "audit", label: "سجل التدقيق", to: "/admin/audit" },
+        ]}
       />
 
       {error ? <AdminErrorState message={error} onRetry={() => void load()} /> : null}

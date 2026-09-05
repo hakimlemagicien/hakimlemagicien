@@ -124,15 +124,21 @@ function ExercisePlayerPage() {
           {runtimeQuery.isError
             ? "تعذر تحميل البرنامج."
             : runtimeQuery.data?.reason === "no_program"
-              ? "لا برنامج تدريبي معيَّن"
+              ? TRAINING_PRODUCT_COPY.strategySetupTitle
               : "البرنامج غير متاح لهذه الحصة"}
         </p>
-        <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+        <p className="text-xs text-muted-foreground">
+          {runtimeQuery.data?.reason === "no_program"
+            ? TRAINING_PRODUCT_COPY.strategySetupBody
+            : "لا تُعرض تمارين افتراضية مكان برنامجك."}
+        </p>
         <Link
           to="/app/program/workout"
           className="rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground"
         >
-          العودة لتمرين اليوم
+          {runtimeQuery.data?.reason === "no_program"
+            ? TRAINING_PRODUCT_COPY.strategySetupCta
+            : "العودة لتمرين اليوم"}
         </Link>
       </div>
     );
@@ -192,6 +198,7 @@ function ExercisePlayerPage() {
     assignmentId: assignedOk ? exercises[0]?.assignmentId ?? null : null,
     recoveryHold: continuity.decision ? toProgressionRecoveryHold(continuity.decision) : "NORMAL",
     prescriptionState: continuity.decision?.prescription_state ?? null,
+    progressionStrategy: runtimeQuery.data?.assignment?.progression_strategy ?? null,
   });
 
   if (sessionQuery.isLoading) {

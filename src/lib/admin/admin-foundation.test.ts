@@ -55,6 +55,7 @@ assert(
       "/admin/audit",
       "/admin/support",
       "/admin/content",
+      "/admin/studio",
       "/admin/settings",
     ].includes(item.to),
   ),

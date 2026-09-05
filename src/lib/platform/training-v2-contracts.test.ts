@@ -6,9 +6,12 @@ import {
   LEGACY_GOAL_MAP,
   TRAINING_NUTRITION_BOUNDARY,
   TRAINING_V2_CANONICAL_GOALS,
+  homeBucketForCanonicalGoal,
+  isCanonicalTrainingGoal,
   isWorkingSetHistoryRow,
   mapLegacyEffortToV2,
   mapLegacyGoalId,
+  quizHeroIdForCanonicalGoal,
 } from "./training-v2-contracts";
 import { SET_WEIGHT_INCREMENT } from "./workout-session";
 
@@ -26,12 +29,29 @@ assertEqual(mapLegacyGoalId("fat").canonicalId, "FAT_LOSS", "fat → FAT_LOSS");
 assertEqual(mapLegacyGoalId("glutes").canonicalId, "GLUTE_GROWTH", "glutes → GLUTE_GROWTH");
 assertEqual(mapLegacyGoalId("waist").canonicalId, "SLIM_TONED_WAIST", "waist → SLIM_TONED_WAIST");
 assertEqual(mapLegacyGoalId("body").canonicalId, "FEMININE_BALANCED_BODY", "body → FEMININE_BALANCED_BODY");
-assertEqual(mapLegacyGoalId("tone").canonicalId, null, "tone is not TONED_ARMS_UPPER_BODY");
-assertEqual(mapLegacyGoalId("tone").mappingStatus, "LEGACY_UNMAPPED", "tone unmapped");
-assertEqual(mapLegacyGoalId("fit").mappingStatus, "LEGACY_UNMAPPED", "fit unmapped");
+assertEqual(mapLegacyGoalId("muscle").canonicalId, "MUSCLE_GROWTH", "muscle → MUSCLE_GROWTH");
+assertEqual(mapLegacyGoalId("fitness").canonicalId, "FITNESS_ENERGY", "fitness → FITNESS_ENERGY");
+assertEqual(mapLegacyGoalId("athletic").canonicalId, "ATHLETIC_PHYSIQUE", "athletic → ATHLETIC_PHYSIQUE");
+assertEqual(mapLegacyGoalId("shape").canonicalId, "BODY_RESHAPE", "shape → BODY_RESHAPE");
+assertEqual(mapLegacyGoalId("gain").canonicalId, "HEALTHY_WEIGHT_GAIN", "gain → HEALTHY_WEIGHT_GAIN");
+assertEqual(mapLegacyGoalId("tone").canonicalId, "TONED_ARMS_UPPER_BODY", "tone → TONED_ARMS_UPPER_BODY");
+assertEqual(mapLegacyGoalId("tone").mappingStatus, "MAPPED", "tone mapped");
+assertEqual(mapLegacyGoalId("fit").canonicalId, "POSTURE_TONED_BACK", "fit → POSTURE_TONED_BACK");
+assertEqual(mapLegacyGoalId("fit").mappingStatus, "MAPPED", "fit mapped");
 assertEqual(mapLegacyGoalId("unknown-goal").mappingStatus, "LEGACY_UNMAPPED", "unknown unmapped");
-assert(!LEGACY_GOAL_MAP.tone?.canonicalId, "tone mapping table has no canonical id");
+assert(LEGACY_GOAL_MAP.tone?.canonicalId === "TONED_ARMS_UPPER_BODY", "tone mapping table has canonical id");
 assert(TRAINING_V2_CANONICAL_GOALS.includes("TONED_ARMS_UPPER_BODY"), "arms goal exists as catalog, not auto-map");
+assert(isCanonicalTrainingGoal("FAT_LOSS"), "FAT_LOSS is canonical");
+assert(!isCanonicalTrainingGoal("fat"), "quiz fat is not canonical");
+assertEqual(quizHeroIdForCanonicalGoal("FAT_LOSS"), "fat", "FAT_LOSS → fat hero");
+assertEqual(quizHeroIdForCanonicalGoal("GLUTE_GROWTH"), "glutes", "GLUTE_GROWTH → glutes hero");
+assertEqual(quizHeroIdForCanonicalGoal("POSTURE_TONED_BACK", "male"), "fitness", "posture male hero");
+assertEqual(quizHeroIdForCanonicalGoal("POSTURE_TONED_BACK", "female"), "fit", "posture female hero");
+assertEqual(quizHeroIdForCanonicalGoal("MUSCLE_GROWTH"), "muscle", "MUSCLE_GROWTH → muscle hero");
+assertEqual(homeBucketForCanonicalGoal("FAT_LOSS"), "cut", "FAT_LOSS home bucket");
+assertEqual(homeBucketForCanonicalGoal("GLUTE_GROWTH"), "fitness", "GLUTE_GROWTH home bucket");
+assertEqual(homeBucketForCanonicalGoal("TONED_ARMS_UPPER_BODY"), "bulk", "arms home bucket");
+assertEqual(homeBucketForCanonicalGoal("MUSCLE_GROWTH"), "bulk", "muscle home bucket");
 
 assertEqual(mapLegacyEffortToV2("easy"), "EASY", "easy → EASY");
 assertEqual(mapLegacyEffortToV2("medium"), "IDEAL", "medium → IDEAL");
@@ -95,8 +115,14 @@ assert(migration.includes("NEW', 'CALIBRATING', 'FAMILIAR', 'ESTABLISHED'"), "ex
 assert(migration.includes("GRANT SELECT ON public.client_exercise_experience TO authenticated"), "experience read-only to client table");
 assert(migration.includes("RECONDITIONING"), "reconditioning representable");
 assert(migration.includes("'fat', 'FAT_LOSS'"), "fat mapping seed");
-assert(migration.includes("'tone', NULL, 'LEGACY_UNMAPPED'"), "tone unmapped seed");
-assert(migration.includes("'fit', NULL, 'LEGACY_UNMAPPED'"), "fit unmapped seed");
+assert(migration.includes("'tone', NULL, 'LEGACY_UNMAPPED'"), "historical tone seed present");
+assert(migration.includes("'fit', NULL, 'LEGACY_UNMAPPED'"), "historical fit seed present");
+const bridgeMigration = readFileSync(
+  join(root, "supabase/migrations/20260905120000_map_quiz_tone_fit_goals.sql"),
+  "utf8",
+);
+assert(bridgeMigration.includes("TONED_ARMS_UPPER_BODY"), "bridge maps tone");
+assert(bridgeMigration.includes("POSTURE_TONED_BACK"), "bridge maps fit");
 assert(migration.includes("client_goal_history"), "goal history");
 assert(migration.includes("client_ensure_workout_session"), "active/resume session RPC");
 assert(migration.includes("ON CONFLICT (user_id, session_key) DO UPDATE"), "session retry idempotent");

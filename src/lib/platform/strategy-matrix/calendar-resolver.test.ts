@@ -326,13 +326,26 @@ assert(!plans.mon.isRestDay, "workout day not rest");
 
 // --- Fail-closed goal unchanged ---
 
+const toneReady = resolveTrainingStrategy(
+  trainingStrategyInputFromProfileRow({
+    userId: "u2",
+    goal: "tone",
+    answers: {
+      goalId: "tone",
+      trainingEnvironment: "gym",
+      activityLevel: "moderate",
+    },
+  }),
+);
+assert(toneReady.ok, "quiz tone + activity + gym environment resolves via bridge");
+
 const blocked = resolveTrainingStrategy(
   trainingStrategyInputFromProfileRow({
     userId: "u2",
-    goal: "muscle",
-    answers: { goalId: "muscle", trainingEnvironment: "gym", trainingDaysPerWeek: 3 },
+    goal: "not-a-real-goal",
+    answers: { goalId: "not-a-real-goal", trainingEnvironment: "gym", trainingDaysPerWeek: 3 },
   }),
 );
-assert(!blocked.ok, "unresolved male goal remains fail-closed");
+assert(!blocked.ok, "unknown goal remains fail-closed");
 
 console.log("calendar-resolver.test.ts: all tests passed");

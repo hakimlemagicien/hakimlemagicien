@@ -1,3 +1,6 @@
+import { readQuizProgress } from "@/lib/quiz-progress-storage";
+import type { DiscoverPreviewItem } from "@/lib/platform/home-hub";
+import { contentVisibleToAudience, type DiscoverAudience } from "@/lib/platform/discover-audience";
 import homeNutritionHero from "@/assets/home-nutrition-hero.webp";
 import heroCoachDashboard from "@/assets/hero-coach-dashboard.png";
 import muscleBuild from "@/assets/بناء العضلات.webp";
@@ -24,6 +27,14 @@ export type DiscoverContentType =
 export type DiscoverContentStatus = "draft" | "scheduled" | "published" | "unpublished" | "archived";
 export type DiscoverAccessLevel = "free" | "premium";
 export type DiscoverChallengeStatus = "upcoming" | "active" | "completed" | "closed";
+export type { DiscoverAudience } from "@/lib/platform/discover-audience";
+export {
+  CONTENT_COVER_SIZE,
+  DISCOVER_AUDIENCES,
+  DISCOVER_AUDIENCE_OPTIONS,
+  contentVisibleToAudience,
+  parseDiscoverAudience,
+} from "@/lib/platform/discover-audience";
 
 export type DiscoverCategory = {
   id: string;
@@ -91,6 +102,8 @@ export type DiscoverContentItem = {
   learnings?: string[];
   badge?: string;
   sortPriority?: number;
+  audience?: DiscoverAudience | null;
+  source?: "cms";
 };
 
 export type DiscoverFeed = {
@@ -690,6 +703,61 @@ export function isDiscoverPublished(item: DiscoverContentItem, at = new Date()):
   return true;
 }
 
+let discoverViewerGender: "male" | "female" | null | undefined;
+
+export function setDiscoverViewerGender(gender: "male" | "female" | null) {
+  discoverViewerGender = gender;
+}
+
+export function resolveDiscoverViewerGender(): "male" | "female" | null {
+  if (discoverViewerGender === "male" || discoverViewerGender === "female") return discoverViewerGender;
+  const quizGender = readQuizProgress()?.gender;
+  return quizGender === "male" || quizGender === "female" ? quizGender : null;
+}
+
+export function formatDiscoverHomeDuration(item: DiscoverContentItem): string {
+  const minutes =
+    item.readingTimeMinutes ??
+    (item.videoDurationSeconds ? Math.max(1, Math.round(item.videoDurationSeconds / 60)) : null) ??
+    item.recipe?.prepMinutes;
+  if (minutes) return `${minutes} دقائق`;
+  return item.shortDescription.trim() || getDiscoverTypeLabel(item.type);
+}
+
+function homeBadgeTone(type: DiscoverContentType): DiscoverPreviewItem["badgeTone"] {
+  if (type === "recipe") return "recipe";
+  if (type === "video") return "workout";
+  return "article";
+}
+
+export function discoverItemToHomePreview(item: DiscoverContentItem): DiscoverPreviewItem {
+  return {
+    id: item.id,
+    title: item.title,
+    description: formatDiscoverHomeDuration(item),
+    href: `/app/discover/${item.slug}`,
+    coverSrc: item.coverImage || undefined,
+    badge: getDiscoverTypeLabel(item.type),
+    badgeTone: homeBadgeTone(item.type),
+    showPlay: item.type === "video",
+  };
+}
+
+export function listHomeDiscoverPreview(gender: "male" | "female" | null = resolveDiscoverViewerGender()): DiscoverPreviewItem[] {
+  return publishedItems(gender)
+    .filter((item) => item.source === "cms")
+    .sort((a, b) => Number(b.featured) - Number(a.featured) || (a.sortPriority ?? 99) - (b.sortPriority ?? 99))
+    .slice(0, 6)
+    .map(discoverItemToHomePreview);
+}
+
+export function resolveHomeDiscoverPreview(
+  cmsItems: DiscoverPreviewItem[],
+  fallback: DiscoverPreviewItem[],
+): DiscoverPreviewItem[] {
+  return cmsItems.length > 0 ? cmsItems : fallback;
+}
+
 export function getDiscoverCategory(id: string): DiscoverCategory | undefined {
   return DISCOVER_CATEGORIES.find((c) => c.id === id && c.status === "active");
 }
@@ -774,15 +842,17 @@ export function canAccessDiscoverContent(
   return isPaidMember;
 }
 
-function publishedItems(): DiscoverContentItem[] {
+function publishedItems(gender: "male" | "female" | null = resolveDiscoverViewerGender()): DiscoverContentItem[] {
   return getDiscoverCatalog()
     .filter((item) => isDiscoverPublished(item))
+    .filter((item) => contentVisibleToAudience(item.audience, gender))
     .sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
 }
 
 export function getDiscoverContentBySlug(slug: string): DiscoverContentItem | undefined {
   const item = getDiscoverCatalog().find((c) => c.slug === slug);
   if (!item || !isDiscoverPublished(item)) return undefined;
+  if (!contentVisibleToAudience(item.audience, resolveDiscoverViewerGender())) return undefined;
   if (item.type === "success_story" && !item.successStory?.consentApproved) return undefined;
   return item;
 }
@@ -790,6 +860,7 @@ export function getDiscoverContentBySlug(slug: string): DiscoverContentItem | un
 export function getDiscoverContentById(id: string): DiscoverContentItem | undefined {
   const item = getDiscoverCatalog().find((c) => c.id === id);
   if (!item || !isDiscoverPublished(item)) return undefined;
+  if (!contentVisibleToAudience(item.audience, resolveDiscoverViewerGender())) return undefined;
   return item;
 }
 

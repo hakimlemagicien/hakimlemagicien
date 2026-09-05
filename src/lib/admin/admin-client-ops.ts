@@ -2,7 +2,7 @@ import type { AdminClientListItem, AdminClientOverview } from "@/lib/admin/admin
 import { isRecentClient } from "@/lib/admin/admin-dashboard";
 import { formatAuditEventLabel } from "@/lib/admin/admin-dashboard-present";
 import type { AdminAuditEvent } from "@/lib/admin/admin-audit-api";
-import type { AdminPriority } from "@/lib/admin/admin-status";
+import { planLabel, type AdminPriority, type AdminStatusKind } from "@/lib/admin/admin-status";
 import {
   assignmentStatusLabel,
   objectiveSignalLabel,
@@ -13,15 +13,20 @@ import {
   nutritionSignalLabel,
   nutritionStatusLabel,
 } from "@/lib/platform/nutrition-assignment";
-import { planLabel } from "@/lib/admin/admin-status";
+import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
+import { normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
 
 export type ClientDirectorySummary = {
   totalClients: number;
   newClients: number;
   activeClients: number;
   needsAttention: number;
+  incompleteOnboarding: number;
+  pausedAccounts: number;
   fromVisibleRows: boolean;
 };
+
+export type DirectoryOperationalStatus = "active" | "attention" | "paused";
 
 export type ClientAttentionAlert = {
   id: string;
@@ -44,10 +49,66 @@ export function buildClientDirectorySummary(
   return {
     totalClients: totalCount,
     newClients: rows.filter((row) => isRecentClient(row, now)).length,
-    activeClients: rows.filter((row) => row.membershipActive === true).length,
+    activeClients: rows.filter((row) => directoryOperationalStatus(row) === "active").length,
     needsAttention: rows.filter(clientNeedsAttention).length,
+    incompleteOnboarding: rows.filter((row) => !row.onboardingCompletedAt).length,
+    pausedAccounts: rows.filter((row) => directoryOperationalStatus(row) === "paused").length,
     fromVisibleRows: rows.length < totalCount,
   };
+}
+
+export function directoryOperationalStatus(row: AdminClientListItem): DirectoryOperationalStatus {
+  const account = normalizeClientAccountStatus(row.accountStatus);
+  if (account === "suspended" || account === "archived" || account === "deletion_pending") {
+    return "paused";
+  }
+  if (clientNeedsAttention(row)) return "attention";
+  return "active";
+}
+
+export function directoryOperationalLabel(status: DirectoryOperationalStatus): string {
+  if (status === "attention") return "يحتاج متابعة";
+  if (status === "paused") return "متوقف";
+  return "نشط";
+}
+
+export function directoryOperationalTone(status: DirectoryOperationalStatus): AdminStatusKind {
+  if (status === "attention") return "waiting";
+  if (status === "paused") return "neutral";
+  return "active";
+}
+
+/** Presentation-only Arabic plan labels for the clients directory. Catalog IDs stay English. */
+export function directoryPlanLabelAr(plan: string | null | undefined): string {
+  const value = plan?.toLowerCase();
+  if (value === "premium") return "احترافي";
+  if (value === "essential") return "أساسي";
+  if (value === "free") return "مجاني";
+  if (value === "vip") return "VIP داخلي";
+  return planLabel(plan);
+}
+
+export function directoryPlanTone(plan: string | null | undefined): AdminStatusKind {
+  const value = plan?.toLowerCase();
+  if (value === "premium" || value === "vip") return "active";
+  if (value === "essential") return "waiting";
+  if (value === "free") return "neutral";
+  return "neutral";
+}
+
+export function paginationPages(current: number, total: number): Array<number | "gap"> {
+  if (total <= 0) return [];
+  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+  const unique = [...new Set([1, total, current - 1, current, current + 1])]
+    .filter((page) => page >= 1 && page <= total)
+    .sort((a, b) => a - b);
+  const pages: Array<number | "gap"> = [];
+  for (const page of unique) {
+    const previous = pages[pages.length - 1];
+    if (typeof previous === "number" && page - previous > 1) pages.push("gap");
+    pages.push(page);
+  }
+  return pages;
 }
 
 export function trainingLocationLabel(value: string | null | undefined): string {
@@ -100,17 +161,33 @@ export function buildClientAttentionAlerts(
     });
   }
 
+  const goal = presentClientTrainingGoal(overview.goal);
+  if (!goal.matrixReady) {
+    alerts.push({
+      id: "training-goal-unmapped",
+      title: "هدف التدريب غير مربوط",
+      reason:
+        goal.status === "MISSING"
+          ? "لا يوجد هدف تدريبي معتمد. Matrix لا تولّد برنامجًا حتى يُحدَّد هدف رسمي."
+          : `الهدف الحالي «${goal.displayAr}» غير مربوط بالعقد الرسمي.`,
+      actionLabel: "تعديل الهدف",
+      href: `/admin/clients/${clientId}?tab=overview`,
+      priority: "high",
+    });
+  }
+
   for (const signal of objectiveTrainingSignals({
     status: overview.assignment?.status ?? null,
     startsOn: overview.assignment?.starts_on ?? null,
     durationWeeks: overview.assignment?.duration_weeks ?? null,
     snapshotComplete: overview.assignment?.snapshot_complete ?? null,
   })) {
+    const setup = signal === "no_active_program";
     alerts.push({
       id: `training-${signal}`,
-      title: "مراجعة تدريب",
+      title: setup ? "برنامج التدريب غير مفعل" : "مراجعة تدريب",
       reason: objectiveSignalLabel(signal),
-      actionLabel: "فتح التدريب",
+      actionLabel: setup ? "إعداد التدريب" : "فتح التدريب",
       href: `/admin/clients/${clientId}?tab=training`,
       priority: "high",
     });
@@ -122,13 +199,25 @@ export function buildClientAttentionAlerts(
     snapshotComplete: overview.nutrition_assignment?.snapshot_complete ?? null,
     allergenConflict: overview.nutrition_assignment?.allergen_conflict ?? null,
   })) {
+    const setup = signal === "no_active_nutrition";
     alerts.push({
       id: `nutrition-${signal}`,
-      title: "تنبيه تغذية",
+      title: setup ? "لا توجد خطة تغذية" : "تنبيه تغذية",
       reason: nutritionSignalLabel(signal),
-      actionLabel: "فتح التغذية",
+      actionLabel: setup ? "إعداد التغذية" : "فتح التغذية",
       href: `/admin/clients/${clientId}?tab=nutrition`,
       priority: signal === "allergen_conflict" ? "critical" : "high",
+    });
+  }
+
+  if (overview.assignment?.progression_status === "REVIEW_REQUIRED") {
+    alerts.push({
+      id: "training-progression-review",
+      title: "مراجعة تدريب",
+      reason: "تمرين يحتاج مراجعة المدرب قبل أي تطور إضافي.",
+      actionLabel: "فتح التدريب",
+      href: `/admin/clients/${clientId}?tab=training`,
+      priority: "high",
     });
   }
 

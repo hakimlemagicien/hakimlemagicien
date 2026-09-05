@@ -72,6 +72,41 @@ export const GOAL_MUSCLE_PROFILES: Record<TrainingV2CanonicalGoal, GoalMusclePro
     maintenance: [],
     notes: "Muscle-preservation balanced resistance. No fat-loss rep or rest special case.",
   },
+  MUSCLE_GROWTH: {
+    canonicalId: "MUSCLE_GROWTH",
+    primary: ["CHEST", "LATS", "SHOULDERS", "QUADRICEPS"],
+    secondary: ["BICEPS", "TRICEPS", "HAMSTRINGS", "UPPER_BACK", "GLUTES"],
+    maintenance: ["CORE", "CALVES"],
+    notes: "Hypertrophy emphasis without dropping lower-body coverage.",
+  },
+  FITNESS_ENERGY: {
+    canonicalId: "FITNESS_ENERGY",
+    primary: [],
+    secondary: ALL_RESISTANCE,
+    maintenance: [],
+    notes: "Balanced resistance for general fitness. Not a cardio-only goal.",
+  },
+  ATHLETIC_PHYSIQUE: {
+    canonicalId: "ATHLETIC_PHYSIQUE",
+    primary: ["CHEST", "SHOULDERS", "QUADRICEPS"],
+    secondary: ["LATS", "UPPER_BACK", "HAMSTRINGS", "CORE"],
+    maintenance: ["BICEPS", "TRICEPS", "CALVES", "GLUTES"],
+    notes: "Balanced athletic look. Not a female-proportion template.",
+  },
+  BODY_RESHAPE: {
+    canonicalId: "BODY_RESHAPE",
+    primary: [],
+    secondary: ALL_RESISTANCE,
+    maintenance: [],
+    notes: "Recomposition-oriented balanced resistance. Body composition is separate.",
+  },
+  HEALTHY_WEIGHT_GAIN: {
+    canonicalId: "HEALTHY_WEIGHT_GAIN",
+    primary: ["CHEST", "LATS", "SHOULDERS", "QUADRICEPS"],
+    secondary: ["BICEPS", "TRICEPS", "HAMSTRINGS", "UPPER_BACK", "GLUTES"],
+    maintenance: ["CORE", "CALVES"],
+    notes: "Same training emphasis as muscle growth; surplus is nutrition-owned.",
+  },
 };
 
 export function resolveCanonicalGoal(goalId: string | null | undefined): {

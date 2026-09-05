@@ -2,6 +2,54 @@ import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
 import type { DiscoverContentItem } from "@/lib/platform/discover-content";
 
+export const CONTENT_COVER_BUCKET = "content-covers";
+export const CONTENT_COVER_MAX_BYTES = 5 * 1024 * 1024;
+export const CONTENT_COVER_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
+
+export function validateContentCoverFile(file: File): string | null {
+  if (!file.size) return "الملف فارغ.";
+  if (file.size > CONTENT_COVER_MAX_BYTES) return "حجم الصورة أكبر من 5 ميغابايت.";
+  if (!CONTENT_COVER_MIME.includes(file.type as (typeof CONTENT_COVER_MIME)[number])) {
+    return "الصيغة المسموحة: JPG أو PNG أو WebP.";
+  }
+  return null;
+}
+
+export async function uploadContentCoverImage(input: {
+  file: File;
+  contentId?: string | null;
+}): Promise<string> {
+  const validation = validateContentCoverFile(input.file);
+  if (validation) throw new Error(validation);
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error("يجب تسجيل الدخول لرفع الصورة.");
+
+  const folder = input.contentId?.trim() || `drafts/${user.id}`;
+  const ext = input.file.type === "image/png" ? "png" : input.file.type === "image/webp" ? "webp" : "jpg";
+  const path = `${folder}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage.from(CONTENT_COVER_BUCKET).upload(path, input.file, {
+    upsert: true,
+    contentType: input.file.type || undefined,
+    cacheControl: "3600",
+  });
+  if (uploadError) {
+    throw new Error(
+      uploadError.message.includes("Bucket not found") || uploadError.message.includes("not found")
+        ? "مخزن صور المحتوى غير مفعّل بعد. طبّق هجرة content-covers ثم أعد المحاولة."
+        : "فشل رفع الصورة. أعد المحاولة.",
+    );
+  }
+
+  const { data } = supabase.storage.from(CONTENT_COVER_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) throw new Error("تعذر الحصول على رابط الصورة بعد الرفع.");
+  return data.publicUrl;
+}
+
 export type AdminContentListItem = {
   id: string;
   title: string;
@@ -143,6 +191,6 @@ export function emptyContentDraft(seed?: Partial<DiscoverContentItem>): AdminCon
     video_source: seed?.videoSource ?? null,
     tags: seed?.tags ?? [],
     sort_priority: seed?.sortPriority ?? 0,
-    type_payload: {},
+    type_payload: seed?.audience ? { audience: seed.audience } : {},
   };
 }

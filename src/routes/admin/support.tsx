@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   AdminCard,
+  AdminConceptKpiRow,
+  AdminConceptTabs,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -142,8 +144,49 @@ function AdminSupportPage() {
   return (
     <>
       <AdminPageHeader
-        title="الدعم"
-        subtitle="متابعة تذاكر الدعم والاستفسارات التشغيلية."
+        title="الدعم وإدارة الفريق"
+        subtitle="حل طلبات العملاء وتنظيم وصول فريق العمل. لا دعوة عضو وهمية من هذه الشاشة."
+      />
+      <AdminConceptTabs
+        items={[
+          { id: "tickets", label: "تذاكر الدعم", to: "/admin/support", active: true },
+          { id: "team", label: "الفريق", to: "/admin/settings" },
+          { id: "roles", label: "الأدوار والصلاحيات", to: "/admin/settings" },
+          { id: "audit", label: "سجل التدقيق", to: "/admin/audit" },
+        ]}
+      />
+      <AdminConceptKpiRow
+        loading={loading}
+        metrics={[
+          {
+            id: "open",
+            label: "تذاكر معروضة",
+            value: rows.length.toLocaleString("ar-AE"),
+            hint: hasMore ? "صفحة واحدة — يوجد المزيد" : "حسب التصفية الحالية",
+            tone: rows.length > 0 ? "attention" : "neutral",
+          },
+          {
+            id: "urgent",
+            label: "عاجلة",
+            value: "—",
+            hint: "لا أولوية عاجلة معتمدة في عقد التذكرة",
+            tone: "unavailable",
+          },
+          {
+            id: "resolution",
+            label: "متوسط الحل",
+            value: "—",
+            hint: "لا زمن حل معتمد",
+            tone: "unavailable",
+          },
+          {
+            id: "online",
+            label: "أعضاء متصلون",
+            value: "—",
+            hint: "لا حالة اتصال للطاقم",
+            tone: "unavailable",
+          },
+        ]}
       />
 
       <AdminFilterBar>

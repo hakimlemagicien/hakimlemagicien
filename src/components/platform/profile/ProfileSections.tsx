@@ -295,7 +295,7 @@ export function ProfileGoalsProgramSection({ summary }: { summary: ProfileProgra
         <ProfileField label="بداية البرنامج" value={summary.programStart} />
       </ProfileFieldGrid>
       <p className="mt-3 text-[10px] font-medium text-muted-foreground">
-        الهدف والجنس ثابتان بعد التسجيل. لطلب تغيير أي منهما تواصل مع المدرب.
+        الهدف والجنس من الاستبيان ومربوطان بحسابك. لا نعيد سؤالهما داخل التطبيق. لطلب تغيير تواصل مع المدرب.
       </p>
     </ProfileSectionCard>
   );

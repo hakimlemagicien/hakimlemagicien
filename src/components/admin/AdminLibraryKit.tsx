@@ -231,9 +231,9 @@ export function useUnsavedNavigation(dirty: boolean, confirm: (request: AdminCon
       return;
     }
     confirm({
-      title: "تغييرات غير محفوظة",
-      body: "هناك تعديلات لم تُحفظ. إذا غادرت الآن ستفقد هذا العمل.",
-      confirmLabel: "تجاهل التغييرات",
+      title: "لديك تعديلات غير محفوظة.",
+      body: "احفظ من شريط الحفظ للمتابعة، أو تجاهل التعديلات، أو أغلق هذه الرسالة للبقاء.",
+      confirmLabel: "تجاهل التعديلات",
       tone: "danger",
       onConfirm: next,
     });

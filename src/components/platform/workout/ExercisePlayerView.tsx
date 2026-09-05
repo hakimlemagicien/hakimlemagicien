@@ -245,8 +245,6 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
     videoAutoPlay,
     openVideo,
     beginSet,
-    showDetails,
-    setShowDetails,
     heroKey,
     primaryActionLabel,
     handlePrimaryAction,
@@ -406,6 +404,12 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                 restLabel={formatRestSeconds(v2Targets.restSeconds ?? currentExercise.restSeconds)}
               />
 
+              {prescription?.prescribed_load != null &&
+              prescription.assigned?.suggested_weight_kg != null &&
+              prescription.prescribed_load !== prescription.assigned.suggested_weight_kg ? (
+                <p className="mt-2 text-center text-[11px] font-bold text-primary">تم تحديث هدفك للجلسة القادمة</p>
+              ) : null}
+
               {stageGuide ? (
                 <div className="mt-3">
                   <ExerciseStageGuide
@@ -423,31 +427,8 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                   </h2>
                   <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
                     {currentExercise.coachNotes?.trim() ||
-                      "حافظ على التحكم في الحركة، لا تتعجل التكرار، وتنفّس بثبات مع كل عدة. شاهد الفيديو أعلاه أثناء التنفيذ."}
+                      "حافظ على التحكم في الحركة، لا تتعجل التكرار، وتنفّس بثبات مع كل عدة. شاهد الفيديو أعلاه واستعن بصور الشرح والأخطاء."}
                   </p>
-
-                  {currentExercise.instructionsVideoPath ? (
-                    <div className="mt-3 border-t border-border/50 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowDetails((value) => !value)}
-                        className="text-[11px] font-bold text-primary"
-                      >
-                        {showDetails ? "إخفاء تعليمات إضافية" : "تعليمات إضافية من المدرب"}
-                      </button>
-                      {showDetails ? (
-                        <div className="mt-3">
-                          <ExerciseMedia
-                            status={currentExercise.instructionsStatus}
-                            path={currentExercise.instructionsVideoPath}
-                            kind="instructions"
-                            title={currentExercise.name}
-                            label="فيديو التعليمات"
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
                 </section>
             </motion.div>
           ) : (

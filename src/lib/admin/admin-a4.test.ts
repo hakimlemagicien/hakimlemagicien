@@ -4,12 +4,16 @@ import {
   buildClientAttentionAlerts,
   buildClientDirectorySummary,
   clientNeedsAttention,
+  directoryPlanLabelAr,
+  directoryOperationalStatus,
   formatClientActivityEvent,
   isInternalVipTier,
+  paginationPages,
   trainingLocationLabel,
 } from "./admin-client-ops";
 import type { AdminClientListItem, AdminClientOverview } from "./admin-clients-api";
 import type { AdminAuditEvent } from "./admin-audit-api";
+import { formatAdminActivityStamp } from "./admin-status";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -18,7 +22,7 @@ function assert(condition: unknown, message: string): asserts condition {
 const clientsIndex = readFileSync(resolve(process.cwd(), "src/routes/admin/clients/index.tsx"), "utf8");
 const client360 = readFileSync(resolve(process.cwd(), "src/routes/admin/clients/$clientId.tsx"), "utf8");
 const headerSource = readFileSync(resolve(process.cwd(), "src/components/admin/Client360Header.tsx"), "utf8");
-const healthSource = readFileSync(resolve(process.cwd(), "src/components/admin/ClientHealthSnapshot.tsx"), "utf8");
+const overviewSource = readFileSync(resolve(process.cwd(), "src/components/admin/ClientOverviewWorkspace.tsx"), "utf8");
 const attentionSource = readFileSync(resolve(process.cwd(), "src/components/admin/ClientAttentionAlerts.tsx"), "utf8");
 const activitySource = readFileSync(resolve(process.cwd(), "src/components/admin/ClientActivityPanel.tsx"), "utf8");
 const matrixSource = readFileSync(resolve(process.cwd(), "src/components/admin/MatrixImpactCard.tsx"), "utf8");
@@ -76,7 +80,7 @@ const baseOverview: AdminClientOverview = {
 
 // T1 directory renders
 assert(clientsIndex.includes("العملاء"), "directory title");
-assert(clientsIndex.includes("إدارة ومتابعة جميع عملاء MAAKFIT من مكان واحد"), "directory subtitle");
+assert(clientsIndex.includes("إدارة العملاء ومتابعة تقدمهم"), "directory subtitle");
 
 // T2 search preserved
 assert(clientsIndex.includes("AdminSearchInput"), "search input");
@@ -94,20 +98,42 @@ assert(clientsIndex.includes("فتح العميل"), "open client CTA");
 // T5 header
 assert(headerSource.includes("إرسال رسالة"), "message action");
 assert(headerSource.includes("إضافة ملاحظة"), "add note action");
+assert(
+  /import\s*\{[^}]*trainingLocationLabel/.test(headerSource),
+  "header imports trainingLocationLabel — missing import crashes overview",
+);
 
 // T6 overview
-assert(client360.includes("ClientHealthSnapshot"), "health snapshot in overview");
-assert(client360.includes("يحتاج انتباهك"), "attention section");
+assert(client360.includes("ClientOverviewWorkspace"), "overview workspace");
+assert(overviewSource.includes("ClientTrainingGoalCard"), "overview shows training goal editor");
+assert(headerSource.includes("presentClientTrainingGoal"), "header uses mapped goal label");
+const goalCardSource = readFileSync(resolve(process.cwd(), "src/components/admin/ClientTrainingGoalCard.tsx"), "utf8");
+assert(goalCardSource.includes("optgroup"), "goal picker groups men and women");
+assert(goalCardSource.includes("ADMIN_GOAL_PICKER_GROUPS"), "uses grouped official goals");
+assert(overviewSource.includes("يحتاج انتباهك"), "attention section");
 
 // T7 health snapshot
-assert(healthSource.includes("العضوية"), "membership card");
-assert(healthSource.includes("التدريب"), "training card");
-assert(!healthSource.includes("Health Score"), "no fake health score");
+assert(overviewSource.includes("العضوية"), "membership card");
+assert(overviewSource.includes("التدريب"), "training card");
+assert(!overviewSource.includes("Health Score"), "no fake health score");
+assert(!overviewSource.includes("82.4"), "no invented weight");
 
 // T8 attention
 const alerts = buildClientAttentionAlerts(baseOverview, "c1");
 assert(alerts.some((a) => a.id === "coaching-unread"), "unread alert");
 assert(attentionSource.includes("AdminPriorityBadge"), "priority badges");
+
+const inactiveAlerts = buildClientAttentionAlerts(
+  {
+    ...baseOverview,
+    membership: { ...baseOverview.membership!, is_active: false },
+  },
+  "c1",
+);
+assert(
+  inactiveAlerts.some((a) => a.id === "membership-inactive"),
+  "inactive membership alert uses planLabel without crashing",
+);
 
 // T9 training tab
 assert(client360.includes("ClientTrainingWorkspace"), "training workspace");
@@ -164,13 +190,13 @@ assert(!client360.includes("AdminAudit"), "notes not audit log in client 360");
 
 // T28 empty states
 assert(attentionSource.includes("لا توجد حالات"), "attention empty");
-assert(healthSource.includes("لا بيانات تقدم كافية بعد"), "progress empty copy");
+assert(overviewSource.includes("لا بيانات تقدم كافية بعد"), "progress empty copy");
 
 // T29 error states
 assert(client360.includes("AdminErrorState"), "error states");
 
 // T30 RTL
-assert(styles.includes(".cc-health-snapshot"), "health snapshot styles");
+assert(styles.includes(".cc-health-snapshot") || styles.includes(".cc-health-mini"), "health snapshot styles");
 assert(styles.includes("grid-template-columns"), "responsive grid");
 
 // T31 mobile
@@ -207,5 +233,13 @@ const formatted = formatClientActivityEvent(event);
 assert(formatted.what.length > 0, "activity what");
 assert(formatted.source === "admin", "activity source");
 assert(trainingLocationLabel("both") === "منزل + نادي", "training location label");
+assert(directoryPlanLabelAr("premium") === "احترافي", "arabic premium label");
+assert(directoryOperationalStatus(sampleRow) === "attention", "unread is follow-up status");
+assert(paginationPages(1, 11).includes("gap"), "pagination collapses long ranges");
+assert(formatAdminActivityStamp(null) === "—", "missing activity is a dash");
+assert(clientsIndex.includes("window.open(\"/quiz\""), "add client opens real signup, not a fake create rpc");
+assert(!clientsIndex.includes("admin_create_client"), "no fake create client");
+assert(membershipSource.includes("/admin/memberships"), "manage subscription is a real admin route");
+assert(membershipSource.includes("/admin/payments"), "invoice history links to payments");
 
 console.log("admin-a4 tests passed");

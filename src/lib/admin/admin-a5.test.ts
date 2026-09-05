@@ -115,6 +115,8 @@ assert(trainingWorkspace.includes("Strategy Matrix"), "legacy warning");
 // T26–T28 exercise library
 assert(exerciseLib.includes("LibraryImpactWarningCard"), "exercise warning");
 assert(exerciseLib.includes("detectExerciseSensitiveChanges"), "exercise detect");
+assert(exerciseLib.includes("متاحة في التطبيق"), "app-visible exercise count");
+assert(exerciseLib.includes("countClientVisibleExercises"), "live client exercise count");
 
 // T31 nutrition operations
 assert(nutritionOps.includes("عمليات التغذية"), "nutrition ops");

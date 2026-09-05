@@ -1,4 +1,12 @@
 import {
+  bodyTypeLabelAr,
+  challengeLabelAr,
+  parseClientQuizAnswers,
+  QUIZ_ACTIVITY_LABELS_AR,
+  trainingEnvironmentLabelAr,
+  trainingDaysLabelFromQuiz,
+} from "@/lib/platform/client-quiz-answers";
+import {
   getMembershipTierLabel,
   isPaidMembershipTier,
   type MembershipResponse,
@@ -11,7 +19,10 @@ import {
   type ProgressDashboardData,
 } from "@/lib/platform/progress-experience";
 import type { ProfileDetails, TrainingProfileSnapshot } from "@/lib/platform/profile-api";
-import { parseTrainingProfileAnswers } from "@/lib/platform/strategy-matrix/profile-source";
+import {
+  isCanonicalTrainingGoal,
+  TRAINING_V2_GOAL_LABELS_AR,
+} from "@/lib/platform/training-v2-contracts";
 
 export type MembershipDisplayStatus =
   | "free"
@@ -92,6 +103,7 @@ export function resolveClientGoalLabel(
   for (const raw of sources) {
     const key = raw?.trim();
     if (!key) continue;
+    if (isCanonicalTrainingGoal(key)) return TRAINING_V2_GOAL_LABELS_AR[key];
     const mapped = GOAL_LABELS[key] ?? GOAL_LABELS[key.toLowerCase()];
     if (mapped) return mapped;
     if (/[\u0600-\u06FF]/.test(key)) return key;
@@ -100,11 +112,16 @@ export function resolveClientGoalLabel(
 }
 
 export const ACTIVITY_LABELS: Record<string, string> = {
-  sedentary: "قليل الحركة",
-  light: "نشاط خفيف",
-  moderate: "نشاط متوسط",
-  active: "نشط",
-  very_active: "نشط جداً",
+  ...QUIZ_ACTIVITY_LABELS_AR,
+  sedentary: QUIZ_ACTIVITY_LABELS_AR.sedentary,
+  light: QUIZ_ACTIVITY_LABELS_AR.light,
+  moderate: QUIZ_ACTIVITY_LABELS_AR.moderate,
+  high: QUIZ_ACTIVITY_LABELS_AR.high,
+  veryhigh: QUIZ_ACTIVITY_LABELS_AR.veryhigh,
+  athlete: QUIZ_ACTIVITY_LABELS_AR.athlete,
+  // Legacy profile form aliases
+  active: QUIZ_ACTIVITY_LABELS_AR.high,
+  very_active: QUIZ_ACTIVITY_LABELS_AR.veryhigh,
 };
 
 const GENDER_LABELS: Record<string, string> = {
@@ -247,14 +264,34 @@ export function buildPersonalInfoFields(
   training: TrainingProfileSnapshot | null,
   bodyWeightKg: number | null,
 ): ProfilePersonalField[] {
-  const answers = training?.answers ?? {};
-  const age = computeAgeFromBirthDate(answers.birthDate);
+  const quiz = parseClientQuizAnswers(
+    (training?.answers ?? null) as Record<string, unknown> | null,
+    training?.goal ?? profile?.goal,
+  );
+  const age =
+    quiz.age ??
+    (quiz.birthDate
+      ? (() => {
+          const date = new Date(`${quiz.birthDate}T00:00:00`);
+          if (Number.isNaN(date.getTime())) return null;
+          const now = new Date();
+          let value = now.getFullYear() - date.getFullYear();
+          const m = now.getMonth() - date.getMonth();
+          if (m < 0 || (m === 0 && now.getDate() < date.getDate())) value -= 1;
+          return value > 0 ? value : null;
+        })()
+      : null);
   const missing = (label: string): ProfilePersonalField => ({
     id: label,
     label,
     value: "أكمل هذه المعلومة",
     missing: true,
   });
+
+  const injuryLabel =
+    quiz.injuryIds.length === 0 || quiz.injuryIds.every((id) => id === "none")
+      ? "لا إصابات"
+      : quiz.injuryIds.filter((id) => id !== "none").join(" · ");
 
   return [
     { id: "name", label: "الاسم", value: profile?.fullName ?? "غير محدد", missing: !profile?.fullName },
@@ -267,36 +304,75 @@ export function buildPersonalInfoFields(
     profile?.phone
       ? { id: "phone", label: "الهاتف", value: profile.phone }
       : missing("الهاتف"),
-    answers.gender
-      ? { id: "gender", label: "الجنس", value: GENDER_LABELS[answers.gender] ?? "غير محدد" }
+    quiz.gender
+      ? { id: "gender", label: "الجنس", value: GENDER_LABELS[quiz.gender] ?? "غير محدد" }
       : missing("الجنس"),
-    answers.birthDate
+    quiz.birthDate || age
       ? {
           id: "birth",
-          label: "تاريخ الميلاد",
-          value: `${formatProfileDate(answers.birthDate)}${age ? ` (${age} سنة)` : ""}`,
+          label: quiz.birthDate ? "تاريخ الميلاد" : "العمر",
+          value: quiz.birthDate
+            ? `${formatProfileDate(quiz.birthDate)}${age ? ` (${age} سنة)` : ""}`
+            : `${age} سنة`,
         }
-      : missing("تاريخ الميلاد"),
-    answers.heightCm
-      ? { id: "height", label: "الطول", value: `${answers.heightCm} سم` }
+      : missing("العمر"),
+    quiz.heightCm
+      ? { id: "height", label: "الطول", value: `${quiz.heightCm} سم` }
       : missing("الطول"),
-    bodyWeightKg || answers.weightKg
+    bodyWeightKg || quiz.weightKg
       ? {
           id: "weight",
           label: "الوزن الحالي",
-          value: `${bodyWeightKg ?? answers.weightKg} كغ`,
+          value: `${bodyWeightKg ?? quiz.weightKg} كغ`,
         }
       : missing("الوزن الحالي"),
-    answers.targetWeightKg
-      ? { id: "target", label: "الوزن المستهدف", value: `${answers.targetWeightKg} كغ` }
-      : missing("الوزن المستهدف"),
-    answers.activityLevel
+    quiz.targetWeightKg
+      ? { id: "target", label: "الوزن المستهدف", value: `${quiz.targetWeightKg} كغ` }
+      : { id: "target", label: "الوزن المستهدف", value: "غير محدد" },
+    quiz.activityLevel
       ? {
           id: "activity",
           label: "مستوى النشاط",
-          value: ACTIVITY_LABELS[answers.activityLevel] ?? answers.activityLevel,
+          value: ACTIVITY_LABELS[quiz.activityLevel] ?? quiz.activityLevel,
         }
       : missing("مستوى النشاط"),
+    quiz.trainingEnvironment
+      ? {
+          id: "environment",
+          label: "مكان التدريب",
+          value: trainingEnvironmentLabelAr(quiz.trainingEnvironment) ?? quiz.trainingEnvironment,
+        }
+      : missing("مكان التدريب"),
+    trainingDaysLabelFromQuiz(quiz)
+      ? {
+          id: "days",
+          label: "أيام التدريب",
+          value: trainingDaysLabelFromQuiz(quiz)!,
+        }
+      : {
+          id: "days",
+          label: "أيام التدريب",
+          value: "5 أيام/أسبوع",
+        },
+    challengeLabelAr(quiz.challengeId)
+      ? {
+          id: "challenge",
+          label: "التحدي الأبرز",
+          value: challengeLabelAr(quiz.challengeId)!,
+        }
+      : { id: "challenge", label: "التحدي الأبرز", value: "غير محدد" },
+    bodyTypeLabelAr(quiz.bodyType)
+      ? {
+          id: "bodyType",
+          label: "نوع الجسم",
+          value: bodyTypeLabelAr(quiz.bodyType)!,
+        }
+      : { id: "bodyType", label: "نوع الجسم", value: "غير محدد" },
+    {
+      id: "injuries",
+      label: "الإصابات",
+      value: injuryLabel,
+    },
     profile?.city
       ? { id: "city", label: "المدينة", value: profile.city }
       : missing("المدينة"),
@@ -311,23 +387,28 @@ export function buildProgramSummary(
   training: TrainingProfileSnapshot | null,
   quizGoalId?: string | null,
 ): ProfileProgramSummary {
+  const quiz = parseClientQuizAnswers(
+    (training?.answers ?? null) as Record<string, unknown> | null,
+    training?.goal ?? profile?.goal ?? quizGoalId,
+  );
   const goalLabel = resolveClientGoalLabel(
-    training?.answers.goalId,
+    quiz.goalId,
     quizGoalId,
     profile?.goal,
     training?.goal,
   );
 
-  const parsedTraining = training
-    ? parseTrainingProfileAnswers(training.answers as Record<string, unknown>)
-    : null;
-  const weeklyCount = parsedTraining?.trainingDaysPerWeek;
+  const weeklyCount = quiz.trainingDaysPerWeek;
 
   return {
     currentGoal: goalLabel,
-    programName: profile?.trainingType ? `برنامج ${profile.trainingType}` : "برنامج MAAKFIT المخصص",
-    fitnessLevel: training?.answers.activityLevel
-      ? (ACTIVITY_LABELS[training.answers.activityLevel] ?? "غير محدد")
+    programName: quiz.trainingEnvironment
+      ? `برنامج ${trainingEnvironmentLabelAr(quiz.trainingEnvironment) ?? quiz.trainingEnvironment}`
+      : profile?.trainingType
+        ? `برنامج ${profile.trainingType}`
+        : "برنامج MAAKFIT المخصص",
+    fitnessLevel: quiz.activityLevel
+      ? (ACTIVITY_LABELS[quiz.activityLevel] ?? "غير محدد")
       : "غير محدد",
     weeklyDays: weeklyCount && weeklyCount > 0 ? `${weeklyCount} أيام` : "حسب خطتك",
     calorieTarget: "حسب خطتك",

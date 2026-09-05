@@ -1,17 +1,10 @@
 import { resolveCanonicalGoal } from "@/lib/platform/prescription/goal-profile";
 import type { GoalResolutionResult } from "./types";
 
-export const OPEN_GOAL_MAPPING_DECISIONS = [
-  "muscle",
-  "fitness",
-  "athletic",
-  "shape",
-  "gain",
-  "tone",
-  "fit",
-] as const;
+/** No open quiz-goal mapping decisions — all quiz ids in LEGACY_GOAL_MAP are mapped. */
+export const OPEN_GOAL_MAPPING_DECISIONS: readonly string[] = [];
 
-export type OpenGoalMappingId = (typeof OPEN_GOAL_MAPPING_DECISIONS)[number];
+export type OpenGoalMappingId = string;
 
 function pickRawGoal(input: {
   rawGoalId?: string | null;

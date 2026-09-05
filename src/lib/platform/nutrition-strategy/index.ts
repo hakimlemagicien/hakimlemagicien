@@ -14,6 +14,7 @@ export * from "./consumption";
 export * from "./legacy-compat";
 export * from "./entitlements-strategy";
 export * from "./assignment-orchestrator";
+export * from "./profile-from-quiz";
 
 export function isFailClosed(
   result: unknown,

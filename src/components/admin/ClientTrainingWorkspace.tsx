@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { MatrixImpactCard } from "@/components/admin/MatrixImpactCard";
+import { ClientTrainingGoalCard } from "@/components/admin/ClientTrainingGoalCard";
+import { ClientProgressionStrategyCard } from "@/components/admin/ClientProgressionStrategyCard";
 import {
   AdminCard,
   AdminEmptyState,
@@ -42,7 +43,7 @@ import {
   objectiveTrainingSignals,
   validateClientPrescription,
 } from "@/lib/admin/admin-client-training";
-import { listAdminExercises, type AdminExerciseListItem } from "@/lib/admin/admin-exercises-api";
+import type { AdminExerciseListItem } from "@/lib/admin/admin-exercises-api";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import {
   getAdminProgramTemplate,
@@ -55,6 +56,8 @@ import {
   PROGRAM_GOALS,
   PROGRAM_LEVELS,
   moveItem,
+  programGoalLabel,
+  programLevelLabel,
   translateLibraryError,
   type LibrarySaveState,
 } from "@/lib/admin/admin-libraries";
@@ -67,8 +70,39 @@ import {
   type CoachOverrideFormState,
 } from "@/lib/admin/coach-override-form";
 import { WeeklySchedulePreview } from "@/components/admin/WeeklySchedulePreview";
+import { AdminExercisePicker } from "@/components/admin/AdminExercisePicker";
+import {
+  assessClientProgramEditImpact,
+  assessTemplateCompatibility,
+  compatibilityStatusLabel,
+  mapClientGoalToProgramGoal,
+  programLocationLabel,
+  sessionPresentationForDay,
+  templateLocationFromMetadata,
+  type ProgramLocation,
+} from "@/lib/admin/admin-program-ops";
 import { PreferredWeekdayId, WEEKDAY_CALENDAR_ORDER } from "@/lib/platform/strategy-matrix/weekdays";
-import { listV2ExerciseCandidates } from "@/lib/platform/exercise-library-v2-api";
+import { listV2ExerciseCandidates, fetchExercisesV2ByExternalIds } from "@/lib/platform/exercise-library-v2-api";
+import type { ExerciseV2Metadata } from "@/lib/platform/exercise-library-v2";
+import {
+  assignmentExercisesForProgression,
+  findAssignmentExerciseCoords,
+  mapProgramLevelToTrainingLevel,
+  progressionFromAssignmentRow,
+  progressionWriteErrorMessage,
+  resolveAdminProgressionReview,
+  setAdminClientProgressionStrategy,
+  setLogsToHistoryById,
+} from "@/lib/admin/admin-progression-strategy-api";
+import {
+  evaluateAssignmentProgression,
+  mergeEvaluationReviews,
+  parseProgressionStrategy,
+  programSourceLabel,
+  resolveProgramSource,
+  PROGRESSION_STRATEGY_OPTIONS,
+  type ProgressionStrategy,
+} from "@/lib/platform/progression-strategy";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
 import {
   applyCoachOverride,
@@ -129,7 +163,7 @@ function strategyResolutionErrorMessage(code: string): string {
   }
 }
 
-type AssignStep = "closed" | "pick" | "preview" | "review";
+type AssignStep = "closed" | "source" | "pick" | "preview" | "review";
 type OverrideUiState =
   | "idle"
   | "editing"
@@ -205,9 +239,12 @@ export function ClientTrainingWorkspace({
   const [pickerRows, setPickerRows] = useState<AdminProgramListItem[]>([]);
   const [preview, setPreview] = useState<AdminProgramDetail | null>(null);
   const [startsOn, setStartsOn] = useState(() => new Date().toISOString().slice(0, 10));
-  const [pickerOpen, setPickerOpen] = useState<{ week: number; day: number; exercise: number } | null>(null);
-  const [exerciseRows, setExerciseRows] = useState<AdminExerciseListItem[]>([]);
-  const exerciseQuery = useDebouncedValue(pickerQuery, 280);
+  const [pickerOpen, setPickerOpen] = useState<{ week: number; day: number; exercise?: number } | null>(null);
+  const [saveReason, setSaveReason] = useState("");
+  const [assignStrategy, setAssignStrategy] = useState<ProgressionStrategy>(PROGRESSION_STRATEGY_OPTIONS[0].id);
+  const [strategySaving, setStrategySaving] = useState(false);
+  const [strategyError, setStrategyError] = useState<string | null>(null);
+  const [exerciseMeta, setExerciseMeta] = useState<Record<string, ExerciseV2Metadata>>({});
   const templateQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(editing && draft && detail && JSON.stringify(draft.weeks) !== JSON.stringify(detail.weeks));
   const guard = useUnsavedNavigation(dirty, onConfirm);
@@ -285,9 +322,9 @@ export function ClientTrainingWorkspace({
   }, [clientId, overview.assignment?.id]);
 
   useEffect(() => {
-    if (tab !== "progress") return;
+    if (tab !== "progress" && tab !== "training") return;
     setLogsLoading(true);
-    void listAdminClientSetLogs({ clientId, exerciseId: exerciseFilter || null, offset: logsOffset })
+    void listAdminClientSetLogs({ clientId, exerciseId: tab === "progress" ? exerciseFilter || null : null, offset: tab === "progress" ? logsOffset : 0 })
       .then((result) => {
         setLogs(result.rows);
         setLogsTotal(result.totalCount);
@@ -320,9 +357,117 @@ export function ClientTrainingWorkspace({
   }, [assignStep, templateQuery, pickerGoal, pickerLevel, pickerDays]);
 
   useEffect(() => {
-    if (!pickerOpen) return;
-    void listAdminExercises({ query: exerciseQuery, active: true }).then((result) => setExerciseRows(result.rows));
-  }, [pickerOpen, exerciseQuery]);
+    if (!detail) {
+      setExerciseMeta({});
+      return;
+    }
+    const ids = assignmentExercisesForProgression(detail).map((row) => row.exercise_external_id);
+    if (!ids.length) {
+      setExerciseMeta({});
+      return;
+    }
+    void fetchExercisesV2ByExternalIds(ids)
+      .then((rows) => {
+        setExerciseMeta(Object.fromEntries(rows.map((row) => [row.external_id, row])));
+      })
+      .catch(() => setExerciseMeta({}));
+  }, [detail?.id, detail?.updated_at]);
+
+  const progressionView = useMemo(() => {
+    if (!detail) return null;
+    const stored = progressionFromAssignmentRow(detail);
+    const evaluation = evaluateAssignmentProgression({
+      strategy: stored.strategy,
+      exercises: assignmentExercisesForProgression(detail),
+      historyById: setLogsToHistoryById(logs),
+      metadataById: exerciseMeta,
+      trainingLevel: mapProgramLevelToTrainingLevel(detail.level),
+      kept: stored.kept,
+    });
+    const merged = mergeEvaluationReviews({ ...stored, status: evaluation.status }, evaluation.reviews);
+    return {
+      stored,
+      evaluation,
+      status: merged.status,
+      reviews: merged.reviews,
+      history: evaluation.history,
+    };
+  }, [detail, logs, exerciseMeta]);
+
+  const applyAssignedStrategy = async (row: AdminAssignmentDetail) => {
+    const current = parseProgressionStrategy(row.progression_strategy);
+    if (current === assignStrategy) return row;
+    try {
+      const saved = await setAdminClientProgressionStrategy({
+        assignmentId: row.id,
+        clientId,
+        strategy: assignStrategy,
+        expectedUpdatedAt: row.updated_at,
+        reason: "اختيار استراتيجية التطور عند التعيين",
+        from: current,
+      });
+      return {
+        ...row,
+        progression_strategy: saved.progression_strategy,
+        progression_state: saved.progression_state as unknown as Record<string, unknown>,
+        updated_at: saved.updated_at || row.updated_at,
+      };
+    } catch (err) {
+      setStrategyError(progressionWriteErrorMessage(err));
+      return row;
+    }
+  };
+
+  const changeProgressionStrategy = (strategy: ProgressionStrategy, reason: string) => {
+    if (!detail) return;
+    setStrategySaving(true);
+    setStrategyError(null);
+    void setAdminClientProgressionStrategy({
+      assignmentId: detail.id,
+      clientId,
+      strategy,
+      expectedUpdatedAt: detail.updated_at,
+      reason,
+      from: parseProgressionStrategy(detail.progression_strategy),
+    })
+      .then(async () => {
+        await loadAssignment(detail.id);
+      })
+      .catch((err) => {
+        setStrategyError(progressionWriteErrorMessage(err));
+      })
+      .finally(() => setStrategySaving(false));
+  };
+
+  const keepProgressionExercise = (externalId: string) => {
+    if (!detail) return;
+    const reasonCode = progressionView?.reviews.find((row) => row.exercise_external_id === externalId)?.reason_code;
+    setStrategySaving(true);
+    setStrategyError(null);
+    void resolveAdminProgressionReview({
+      assignmentId: detail.id,
+      clientId,
+      exerciseExternalId: externalId,
+      expectedUpdatedAt: detail.updated_at,
+      action: "keep",
+      reasonCode,
+    })
+      .then(async () => {
+        await loadAssignment(detail.id);
+      })
+      .catch((err) => {
+        setStrategyError(progressionWriteErrorMessage(err));
+      })
+      .finally(() => setStrategySaving(false));
+  };
+
+  const openExerciseForReview = (externalId: string, replace: boolean) => {
+    if (!detail) return;
+    const coords = findAssignmentExerciseCoords(detail, externalId);
+    setDraft(detail);
+    setEditing(true);
+    if (coords) setPickerOpen(replace ? coords : null);
+  };
 
   const flattenExercises = (row: AdminAssignmentDetail) => {
     const exercises: Array<Record<string, unknown>> = [];
@@ -330,7 +475,8 @@ export function ClientTrainingWorkspace({
       week.days.forEach((day) => {
         day.exercises.forEach((exercise, index) => {
           exercises.push({
-            id: exercise.id,
+            id: exercise.id || null,
+            day_id: day.id,
             exercise_id: exercise.exercise_id,
             sort_order: index,
             sets: exercise.sets,
@@ -347,7 +493,7 @@ export function ClientTrainingWorkspace({
     return exercises;
   };
 
-  const saveDraft = async () => {
+  const saveDraft = async (reason?: string) => {
     if (!draft || !detail) return;
     const invalid = draft.weeks
       .flatMap((week) => week.days.flatMap((day) => day.exercises))
@@ -358,18 +504,57 @@ export function ClientTrainingWorkspace({
       setError(translateLibraryError({ message: invalid }));
       return;
     }
+    const impact = assessClientProgramEditImpact({
+      beforeDays: detail.weeks.flatMap((week) => week.days),
+      afterDays: draft.weeks.flatMap((week) => week.days),
+    });
+    if (impact.emptyWorkoutDays) {
+      setSaveState("failed");
+      setError("لا يمكن حفظ حصة تدريب بلا تمارين.");
+      return;
+    }
+    if (impact.status === "HIGH_IMPACT" && !reason) {
+      onConfirm({
+        title: "تعديل ذو أثر مرتفع",
+        body: impact.reasons.join(" ") || "هذا التعديل يحتاج تأكيد المدرب وسبباً قبل الحفظ.",
+        confirmLabel: "حفظ مع التأكيد",
+        tone: "danger",
+        reasonRequired: true,
+        reasonLabel: "سبب التعديل",
+        diff: impact.replacements.slice(0, 4).map((row) => ({
+          label: "تمرين",
+          before: row.from,
+          after: row.to,
+        })),
+        onConfirm: (value) => {
+          void saveDraft(value);
+        },
+      });
+      return;
+    }
     setSaveState("saving");
     setError(null);
+    const beforeIds = new Set(
+      detail.weeks.flatMap((week) => week.days.flatMap((day) => day.exercises.map((exercise) => exercise.id).filter(Boolean))),
+    );
+    const afterIds = new Set(
+      draft.weeks.flatMap((week) => week.days.flatMap((day) => day.exercises.map((exercise) => exercise.id).filter(Boolean))),
+    );
+    const removeIds = [...beforeIds].filter((id) => !afterIds.has(id));
     try {
-      const next = await saveAdminClientAssignmentExercises(detail.id, flattenExercises(draft), detail.updated_at);
+      const next = await saveAdminClientAssignmentExercises(detail.id, flattenExercises(draft), detail.updated_at, {
+        removeIds,
+        reason: reason || saveReason || null,
+      });
       setDetail(next);
       setDraft(next);
       setSaveState("saved");
       setEditing(false);
+      setSaveReason("");
     } catch (err) {
       console.error(err);
       setSaveState("failed");
-      setError(translateLibraryError(err));
+      setError(progressionWriteErrorMessage(err));
     }
   };
 
@@ -631,6 +816,63 @@ export function ClientTrainingWorkspace({
 
   const confirmAssign = (replace: boolean) => {
     if (!preview) return;
+    const compatibility = assessTemplateCompatibility({
+      template: {
+        goal: preview.goal,
+        level: preview.level,
+        days_per_week: preview.days_per_week,
+        training_location: (templateLocationFromMetadata(preview.metadata) ?? preview.training_location) as ProgramLocation | null,
+        weeks: preview.weeks,
+      },
+      client: {
+        goal: overview.goal,
+        level: detail?.level,
+        trainingType: overview.training_type,
+        daysPerWeek: detail?.days_per_week,
+      },
+    });
+    if (compatibility.status === "HIGH_IMPACT") {
+      onConfirm({
+        title: "تعيين ذو أثر مرتفع",
+        body: `${compatibility.reasons.join(" ")} ${compatibility.recommendations.join(" ")}`,
+        confirmLabel: replace ? "تأكيد الاستبدال" : "تأكيد التعيين",
+        tone: "danger",
+        reasonRequired: true,
+        reasonLabel: "سبب التعيين رغم الأثر",
+        onConfirm: (reason) => {
+          void recordAdminAdaptiveDecision({
+            clientId,
+            decisionType: "PROGRAM_GENERATION",
+            evaluationKey: `template-assign:${preview.id}:${startsOn}`,
+            reasonCode: "TEMPLATE_ASSIGN_HIGH_IMPACT",
+            confidence: "HIGH",
+            snapshot: { template_id: preview.id, reason: reason ?? null, replace },
+          }).catch(() => undefined);
+          void assignAdminClientProgram({
+            clientId,
+            templateId: preview.id,
+            startsOn,
+            replace,
+          })
+            .then(async (row) => {
+              const next = await applyAssignedStrategy(row);
+              setDetail(next);
+              setDraft(next);
+              setAssignStep("closed");
+              setPreview(null);
+              const list = await listAdminClientAssignments(clientId, 0);
+              setHistory(list.rows);
+              setHistoryTotal(list.totalCount);
+              await onOverviewRefresh();
+            })
+            .catch((err) => {
+              console.error(err);
+              setError(translateLibraryError(err));
+            });
+        },
+      });
+      return;
+    }
     onConfirm({
       title: replace ? "استبدال البرنامج النشط" : "تأكيد تعيين البرنامج",
       body: replace
@@ -646,8 +888,9 @@ export function ClientTrainingWorkspace({
           replace,
         })
           .then(async (row) => {
-            setDetail(row);
-            setDraft(row);
+            const next = await applyAssignedStrategy(row);
+            setDetail(next);
+            setDraft(next);
             setAssignStep("closed");
             setPreview(null);
             const list = await listAdminClientAssignments(clientId, 0);
@@ -718,6 +961,52 @@ export function ClientTrainingWorkspace({
       ),
     });
     setSaveState("unsaved");
+  };
+
+  const applyPickedExercise = (item: AdminExerciseListItem) => {
+    if (!draft || !pickerOpen) return;
+    if (pickerOpen.exercise == null) {
+      const day = draft.weeks[pickerOpen.week]?.days[pickerOpen.day];
+      if (!day) return;
+      const next: AdminAssignmentExercise = {
+        id: "",
+        exercise_id: item.id,
+        exercise_external_id: item.external_id,
+        exercise_name_ar: item.name_ar,
+        exercise_name_en: item.name_en,
+        sort_order: day.exercises.length,
+        sets: 3,
+        reps_min: 8,
+        reps_max: 12,
+        reps_label: null,
+        rest_seconds: 60,
+        suggested_weight_kg: null,
+        notes_ar: null,
+      };
+      setDraft({
+        ...draft,
+        weeks: draft.weeks.map((week, w) =>
+          w !== pickerOpen.week
+            ? week
+            : {
+                ...week,
+                days: week.days.map((row, d) =>
+                  d !== pickerOpen.day ? row : { ...row, exercises: [...row.exercises, next] },
+                ),
+              },
+        ),
+      });
+      setSaveState("unsaved");
+      setPickerOpen(null);
+      return;
+    }
+    patchExercise(pickerOpen.week, pickerOpen.day, pickerOpen.exercise, {
+      exercise_id: item.id,
+      exercise_external_id: item.external_id,
+      exercise_name_ar: item.name_ar,
+      exercise_name_en: item.name_en,
+    });
+    setPickerOpen(null);
   };
 
   const exerciseOptions = useMemo(() => {
@@ -843,13 +1132,48 @@ export function ClientTrainingWorkspace({
         </AdminCard>
       ) : null}
 
+      <ClientTrainingGoalCard overview={overview} onUpdated={onOverviewRefresh} onConfirm={onConfirm} />
+
       <AdminCard>
         <h2 className="cc-section__title">البرنامج الحالي</h2>
+        <dl className="cc-dl">
+          <div>
+            <dt>العميل</dt>
+            <dd>{overview.full_name || "—"}</dd>
+          </div>
+          <div>
+            <dt>الهدف</dt>
+            <dd>{programGoalLabel(mapClientGoalToProgramGoal(overview.goal)) || overview.goal || "—"}</dd>
+          </div>
+          <div>
+            <dt>المستوى</dt>
+            <dd>{detail?.level ? programLevelLabel(detail.level) : "—"}</dd>
+          </div>
+          <div>
+            <dt>مكان التدريب</dt>
+            <dd>{programLocationLabel(mapClientTrainingLocation(overview.training_type) as ProgramLocation)}</dd>
+          </div>
+          <div>
+            <dt>أيام التدريب</dt>
+            <dd>{detail?.days_per_week ?? "—"}</dd>
+          </div>
+        </dl>
         <p className="cc-muted">
           {PROGRAM_BOUNDARIES.template} منفصل عن {PROGRAM_BOUNDARIES.assigned}. تعديل القالب لا يغيّر لقطة العميل.
         </p>
         {detail ? (
           <dl className="cc-dl">
+            <div>
+              <dt>مصدر البرنامج</dt>
+              <dd>
+                {programSourceLabel(
+                  resolveProgramSource({
+                    source_template_id: detail.source_template_id,
+                    generation_source: detail.generation_source,
+                  }),
+                )}
+              </dd>
+            </div>
             <div>
               <dt>الاسم</dt>
               <dd>{detail.name_ar || "—"}</dd>
@@ -863,12 +1187,16 @@ export function ClientTrainingWorkspace({
               </dd>
             </div>
             <div>
-              <dt>إصدار القالب المصدر</dt>
-              <dd>{detail.template_version}</dd>
+              <dt>الإصدار</dt>
+              <dd>V{detail.template_version}</dd>
             </div>
             <div>
               <dt>تاريخ البداية</dt>
               <dd>{detail.starts_on ? formatAdminDate(detail.starts_on) : "—"}</dd>
+            </div>
+            <div>
+              <dt>آخر تحديث</dt>
+              <dd>{formatAdminDate(detail.updated_at)}</dd>
             </div>
             <div>
               <dt>الأسبوع الحالي</dt>
@@ -878,10 +1206,6 @@ export function ClientTrainingWorkspace({
               <dt>لقطة مكتملة</dt>
               <dd>{detail.snapshot_complete ? "نعم" : "لا — تعيين قديم يحتاج مراجعة"}</dd>
             </div>
-            <div>
-              <dt>آخر تمرين</dt>
-              <dd>{overview.last_workout_at ? formatRelativeAge(overview.last_workout_at) : "لا سجل"}</dd>
-            </div>
           </dl>
         ) : (
           <AdminEmptyState
@@ -890,26 +1214,24 @@ export function ClientTrainingWorkspace({
           />
         )}
         <div className="cc-editor-toolbar">
-          <button type="button" className="cc-btn cc-btn--primary" onClick={() => setAssignStep("pick")}>
-            تعيين برنامج
-          </button>
-          <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
-            {v2Busy ? "جاري توليد V2…" : "توليد برنامج V2"}
-          </button>
           {detail?.snapshot_complete && (detail.status === "active" || detail.status === "scheduled") ? (
-            <button type="button" className="cc-btn" onClick={() => setEditing(true)}>
-              تعديل نسخة العميل
+            <button type="button" className="cc-btn cc-btn--primary" onClick={() => setEditing(true)}>
+              تعديل البرنامج
             </button>
           ) : null}
+          <button type="button" className="cc-btn cc-btn--primary" onClick={() => setAssignStep("source")}>
+            تعيين برنامج
+          </button>
+          <button type="button" className="cc-btn" onClick={() => setAssignStep("source")}>
+            تغيير البرنامج
+          </button>
+          <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
+            {v2Busy ? "جاري توليد V2…" : "إعادة التوليد"}
+          </button>
           {detail && (detail.status === "active" || detail.status === "scheduled") ? (
-            <>
-              <button type="button" className="cc-btn" onClick={() => requestEnd("completed")}>
-                إنهاء البرنامج
-              </button>
-              <button type="button" className="cc-btn" onClick={() => setAssignStep("pick")}>
-                استبدال البرنامج
-              </button>
-            </>
+            <button type="button" className="cc-btn" onClick={() => requestEnd("completed")}>
+              إنهاء البرنامج
+            </button>
           ) : null}
           {conversationId ? (
             <Link to="/admin/messages/$conversationId" params={{ conversationId }} className="cc-btn">
@@ -919,6 +1241,24 @@ export function ClientTrainingWorkspace({
           {editing ? <AdminSaveState state={dirty ? "unsaved" : saveState} /> : null}
         </div>
       </AdminCard>
+
+      <ClientProgressionStrategyCard
+        assignmentId={detail?.id ?? null}
+        sourceTemplateId={detail?.source_template_id ?? null}
+        generationSource={detail?.generation_source ?? null}
+        strategy={progressionView?.stored.strategy ?? parseProgressionStrategy(detail?.progression_strategy)}
+        status={progressionView?.status ?? "WAITING_FOR_DATA"}
+        lastEvaluationAt={detail?.last_progression_evaluation_at ?? null}
+        reviews={progressionView?.reviews ?? []}
+        history={progressionView?.history ?? []}
+        loading={false}
+        saving={strategySaving}
+        error={strategyError}
+        onChangeStrategy={changeProgressionStrategy}
+        onKeepExercise={keepProgressionExercise}
+        onReplaceExercise={(externalId) => openExerciseForReview(externalId, true)}
+        onReviewExercise={(externalId) => openExerciseForReview(externalId, false)}
+      />
 
       <AdminCard>
         <h2 className="cc-section__title">تعديلات المدرب (Coach Override)</h2>
@@ -1176,13 +1516,35 @@ export function ClientTrainingWorkspace({
 
       {assignStep !== "closed" ? (
         <AdminCard>
-          <h2 className="cc-section__title">تعيين برنامج</h2>
+          <h2 className="cc-section__title">طريقة إنشاء البرنامج</h2>
+          {assignStep === "source" ? (
+            <>
+              <p className="cc-muted">اختيار المصدر يبدأ المسار فقط. لن يُغيَّر برنامج العميل حتى التأكيد.</p>
+              <div className="cc-source-grid">
+                <button
+                  type="button"
+                  className="cc-source-card"
+                  onClick={() => {
+                    setAssignStep("closed");
+                    void generateV2();
+                  }}
+                >
+                  <strong>Strategy Matrix</strong>
+                  <span>توليد من ملف العميل ثم مراجعة وتعيين عبر المحرّك الحالي.</span>
+                </button>
+                <button type="button" className="cc-source-card" onClick={() => setAssignStep("pick")}>
+                  <strong>Program Template</strong>
+                  <span>اختر قالباً منشوراً، راجع التوافق، ثم أنشئ لقطة للعميل.</span>
+                </button>
+              </div>
+            </>
+          ) : null}
           {assignStep === "pick" ? (
             <>
               <div className="cc-notice cc-notice--warning" role="alert">
-                <strong>مسار القالب الجاهز (Legacy)</strong>
+                <strong>مسار القالب الجاهز</strong>
                 <p>
-                  هذا المسار يستخدم قالبًا جاهزًا ولا يمر بكامل مراجعة Strategy Matrix الخاصة بالبرنامج المولَّد.
+                  هذا المسار يستخدم قالبًا جاهزًا. Matrix تبقى أداة قرار: عدم التوافق يظهر قبل التعيين ولا يتم التعيين بصمت.
                 </p>
                 <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setAssignStep("closed"); void generateV2(); }}>
                   إنشاء برنامج باستخدام MAAKFIT Strategy
@@ -1241,60 +1603,19 @@ export function ClientTrainingWorkspace({
             </>
           ) : null}
           {preview && (assignStep === "preview" || assignStep === "review") ? (
-            <>
-              <dl className="cc-dl">
-                <div>
-                  <dt>الاسم</dt>
-                  <dd>{preview.name_ar}</dd>
-                </div>
-                <div>
-                  <dt>الهدف / المستوى</dt>
-                  <dd>
-                    {GOAL_LABELS[preview.goal ?? ""] ?? preview.goal ?? "—"} · {preview.level ?? "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>المدة</dt>
-                  <dd>
-                    {preview.duration_weeks} أسبوع · {preview.days_per_week} أيام/أسبوع · {preview.weeks.length} أسبوع مبني
-                  </dd>
-                </div>
-                <div>
-                  <dt>التمارين</dt>
-                  <dd>{preview.weeks.reduce((sum, week) => sum + week.days.reduce((inner, day) => inner + day.exercises.length, 0), 0)}</dd>
-                </div>
-                <div>
-                  <dt>إصدار القالب</dt>
-                  <dd>{preview.version}</dd>
-                </div>
-              </dl>
-              {overview.assignment?.status === "active" ? (
-                <p className="cc-field__error" role="alert">
-                  يوجد برنامج نشط. التعيين الجديد يستبدله بعد التأكيد ويُبقي التاريخ.
-                </p>
-              ) : null}
-              <AdminField label="تاريخ البداية" htmlFor="starts_on">
-                <input
-                  id="starts_on"
-                  className="cc-input"
-                  type="date"
-                  value={startsOn}
-                  onChange={(event) => setStartsOn(event.target.value)}
-                />
-              </AdminField>
-              <div className="cc-editor-toolbar">
-                <button type="button" className="cc-btn" onClick={() => setAssignStep("pick")}>
-                  رجوع
-                </button>
-                <button
-                  type="button"
-                  className="cc-btn cc-btn--primary"
-                  onClick={() => confirmAssign(overview.assignment?.status === "active" || overview.assignment?.status === "scheduled")}
-                >
-                  متابعة التأكيد
-                </button>
-              </div>
-            </>
+            <TemplateAssignPreview
+              preview={preview}
+              overview={overview}
+              detail={detail}
+              startsOn={startsOn}
+              assignStrategy={assignStrategy}
+              onAssignStrategy={setAssignStrategy}
+              onStartsOn={setStartsOn}
+              onBack={() => setAssignStep("pick")}
+              onConfirm={() =>
+                confirmAssign(overview.assignment?.status === "active" || overview.assignment?.status === "scheduled")
+              }
+            />
           ) : null}
           <button type="button" className="cc-btn cc-btn--ghost" onClick={() => { setAssignStep("closed"); setPreview(null); }}>
             إغلاق
@@ -1304,16 +1625,72 @@ export function ClientTrainingWorkspace({
 
       {editing && draft?.snapshot_complete ? (
         <AdminCard>
-          <h2 className="cc-section__title">محرر نسخة العميل</h2>
-          <p className="cc-muted">هذه الحقول خاصة بلقطة العميل. ملاحظات التمرين تظهر للعميل. الملاحظات الداخلية تبقى في تبويب الملاحظات.</p>
+          <header className="cc-edit-header">
+            <h2 className="cc-section__title">محرر نسخة العميل</h2>
+            <span className="cc-badge-client-edit">CLIENT-SPECIFIC EDIT</span>
+          </header>
+          <p>
+            تعديل برنامج العميل — {overview.full_name || "العميل"} · المصدر:{" "}
+            {programSourceLabel(
+              resolveProgramSource({
+                source_template_id: detail?.source_template_id,
+                generation_source: detail?.generation_source,
+              }),
+            )}
+          </p>
+          <p className="cc-muted">هذه الحقول خاصة بلقطة العميل. تعديل القالب الأصلي لا يحدث من هنا.</p>
+          {dirty ? (
+            <div className="cc-sticky-save">
+              <span>● لديك تعديلات غير محفوظة</span>
+              <AdminSaveState state={saveState} />
+              <button
+                type="button"
+                className="cc-btn"
+                onClick={() =>
+                  guard(() => {
+                    setDraft(detail);
+                    setEditing(false);
+                    setSaveState("saved");
+                  })
+                }
+              >
+                إلغاء
+              </button>
+              <button type="button" className="cc-btn cc-btn--primary" disabled={saveState === "saving"} onClick={() => void saveDraft()}>
+                حفظ التعديلات
+              </button>
+            </div>
+          ) : saveState === "saved" ? (
+            <p className="cc-muted">✓ تم حفظ تعديلات برنامج العميل</p>
+          ) : saveState === "failed" ? (
+            <div className="cc-sticky-save">
+              <span>تعذر حفظ التعديلات</span>
+              <button type="button" className="cc-btn cc-btn--primary" onClick={() => void saveDraft()}>
+                إعادة المحاولة
+              </button>
+            </div>
+          ) : null}
           {draft.weeks.map((week, weekIndex) => (
             <section key={week.id} className="cc-week">
               <strong>الأسبوع {week.week_number}</strong>
-              {week.days.map((day, dayIndex) => (
-                <div key={day.id} className="cc-day">
-                  <span>{day.title_ar} · يوم {day.day_number}</span>
+              {week.days.map((day, dayIndex) => {
+                const presentation = sessionPresentationForDay(day);
+                return (
+                <div key={day.id} className={day.day_type === "workout" ? "cc-day" : "cc-day is-rest"}>
+                  <div className="cc-ing-head">
+                    <span>
+                      {day.title_ar || presentation.displayNameAr} · {presentation.displayNameAr} · {presentation.exerciseCount} تمارين
+                    </span>
+                    {day.day_type === "workout" ? (
+                      <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPickerOpen({ week: weekIndex, day: dayIndex })}>
+                        إضافة تمرين
+                      </button>
+                    ) : (
+                      <span className="cc-muted">راحة</span>
+                    )}
+                  </div>
                   {day.exercises.map((exercise, exerciseIndex) => (
-                    <div key={exercise.id} className="cc-ex-row">
+                    <div key={exercise.id || `${exercise.exercise_id}-${exerciseIndex}`} className="cc-ex-row">
                       <span>
                         {exercise.exercise_name_ar} <span dir="ltr">{exercise.exercise_name_en}</span>
                       </span>
@@ -1441,10 +1818,35 @@ export function ClientTrainingWorkspace({
                       >
                         استبدال التمرين
                       </button>
+                      <button
+                        type="button"
+                        className="cc-btn cc-btn--ghost"
+                        onClick={() => {
+                          setDraft({
+                            ...draft,
+                            weeks: draft.weeks.map((row, w) =>
+                              w !== weekIndex
+                                ? row
+                                : {
+                                    ...row,
+                                    days: row.days.map((item, d) =>
+                                      d !== dayIndex
+                                        ? item
+                                        : { ...item, exercises: item.exercises.filter((_, i) => i !== exerciseIndex) },
+                                    ),
+                                  },
+                            ),
+                          });
+                          setSaveState("unsaved");
+                        }}
+                      >
+                        حذف
+                      </button>
                     </div>
                   ))}
                 </div>
-              ))}
+                );
+              })}
             </section>
           ))}
           <div className="cc-editor-toolbar">
@@ -1472,16 +1874,20 @@ export function ClientTrainingWorkspace({
           {detail.weeks.map((week) => (
             <section key={week.id} className="cc-week">
               <strong>الأسبوع {week.week_number}</strong>
-              {week.days.map((day) => (
-                <div key={day.id} className="cc-day">
-                  <span>{day.title_ar}</span>
+              {week.days.map((day) => {
+                const presentation = sessionPresentationForDay(day);
+                return (
+                <div key={day.id} className={day.day_type === "workout" ? "cc-day" : "cc-day is-rest"}>
+                  <span>{presentation.displayNameAr} · {day.title_ar}</span>
+                  {day.day_type !== "workout" ? <p className="cc-muted">راحة</p> : null}
                   {day.exercises.map((exercise) => (
                     <p key={exercise.id} className="cc-meta">
                       {exercise.exercise_name_ar} · {exercise.sets} مجموعات · {formatRepsLabel(exercise) ?? "—"}
                     </p>
                   ))}
                 </div>
-              ))}
+                );
+              })}
             </section>
           ))}
         </AdminCard>
@@ -1501,39 +1907,142 @@ export function ClientTrainingWorkspace({
         onOpen={(id) => void loadAssignment(id)}
       />
 
-      {pickerOpen && draft ? (
-        <div className="cc-dialog-scrim" role="dialog" aria-labelledby="client-ex-picker">
-          <div className="cc-dialog cc-dialog--wide">
-            <h2 id="client-ex-picker">استبدال تمرين من المكتبة</h2>
-            <AdminSearchInput value={pickerQuery} onChange={setPickerQuery} placeholder="ابحث في التمارين النشطة" label="بحث التمرين" />
-            <ul className="cc-picker-list">
-              {exerciseRows.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="cc-row-btn"
-                    onClick={() => {
-                      patchExercise(pickerOpen.week, pickerOpen.day, pickerOpen.exercise, {
-                        exercise_id: item.id,
-                        exercise_external_id: item.external_id,
-                        exercise_name_ar: item.name_ar,
-                        exercise_name_en: item.name_en,
-                      });
-                      setPickerOpen(null);
-                    }}
-                  >
-                    {item.name_ar} <span dir="ltr">{item.name_en}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPickerOpen(null)}>
-              إغلاق
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <AdminExercisePicker
+        open={Boolean(pickerOpen && draft)}
+        title={pickerOpen?.exercise == null ? "إضافة تمرين من المكتبة" : "استبدال التمرين"}
+        onClose={() => setPickerOpen(null)}
+        onPick={applyPickedExercise}
+      />
     </AdminSection>
+  );
+}
+
+function TemplateAssignPreview({
+  preview,
+  overview,
+  detail,
+  startsOn,
+  assignStrategy,
+  onAssignStrategy,
+  onStartsOn,
+  onBack,
+  onConfirm,
+}: {
+  preview: AdminProgramDetail;
+  overview: AdminClientOverview;
+  detail: AdminAssignmentDetail | null;
+  startsOn: string;
+  assignStrategy: ProgressionStrategy;
+  onAssignStrategy: (value: ProgressionStrategy) => void;
+  onStartsOn: (value: string) => void;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const compatibility = assessTemplateCompatibility({
+    template: {
+      goal: preview.goal,
+      level: preview.level,
+      days_per_week: preview.days_per_week,
+      training_location: (templateLocationFromMetadata(preview.metadata) ?? preview.training_location) as ProgramLocation | null,
+      weeks: preview.weeks,
+    },
+    client: {
+      goal: overview.goal,
+      level: detail?.level,
+      trainingType: overview.training_type,
+      daysPerWeek: detail?.days_per_week,
+    },
+  });
+  return (
+    <>
+      <dl className="cc-dl">
+        <div>
+          <dt>الهدف</dt>
+          <dd>{programGoalLabel(preview.goal)}</dd>
+        </div>
+        <div>
+          <dt>المستوى</dt>
+          <dd>{programLevelLabel(preview.level)}</dd>
+        </div>
+        <div>
+          <dt>الأيام / المكان</dt>
+          <dd>
+            {preview.days_per_week} · {programLocationLabel((preview.training_location as ProgramLocation) ?? "GYM")}
+          </dd>
+        </div>
+        <div>
+          <dt>الإصدار</dt>
+          <dd>V{preview.version}</dd>
+        </div>
+      </dl>
+      <p className={`cc-compat cc-compat--${compatibility.status.toLowerCase()}`}>
+        {compatibilityStatusLabel(compatibility.status)}
+        {compatibility.status === "SAFE" ? " — ✓ متوافق مع استراتيجية العميل" : null}
+      </p>
+      {compatibility.reasons.length ? (
+        <ul>
+          {compatibility.reasons.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      ) : null}
+      {compatibility.recommendations.length ? (
+        <ul>
+          {compatibility.recommendations.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      ) : null}
+      <ul className="cc-weekly-schedule__list">
+        {(preview.weeks[0]?.days ?? []).map((day, index) => {
+          const weekday = WEEKDAY_CALENDAR_ORDER[index] ?? "sun";
+          const presentation = sessionPresentationForDay(day);
+          return (
+            <li key={index} className={day.day_type === "workout" ? undefined : "is-rest"}>
+              <span className="cc-weekly-schedule__day">{WEEKDAY_LABELS_AR[weekday]}</span>
+              {day.day_type === "workout" ? presentation.displayNameAr : "راحة"}
+            </li>
+          );
+        })}
+      </ul>
+      {overview.assignment?.status === "active" ? (
+        <p className="cc-field__error" role="alert">
+          يوجد برنامج نشط. التعيين الجديد يستبدله بعد التأكيد ويُبقي التاريخ.
+        </p>
+      ) : null}
+      <AdminField label="تاريخ البداية" htmlFor="starts_on">
+        <input
+          id="starts_on"
+          className="cc-input"
+          type="date"
+          value={startsOn}
+          onChange={(event) => onStartsOn(event.target.value)}
+        />
+      </AdminField>
+      <div className="cc-progression-picker">
+        <p className="cc-section__lead">استراتيجية التطور</p>
+        {PROGRESSION_STRATEGY_OPTIONS.map((item) => (
+          <label key={item.id} className={assignStrategy === item.id ? "cc-cms-type is-active" : "cc-cms-type"}>
+            <input
+              type="radio"
+              name="assign-progression-strategy"
+              checked={assignStrategy === item.id}
+              onChange={() => onAssignStrategy(parseProgressionStrategy(item.id))}
+            />
+            <strong>{item.label_ar}</strong>
+            <span className="cc-muted">{item.description_ar}</span>
+          </label>
+        ))}
+      </div>
+      <div className="cc-editor-toolbar">
+        <button type="button" className="cc-btn" onClick={onBack}>
+          رجوع
+        </button>
+        <button type="button" className="cc-btn cc-btn--primary" onClick={onConfirm}>
+          متابعة التأكيد
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -1581,7 +2090,7 @@ function HistoryList({
       {rows.length === 0 ? <AdminEmptyState title="لا تاريخ تعيين" body="ستظهر هنا البرامج السابقة والحالية والمجدولة." /> : null}
       {rows.map((row) => (
         <button key={row.id} type="button" className="cc-row-btn" onClick={() => onOpen(row.id)}>
-          {row.name_ar || row.id.slice(0, 8)} · {assignmentStatusLabel(row.status)} · إصدار {row.template_version} ·{" "}
+          {row.name_ar || "برنامج"} · {assignmentStatusLabel(row.status)} · {row.source_template_id ? "قالب" : "Matrix"} · إصدار {row.template_version} ·{" "}
           {formatAdminDate(row.assigned_at)}
           {row.snapshot_complete ? "" : " · لقطة ناقصة"}
         </button>

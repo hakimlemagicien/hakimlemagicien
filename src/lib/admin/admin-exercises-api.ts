@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import { CORE_100_EXTERNAL_IDS } from "@/lib/platform/strategy-matrix/config/core-100-external-ids";
+import { ADMIN_LIBRARY_MAX_PAGE_SIZE, ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
 
 export type AdminExerciseListItem = {
   id: string;
@@ -58,6 +59,7 @@ export type AdminExerciseFilters = {
   type?: string | null;
   active?: boolean | null;
   offset?: number;
+  limit?: number;
 };
 
 export type AdminExerciseFilterOptions = {
@@ -104,7 +106,7 @@ export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
     p_difficulty: filters.difficulty || null,
     p_type: filters.type || null,
     p_active: filters.active ?? null,
-    p_limit: clampAdminLibraryLimit(ADMIN_LIBRARY_PAGE_SIZE),
+    p_limit: clampAdminLibraryLimit(filters.limit ?? ADMIN_LIBRARY_PAGE_SIZE, ADMIN_LIBRARY_MAX_PAGE_SIZE),
     p_offset: Math.max(filters.offset ?? 0, 0),
   });
   if (error) throw error;
@@ -216,4 +218,15 @@ export function emptyExerciseDraft(muscleGroupId = ""): Omit<AdminExerciseDetail
     complexity: null,
     beginner_eligible: null,
   };
+}
+
+/** Live count of Core 100 exercises currently active for the client app. */
+export async function countClientVisibleExercises(): Promise<number> {
+  const { count, error } = await supabase
+    .from("exercises")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true)
+    .in("external_id", [...CORE_100_EXTERNAL_IDS]);
+  if (error) throw error;
+  return count ?? 0;
 }

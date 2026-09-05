@@ -14,6 +14,10 @@ import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/li
 import { getWeekdayIdFromDate, resolveWeekdayPlan, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
+import {
+  homeBucketForCanonicalGoal,
+  isCanonicalTrainingGoal,
+} from "@/lib/platform/training-v2-contracts";
 
 /** User training goal used to personalize home content. */
 export type UserGoal = "cut" | "bulk" | "fitness";
@@ -280,7 +284,9 @@ export function buildTimeGreeting(displayName: string, date = new Date()): strin
 }
 
 export function resolveUserGoal(raw?: string | null): UserGoal {
-  const value = (raw ?? "").toLowerCase();
+  const trimmed = (raw ?? "").trim();
+  if (isCanonicalTrainingGoal(trimmed)) return homeBucketForCanonicalGoal(trimmed);
+  const value = trimmed.toLowerCase();
   if (value.includes("bulk") || value.includes("تضخيم") || value.includes("عضل")) return "bulk";
   if (value.includes("fit") || value.includes("لياق") || value.includes("صح")) return "fitness";
   return "cut";
@@ -708,7 +714,8 @@ export type DiscoverPreviewItem = {
   title: string;
   description: string;
   href: string;
-  image: FeaturedContentItem["image"];
+  image?: FeaturedContentItem["image"];
+  coverSrc?: string;
   badge?: string;
   badgeTone?: "article" | "recipe" | "workout";
   showPlay?: boolean;
@@ -1027,10 +1034,12 @@ export function buildNextSession(input: {
     return {
       kind: "done",
       eyebrow: "البرنامج",
-      title: input.assignmentReason === "legacy_incomplete" ? "البرنامج يحتاج مراجعة" : "لا برنامج تدريبي معيَّن",
-      meta: "لا تُعرض تمارين افتراضية مكان برنامجك",
+      title: input.assignmentReason === "legacy_incomplete"
+        ? TRAINING_PRODUCT_COPY.strategySetupTitle
+        : TRAINING_PRODUCT_COPY.paidNoProgramTitle,
+      meta: TRAINING_PRODUCT_COPY.strategySetupBody,
       href: "/app/program/workout",
-      cta: null,
+      cta: TRAINING_PRODUCT_COPY.strategySetupCta,
     };
   }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  AdminConceptKpiRow,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -271,14 +272,46 @@ export function NutritionLibraryManager() {
   return (
     <>
       <AdminPageHeader
-        kicker="مكتبة التغذية"
-        title="مكتبة الوجبات"
-        subtitle={`${NUTRITION_BOUNDARIES.library} — منفصلة عن ${NUTRITION_BOUNDARIES.plan}. تعديل الوجبة لا يغيّر خطط العملاء تلقائيًا.`}
+        kicker="التغذية"
+        title="إدارة التغذية"
+        subtitle={`${NUTRITION_BOUNDARIES.library} — منفصلة عن ${NUTRITION_BOUNDARIES.plan}. مكتبة الوجبات لا تغيّر خطط العملاء تلقائيًا.`}
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
             وجبة جديدة
           </button>
         }
+      />
+      <AdminConceptKpiRow
+        loading={loading}
+        metrics={[
+          {
+            id: "meals",
+            label: "وجبات في المكتبة",
+            value: total.toLocaleString("ar-AE"),
+            hint: "مكتبة الوجبات",
+            tone: total > 0 ? "positive" : "neutral",
+          },
+          {
+            id: "page",
+            label: "في هذه الصفحة",
+            value: rows.length.toLocaleString("ar-AE"),
+            hint: "نتائج التصفية الحالية",
+          },
+          {
+            id: "plans",
+            label: "خطط نشطة",
+            value: "—",
+            hint: "خطة العميل تُدار من ملف العميل",
+            tone: "unavailable",
+          },
+          {
+            id: "allergy",
+            label: "تنبيهات الحساسية",
+            value: "—",
+            hint: "لا عدّاد حساسية تشغيلي هنا",
+            tone: "unavailable",
+          },
+        ]}
       />
       <AdminLibraryLayout
         list={

@@ -74,6 +74,16 @@ export function mapQuizGoalToClientGoalId(goalId: string | null | undefined): Cl
     gain: "MUSCLE_GAIN",
     fat_loss: "FAT_LOSS",
     muscle_gain: "MUSCLE_GAIN",
+    muscle_growth: "MUSCLE_GAIN",
+    fitness_energy: "FITNESS_ENDURANCE",
+    athletic_physique: "GENERAL_HEALTH_FITNESS",
+    body_reshape: "BODY_RECOMPOSITION",
+    healthy_weight_gain: "MUSCLE_GAIN",
+    posture_toned_back: "POSTURE_BACK_HEALTH",
+    toned_arms_upper_body: "UPPER_BODY_DEFINITION",
+    feminine_balanced_body: "FEMININE_BALANCED_BODY",
+    glute_growth: "GLUTE_GROWTH",
+    slim_toned_waist: "WAIST_DEFINITION",
   };
   return map[key] ?? null;
 }

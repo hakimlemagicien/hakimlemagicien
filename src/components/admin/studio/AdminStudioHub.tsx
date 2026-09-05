@@ -49,8 +49,8 @@ export function AdminStudioHub({ search }: { search: AdminStudioSearch }) {
     <div className="cc-page" dir="rtl">
       <AdminPageHeader
         kicker="المحتوى والتصميم"
-        title="ستوديو"
-        subtitle="معاينة بطاقة الهيرو ومحرر الواجهة — التعديلات المحفوظة تُطبَّق على جميع المستخدمين."
+        title="المحتوى وستوديو التصميم"
+        subtitle="معاينة بطاقة الهيرو ومحرر الواجهة — التعديلات المحفوظة تُطبَّق على جميع المستخدمين. ليست لوحة هوية وهمية."
       />
 
       <div className="mb-6 flex flex-wrap gap-2">

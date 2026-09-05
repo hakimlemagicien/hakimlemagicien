@@ -838,42 +838,79 @@ export function HomeNextSession({ session }: { session: NextSessionState }) {
 
 /* ── Discover ──────────────────────────────────────────────────────────── */
 
-function DiscoverPreviewCard({ item }: { item: DiscoverPreviewItem }) {
-  const imageSrc = FEATURED_IMAGES[item.image];
+/* ── Discover ──────────────────────────────────────────────────────────── */
+
+export function HomeDiscoverCard({
+  item,
+  preview = false,
+}: {
+  item: DiscoverPreviewItem;
+  preview?: boolean;
+}) {
+  const imageSrc = item.coverSrc || (item.image ? FEATURED_IMAGES[item.image] : undefined);
+  const media = (
+    <div className="platform-home-discover-card__media">
+      {imageSrc ? (
+        <OptimizedImage src={imageSrc} alt="" className="h-full w-full" objectFit="cover" width={1080} height={1350} />
+      ) : (
+        <span className="platform-home-discover-card__fallback" aria-hidden />
+      )}
+      <span className="platform-home-discover-card__shade" aria-hidden />
+      {item.badge ? (
+        <span
+          className={cn(
+            "platform-home-discover-card__badge",
+            item.badgeTone === "recipe" && "is-recipe",
+            item.badgeTone === "article" && "is-article",
+          )}
+        >
+          {item.badge}
+        </span>
+      ) : null}
+      {item.showPlay ? (
+        <span className="platform-home-discover-card__play" aria-hidden>
+          <Play className="h-5 w-5 fill-current" />
+        </span>
+      ) : null}
+      <div className="platform-home-discover-card__caption">
+        <p className="platform-home-discover-card__title">{item.title}</p>
+        <p className="platform-home-discover-card__desc">
+          <Clock3 className="h-3.5 w-3.5" aria-hidden />
+          {item.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (preview) {
+    return (
+      <article className="platform-home-discover-card" aria-label={`${item.title} — ${item.description}`}>
+        {media}
+      </article>
+    );
+  }
+
+  const slug = item.href.match(/^\/app\/discover\/([^/?#]+)$/)?.[1];
+  if (slug && slug !== "discover") {
+    return (
+      <Link
+        to="/app/discover/$slug"
+        params={{ slug }}
+        className="platform-home-discover-card platform-touch"
+        aria-label={`${item.title} — ${item.description}`}
+      >
+        {media}
+      </Link>
+    );
+  }
 
   return (
     <Link
-      to={item.href}
+      to="/app/discover"
       className="platform-home-discover-card platform-touch"
       aria-label={`${item.title} — ${item.description}`}
     >
-      <div className="platform-home-discover-card__media">
-        <OptimizedImage src={imageSrc} alt="" className="h-full w-full" objectFit="cover" />
-        <span className="platform-home-discover-card__shade" aria-hidden />
-        {item.badge ? (
-          <span
-            className={cn(
-              "platform-home-discover-card__badge",
-              item.badgeTone === "recipe" && "is-recipe",
-              item.badgeTone === "article" && "is-article",
-            )}
-          >
-            {item.badge}
-          </span>
-        ) : null}
-        {item.showPlay ? (
-          <span className="platform-home-discover-card__play" aria-hidden>
-            <Play className="h-5 w-5 fill-current" />
-          </span>
-        ) : null}
-        <div className="platform-home-discover-card__caption">
-          <p className="platform-home-discover-card__title">{item.title}</p>
-          <p className="platform-home-discover-card__desc">
-            <Clock3 className="h-3.5 w-3.5" aria-hidden />
-            {item.description}
-          </p>
-        </div>
-      </div>
+      {media}
     </Link>
   );
 }
@@ -895,7 +932,7 @@ export function HomeDiscover({ items }: { items: DiscoverPreviewItem[] }) {
 
       <div className="platform-home-discover-grid" data-count={items.length}>
         {items.map((item) => (
-          <DiscoverPreviewCard key={item.id} item={item} />
+          <HomeDiscoverCard key={item.id} item={item} />
         ))}
       </div>
     </section>

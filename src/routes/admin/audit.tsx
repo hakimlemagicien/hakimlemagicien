@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  AdminConceptTabs,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -97,6 +98,13 @@ function AdminAuditPage() {
       <AdminPageHeader
         title="سجل العمليات"
         subtitle="سجل التدقيق والأحداث التشغيلية — قراءة فقط."
+      />
+      <AdminConceptTabs
+        items={[
+          { id: "tickets", label: "تذاكر الدعم", to: "/admin/support" },
+          { id: "team", label: "الفريق", to: "/admin/settings" },
+          { id: "audit", label: "سجل التدقيق", to: "/admin/audit", active: true },
+        ]}
       />
 
       <AdminSearchInput

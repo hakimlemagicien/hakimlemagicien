@@ -3114,7 +3114,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         country: contactPayload.country,
         city: contactPayload.city,
         goal: quizAnswers.goalId ?? undefined,
-        location_preference: contactPayload.locationPreference,
+        // Persist quiz training place for Strategy Matrix — not dubai/remote contact preference.
+        training_type: quizAnswers.trainingEnvironment ?? undefined,
+        location_preference: quizAnswers.trainingEnvironment ?? contactPayload.locationPreference,
         answers: buildQuizAnswersPayload({
           ...quizAnswers,
           userLocation: contactPayload.locationPreference,

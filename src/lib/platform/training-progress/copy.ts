@@ -17,6 +17,11 @@ export const GOAL_DISPLAY_NAMES: Record<TrainingV2CanonicalGoal, string> = {
   FEMININE_BALANCED_BODY: "جسم متوازن",
   FAT_LOSS: "خسارة الدهون",
   POSTURE_TONED_BACK: "ظهر وقوام مشدود",
+  MUSCLE_GROWTH: "بناء العضلات",
+  FITNESS_ENERGY: "لياقة وطاقة",
+  ATHLETIC_PHYSIQUE: "قوام رياضي",
+  BODY_RESHAPE: "تغيير الشكل",
+  HEALTHY_WEIGHT_GAIN: "زيادة وزن صحي",
 };
 
 export const REGION_LABELS: Record<string, string> = {

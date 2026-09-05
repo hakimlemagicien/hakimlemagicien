@@ -158,7 +158,10 @@ assert(JSON.stringify(d1) === JSON.stringify(d2), "safety rules deterministic");
 
 // --- Fail-closed goal unchanged ---
 
-const blockedGoal = resolveTrainingStrategy(baseInput({ rawGoalId: "muscle" }));
-assert(!blockedGoal.ok, "unmapped goal still fail-closed");
+const blockedGoal = resolveTrainingStrategy(baseInput({ rawGoalId: "not-a-real-goal" }));
+assert(!blockedGoal.ok, "unknown goal still fail-closed");
+
+const toneOk = resolveTrainingStrategy(baseInput({ rawGoalId: "tone" }));
+assert(toneOk.ok, "quiz tone goal now maps through bridge");
 
 console.log("core-100-safety.test.ts: all tests passed");
