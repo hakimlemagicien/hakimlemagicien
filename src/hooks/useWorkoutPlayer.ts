@@ -666,12 +666,14 @@ export function useWorkoutPlayer(
   }, [currentExercise, isV2, persistSession]);
 
   const openSetSheet = useCallback(() => {
+    setVideoAutoPlay(false);
     setPhase("set-sheet");
   }, []);
 
   const closeSetSheet = useCallback(() => {
     setPhase("exercise");
     setEditingSet(false);
+    setVideoAutoPlay(true);
   }, []);
 
   const startRest = useCallback((seconds: number) => {
@@ -681,6 +683,7 @@ export function useWorkoutPlayer(
     setRestSecondsLeft(seconds);
     setPhase("rest");
     setSetInProgress(false);
+    setVideoAutoPlay(false);
   }, []);
 
   const advanceAfterSet = useCallback(() => {
@@ -972,6 +975,9 @@ export function useWorkoutPlayer(
     );
     setPhase("complete");
     setRestClock(null);
+    setSetInProgress(false);
+    setVideoOpen(false);
+    setVideoAutoPlay(false);
     void persistSession().then((id) => {
       if (id) void updateWorkoutSessionStatus(id, remaining ? "PARTIALLY_COMPLETED" : "COMPLETED");
       trackTrainingEvent(remaining ? "workout_partial" : "workout_completed", { runtime: isV2 ? "v2" : "legacy_free" });
@@ -992,6 +998,7 @@ export function useWorkoutPlayer(
       safetyFlag: false,
     });
     setEditingSet(true);
+    setVideoAutoPlay(false);
     setPhase("set-sheet");
   }, [lastLogForCurrent, v2Targets.durationMax, v2Targets.repsMax]);
 
@@ -1027,6 +1034,9 @@ export function useWorkoutPlayer(
       setExerciseIndex(index);
       setHeroKey((value) => value + 1);
       setSetInProgress(false);
+      setVideoOpen(false);
+      setVideoAutoPlay(false);
+      setRestClock(null);
       setPhase("exercise");
       setCalibrationAction(null);
     },

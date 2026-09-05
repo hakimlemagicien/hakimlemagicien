@@ -6034,6 +6034,26 @@ button.platform-home-day-card {
 
 
 
+@keyframes workout-coach-tip-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  20% { transform: translate3d(-1px, -1.5px, 0) rotate(-0.6deg); }
+  40% { transform: translate3d(1px, 1px, 0) rotate(0.5deg); }
+  60% { transform: translate3d(-0.5px, 1.5px, 0) rotate(-0.35deg); }
+  80% { transform: translate3d(0.75px, -1px, 0) rotate(0.4deg); }
+}
+
+.workout-coach-tip-float {
+  animation: workout-coach-tip-float 2.4s ease-in-out infinite;
+  will-change: transform;
+  transform-origin: 85% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workout-coach-tip-float {
+    animation: none;
+  }
+}
+
 @keyframes float-soft {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }

@@ -30,6 +30,7 @@ import {
   isExerciseUnlockedByEntitlements,
   isTrainingPreviewMode,
 } from "@/lib/platform/entitlements";
+import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
@@ -71,7 +72,6 @@ import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { ClientTrainingStrategySetupCard } from "@/components/platform/workout/ClientTrainingStrategySetupCard";
 import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
-import { isLocalProgramHoldPreview } from "@/lib/platform/program-preparation-hold";
 import { SessionAnatomyVisual } from "@/components/platform/workout/SessionAnatomyVisual";
 import {
   resolveSessionAnatomyImageSrc,
@@ -612,7 +612,11 @@ function SessionExercisePathRow({
       isExerciseUnlockedByEntitlements(entitlements, orderIndex, { isToday: true }));
   const isDone = exercise.status === "done";
   const isActive = exercise.status === "active";
-  const stillThumb = getExerciseStageListThumb(exercise.external_id);
+  const preferVideoThumb = exerciseHasRealMotionVideo({
+    externalId: exercise.external_id,
+    videoStatus: exercise.videoStatus,
+  });
+  const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
   const thumbClass = cn(
     "h-full w-full object-cover object-center",
     !isUnlocked && "opacity-45 saturate-50",
@@ -1124,7 +1128,7 @@ function WorkoutDayPage() {
         {showHoldRoom ? (
           <ProgramPreparationHoldCard
             hold={hold}
-            showUpgrade={!membership.is_paid || isLocalProgramHoldPreview()}
+            showUpgrade={!membership.is_paid}
             onUpgrade={() =>
               openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.holdUpgradeTitle)
             }

@@ -147,6 +147,16 @@ export function resolveExerciseListMediaPath(input: {
   thumbnailPath: string | null | undefined;
   videoPath: string | null | undefined;
 }): { status: ExerciseMediaStatus; path: string | null; kind: ExerciseMediaKind } {
+  // Real motion videos use the video itself as the list/session thumbnail —
+  // never a temporary still when the exercise video is ready.
+  if (input.status === "ready" && input.videoPath?.trim()) {
+    return {
+      status: "ready",
+      path: input.videoPath.trim(),
+      kind: "exercise",
+    };
+  }
+
   if (input.thumbnailPath?.trim()) {
     return {
       status: "ready",

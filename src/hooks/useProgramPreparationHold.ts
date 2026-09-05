@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { PROFILE_DETAILS_KEY } from "@/hooks/useProfileExperience";
 import { fetchMyProfileDetails } from "@/lib/platform/profile-api";
 import {
-  createLocalHoldPreview,
-  isLocalProgramHoldPreview,
   resolveProgramPreparationHold,
   type ProgramPreparationHold,
 } from "@/lib/platform/program-preparation-hold";
 
+/**
+ * Hold room for brand-new accounts only (createdAt within 2h, no coach assign).
+ * Existing accounts — including founder/admin — never enter the hold room.
+ */
 export function useProgramPreparationHold(input?: { coachAssigned?: boolean }) {
   const profileQuery = useQuery({
     queryKey: PROFILE_DETAILS_KEY,
@@ -16,16 +18,12 @@ export function useProgramPreparationHold(input?: { coachAssigned?: boolean }) {
     staleTime: 30_000,
   });
   const [now, setNow] = useState(() => Date.now());
-  const [previewStartedAt] = useState(() => Date.now());
-  const localPreview = isLocalProgramHoldPreview();
 
-  const hold = localPreview
-    ? createLocalHoldPreview({ startedAt: previewStartedAt, now })
-    : resolveProgramPreparationHold({
-        createdAt: profileQuery.data?.createdAt ?? null,
-        now,
-        coachAssigned: input?.coachAssigned,
-      });
+  const hold = resolveProgramPreparationHold({
+    createdAt: profileQuery.data?.createdAt ?? null,
+    now,
+    coachAssigned: input?.coachAssigned,
+  });
 
   useEffect(() => {
     if (!hold.active) return;

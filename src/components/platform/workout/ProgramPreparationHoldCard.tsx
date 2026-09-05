@@ -155,7 +155,7 @@ function OriginalPremiumCard({ onUpgrade }: { onUpgrade: () => void }) {
           {PREMIUM_PERKS.map((perk) => (
             <li key={perk} className="flex items-center justify-end gap-2 text-[12px] font-bold">
               <span>{perk}</span>
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" strokeWidth={2.2} />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" strokeWidth={2.2} />
             </li>
           ))}
         </ul>

@@ -4,7 +4,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  createLocalHoldPreview,
   padHoldUnit,
   PROGRAM_PREPARATION_HOLD_MS,
   resolveProgramPreparationHold,
@@ -62,15 +61,11 @@ assertEqual(stepForElapsedMs(0), 2, "step 2 at start");
 assertEqual(padHoldUnit(2), "02", "pad hours");
 assertEqual(padHoldUnit(0), "00", "pad zero");
 
-const previewStart = start.getTime();
-const previewTick = createLocalHoldPreview({
-  startedAt: previewStart,
-  now: previewStart + 3000,
+const olderAccount = resolveProgramPreparationHold({
+  createdAt: new Date(start.getTime() - 3 * 60 * 60 * 1000).toISOString(),
+  now: start,
 });
-assert(previewTick.active, "local preview stays active");
-assertEqual(previewTick.seconds, 57, "local preview actually counts down");
-assertEqual(previewTick.hours, 1, "three seconds into a 2h window");
-assertEqual(previewTick.minutes, 59, "minutes roll after the first second");
+assert(!olderAccount.active, "accounts older than 2h are not held");
 
 const root = process.cwd();
 const card = readFileSync(join(root, "src/components/platform/workout/ProgramPreparationHoldCard.tsx"), "utf8");
@@ -91,6 +86,11 @@ assert(card.includes("2*var(--platform-gutter)-16px"), "matches goal hero width"
 assert(!card.includes("HOLD_DESIGN_OPTIONS"), "design gallery closed");
 assert(!card.includes("bg-[#07140f]"), "dark closed radar removed");
 
+const hook = readFileSync(join(root, "src/hooks/useProgramPreparationHold.ts"), "utf8");
+assert(!hook.includes("isLocalProgramHoldPreview"), "no localhost force-preview");
+assert(!hook.includes("createLocalHoldPreview"), "no fake createdAt preview");
+assert(hook.includes("profileQuery.data?.createdAt"), "hold uses real account createdAt");
+
 const copy = readFileSync(join(root, "src/lib/platform/training-product-copy.ts"), "utf8");
 assert(copy.includes("جاري إعداد برنامجك"), "hold badge copy");
 assert(copy.includes("نحن نجهّز لك برنامجك الشخصي"), "hold title copy");
@@ -102,6 +102,11 @@ const workout = readFileSync(join(root, "src/routes/_platform/app/program/workou
 assert(workout.includes("ProgramPreparationHoldCard"), "workout shows hold room");
 assert(workout.includes("hold.active"), "workout gates schedule on hold");
 assert(workout.includes("<WorkoutGoalHero"), "workout keeps goal hero during hold");
+assert(!workout.includes("isLocalProgramHoldPreview"), "workout does not force local hold preview");
+assert(workout.includes("showUpgrade={!membership.is_paid}"), "upgrade only for free members");
+
+const exercise = readFileSync(join(root, "src/routes/_platform/app/program/workout/exercise.tsx"), "utf8");
+assert(!exercise.includes("isLocalProgramHoldPreview"), "exercise does not force local hold preview");
 
 const platform = readFileSync(join(root, "src/routes/_platform/route.tsx"), "utf8");
 assert(platform.includes("useProgramPreparationHold"), "platform delays auto-assign");
@@ -118,5 +123,9 @@ assert(home.includes("HomeNextSession"), "home keeps normal next session");
 const homeHub = readFileSync(join(root, "src/lib/platform/home-hub.ts"), "utf8");
 assert(!homeHub.includes("buildProgramHoldNextSession"), "home hub hold session removed");
 assert(!homeHub.includes("programHoldActive"), "home hub ignore hold flag");
+
+const holdLib = readFileSync(join(root, "src/lib/platform/program-preparation-hold.ts"), "utf8");
+assert(!holdLib.includes("isLocalProgramHoldPreview"), "local preview helper removed");
+assert(!holdLib.includes("createLocalHoldPreview"), "local preview factory removed");
 
 console.log("program-preparation-hold.test.ts: all assertions passed");

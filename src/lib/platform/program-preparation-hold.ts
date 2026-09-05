@@ -93,23 +93,3 @@ export function resolveProgramPreparationHold(input: {
 export function padHoldUnit(value: number): string {
   return String(value).padStart(2, "0");
 }
-
-/** Localhost-only design preview. Never active on staging or production. */
-export function isLocalProgramHoldPreview(): boolean {
-  if (typeof window === "undefined") return false;
-  if (import.meta.env.PROD) return false;
-  const host = window.location.hostname;
-  return host === "localhost" || host === "127.0.0.1";
-}
-
-export function createLocalHoldPreview(input: {
-  startedAt: number;
-  now: Date | number;
-}): ProgramPreparationHold {
-  const now = typeof input.now === "number" ? input.now : input.now.getTime();
-  return resolveProgramPreparationHold({
-    createdAt: new Date(input.startedAt).toISOString(),
-    now,
-    coachAssigned: false,
-  });
-}

@@ -24,7 +24,6 @@ import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
-import { isLocalProgramHoldPreview } from "@/lib/platform/program-preparation-hold";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle, Lock } from "lucide-react";
@@ -125,7 +124,7 @@ function ExercisePlayerPage() {
         ) : (
           <ProgramPreparationHoldCard
             hold={hold}
-            showUpgrade={!is_paid || isLocalProgramHoldPreview()}
+            showUpgrade={!is_paid}
             onUpgrade={() =>
               openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.holdUpgradeTitle)
             }

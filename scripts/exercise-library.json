@@ -111,6 +111,14 @@
       "equipment": "PARALLEL_BARS",
       "level": "intermediate",
       "status": "placeholder"
+    },
+    {
+      "id": "CH-015",
+      "name": "Incline Smith Machine Bench Press",
+      "name_ar": "بنش سميث مائل",
+      "equipment": "SMITH_MACHINE",
+      "level": "intermediate",
+      "status": "placeholder"
     }
   ],
   "Back": [
