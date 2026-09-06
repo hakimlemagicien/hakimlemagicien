@@ -116,7 +116,7 @@ export function DiscoverSectionHead({
 export function DiscoverPremiumBadge() {
   return (
     <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-black text-primary">
-      Premium
+      PRO
     </span>
   );
 }

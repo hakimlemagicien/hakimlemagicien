@@ -8,6 +8,7 @@ import {
   fetchDiscoverContent,
   fetchDiscoverFeed,
   getDiscoverContentById,
+  resolveDiscoverViewerGender,
   searchDiscoverContentAsync,
 } from "@/lib/platform/discover-content";
 import {
@@ -25,8 +26,9 @@ export const discoverSearchQueryKey = (query: string, filter: DiscoverContentFil
   ["discover", "search", query, filter, categoryId ?? "all"] as const;
 
 export function useDiscoverFeed() {
+  const viewerGender = resolveDiscoverViewerGender();
   const query = useQuery({
-    queryKey: DISCOVER_FEED_QUERY_KEY,
+    queryKey: [...DISCOVER_FEED_QUERY_KEY, viewerGender],
     queryFn: fetchDiscoverFeed,
     staleTime: 60_000,
     placeholderData: buildDiscoverFeed,

@@ -64,6 +64,11 @@ export type AdminAssignmentDetail = AdminAssignmentSummary & {
   updated_at: string;
   exercise_count: number;
   weeks: AdminAssignmentWeek[];
+  generation_source: string | null;
+  progression_strategy: string | null;
+  progression_status: string | null;
+  last_progression_evaluation_at: string | null;
+  progression_state: Record<string, unknown>;
 };
 
 export type AdminSetLogRow = {
@@ -100,6 +105,11 @@ function mapDetail(row: Record<string, unknown>): AdminAssignmentDetail {
     days_per_week: row.days_per_week == null ? null : Number(row.days_per_week),
     updated_at: String(row.updated_at),
     exercise_count: Number(row.exercise_count ?? 0),
+    generation_source: (row.generation_source as string | null) ?? null,
+    progression_strategy: (row.progression_strategy as string | null) ?? null,
+    progression_status: (row.progression_status as string | null) ?? null,
+    last_progression_evaluation_at: (row.last_progression_evaluation_at as string | null) ?? null,
+    progression_state: (row.progression_state as Record<string, unknown>) ?? {},
     weeks: ((row.weeks as AdminAssignmentWeek[]) ?? []).map((week) => ({
       ...week,
       days: (week.days ?? []).map((day) => ({ ...day, exercises: day.exercises ?? [] })),
@@ -250,10 +260,15 @@ export async function saveAdminClientAssignmentExercises(
   assignmentId: string,
   exercises: Array<Record<string, unknown>>,
   expectedUpdatedAt: string | null,
+  extras?: { removeIds?: string[]; reason?: string | null },
 ) {
   const { data, error } = await supabase.rpc("admin_save_client_assignment_exercises", {
     p_assignment_id: assignmentId,
-    p_payload: { exercises },
+    p_payload: {
+      exercises,
+      remove_ids: extras?.removeIds ?? [],
+      reason: extras?.reason ?? null,
+    },
     p_expected_updated_at: expectedUpdatedAt,
   });
   if (error) throw error;

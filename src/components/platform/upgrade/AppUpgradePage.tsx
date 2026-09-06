@@ -172,7 +172,7 @@ export function AppUpgradePage({
 
       {!entitlements.coachChat && currentTier === "premium" ? (
         <p className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-right font-[Tajawal] text-[11px] text-[#64748B]">
-          Premium العام V1 لا يشمل دردشة الكوتش — هذه ميزة VIP الداخلية فقط.
+          PRO العام V1 لا يشمل دردشة الكوتش — هذه ميزة VIP الداخلية فقط.
         </p>
       ) : null}
 

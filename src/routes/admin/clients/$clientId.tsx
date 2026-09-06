@@ -7,12 +7,10 @@ import {
   AdminErrorState,
   AdminPageHeader,
   AdminSection,
-  AdminStatusBadge,
 } from "@/components/admin/AdminPage";
 import { Client360Header } from "@/components/admin/Client360Header";
 import { ClientAccountManagementPanel } from "@/components/admin/ClientAccountManagementPanel";
-import { ClientAttentionAlerts } from "@/components/admin/ClientAttentionAlerts";
-import { ClientHealthSnapshot } from "@/components/admin/ClientHealthSnapshot";
+import { ClientOverviewWorkspace } from "@/components/admin/ClientOverviewWorkspace";
 import {
   AdminConfirmDialog,
   AdminSkeletonRows,
@@ -32,12 +30,12 @@ import {
   listAdminClientNotes,
   type AdminCoachNote,
 } from "@/lib/admin/admin-notes-api";
-import { buildClientAttentionAlerts, clientNutritionSummary, clientTrainingSummary } from "@/lib/admin/admin-client-ops";
-import { formatAdminDate, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { buildClientAttentionAlerts } from "@/lib/admin/admin-client-ops";
+import { formatAdminDate } from "@/lib/admin/admin-status";
 import { normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
-import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
 import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
 import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
+import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
 
 const ClientNutritionWorkspace = lazy(() =>
   import("@/components/admin/ClientNutritionWorkspace").then((module) => ({
@@ -104,6 +102,11 @@ function AdminClient360Page() {
       })
       .finally(() => setNotesLoading(false));
   }, [clientId, tab, includeArchived]);
+
+  const refreshOverview = async () => {
+    const next = await fetchAdminClientOverview(clientId);
+    if (next) setOverview(next);
+  };
 
   const conversationId = overview?.coaching?.conversation_id;
   const attentionAlerts = overview ? buildClientAttentionAlerts(overview, clientId) : [];
@@ -201,7 +204,7 @@ function AdminClient360Page() {
             </div>
           ) : null}
 
-          <nav className="cc-tabs" aria-label="أقسام العميل">
+          <nav className="cc-tabs cc-tabs--line" aria-label="أقسام العميل">
             {CLIENT_360_SECTIONS.map((section) => (
               <Link
                 key={section}
@@ -217,110 +220,15 @@ function AdminClient360Page() {
           </nav>
 
           {tab === "overview" ? (
-            <AdminSection>
-              <h2 className="cc-section__title">يحتاج انتباهك</h2>
-              <ClientAttentionAlerts alerts={attentionAlerts} />
-
-              <h2 className="cc-section__title cc-section__title--spaced">اللقطة الصحية</h2>
-              <ClientHealthSnapshot clientId={clientId} overview={overview} />
-
-              <h2 className="cc-section__title cc-section__title--spaced">ملخص الخطط الحالية</h2>
-              <div className="cc-client-overview-grid">
-                <AdminCard>
-                  <h3 className="cc-section__title">التدريب</h3>
-                  <p>{clientTrainingSummary(overview)}</p>
-                  {overview.assignment?.starts_on ? (
-                    <p className="cc-meta">بدأ {formatAdminDate(overview.assignment.starts_on)}</p>
-                  ) : null}
-                  <Link
-                    to="/admin/clients/$clientId"
-                    params={{ clientId }}
-                    search={{ tab: "training" }}
-                    className="cc-btn cc-btn--compact"
-                  >
-                    فتح التدريب
-                  </Link>
-                </AdminCard>
-                <AdminCard>
-                  <h3 className="cc-section__title">التغذية</h3>
-                  <p>{clientNutritionSummary(overview)}</p>
-                  {overview.nutrition_assignment?.starts_on ? (
-                    <p className="cc-meta">بدأ {formatAdminDate(overview.nutrition_assignment.starts_on)}</p>
-                  ) : null}
-                  <Link
-                    to="/admin/clients/$clientId"
-                    params={{ clientId }}
-                    search={{ tab: "nutrition" }}
-                    className="cc-btn cc-btn--compact"
-                  >
-                    فتح التغذية
-                  </Link>
-                </AdminCard>
-                <AdminCard>
-                  <h3 className="cc-section__title">العضوية</h3>
-                  <p>
-                    {overview.membership ? (
-                      <>
-                        <AdminStatusBadge tone={planStatusKind(overview.membership.tier)}>
-                          {planLabel(overview.membership.tier)}
-                        </AdminStatusBadge>{" "}
-                        {overview.membership.is_active ? "نشطة" : "غير نشطة"}
-                      </>
-                    ) : (
-                      "لا عضوية مسجّلة"
-                    )}
-                  </p>
-                  {overview.membership?.paid_period_end ? (
-                    <p className="cc-meta">الفترة المدفوعة حتى {formatAdminDate(overview.membership.paid_period_end)}</p>
-                  ) : null}
-                  <Link
-                    to="/admin/clients/$clientId"
-                    params={{ clientId }}
-                    search={{ tab: "membership" }}
-                    className="cc-btn cc-btn--compact"
-                  >
-                    الاشتراك والفوترة
-                  </Link>
-                </AdminCard>
-              </div>
-
-              {notesPreview.length > 0 ? (
-                <AdminCard className="cc-client-notes-preview">
-                  <h3 className="cc-section__title">آخر ملاحظة</h3>
-                  <p>{notesPreview[0]?.body}</p>
-                  <p className="cc-meta">{formatAdminDate(notesPreview[0]?.createdAt ?? "")}</p>
-                  <Link
-                    to="/admin/clients/$clientId"
-                    params={{ clientId }}
-                    search={{ tab: "notes" }}
-                    className="cc-btn cc-btn--compact"
-                  >
-                    كل الملاحظات
-                  </Link>
-                </AdminCard>
-              ) : null}
-
-              <AdminCard>
-                <h3 className="cc-section__title">آخر النشاطات</h3>
-                <ClientActivityPanel clientId={clientId} limit={5} compact />
-                <Link
-                  to="/admin/clients/$clientId"
-                  params={{ clientId }}
-                  search={{ tab: "activity" }}
-                  className="cc-btn cc-btn--compact"
-                >
-                  عرض كل النشاط
-                </Link>
-              </AdminCard>
-
-              <ClientAccountManagementPanel
-                overview={overview}
-                onUpdated={async () => {
-                  const next = await fetchAdminClientOverview(clientId);
-                  if (next) setOverview(next);
-                }}
-              />
-            </AdminSection>
+            <ClientOverviewWorkspace
+              clientId={clientId}
+              overview={overview}
+              alerts={attentionAlerts}
+              notesPreview={notesPreview}
+              conversationId={conversationId}
+              onUpdated={refreshOverview}
+              onConfirm={setConfirm}
+            />
           ) : null}
 
           {tab === "notes" ? (
@@ -378,7 +286,13 @@ function AdminClient360Page() {
           ) : null}
 
           {tab === "membership" ? (
-            <ClientMembershipWorkspace clientId={clientId} overview={overview} />
+            <ClientMembershipWorkspace
+              clientId={clientId}
+              overview={overview}
+              sidebar={
+                <ClientAccountManagementPanel overview={overview} onUpdated={refreshOverview} />
+              }
+            />
           ) : null}
 
           {tab === "activity" ? <ClientActivityPanel clientId={clientId} /> : null}
@@ -389,10 +303,7 @@ function AdminClient360Page() {
               conversationId={conversationId}
               overview={overview}
               tab={tab}
-              onOverviewRefresh={async () => {
-                const next = await fetchAdminClientOverview(clientId);
-                if (next) setOverview(next);
-              }}
+              onOverviewRefresh={refreshOverview}
               onConfirm={setConfirm}
             />
           ) : null}

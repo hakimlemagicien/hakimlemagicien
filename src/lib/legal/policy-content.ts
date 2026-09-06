@@ -59,9 +59,9 @@ const AR: Record<PolicyKind, LegalDocument> = {
       {
         title: "4. الباقات والاشتراك",
         body: [
-          "الباقات المدفوعة: Essential وPremium وVIP لمدد 3 أشهر أو 6 أشهر فقط. لا يوجد اشتراك شهري أو سنوي في V1.",
-          "Essential: البرنامج والمزايا الأساسية. لا يشمل دردشة الكوتش البشرية الخاصة بـPremium/VIP.",
-          "Premium: يشمل دردشة الكوتش ومراجعة تقدم دورية كل أسبوعين، مع تحسينات مناسبة حسب التقدم والمعلومات المتاحة.",
+          "الباقات المدفوعة: PLUS وPRO وVIP لمدد 3 أشهر أو 6 أشهر فقط. لا يوجد اشتراك شهري أو سنوي في V1.",
+          "PLUS: خطتك الكاملة — التدريب والتغذية الشخصية والمزايا الأساسية المدفوعة. لا يشمل دردشة الكوتش البشرية الخاصة بـPRO/VIP.",
+          "PRO: خطتك التي تتطور معك — التطور الذكي والتحليلات والمرونة الأعلى، مع دردشة الكوتش ومراجعة تقدم دورية كل أسبوعين.",
           "VIP: يشمل دردشة الكوتش ودعماً يومياً بأولوية أعلى ومتابعة أقرب وتعديلات أسرع عند الملاءمة. الدعم اليومي ليس 24/7، والأولوية ليست رداً فورياً مضموناً.",
           "البرنامج رقمي ويمكن أن يتطور حسب تقدمك وأهدافك والإصابات المبلّغ عنها ومنطق البرنامج ومراجعة الكوتش.",
         ],
@@ -86,7 +86,7 @@ const AR: Record<PolicyKind, LegalDocument> = {
       {
         title: "7. دردشة الكوتش والذكاء الاصطناعي",
         body: [
-          "دردشة الكوتش ميزة لـPremium وVIP. المرفقات خاصة وللمخوّلين فقط.",
+          "دردشة الكوتش ميزة لـPRO وVIP. المرفقات خاصة وللمخوّلين فقط.",
           "MAAKFIT أو Coach Hakim قد يرفض تعديلاً غير آمن أو غير مناسب.",
           "قد يساعد الذكاء الاصطناعي في التخصيص والاقتراح والتحليل. لا ينتحل شخصية Coach Hakim. أي رد يُقدَّم لك على أنه من الكوتش بشرياً يخضع لآلية الاعتماد البشري المطلوبة.",
         ],
@@ -309,9 +309,9 @@ const EN: Record<PolicyKind, LegalDocument> = {
       {
         title: "4. Plans and subscription",
         body: [
-          "Paid plans: Essential, Premium, and VIP for 3-month or 6-month periods only. No monthly or annual core plan in V1.",
-          "Essential includes the core program. It does not include Premium/VIP human Coaching Chat.",
-          "Premium includes Coaching Chat and a progress review about every two weeks, with suitable program improvements based on available information.",
+          "Paid plans: PLUS, PRO, and VIP for 3-month or 6-month periods only. No monthly or annual core plan in V1.",
+          "PLUS is your complete plan — personal training and nutrition. It does not include PRO/VIP human Coaching Chat.",
+          "PRO is the plan that evolves with you — smarter progression, deeper analytics, and higher flexibility, including Coaching Chat and a progress review about every two weeks.",
           "VIP includes Coaching Chat, higher-priority daily support, closer follow-up, and faster adjustments when appropriate. Daily support is not 24/7. Priority is not a guaranteed instant reply.",
           "Your program can evolve with progress, goals, reported injuries, program logic, and coaching review.",
         ],
@@ -335,7 +335,7 @@ const EN: Record<PolicyKind, LegalDocument> = {
       {
         title: "7. Coaching Chat and AI",
         body: [
-          "Coaching Chat is a Premium/VIP feature. Attachments are private.",
+          "Coaching Chat is a PRO/VIP feature. Attachments are private.",
           "MAAKFIT or Coach Hakim may refuse an unsafe or unsuitable adjustment.",
           "AI may analyze, suggest, and assist. It must not impersonate Coach Hakim. Anything presented as a human Coach Hakim reply requires the required human-approval path.",
         ],

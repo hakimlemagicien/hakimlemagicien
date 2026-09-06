@@ -1,7 +1,9 @@
 import type { PreferredWeekdayId } from "./constants";
+import {
+  resolveClientTrainingDaysPerWeek,
+  sanitizeTrainingLocationHints,
+} from "./quiz-strategy-bridge";
 import type { TrainingStrategyInput } from "./types";
-
-// TrainingStrategyInput imported above — used by trainingStrategyInputFromProfileRow
 
 export type ParsedTrainingProfileAnswers = {
   goalId?: string | null;
@@ -12,6 +14,7 @@ export type ParsedTrainingProfileAnswers = {
   trainingDaysPerWeek?: number | null;
   preferredTrainingDays?: PreferredWeekdayId[] | null;
   availableEquipment?: string[] | null;
+  activityLevel?: string | null;
 };
 
 function asString(value: unknown): string | null {
@@ -45,6 +48,10 @@ export function parseTrainingProfileAnswers(
     ? injuryRaw.filter((item): item is string => typeof item === "string")
     : undefined;
 
+  const explicitDays =
+    asNumber(answers.trainingDaysPerWeek) ?? asNumber(answers.training_days_per_week);
+  const activityLevel = asString(answers.activityLevel) ?? asString(answers.activity_level);
+
   return {
     goalId: asString(answers.goalId) ?? asString(answers.goal_id),
     gender:
@@ -53,12 +60,15 @@ export function parseTrainingProfileAnswers(
     trainingEnvironment: parseTrainingEnvironment(answers.trainingEnvironment),
     sessionDurationMinutes:
       asNumber(answers.sessionDurationMinutes) ?? asNumber(answers.session_duration_minutes),
-    trainingDaysPerWeek:
-      asNumber(answers.trainingDaysPerWeek) ?? asNumber(answers.training_days_per_week),
+    trainingDaysPerWeek: resolveClientTrainingDaysPerWeek({
+      explicitDays,
+      activityLevel,
+    }),
     preferredTrainingDays: parsePreferredDays(answers.preferredTrainingDays),
     availableEquipment: Array.isArray(answers.availableEquipment)
       ? answers.availableEquipment.filter((item): item is string => typeof item === "string")
       : null,
+    activityLevel,
   };
 }
 
@@ -71,6 +81,12 @@ export function trainingStrategyInputFromProfileRow(input: {
   assessedTrainingLevel?: TrainingStrategyInput["assessedTrainingLevel"];
 }): TrainingStrategyInput {
   const parsed = parseTrainingProfileAnswers(input.answers);
+  const location = sanitizeTrainingLocationHints({
+    trainingEnvironment: parsed.trainingEnvironment ?? null,
+    trainingType: input.trainingType ?? null,
+    locationPreference: input.locationPreference ?? null,
+  });
+
   return {
     userId: input.userId,
     rawGoalId: parsed.goalId ?? input.goal ?? null,
@@ -80,9 +96,9 @@ export function trainingStrategyInputFromProfileRow(input: {
     trainingDaysPerWeek: parsed.trainingDaysPerWeek ?? null,
     preferredTrainingDays: parsed.preferredTrainingDays ?? null,
     sessionDurationMinutes: parsed.sessionDurationMinutes ?? null,
-    trainingEnvironment: parsed.trainingEnvironment ?? null,
-    trainingType: input.trainingType ?? null,
-    locationPreference: input.locationPreference ?? null,
+    trainingEnvironment: location.trainingEnvironment,
+    trainingType: location.trainingType,
+    locationPreference: location.locationPreference,
     availableEquipment: parsed.availableEquipment ?? null,
     injuryIds: parsed.injuryIds ?? null,
   };

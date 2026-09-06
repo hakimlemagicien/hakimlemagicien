@@ -23,6 +23,12 @@ assert(
 assert(getExerciseStageCover("CH-001")?.key === "b", "cover still is PRIMARY_ACTION");
 assert(getExerciseStageCover("CH-004")?.key === "b", "push-up cover is stage B");
 assert(getExerciseStageListThumb("BI-002")?.includes("stage-b-thumb"), "dumbbell curl thumb is stage B");
+assert(
+  getExerciseStageListThumb("BI-001") === "/exercises/BI-001/stages/stage-b-thumb.webp",
+  "Core 100 outside pilot registry still gets list thumb from synced pack",
+);
+assert(getExerciseStageListThumb("MO-001") === null, "non-Core-100 without stage pack returns null");
+assert(getExerciseStageGuide("BI-001") === null, "BI-001 guide not wired yet; thumb still available");
 
 const bench = getExerciseStageGuide("CH-001");
 assert(bench, "CH-001 guide exists");

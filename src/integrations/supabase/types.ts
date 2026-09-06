@@ -799,9 +799,13 @@ export type Database = {
           generation_source: string
           goal: string | null
           id: string
+          last_progression_evaluation_at: string | null
           level: string | null
           name_ar: string | null
           name_en: string | null
+          progression_state: Json
+          progression_status: string
+          progression_strategy: string
           source_template_id: string | null
           starts_on: string | null
           status: string
@@ -820,9 +824,13 @@ export type Database = {
           generation_source?: string
           goal?: string | null
           id?: string
+          last_progression_evaluation_at?: string | null
           level?: string | null
           name_ar?: string | null
           name_en?: string | null
+          progression_state?: Json
+          progression_status?: string
+          progression_strategy?: string
           source_template_id?: string | null
           starts_on?: string | null
           status?: string
@@ -841,9 +849,13 @@ export type Database = {
           generation_source?: string
           goal?: string | null
           id?: string
+          last_progression_evaluation_at?: string | null
           level?: string | null
           name_ar?: string | null
           name_en?: string | null
+          progression_state?: Json
+          progression_status?: string
+          progression_strategy?: string
           source_template_id?: string | null
           starts_on?: string | null
           status?: string
@@ -4080,6 +4092,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_clone_program_template: {
+        Args: { p_id: string; p_mode?: string }
+        Returns: Json
+      }
       admin_list_program_templates: {
         Args: {
           p_goal?: string
@@ -4102,6 +4118,7 @@ export type Database = {
           name_en: string
           slug: string
           total_count: number
+          training_location: string | null
           updated_at: string
           version: number
         }[]
@@ -4206,6 +4223,25 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_client_progression_strategy: {
+        Args: {
+          p_assignment_id: string
+          p_expected_updated_at?: string
+          p_reason?: string
+          p_strategy: string
+        }
+        Returns: Json
+      }
+      admin_resolve_progression_review: {
+        Args: {
+          p_action?: string
+          p_assignment_id: string
+          p_exercise_external_id: string
+          p_expected_updated_at?: string
+          p_reason_code?: string
+        }
+        Returns: Json
+      }
       admin_save_client_nutrition_slots: {
         Args: {
           p_assignment_id: string
@@ -4254,6 +4290,10 @@ export type Database = {
       }
       admin_set_client_account_status: {
         Args: { p_action: string; p_client_id: string; p_reason: string }
+        Returns: Json
+      }
+      admin_set_client_training_goal: {
+        Args: { p_client_id: string; p_goal: string; p_reason?: string }
         Returns: Json
       }
       admin_set_coaching_conversation_status: {

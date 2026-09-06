@@ -10,6 +10,11 @@ export const TRAINING_V2_CANONICAL_GOALS = [
   "FEMININE_BALANCED_BODY",
   "FAT_LOSS",
   "POSTURE_TONED_BACK",
+  "MUSCLE_GROWTH",
+  "FITNESS_ENERGY",
+  "ATHLETIC_PHYSIQUE",
+  "BODY_RESHAPE",
+  "HEALTHY_WEIGHT_GAIN",
 ] as const;
 
 export type TrainingV2CanonicalGoal = (typeof TRAINING_V2_CANONICAL_GOALS)[number];
@@ -28,11 +33,62 @@ export const TRAINING_V2_GOAL_LABELS_AR: Record<TrainingV2CanonicalGoal, string>
   SLIM_TONED_WAIST: "أريد خصرًا أنحف ومشدودًا",
   TONED_ARMS_UPPER_BODY: "أريد شد الذراعين والجزء العلوي",
   FEMININE_BALANCED_BODY: "أريد جسمًا متناسقًا وأنثويًا",
-  FAT_LOSS: "أريد خسارة الدهون",
+  FAT_LOSS: "خسارة الدهون",
   POSTURE_TONED_BACK: "أريد تحسين القوام وشد الظهر",
+  MUSCLE_GROWTH: "بناء العضلات",
+  FITNESS_ENERGY: "تحسين اللياقة والطاقة",
+  ATHLETIC_PHYSIQUE: "جسم رياضي ومتناسق",
+  BODY_RESHAPE: "تغيير شكل الجسم",
+  HEALTHY_WEIGHT_GAIN: "زيادة وزن صحي",
 };
 
-/** Approved Phase 2 mappings. Unlisted / tone / fit stay LEGACY_UNMAPPED. */
+export function isCanonicalTrainingGoal(value: string | null | undefined): value is TrainingV2CanonicalGoal {
+  return Boolean(value && (TRAINING_V2_CANONICAL_GOALS as readonly string[]).includes(value));
+}
+
+/**
+ * Display-only: map an official Matrix goal to the quiz/home hero asset id.
+ * This does not invent Strategy Matrix mappings for unmapped quiz ids.
+ */
+export function quizHeroIdForCanonicalGoal(
+  goal: TrainingV2CanonicalGoal,
+  gender: "male" | "female" = "female",
+): string {
+  switch (goal) {
+    case "FAT_LOSS":
+      return "fat";
+    case "GLUTE_GROWTH":
+      return "glutes";
+    case "SLIM_TONED_WAIST":
+      return "waist";
+    case "FEMININE_BALANCED_BODY":
+      return "body";
+    case "TONED_ARMS_UPPER_BODY":
+      return gender === "female" ? "tone" : "muscle";
+    case "POSTURE_TONED_BACK":
+      return gender === "female" ? "fit" : "fitness";
+    case "MUSCLE_GROWTH":
+      return "muscle";
+    case "FITNESS_ENERGY":
+      return "fitness";
+    case "ATHLETIC_PHYSIQUE":
+      return "athletic";
+    case "BODY_RESHAPE":
+      return "shape";
+    case "HEALTHY_WEIGHT_GAIN":
+      return "gain";
+  }
+}
+
+export function homeBucketForCanonicalGoal(goal: TrainingV2CanonicalGoal): "cut" | "bulk" | "fitness" {
+  if (goal === "FAT_LOSS" || goal === "SLIM_TONED_WAIST") return "cut";
+  if (goal === "TONED_ARMS_UPPER_BODY" || goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
+    return "bulk";
+  }
+  return "fitness";
+}
+
+/** Approved Phase 2 mappings — all quiz goal ids used in /quiz map to a canonical V2 goal. */
 export const LEGACY_GOAL_MAP: Record<string, LegacyGoalMapping> = {
   fat: { legacyId: "fat", canonicalId: "FAT_LOSS", mappingStatus: "MAPPED" },
   glutes: { legacyId: "glutes", canonicalId: "GLUTE_GROWTH", mappingStatus: "MAPPED" },
@@ -40,21 +96,21 @@ export const LEGACY_GOAL_MAP: Record<string, LegacyGoalMapping> = {
   body: { legacyId: "body", canonicalId: "FEMININE_BALANCED_BODY", mappingStatus: "MAPPED" },
   tone: {
     legacyId: "tone",
-    canonicalId: null,
-    mappingStatus: "LEGACY_UNMAPPED",
-    notes: "chest-shape; not TONED_ARMS_UPPER_BODY",
+    canonicalId: "TONED_ARMS_UPPER_BODY",
+    mappingStatus: "MAPPED",
+    notes: "Female quiz chest/upper tone → TONED_ARMS_UPPER_BODY (matches hero asset id)",
   },
   fit: {
     legacyId: "fit",
-    canonicalId: null,
-    mappingStatus: "LEGACY_UNMAPPED",
-    notes: "not auto-mapped",
+    canonicalId: "POSTURE_TONED_BACK",
+    mappingStatus: "MAPPED",
+    notes: "Female quiz healthy/athletic → POSTURE_TONED_BACK (matches hero asset id)",
   },
-  muscle: { legacyId: "muscle", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
-  fitness: { legacyId: "fitness", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
-  athletic: { legacyId: "athletic", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
-  shape: { legacyId: "shape", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
-  gain: { legacyId: "gain", canonicalId: null, mappingStatus: "LEGACY_UNMAPPED" },
+  muscle: { legacyId: "muscle", canonicalId: "MUSCLE_GROWTH", mappingStatus: "MAPPED" },
+  fitness: { legacyId: "fitness", canonicalId: "FITNESS_ENERGY", mappingStatus: "MAPPED" },
+  athletic: { legacyId: "athletic", canonicalId: "ATHLETIC_PHYSIQUE", mappingStatus: "MAPPED" },
+  shape: { legacyId: "shape", canonicalId: "BODY_RESHAPE", mappingStatus: "MAPPED" },
+  gain: { legacyId: "gain", canonicalId: "HEALTHY_WEIGHT_GAIN", mappingStatus: "MAPPED" },
 };
 
 export function mapLegacyGoalId(legacyId: string | null | undefined): LegacyGoalMapping {

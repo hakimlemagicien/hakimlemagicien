@@ -16,6 +16,8 @@ type ExerciseMediaProps = {
   title: string;
   label: string;
   autoPlay?: boolean;
+  /** When true, pause playback (e.g. set report / rest overlays). */
+  paused?: boolean;
   loop?: boolean;
   aspect?: "video" | "square";
   showCaption?: boolean;
@@ -29,6 +31,7 @@ export function ExerciseMedia({
   title,
   label,
   autoPlay = false,
+  paused = false,
   loop = false,
   aspect = "video",
   showCaption = true,
@@ -43,14 +46,19 @@ export function ExerciseMedia({
   });
 
   useEffect(() => {
-    if (!autoPlay || !mediaQuery.data) return;
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !mediaQuery.data) return;
 
+    if (paused) {
+      video.pause();
+      return;
+    }
+
+    if (!autoPlay) return;
     void video.play().catch(() => {
       // Autoplay may be blocked until user interacts — controls remain available.
     });
-  }, [autoPlay, mediaQuery.data]);
+  }, [autoPlay, paused, mediaQuery.data]);
 
   const frameClass = aspect === "square" ? "aspect-square" : "aspect-video";
 
@@ -84,7 +92,7 @@ export function ExerciseMedia({
         ref={videoRef}
         key={mediaQuery.data}
         controls
-        autoPlay={autoPlay}
+        autoPlay={autoPlay && !paused}
         loop={loop}
         preload="metadata"
         playsInline

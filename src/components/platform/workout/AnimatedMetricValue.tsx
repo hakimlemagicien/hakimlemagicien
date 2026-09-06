@@ -1,4 +1,4 @@
-import { animate, motion } from "framer-motion";
+import { animate, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 type AnimatedMetricValueProps = {
@@ -23,15 +23,23 @@ export function AnimatedMetricValue({
   decimals = 0,
   prefix = "",
   suffix = "",
-  duration = 1.75,
+  duration = 0.95,
   className,
 }: AnimatedMetricValueProps) {
+  const reduceMotion = useReducedMotion();
   const from = initial ?? value;
   const prevRef = useRef(from);
   const displayedRef = useRef(from);
   const [text, setText] = useState(() => `${prefix}${formatNumber(from, decimals)}${suffix}`);
 
   useEffect(() => {
+    if (reduceMotion) {
+      prevRef.current = value;
+      displayedRef.current = value;
+      setText(`${prefix}${formatNumber(value, decimals)}${suffix}`);
+      return;
+    }
+
     const start = prevRef.current;
     if (start === value) {
       setText(`${prefix}${formatNumber(value, decimals)}${suffix}`);
@@ -56,15 +64,14 @@ export function AnimatedMetricValue({
       controls.stop();
       prevRef.current = displayedRef.current;
     };
-  }, [decimals, duration, prefix, suffix, value]);
+  }, [decimals, duration, prefix, reduceMotion, suffix, value]);
 
   return (
     <motion.span
-      key={value}
       className={className}
-      initial={{ scale: 1 }}
-      animate={{ scale: [1, 1.08, 1] }}
-      transition={{ duration, ease: [0.16, 1, 0.3, 1] }}
+      initial={reduceMotion || from === value ? false : { scale: 0.88, opacity: 0.6 }}
+      animate={{ scale: from === value ? 1 : [0.88, 1.08, 1], opacity: 1 }}
+      transition={{ duration: Math.min(duration, 1.2), ease: [0.16, 1, 0.3, 1] }}
     >
       {text}
     </motion.span>
@@ -76,7 +83,7 @@ export function AnimatedRepRange({
   max,
   initialMin,
   initialMax,
-  duration = 1.75,
+  duration = 0.95,
   className,
 }: {
   min: number;

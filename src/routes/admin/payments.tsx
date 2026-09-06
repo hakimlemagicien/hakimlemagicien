@@ -186,6 +186,7 @@ function AdminPaymentsPage() {
   return (
     <>
       <AdminPageHeader
+        kicker="الاشتراكات والمدفوعات"
         title="المدفوعات"
         subtitle={sectionSubtitle[section]}
         actions={

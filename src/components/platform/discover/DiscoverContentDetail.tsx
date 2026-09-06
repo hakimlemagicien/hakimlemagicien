@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { BadgeCheck, Bookmark, Check, ChevronLeft, ChevronRight, Play, Users } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import coachPhoto from "@/assets/coach-photo.png";
 import {
+  contentGalleryImages,
   type DiscoverContentItem,
   formatDiscoverClock,
   getDiscoverAuthorLabel,
@@ -65,6 +66,7 @@ export function DiscoverContentDetailView({
   joinedChallenge,
   onToggleSave,
   onUpgrade,
+  preview = false,
 }: {
   content: DiscoverContentItem;
   related: DiscoverContentItem[];
@@ -72,6 +74,7 @@ export function DiscoverContentDetailView({
   liked: boolean;
   joinedChallenge: boolean;
   locked: boolean;
+  preview?: boolean;
   onToggleSave: () => void;
   onToggleLike: () => void;
   onShare: () => void;
@@ -83,11 +86,11 @@ export function DiscoverContentDetailView({
   const learnings = getDiscoverLearnings(content);
   const authorName = getDiscoverAuthorLabel(content.authorName);
   const isCoach = content.authorName.includes("حكيم");
-  const intro = content.body.split("\n\n")[0] ?? content.shortDescription;
-  const suggested = related[0];
+  const intro = content.shortDescription || content.body.split("\n\n")[0];
+  const suggested = preview ? undefined : related[0];
   const bodyRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(() => getDiscoverContentProgress(content.id));
-  const [expanded, setExpanded] = useState(() => getDiscoverContentProgress(content.id) > 0);
+  const [progress, setProgress] = useState(() => (preview ? 0 : getDiscoverContentProgress(content.id)));
+  const [expanded, setExpanded] = useState(() => preview || getDiscoverContentProgress(content.id) > 0);
   const readingLabel = content.readingTimeMinutes
     ? `${content.readingTimeMinutes} دقائق قراءة`
     : duration
@@ -103,7 +106,26 @@ export function DiscoverContentDetailView({
     [content],
   );
 
+  const gallery = useMemo(
+    () =>
+      contentGalleryImages({
+        coverImage: content.coverImage,
+        galleryImages: content.galleryImages,
+      }),
+    [content.coverImage, content.galleryImages],
+  );
+  const [heroIndex, setHeroIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+
+  useEffect(() => {
+    setHeroIndex(0);
+  }, [content.id]);
+
   const openContent = () => {
+    if (preview) {
+      setExpanded(true);
+      return;
+    }
     if (locked) {
       onUpgrade();
       return;
@@ -119,26 +141,80 @@ export function DiscoverContentDetailView({
   return (
     <div className="discover-detail">
       <header className="discover-detail__head">
-        <Link to="/app/discover" aria-label="رجوع" className="discover-detail__head-btn">
-          <ChevronRight className="h-6 w-6" />
-        </Link>
+        {preview ? (
+          <span className="discover-detail__head-btn" aria-hidden>
+            <ChevronRight className="h-6 w-6" />
+          </span>
+        ) : (
+          <Link to="/app/discover" aria-label="رجوع" className="discover-detail__head-btn">
+            <ChevronRight className="h-6 w-6" />
+          </Link>
+        )}
         <h1>تفاصيل المحتوى</h1>
         <button
           type="button"
           aria-label={saved ? "إزالة من المحفوظات" : "حفظ"}
           aria-pressed={saved}
-          onClick={onToggleSave}
+          onClick={preview ? undefined : onToggleSave}
+          disabled={preview}
           className={cn("discover-detail__head-btn", saved && "is-saved")}
         >
           <Bookmark className={cn("h-5 w-5", saved && "fill-current")} strokeWidth={1.9} />
         </button>
       </header>
 
-      <div className="discover-detail__hero">
+      <div
+        className="discover-detail__hero"
+        onTouchStart={(event) => {
+          touchStartX.current = event.changedTouches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(event) => {
+          if (gallery.length < 2 || touchStartX.current == null) return;
+          const delta = (event.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+          touchStartX.current = null;
+          if (Math.abs(delta) < 40) return;
+          setHeroIndex((current) => {
+            if (delta < 0) return (current + 1) % gallery.length;
+            return (current - 1 + gallery.length) % gallery.length;
+          });
+        }}
+      >
         <span className="discover-hero__media">
-          <OptimizedImage src={content.coverImage} alt="" width={390} height={196} priority />
+          <OptimizedImage
+            key={gallery[heroIndex] || content.coverImage}
+            src={gallery[heroIndex] || content.coverImage}
+            alt=""
+            width={1080}
+            height={1350}
+            priority
+          />
         </span>
         <span className="discover-hero__shade" aria-hidden />
+        {gallery.length > 1 ? (
+          <>
+            <button
+              type="button"
+              className="discover-detail__nav is-prev"
+              aria-label="الصورة السابقة"
+              onClick={() => setHeroIndex((current) => (current - 1 + gallery.length) % gallery.length)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="discover-detail__nav is-next"
+              aria-label="الصورة التالية"
+              onClick={() => setHeroIndex((current) => (current + 1) % gallery.length)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="discover-detail__dots" aria-hidden>
+              {gallery.map((src, index) => (
+                <span key={src} className={index === heroIndex ? "is-active" : undefined} />
+              ))}
+            </span>
+          </>
+        ) : null}
         {content.videoDurationSeconds || content.type === "video" ? (
           <button type="button" aria-label="تشغيل" className="discover-detail__play" onClick={openContent}>
             <Play className="h-4 w-4 fill-current" />
@@ -150,6 +226,7 @@ export function DiscoverContentDetailView({
       <div className="discover-detail__chips">
         <span className="discover-detail__chip is-type">{getDiscoverTypeLabel(content.type)}</span>
         {topic ? <span className="discover-detail__chip is-topic">{topic}</span> : null}
+        {content.featured ? <span className="discover-detail__chip is-type">مميز</span> : null}
       </div>
 
       <h2 className="discover-detail__title">{content.title}</h2>
@@ -189,15 +266,17 @@ export function DiscoverContentDetailView({
         </section>
       ) : null}
 
-      <section className="discover-detail__card">
-        <div className="discover-detail__progress">
-          <p>أكملت</p>
-          <strong>{progress}%</strong>
-        </div>
-        <div className="discover-detail__bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-          <span style={{ width: `${progress}%` }} />
-        </div>
-      </section>
+      {preview ? null : (
+        <section className="discover-detail__card">
+          <div className="discover-detail__progress">
+            <p>أكملت</p>
+            <strong>{progress}%</strong>
+          </div>
+          <div className="discover-detail__bar" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+            <span style={{ width: `${progress}%` }} />
+          </div>
+        </section>
+      )}
 
       <button type="button" onClick={openContent} className="discover-detail__cta">
         {contentCtaLabel(content.type, progress, locked)}
@@ -263,8 +342,11 @@ export function DiscoverContentDetailView({
               </div>
               <button
                 type="button"
-                disabled={joinedChallenge || extras.challenge.status !== "active"}
-                onClick={() => joinDiscoverChallenge(content.id)}
+                disabled={preview || joinedChallenge || extras.challenge.status !== "active"}
+                onClick={() => {
+                  if (preview) return;
+                  joinDiscoverChallenge(content.id);
+                }}
                 className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground disabled:opacity-50"
               >
                 {joinedChallenge ? "أنت منضم بالفعل" : "انضم إلى التحدي"}

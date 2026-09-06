@@ -17,12 +17,14 @@ Order summary CTA: **`متابعة الدفع`**
 
 ## Official catalog
 
-| Tier | Role |
-|------|------|
-| **Free** | Official entry for every user |
-| **Essential** | Core / main product |
-| **Premium** | Essential + extra services |
-| **VIP** | Highest personal follow-up |
+| Tier ID (keep) | Display name | Role |
+|----------------|--------------|------|
+| **free** | **FREE** — ابدأ رحلتك | دخول مجاني دائم وتجربة حقيقية محدودة |
+| **essential** | **PLUS** — خطتك الكاملة | التدريب والتغذية الشخصية الكاملة والمزايا الأساسية المدفوعة |
+| **premium** | **PRO** — خطتك التي تتطور معك | التطور الذكي، التحليلات والمرونة الأعلى |
+| **vip** | **VIP** | Highest personal follow-up (not public sale) |
+
+Do **not** rename catalog IDs (`essential` / `premium`). Display labels only.
 
 ## Terms (paid only)
 

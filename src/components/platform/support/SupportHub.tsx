@@ -65,11 +65,11 @@ export function SupportHub() {
         ) : (
           <div className="support-coach-card__locked">
             <p className="text-xs leading-relaxed text-muted-foreground">
-              دردشة الكوتش متاحة في باقتي Premium وVIP فقط. Essential والعضوية المجانية تستخدمان دعم الحساب والفوترة من صفحة التواصل.
+              دردشة الكوتش متاحة في باقتي PRO وVIP فقط. PLUS والعضوية المجانية FREE تستخدمان دعم الحساب والفوترة من صفحة التواصل.
             </p>
             <UpgradeCta
               className="mt-3 w-full"
-              reason="فعّل Premium أو VIP لمتابعة Coach Hakim داخل الدردشة."
+              reason="فعّل PRO أو VIP لمتابعة Coach Hakim داخل الدردشة."
             />
           </div>
         )}
@@ -78,7 +78,7 @@ export function SupportHub() {
       <section className="rounded-3xl border border-border bg-card p-4">
         <h2 className="text-sm font-black text-foreground">دعم الحساب والفوترة والخصوصية</h2>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          متاح لكل الباقات بما فيها المجانية وEssential. ليست قناة طوارئ طبية وليست دردشة كوتش.
+          متاح لكل الباقات بما فيها FREE وPLUS. ليست قناة طوارئ طبية وليست دردشة كوتش.
         </p>
         <Link
           to="/contact"

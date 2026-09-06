@@ -40,9 +40,21 @@ export function resolveStrategyTrainingLocation(input: {
     return { ok: true, trainingLocation: "GYM", permittedLocations: ["GYM"] };
   }
 
-  const hints = [input.trainingType, input.locationPreference].filter(Boolean).join(" ").toLowerCase();
+  const hints = [input.trainingType, input.locationPreference]
+    .filter((value) => {
+      if (!value) return false;
+      const key = value.trim().toLowerCase();
+      // Contact-city / service-mode quiz fields are not training place.
+      if (key === "dubai" || key === "remote" || key === "online" || key === "inperson" || key === "in-person") {
+        return false;
+      }
+      return true;
+    })
+    .join(" ")
+    .toLowerCase();
   if (!hints.trim()) {
-    return { ok: false, code: "UNKNOWN_TRAINING_LOCATION" };
+    // Product default: gym. Admin can override later — never block the client.
+    return { ok: true, trainingLocation: "GYM", permittedLocations: ["GYM"] };
   }
   const home = includesHome(hints);
   const gym = includesGym(hints);
@@ -56,7 +68,8 @@ export function resolveStrategyTrainingLocation(input: {
     return { ok: true, trainingLocation: "GYM", permittedLocations: ["GYM"] };
   }
 
-  return { ok: false, code: "UNKNOWN_TRAINING_LOCATION" };
+  // Unrecognized hint → gym default (same product policy as missing place).
+  return { ok: true, trainingLocation: "GYM", permittedLocations: ["GYM"] };
 }
 
 export function permittedLocationsFor(

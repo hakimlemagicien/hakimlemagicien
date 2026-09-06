@@ -315,11 +315,16 @@ export function ProfilePersonalInfoForm({
         </label>
       </div>
       <p className="text-[10px] font-medium text-muted-foreground">
-        الجنس والهدف لا يمكن تغييرهما. لطلب مراجعة تواصل مع المدرب.
+        الجنس والهدف من الاستبيان — لا نعيد سؤالهما هنا. لطلب مراجعة تواصل مع المدرب.
       </p>
       <label className="block">
         <span className="mb-1 block text-xs font-black">تاريخ الميلاد</span>
         <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} className={inputClass} />
+        {answers?.age ? (
+          <span className="mt-1 block text-[10px] text-muted-foreground">
+            العمر من الاستبيان: {answers.age} سنة — لا نعيد سؤاله؛ يمكنك ضبط التاريخ فقط.
+          </span>
+        ) : null}
       </label>
       <div className="grid grid-cols-3 gap-2">
         <label className="block">
@@ -344,11 +349,12 @@ export function ProfilePersonalInfoForm({
         <span className="mb-1 block text-xs font-black">مستوى النشاط</span>
         <select value={activityLevel} onChange={(e) => setActivityLevel(e.target.value)} className={inputClass}>
           <option value="">غير محدد</option>
-          <option value="sedentary">قليل الحركة</option>
+          <option value="sedentary">خامل تماماً</option>
           <option value="light">نشاط خفيف</option>
           <option value="moderate">نشاط متوسط</option>
-          <option value="active">نشط</option>
-          <option value="very_active">نشط جداً</option>
+          <option value="high">نشاط عالي</option>
+          <option value="veryhigh">نشاط عالي جداً</option>
+          <option value="athlete">رياضي محترف</option>
         </select>
       </label>
       <div className="grid grid-cols-2 gap-2">

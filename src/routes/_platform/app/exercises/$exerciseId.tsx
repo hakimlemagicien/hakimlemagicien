@@ -160,16 +160,6 @@ function ExerciseDetailsPage() {
         />
       </PlatformSection>
 
-      <PlatformSection title="فيديو التعليمات" icon={NotebookText}>
-        <ExerciseMedia
-          status={exercise.instructions_status}
-          path={exercise.instructions_video_path}
-          kind="instructions"
-          title={exercise.name_ar}
-          label="فيديو التعليمات"
-        />
-      </PlatformSection>
-
       {exercise.coach_notes ? (
         <PlatformSection title="ملاحظات التمرين" icon={NotebookText} variant="card">
           <p className="text-sm leading-7 text-foreground">{exercise.coach_notes}</p>

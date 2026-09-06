@@ -4,7 +4,8 @@
  * Philosophy: we do not sell a subscription — we activate a personal program
  * inside an Arabic digital coaching platform.
  *
- * - Official catalogs: Free → Essential → Premium → VIP
+ * - Official catalogs: FREE → PLUS → PRO → VIP
+ * - Internal IDs stay: free | essential | premium | vip (do not rename IDs)
  * - Paid terms only: 3 months | 6 months (no monthly core product)
  * - Total = official price; daily rate = illustrative value framing only
  * - Primary CTA copy: «فعّل برنامجك الآن»
@@ -123,38 +124,38 @@ function term(
 /** Official free entry point — all users start here. */
 export const FREE_TIER: FreeTierCatalog = {
   id: "free",
-  name: "Free",
-  tagline: "نقطة الدخول الرسمية — جرب المنصة وابني الثقة قبل التفعيل",
-  role: "نقطة الدخول لجميع المستخدمين",
+  name: "FREE",
+  tagline: "ابدأ رحلتك",
+  role: "دخول مجاني دائم وتجربة حقيقية محدودة",
   features: [
-    "إنشاء حساب مجاني",
-    "الوصول للميزات الأساسية",
+    "دخول مجاني دائم للمنصة",
+    "تجربة حقيقية محدودة للتدريب والتغذية",
     "اكتشف شكل برنامجك الشخصي",
-    "فعّل برنامجك في أي وقت يناسبك",
+    "فعّل خطتك الكاملة في أي وقت",
   ],
 };
 
 /**
  * Official paid catalog.
- * Core product = Essential. Premium/VIP add services on top.
+ * Core product = PLUS (id: essential). PRO/VIP add progression & services on top.
  * Terms: 3 months | 6 months only (no monthly).
  *
  * Official V1 economics (CEO 2026-08-20):
- * Essential 87 / 149 · Premium 147 / 249 · VIP 397 / 647
+ * PLUS 87 / 149 · PRO 147 / 249 · VIP 397 / 647
  * 6-month savings vs buying the 3-month term twice.
  */
 export const PAID_TIERS: PaidTierCatalog[] = [
   {
     id: "essential",
-    name: "Essential",
-    tagline: "المنتج الرئيسي — برنامجك الشخصي داخل المنصة",
-    role: "المنتج الرئيسي للمنصة",
+    name: "PLUS",
+    tagline: "خطتك الكاملة",
+    role: "التدريب والتغذية الشخصية الكاملة والمزايا الأساسية المدفوعة",
     features: [
-      "برنامج تدريبي مخصص",
-      "خطة تغذية أساسية",
+      "برنامج تدريبي مخصص كامل",
+      "خطة تغذية شخصية كاملة",
       "متابعة التقدم داخل المنصة",
       "دعم الحساب والفوترة عبر قنوات الدعم العامة",
-      "بدون دردشة الكوتش البشرية (Premium/VIP)",
+      "بدون دردشة الكوتش البشرية (PRO/VIP)",
     ],
     popular: true,
     terms: [
@@ -167,14 +168,15 @@ export const PAID_TIERS: PaidTierCatalog[] = [
   },
   {
     id: "premium",
-    name: "Premium",
-    tagline: "كل مزايا Essential مع متابعة كوتش أقرب",
-    role: "Essential + Coaching Chat",
+    name: "PRO",
+    tagline: "خطتك التي تتطور معك",
+    role: "التطور الذكي، التحليلات والمرونة الأعلى",
     features: [
-      "كل مزايا Essential",
+      "كل مزايا PLUS",
+      "تطور ذكي للبرنامج حسب تقدمك",
+      "تحليلات أعمق ومرونة أعلى",
       "دردشة الكوتش مع Coach Hakim",
       "مراجعة تقدم دورية كل أسبوعين",
-      "تحسينات مناسبة على البرنامج حسب التقدم",
     ],
     terms: [
       term(3, 147),
@@ -190,7 +192,7 @@ export const PAID_TIERS: PaidTierCatalog[] = [
     tagline: "أعلى مستوى متابعة شخصية — ليست 24/7",
     role: "أعلى مستوى خدمة ومتابعة",
     features: [
-      "كل مزايا Premium",
+      "كل مزايا PRO",
       "دعم يومي بأولوية أعلى (ليس 24/7 وليس رداً فورياً مضموناً)",
       "متابعة أقرب مع Coach Hakim",
       "تعديلات أسرع عند الملاءمة",

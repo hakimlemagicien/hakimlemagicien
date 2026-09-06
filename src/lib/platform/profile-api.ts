@@ -31,8 +31,16 @@ export type TrainingProfileSnapshot = {
     weightKg?: number | null;
     targetWeightKg?: number | null;
     birthDate?: string | null;
+    age?: number | null;
     activityLevel?: string | null;
     goalId?: string | null;
+    challengeId?: string | null;
+    injuryIds?: string[] | null;
+    bodyType?: string | null;
+    investment?: string | null;
+    trainingDaysPerWeek?: number | null;
+    trainingEnvironment?: "home" | "gym" | "anywhere" | null;
+    selectedTierId?: string | null;
   };
 };
 
@@ -96,6 +104,22 @@ export async function fetchMyTrainingProfile(): Promise<TrainingProfileSnapshot 
   if (!data) return null;
 
   const answers = (data.answers ?? {}) as Record<string, unknown>;
+  const envRaw = answers.trainingEnvironment;
+  const injuryRaw = answers.injuryIds;
+  const age = typeof answers.age === "number" ? answers.age : null;
+  const birthDateRaw =
+    typeof answers.birthDate === "string"
+      ? answers.birthDate
+      : typeof answers.birth_date === "string"
+        ? answers.birth_date
+        : null;
+  // Prefer explicit birthDate; else approximate from quiz age so profile never looks "empty".
+  const birthDate =
+    birthDateRaw ??
+    (age != null && age >= 10 && age <= 100
+      ? `${new Date().getFullYear() - Math.round(age)}-01-01`
+      : null);
+
   return {
     goal: data.goal ?? null,
     trainingType: data.training_type ?? null,
@@ -105,13 +129,44 @@ export async function fetchMyTrainingProfile(): Promise<TrainingProfileSnapshot 
       heightCm: typeof answers.heightCm === "number" ? answers.heightCm : null,
       weightKg: typeof answers.weightKg === "number" ? answers.weightKg : null,
       targetWeightKg: typeof answers.targetWeightKg === "number" ? answers.targetWeightKg : null,
-      birthDate: typeof answers.birthDate === "string" ? answers.birthDate : null,
+      birthDate,
+      age,
       activityLevel: typeof answers.activityLevel === "string" ? answers.activityLevel : null,
       goalId:
         typeof answers.goalId === "string" && answers.goalId.trim()
           ? answers.goalId.trim()
           : typeof answers.goal_id === "string" && answers.goal_id.trim()
             ? answers.goal_id.trim()
+            : null,
+      challengeId:
+        typeof answers.challengeId === "string"
+          ? answers.challengeId
+          : typeof answers.challenge_id === "string"
+            ? answers.challenge_id
+            : null,
+      injuryIds: Array.isArray(injuryRaw)
+        ? injuryRaw.filter((item): item is string => typeof item === "string")
+        : null,
+      bodyType:
+        typeof answers.bodyType === "string"
+          ? answers.bodyType
+          : typeof answers.body_type === "string"
+            ? answers.body_type
+            : null,
+      investment: typeof answers.investment === "string" ? answers.investment : null,
+      trainingDaysPerWeek:
+        typeof answers.trainingDaysPerWeek === "number"
+          ? answers.trainingDaysPerWeek
+          : typeof answers.training_days_per_week === "number"
+            ? answers.training_days_per_week
+            : null,
+      trainingEnvironment:
+        envRaw === "home" || envRaw === "gym" || envRaw === "anywhere" ? envRaw : null,
+      selectedTierId:
+        typeof answers.selectedTierId === "string"
+          ? answers.selectedTierId
+          : typeof answers.selected_tier_id === "string"
+            ? answers.selected_tier_id
             : null,
     },
   };

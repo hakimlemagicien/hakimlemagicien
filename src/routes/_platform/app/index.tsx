@@ -33,6 +33,12 @@ import {
 } from "@/lib/platform/home-hub";
 import { readHomeGoalContext, resolveHeroGoalImage } from "@/lib/platform/hero-goal-images";
 import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
+import { hydrateDiscoverFromSupabase } from "@/lib/platform/discover-content-api";
+import {
+  listHomeDiscoverPreview,
+  resolveHomeDiscoverPreview,
+  setDiscoverViewerGender,
+} from "@/lib/platform/discover-content";
 
 export const Route = createFileRoute("/_platform/app/")({
   head: () => ({ meta: [{ title: "الرئيسية | MAAKFIT" }] }),
@@ -91,6 +97,20 @@ function PlatformHomePage() {
     goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
   });
   const clientName = resolveClientFirstName(displayName);
+  const viewerGender = gender === "male" || gender === "female" ? gender : null;
+
+  useEffect(() => {
+    setDiscoverViewerGender(viewerGender);
+  }, [viewerGender]);
+
+  const discoverQuery = useQuery({
+    queryKey: ["home", "discover-preview", viewerGender],
+    queryFn: async () => {
+      await hydrateDiscoverFromSupabase();
+      return listHomeDiscoverPreview(viewerGender);
+    },
+    staleTime: 30_000,
+  });
 
   const dashboard = useMemo(() => {
     if (loading) return null;
@@ -113,7 +133,7 @@ function PlatformHomePage() {
         assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
         workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
       }),
-      discover: buildDiscoverPreviewItems(goal),
+      discover: resolveHomeDiscoverPreview(discoverQuery.data ?? [], buildDiscoverPreviewItems(goal)),
     };
   }, [
     loading,
@@ -129,6 +149,7 @@ function PlatformHomePage() {
     assignmentReason,
     runtimeQuery.isLoading,
     continuity.decision?.action,
+    discoverQuery.data,
   ]);
 
   if (loading) {

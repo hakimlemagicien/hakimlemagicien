@@ -30,12 +30,16 @@ import {
   isExerciseUnlockedByEntitlements,
   isTrainingPreviewMode,
 } from "@/lib/platform/entitlements";
+import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { useFreeTrainingStrategyPreview } from "@/hooks/useFreeTrainingStrategyPreview";
 import { PAID_TRAINING_AUTO_ASSIGN_KEY } from "@/hooks/usePaidTrainingAutoAssign";
-import type { PaidTrainingAutoAssignResult } from "@/lib/platform/paid-training-auto-assign";
+import {
+  runPaidTrainingAutoAssignment,
+  type PaidTrainingAutoAssignResult,
+} from "@/lib/platform/paid-training-auto-assign";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import {
   buildWeeklySchedule,
@@ -55,19 +59,26 @@ import { workoutFitsGoalCopy } from "@/lib/platform/home-hub";
 import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
 import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
 import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import { HERO_GOAL_SETTINGS_CHANGED_EVENT } from "@/lib/platform/hero-goal-framing";
 import {
   resolveWorkoutGoalHeroPhotos,
   type WorkoutGoalHeroPhoto,
 } from "@/lib/platform/workout-goal-hero-images";
+import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
+import { ClientTrainingStrategySetupCard } from "@/components/platform/workout/ClientTrainingStrategySetupCard";
+import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
+import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { SessionAnatomyVisual } from "@/components/platform/workout/SessionAnatomyVisual";
 import {
   resolveSessionAnatomyImageSrc,
   resolveSessionPresentation,
 } from "@/lib/platform/session-muscle-presentation";
+import { isClientFixableStrategyReason } from "@/lib/platform/client-training-strategy-setup";
+import { FREE_TRAINING_STRATEGY_PREVIEW_KEY } from "@/hooks/useFreeTrainingStrategyPreview";
 
 function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -601,7 +612,11 @@ function SessionExercisePathRow({
       isExerciseUnlockedByEntitlements(entitlements, orderIndex, { isToday: true }));
   const isDone = exercise.status === "done";
   const isActive = exercise.status === "active";
-  const stillThumb = getExerciseStageListThumb(exercise.external_id);
+  const preferVideoThumb = exerciseHasRealMotionVideo({
+    externalId: exercise.external_id,
+    videoStatus: exercise.videoStatus,
+  });
+  const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
   const thumbClass = cn(
     "h-full w-full object-cover object-center",
     !isUnlocked && "opacity-45 saturate-50",
@@ -825,7 +840,9 @@ function SessionExercisesSection({
 }
 
 function WorkoutDayPage() {
-  const { features, entitlements } = useMembership();
+  const queryClient = useQueryClient();
+  const membership = useMembership();
+  const { features, entitlements, tier } = membership;
   const { openUpgradeWithContext } = useUpgradeFlow();
   const { userId, snapshot } = usePlatformActivity();
   const hasWorkoutProgram = Boolean(features?.workout_program);
@@ -833,6 +850,8 @@ function WorkoutDayPage() {
   const todayId = getWeekdayIdFromDate();
   const [selectedDayId, setSelectedDayId] = useState<WeekdayId>(() => readStoredSelectedDay(todayId));
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [goalHeroVersion, setGoalHeroVersion] = useState(0);
+  const goalSettingsQuery = useHeroGoalSettings();
   const isSelectedToday = selectedDayId === todayId;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const lockedReason = freeDayFullyLocked
@@ -849,9 +868,33 @@ function WorkoutDayPage() {
     queryFn: fetchMyTrainingProfile,
     staleTime: 30_000,
   });
+  const quizProgress = readQuizProgress();
+  const strategySetupAnswers = useMemo(() => {
+    const fromLocal = readQuizProgress();
+    const fromQuiz = fromLocal
+      ? {
+          gender: fromLocal.gender,
+          goalId: fromLocal.goalId,
+          challengeId: fromLocal.challengeId,
+          injuryIds: fromLocal.injuryIds,
+          age: fromLocal.age,
+          heightCm: fromLocal.heightCm,
+          weightKg: fromLocal.weightKg,
+          activityLevel: fromLocal.activityLevel,
+          investment: fromLocal.investment,
+          bodyType: fromLocal.bodyType,
+          trainingEnvironment: fromLocal.trainingEnvironment,
+          selectedTierId: fromLocal.selectedTierId,
+        }
+      : {};
+    return {
+      ...fromQuiz,
+      ...(trainingQuery.data?.answers ?? {}),
+    } as Record<string, unknown>;
+  }, [trainingQuery.data?.answers]);
   const goalLabel = resolveClientGoalLabel(
     trainingQuery.data?.answers.goalId,
-    readQuizProgress()?.goalId,
+    quizProgress?.goalId,
     trainingQuery.data?.goal,
   );
   const { gender, goalId } = readHomeGoalContext({
@@ -859,9 +902,16 @@ function WorkoutDayPage() {
     goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal,
     goalText: trainingQuery.data?.goal,
   });
+
+  useEffect(() => {
+    const sync = () => setGoalHeroVersion((value) => value + 1);
+    window.addEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(HERO_GOAL_SETTINGS_CHANGED_EVENT, sync);
+  }, []);
+
   const goalHeroPhotos = useMemo(
     () => resolveWorkoutGoalHeroPhotos({ gender, goalId, goalLabel }),
-    [gender, goalId, goalLabel],
+    [gender, goalId, goalLabel, goalHeroVersion, goalSettingsQuery.dataUpdatedAt],
   );
 
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
@@ -876,13 +926,18 @@ function WorkoutDayPage() {
   const paidAutoAssignRunning = paidAutoAssignLatest?.status === "pending";
   const paidAutoAssignResult = paidAutoAssignLatest?.data;
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
+  const runtimeOkEarly =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok";
+  const { hold, loading: holdLoading } = useProgramPreparationHold({
+    coachAssigned: runtimeOkEarly,
+  });
   const assignedPlans =
     hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
       ? continuity.assignedPlans
       : null;
 
   const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
-    enabled: freePreview && !hasWorkoutProgram,
+    enabled: freePreview && !hasWorkoutProgram && !hold.active,
     userId,
     training: trainingQuery.data,
   });
@@ -909,7 +964,7 @@ function WorkoutDayPage() {
     ? previewPlans[selectedDayId] ?? resolveWeekdayPlan(selectedDayId, true, previewPlans)
     : resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
   const sessionQuery = useWorkoutDaySession(
-    (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
+    !hold.active && (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
   );
   const sessionExercises = sessionQuery.data?.exercises ?? [];
   const todayKey = continuity.todayKey;
@@ -941,29 +996,76 @@ function WorkoutDayPage() {
     !freeStrategyPreviewQuery.isLoading &&
     (freeStrategyPreviewQuery.isError ||
       (freeStrategyPreviewQuery.isFetched && !freeStrategyPreviewPlans));
-  const showWeeklySchedule = showFreeStrategyPreview || runtimeOk;
+  const showHoldRoom = hold.active;
+  const showWeeklySchedule = !showHoldRoom && (showFreeStrategyPreview || runtimeOk);
   const showFreePreviewLoading =
-    freePreview && !hasWorkoutProgram && freeStrategyPreviewQuery.isLoading;
+    !showHoldRoom &&
+    freePreview &&
+    !hasWorkoutProgram &&
+    freeStrategyPreviewQuery.isLoading;
   const showPaidAutoAssignLoading =
+    !showHoldRoom &&
     hasWorkoutProgram &&
     !runtimeOk &&
     (paidAutoAssignRunning || runtimeQuery.isLoading);
+  const paidBlockedReason =
+    paidAutoAssignResult?.status === "blocked"
+      ? paidAutoAssignResult.reasonCode
+      : paidAutoAssignResult?.status === "review_required"
+        ? paidAutoAssignResult.reasonCode
+        : paidAutoAssignResult?.status === "skipped" && paidAutoAssignResult.reason === "no_profile"
+          ? "MISSING_PROFILE_DATA"
+          : null;
+  const paidAutoAssignSettled =
+    paidAutoAssignLatest?.status === "success" || paidAutoAssignLatest?.status === "error";
+  const showPaidClientSetup =
+    hasWorkoutProgram &&
+    !runtimeOk &&
+    !showPaidAutoAssignLoading &&
+    (isClientFixableStrategyReason(paidBlockedReason) ||
+      ((runtimeReason === "no_program" || runtimeReason === "legacy_incomplete") &&
+        paidAutoAssignSettled));
   const showPaidReviewPending =
     hasWorkoutProgram &&
     !runtimeOk &&
     !showPaidAutoAssignLoading &&
+    !showPaidClientSetup &&
     paidAutoAssignResult?.status === "review_required";
-  const showPaidProfileBlocked =
-    hasWorkoutProgram &&
-    !runtimeOk &&
-    !showPaidAutoAssignLoading &&
-    paidAutoAssignResult?.status === "blocked" &&
-    paidAutoAssignResult.reasonCode === "MISSING_PROFILE_DATA";
-  const showRuntimeLoading = hasWorkoutProgram && runtimeQuery.isLoading;
+  const showStrategySetup =
+    !showHoldRoom &&
+    (showFreePreviewIncompleteProfile || showFreePreviewError || showPaidClientSetup);
+  const showRuntimeLoading = !showHoldRoom && hasWorkoutProgram && runtimeQuery.isLoading;
   const showRuntimeError =
-    hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
+    !showHoldRoom && hasWorkoutProgram && runtimeQuery.isError && !runtimeQuery.isFetching;
   const showRuntimeBlocked =
-    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason !== "ok";
+    !showHoldRoom &&
+    hasWorkoutProgram &&
+    runtimeQuery.isSuccess &&
+    runtimeReason !== "ok" &&
+    !showPaidAutoAssignLoading &&
+    !showStrategySetup &&
+    !showPaidReviewPending &&
+    (runtimeReason === "scheduled" || runtimeReason === "ended");
+
+  const refreshAfterStrategySetup = async () => {
+    await queryClient.invalidateQueries({ queryKey: PROFILE_TRAINING_KEY });
+    await queryClient.invalidateQueries({ queryKey: FREE_TRAINING_STRATEGY_PREVIEW_KEY });
+    await queryClient.invalidateQueries({ queryKey: ["client-training-runtime"] });
+    await trainingQuery.refetch();
+    if (freePreview && !hasWorkoutProgram) {
+      await freeStrategyPreviewQuery.refetch();
+    }
+    if (hasWorkoutProgram) {
+      await runPaidTrainingAutoAssignment({
+        userId,
+        membershipTier: tier,
+        hasWorkoutProgram: true,
+        runtimeReason: runtimeQuery.data?.reason ?? "no_program",
+      });
+      await runtimeQuery.refetch();
+    }
+  };
+
   const interrupted =
     applyStoredProgress && isStoredWorkoutInterrupted(peekStoredWorkoutSession());
   const resumeNotice =
@@ -1009,13 +1111,31 @@ function WorkoutDayPage() {
           <PlatformHeaderActions />
         </header>
 
+        {holdLoading && !showHoldRoom ? (
+          <section className="platform-card space-y-3 rounded-3xl p-4">
+            <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+            <div className="h-16 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+          </section>
+        ) : null}
+
         <WorkoutGoalHero
           overallProgress={overallProgress}
           goalLabel={goalLabel}
           photos={goalHeroPhotos}
         />
 
-        {showRuntimeLoading ? (
+        {showHoldRoom ? (
+          <ProgramPreparationHoldCard
+            hold={hold}
+            showUpgrade={!membership.is_paid}
+            onUpgrade={() =>
+              openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.holdUpgradeTitle)
+            }
+          />
+        ) : null}
+
+        {!showHoldRoom && showRuntimeLoading ? (
           <section className="platform-card space-y-3 rounded-3xl p-4">
             <div className="h-4 w-40 animate-pulse rounded bg-muted" />
             <div className="h-16 animate-pulse rounded-2xl bg-muted" />
@@ -1044,17 +1164,13 @@ function WorkoutDayPage() {
             <p className="text-sm font-black text-foreground">
               {runtimeReason === "scheduled"
                 ? "برنامجك مجدول ولم يبدأ بعد"
-                : runtimeReason === "ended"
-                  ? "انتهت مدة البرنامج الحالي"
-                  : runtimeReason === "legacy_incomplete"
-                    ? "هذا التعيين يحتاج مراجعة من المدرب"
-                    : "لا برنامج تدريبي معيَّن"}
+                : "انتهت مدة البرنامج الحالي"}
             </p>
             <p className="text-xs text-muted-foreground">
               {programName ? `${programName} — ` : ""}
-              {runtimeReason === "no_program"
-                ? "سيظهر تمرينك هنا بعد أن يعيّن المدرب برنامجاً."
-                : "لا تُعرض تمارين جاهزة مكان البرنامج المعيَّن."}
+              {runtimeReason === "scheduled"
+                ? "سيظهر تمرينك عند تاريخ البداية."
+                : "حدّث بياناتك أدناه إذا احتجت برنامجاً جديداً، أو انتظر تعيين المدرب."}
             </p>
           </section>
         ) : null}
@@ -1066,31 +1182,25 @@ function WorkoutDayPage() {
           </section>
         ) : null}
 
-        {showFreePreviewIncompleteProfile ? (
-          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
-            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.completeProfileTitle}</p>
-            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.completeProfileBody}</p>
-            <Link
-              to="/app/profile"
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-black text-primary-foreground"
-            >
-              {TRAINING_PRODUCT_COPY.completeProfileCta}
-            </Link>
-          </section>
-        ) : null}
-
-        {showFreePreviewError ? (
-          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
-            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.previewErrorTitle}</p>
-            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.previewErrorBody}</p>
-            <button
-              type="button"
-              className="text-[11px] font-black text-primary"
-              onClick={() => void freeStrategyPreviewQuery.refetch()}
-            >
-              {TRAINING_PRODUCT_COPY.previewRetry}
-            </button>
-          </section>
+        {showStrategySetup ? (
+          <ClientTrainingStrategySetupCard
+            initialGoal={trainingQuery.data?.goal ?? null}
+            initialGoalId={
+              trainingQuery.data?.answers.goalId ?? quizProgress?.goalId ?? null
+            }
+            initialDaysPerWeek={trainingQuery.data?.answers.trainingDaysPerWeek ?? null}
+            initialActivityLevel={
+              trainingQuery.data?.answers.activityLevel ?? quizProgress?.activityLevel ?? null
+            }
+            initialEnvironment={
+              trainingQuery.data?.answers.trainingEnvironment ??
+              quizProgress?.trainingEnvironment ??
+              null
+            }
+            initialTrainingType={trainingQuery.data?.trainingType ?? null}
+            initialAnswers={strategySetupAnswers}
+            onActivated={refreshAfterStrategySetup}
+          />
         ) : null}
 
         {showPaidAutoAssignLoading ? (
@@ -1100,23 +1210,24 @@ function WorkoutDayPage() {
         ) : null}
 
         {showPaidReviewPending ? (
-          <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
-            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.paidReviewPendingTitle}</p>
-            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.paidReviewPendingBody}</p>
-          </section>
-        ) : null}
-
-        {showPaidProfileBlocked ? (
-          <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
-            <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.completeProfileTitle}</p>
-            <p className="text-xs text-muted-foreground">{TRAINING_PRODUCT_COPY.completeProfileBody}</p>
-            <Link
-              to="/app/profile"
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-black text-primary-foreground"
-            >
-              {TRAINING_PRODUCT_COPY.completeProfileCta}
-            </Link>
-          </section>
+          <ClientTrainingStrategySetupCard
+            initialGoal={trainingQuery.data?.goal ?? null}
+            initialGoalId={
+              trainingQuery.data?.answers.goalId ?? quizProgress?.goalId ?? null
+            }
+            initialDaysPerWeek={trainingQuery.data?.answers.trainingDaysPerWeek ?? null}
+            initialActivityLevel={
+              trainingQuery.data?.answers.activityLevel ?? quizProgress?.activityLevel ?? null
+            }
+            initialEnvironment={
+              trainingQuery.data?.answers.trainingEnvironment ??
+              quizProgress?.trainingEnvironment ??
+              null
+            }
+            initialTrainingType={trainingQuery.data?.trainingType ?? null}
+            initialAnswers={strategySetupAnswers}
+            onActivated={refreshAfterStrategySetup}
+          />
         ) : null}
 
         {showWeeklySchedule ? (

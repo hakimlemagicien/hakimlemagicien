@@ -14,7 +14,6 @@ import {
   Palette,
   Plus,
   RotateCcw,
-  Save,
   Smartphone,
 } from "lucide-react";
 import { AdminCard, AdminSection } from "@/components/admin/AdminPage";
@@ -92,33 +91,27 @@ function resolveSlot(gender: HeroGender, goalId: string): HeroReviewSlot {
 function HeroFramingPanel({
   gender,
   framing,
-  savedFraming,
   cardTheme,
-  savedCardTheme,
-  saveMessage,
+  statusMessage,
+  busy = false,
   onZoom,
   onPan,
   onPanVertical,
   onFlip,
   onCardColor,
   onReset,
-  onSave,
-  saving = false,
 }: {
   gender: HeroGender;
   framing: HeroGoalFraming;
-  savedFraming: HeroGoalFraming;
   cardTheme: HeroGoalCardTheme;
-  savedCardTheme: HeroGoalCardTheme;
-  saveMessage: string | null;
-  saving?: boolean;
+  statusMessage: string | null;
+  busy?: boolean;
   onZoom: (direction: "in" | "out") => void;
   onPan: (direction: "left" | "right") => void;
   onPanVertical: (direction: "up" | "down") => void;
   onFlip: () => void;
   onCardColor: (color: string | null) => void;
   onReset: () => void;
-  onSave: () => void;
 }) {
   const colorPresets = useMemo(() => {
     if (gender !== "female") return [...HERO_CARD_COLOR_PRESETS];
@@ -127,25 +120,19 @@ function HeroFramingPanel({
     return rose ? [others[0], rose, ...others.slice(1)] : others;
   }, [gender]);
 
-  const isDirty =
-    framing.scale !== savedFraming.scale ||
-    framing.offsetX !== savedFraming.offsetX ||
-    framing.offsetY !== savedFraming.offsetY ||
-    framing.flipX !== savedFraming.flipX ||
-    cardTheme.color !== savedCardTheme.color;
-
   return (
     <AdminCard className="space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-sm font-black text-foreground">ضبط موضع الصورة</p>
           <p className="text-xs font-medium text-muted-foreground">
-            كبّر / صغّر، حرّك، اعكس الصورة، أو غيّر لون البطاقة — ثم احفظ ليُطبَّق على جميع المستخدمين
+            كبّر / صغّر، حرّك، اعكس الصورة، أو غيّر لون البطاقة — يُطبَّق فوراً بدون حفظ أو نشر
           </p>
         </div>
         <div className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[10px] font-mono text-muted-foreground">
           scale {framing.scale.toFixed(2)} · x {framing.offsetX}px · y {framing.offsetY}px
           {framing.flipX ? " · معكوس" : ""}
+          {busy ? " · جاري التحديث…" : ""}
         </div>
       </div>
 
@@ -153,7 +140,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onZoom("out")}
-          disabled={framing.scale <= HERO_FRAMING_LIMITS.scaleMin}
+          disabled={busy || framing.scale <= HERO_FRAMING_LIMITS.scaleMin}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <Minus className="h-4 w-4" aria-hidden />
@@ -162,7 +149,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onZoom("in")}
-          disabled={framing.scale >= HERO_FRAMING_LIMITS.scaleMax}
+          disabled={busy || framing.scale >= HERO_FRAMING_LIMITS.scaleMax}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <Plus className="h-4 w-4" aria-hidden />
@@ -171,7 +158,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onPan("right")}
-          disabled={framing.offsetX >= HERO_FRAMING_LIMITS.offsetMax}
+          disabled={busy || framing.offsetX >= HERO_FRAMING_LIMITS.offsetMax}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <ArrowRight className="h-4 w-4" aria-hidden />
@@ -180,7 +167,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onPan("left")}
-          disabled={framing.offsetX <= HERO_FRAMING_LIMITS.offsetMin}
+          disabled={busy || framing.offsetX <= HERO_FRAMING_LIMITS.offsetMin}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
@@ -192,7 +179,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onPanVertical("up")}
-          disabled={framing.offsetY <= HERO_FRAMING_LIMITS.offsetMin}
+          disabled={busy || framing.offsetY <= HERO_FRAMING_LIMITS.offsetMin}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <ArrowUp className="h-4 w-4" aria-hidden />
@@ -201,7 +188,7 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={() => onPanVertical("down")}
-          disabled={framing.offsetY >= HERO_FRAMING_LIMITS.offsetMax}
+          disabled={busy || framing.offsetY >= HERO_FRAMING_LIMITS.offsetMax}
           className="inline-flex h-11 items-center justify-center gap-1 rounded-2xl border border-border bg-card text-xs font-black disabled:opacity-40"
         >
           <ArrowDown className="h-4 w-4" aria-hidden />
@@ -210,8 +197,9 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={onFlip}
+          disabled={busy}
           className={cn(
-            "inline-flex h-11 items-center justify-center gap-1 rounded-2xl border text-xs font-black",
+            "inline-flex h-11 items-center justify-center gap-1 rounded-2xl border text-xs font-black disabled:opacity-40",
             framing.flipX
               ? "border-primary bg-primary/10 text-primary"
               : "border-border bg-card text-foreground",
@@ -240,9 +228,10 @@ function HeroFramingPanel({
               <button
                 key={preset.id}
                 type="button"
+                disabled={busy}
                 onClick={() => onCardColor(preset.color)}
                 className={cn(
-                  "inline-flex h-9 items-center gap-2 rounded-full border px-3 text-[11px] font-black transition-colors",
+                  "inline-flex h-9 items-center gap-2 rounded-full border px-3 text-[11px] font-black transition-colors disabled:opacity-40",
                   active
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-card text-foreground",
@@ -267,8 +256,9 @@ function HeroFramingPanel({
           <input
             type="color"
             value={cardTheme.color ?? "#2a2a2e"}
+            disabled={busy}
             onChange={(event) => onCardColor(event.target.value)}
-            className="h-9 w-12 cursor-pointer rounded-lg border border-border bg-card p-1"
+            className="h-9 w-12 cursor-pointer rounded-lg border border-border bg-card p-1 disabled:opacity-40"
             aria-label="لون مخصص للبطاقة"
           />
         </label>
@@ -278,34 +268,22 @@ function HeroFramingPanel({
         <button
           type="button"
           onClick={onReset}
-          disabled={saving}
+          disabled={busy}
           className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-black disabled:opacity-50"
         >
           <RotateCcw className="h-4 w-4" aria-hidden />
           إعادة ضبط
         </button>
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={!isDirty || saving}
-          className={cn(
-            "platform-home-hero__cta inline-flex h-11 min-w-[180px] flex-[2] items-center justify-center gap-2 rounded-full px-5 text-sm font-black text-white disabled:opacity-50",
-            (!isDirty || saving) && "opacity-70",
-          )}
-        >
-          <Save className="h-4 w-4" aria-hidden />
-          {saving ? "جاري الحفظ…" : "حفظ التعديل"}
-        </button>
       </div>
 
-      {saveMessage ? (
+      {statusMessage ? (
         <p
           className={cn(
             "text-center text-xs font-bold",
-            saveMessage.startsWith("تم") ? "text-primary" : "text-destructive",
+            statusMessage.startsWith("تم") ? "text-primary" : "text-destructive",
           )}
         >
-          {saveMessage}
+          {statusMessage}
         </p>
       ) : null}
     </AdminCard>
@@ -360,7 +338,7 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
   const navigate = useNavigate({ from: "/admin/studio" });
   const queryClient = useQueryClient();
   const settingsQuery = useHeroGoalSettings();
-  const totalAssets = useMemo(() => countHeroReviewAssets(), []);
+  const totalAssets = useMemo(() => countHeroReviewAssets(), [settingsQuery.dataUpdatedAt]);
   const draftDirtyRef = useRef(false);
   const prevFramingKeyRef = useRef<string | null>(null);
   const prevCardThemeKeyRef = useRef<string | null>(null);
@@ -371,12 +349,15 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
 
   const mode: ReviewMode = search.mode === "grid" ? "grid" : "single";
   const gender: HeroGender = search.gender === "female" ? "female" : "male";
-  const genderSlots = useMemo(() => goalsForGender(gender), [gender]);
+  const genderSlots = useMemo(() => goalsForGender(gender), [gender, settingsQuery.dataUpdatedAt]);
   const goalId = genderSlots.some((slot) => slot.goalId === search.goal)
     ? (search.goal as string)
     : (genderSlots[0]?.goalId ?? "fat");
 
-  const slot = useMemo(() => resolveSlot(gender, goalId), [gender, goalId]);
+  const slot = useMemo(
+    () => resolveSlot(gender, goalId),
+    [gender, goalId, settingsQuery.dataUpdatedAt],
+  );
   const assetCount = slot.assets.length;
   const assetIndex =
     assetCount > 0
@@ -481,7 +462,10 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     patchSearch({ asset: index });
   }
 
-  async function handleSaveFraming() {
+  async function persistFramingLive(
+    nextFraming: HeroGoalFraming,
+    nextTheme: HeroGoalCardTheme,
+  ) {
     if (saving) return;
     setSaving(true);
     setSaveMessage(null);
@@ -491,9 +475,9 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
           gender,
           goalId,
           assetFileName: currentAsset.fileName,
-          framing: draftFraming,
+          framing: nextFraming,
         });
-        const saved = applyHeroGoalFramingToManifest(framingKey, draftFraming);
+        const saved = applyHeroGoalFramingToManifest(framingKey, nextFraming);
         if (import.meta.env.DEV) saveHeroGoalFraming(framingKey, saved);
         setSavedFraming(saved);
         setDraftFraming(saved);
@@ -502,17 +486,17 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
       await adminSaveHeroGoalCardTheme({
         gender,
         goalId,
-        theme: draftCardTheme,
+        theme: nextTheme,
       });
-      const savedTheme = applyHeroGoalCardThemeToManifest(cardThemeKey, draftCardTheme);
+      const savedTheme = applyHeroGoalCardThemeToManifest(cardThemeKey, nextTheme);
       if (import.meta.env.DEV) saveHeroGoalCardTheme(cardThemeKey, savedTheme);
       setSavedCardTheme(savedTheme);
       setDraftCardTheme(savedTheme);
       draftDirtyRef.current = false;
       window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
       await invalidateHeroGoalSettings(queryClient);
-      setSaveMessage("تم حفظ التعديل — سيظهر لجميع المستخدمين");
-      window.setTimeout(() => setSaveMessage(null), 3200);
+      setSaveMessage("تم التحديث مباشرة في التطبيق");
+      window.setTimeout(() => setSaveMessage(null), 2500);
     } catch (error) {
       setSaveMessage(formatHeroGoalSettingsError(error));
       window.setTimeout(() => setSaveMessage(null), 8000);
@@ -520,6 +504,16 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (!draftDirtyRef.current || !currentAsset) return;
+    const timer = window.setTimeout(() => {
+      void persistFramingLive(draftFraming, draftCardTheme);
+    }, 450);
+    return () => window.clearTimeout(timer);
+    // Persist only when drafts change after a user edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftFraming, draftCardTheme]);
 
   async function handleResetFraming() {
     if (saving) return;
@@ -686,13 +680,13 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                         type="button"
                         onClick={() => patchSearch({ asset: index })}
                         className={cn(
-                          "rounded-xl border px-3 py-2 text-[10px] font-mono transition-colors",
+                          "overflow-hidden rounded-xl border transition-colors",
                           index === assetIndex
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-card text-muted-foreground",
+                            ? "border-primary ring-2 ring-primary/30"
+                            : "border-border bg-card",
                         )}
                       >
-                        {asset.fileName}
+                        <img src={asset.url} alt="" className="h-16 w-12 object-cover" />
                       </button>
                     ))}
                   </div>
@@ -705,11 +699,9 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                 <HeroFramingPanel
                   gender={gender}
                   framing={draftFraming}
-                  savedFraming={savedFraming}
                   cardTheme={draftCardTheme}
-                  savedCardTheme={savedCardTheme}
-                  saveMessage={saveMessage}
-                  saving={saving}
+                  statusMessage={saveMessage}
+                  busy={saving}
                   onZoom={(direction) => {
                     markDraftDirty();
                     setDraftFraming((current) => zoomHeroGoalFraming(current, direction));
@@ -731,7 +723,6 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                     setDraftCardTheme({ color });
                   }}
                   onReset={handleResetFraming}
-                  onSave={handleSaveFraming}
                 />
               </AdminSection>
             ) : null}

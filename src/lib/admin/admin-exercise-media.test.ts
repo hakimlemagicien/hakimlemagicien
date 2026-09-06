@@ -76,12 +76,21 @@ assert(
 );
 assert(
   resolveAdminExerciseListThumbSrc({
-    externalId: "CH-001",
-    thumbnailPath: "exercises/CH-001/thumbnail.webp",
+    externalId: "BI-001",
+    thumbnailPath: null,
     signedUrls: {},
     storageFetchDone: true,
-  }) === "/exercises/CH-001/stages/stage-b-thumb.webp",
-  "stage fallback when storage thumb missing",
+  }) === "/exercises/BI-001/stages/stage-b-thumb.webp",
+  "Core 100 list thumb works without pilot guide registry",
+);
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "MO-001",
+    thumbnailPath: null,
+    signedUrls: {},
+    storageFetchDone: true,
+  }) === null,
+  "non-Core-100 without storage thumb stays empty until asset created",
 );
 
 const manager = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseLibraryManager.tsx"), "utf8");

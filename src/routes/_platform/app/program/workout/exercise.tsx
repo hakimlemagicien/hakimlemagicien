@@ -22,6 +22,8 @@ import {
 } from "@/lib/platform/weekly-workout-schedule";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
+import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
+import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle, Lock } from "lucide-react";
@@ -57,7 +59,7 @@ export const Route = createFileRoute("/_platform/app/program/workout/exercise")(
 });
 
 function ExercisePlayerPage() {
-  const { features, entitlements } = useMembership();
+  const { features, entitlements, is_paid } = useMembership();
   const { openUpgradeWithContext } = useUpgradeFlow();
   const { userId } = usePlatformActivity();
   const hasWorkoutProgram = features.workout_program;
@@ -68,14 +70,17 @@ function ExercisePlayerPage() {
     queryFn: fetchMyTrainingProfile,
     staleTime: 30_000,
   });
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const assignedOk = hasWorkoutProgram && runtimeQuery.data?.reason === "ok";
+  const { hold, loading: holdLoading } = useProgramPreparationHold({
+    coachAssigned: assignedOk,
+  });
   const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
-    enabled: freePreview && !hasWorkoutProgram,
+    enabled: freePreview && !hasWorkoutProgram && !hold.active,
     userId,
     training: trainingQuery.data ?? undefined,
   });
-  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
   const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
-  const assignedOk = hasWorkoutProgram && runtimeQuery.data?.reason === "ok";
   const runtimeFailed =
     hasWorkoutProgram &&
     !runtimeQuery.isLoading &&
@@ -92,7 +97,7 @@ function ExercisePlayerPage() {
     ? previewPlans[day] ?? resolveWeekdayPlan(day, true, previewPlans)
     : resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot);
   const sessionQuery = useWorkoutDaySession(
-    (freePreview || previewPlans || sessionPilot) && !plan.isRestDay ? plan : null,
+    !hold.active && (freePreview || previewPlans || sessionPilot) && !plan.isRestDay ? plan : null,
   );
 
   const exercises = sessionQuery.data?.exercises ?? [];
@@ -107,6 +112,27 @@ function ExercisePlayerPage() {
   const todayId = getWeekdayIdFromDate();
   const freeDayFullyLocked = freePreview && day !== todayId;
   const prescribedExerciseCount = plan.prescriptions?.length ?? 0;
+
+  if (holdLoading || hold.active) {
+    return (
+      <div className="px-0 py-2">
+        {holdLoading && !hold.active ? (
+          <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
+            <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-bold text-muted-foreground">{TRAINING_PRODUCT_COPY.holdTitle}</p>
+          </div>
+        ) : (
+          <ProgramPreparationHoldCard
+            hold={hold}
+            showUpgrade={!is_paid}
+            onUpgrade={() =>
+              openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.holdUpgradeTitle)
+            }
+          />
+        )}
+      </div>
+    );
+  }
 
   if (hasWorkoutProgram && runtimeQuery.isLoading) {
     return (
@@ -124,15 +150,21 @@ function ExercisePlayerPage() {
           {runtimeQuery.isError
             ? "تعذر تحميل البرنامج."
             : runtimeQuery.data?.reason === "no_program"
-              ? "لا برنامج تدريبي معيَّن"
+              ? TRAINING_PRODUCT_COPY.strategySetupTitle
               : "البرنامج غير متاح لهذه الحصة"}
         </p>
-        <p className="text-xs text-muted-foreground">لا تُعرض تمارين افتراضية مكان برنامجك.</p>
+        <p className="text-xs text-muted-foreground">
+          {runtimeQuery.data?.reason === "no_program"
+            ? TRAINING_PRODUCT_COPY.strategySetupBody
+            : "لا تُعرض تمارين افتراضية مكان برنامجك."}
+        </p>
         <Link
           to="/app/program/workout"
           className="rounded-xl bg-primary px-4 py-2 text-xs font-black text-primary-foreground"
         >
-          العودة لتمرين اليوم
+          {runtimeQuery.data?.reason === "no_program"
+            ? TRAINING_PRODUCT_COPY.strategySetupCta
+            : "العودة لتمرين اليوم"}
         </Link>
       </div>
     );
@@ -192,6 +224,7 @@ function ExercisePlayerPage() {
     assignmentId: assignedOk ? exercises[0]?.assignmentId ?? null : null,
     recoveryHold: continuity.decision ? toProgressionRecoveryHold(continuity.decision) : "NORMAL",
     prescriptionState: continuity.decision?.prescription_state ?? null,
+    progressionStrategy: runtimeQuery.data?.assignment?.progression_strategy ?? null,
   });
 
   if (sessionQuery.isLoading) {

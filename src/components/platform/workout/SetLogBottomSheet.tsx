@@ -8,6 +8,7 @@ import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { formatExerciseVolume, formatRestTime } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
 import { AnimatedMetricValue, AnimatedRepRange } from "./AnimatedMetricValue";
+import { WorkoutCoachTipBubble } from "./WorkoutCoachTipBubble";
 import {
   remainingRestSeconds,
   pendingRestCues,
@@ -42,6 +43,13 @@ function StepperButton({
   );
 }
 
+const WEIGHT_STEP_KG = 2;
+
+function snapEvenWeightKg(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.max(0, Math.round(value / WEIGHT_STEP_KG) * WEIGHT_STEP_KG);
+}
+
 function ReportForm({ player }: { player: WorkoutPlayerState }) {
   const {
     currentExercise,
@@ -63,6 +71,24 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
   const hideLoad = isV2 && (isBodyweight || isTimed);
   const calibration = prescription?.status === "CALIBRATION_REQUIRED" || prescription?.status === "RECALIBRATION_REQUIRED";
   const loadKnown = isV2 ? v2Targets.loadKnown && !calibration : currentSetTargets.weightKg > 0;
+  const [weightText, setWeightText] = useState(() =>
+    setDraft.weightKg > 0 ? String(setDraft.weightKg) : "",
+  );
+
+  useEffect(() => {
+    setWeightText(setDraft.weightKg > 0 ? String(setDraft.weightKg) : "");
+  }, [setDraft.weightKg]);
+
+  const commitWeightText = () => {
+    const parsed = Number(weightText.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setWeightText(setDraft.weightKg > 0 ? String(setDraft.weightKg) : "");
+      return;
+    }
+    const next = snapEvenWeightKg(parsed);
+    setSetDraft((draft) => ({ ...draft, weightKg: next }));
+    setWeightText(next > 0 ? String(next) : "");
+  };
 
   return (
     <>
@@ -97,27 +123,44 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
           <p className="text-center text-xs font-bold text-muted-foreground">
             {isV2 && !loadKnown ? "الحمل المستخدم (كجم)" : "الوزن (كجم)"}
           </p>
+          <p className="mt-0.5 text-center text-[10px] font-medium text-muted-foreground">خطوة 2 كجم · أو اكتب مباشرة</p>
           <div className="mt-2 flex items-center justify-center gap-3">
             <StepperButton
               label="تقليل الوزن"
               onClick={() =>
                 setSetDraft((draft) => ({
                   ...draft,
-                  weightKg: Math.max(0, draft.weightKg - 2.5),
+                  weightKg: Math.max(0, snapEvenWeightKg(draft.weightKg) - WEIGHT_STEP_KG),
                 }))
               }
             >
               <Minus className="h-4 w-4" />
             </StepperButton>
-            <p className="min-w-[72px] text-center text-2xl font-black text-foreground">
-              {isV2 && !loadKnown && setDraft.weightKg <= 0 ? "—" : setDraft.weightKg}
-            </p>
+            <input
+              type="number"
+              inputMode="decimal"
+              step={WEIGHT_STEP_KG}
+              min={0}
+              aria-label="الحمل المستخدم بالكيلوغرام"
+              value={isV2 && !loadKnown && setDraft.weightKg <= 0 && weightText === "" ? "" : weightText}
+              placeholder="—"
+              onChange={(event) => setWeightText(event.target.value)}
+              onBlur={commitWeightText}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  commitWeightText();
+                  (event.target as HTMLInputElement).blur();
+                }
+              }}
+              className="min-w-[72px] max-w-[96px] rounded-xl border border-border/50 bg-background/70 px-2 py-1.5 text-center text-2xl font-black tabular-nums text-foreground outline-none ring-primary/30 placeholder:text-muted-foreground focus:ring-2"
+            />
             <StepperButton
               label="زيادة الوزن"
               onClick={() =>
                 setSetDraft((draft) => ({
                   ...draft,
-                  weightKg: draft.weightKg + 2.5,
+                  weightKg: snapEvenWeightKg(draft.weightKg) + WEIGHT_STEP_KG,
                 }))
               }
             >
@@ -491,6 +534,14 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
 export function SetLogBottomSheet({ player }: SetLogBottomSheetProps) {
   const { phase, closeSetSheet } = player;
   const open = phase === "set-sheet" || phase === "rest";
+  const tipKey =
+    phase === "rest"
+      ? `rest-${player.currentExercise?.id ?? "x"}-${player.currentSetNumber}`
+      : `set-report-${player.currentExercise?.id ?? "x"}-${player.currentSetNumber}`;
+  const tipMessage =
+    phase === "rest"
+      ? "وقت الراحة جزء من التمرين — التزم به لتؤدي المجموعة القادمة بقوة وتقترب أكثر من هدفك."
+      : "سجّل أداءك الحقيقي — كل جولة تساعدنا على تطوير تمرينك القادم بدقة.";
 
   return (
     <AnimatePresence>
@@ -515,41 +566,46 @@ export function SetLogBottomSheet({ player }: SetLogBottomSheetProps) {
             <div className="absolute inset-0 bg-foreground/25 backdrop-blur-[8px]" />
           )}
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: 10 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full max-w-[min(24rem,calc(var(--platform-frame-w)-2rem))] overflow-hidden rounded-[28px] border border-white/40 bg-card/70 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl"
-          >
-            <div className="max-h-[min(82dvh,640px)] space-y-4 overflow-y-auto px-4 py-4">
-              <AnimatePresence mode="wait" initial={false}>
-                {phase === "set-sheet" ? (
-                  <motion.div
-                    key="report"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.22 }}
-                    className="space-y-4"
-                  >
-                    <ReportForm player={player} />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="rest"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.22 }}
-                    className="space-y-4"
-                  >
-                    <RestTimer player={player} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
+          {/* Sheet keeps original centered position; tip floats absolutely above it */}
+          <div className="relative z-10 w-full max-w-[min(24rem,calc(var(--platform-frame-w)-2rem))]">
+            <WorkoutCoachTipBubble tipKey={tipKey} message={tipMessage} collapsedLabel="رسالة من الكوتش" />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 10 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden rounded-[28px] border border-white/40 bg-card/70 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+            >
+              <div className="max-h-[min(82dvh,640px)] space-y-4 overflow-y-auto px-4 py-4">
+                <AnimatePresence mode="wait" initial={false}>
+                  {phase === "set-sheet" ? (
+                    <motion.div
+                      key="report"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.22 }}
+                      className="space-y-4"
+                    >
+                      <ReportForm player={player} />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="rest"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.22 }}
+                      className="space-y-4"
+                    >
+                      <RestTimer player={player} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       ) : null}
     </AnimatePresence>

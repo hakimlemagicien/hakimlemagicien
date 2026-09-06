@@ -9,6 +9,11 @@ import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import coachPhoto from "@/assets/coach-photo.png";
 import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 import { attachHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
+import {
+  homeBucketForCanonicalGoal,
+  isCanonicalTrainingGoal,
+  quizHeroIdForCanonicalGoal,
+} from "@/lib/platform/training-v2-contracts";
 
 export type HeroGender = "male" | "female";
 
@@ -53,6 +58,7 @@ function isFemaleGoalId(value: string): value is FemaleGoalId {
 /** Maps quiz goal ids to the platform goal buckets used on home. */
 export function goalIdToUserGoal(goalId?: string | null): UserGoal | null {
   if (!goalId) return null;
+  if (isCanonicalTrainingGoal(goalId)) return homeBucketForCanonicalGoal(goalId);
   if (goalId === "fat" || goalId === "waist") return "cut";
   if (goalId === "muscle" || goalId === "gain" || goalId === "tone") return "bulk";
   if (goalId === "glutes" || goalId === "body") return "fitness";
@@ -64,6 +70,9 @@ export function inferGoalIdFromText(raw?: string | null, gender?: HeroGender | n
   if (!raw) return null;
   const value = raw.trim();
   if (!value) return null;
+  if (isCanonicalTrainingGoal(value)) {
+    return quizHeroIdForCanonicalGoal(value, gender === "male" ? "male" : "female");
+  }
   if (isMaleGoalId(value) || isFemaleGoalId(value)) return value;
 
   const text = value.toLowerCase();

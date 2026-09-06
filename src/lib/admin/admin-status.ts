@@ -18,9 +18,9 @@ export type AdminStatusKind =
 
 const PLAN_LABELS: Record<string, string> = {
   vip: "VIP",
-  premium: "Premium",
-  essential: "Essential",
-  free: "Free",
+  premium: "PRO",
+  essential: "PLUS",
+  free: "FREE",
   visitor: "زائر",
   admin: "Admin",
 };
@@ -118,4 +118,26 @@ export function formatRelativeAge(iso: string | null | undefined, now = new Date
   if (hours < 24) return `${hours} ساعة`;
   const days = Math.floor(hours / 24);
   return `${days} يوم`;
+}
+
+function startOfLocalDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+/** Relative stamp for directory/360 — never invents a time when the source is missing. */
+export function formatAdminActivityStamp(iso: string | null | undefined, now = new Date()): string {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  if (!Number.isFinite(date.getTime())) return "—";
+  const time = new Intl.DateTimeFormat("ar-AE", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    numberingSystem: "latn",
+  }).format(date);
+  const dayDiff = Math.round((startOfLocalDay(now) - startOfLocalDay(date)) / 86_400_000);
+  if (dayDiff === 0) return `اليوم ${time}`;
+  if (dayDiff === 1) return `أمس ${time}`;
+  if (dayDiff > 1 && dayDiff < 7) return `منذ ${dayDiff} أيام`;
+  return formatAdminDate(iso);
 }

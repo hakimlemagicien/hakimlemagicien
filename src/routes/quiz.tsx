@@ -3114,7 +3114,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         country: contactPayload.country,
         city: contactPayload.city,
         goal: quizAnswers.goalId ?? undefined,
-        location_preference: contactPayload.locationPreference,
+        // Persist quiz training place for Strategy Matrix — not dubai/remote contact preference.
+        training_type: quizAnswers.trainingEnvironment ?? undefined,
+        location_preference: quizAnswers.trainingEnvironment ?? contactPayload.locationPreference,
         answers: buildQuizAnswersPayload({
           ...quizAnswers,
           userLocation: contactPayload.locationPreference,
@@ -4129,13 +4131,13 @@ type PricingTier = {
 const PRICING_TIERS: PricingTier[] = [
   {
     id: "transform",
-    name: "Essential",
-    tagline: "البرنامج والمزايا الأساسية لمدة 3 أشهر — بدون دردشة الكوتش.",
+    name: "PLUS",
+    tagline: "خطتك الكاملة — التدريب والتغذية الشخصية والمزايا الأساسية المدفوعة.",
     pricePerDay: "0.97",
     totalPrice: "87",
     features: [
-      "خطة تدريب مخصصة",
-      "خطة تغذية أساسية",
+      "خطة تدريب مخصصة كاملة",
+      "خطة تغذية شخصية كاملة",
       "متابعة التقدم داخل المنصة",
       "دعم الحساب والفوترة",
       "بدون دردشة الكوتش البشرية",
@@ -4148,15 +4150,15 @@ const PRICING_TIERS: PricingTier[] = [
   },
   {
     id: "pro",
-    name: "Premium",
-    tagline: "كل مزايا Essential مع مرونة أعلى في التغذية وبدائل متعددة — بدون دردشة الكوتش.",
+    name: "PRO",
+    tagline: "خطتك التي تتطور معك — التطور الذكي والتحليلات والمرونة الأعلى.",
     pricePerDay: "1.63",
     totalPrice: "147",
     features: [
-      "كل مزايا Essential",
+      "كل مزايا PLUS",
+      "تطور ذكي للبرنامج حسب تقدمك",
       "مرونة أعلى في تغيير الوجبات",
       "بدائل متعددة حيث تدعمها الخطة",
-      "تحسينات مناسبة حسب التقدم",
       "بدون دردشة الكوتش البشرية",
     ],
     primary: "#2563EB",
@@ -4173,7 +4175,7 @@ const PRICING_TIERS: PricingTier[] = [
     pricePerDay: "4.41",
     totalPrice: "397",
     features: [
-      "كل مزايا Premium",
+      "كل مزايا PRO",
       "دعم يومي بأولوية أعلى",
       "متابعة أقرب مع Coach Hakim",
       "تعديلات أسرع عند الملاءمة",
@@ -4196,16 +4198,16 @@ function PricingTierTitle({ tier, color }: { tier: PricingTier; color: string })
 }
 
 const PRICING_CTA_COPY: Record<PricingTier["id"], string> = {
-  transform: "فعّل Essential — 3 أشهر",
-  pro: "فعّل Premium — 3 أشهر",
+  transform: "فعّل PLUS — 3 أشهر",
+  pro: "فعّل PRO — 3 أشهر",
   vip: "فعّل VIP — 3 أشهر",
 };
 
 const PUBLIC_PRICING_TIERS = PRICING_TIERS.filter((tier) => tier.id !== "vip");
 
 const PRICING_TIER_TABS: { id: PricingTier["id"]; label: string }[] = [
-  { id: "transform", label: "Essential" },
-  { id: "pro", label: "Premium" },
+  { id: "transform", label: "PLUS" },
+  { id: "pro", label: "PRO" },
 ];
 
 function PricingTrustInline() {
@@ -4734,7 +4736,7 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
           </h1>
         </div>
         <p className="pri-in mt-2 text-center text-[12.5px] text-neutral-500 leading-relaxed" style={{ animationDelay: ".08s" }}>
-          الباقات الرسمية الرقمية: Essential وPremium وVIP لمدة 3 أو 6 أشهر. النتائج تختلف من شخص لآخر.
+          الباقات الرسمية الرقمية: PLUS وPRO وVIP لمدة 3 أو 6 أشهر. النتائج تختلف من شخص لآخر.
         </p>
 
         {/* Tier switcher */}
@@ -4892,7 +4894,7 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center" dir="rtl">
         <p className="text-sm font-black text-[#0F172A]">VIP غير متاح للبيع العام</p>
-        <p className="text-xs text-neutral-500">اختر Essential أو Premium للمتابعة.</p>
+        <p className="text-xs text-neutral-500">اختر PLUS أو PRO للمتابعة.</p>
         <button type="button" onClick={onBack} className="rounded-full bg-[#FF6B00] px-5 py-2.5 text-sm font-black text-white">
           العودة للباقات
         </button>

@@ -67,14 +67,16 @@ assert(plans.sun.isRestDay, "unmapped days stay rest");
 
 const paidEmpty = resolveWeekdayPlan("mon", true);
 assert(paidEmpty.isRestDay, "paid member without assignment does not receive seed week");
-const freePreview = resolveWeekdayPlan("mon", false);
-assert(!freePreview.isRestDay, "free preview remains a marketing preview");
-assert(freePreview.prescriptions[0]?.external_id === "CH-001", "free preview still unlocks chest");
+const freeEmpty = resolveWeekdayPlan("mon", false);
+assert(freeEmpty.isRestDay, "free member without strategy plans does not receive generic seed week");
+assert(freeEmpty.prescriptions.length === 0, "no catalog fallback prescriptions");
 
 const root = process.cwd();
 const workoutPage = readFileSync(join(root, "src/routes/_platform/app/program/workout/index.tsx"), "utf8");
 assert(workoutPage.includes("client-training-runtime") || workoutPage.includes("useAssignedTrainingRuntime"), "workout route reads assignment runtime");
-assert(workoutPage.includes("لا برنامج تدريبي معيَّن"), "no-program empty state exists");
+assert(workoutPage.includes("ClientTrainingStrategySetupCard"), "client strategy setup empty state exists");
+assert(!workoutPage.includes("سيظهر تمرينك هنا بعد أن يعيّن المدرب برنامجاً"), "coach-wait copy removed");
+assert(!workoutPage.includes("لا برنامج تدريبي معيَّن"), "no-program coach empty state removed");
 assert(!workoutPage.includes("from \"@/components/admin"), "workout route does not import admin UI");
 assert(!workoutPage.includes("admin_assign_client_program"), "client cannot assign");
 

@@ -61,8 +61,16 @@ assert(!workspace.includes("87%"), "no fake adherence");
 assert(workspace.includes("AdminConfirmDialog") || workspace.includes("onConfirm"), "sensitive actions confirm");
 assert(workspace.includes("تاريخ البرامج"), "program history exists");
 assert(workspace.includes("محرر نسخة العميل"), "client copy editor exists");
+assert(workspace.includes("CLIENT-SPECIFIC EDIT"), "client-specific edit badge exists");
+assert(workspace.includes("ClientTrainingGoalCard"), "client goal editor exists");
+assert(workspace.includes("Strategy Matrix"), "matrix source selector exists");
+assert(workspace.includes("Program Template"), "template source selector exists");
+assert(workspace.includes("حفظ التعديلات"), "sticky save exists");
 assert(workspace.includes("prepareTrainingProgramAssignment"), "V2 orchestrator wired");
 assert(workspace.includes("رفض"), "reject action exists");
+assert(workspace.includes("ClientProgressionStrategyCard"), "progression strategy card wired");
+assert(workspace.includes("استراتيجية التطور"), "progression strategy section exists");
+assert(workspace.includes("تغيير استراتيجية التطور") || workspace.includes("ClientProgressionStrategyCard"), "change strategy action exists");
 
 const client360 = readFileSync(join(root, "src/routes/admin/clients/$clientId.tsx"), "utf8");
 assert(client360.includes("ClientTrainingWorkspace"), "client 360 training workspace is wired");

@@ -233,7 +233,7 @@ function forGoal(goal: TrainingV2CanonicalGoal, days: DaysPerWeek): SessionBluep
     if (days === 4) return [LOWER_GLUTE_PRIORITY, UPPER_PRIORITY, LOWER_POSTERIOR, UPPER_SUPPORT];
     return [LOWER_GLUTE_PRIORITY, UPPER_PRIORITY, LOWER_GLUTE_SUPPORT, PULL_POSTERIOR, CORE_SUPPORT];
   }
-  if (goal === "TONED_ARMS_UPPER_BODY") {
+  if (goal === "TONED_ARMS_UPPER_BODY" || goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
     if (days === 2) return [UPPER_PRIORITY, ARMS_FULL_A];
     if (days === 3) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT];
     if (days === 4) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, PULL_POSTERIOR];
@@ -251,6 +251,12 @@ function forGoal(goal: TrainingV2CanonicalGoal, days: DaysPerWeek): SessionBluep
     if (days === 4) return [LOWER_GLUTE_SUPPORT, UPPER_PRIORITY, LOWER_POSTERIOR, UPPER_SUPPORT];
     return [LOWER_GLUTE_SUPPORT, UPPER_PRIORITY, LOWER_POSTERIOR, UPPER_SUPPORT, CORE_SUPPORT];
   }
+  if (goal === "ATHLETIC_PHYSIQUE") {
+    if (days === 2) return [BALANCED_A, BALANCED_B];
+    if (days === 3) return [UPPER_PRIORITY, LOWER_SUPPORT, BALANCED_B];
+    if (days === 4) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, LOWER_POSTERIOR];
+    return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, LOWER_POSTERIOR, CORE_SUPPORT];
+  }
   if (goal === "SLIM_TONED_WAIST") {
     if (days === 2) return [BALANCED_A, BALANCED_B];
     if (days === 3) return [BALANCED_A, UPPER_SUPPORT, LOWER_SUPPORT];
@@ -265,7 +271,9 @@ function forGoal(goal: TrainingV2CanonicalGoal, days: DaysPerWeek): SessionBluep
 
 export function requiredMovementRoles(goal: TrainingV2CanonicalGoal): string[] {
   if (goal === "GLUTE_GROWTH") return ["HIP_EXTENSION"];
-  if (goal === "TONED_ARMS_UPPER_BODY") return ["ELBOW_FLEXION", "ELBOW_EXTENSION"];
+  if (goal === "TONED_ARMS_UPPER_BODY" || goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
+    return ["ELBOW_FLEXION", "ELBOW_EXTENSION"];
+  }
   if (goal === "POSTURE_TONED_BACK") return ["HORIZONTAL_PULL"];
   if (goal === "SLIM_TONED_WAIST") return ["ANTI_EXTENSION"];
   return [];

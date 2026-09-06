@@ -19,8 +19,8 @@ function ContactPage() {
       title={isEn ? "Contact & Support" : "التواصل والدعم"}
       description={
         isEn
-          ? "Account, billing, refund, technical, and privacy support are available to every member — including Free and Essential. Coaching Chat is a Premium/VIP feature."
-          : "دعم الحساب والفوترة والاسترداد والمشاكل التقنية والخصوصية متاح لكل الأعضاء بما فيهم Free وEssential. دردشة الكوتش ميزة Premium/VIP."
+          ? "Account, billing, refund, technical, and privacy support are available to every member — including FREE and PLUS. Coaching Chat is a PRO/VIP feature."
+          : "دعم الحساب والفوترة والاسترداد والمشاكل التقنية والخصوصية متاح لكل الأعضاء بما فيهم FREE وPLUS. دردشة الكوتش ميزة PRO/VIP."
       }
       sections={[
         {

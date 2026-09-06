@@ -70,7 +70,7 @@ export function DashboardQuickStatus({ metrics, loading }: Props) {
               key={metric.id}
               to={metric.href}
               preload={false}
-              className={["cc-kpi-card", `cc-kpi-card--${metric.tone}`].join(" ")}
+              className={["cc-kpi-card", `cc-kpi-card--${metric.tone}`, `cc-kpi-card--${metric.id}`].join(" ")}
             >
               {body}
             </Link>

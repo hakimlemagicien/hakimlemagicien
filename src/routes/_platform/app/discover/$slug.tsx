@@ -77,7 +77,7 @@ function DiscoverContentPage() {
         onToggleLike={() => toggleLike(content.id)}
         onShare={share}
         onUpgrade={() =>
-          openUpgrade("افتح محتوى Premium داخل اكتشف — تعلم واستكشف بدون قيود.")
+          openUpgrade("افتح محتوى PRO داخل اكتشف — تعلم واستكشف بدون قيود.")
         }
       />
     </PlatformStack>

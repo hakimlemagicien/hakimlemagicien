@@ -838,48 +838,156 @@ export function HomeNextSession({ session }: { session: NextSessionState }) {
 
 /* ── Discover ──────────────────────────────────────────────────────────── */
 
-function DiscoverPreviewCard({ item }: { item: DiscoverPreviewItem }) {
-  const imageSrc = FEATURED_IMAGES[item.image];
+/* ── Discover ──────────────────────────────────────────────────────────── */
+
+export function HomeDiscoverCard({
+  item,
+  preview = false,
+}: {
+  item: DiscoverPreviewItem;
+  preview?: boolean;
+}) {
+  const gallery = useMemo(() => {
+    const fromGallery = (item.gallerySrcs ?? []).filter(Boolean);
+    if (fromGallery.length > 0) return fromGallery;
+    const single = item.coverSrc || (item.image ? FEATURED_IMAGES[item.image] : undefined);
+    return single ? [single] : [];
+  }, [item.coverSrc, item.gallerySrcs, item.image]);
+  const [slide, setSlide] = useState(0);
+  const [instant, setInstant] = useState(false);
+  const trackSlides = useMemo(() => {
+    if (gallery.length < 2) return gallery;
+    return [...gallery, gallery[0]];
+  }, [gallery]);
+  const activeDot = gallery.length > 0 ? slide % gallery.length : 0;
+
+  useEffect(() => {
+    setSlide(0);
+    setInstant(true);
+  }, [item.id, gallery.join("|")]);
+
+  useEffect(() => {
+    if (!instant) return;
+    const id = window.requestAnimationFrame(() => setInstant(false));
+    return () => window.cancelAnimationFrame(id);
+  }, [instant, slide]);
+
+  useEffect(() => {
+    if (gallery.length < 2) return;
+    const timer = window.setInterval(() => {
+      setSlide((current) => (current >= gallery.length ? current : current + 1));
+    }, 3200);
+    return () => window.clearInterval(timer);
+  }, [gallery.length]);
+
+  useEffect(() => {
+    if (gallery.length < 2) return;
+    if (slide < gallery.length) return;
+    const reset = window.setTimeout(() => {
+      setInstant(true);
+      setSlide(0);
+    }, 700);
+    return () => window.clearTimeout(reset);
+  }, [slide, gallery.length]);
+
+  const media = (
+    <div className="platform-home-discover-card__media">
+      {trackSlides.length > 0 ? (
+        <div
+          className={cn(
+            "platform-home-discover-card__track",
+            instant && "is-instant",
+          )}
+          style={{ transform: `translate3d(${-slide * 100}%, 0, 0)` }}
+          aria-hidden
+        >
+          {trackSlides.map((src, index) => (
+            <div key={`${item.id}-${src}-${index}`} className="platform-home-discover-card__slide">
+              <OptimizedImage
+                src={src}
+                alt=""
+                className="h-full w-full"
+                objectFit="cover"
+                width={1080}
+                height={1350}
+                priority={index === 0}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <span className="platform-home-discover-card__fallback" aria-hidden />
+      )}
+      <span className="platform-home-discover-card__shade" aria-hidden />
+      {gallery.length > 1 ? (
+        <span className="platform-home-discover-card__dots" aria-hidden>
+          {gallery.map((src, index) => (
+            <span key={`${src}-dot-${index}`} className={index === activeDot ? "is-active" : undefined} />
+          ))}
+        </span>
+      ) : null}
+      {item.badge ? (
+        <span
+          className={cn(
+            "platform-home-discover-card__badge",
+            item.badgeTone === "recipe" && "is-recipe",
+            item.badgeTone === "article" && "is-article",
+          )}
+        >
+          {item.badge}
+        </span>
+      ) : null}
+      {item.showPlay ? (
+        <span className="platform-home-discover-card__play" aria-hidden>
+          <Play className="h-5 w-5 fill-current" />
+        </span>
+      ) : null}
+      <div className="platform-home-discover-card__caption">
+        <p className="platform-home-discover-card__title">{item.title}</p>
+        <p className="platform-home-discover-card__desc">
+          <Clock3 className="h-3.5 w-3.5" aria-hidden />
+          {item.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (preview) {
+    return (
+      <article className="platform-home-discover-card" aria-label={`${item.title} — ${item.description}`}>
+        {media}
+      </article>
+    );
+  }
+
+  const slug = item.href.match(/^\/app\/discover\/([^/?#]+)$/)?.[1];
+  if (slug && slug !== "discover") {
+    return (
+      <Link
+        to="/app/discover/$slug"
+        params={{ slug }}
+        className="platform-home-discover-card platform-touch"
+        aria-label={`${item.title} — ${item.description}`}
+      >
+        {media}
+      </Link>
+    );
+  }
 
   return (
     <Link
-      to={item.href}
+      to="/app/discover"
       className="platform-home-discover-card platform-touch"
       aria-label={`${item.title} — ${item.description}`}
     >
-      <div className="platform-home-discover-card__media">
-        <OptimizedImage src={imageSrc} alt="" className="h-full w-full" objectFit="cover" />
-        <span className="platform-home-discover-card__shade" aria-hidden />
-        {item.badge ? (
-          <span
-            className={cn(
-              "platform-home-discover-card__badge",
-              item.badgeTone === "recipe" && "is-recipe",
-              item.badgeTone === "article" && "is-article",
-            )}
-          >
-            {item.badge}
-          </span>
-        ) : null}
-        {item.showPlay ? (
-          <span className="platform-home-discover-card__play" aria-hidden>
-            <Play className="h-5 w-5 fill-current" />
-          </span>
-        ) : null}
-        <div className="platform-home-discover-card__caption">
-          <p className="platform-home-discover-card__title">{item.title}</p>
-          <p className="platform-home-discover-card__desc">
-            <Clock3 className="h-3.5 w-3.5" aria-hidden />
-            {item.description}
-          </p>
-        </div>
-      </div>
+      {media}
     </Link>
   );
 }
 
 export function HomeDiscover({ items }: { items: DiscoverPreviewItem[] }) {
   if (items.length === 0) return null;
+  const gridItems = items.slice(0, 4);
 
   return (
     <section className="platform-home-enter platform-home-enter--d3" aria-labelledby="home-discover-title">
@@ -893,9 +1001,9 @@ export function HomeDiscover({ items }: { items: DiscoverPreviewItem[] }) {
         </Link>
       </div>
 
-      <div className="platform-home-discover-grid" data-count={items.length}>
-        {items.map((item) => (
-          <DiscoverPreviewCard key={item.id} item={item} />
+      <div className="platform-home-discover-grid" data-count={gridItems.length}>
+        {gridItems.map((item) => (
+          <HomeDiscoverCard key={item.id} item={item} />
         ))}
       </div>
     </section>

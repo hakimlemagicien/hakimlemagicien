@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  AdminConceptKpiRow,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -8,27 +9,18 @@ import {
 } from "@/components/admin/AdminPage";
 import { AdminFilterBar, AdminSkeletonRows, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
 import {
-  AdminEditorToolbar,
-  AdminField,
   AdminLibraryDialogs,
-  AdminLibraryLayout,
   AdminLibraryStatusBadge,
   AdminPagination,
-  AdminPreview,
-  AdminSaveState,
-  AdminSelect,
-  AdminTextInput,
-  AdminTextarea,
-  firstFieldError,
   useDebouncedValue,
   useUnsavedNavigation,
 } from "@/components/admin/AdminLibraryKit";
+import { AdminProgramBuilder } from "@/components/admin/programs/AdminProgramBuilder";
 import {
   ADMIN_LIBRARY_PAGE_SIZE,
   PROGRAM_GOALS,
   PROGRAM_LEVELS,
   PROGRAM_VERSIONING_COMPLETION_REQUIRED,
-  moveItem,
   programGoalLabel,
   programLevelLabel,
   programStatusLabel,
@@ -36,12 +28,15 @@ import {
   validateProgramDraft,
   type LibrarySaveState,
 } from "@/lib/admin/admin-libraries";
-import { listAdminExercises, type AdminExerciseListItem } from "@/lib/admin/admin-exercises-api";
+import {
+  serializeBuilderMetadata,
+  slugFromProgramName,
+  validateProgramForPublish,
+} from "@/lib/admin/admin-program-builder";
 import {
   archiveAdminProgramTemplate,
-  emptyProgramDay,
+  cloneAdminProgramTemplate,
   emptyProgramDraft,
-  emptyProgramExercise,
   emptyProgramWeek,
   getAdminProgramTemplate,
   listAdminProgramTemplates,
@@ -51,6 +46,13 @@ import {
   type AdminProgramListItem,
 } from "@/lib/admin/admin-programs-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
+import {
+  PROGRAM_LOCATIONS,
+  buildSevenDayWeek,
+  programLocationLabel,
+  weekMatchesDaysPerWeek,
+  type ProgramLocation,
+} from "@/lib/admin/admin-program-ops";
 
 export function ProgramLibraryManager() {
   const [query, setQuery] = useState("");
@@ -58,6 +60,8 @@ export function ProgramLibraryManager() {
   const [goal, setGoal] = useState("");
   const [level, setLevel] = useState("");
   const [status, setStatus] = useState("");
+  const [daysFilter, setDaysFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminProgramListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -68,13 +72,12 @@ export function ProgramLibraryManager() {
   const [baseline, setBaseline] = useState("");
   const [saveState, setSaveState] = useState<LibrarySaveState>("saved");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [publishIssues, setPublishIssues] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
-  const [picker, setPicker] = useState<{ week: number; day: number } | null>(null);
-  const [pickerQuery, setPickerQuery] = useState("");
-  const pickerDebounced = useDebouncedValue(pickerQuery);
-  const [pickerRows, setPickerRows] = useState<AdminExerciseListItem[]>([]);
+  const [openPreview, setOpenPreview] = useState(false);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
+  const structureLocked = Boolean(draft?.is_published && !draft.archived_at);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +92,14 @@ export function ProgramLibraryManager() {
     })
       .then((result) => {
         if (cancelled) return;
-        setRows(result.rows);
+        setRows(
+          result.rows.filter((row) => {
+            const daysOk = !daysFilter || String(row.days_per_week) === daysFilter;
+            const locationOk =
+              !locationFilter || String(row.training_location ?? "").toUpperCase() === locationFilter;
+            return daysOk && locationOk;
+          }),
+        );
         setTotal(result.totalCount);
       })
       .catch((err) => {
@@ -101,9 +111,13 @@ export function ProgramLibraryManager() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, goal, level, status, offset]);
+  }, [debouncedQuery, goal, level, status, offset, daysFilter, locationFilter]);
 
-  const openItem = (id: string | "new") => guard(() => setSelectedId(id));
+  const openItem = (id: string | "new", preview = false) =>
+    guard(() => {
+      setOpenPreview(preview);
+      setSelectedId(id);
+    });
 
   useEffect(() => {
     if (selectedId == null) {
@@ -116,16 +130,25 @@ export function ProgramLibraryManager() {
       setBaseline(JSON.stringify(next));
       setSaveState("saved");
       setFieldErrors({});
+      setPublishIssues([]);
       return;
     }
     let cancelled = false;
     void getAdminProgramTemplate(selectedId)
       .then((item) => {
         if (cancelled) return;
-        setDraft(item);
-        setBaseline(JSON.stringify(item));
+        const weeks =
+          item.weeks.length > 0
+            ? item.weeks.map((week) =>
+                week.days.length === 7 ? week : { ...week, days: buildSevenDayWeek(item.days_per_week) },
+              )
+            : [emptyProgramWeek(1, item.days_per_week)];
+        const next = { ...item, weeks };
+        setDraft(next);
+        setBaseline(JSON.stringify(next));
         setSaveState("saved");
         setFieldErrors({});
+        setPublishIssues([]);
       })
       .catch((err) => setError(translateLibraryError(err)));
     return () => {
@@ -137,11 +160,6 @@ export function ProgramLibraryManager() {
     if (draft && JSON.stringify(draft) !== baseline) setSaveState("unsaved");
   }, [draft, baseline]);
 
-  useEffect(() => {
-    if (!picker) return;
-    void listAdminExercises({ query: pickerDebounced, active: true, offset: 0 }).then((result) => setPickerRows(result.rows));
-  }, [picker, pickerDebounced]);
-
   const refreshList = async () => {
     const result = await listAdminProgramTemplates({
       query: debouncedQuery,
@@ -150,57 +168,81 @@ export function ProgramLibraryManager() {
       status: status || null,
       offset,
     });
-    setRows(result.rows);
+    setRows(
+      result.rows.filter((row) => {
+        const daysOk = !daysFilter || String(row.days_per_week) === daysFilter;
+        const locationOk =
+          !locationFilter || String(row.training_location ?? "").toUpperCase() === locationFilter;
+        return daysOk && locationOk;
+      }),
+    );
     setTotal(result.totalCount);
   };
 
   const save = async () => {
     if (!draft) return;
-    const errors = validateProgramDraft(draft);
+    const nextDraft = {
+      ...draft,
+      slug: draft.slug.trim() || slugFromProgramName(draft.name_ar),
+    };
+    const errors = validateProgramDraft(nextDraft);
+    const week = nextDraft.weeks[0]?.days ?? [];
+    if (week.length && !weekMatchesDaysPerWeek(week, nextDraft.days_per_week)) {
+      errors.days_per_week = "عدد أيام التدريب يجب أن يطابق أيام التمرين في الأسبوع.";
+    }
     setFieldErrors(errors);
     if (Object.keys(errors).length) {
       setSaveState("failed");
       return;
     }
     setSaveState("saving");
-    try {
-      const saved = await saveAdminProgramTemplate(
-        {
-          id: draft.id || null,
-          slug: draft.slug,
-          name_ar: draft.name_ar,
-          name_en: draft.name_en,
-          description_ar: draft.description_ar,
-          goal: draft.goal,
-          level: draft.level,
-          duration_weeks: draft.duration_weeks,
-          days_per_week: draft.days_per_week,
-          weeks: draft.weeks.map((week, weekIndex) => ({
-            week_number: weekIndex + 1,
-            title_ar: week.title_ar,
-            notes_ar: week.notes_ar,
-            days: week.days.map((day, dayIndex) => ({
-              day_number: dayIndex + 1,
-              day_type: day.day_type,
-              title_ar: day.title_ar,
-              muscle_focus: day.muscle_focus,
-              estimated_minutes: day.estimated_minutes,
-              estimated_calories: day.estimated_calories,
-              exercises: day.exercises.map((exercise) => ({
-                exercise_id: exercise.exercise_id,
-                sets: exercise.sets,
-                reps_min: exercise.reps_min,
-                reps_max: exercise.reps_max,
-                reps_label: exercise.reps_label,
-                rest_seconds: exercise.rest_seconds,
-                suggested_weight_kg: exercise.suggested_weight_kg,
-                notes_ar: exercise.notes_ar,
-              })),
-            })),
+    const builder = serializeBuilderMetadata(nextDraft);
+    const metadata = {
+      ...nextDraft.metadata,
+      training_location: nextDraft.training_location,
+      session_minutes: nextDraft.session_minutes,
+      equipment: nextDraft.equipment,
+      builder,
+    };
+    const payload: Record<string, unknown> = {
+      id: nextDraft.id || null,
+      slug: nextDraft.slug,
+      name_ar: nextDraft.name_ar,
+      name_en: nextDraft.name_en,
+      description_ar: nextDraft.description_ar,
+      goal: nextDraft.goal,
+      level: nextDraft.level,
+      duration_weeks: nextDraft.duration_weeks,
+      days_per_week: nextDraft.days_per_week,
+      metadata,
+    };
+    if (!structureLocked) {
+      payload.weeks = nextDraft.weeks.map((item, weekIndex) => ({
+        week_number: weekIndex + 1,
+        title_ar: item.title_ar,
+        notes_ar: item.notes_ar,
+        days: item.days.map((day, dayIndex) => ({
+          day_number: dayIndex + 1,
+          day_type: day.day_type,
+          title_ar: day.title_ar,
+          muscle_focus: day.muscle_focus,
+          estimated_minutes: day.estimated_minutes,
+          estimated_calories: day.estimated_calories,
+          exercises: day.exercises.map((exercise) => ({
+            exercise_id: exercise.exercise_id,
+            sets: exercise.sets,
+            reps_min: exercise.reps_min,
+            reps_max: exercise.reps_max,
+            reps_label: exercise.reps_label,
+            rest_seconds: exercise.rest_seconds,
+            suggested_weight_kg: exercise.suggested_weight_kg,
+            notes_ar: exercise.notes_ar,
           })),
-        },
-        draft.updated_at || null,
-      );
+        })),
+      }));
+    }
+    try {
+      const saved = await saveAdminProgramTemplate(payload, nextDraft.updated_at || null);
       setDraft(saved);
       setBaseline(JSON.stringify(saved));
       setSelectedId(saved.id);
@@ -214,12 +256,18 @@ export function ProgramLibraryManager() {
 
   const publish = () => {
     if (!draft?.id || dirty) return;
+    const issues = validateProgramForPublish(draft);
+    setPublishIssues(issues);
+    if (issues.length) {
+      setError(issues[0] ?? "لا يمكن النشر قبل إصلاح أخطاء القالب.");
+      return;
+    }
     setConfirm({
       title: "نشر القالب",
       body: PROGRAM_VERSIONING_COMPLETION_REQUIRED
-        ? "نشر القالب لا ينشئ لقطة كاملة للأسبوع/اليوم. تعيينات العملاء الحالية تحتفظ برقم الإصدار المجمد، لكن محتوى القالب الحي قد يتغير. PROGRAM_VERSIONING_COMPLETION_REQUIRED."
-        : "سيتم نشر القالب.",
-      confirmLabel: "نشر القالب",
+        ? "بعد النشر يصبح القالب متاحاً للتعيين. تعديل الهيكل لاحقاً يتطلب نسخة جديدة حتى لا تتأثر تعيينات العملاء. PROGRAM_VERSIONING_COMPLETION_REQUIRED."
+        : "سيتم نشر القالب للتعيين.",
+      confirmLabel: "نشر",
       onConfirm: () => {
         void publishAdminProgramTemplate(draft.id)
           .then((saved) => {
@@ -233,19 +281,22 @@ export function ProgramLibraryManager() {
     });
   };
 
-  const archive = () => {
-    if (!draft?.id) return;
+  const archive = (id?: string) => {
+    const targetId = id ?? draft?.id;
+    if (!targetId) return;
     setConfirm({
       title: "أرشفة القالب",
-      body: `عدد التعيينات النشطة المرتبطة: ${draft.assignment_count}. الأرشفة لا تحذف التعيينات ولا تعدّل برنامج العميل المعيَّن.`,
+      body: `الأرشفة تخفي القالب من خيارات التعيين. التعيينات الحالية تبقى كما هي.`,
       confirmLabel: "أرشفة",
       tone: "danger",
       onConfirm: () => {
-        void archiveAdminProgramTemplate(draft.id)
+        void archiveAdminProgramTemplate(targetId)
           .then((saved) => {
-            setDraft(saved);
-            setBaseline(JSON.stringify(saved));
-            setSaveState("saved");
+            if (draft?.id === saved.id) {
+              setDraft(saved);
+              setBaseline(JSON.stringify(saved));
+              setSaveState("saved");
+            }
             void refreshList();
           })
           .catch((err) => setError(translateLibraryError(err)));
@@ -253,358 +304,251 @@ export function ProgramLibraryManager() {
     });
   };
 
+  const clone = (id: string, mode: "duplicate" | "new_version") => {
+    guard(() => {
+      void cloneAdminProgramTemplate(id, mode)
+        .then((saved) => {
+          setSelectedId(saved.id);
+          setOpenPreview(false);
+          void refreshList();
+        })
+        .catch((err) => setError(translateLibraryError(err)));
+    });
+  };
+
+  if (selectedId != null && !draft) {
+    return <AdminSkeletonRows rows={8} />;
+  }
+
+  if (selectedId != null && draft) {
+    return (
+      <>
+        {error ? <AdminErrorState message={error} onRetry={() => setError(null)} /> : null}
+        <AdminProgramBuilder
+          draft={draft}
+          setDraft={setDraft}
+          structureLocked={structureLocked}
+          saveState={saveState}
+          fieldErrors={fieldErrors}
+          dirty={dirty}
+          publishIssues={publishIssues}
+          initialPreview={openPreview}
+          onBack={() =>
+            guard(() => {
+              setSelectedId(null);
+              setDraft(null);
+              setOpenPreview(false);
+              setPublishIssues([]);
+            })
+          }
+          onSave={() => void save()}
+          onPublish={publish}
+          onCloneVersion={draft.id ? () => clone(draft.id, "new_version") : undefined}
+        />
+        <AdminLibraryDialogs request={confirm} onClose={() => setConfirm(null)} />
+      </>
+    );
+  }
+
   return (
     <>
       <AdminPageHeader
-        kicker="قوالب البرامج"
-        title="البرامج"
-        subtitle="إدارة قوالب البرامج فقط. القالب ليس برنامج العميل المعيَّن."
+        kicker="التدريب"
+        title="البرامج التدريبية"
+        subtitle="قوالب البرامج للأسبوع والتمارين. القالب ليس برنامج العميل المعيّن."
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
-            قالب جديد
+            برنامج جديد
           </button>
         }
       />
-      <AdminLibraryLayout
-        list={
-          <>
-            <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم البرنامج / slug" label="بحث البرامج" />
-            <AdminFilterBar>
-              <label className="cc-filter">
-                الهدف
-                <select value={goal} onChange={(event) => { setGoal(event.target.value); setOffset(0); }}>
-                  <option value="">الكل</option>
-                  {PROGRAM_GOALS.map((item) => (
-                    <option key={item} value={item}>
-                      {programGoalLabel(item)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="cc-filter">
-                المستوى
-                <select value={level} onChange={(event) => { setLevel(event.target.value); setOffset(0); }}>
-                  <option value="">الكل</option>
-                  {PROGRAM_LEVELS.map((item) => (
-                    <option key={item} value={item}>
-                      {programLevelLabel(item)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="cc-filter">
-                الحالة
-                <select value={status} onChange={(event) => { setStatus(event.target.value); setOffset(0); }}>
-                  <option value="">الكل</option>
-                  <option value="draft">مسودة</option>
-                  <option value="published">منشور</option>
-                  <option value="archived">مؤرشف</option>
-                </select>
-              </label>
-            </AdminFilterBar>
-            {error ? <AdminErrorState message={error} onRetry={() => setOffset(0)} /> : null}
-            {loading ? (
-              <AdminSkeletonRows rows={8} />
-            ) : rows.length === 0 ? (
-              <AdminEmptyState title="لا قوالب مطابقة" body="أنشئ قالباً أو غيّر الفلاتر." />
-            ) : (
-              <AdminTable>
-                <thead>
-                  <tr>
-                    <th>البرنامج</th>
-                    <th>الهدف</th>
-                    <th>المستوى</th>
-                    <th>أيام/أسبوع</th>
-                    <th>الإصدار</th>
-                    <th>تعيينات</th>
-                    <th>الحالة</th>
-                    <th>تحديث</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id} className={row.id === selectedId ? "is-selected" : undefined}>
-                      <td>
-                        <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
-                          {row.name_ar}
-                        </button>
-                        <div className="cc-muted">{row.slug}</div>
-                      </td>
-                      <td>{programGoalLabel(row.goal)}</td>
-                      <td>{programLevelLabel(row.level)}</td>
-                      <td>{row.days_per_week}</td>
-                      <td>{row.version}</td>
-                      <td>{row.assignment_count}</td>
-                      <td>
-                        <AdminLibraryStatusBadge
-                          status={row.archived_at ? "archived" : row.is_published ? "published" : "draft"}
-                          label={programStatusLabel(row.is_published, row.archived_at)}
-                        />
-                      </td>
-                      <td>{formatAdminDate(row.updated_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </AdminTable>
-            )}
-            <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={setOffset} />
-          </>
-        }
-        editor={
-          !draft ? (
-            <AdminEmptyState title="اختر قالباً" body="هيكل البرنامج يُحمّل عند فتح العنصر فقط." />
-          ) : (
-            <form
-              className="cc-editor"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void save();
-              }}
-            >
-              <AdminEditorToolbar>
-                <AdminSaveState state={saveState} />
-                <button type="submit" className="cc-btn cc-btn--primary" disabled={saveState === "saving" || Boolean(draft.archived_at)}>
-                  حفظ القالب
-                </button>
-                {draft.id && !draft.archived_at ? (
-                  <>
-                    <button type="button" className="cc-btn cc-btn--primary" disabled={dirty} onClick={publish}>
-                      نشر
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={archive}>
-                      أرشفة
-                    </button>
-                  </>
-                ) : null}
-              </AdminEditorToolbar>
-              <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · التعيينات الحالية لا تُعدَّل صامتة.</p>
-              {PROGRAM_VERSIONING_COMPLETION_REQUIRED ? (
-                <p className="cc-muted">لقطة الهيكل غير مكتملة بعد. لا تعامل رقم الإصدار كتجميد كامل للمحتوى.</p>
-              ) : null}
-              {firstFieldError(fieldErrors) ? <p className="cc-field__error">{firstFieldError(fieldErrors)}</p> : null}
-              <div className="cc-form-grid">
-                <AdminField label="اسم البرنامج" htmlFor="name_ar" error={fieldErrors.name_ar}>
-                  <AdminTextInput id="name_ar" value={draft.name_ar} error={fieldErrors.name_ar} onChange={(value) => setDraft({ ...draft, name_ar: value })} />
-                </AdminField>
-                <AdminField label="English name" htmlFor="name_en">
-                  <AdminTextInput id="name_en" dir="ltr" value={draft.name_en ?? ""} onChange={(value) => setDraft({ ...draft, name_en: value })} />
-                </AdminField>
-                <AdminField label="Slug" htmlFor="slug" error={fieldErrors.slug}>
-                  <AdminTextInput id="slug" dir="ltr" value={draft.slug} error={fieldErrors.slug} onChange={(value) => setDraft({ ...draft, slug: value })} />
-                </AdminField>
-                <AdminField label="الهدف" htmlFor="goal">
-                  <AdminSelect id="goal" value={draft.goal ?? ""} onChange={(value) => setDraft({ ...draft, goal: value })}>
-                    {PROGRAM_GOALS.map((item) => (
-                      <option key={item} value={item}>
-                        {programGoalLabel(item)}
-                      </option>
-                    ))}
-                  </AdminSelect>
-                </AdminField>
-                <AdminField label="المستوى" htmlFor="level">
-                  <AdminSelect id="level" value={draft.level ?? ""} onChange={(value) => setDraft({ ...draft, level: value })}>
-                    {PROGRAM_LEVELS.map((item) => (
-                      <option key={item} value={item}>
-                        {programLevelLabel(item)}
-                      </option>
-                    ))}
-                  </AdminSelect>
-                </AdminField>
-                <AdminField label="أسابيع" htmlFor="duration_weeks">
-                  <AdminTextInput id="duration_weeks" type="number" value={String(draft.duration_weeks)} onChange={(value) => setDraft({ ...draft, duration_weeks: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="أيام/أسبوع" htmlFor="days_per_week">
-                  <AdminTextInput id="days_per_week" type="number" value={String(draft.days_per_week)} onChange={(value) => setDraft({ ...draft, days_per_week: Number(value) || 0 })} />
-                </AdminField>
-              </div>
-              <AdminField label="الوصف" htmlFor="description_ar">
-                <AdminTextarea id="description_ar" value={draft.description_ar ?? ""} onChange={(value) => setDraft({ ...draft, description_ar: value })} />
-              </AdminField>
-              <div className="cc-ing-head">
-                <h3>الأسابيع</h3>
-                <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, weeks: [...draft.weeks, emptyProgramWeek(draft.weeks.length + 1)] })}>
-                  إضافة أسبوع
-                </button>
-              </div>
-              {draft.weeks.map((week, weekIndex) => (
-                <section key={weekIndex} className="cc-week">
-                  <div className="cc-ing-head">
-                    <strong>الأسبوع {weekIndex + 1}</strong>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, weeks: draft.weeks.filter((_, i) => i !== weekIndex) })}>
-                      حذف الأسبوع
-                    </button>
-                  </div>
-                  <AdminTextInput value={week.title_ar ?? ""} onChange={(value) => setDraft({ ...draft, weeks: draft.weeks.map((row, i) => (i === weekIndex ? { ...row, title_ar: value } : row)) })} />
-                  {week.days.map((day, dayIndex) => (
-                    <div key={dayIndex} className="cc-day">
-                      <div className="cc-ing-head">
-                        <span>{day.title_ar || `اليوم ${dayIndex + 1}`}</span>
-                        <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPicker({ week: weekIndex, day: dayIndex })}>
-                          اختيار تمرين
-                        </button>
-                        <button
-                          type="button"
-                          className="cc-btn cc-btn--ghost"
-                          onClick={() =>
-                            setDraft({
-                              ...draft,
-                              weeks: draft.weeks.map((row, i) =>
-                                i === weekIndex ? { ...row, days: [...row.days, emptyProgramDay(row.days.length + 1)] } : row,
-                              ),
-                            })
-                          }
-                        >
-                          يوم
-                        </button>
-                      </div>
-                      <div className="cc-form-grid">
-                        <AdminTextInput value={day.title_ar} onChange={(value) => setDraft({ ...draft, weeks: patchDay(draft, weekIndex, dayIndex, { title_ar: value }) })} />
-                        <AdminSelect value={day.day_type} onChange={(value) => setDraft({ ...draft, weeks: patchDay(draft, weekIndex, dayIndex, { day_type: value }) })}>
-                          <option value="workout">تمرين</option>
-                          <option value="rest">راحة</option>
-                          <option value="active_recovery">استشفاء</option>
-                        </AdminSelect>
-                      </div>
-                      {day.exercises.map((exercise, exerciseIndex) => (
-                        <div key={`${exercise.exercise_id}-${exerciseIndex}`} className="cc-ex-row">
-                          <span>{exercise.exercise_name_ar || exercise.exercise_id}</span>
-                          <label>
-                            مجموعات
-                            <input type="number" value={exercise.sets} onChange={(event) => setDraft({ ...draft, weeks: patchExercise(draft, weekIndex, dayIndex, exerciseIndex, { sets: Number(event.target.value) || 1 }) })} />
-                          </label>
-                          <label>
-                            تكرار من
-                            <input type="number" value={exercise.reps_min ?? ""} onChange={(event) => setDraft({ ...draft, weeks: patchExercise(draft, weekIndex, dayIndex, exerciseIndex, { reps_min: event.target.value ? Number(event.target.value) : null }) })} />
-                          </label>
-                          <label>
-                            إلى
-                            <input type="number" value={exercise.reps_max ?? ""} onChange={(event) => setDraft({ ...draft, weeks: patchExercise(draft, weekIndex, dayIndex, exerciseIndex, { reps_max: event.target.value ? Number(event.target.value) : null }) })} />
-                          </label>
-                          <label>
-                            راحة ث
-                            <input type="number" value={exercise.rest_seconds} onChange={(event) => setDraft({ ...draft, weeks: patchExercise(draft, weekIndex, dayIndex, exerciseIndex, { rest_seconds: Number(event.target.value) || 0 }) })} />
-                          </label>
-                          <label>
-                            وزن مقترح
-                            <input type="number" value={exercise.suggested_weight_kg ?? ""} onChange={(event) => setDraft({ ...draft, weeks: patchExercise(draft, weekIndex, dayIndex, exerciseIndex, { suggested_weight_kg: event.target.value ? Number(event.target.value) : null }) })} />
-                          </label>
-                          <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, weeks: patchExercises(draft, weekIndex, dayIndex, moveItem(day.exercises, exerciseIndex, -1)) })}>
-                            أعلى
-                          </button>
-                          <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, weeks: patchExercises(draft, weekIndex, dayIndex, moveItem(day.exercises, exerciseIndex, 1)) })}>
-                            أسفل
-                          </button>
-                          <button
-                            type="button"
-                            className="cc-btn cc-btn--ghost"
-                            onClick={() =>
-                              setDraft({
-                                ...draft,
-                                weeks: patchExercises(
-                                  draft,
-                                  weekIndex,
-                                  dayIndex,
-                                  day.exercises.filter((_, i) => i !== exerciseIndex),
-                                ),
-                              })
-                            }
-                          >
-                            إزالة
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </section>
-              ))}
-              <AdminPreview title="ملخص القالب">
-                <p className="cc-preview-title">{draft.name_ar || "بدون اسم"}</p>
-                <p>
-                  إصدار {draft.version} · تعيينات نشطة {draft.assignment_count} · {draft.weeks.length} أسبوع
-                </p>
-              </AdminPreview>
-            </form>
-          )
-        }
+      <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · التعيينات الحالية لا تُعدَّل صامتة.</p>
+      <AdminConceptKpiRow
+        loading={loading}
+        metrics={[
+          {
+            id: "programs",
+            label: "البرامج",
+            value: total.toLocaleString("ar-AE"),
+            hint: "قوالب في المكتبة",
+            tone: total > 0 ? "positive" : "neutral",
+          },
+          {
+            id: "page",
+            label: "في هذه الصفحة",
+            value: rows.length.toLocaleString("ar-AE"),
+            hint: "نتائج التصفية الحالية",
+          },
+          {
+            id: "adherence",
+            label: "متوسط الالتزام",
+            value: "—",
+            hint: "لا التزام برامج معتمد في هذه الشاشة",
+            tone: "unavailable",
+          },
+          {
+            id: "assigned",
+            label: "العملاء المعينون",
+            value: "—",
+            hint: "التعيين يظهر في ملف العميل",
+            tone: "unavailable",
+          },
+        ]}
       />
-      {picker && draft ? (
-        <div className="cc-dialog-scrim" role="dialog" aria-labelledby="picker-title">
-          <div className="cc-dialog cc-dialog--wide">
-            <h2 id="picker-title">اختيار تمرين من المكتبة</h2>
-            <AdminSearchInput value={pickerQuery} onChange={setPickerQuery} placeholder="ابحث في التمارين النشطة" label="بحث التمرين" />
-            <ul className="cc-picker-list">
-              {pickerRows.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="cc-row-btn"
-                    onClick={() => {
-                      const next = emptyProgramExercise({
-                        id: item.id,
-                        name_ar: item.name_ar,
-                        name_en: item.name_en,
-                        external_id: item.external_id,
-                      });
-                      setDraft({
-                        ...draft,
-                        weeks: patchExercises(draft, picker.week, picker.day, [
-                          ...(draft.weeks[picker.week]?.days[picker.day]?.exercises ?? []),
-                          next,
-                        ]),
-                      });
-                      setPicker(null);
-                    }}
-                  >
-                    {item.name_ar} <span dir="ltr">{item.name_en}</span>
+      <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم البرنامج" label="بحث البرامج" />
+      <AdminFilterBar>
+        <label className="cc-filter">
+          الهدف
+          <select
+            value={goal}
+            onChange={(event) => {
+              setGoal(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {PROGRAM_GOALS.map((item) => (
+              <option key={item} value={item}>
+                {programGoalLabel(item)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          المستوى
+          <select
+            value={level}
+            onChange={(event) => {
+              setLevel(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {PROGRAM_LEVELS.map((item) => (
+              <option key={item} value={item}>
+                {programLevelLabel(item)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          الأيام
+          <select
+            value={daysFilter}
+            onChange={(event) => {
+              setDaysFilter(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {[2, 3, 4, 5].map((days) => (
+              <option key={days} value={String(days)}>
+                {days}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          المكان
+          <select
+            value={locationFilter}
+            onChange={(event) => {
+              setLocationFilter(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {PROGRAM_LOCATIONS.map((item) => (
+              <option key={item} value={item}>
+                {programLocationLabel(item)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          الحالة
+          <select
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            <option value="draft">مسودة</option>
+            <option value="published">نشط</option>
+            <option value="archived">مؤرشف</option>
+          </select>
+        </label>
+      </AdminFilterBar>
+      {error ? <AdminErrorState message={error} onRetry={() => setOffset(0)} /> : null}
+      {loading ? (
+        <AdminSkeletonRows rows={8} />
+      ) : rows.length === 0 ? (
+        <AdminEmptyState title="لا قوالب مطابقة" body="أنشئ قالباً أو غيّر الفلاتر." />
+      ) : (
+        <AdminTable>
+          <thead>
+            <tr>
+              <th>البرنامج</th>
+              <th>الهدف</th>
+              <th>المستوى</th>
+              <th>أيام</th>
+              <th>المكان</th>
+              <th>الإصدار</th>
+              <th>الحالة</th>
+              <th>تحديث</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id} className={row.id === selectedId ? "is-selected" : undefined}>
+                <td>
+                  <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
+                    {row.name_ar}
                   </button>
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPicker(null)}>
-              إغلاق
-            </button>
-          </div>
-        </div>
-      ) : null}
+                </td>
+                <td>{programGoalLabel(row.goal)}</td>
+                <td>{programLevelLabel(row.level)}</td>
+                <td>{row.days_per_week}</td>
+                <td>{programLocationLabel(row.training_location as ProgramLocation)}</td>
+                <td>V{row.version}</td>
+                <td>
+                  <AdminLibraryStatusBadge
+                    status={row.archived_at ? "archived" : row.is_published ? "published" : "draft"}
+                    label={programStatusLabel(row.is_published, row.archived_at)}
+                  />
+                </td>
+                <td>{formatAdminDate(row.updated_at)}</td>
+                <td>
+                  <div className="cc-row-actions">
+                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => openItem(row.id)}>
+                      فتح
+                    </button>
+                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => openItem(row.id, true)}>
+                      معاينة
+                    </button>
+                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => clone(row.id, "duplicate")}>
+                      نسخ القالب
+                    </button>
+                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => clone(row.id, "new_version")}>
+                      نسخة جديدة
+                    </button>
+                    {!row.archived_at ? (
+                      <button type="button" className="cc-btn cc-btn--ghost" onClick={() => archive(row.id)}>
+                        أرشفة
+                      </button>
+                    ) : null}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </AdminTable>
+      )}
+      <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={setOffset} />
       <AdminLibraryDialogs request={confirm} onClose={() => setConfirm(null)} />
     </>
-  );
-}
-
-function patchDay(draft: AdminProgramDetail, weekIndex: number, dayIndex: number, patch: Partial<AdminProgramDetail["weeks"][number]["days"][number]>) {
-  return draft.weeks.map((week, i) =>
-    i === weekIndex
-      ? { ...week, days: week.days.map((day, j) => (j === dayIndex ? { ...day, ...patch } : day)) }
-      : week,
-  );
-}
-
-function patchExercise(
-  draft: AdminProgramDetail,
-  weekIndex: number,
-  dayIndex: number,
-  exerciseIndex: number,
-  patch: Partial<AdminProgramDetail["weeks"][number]["days"][number]["exercises"][number]>,
-) {
-  return patchExercises(
-    draft,
-    weekIndex,
-    dayIndex,
-    (draft.weeks[weekIndex]?.days[dayIndex]?.exercises ?? []).map((exercise, index) =>
-      index === exerciseIndex ? { ...exercise, ...patch } : exercise,
-    ),
-  );
-}
-
-function patchExercises(
-  draft: AdminProgramDetail,
-  weekIndex: number,
-  dayIndex: number,
-  exercises: AdminProgramDetail["weeks"][number]["days"][number]["exercises"],
-) {
-  return draft.weeks.map((week, i) =>
-    i === weekIndex
-      ? { ...week, days: week.days.map((day, j) => (j === dayIndex ? { ...day, exercises } : day)) }
-      : week,
   );
 }

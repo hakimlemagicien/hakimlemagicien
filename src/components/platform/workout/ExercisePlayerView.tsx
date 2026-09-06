@@ -1,6 +1,6 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { createPortal } from "react-dom";
 import {
   Check,
@@ -25,8 +25,10 @@ import {
   getExerciseStageGuide,
   getExerciseStageListThumb,
 } from "@/lib/platform/exercise-stage-media";
-import { formatExerciseVolume, formatWeightKg } from "@/lib/platform/workout-session";
+import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
+import { formatExerciseVolume } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
+import { AnimatedMetricValue, AnimatedRepRange } from "./AnimatedMetricValue";
 import { SetLogBottomSheet } from "./SetLogBottomSheet";
 import { WorkoutCompleteScreen } from "./WorkoutCompleteScreen";
 
@@ -34,53 +36,219 @@ type ExercisePlayerViewProps = {
   player: WorkoutPlayerState;
 };
 
-function formatWeightLabel(kg: number) {
-  const value = formatWeightKg(kg);
-  return value === "—" ? "—" : `${value} كغ`;
-}
+/** Full reveal window for RX strip count-up + card/icon motion. */
+const RX_REVEAL_SECONDS = 5;
 
-function formatRestSeconds(seconds: number) {
-  if (seconds <= 0) return "—";
-  return `${seconds} ثانية`;
+function parseRepRange(reps: string): { min: number; max: number } | null {
+  const match = reps.match(/(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)/);
+  if (!match) return null;
+  const min = Number(match[1]);
+  const max = Number(match[2]);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return null;
+  return { min, max };
 }
 
 function ExerciseRxStrip({
   sets,
   reps,
-  weightLabel,
-  restLabel,
+  weightKg,
+  hideWeight,
+  restSeconds,
+  motionKey,
+  isTimed,
 }: {
   sets: number;
   reps: string;
-  weightLabel: string;
-  restLabel: string;
+  weightKg: number;
+  hideWeight: boolean;
+  restSeconds: number;
+  /** Changes on next set / next exercise to replay 0→value count-up. */
+  motionKey: string;
+  isTimed?: boolean;
 }) {
-  const stats = [
-    { icon: Layers, label: "المجموعات", value: String(sets) },
-    { icon: RefreshCcw, label: "التكرارات", value: reps },
-    { icon: Weight, label: "الوزن", value: weightLabel },
-    { icon: Timer, label: "الراحة", value: restLabel },
+  const reduceMotion = useReducedMotion();
+  const [revealing, setRevealing] = useState(true);
+  const repRange = !isTimed ? parseRepRange(reps) : null;
+  const timedSeconds = isTimed ? Number.parseInt(reps, 10) : NaN;
+  const valueClass =
+    "mt-1.5 max-w-full truncate text-[14px] font-black leading-none tracking-tight text-foreground tabular-nums";
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setRevealing(false);
+      return;
+    }
+    setRevealing(true);
+    const id = window.setTimeout(() => setRevealing(false), RX_REVEAL_SECONDS * 1000);
+    return () => window.clearTimeout(id);
+  }, [motionKey, reduceMotion]);
+
+  const cells = [
+    {
+      icon: Layers,
+      label: "المجموعات",
+      node: revealing ? (
+        <AnimatedMetricValue
+          key={`${motionKey}-sets`}
+          value={sets}
+          initial={0}
+          duration={RX_REVEAL_SECONDS}
+          className={valueClass}
+        />
+      ) : (
+        <p className={valueClass}>{sets}</p>
+      ),
+    },
+    {
+      icon: RefreshCcw,
+      label: "التكرارات",
+      node: revealing ? (
+        repRange ? (
+          <AnimatedRepRange
+            key={`${motionKey}-reps`}
+            min={repRange.min}
+            max={repRange.max}
+            initialMin={0}
+            initialMax={0}
+            duration={RX_REVEAL_SECONDS}
+            className={valueClass}
+          />
+        ) : Number.isFinite(timedSeconds) ? (
+          <AnimatedMetricValue
+            key={`${motionKey}-timed`}
+            value={timedSeconds}
+            initial={0}
+            suffix=" ث"
+            duration={RX_REVEAL_SECONDS}
+            className={valueClass}
+          />
+        ) : (
+          <p className={valueClass}>{reps}</p>
+        )
+      ) : repRange ? (
+        <p className={valueClass}>
+          {repRange.min}–{repRange.max}
+        </p>
+      ) : Number.isFinite(timedSeconds) ? (
+        <p className={valueClass}>{timedSeconds} ث</p>
+      ) : (
+        <p className={valueClass}>{reps}</p>
+      ),
+    },
+    {
+      icon: Weight,
+      label: "الوزن",
+      node:
+        hideWeight || weightKg <= 0 ? (
+          <p className={valueClass}>—</p>
+        ) : revealing ? (
+          <AnimatedMetricValue
+            key={`${motionKey}-weight`}
+            value={weightKg}
+            initial={0}
+            decimals={weightKg % 1 === 0 ? 0 : 1}
+            suffix=" كغ"
+            duration={RX_REVEAL_SECONDS}
+            className={valueClass}
+          />
+        ) : (
+          <p className={valueClass}>
+            {weightKg % 1 === 0 ? weightKg : weightKg.toFixed(1)} كغ
+          </p>
+        ),
+    },
+    {
+      icon: Timer,
+      label: "الراحة",
+      node:
+        restSeconds <= 0 ? (
+          <p className={valueClass}>—</p>
+        ) : revealing ? (
+          <AnimatedMetricValue
+            key={`${motionKey}-rest`}
+            value={restSeconds}
+            initial={0}
+            suffix=" ثانية"
+            duration={RX_REVEAL_SECONDS}
+            className={valueClass}
+          />
+        ) : (
+          <p className={valueClass}>{restSeconds} ثانية</p>
+        ),
+    },
   ] as const;
 
   return (
-    <div className="rounded-[20px] bg-muted/90 px-2 py-3.5">
+    <motion.div
+      key={motionKey}
+      className="rounded-[20px] bg-muted/90 px-2 py-3.5 [perspective:900px]"
+      initial={false}
+      animate={
+        reduceMotion
+          ? { boxShadow: "inset 0 0 0 0 rgba(249,115,22,0)" }
+          : revealing
+            ? {
+                boxShadow: [
+                  "inset 0 0 0 0 rgba(249,115,22,0)",
+                  "inset 0 0 0 1.5px rgba(249,115,22,0.42)",
+                  "inset 0 0 0 1.5px rgba(249,115,22,0.28)",
+                  "inset 0 0 0 0 rgba(249,115,22,0)",
+                ],
+              }
+            : { boxShadow: "inset 0 0 0 0 rgba(249,115,22,0)" }
+      }
+      transition={
+        revealing && !reduceMotion
+          ? { duration: RX_REVEAL_SECONDS, ease: "easeOut", times: [0, 0.22, 0.55, 1] }
+          : { duration: 0.3 }
+      }
+    >
       <div className="grid grid-cols-4 gap-1.5">
-        {stats.map((stat) => {
+        {cells.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="flex min-w-0 flex-col items-center text-center">
-              <Icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.85} />
-              <p className="mt-1.5 text-[11px] font-medium leading-none text-foreground/70">
-                {stat.label}
-              </p>
-              <p className="mt-1.5 max-w-full truncate text-[14px] font-black leading-none tracking-tight text-foreground">
-                {stat.value}
-              </p>
-            </div>
+            <motion.div
+              key={`${motionKey}-${stat.label}`}
+              className="flex min-w-0 flex-col items-center text-center [transform-style:preserve-3d]"
+              initial={
+                reduceMotion
+                  ? false
+                  : { opacity: 0, rotateX: -65, y: 10 }
+              }
+              animate={{ opacity: 1, rotateX: 0, y: 0 }}
+              transition={{
+                duration: reduceMotion ? 0.2 : 0.9,
+                delay: reduceMotion ? 0 : index * 0.12,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <motion.span
+                className="grid place-items-center text-primary"
+                animate={
+                  reduceMotion || !revealing
+                    ? { y: 0, scale: 1 }
+                    : { y: [0, -2, 0, -1.5, 0], scale: [1, 1.08, 1, 1.05, 1] }
+                }
+                transition={
+                  revealing && !reduceMotion
+                    ? {
+                        duration: RX_REVEAL_SECONDS,
+                        ease: "easeInOut",
+                        delay: index * 0.12,
+                        times: [0, 0.25, 0.5, 0.75, 1],
+                      }
+                    : { duration: 0.25 }
+                }
+              >
+                <Icon className="h-5 w-5 shrink-0" strokeWidth={1.85} />
+              </motion.span>
+              <p className="mt-1.5 text-[11px] font-medium leading-none text-foreground/70">{stat.label}</p>
+              {stat.node}
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -95,6 +263,7 @@ function ExercisePlayerStage({
   sessionProgressPct,
   heroKey,
   videoAutoPlay,
+  videoPaused,
   onStart,
 }: {
   sessionActive: boolean;
@@ -105,9 +274,14 @@ function ExercisePlayerStage({
   sessionProgressPct: number;
   heroKey: string;
   videoAutoPlay: boolean;
+  videoPaused: boolean;
   onStart: () => void;
 }) {
-  const stillPoster = getExerciseStageCover(currentExercise.external_id);
+  const hasRealVideo = exerciseHasRealMotionVideo({
+    externalId: currentExercise.external_id,
+    videoStatus: currentExercise.videoStatus,
+  });
+  const stillPoster = hasRealVideo ? null : getExerciseStageCover(currentExercise.external_id);
   return (
     <div className="bg-background pb-2">
       <header className="space-y-2 px-1 pt-1">
@@ -171,7 +345,8 @@ function ExercisePlayerStage({
                   kind="exercise"
                   title={currentExercise.name}
                   label="فيديو التمرين"
-                  autoPlay={videoAutoPlay}
+                  autoPlay={videoAutoPlay && !videoPaused}
+                  paused={videoPaused}
                   loop
                   aspect="square"
                   showCaption={false}
@@ -245,8 +420,6 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
     videoAutoPlay,
     openVideo,
     beginSet,
-    showDetails,
-    setShowDetails,
     heroKey,
     primaryActionLabel,
     handlePrimaryAction,
@@ -263,6 +436,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
   } = player;
 
   const sessionActive = videoOpen || player.setInProgress;
+  const videoPaused = phase === "rest" || phase === "set-sheet";
   const isBlocked = phase === "rest" || phase === "complete" || phase === "set-sheet";
   const dockRef = useRef<HTMLDivElement>(null);
   const [dockH, setDockH] = useState(0);
@@ -280,10 +454,11 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
       if (main instanceof HTMLElement) {
         const mainRect = main.getBoundingClientRect();
         const frameRect = frame instanceof HTMLElement ? frame.getBoundingClientRect() : mainRect;
+        const width = frameRect.width || mainRect.width || window.innerWidth;
         setDockBox({
-          top: mainRect.top,
-          left: frameRect.left,
-          width: frameRect.width,
+          top: Math.max(0, mainRect.top),
+          left: frameRect.left || 0,
+          width,
         });
       }
       if (dockRef.current) {
@@ -309,7 +484,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
       observer.disconnect();
       window.removeEventListener("resize", sync);
     };
-  }, [sessionActive, heroKey]);
+  }, [sessionActive, heroKey, phase]);
 
   if (!currentExercise) {
     return (
@@ -346,9 +521,8 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                       position: "fixed",
                       top: dockBox.top,
                       left: dockBox.left,
-                      width: dockBox.width || "100%",
+                      width: dockBox.width || "min(100%, var(--platform-frame-w, 100%))",
                       zIndex: 45,
-                      visibility: dockBox.width ? "visible" : "hidden",
                     }}
                   >
                     <ExercisePlayerStage
@@ -360,6 +534,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                       sessionProgressPct={sessionProgressPct}
                       heroKey={heroKey}
                       videoAutoPlay={videoAutoPlay}
+                      videoPaused={videoPaused}
                       onStart={startSession}
                     />
                   </div>,
@@ -377,6 +552,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
             sessionProgressPct={sessionProgressPct}
             heroKey={heroKey}
             videoAutoPlay={videoAutoPlay}
+            videoPaused={false}
             onStart={startSession}
           />
         )}
@@ -392,19 +568,24 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
               className="pt-3"
             >
               <ExerciseRxStrip
+                motionKey={`${heroKey}-${currentSetNumber}-${currentExercise.id}-live`}
                 sets={currentExercise.sets}
                 reps={
                   isTimed
                     ? `${v2Targets.durationMin ?? currentExercise.durationSeconds} ث`
                     : `${currentSetTargets.repsMin} - ${currentSetTargets.repsMax}`
                 }
-                weightLabel={
-                  isBodyweight || isTimed || (runtimeMode === "v2" && !v2Targets.loadKnown)
-                    ? "—"
-                    : formatWeightLabel(currentSetTargets.weightKg)
-                }
-                restLabel={formatRestSeconds(v2Targets.restSeconds ?? currentExercise.restSeconds)}
+                isTimed={isTimed}
+                weightKg={currentSetTargets.weightKg}
+                hideWeight={isBodyweight || isTimed || (runtimeMode === "v2" && !v2Targets.loadKnown)}
+                restSeconds={v2Targets.restSeconds ?? currentExercise.restSeconds}
               />
+
+              {prescription?.prescribed_load != null &&
+              prescription.assigned?.suggested_weight_kg != null &&
+              prescription.prescribed_load !== prescription.assigned.suggested_weight_kg ? (
+                <p className="mt-2 text-center text-[11px] font-bold text-primary">تم تحديث هدفك للجلسة القادمة</p>
+              ) : null}
 
               {stageGuide ? (
                 <div className="mt-3">
@@ -423,31 +604,8 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                   </h2>
                   <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
                     {currentExercise.coachNotes?.trim() ||
-                      "حافظ على التحكم في الحركة، لا تتعجل التكرار، وتنفّس بثبات مع كل عدة. شاهد الفيديو أعلاه أثناء التنفيذ."}
+                      "حافظ على التحكم في الحركة، لا تتعجل التكرار، وتنفّس بثبات مع كل عدة. شاهد الفيديو أعلاه واستعن بصور الشرح والأخطاء."}
                   </p>
-
-                  {currentExercise.instructionsVideoPath ? (
-                    <div className="mt-3 border-t border-border/50 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowDetails((value) => !value)}
-                        className="text-[11px] font-bold text-primary"
-                      >
-                        {showDetails ? "إخفاء تعليمات إضافية" : "تعليمات إضافية من المدرب"}
-                      </button>
-                      {showDetails ? (
-                        <div className="mt-3">
-                          <ExerciseMedia
-                            status={currentExercise.instructionsStatus}
-                            path={currentExercise.instructionsVideoPath}
-                            kind="instructions"
-                            title={currentExercise.name}
-                            label="فيديو التعليمات"
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
                 </section>
             </motion.div>
           ) : (
@@ -460,18 +618,20 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
               className="overflow-hidden pt-3"
             >
               <ExerciseRxStrip
+                motionKey={`${heroKey}-${currentExercise.id}-preview`}
                 sets={currentExercise.sets}
                 reps={
                   isTimed
                     ? `${currentExercise.durationSeconds ?? volumeLabel} ث`
                     : volumeLabel
                 }
-                weightLabel={
-                  runtimeMode === "v2" && (isBodyweight || isTimed || prescription?.status === "CALIBRATION_REQUIRED")
-                    ? "—"
-                    : formatWeightLabel(currentExercise.suggestedWeightKg)
+                isTimed={isTimed}
+                weightKg={currentExercise.suggestedWeightKg}
+                hideWeight={
+                  runtimeMode === "v2" &&
+                  (isBodyweight || isTimed || prescription?.status === "CALIBRATION_REQUIRED")
                 }
-                restLabel={formatRestSeconds(currentExercise.restSeconds)}
+                restSeconds={currentExercise.restSeconds}
               />
 
               {stageGuide ? (
@@ -491,7 +651,11 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     const item = progress[index];
                     const isCurrent = index === exerciseIndex;
                     const isDone = item?.status === "done";
-                    const stillThumb = getExerciseStageListThumb(exercise.external_id);
+                    const preferVideoThumb = exerciseHasRealMotionVideo({
+                      externalId: exercise.external_id,
+                      videoStatus: exercise.videoStatus,
+                    });
+                    const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
 
                     return (
                       <button

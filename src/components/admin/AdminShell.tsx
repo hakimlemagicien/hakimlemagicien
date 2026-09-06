@@ -53,7 +53,9 @@ function AdminNavLink({
       aria-label={later ? `${item.label} — قريبًا` : item.label}
     >
       <span className="cc-nav-link__main">
-        <Icon className="cc-nav-link__icon" aria-hidden />
+        <span className="cc-nav-icon" aria-hidden>
+          <Icon className="cc-nav-link__icon" />
+        </span>
         <span>{item.label}</span>
       </span>
       {count > 0 ? (

@@ -128,6 +128,7 @@ export function useHourlyRotationIndex(): number {
 }
 
 export function listHeroGoalAssets(gender: HeroGender, goalId: string): string[] {
+  // Home hero uses bundled assets only. Workout CMS images must never leak here.
   return URLS_BY_GOAL.get(slotKey(gender, goalId)) ?? [];
 }
 
@@ -140,7 +141,7 @@ export function pickHeroGoalAsset(input: {
   goalId: string;
   rotationIndex?: number;
 }): string | null {
-  const urls = listHeroGoalAssets(input.gender, input.goalId);
+  const urls = URLS_BY_GOAL.get(slotKey(input.gender, input.goalId)) ?? [];
   if (urls.length === 0) return null;
   if (urls.length === 1) return urls[0]!;
 

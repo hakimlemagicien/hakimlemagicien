@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AdminConceptKpiRow,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -47,6 +48,7 @@ import {
   V2_METADATA_STATUSES,
 } from "@/lib/platform/exercise-library-v2";
 import {
+  countClientVisibleExercises,
   emptyExerciseDraft,
   fetchExerciseFilterOptions,
   getAdminExercise,
@@ -58,6 +60,7 @@ import {
   type AdminExerciseListItem,
 } from "@/lib/admin/admin-exercises-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
+import { CORE_100_EXERCISE_COUNT } from "@/lib/platform/content/core-100-exercise-media";
 import { ExerciseListThumb } from "@/components/admin/libraries/ExerciseListThumb";
 import { ExerciseMediaPanel } from "@/components/admin/libraries/ExerciseMediaPanel";
 import {
@@ -83,6 +86,8 @@ export function ExerciseLibraryManager() {
   const [rows, setRows] = useState<AdminExerciseListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [appAvailable, setAppAvailable] = useState<number | null>(null);
+  const [appCountVersion, setAppCountVersion] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [options, setOptions] = useState<AdminExerciseFilterOptions>({ muscles: [], equipment: [] });
   const [selectedId, setSelectedId] = useState<string | "new" | null>(null);
@@ -133,6 +138,20 @@ export function ExerciseLibraryManager() {
       cancelled = true;
     };
   }, [debouncedQuery, muscle, equipment, difficulty, type, active, offset]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void countClientVisibleExercises()
+      .then((count) => {
+        if (!cancelled) setAppAvailable(count);
+      })
+      .catch(() => {
+        if (!cancelled) setAppAvailable(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [appCountVersion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -311,6 +330,7 @@ export function ExerciseLibraryManager() {
       });
       setRows(result.rows);
       setTotal(result.totalCount);
+      setAppCountVersion((version) => version + 1);
     } catch (err) {
       setSaveState("failed");
       setError(translateLibraryError(err));
@@ -347,9 +367,8 @@ export function ExerciseLibraryManager() {
       onConfirm: () => {
         void setAdminExerciseActive(draft.id, makeActive)
           .then((saved) => {
-            setDraft(saved);
-            setBaseline(JSON.stringify(saved));
             setSaveState("saved");
+            setAppCountVersion((version) => version + 1);
           })
           .catch((err) => setError(translateLibraryError(err)));
       },
@@ -359,14 +378,45 @@ export function ExerciseLibraryManager() {
   return (
     <>
       <AdminPageHeader
-        kicker="مكتبة التدريب"
-        title="التمارين"
-        subtitle="مكتبة التمارين — تعديل التعريف قد يؤثر على Strategy Matrix. لا يعاد كتابة برامج العملاء تلقائيًا."
+        kicker="التدريب"
+        title="مكتبة التمارين"
+        subtitle="مكتبة التمارين — تعديل التعريف قد يؤثر على Strategy Matrix. لا يُعاد كتابة برامج العملاء تلقائيًا."
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
             تمرين جديد
           </button>
         }
+      />
+      <AdminConceptKpiRow
+        loading={loading && appAvailable == null}
+        metrics={[
+          {
+            id: "exercises",
+            label: "التمارين",
+            value: total.toLocaleString("ar-AE"),
+            hint: "في المكتبة حسب التصفية",
+            tone: total > 0 ? "positive" : "neutral",
+          },
+          {
+            id: "app_available",
+            label: "متاحة في التطبيق",
+            value: appAvailable == null ? "—" : appAvailable.toLocaleString("ar-AE"),
+            hint: `تمارين Core 100 النشطة الآن — من أصل ${CORE_100_EXERCISE_COUNT}`,
+            tone: appAvailable && appAvailable > 0 ? "positive" : appAvailable == null ? "unavailable" : "neutral",
+          },
+          {
+            id: "page",
+            label: "في هذه الصفحة",
+            value: rows.length.toLocaleString("ar-AE"),
+            hint: "نتائج البحث الحالية",
+          },
+          {
+            id: "muscle",
+            label: "تصفية العضلة",
+            value: muscle ? "مفعّلة" : "الكل",
+            hint: "بدون عدّاد وهمي للمجموعات",
+          },
+        ]}
       />
       <AdminLibraryLayout
         list={

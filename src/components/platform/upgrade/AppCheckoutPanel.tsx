@@ -86,7 +86,7 @@ export function AppCheckoutPanel({
     <section className="rounded-2xl border border-[#E8E4DE] bg-white p-4 text-right" dir="rtl">
       <h3 className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">متابعة الدفع</h3>
       <p className="mt-1 font-[Tajawal] text-[12px] text-[#64748B]">
-        {plan === "essential" ? "Essential" : "Premium"} · {formatOfficialTotal(offer.totalPrice)} ·{" "}
+        {plan === "essential" ? "PLUS" : "PRO"} · {formatOfficialTotal(offer.totalPrice)} ·{" "}
         {termMonths} أشهر
       </p>
 
