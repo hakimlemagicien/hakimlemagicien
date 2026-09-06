@@ -21,8 +21,7 @@ import {
   ExerciseLockedCard,
   ExerciseUnlockedStatusIcon,
 } from "@/components/platform/workout/ExerciseLockedCard";
-import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWorkoutDaySession } from "@/hooks/useTodayWorkout";
 import { useMembership } from "@/hooks/useMembership";
@@ -30,7 +29,6 @@ import {
   isExerciseUnlockedByEntitlements,
   isTrainingPreviewMode,
 } from "@/lib/platform/entitlements";
-import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
@@ -49,7 +47,6 @@ import {
   type WeekDayEntry,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
 import {
   formatExerciseVolume,
   type WorkoutSessionExercise,
@@ -612,42 +609,21 @@ function SessionExercisePathRow({
       isExerciseUnlockedByEntitlements(entitlements, orderIndex, { isToday: true }));
   const isDone = exercise.status === "done";
   const isActive = exercise.status === "active";
-  const preferVideoThumb = exerciseHasRealMotionVideo({
-    externalId: exercise.external_id,
-    videoStatus: exercise.videoStatus,
-  });
-  const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
   const thumbClass = cn(
     "h-full w-full object-cover object-center",
     !isUnlocked && "opacity-45 saturate-50",
   );
 
-  const thumbnail = stillThumb ? (
-    <OptimizedImage
-      src={stillThumb}
-      alt=""
+  const thumbnail = (
+    <ExerciseListThumb
+      externalId={exercise.external_id}
+      videoStatus={exercise.videoStatus}
+      resolvedMediaUrl={exercise.thumbnailUrl}
+      alt={exercise.name}
+      className={thumbClass}
       width={176}
       height={176}
       sizes="88px"
-      objectFit="cover"
-      className={cn("h-full w-full", !isUnlocked && "opacity-45 saturate-50")}
-      fallback={
-        <ExerciseThumbnail
-          signedUrl={exercise.thumbnailUrl}
-          status={exercise.videoStatus}
-          mediaPath={exercise.videoPath}
-          alt={exercise.name}
-          className={thumbClass}
-        />
-      }
-    />
-  ) : (
-    <ExerciseThumbnail
-      signedUrl={exercise.thumbnailUrl}
-      status={exercise.videoStatus}
-      mediaPath={exercise.videoPath}
-      alt={exercise.name}
-      className={thumbClass}
     />
   );
 

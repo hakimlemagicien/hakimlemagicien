@@ -34,15 +34,18 @@ async function buildSessionExercise(
   details: ExerciseDetails,
 ): Promise<WorkoutSessionExercise> {
   const listMedia = resolveExerciseListMediaPath({
+    externalId: details.external_id,
     status: details.video_status,
     thumbnailPath: details.thumbnail_path,
     videoPath: details.video_path,
   });
-  const thumbnailUrl = await fetchResolvedExerciseMediaUrl({
-    status: listMedia.status,
-    path: listMedia.path,
-    kind: listMedia.kind,
-  });
+  const thumbnailUrl = listMedia.path
+    ? await fetchResolvedExerciseMediaUrl({
+        status: listMedia.status,
+        path: listMedia.path,
+        kind: listMedia.kind,
+      })
+    : null;
 
   return {
     id: details.id,

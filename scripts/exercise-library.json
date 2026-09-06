@@ -38,7 +38,7 @@
       "name_ar": "فلاي صدر",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "CH-006",
@@ -54,7 +54,7 @@
       "name_ar": "ضغط دمبل علوي",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "CH-008",
@@ -94,7 +94,7 @@
       "name_ar": "جهاز ضغط صدر",
       "equipment": "MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "CH-013",
@@ -118,7 +118,15 @@
       "name_ar": "بنش سميث مائل",
       "equipment": "SMITH_MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
+    },
+    {
+      "id": "CH-016",
+      "name": "Smith Machine Bench Press",
+      "name_ar": "بنش سميث مستوٍ",
+      "equipment": "SMITH_MACHINE",
+      "level": "intermediate",
+      "status": "ready"
     }
   ],
   "Back": [
@@ -168,7 +176,7 @@
       "name_ar": "سحب لات",
       "equipment": "MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BA-007",
@@ -176,7 +184,7 @@
       "name_ar": "سحب لات عريض",
       "equipment": "MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BA-008",
@@ -192,7 +200,7 @@
       "name_ar": "سحب ذراع مستقيم",
       "equipment": "CABLE_STATION",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BA-010",
@@ -248,7 +256,7 @@
       "name_ar": "روو كيبل جالس",
       "equipment": "CABLE_STATION",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BA-017",
@@ -256,7 +264,7 @@
       "name_ar": "روو بصدر مدعوم",
       "equipment": "MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BA-018",
@@ -402,7 +410,7 @@
       "name_ar": "قفزات جاك",
       "equipment": "NO_EQUIPMENT",
       "level": "beginner",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "WU-005",
@@ -410,7 +418,7 @@
       "name_ar": "ركب عالية",
       "equipment": "NO_EQUIPMENT",
       "level": "beginner",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "WU-006",
@@ -798,7 +806,7 @@
       "name_ar": "أرنولد برس",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-004",
@@ -814,7 +822,7 @@
       "name_ar": "رفرفة جانبية",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-006",
@@ -830,7 +838,7 @@
       "name_ar": "فلاي خلفي للكتف",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-008",
@@ -838,7 +846,7 @@
       "name_ar": "فلاي عكسي منحني",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-009",
@@ -862,7 +870,7 @@
       "name_ar": "روو عمودي",
       "equipment": "BARBELL",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-012",
@@ -926,7 +934,7 @@
       "name_ar": "ضغط دمبل جالس",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "SH-020",
@@ -1032,7 +1040,7 @@
       "name_ar": "بايسيبس دمبل",
       "equipment": "DUMBBELLS",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "BI-003",
@@ -1582,7 +1590,7 @@
       "name_ar": "سكوات سميث",
       "equipment": "SMITH_MACHINE",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "LE-016",
@@ -1823,6 +1831,14 @@
       "equipment": "BARBELL",
       "level": "intermediate",
       "status": "placeholder"
+    },
+    {
+      "id": "LE-046",
+      "name": "Weighted Jump Squat",
+      "name_ar": "سكوات قفز بوزن",
+      "equipment": "WEIGHTED_VEST",
+      "level": "intermediate",
+      "status": "ready"
     }
   ],
   "Glutes": [
@@ -2172,7 +2188,7 @@
       "name_ar": "كرنش دراجة",
       "equipment": "NO_EQUIPMENT",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "AB-004",
@@ -2196,7 +2212,7 @@
       "name_ar": "بلانك",
       "equipment": "NO_EQUIPMENT",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "AB-007",
@@ -2348,7 +2364,7 @@
       "name_ar": "كرنش مائل",
       "equipment": "NO_EQUIPMENT",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "AB-026",
@@ -2446,7 +2462,7 @@
       "name_ar": "تسلق جبل",
       "equipment": "NO_EQUIPMENT",
       "level": "intermediate",
-      "status": "placeholder"
+      "status": "ready"
     },
     {
       "id": "CR-008",

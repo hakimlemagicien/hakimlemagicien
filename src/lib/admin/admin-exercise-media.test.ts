@@ -54,7 +54,7 @@ assert(
     signedUrls: {},
     storageFetchDone: true,
   }) === "/exercises/CH-001/stages/stage-b-thumb.webp",
-  "T11 stage still fallback when no db thumb",
+  "T11 stage still when no real video",
 );
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -63,7 +63,7 @@ assert(
     signedUrls: { "exercises/CH-001/thumbnail.webp": "https://signed.example/thumb.webp" },
     storageFetchDone: true,
   }) === "https://signed.example/thumb.webp",
-  "storage override wins over stage still",
+  "storage image override when no real video",
 );
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -71,8 +71,8 @@ assert(
     thumbnailPath: "exercises/CH-001/thumbnail.webp",
     signedUrls: {},
     storageFetchDone: false,
-  }) === null,
-  "wait for signed url before fallback",
+  }) === "/exercises/CH-001/stages/stage-b-thumb.webp",
+  "while signed thumb loads, show stage still — never blank",
 );
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -85,13 +85,32 @@ assert(
 );
 assert(
   resolveAdminExerciseListThumbSrc({
-    externalId: "MO-001",
+    externalId: "BI-002",
     thumbnailPath: null,
+    videoStatus: "ready",
     signedUrls: {},
     storageFetchDone: true,
-  }) === null,
-  "non-Core-100 without storage thumb stays empty until asset created",
+  }) === "/exercises/BI-002/video/exercise.mp4",
+  "real video becomes the list thumb — stage still not used",
 );
+assert(
+  resolveAdminExerciseListThumbSrc({
+    externalId: "BI-002",
+    thumbnailPath: "exercises/BI-002/thumbnail.webp",
+    videoStatus: "ready",
+    signedUrls: { "exercises/BI-002/thumbnail.webp": "https://signed.example/old-still.webp" },
+    storageFetchDone: true,
+  }) === "/exercises/BI-002/video/exercise.mp4",
+  "real video ignores DB still thumbnail",
+);
+const moThumb = resolveAdminExerciseListThumbSrc({
+  externalId: "MO-001",
+  thumbnailPath: null,
+  signedUrls: {},
+  storageFetchDone: true,
+});
+assert(typeof moThumb === "string" && moThumb.length > 0, "non-Core-100 without assets still has a visible fallback thumb");
+assert(moThumb.startsWith("data:image/svg+xml"), "fallback thumb is inline svg");
 
 const manager = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseLibraryManager.tsx"), "utf8");
 assert(manager.includes("resolveAdminExerciseListThumbSrc"), "T11 list thumbnail resolver");

@@ -34,6 +34,8 @@ export type AdminProgramExercise = {
   exercise_name_ar?: string;
   exercise_name_en?: string;
   exercise_external_id?: string;
+  /** Library video readiness — used for list thumbs (real video vs stage still). */
+  video_status?: string | null;
   /** Client-facing alias — does not change library exercise name. */
   client_label_ar?: string | null;
   /** Client-facing thumbnail override URL. */
@@ -191,6 +193,7 @@ export function emptyProgramExercise(exercise?: {
   name_ar: string;
   name_en: string;
   external_id: string;
+  video_status?: string | null;
 }): AdminProgramExercise {
   return {
     exercise_id: exercise?.id ?? "",
@@ -205,6 +208,7 @@ export function emptyProgramExercise(exercise?: {
     exercise_name_ar: exercise?.name_ar,
     exercise_name_en: exercise?.name_en,
     exercise_external_id: exercise?.external_id,
+    video_status: exercise?.video_status ?? null,
     client_label_ar: "",
     client_thumb_url: "",
     rir: 2,

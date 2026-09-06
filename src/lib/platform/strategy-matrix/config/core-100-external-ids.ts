@@ -97,7 +97,7 @@ export const CORE_100_EXTERNAL_IDS = [
   // P3 — variety and advanced coverage (81–100)
   "CH-005",
   "CH-010",
-  "CH-014",
+  "CH-016",
   "BA-009",
   "BA-018",
   "SH-003",

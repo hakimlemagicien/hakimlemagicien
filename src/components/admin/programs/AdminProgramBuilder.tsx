@@ -87,7 +87,7 @@ import {
 } from "@/lib/admin/admin-programs-api";
 import { WEEKDAY_LABELS_AR } from "@/lib/admin/coach-override-form";
 import { WEEKDAY_CALENDAR_ORDER } from "@/lib/platform/strategy-matrix/weekdays";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { resolveExerciseListThumb } from "@/lib/platform/exercise-list-thumb";
 
 type Props = {
   draft: AdminProgramDetail;
@@ -215,6 +215,7 @@ export function AdminProgramBuilder({
         name_ar: item.name_ar,
         name_en: item.name_en,
         external_id: item.external_id,
+        video_status: item.video_status,
       }),
     ];
     updateWeeks(patchDay(draft, weekIndex, dayIndex, { ...nextDay, exercises: nextExercises }), {
@@ -232,6 +233,7 @@ export function AdminProgramBuilder({
           name_ar: item.name_ar,
           name_en: item.name_en,
           external_id: item.external_id,
+          video_status: item.video_status,
         }),
         sets: day.exercises[index]?.sets ?? 3,
         reps_min: day.exercises[index]?.reps_min ?? 8,
@@ -660,9 +662,11 @@ export function AdminProgramBuilder({
                   </thead>
                   <tbody>
                     {day.exercises.map((exercise, index) => {
-                      const thumb =
-                        clientFacingExerciseThumb(exercise) ||
-                        getExerciseStageListThumb(exercise.exercise_external_id);
+                      const thumb = resolveExerciseListThumb({
+                        externalId: exercise.exercise_external_id || "",
+                        videoStatus: exercise.video_status,
+                        imageOverrideUrl: clientFacingExerciseThumb(exercise),
+                      });
                       const displayName = clientFacingExerciseName(exercise);
                       const hasClientAlias = Boolean(exercise.client_label_ar?.trim());
                       return (
@@ -710,7 +714,18 @@ export function AdminProgramBuilder({
                           <td>
                             <div className="cc-builder-ex">
                               <button type="button" className="cc-builder-ex" disabled={locked} onClick={() => setPicker(index)}>
-                                {thumb ? <img src={thumb} alt="" className="cc-builder-thumb" /> : <span className="cc-builder-thumb" />}
+                                {thumb.type === "video" ? (
+                                  <video
+                                    src={thumb.src}
+                                    muted
+                                    playsInline
+                                    preload="metadata"
+                                    className="cc-builder-thumb"
+                                    aria-hidden
+                                  />
+                                ) : (
+                                  <img src={thumb.src} alt="" className="cc-builder-thumb" />
+                                )}
                                 <span className="cc-builder-ex-name">
                                   <strong>{displayName || "اختيار تمرين"}</strong>
                                   {hasClientAlias ? (
@@ -1221,12 +1236,25 @@ export function AdminProgramBuilder({
                 ) : (
                   <ul>
                     {day.exercises.map((exercise, index) => {
-                      const thumb =
-                        clientFacingExerciseThumb(exercise) ||
-                        getExerciseStageListThumb(exercise.exercise_external_id);
+                      const thumb = resolveExerciseListThumb({
+                        externalId: exercise.exercise_external_id || "",
+                        videoStatus: exercise.video_status,
+                        imageOverrideUrl: clientFacingExerciseThumb(exercise),
+                      });
                       return (
                         <li key={`${exercise.exercise_id}-${index}`}>
-                          {thumb ? <img src={thumb} alt="" className="cc-builder-thumb" /> : <span className="cc-builder-thumb" />}
+                          {thumb.type === "video" ? (
+                            <video
+                              src={thumb.src}
+                              muted
+                              playsInline
+                              preload="metadata"
+                              className="cc-builder-thumb"
+                              aria-hidden
+                            />
+                          ) : (
+                            <img src={thumb.src} alt="" className="cc-builder-thumb" />
+                          )}
                           <span>
                             <strong>{clientFacingExerciseName(exercise)}</strong>
                             <small className="cc-muted">

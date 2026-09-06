@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
 import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import {
   PlatformSection,
   PlatformStack,
@@ -22,7 +22,7 @@ import {
   fetchExerciseDetails,
   formatExerciseDifficulty,
 } from "@/lib/platform/exercise-library";
-import { getExerciseStageGuide, getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { getExerciseStageGuide } from "@/lib/platform/exercise-stage-media";
 import { guardExerciseLibraryRoute } from "@/lib/platform/exercise-library-route-guard";
 
 export const Route = createFileRoute("/_platform/app/exercises/$exerciseId")({
@@ -73,7 +73,6 @@ function ExerciseDetailsPage() {
 
   const exercise = exerciseQuery.data;
   const stageGuide = getExerciseStageGuide(exercise.external_id);
-  const coverThumb = getExerciseStageListThumb(exercise.external_id);
 
   return (
     <PlatformStack>
@@ -86,20 +85,14 @@ function ExerciseDetailsPage() {
       <section className="platform-card overflow-hidden p-4">
         <div className="flex items-start gap-3">
           <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary-soft text-primary">
-            {coverThumb ? (
-              <OptimizedImage
-                src={coverThumb}
-                alt=""
-                width={112}
-                height={84}
-                sizes="56px"
-                objectFit="cover"
-                className="h-14 w-14"
-                fallback={<Dumbbell className="h-6 w-6" />}
-              />
-            ) : (
-              <Dumbbell className="h-6 w-6" />
-            )}
+            <ExerciseListThumb
+              externalId={exercise.external_id}
+              videoStatus={exercise.video_status}
+              alt={exercise.name_ar}
+              width={112}
+              height={84}
+              sizes="56px"
+            />
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-black text-foreground">{exercise.name_ar}</h1>

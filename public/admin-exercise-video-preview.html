@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>معاينة فيديوهات التمارين — شاشة التمرين</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #141b24;
+      --line: rgba(255,255,255,.08);
+      --text: #f4f7fb;
+      --muted: #9aa8b8;
+      --accent: #3dd6c6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "SF Pro Display", "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(1200px 600px at 80% -10%, #1a2a33, var(--bg));
+      color: var(--text);
+    }
+    header {
+      position: sticky; top: 0; z-index: 5;
+      backdrop-filter: blur(12px);
+      background: rgba(11,15,20,.82);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 18px;
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    header h1 { margin: 0; font-size: 18px; font-weight: 700; }
+    header p { margin: 0; color: var(--muted); font-size: 13px; }
+    .stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px;
+      font-size: 12px; color: var(--muted);
+    }
+    .pill strong { color: var(--accent); }
+    main {
+      max-width: 430px; margin: 0 auto; padding: 16px 12px 40px;
+    }
+    .hint {
+      color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0 4px 14px;
+    }
+    .phone {
+      border: 1px solid var(--line); border-radius: 28px; overflow: hidden;
+      background: #0e151d; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .phone-top {
+      padding: 14px 16px 8px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .phone-top .title { font-size: 15px; font-weight: 700; }
+    .phone-top .sub { font-size: 12px; color: var(--muted); }
+    .list { padding: 10px; display: grid; gap: 12px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+    }
+    .media {
+      position: relative; aspect-ratio: 9/12; background: #000;
+    }
+    video {
+      width: 100%; height: 100%; object-fit: cover; display: block; background: #000;
+    }
+    .badge {
+      position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.15); color: #fff; font-size: 11px;
+      padding: 4px 8px; border-radius: 999px;
+    }
+    .meta { padding: 12px 12px 14px; }
+    .meta h2 { margin: 0 0 4px; font-size: 16px; }
+    .meta .en { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .chip {
+      font-size: 11px; color: var(--muted); border: 1px solid var(--line);
+      border-radius: 999px; padding: 4px 8px;
+    }
+    .alts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .alts button {
+      appearance: none; border: 1px solid var(--line); background: #0f1620; color: var(--text);
+      border-radius: 10px; padding: 7px 10px; font-size: 12px; cursor: pointer;
+    }
+    .alts button.active { border-color: var(--accent); color: var(--accent); }
+    .admin-links {
+      max-width: 430px; margin: 18px auto 0; padding: 0 12px 40px;
+      display: grid; gap: 8px;
+    }
+    .admin-links a {
+      display: block; text-decoration: none; color: var(--text);
+      border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: var(--card);
+    }
+    .admin-links a span { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>معاينة فيديوهات التمارين</h1>
+      <p>شكل بطاقة التمرين كما تظهر في شاشة التمرين — دفعة ALL Exercise</p>
+    </div>
+    <div class="stats">
+      <div class="pill">تمارين: <strong>25</strong></div>
+      <div class="pill">بدائل: <strong>13</strong></div>
+      <div class="pill">فيديوهات: <strong>38</strong></div>
+    </div>
+  </header>
+  <main>
+    <p class="hint">اضغط البديل لتبديل الفيديو داخل نفس البطاقة. هذه معاينة محلية من <code>/exercises/.../video/</code>.</p>
+    <div class="phone">
+      <div class="phone-top">
+        <div>
+          <div class="title">جلسة اليوم</div>
+          <div class="sub">Preview · Real videos batch</div>
+        </div>
+        <div class="sub">25 تمرين</div>
+      </div>
+      <div class="list" id="list"></div>
+    </div>
+  </main>
+  <section class="admin-links">
+    <a href="/admin">لوحة الأدمن<span>إدارة البرامج والمكتبة</span></a>
+    <a href="/admin/programs">برامج التدريب<span>افتح البنّاء لمعاينة التمرين داخل الأدمن</span></a>
+    <a href="/app/program/workout">شاشة التمرين في التطبيق<span>تتطلب تسجيل دخول + برنامج نشط</span></a>
+  </section>
+  <script>
+    const cards = [{"id": "AB-003", "name_en": "Bicycle Crunch", "name_ar": "كرنش دراجة", "group": "Abs", "videos": [{"label": "أساسي", "src": "/exercises/AB-003/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/AB-003/video/exercise-alt-01.mp4"}], "alt_count": 1}, {"id": "AB-006", "name_en": "Plank", "name_ar": "بلانك", "group": "Abs", "videos": [{"label": "أساسي", "src": "/exercises/AB-006/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/AB-006/video/exercise-alt-01.mp4"}, {"label": "بديل 02", "src": "/exercises/AB-006/video/exercise-alt-02.mp4"}], "alt_count": 2}, {"id": "AB-025", "name_en": "Oblique Crunch", "name_ar": "كرنش مائل", "group": "Abs", "videos": [{"label": "أساسي", "src": "/exercises/AB-025/video/exercise.mp4"}], "alt_count": 0}, {"id": "BA-006", "name_en": "Lat Pulldown", "name_ar": "سحب لات", "group": "Back", "videos": [{"label": "أساسي", "src": "/exercises/BA-006/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/BA-006/video/exercise-alt-01.mp4"}, {"label": "بديل 02", "src": "/exercises/BA-006/video/exercise-alt-02.mp4"}], "alt_count": 2}, {"id": "BA-007", "name_en": "Wide Grip Lat Pulldown", "name_ar": "سحب لات عريض", "group": "Back", "videos": [{"label": "أساسي", "src": "/exercises/BA-007/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/BA-007/video/exercise-alt-01.mp4"}], "alt_count": 1}, {"id": "BA-009", "name_en": "Straight Arm Pulldown", "name_ar": "سحب ذراع مستقيم", "group": "Back", "videos": [{"label": "أساسي", "src": "/exercises/BA-009/video/exercise.mp4"}], "alt_count": 0}, {"id": "BA-016", "name_en": "Seated Cable Row", "name_ar": "روو كيبل جالس", "group": "Back", "videos": [{"label": "أساسي", "src": "/exercises/BA-016/video/exercise.mp4"}], "alt_count": 0}, {"id": "BA-017", "name_en": "Chest Supported Row", "name_ar": "روو بصدر مدعوم", "group": "Back", "videos": [{"label": "أساسي", "src": "/exercises/BA-017/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/BA-017/video/exercise-alt-01.mp4"}, {"label": "بديل 02", "src": "/exercises/BA-017/video/exercise-alt-02.mp4"}], "alt_count": 2}, {"id": "BI-002", "name_en": "Dumbbell Curl", "name_ar": "بايسيبس دمبل", "group": "Biceps", "videos": [{"label": "أساسي", "src": "/exercises/BI-002/video/exercise.mp4"}], "alt_count": 0}, {"id": "CH-005", "name_en": "Chest Fly", "name_ar": "فلاي صدر", "group": "Chest", "videos": [{"label": "أساسي", "src": "/exercises/CH-005/video/exercise.mp4"}], "alt_count": 0}, {"id": "CH-007", "name_en": "Incline Dumbbell Press", "name_ar": "ضغط دمبل علوي", "group": "Chest", "videos": [{"label": "أساسي", "src": "/exercises/CH-007/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/CH-007/video/exercise-alt-01.mp4"}], "alt_count": 1}, {"id": "CH-012", "name_en": "Machine Chest Press", "name_ar": "جهاز ضغط صدر", "group": "Chest", "videos": [{"label": "أساسي", "src": "/exercises/CH-012/video/exercise.mp4"}], "alt_count": 0}, {"id": "CH-015", "name_en": "Incline Smith Machine Bench Press", "name_ar": "بنش سميث مائل", "group": "Chest", "videos": [{"label": "أساسي", "src": "/exercises/CH-015/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/CH-015/video/exercise-alt-01.mp4"}], "alt_count": 1}, {"id": "CH-016", "name_en": "Smith Machine Bench Press", "name_ar": "بنش سميث مستوٍ", "group": "Chest", "videos": [{"label": "أساسي", "src": "/exercises/CH-016/video/exercise.mp4"}], "alt_count": 0}, {"id": "CR-007", "name_en": "Mountain Climbers", "name_ar": "تسلق جبل", "group": "Cardio", "videos": [{"label": "أساسي", "src": "/exercises/CR-007/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/CR-007/video/exercise-alt-01.mp4"}], "alt_count": 1}, {"id": "LE-015", "name_en": "Smith Machine Squat", "name_ar": "سكوات سميث", "group": "Legs", "videos": [{"label": "أساسي", "src": "/exercises/LE-015/video/exercise.mp4"}], "alt_count": 0}, {"id": "LE-046", "name_en": "Weighted Jump Squat", "name_ar": "سكوات قفز بوزن", "group": "Legs", "videos": [{"label": "أساسي", "src": "/exercises/LE-046/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-003", "name_en": "Arnold Press", "name_ar": "أرنولد برس", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-003/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-005", "name_en": "Lateral Raise", "name_ar": "رفرفة جانبية", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-005/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-007", "name_en": "Rear Delt Fly", "name_ar": "فلاي خلفي للكتف", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-007/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-008", "name_en": "Bent Over Reverse Fly", "name_ar": "فلاي عكسي منحني", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-008/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-011", "name_en": "Upright Row", "name_ar": "روو عمودي", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-011/video/exercise.mp4"}], "alt_count": 0}, {"id": "SH-019", "name_en": "Seated Dumbbell Press", "name_ar": "ضغط دمبل جالس", "group": "Shoulders", "videos": [{"label": "أساسي", "src": "/exercises/SH-019/video/exercise.mp4"}], "alt_count": 0}, {"id": "WU-004", "name_en": "Jumping Jacks", "name_ar": "قفزات جاك", "group": "Warm Up", "videos": [{"label": "أساسي", "src": "/exercises/WU-004/video/exercise.mp4"}], "alt_count": 0}, {"id": "WU-005", "name_en": "High Knees", "name_ar": "ركب عالية", "group": "Warm Up", "videos": [{"label": "أساسي", "src": "/exercises/WU-005/video/exercise.mp4"}, {"label": "بديل 01", "src": "/exercises/WU-005/video/exercise-alt-01.mp4"}, {"label": "بديل 02", "src": "/exercises/WU-005/video/exercise-alt-02.mp4"}], "alt_count": 2}];
+    const list = document.getElementById('list');
+    for (const card of cards) {
+      const el = document.createElement('article');
+      el.className = 'card';
+      const first = card.videos[0];
+      el.innerHTML = `
+        <div class="media">
+          <span class="badge">${card.id}</span>
+          <video playsinline muted loop controls preload="metadata" src="${first ? first.src : ''}"></video>
+        </div>
+        <div class="meta">
+          <h2>${card.name_ar}</h2>
+          <p class="en">${card.name_en}</p>
+          <div class="row">
+            <span class="chip">${card.group || '—'}</span>
+            <span class="chip">${card.videos.length} فيديو</span>
+          </div>
+          <div class="alts"></div>
+        </div>`;
+      const video = el.querySelector('video');
+      const alts = el.querySelector('.alts');
+      card.videos.forEach((v, idx) => {
+        const btn = document.createElement('button');
+        btn.textContent = v.label;
+        if (idx === 0) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          alts.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          video.src = v.src;
+          video.play().catch(() => {});
+        });
+        alts.appendChild(btn);
+      });
+      list.appendChild(el);
+    }
+  </script>
+</body>
+</html>

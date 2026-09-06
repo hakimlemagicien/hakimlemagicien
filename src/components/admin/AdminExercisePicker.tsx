@@ -7,7 +7,7 @@ import {
   type AdminExerciseListItem,
 } from "@/lib/admin/admin-exercises-api";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import { useDebouncedValue } from "@/components/admin/AdminLibraryKit";
 
 type Props = {
@@ -153,7 +153,6 @@ export function AdminExercisePicker({ open, title = "اختيار تمرين", o
         {loading ? <AdminSkeletonRows rows={4} /> : null}
         <ul className="cc-picker-list cc-exercise-picker-list">
           {visible.map((item) => {
-            const thumb = getExerciseStageListThumb(item.external_id);
             const hasRealVideo = exerciseHasRealMotionVideo({
               externalId: item.external_id,
               videoStatus: item.video_status,
@@ -161,13 +160,16 @@ export function AdminExercisePicker({ open, title = "اختيار تمرين", o
             return (
               <li key={item.id}>
                 <button type="button" className="cc-exercise-picker-row" onClick={() => onPick(item)}>
-                  {thumb ? (
-                    <img src={thumb} alt="" width={48} height={48} />
-                  ) : (
-                    <span className="cc-exercise-picker-row__fallback" aria-hidden>
-                      {item.name_ar.slice(0, 1)}
-                    </span>
-                  )}
+                  <span className="cc-exercise-picker-row__thumb">
+                    <ExerciseListThumb
+                      externalId={item.external_id}
+                      videoStatus={item.video_status}
+                      alt={item.name_ar}
+                      width={48}
+                      height={48}
+                      sizes="48px"
+                    />
+                  </span>
                   <span>
                     <strong>{item.name_ar}</strong>
                     <small>

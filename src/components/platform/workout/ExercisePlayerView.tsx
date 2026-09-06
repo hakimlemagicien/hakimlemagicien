@@ -18,13 +18,8 @@ import { useMembership } from "@/hooks/useMembership";
 import { isTrainingPreviewMode } from "@/lib/platform/entitlements";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
 import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
-import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
-import { OptimizedImage } from "@/components/ui/optimized-image";
-import {
-  getExerciseStageCover,
-  getExerciseStageGuide,
-  getExerciseStageListThumb,
-} from "@/lib/platform/exercise-stage-media";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
+import { getExerciseStageGuide } from "@/lib/platform/exercise-stage-media";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { formatExerciseVolume } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
@@ -281,7 +276,6 @@ function ExercisePlayerStage({
     externalId: currentExercise.external_id,
     videoStatus: currentExercise.videoStatus,
   });
-  const stillPoster = hasRealVideo ? null : getExerciseStageCover(currentExercise.external_id);
   return (
     <div className="bg-background pb-2">
       <header className="space-y-2 px-1 pt-1">
@@ -358,39 +352,21 @@ function ExercisePlayerStage({
                   onClick={onStart}
                   className="relative flex aspect-square w-full items-center justify-center"
                 >
-                  {stillPoster ? (
-                    <OptimizedImage
-                      src={stillPoster.src}
-                      alt={stillPoster.alt}
-                      width={960}
-                      height={720}
-                      sizes="(max-width: 430px) 100vw, 390px"
-                      objectFit="cover"
-                      className="absolute inset-0 h-full w-full"
-                      fallback={
-                        <ExerciseThumbnail
-                          signedUrl={currentExercise.thumbnailUrl}
-                          status={currentExercise.videoStatus}
-                          mediaPath={currentExercise.videoPath}
-                          alt={currentExercise.name}
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
-                      }
-                    />
-                  ) : (
-                    <ExerciseThumbnail
-                      signedUrl={currentExercise.thumbnailUrl}
-                      status={currentExercise.videoStatus}
-                      mediaPath={currentExercise.videoPath}
-                      alt={currentExercise.name}
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  )}
+                  <ExerciseListThumb
+                    externalId={currentExercise.external_id}
+                    videoStatus={currentExercise.videoStatus}
+                    resolvedMediaUrl={currentExercise.thumbnailUrl}
+                    alt={currentExercise.name}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    width={960}
+                    height={720}
+                    sizes="(max-width: 430px) 100vw, 390px"
+                  />
                   <span className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(249,115,22,0.65)] transition-transform duration-[120ms] active:scale-95">
                     <Play className="h-6 w-6 fill-current" />
                   </span>
                   <span className="absolute bottom-3 start-3 rounded-lg bg-card/95 px-2 py-1 text-[10px] font-bold text-foreground shadow-sm">
-                    شاهد الأداء الصحيح
+                    {hasRealVideo ? "شاهد الأداء الصحيح" : "ابدأ التمرين"}
                   </span>
                 </button>
               )}
@@ -651,11 +627,6 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                     const item = progress[index];
                     const isCurrent = index === exerciseIndex;
                     const isDone = item?.status === "done";
-                    const preferVideoThumb = exerciseHasRealMotionVideo({
-                      externalId: exercise.external_id,
-                      videoStatus: exercise.videoStatus,
-                    });
-                    const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
 
                     return (
                       <button
@@ -680,34 +651,16 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                           {index + 1}
                         </span>
                         <div className="aspect-square size-16 shrink-0 overflow-hidden rounded-2xl border border-border/60 bg-card">
-                          {stillThumb ? (
-                            <OptimizedImage
-                              src={stillThumb}
-                              alt=""
-                              width={112}
-                              height={84}
-                              sizes="64px"
-                              objectFit="cover"
-                              className="h-full w-full object-cover object-center"
-                              fallback={
-                                <ExerciseThumbnail
-                                  signedUrl={exercise.thumbnailUrl}
-                                  status={exercise.videoStatus}
-                                  mediaPath={exercise.videoPath}
-                                  alt={exercise.name}
-                                  className="h-full w-full object-cover"
-                                />
-                              }
-                            />
-                          ) : (
-                            <ExerciseThumbnail
-                              signedUrl={exercise.thumbnailUrl}
-                              status={exercise.videoStatus}
-                              mediaPath={exercise.videoPath}
-                              alt={exercise.name}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
+                          <ExerciseListThumb
+                            externalId={exercise.external_id}
+                            videoStatus={exercise.videoStatus}
+                            resolvedMediaUrl={exercise.thumbnailUrl}
+                            alt={exercise.name}
+                            className="h-full w-full object-cover"
+                            width={112}
+                            height={84}
+                            sizes="64px"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p

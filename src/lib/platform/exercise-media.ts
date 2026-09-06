@@ -143,37 +143,37 @@ export function exerciseMediaQueryKey(input: {
 }
 
 export function resolveExerciseListMediaPath(input: {
+  externalId?: string;
   status: ExerciseMediaStatus;
   thumbnailPath: string | null | undefined;
   videoPath: string | null | undefined;
 }): { status: ExerciseMediaStatus; path: string | null; kind: ExerciseMediaKind } {
+  const videoPath = input.videoPath?.trim() || null;
+  const hasReadyVideo = input.status === "ready" && Boolean(videoPath);
+
   // Real motion videos use the video itself as the list/session thumbnail —
-  // never a temporary still when the exercise video is ready.
-  if (input.status === "ready" && input.videoPath?.trim()) {
+  // never a temporary still / DB thumbnail.webp when the exercise video is ready.
+  if (hasReadyVideo) {
     return {
       status: "ready",
-      path: input.videoPath.trim(),
+      path: videoPath,
       kind: "exercise",
     };
   }
 
+  // No real video: prefer DB thumbnail image. Do NOT fall back to the shared
+  // placeholder MP4 for list thumbs — stage stills are handled by the list UI.
   if (input.thumbnailPath?.trim()) {
     return {
       status: "ready",
-      path: input.thumbnailPath,
+      path: input.thumbnailPath.trim(),
       kind: "exercise",
     };
   }
 
-  const source = resolveExerciseMediaSource({
-    status: input.status,
-    path: input.videoPath,
-    kind: "exercise",
-  });
-
   return {
     status: input.status,
-    path: source.storagePath,
+    path: null,
     kind: "exercise",
   };
 }

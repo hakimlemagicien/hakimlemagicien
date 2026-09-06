@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
-import { OptimizedImage } from "@/components/ui/optimized-image";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import {
   clientFacingExerciseName,
   clientFacingExerciseThumb,
@@ -26,10 +26,6 @@ import {
 import type { AdminProgramExercise } from "@/lib/admin/admin-programs-api";
 import { getAdminExercise } from "@/lib/admin/admin-exercises-api";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
-import {
-  getExerciseStageCover,
-  getExerciseStageListThumb,
-} from "@/lib/platform/exercise-stage-media";
 import type { ExerciseMediaStatus } from "@/lib/platform/exercise-media";
 import { cn } from "@/lib/utils";
 
@@ -187,8 +183,6 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
   const displayName = clientFacingExerciseName(current);
   const overrideThumb = clientFacingExerciseThumb(current);
   const media = current.exercise_id ? mediaById[current.exercise_id] : undefined;
-  const stageCover = getExerciseStageCover(externalId);
-  const listThumb = overrideThumb || getExerciseStageListThumb(externalId) || stageCover?.src || null;
   const totalSets = Math.max(1, current.sets || 1);
   const repsLabel = formatReps(current) || "—";
   const restLabel = formatRestSeconds(current.rest_seconds);
@@ -338,21 +332,16 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
                       onClick={() => setPhase("active")}
                       className="relative flex aspect-square w-full items-center justify-center"
                     >
-                      {listThumb ? (
-                        <OptimizedImage
-                          src={listThumb}
-                          alt={displayName}
-                          width={960}
-                          height={720}
-                          sizes="390px"
-                          objectFit="cover"
-                          className="absolute inset-0 h-full w-full"
-                        />
-                      ) : (
-                        <span className="absolute inset-0 grid place-items-center bg-muted text-4xl font-black text-muted-foreground">
-                          {displayName.slice(0, 1)}
-                        </span>
-                      )}
+                      <ExerciseListThumb
+                        externalId={externalId}
+                        videoStatus={media?.videoStatus}
+                        imageOverrideUrl={overrideThumb}
+                        alt={displayName}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        width={960}
+                        height={720}
+                        sizes="390px"
+                      />
                       <span className="relative grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_-8px_rgba(249,115,22,0.65)]">
                         <Play className="h-6 w-6 fill-current" />
                       </span>
@@ -381,12 +370,8 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
                     const total = Math.max(1, exercise.sets || 1);
                     const isCurrent = exerciseIndex === safeIndex;
                     const isDone = doneSets >= total;
-                    const thumb =
-                      clientFacingExerciseThumb(exercise) ||
-                      getExerciseStageListThumb(exercise.exercise_external_id) ||
-                      getExerciseStageCover(exercise.exercise_external_id ?? "")?.src ||
-                      null;
                     const name = clientFacingExerciseName(exercise);
+                    const rowMedia = exercise.exercise_id ? mediaById[exercise.exercise_id] : undefined;
 
                     return (
                       <button
@@ -411,21 +396,15 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
                           {exerciseIndex + 1}
                         </span>
                         <div className="aspect-square size-16 shrink-0 overflow-hidden rounded-2xl border border-border/60 bg-card">
-                          {thumb ? (
-                            <OptimizedImage
-                              src={thumb}
-                              alt=""
-                              width={112}
-                              height={84}
-                              sizes="64px"
-                              objectFit="cover"
-                              className="h-full w-full object-cover object-center"
-                            />
-                          ) : (
-                            <span className="grid h-full w-full place-items-center text-sm font-black text-muted-foreground">
-                              {name.slice(0, 1)}
-                            </span>
-                          )}
+                          <ExerciseListThumb
+                            externalId={exercise.exercise_external_id || ""}
+                            videoStatus={rowMedia?.videoStatus ?? exercise.video_status}
+                            imageOverrideUrl={clientFacingExerciseThumb(exercise)}
+                            alt={name}
+                            width={112}
+                            height={84}
+                            sizes="64px"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p

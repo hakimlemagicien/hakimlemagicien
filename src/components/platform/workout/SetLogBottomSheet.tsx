@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Droplets, Minus, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
-import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { formatExerciseVolume, formatRestTime } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
@@ -450,12 +450,15 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
               <p className="text-[10px] font-bold text-muted-foreground">الجولة التالية</p>
               <div className="mt-2 flex items-center gap-2.5">
                 <div className="aspect-square size-[78px] shrink-0 overflow-hidden rounded-xl border border-border/50">
-                  <ExerciseThumbnail
-                    signedUrl={restUpcoming.exercise.thumbnailUrl}
-                    status={restUpcoming.exercise.videoStatus}
-                    mediaPath={restUpcoming.exercise.videoPath}
+                  <ExerciseListThumb
+                    externalId={restUpcoming.exercise.external_id}
+                    videoStatus={restUpcoming.exercise.videoStatus}
+                    resolvedMediaUrl={restUpcoming.exercise.thumbnailUrl}
                     alt={restUpcoming.exercise.name}
                     className="h-full w-full object-cover"
+                    width={156}
+                    height={156}
+                    sizes="78px"
                   />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -490,12 +493,15 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
               <p className="text-[10px] font-bold text-muted-foreground">التمرين القادم</p>
               <div className="mt-2 flex items-center gap-2.5">
                 <div className="aspect-square size-[78px] shrink-0 overflow-hidden rounded-xl border border-border/50">
-                  <ExerciseThumbnail
-                    signedUrl={restUpcoming.exercise.thumbnailUrl}
-                    status={restUpcoming.exercise.videoStatus}
-                    mediaPath={restUpcoming.exercise.videoPath}
+                  <ExerciseListThumb
+                    externalId={restUpcoming.exercise.external_id}
+                    videoStatus={restUpcoming.exercise.videoStatus}
+                    resolvedMediaUrl={restUpcoming.exercise.thumbnailUrl}
                     alt={restUpcoming.exercise.name}
                     className="h-full w-full object-cover"
+                    width={156}
+                    height={156}
+                    sizes="78px"
                   />
                 </div>
                 <div className="min-w-0 flex-1">

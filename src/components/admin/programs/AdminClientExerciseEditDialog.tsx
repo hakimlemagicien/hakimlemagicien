@@ -6,7 +6,7 @@ import {
   validateProgramCoverFile,
   type AdminProgramExercise,
 } from "@/lib/admin/admin-programs-api";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { resolveExerciseListThumb } from "@/lib/platform/exercise-list-thumb";
 
 type Props = {
   open: boolean;
@@ -38,7 +38,13 @@ export function AdminClientExerciseEditDialog({
     setLabel(exercise.client_label_ar ?? "");
     setThumbUrl(exercise.client_thumb_url ?? "");
     setFile(null);
-    setPreview(exercise.client_thumb_url?.trim() || getExerciseStageListThumb(exercise.exercise_external_id));
+    setPreview(
+      exercise.client_thumb_url?.trim() ||
+        resolveExerciseListThumb({
+          externalId: exercise.exercise_external_id || "",
+          videoStatus: exercise.video_status,
+        }).src,
+    );
     setError(null);
     setUploading(false);
   }, [open, exercise]);
@@ -46,7 +52,13 @@ export function AdminClientExerciseEditDialog({
   if (!open) return null;
 
   const libraryName = exercise.exercise_name_ar?.trim() || "تمرين";
-  const fallbackThumb = getExerciseStageListThumb(exercise.exercise_external_id);
+  const fallbackThumb = resolveExerciseListThumb({
+    externalId: exercise.exercise_external_id || "",
+    videoStatus: exercise.video_status,
+  });
+  const previewIsVideo = Boolean(
+    preview && (/\.(mp4|webm|mov)(\?|#|$)/i.test(preview) || preview.includes("/video/")),
+  );
 
   return (
     <div className="cc-dialog-scrim" role="presentation" onClick={onClose}>
@@ -88,7 +100,15 @@ export function AdminClientExerciseEditDialog({
 
         <div className="cc-client-edit-dialog__thumb">
           <div className="cc-client-edit-dialog__preview">
-            {preview ? <img src={preview} alt="" /> : <span>{libraryName.slice(0, 1)}</span>}
+            {preview ? (
+              previewIsVideo ? (
+                <video src={preview} muted playsInline preload="metadata" aria-hidden />
+              ) : (
+                <img src={preview} alt="" />
+              )
+            ) : (
+              <span>{libraryName.slice(0, 1)}</span>
+            )}
           </div>
           <div className="cc-client-edit-dialog__thumb-actions">
             <input
@@ -127,7 +147,7 @@ export function AdminClientExerciseEditDialog({
                 if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
                 setFile(null);
                 setThumbUrl("");
-                setPreview(fallbackThumb);
+                setPreview(fallbackThumb.src);
               }}
             >
               <ImagePlus size={14} /> إعادة للصورة الافتراضية
@@ -145,7 +165,7 @@ export function AdminClientExerciseEditDialog({
             disabled={locked || uploading || Boolean(file)}
             onChange={(event) => {
               setThumbUrl(event.target.value);
-              setPreview(event.target.value.trim() || fallbackThumb);
+              setPreview(event.target.value.trim() || fallbackThumb.src);
             }}
             placeholder="https://"
           />

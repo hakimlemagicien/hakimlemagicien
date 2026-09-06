@@ -511,6 +511,7 @@ export function ExerciseLibraryManager() {
                           src={resolveAdminExerciseListThumbSrc({
                             externalId: row.external_id,
                             thumbnailPath: row.thumbnail_path,
+                            videoStatus: row.video_status,
                             signedUrls: thumbUrls,
                             storageFetchDone: !thumbsLoading,
                           })}
@@ -555,6 +556,7 @@ export function ExerciseLibraryManager() {
                       src={resolveAdminExerciseListThumbSrc({
                         externalId: row.external_id,
                         thumbnailPath: row.thumbnail_path,
+                        videoStatus: row.video_status,
                         signedUrls: thumbUrls,
                         storageFetchDone: !thumbsLoading,
                       })}

@@ -741,6 +741,56 @@
     "legacy_equipment_label": "SMITH_MACHINE"
   },
   {
+    "external_id": "CH-016",
+    "name_en": "Smith Machine Bench Press",
+    "name_ar": "بنش سميث مستوٍ",
+    "group": "Chest",
+    "exercise_type": "strength",
+    "primary_muscle_canonical": "CHEST",
+    "secondary_muscles_canonical": [
+      "TRICEPS",
+      "ANTERIOR_DELTOID"
+    ],
+    "muscle_contributions": [
+      {
+        "muscle": "CHEST",
+        "contribution": "DIRECT_PRIMARY"
+      },
+      {
+        "muscle": "TRICEPS",
+        "contribution": "DIRECT_SECONDARY"
+      },
+      {
+        "muscle": "ANTERIOR_DELTOID",
+        "contribution": "DIRECT_SECONDARY"
+      }
+    ],
+    "primary_movement_role": "HORIZONTAL_PUSH",
+    "secondary_movement_roles": [],
+    "substitution_group": "HORIZONTAL_CHEST_PRESS",
+    "mechanics": "COMPOUND",
+    "loading_type": "MACHINE",
+    "required_equipment": [
+      "SMITH_MACHINE",
+      "BENCH"
+    ],
+    "equipment_state": "HAS_EQUIPMENT",
+    "location_compatibility": [
+      "GYM"
+    ],
+    "is_bodyweight": false,
+    "is_unilateral": false,
+    "execution_sides": "BILATERAL",
+    "supports_timed_prescription": false,
+    "prescription_mode": "REPS",
+    "conditioning_class": null,
+    "complexity": "MODERATE",
+    "beginner_eligible": true,
+    "difficulty": "intermediate",
+    "v2_metadata_status": "APPROVED",
+    "legacy_equipment_label": "SMITH_MACHINE"
+  },
+  {
     "external_id": "BA-001",
     "name_en": "Pull Up",
     "name_ar": "سحب عالي",
@@ -9976,6 +10026,56 @@
     "difficulty": "intermediate",
     "v2_metadata_status": "APPROVED",
     "legacy_equipment_label": "BARBELL"
+  },
+  {
+    "external_id": "LE-046",
+    "name_en": "Weighted Jump Squat",
+    "name_ar": "سكوات قفز بوزن",
+    "group": "Legs",
+    "exercise_type": "strength",
+    "primary_muscle_canonical": "QUADRICEPS",
+    "secondary_muscles_canonical": [
+      "GLUTES",
+      "HAMSTRINGS"
+    ],
+    "muscle_contributions": [
+      {
+        "muscle": "QUADRICEPS",
+        "contribution": "DIRECT_PRIMARY"
+      },
+      {
+        "muscle": "GLUTES",
+        "contribution": "DIRECT_SECONDARY"
+      },
+      {
+        "muscle": "HAMSTRINGS",
+        "contribution": "DIRECT_SECONDARY"
+      }
+    ],
+    "primary_movement_role": "SQUAT",
+    "secondary_movement_roles": [],
+    "substitution_group": "SQUAT_PATTERN",
+    "mechanics": "COMPOUND",
+    "loading_type": "OTHER",
+    "required_equipment": [
+      "WEIGHTED_VEST"
+    ],
+    "equipment_state": "HAS_EQUIPMENT",
+    "location_compatibility": [
+      "GYM",
+      "HOME"
+    ],
+    "is_bodyweight": false,
+    "is_unilateral": false,
+    "execution_sides": "BILATERAL",
+    "supports_timed_prescription": false,
+    "prescription_mode": "REPS",
+    "conditioning_class": null,
+    "complexity": "MODERATE",
+    "beginner_eligible": false,
+    "difficulty": "intermediate",
+    "v2_metadata_status": "APPROVED",
+    "legacy_equipment_label": "WEIGHTED_VEST"
   },
   {
     "external_id": "GL-001",

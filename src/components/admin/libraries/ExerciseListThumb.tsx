@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { ImageOff } from "lucide-react";
+import { EXERCISE_LIST_THUMB_FALLBACK_SRC } from "@/lib/platform/exercise-list-thumb";
+
+function isVideoSrc(src: string): boolean {
+  return /\.(mp4|webm|mov)(\?|#|$)/i.test(src) || src.includes("/video/");
+}
 
 export function ExerciseListThumb({
   name,
@@ -14,18 +18,27 @@ export function ExerciseListThumb({
   if (loading) {
     return <span className="cc-exercise-thumb cc-exercise-thumb--loading" aria-hidden />;
   }
-  if (!src || broken) {
+
+  const resolved = !src || broken ? EXERCISE_LIST_THUMB_FALLBACK_SRC : src;
+
+  if (isVideoSrc(resolved)) {
     return (
-      <span className="cc-exercise-thumb cc-exercise-thumb--empty" role="img" aria-label={`لا توجد صورة لتمرين ${name}`}>
-        <ImageOff size={18} aria-hidden />
-        <span>لا توجد صورة</span>
-      </span>
+      <video
+        className="cc-exercise-thumb"
+        src={resolved}
+        muted
+        playsInline
+        preload="metadata"
+        aria-label={`فيديو تمرين ${name}`}
+        onError={() => setBroken(true)}
+      />
     );
   }
+
   return (
     <img
       className="cc-exercise-thumb"
-      src={src}
+      src={resolved}
       alt={`صورة تمرين ${name}`}
       width={64}
       height={64}

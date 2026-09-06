@@ -4,11 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   ChevronLeft,
-  Dumbbell,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import {
   PlatformPageHeader,
@@ -20,7 +18,7 @@ import {
   formatExerciseDifficulty,
   type ExerciseLibraryItem,
 } from "@/lib/platform/exercise-library";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { ExerciseListThumb } from "@/components/platform/exercises/ExerciseListThumb";
 import { guardExerciseLibraryRoute } from "@/lib/platform/exercise-library-route-guard";
 
 export const Route = createFileRoute("/_platform/app/exercises/")({
@@ -67,8 +65,6 @@ function groupExercises(exercises: ExerciseLibraryItem[]): ExerciseGroup[] {
 }
 
 function ExerciseCard({ exercise }: { exercise: ExerciseLibraryItem }) {
-  const stageThumb = getExerciseStageListThumb(exercise.external_id);
-
   return (
     <Link
       to="/app/exercises/$exerciseId"
@@ -76,20 +72,14 @@ function ExerciseCard({ exercise }: { exercise: ExerciseLibraryItem }) {
       className="platform-card flex items-center gap-3 p-3 transition hover:border-primary/30 active:scale-[0.99]"
     >
       <span className="relative grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary-soft text-primary">
-        {stageThumb ? (
-          <OptimizedImage
-            src={stageThumb}
-            alt=""
-            width={112}
-            height={84}
-            sizes="56px"
-            objectFit="cover"
-            className="h-14 w-14"
-            fallback={<Dumbbell className="h-6 w-6" />}
-          />
-        ) : (
-          <Dumbbell className="h-6 w-6" />
-        )}
+        <ExerciseListThumb
+          externalId={exercise.external_id}
+          videoStatus={exercise.video_status}
+          alt={exercise.name_ar}
+          width={112}
+          height={84}
+          sizes="56px"
+        />
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-black text-foreground">{exercise.name_ar}</h3>
