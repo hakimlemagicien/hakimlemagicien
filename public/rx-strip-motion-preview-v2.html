@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>معاينة موشن بطاقة RX — مجموعة 2</title>
+    <style>
+      :root {
+        --bg: #f4f1ec;
+        --ink: #1c1917;
+        --muted: #78716c;
+        --primary: #f97316;
+        --frame: 390px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "SF Pro Text", "Segoe UI", Tahoma, sans-serif;
+        background: #f7f4ef;
+        color: var(--ink);
+        min-height: 100vh;
+        padding: 28px 16px 48px;
+      }
+      h1 {
+        margin: 0 auto 8px;
+        max-width: 960px;
+        text-align: center;
+        font-size: 1.3rem;
+        font-weight: 900;
+      }
+      .sub {
+        margin: 0 auto 24px;
+        max-width: 960px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+      .grid {
+        max-width: 960px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 860px) {
+        .grid { grid-template-columns: 1fr 1fr; }
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid rgba(28, 25, 23, 0.08);
+        border-radius: 22px;
+        padding: 14px 12px 16px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 900;
+      }
+      .panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .replay {
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.74rem;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .stage {
+        display: grid;
+        place-items: center;
+        min-height: 160px;
+        padding: 22px 10px;
+        background: #faf7f3;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .phone { width: min(100%, var(--frame)); }
+
+      .rx-card {
+        position: relative;
+        border-radius: 20px;
+        background: rgba(231, 229, 228, 0.9);
+        padding: 14px 8px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        isolation: isolate;
+      }
+      .cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+      }
+      .icon { width: 20px; height: 20px; color: var(--primary); }
+      .label { font-size: 11px; font-weight: 600; color: rgba(28,25,23,.7); }
+      .value { font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+      .hint {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      /* ========== A) Magnetic Snap ========== */
+      .a.is-playing .rx-card {
+        animation: a-snap 5s cubic-bezier(0.22, 1, 0.36, 1) 1;
+      }
+      @keyframes a-snap {
+        0% { transform: scale(0.86) rotate(-1.2deg); filter: blur(2px); opacity: 0.55; }
+        18% { transform: scale(1.04) rotate(0.6deg); filter: blur(0); opacity: 1; }
+        32% { transform: scale(0.985) rotate(-0.25deg); }
+        48% { transform: scale(1.015) rotate(0.15deg); }
+        100% { transform: scale(1) rotate(0); filter: blur(0); opacity: 1; }
+      }
+
+      /* ========== B) Corner Sparks ========== */
+      .b .rx-card::before,
+      .b .rx-card::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        background: var(--primary);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .b .rx-card::before { top: -3px; right: -3px; box-shadow: -100% 0 0 var(--primary), 0 100% 0 var(--primary), -100% 100% 0 var(--primary); }
+      .b .rx-card::after { bottom: -3px; left: -3px; }
+      .b.is-playing .rx-card::before {
+        animation: b-corners 5s ease-in-out 1;
+      }
+      .b.is-playing .rx-card {
+        animation: b-tick 5s ease-in-out 1;
+      }
+      @keyframes b-corners {
+        0%, 100% { opacity: 0; transform: scale(0.4); }
+        12%, 28% { opacity: 1; transform: scale(1); }
+        40%, 55% { opacity: 0.15; transform: scale(0.7); }
+        68%, 82% { opacity: 1; transform: scale(1.05); }
+      }
+      @keyframes b-tick {
+        0%, 100% { transform: translateX(0); }
+        14% { transform: translateX(-2px); }
+        22% { transform: translateX(2px); }
+        30% { transform: translateX(0); }
+        70% { transform: translateX(1.5px); }
+        78% { transform: translateX(-1.5px); }
+        86% { transform: translateX(0); }
+      }
+
+      /* ========== C) Morph Outline ========== */
+      .c .shell {
+        position: relative;
+        border-radius: 20px;
+        padding: 2px;
+      }
+      .c .shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        border: 2px solid transparent;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .c.is-playing .shell::before {
+        animation: c-morph 5s ease-in-out 1;
+      }
+      .c.is-playing .rx-card {
+        animation: c-inflate 5s ease-in-out 1;
+      }
+      @keyframes c-morph {
+        0% { opacity: 0; border-color: rgba(249,115,22,0); border-radius: 28px; transform: scale(0.94); }
+        20% { opacity: 1; border-color: rgba(249,115,22,0.85); border-radius: 14px; transform: scale(1.02); }
+        45% { opacity: 1; border-color: rgba(249,115,22,0.55); border-radius: 24px; transform: scale(1); }
+        70% { opacity: 1; border-color: rgba(249,115,22,0.8); border-radius: 12px; transform: scale(1.015); }
+        100% { opacity: 0; border-color: rgba(249,115,22,0); border-radius: 20px; transform: scale(1); }
+      }
+      @keyframes c-inflate {
+        0%, 100% { transform: scale(1); }
+        20% { transform: scale(1.02); }
+        70% { transform: scale(1.012); }
+      }
+
+      /* ========== D) Underline Scan ========== */
+      .d .rx-card { overflow: hidden; }
+      .d .rx-card::after {
+        content: "";
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        bottom: 4px;
+        height: 2.5px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        transform: scaleX(0);
+        transform-origin: right center;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .d.is-playing .rx-card::after {
+        animation: d-scan 5s ease-in-out 1;
+      }
+      .d.is-playing .rx-card {
+        animation: d-press 5s ease-in-out 1;
+      }
+      @keyframes d-scan {
+        0% { opacity: 0; transform: scaleX(0); transform-origin: right center; }
+        15% { opacity: 1; transform: scaleX(1); transform-origin: right center; }
+        50% { opacity: 1; transform: scaleX(1); }
+        85% { opacity: 1; transform: scaleX(1); transform-origin: left center; }
+        100% { opacity: 0; transform: scaleX(0); transform-origin: left center; }
+      }
+      @keyframes d-press {
+        0%, 100% { transform: translateY(0); }
+        18% { transform: translateY(2px); }
+        30% { transform: translateY(0); }
+        68% { transform: translateY(1.5px); }
+        80% { transform: translateY(0); }
+      }
+
+      /* ========== E) Stagger Flip-In ========== */
+      .e.is-playing .cell {
+        animation: e-flip 5s cubic-bezier(0.22, 1, 0.36, 1) 1;
+        transform-origin: center top;
+      }
+      .e.is-playing .cell:nth-child(1) { animation-delay: 0s; }
+      .e.is-playing .cell:nth-child(2) { animation-delay: 0.12s; }
+      .e.is-playing .cell:nth-child(3) { animation-delay: 0.24s; }
+      .e.is-playing .cell:nth-child(4) { animation-delay: 0.36s; }
+      .e.is-playing .rx-card {
+        animation: e-frame 5s ease-out 1;
+      }
+      @keyframes e-flip {
+        0% { opacity: 0; transform: rotateX(-65deg) translateY(10px); }
+        22% { opacity: 1; transform: rotateX(8deg) translateY(0); }
+        34% { transform: rotateX(0); }
+        100% { opacity: 1; transform: rotateX(0) translateY(0); }
+      }
+      @keyframes e-frame {
+        0% { box-shadow: inset 0 0 0 0 rgba(249,115,22,0); }
+        25% { box-shadow: inset 0 0 0 1.5px rgba(249,115,22,0.4); }
+        100% { box-shadow: inset 0 0 0 0 rgba(249,115,22,0); }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>5 موشنات جديدة — مجموعة 2</h1>
+    <p class="sub">خيارات مختلفة كلياً عن المجموعة الأولى. اضغط «إعادة» ثم اختر الحرف/الرقم الذي يعجبك.</p>
+    <div class="grid" id="grid"></div>
+
+    <script>
+      const icons = {
+        layers: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>',
+        refresh: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
+        weight: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2.5 2.5 0 0 0 0 5H9"/><path d="M17.5 8a2.5 2.5 0 0 1 0 5H15"/><path d="M9 13v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6"/></svg>',
+        timer: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>',
+      };
+
+      const variants = [
+        {
+          id: "a",
+          title: "A — Magnetic Snap",
+          desc: "البطاقة تأتي من بعيد ضبابية ثم تثبت بقوة كأنها انجذبت لمكانها.",
+          shell: false,
+        },
+        {
+          id: "b",
+          title: "B — Corner Sparks",
+          desc: "نقاط برتقالية في الزوايا تومض مع اهتزاز خفيف أفقي للبطاقة.",
+          shell: false,
+        },
+        {
+          id: "c",
+          title: "C — Morph Outline",
+          desc: "إطار خارجي يتغيّر شكله (مستدير ↔ حاد) حول البطاقة أثناء التحديث.",
+          shell: true,
+        },
+        {
+          id: "d",
+          title: "D — Underline Scan",
+          desc: "خط مسح يمر أسفل البطاقة يميناً ثم يساراً مع ضغط خفيف للأسفل.",
+          shell: false,
+        },
+        {
+          id: "e",
+          title: "E — Stagger Flip-In",
+          desc: "كل عمود ينقلب للأعلى بالتتابع داخل البطاقة مع إطار داخلي لحظي.",
+          shell: false,
+        },
+      ];
+
+      function cardHtml() {
+        const cells = [
+          ["layers", "المجموعات", "4"],
+          ["refresh", "التكرارات", "10–8"],
+          ["weight", "الوزن", "—"],
+          ["timer", "الراحة", "90 ثانية"],
+        ];
+        return `<div class="rx-card">${cells
+          .map(
+            ([k, label, value]) =>
+              `<div class="cell">${icons[k]}<div class="label">${label}</div><div class="value">${value}</div></div>`
+          )
+          .join("")}</div>`;
+      }
+
+      const grid = document.getElementById("grid");
+      variants.forEach((v, i) => {
+        const panel = document.createElement("section");
+        panel.className = `panel ${v.id}`;
+        panel.innerHTML = `
+          <div class="panel-head">
+            <div>
+              <h2>${v.title}</h2>
+              <p>${v.desc}</p>
+            </div>
+            <button class="replay" type="button">إعادة</button>
+          </div>
+          <div class="stage">
+            <div class="phone">
+              ${v.shell ? `<div class="shell">${cardHtml()}</div>` : cardHtml()}
+            </div>
+          </div>
+          <p class="hint">الموشن ~5 ثوانٍ ثم يتوقف</p>
+        `;
+        const btn = panel.querySelector(".replay");
+        const play = () => {
+          panel.classList.remove("is-playing");
+          void panel.offsetWidth;
+          panel.classList.add("is-playing");
+          window.clearTimeout(panel._t);
+          panel._t = window.setTimeout(() => panel.classList.remove("is-playing"), 5200);
+        };
+        btn.addEventListener("click", play);
+        grid.appendChild(panel);
+        window.setTimeout(play, 200 * i);
+      });
+    </script>
+  </body>
+</html>

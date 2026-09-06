@@ -3,13 +3,12 @@ import {
   Copy,
   GripVertical,
   ImagePlus,
-  Library,
   Link2,
+  Moon,
   Pencil,
-  Search,
+  Play,
   Trash2,
   Upload,
-  X,
 } from "lucide-react";
 import { AdminExercisePicker } from "@/components/admin/AdminExercisePicker";
 import {
@@ -18,9 +17,9 @@ import {
   firstFieldError,
   useDebouncedValue,
 } from "@/components/admin/AdminLibraryKit";
+import { AdminClientExerciseEditDialog } from "@/components/admin/programs/AdminClientExerciseEditDialog";
+import { AdminClientExercisePreview } from "@/components/admin/programs/AdminClientExercisePreview";
 import {
-  EXERCISE_DIFFICULTIES,
-  EXERCISE_TYPES,
   PROGRAM_GOALS,
   PROGRAM_LEVELS,
   PROGRAM_VERSIONING_COMPLETION_REQUIRED,
@@ -30,15 +29,19 @@ import {
   type LibrarySaveState,
 } from "@/lib/admin/admin-libraries";
 import {
-  fetchExerciseFilterOptions,
   listAdminExercises,
   type AdminExerciseListItem,
 } from "@/lib/admin/admin-exercises-api";
 import {
+  PRESCRIPTION_REP_PRESETS,
+  PRESCRIPTION_REST_PRESETS,
+  PRESCRIPTION_RIR_PRESETS,
   addWeekToDraft,
   addWorkoutDayInWeek,
   applyPatternToSelection,
   builderMetadataFrom,
+  clientFacingExerciseName,
+  clientFacingExerciseThumb,
   convertDayType,
   copyDayToClipboard,
   duplicateExerciseAt,
@@ -57,6 +60,8 @@ import {
   patchDay,
   patchExercise,
   patchExercises,
+  programTargetGenderFromMetadata,
+  programTargetGenderLabel,
   setBuilderField,
   summarizeProgramDraft,
   targetMuscleLabelsForDay,
@@ -65,6 +70,7 @@ import {
   type DayClipboard,
   type ExercisePattern,
   type ExerciseRole,
+  type ProgramTargetGender,
 } from "@/lib/admin/admin-program-builder";
 import {
   PROGRAM_LOCATIONS,
@@ -98,14 +104,6 @@ type Props = {
   onCloneVersion?: () => void;
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  strength: "قوة",
-  cardio: "كارديو",
-  mobility: "حركة",
-  warmup: "إحماء",
-  other: "أخرى",
-};
-
 export function AdminProgramBuilder({
   draft,
   setDraft,
@@ -124,6 +122,8 @@ export function AdminProgramBuilder({
   const [dayIndex, setDayIndex] = useState(0);
   const [selectedExercise, setSelectedExercise] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(initialPreview);
+  const [clientPreviewIndex, setClientPreviewIndex] = useState<number | null>(null);
+  const [clientEditIndex, setClientEditIndex] = useState<number | null>(null);
   const [coverOpen, setCoverOpen] = useState(false);
   const [coverUrl, setCoverUrl] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -133,22 +133,18 @@ export function AdminProgramBuilder({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [clipboard, setClipboard] = useState<DayClipboard | null>(null);
   const [picker, setPicker] = useState<"add" | number | null>(null);
-  const [libQuery, setLibQuery] = useState("");
-  const [libMuscle, setLibMuscle] = useState("");
-  const [libEquipment, setLibEquipment] = useState("");
-  const [libLevel, setLibLevel] = useState("");
-  const [libType, setLibType] = useState("");
+  const [libQuery] = useState("");
+  const [libMuscle] = useState("");
+  const [libEquipment] = useState("");
+  const [libLevel] = useState("");
+  const [libType] = useState("");
   const [libRows, setLibRows] = useState<AdminExerciseListItem[]>([]);
-  const [libTotal, setLibTotal] = useState(0);
-  const [libLoading, setLibLoading] = useState(false);
-  const [libOpen, setLibOpen] = useState(false);
-  const [muscles, setMuscles] = useState<Array<{ id: string; name_ar: string }>>([]);
-  const [equipmentOptions, setEquipmentOptions] = useState<string[]>([]);
   const dragFrom = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const draggedLibrary = useRef<AdminExerciseListItem | null>(null);
   const debouncedQuery = useDebouncedValue(libQuery);
   const builder = builderMetadataFrom(draft.metadata);
+  const targetGender = programTargetGenderFromMetadata(draft.metadata);
   const week = draft.weeks[weekIndex] ?? draft.weeks[0];
   const day = week?.days[dayIndex] ?? week?.days[0];
   const locked = structureLocked || Boolean(draft.archived_at);
@@ -156,15 +152,7 @@ export function AdminProgramBuilder({
   const summary = useMemo(() => summarizeProgramDraft(draft), [draft]);
 
   useEffect(() => {
-    void fetchExerciseFilterOptions().then((options) => {
-      setMuscles(options.muscles.map((row) => ({ id: row.id, name_ar: row.name_ar })));
-      setEquipmentOptions(options.equipment);
-    });
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
-    setLibLoading(true);
     void listAdminExercises({
       query: debouncedQuery,
       muscle: libMuscle || null,
@@ -174,15 +162,10 @@ export function AdminProgramBuilder({
       active: true,
       offset: 0,
       limit: 50,
-    })
-      .then((result) => {
-        if (cancelled) return;
-        setLibRows(result.rows);
-        setLibTotal(result.totalCount);
-      })
-      .finally(() => {
-        if (!cancelled) setLibLoading(false);
-      });
+    }).then((result) => {
+      if (cancelled) return;
+      setLibRows(result.rows);
+    });
     return () => {
       cancelled = true;
     };
@@ -238,7 +221,6 @@ export function AdminProgramBuilder({
       days_per_week: daysPerWeek,
     });
     setSelectedExercise(nextExercises.length - 1);
-    setLibOpen(false);
   };
 
   const replaceExercise = (item: AdminExerciseListItem, index: number) => {
@@ -378,6 +360,29 @@ export function AdminProgramBuilder({
                 {PROGRAM_LOCATIONS.map((item) => (
                   <option key={item} value={item}>
                     {programLocationLabel(item)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="cc-builder__field">
+              الجنس
+              <select
+                value={targetGender}
+                disabled={Boolean(draft.archived_at)}
+                onChange={(event) => {
+                  const next = event.target.value as ProgramTargetGender;
+                  setDraft({
+                    ...draft,
+                    metadata: {
+                      ...draft.metadata,
+                      target_gender: next,
+                    },
+                  });
+                }}
+              >
+                {(["all", "male", "female"] as const).map((item) => (
+                  <option key={item} value={item}>
+                    {programTargetGenderLabel(item)}
                   </option>
                 ))}
               </select>
@@ -559,100 +564,7 @@ export function AdminProgramBuilder({
         </div>
       </section>
 
-      <button type="button" className="cc-builder-lib-toggle" onClick={() => setLibOpen(true)}>
-        <Library size={16} /> مكتبة التمارين
-      </button>
-
-      {libOpen ? (
-        <button type="button" className="cc-builder-lib-backdrop" aria-label="إغلاق المكتبة" onClick={() => setLibOpen(false)} />
-      ) : null}
-
       <div className="cc-builder__workspace">
-        <aside className={libOpen ? "cc-builder__card cc-builder-lib is-open" : "cc-builder__card cc-builder-lib"}>
-          <div className="cc-builder-lib__head">
-            <h3>مكتبة التمارين</h3>
-            <button type="button" className="cc-icon-btn cc-builder-lib__close" onClick={() => setLibOpen(false)} aria-label="إغلاق المكتبة">
-              <X size={16} />
-            </button>
-          </div>
-          <div className="cc-builder-lib__search">
-            <Search size={16} />
-            <input value={libQuery} onChange={(event) => setLibQuery(event.target.value)} placeholder="بحث عن تمرين..." aria-label="بحث التمارين" />
-          </div>
-          <div className="cc-builder-chips">
-            <button type="button" className={!libMuscle ? "cc-builder-chip is-active" : "cc-builder-chip"} onClick={() => setLibMuscle("")}>
-              الكل
-            </button>
-            {muscles.map((muscle) => (
-              <button
-                key={muscle.id}
-                type="button"
-                className={libMuscle === muscle.id ? "cc-builder-chip is-active" : "cc-builder-chip"}
-                onClick={() => setLibMuscle(muscle.id)}
-              >
-                {muscle.name_ar}
-              </button>
-            ))}
-          </div>
-          <div className="cc-builder-lib__filters">
-            <select value={libEquipment} onChange={(event) => setLibEquipment(event.target.value)} aria-label="المعدات">
-              <option value="">كل المعدات</option>
-              {equipmentOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-            <select value={libLevel} onChange={(event) => setLibLevel(event.target.value)} aria-label="المستوى">
-              <option value="">كل المستويات</option>
-              {EXERCISE_DIFFICULTIES.map((item) => (
-                <option key={item} value={item}>
-                  {programLevelLabel(item)}
-                </option>
-              ))}
-            </select>
-            <select value={libType} onChange={(event) => setLibType(event.target.value)} aria-label="نوع الحركة">
-              <option value="">كل الأنواع</option>
-              {EXERCISE_TYPES.map((item) => (
-                <option key={item} value={item}>
-                  {TYPE_LABELS[item] ?? item}
-                </option>
-              ))}
-            </select>
-          </div>
-          {libLoading ? <p className="cc-muted">جاري التحميل…</p> : null}
-          {libRows.map((item) => {
-            const thumb = getExerciseStageListThumb(item.external_id);
-            return (
-              <article
-                key={item.id}
-                className="cc-builder-lib-card"
-                draggable={!locked}
-                onDragStart={() => {
-                  draggedLibrary.current = item;
-                  dragFrom.current = null;
-                }}
-              >
-                <GripVertical className="cc-builder-drag" size={16} />
-                {thumb ? <img src={thumb} alt="" /> : <span className="cc-builder-thumb" />}
-                <div>
-                  <strong>{item.name_ar}</strong>
-                  <div className="cc-builder-tags">
-                    {item.muscle_group_name_ar ? <span className="cc-builder-tag">{item.muscle_group_name_ar}</span> : null}
-                    {item.exercise_type ? <span className="cc-builder-tag">{TYPE_LABELS[item.exercise_type] ?? item.exercise_type}</span> : null}
-                    {item.equipment ? <span className="cc-builder-tag">{item.equipment}</span> : null}
-                  </div>
-                </div>
-                <button type="button" className="cc-plus-btn" disabled={locked} onClick={() => addFromLibrary(item)} aria-label={`إضافة ${item.name_ar}`}>
-                  +
-                </button>
-              </article>
-            );
-          })}
-          {!libLoading && libRows.length === 0 ? <p className="cc-muted">لا توجد تمارين مطابقة.</p> : null}
-          {libTotal > libRows.length ? <p className="cc-muted">{libTotal} تمرين — استخدم البحث لتضييق النتائج.</p> : null}
-        </aside>
-
         <section className="cc-builder__card cc-builder-day">
           <div className="cc-builder-day__head">
             <div className="cc-builder-day__title">
@@ -709,10 +621,27 @@ export function AdminProgramBuilder({
               >
                 {day.exercises.length === 0 ? (
                   <div className="cc-builder-dropzone">
-                    <p>اسحب تمريناً من المكتبة أو أضفه من هنا</p>
-                    <button type="button" className="cc-builder-add-ex" disabled={locked} onClick={() => setPicker("add")}>
-                      إضافة تمرين +
-                    </button>
+                    <p>أضف تمارين من المكتبة المعتمدة لهذا اليوم</p>
+                    <div className="cc-builder-dropzone__actions">
+                      <button type="button" className="cc-builder-add-ex" disabled={locked} onClick={() => setPicker("add")}>
+                        إضافة تمرين +
+                      </button>
+                      <button
+                        type="button"
+                        className="cc-btn"
+                        disabled={locked}
+                        onClick={() => {
+                          const weekday = WEEKDAY_CALENDAR_ORDER[dayIndex] ?? "sun";
+                          const nextDay = convertDayType(day, "rest", `${WEEKDAY_LABELS_AR[weekday]} — راحة`);
+                          const nextDays = week.days.map((row, index) => (index === dayIndex ? nextDay : row));
+                          updateWeeks(patchDay(draft, weekIndex, dayIndex, nextDay), {
+                            days_per_week: Math.max(1, countWorkoutDays(nextDays)),
+                          });
+                        }}
+                      >
+                        <Moon size={16} /> يوم راحة
+                      </button>
+                    </div>
                   </div>
                 ) : (
                 <table className="cc-builder-table">
@@ -731,7 +660,11 @@ export function AdminProgramBuilder({
                   </thead>
                   <tbody>
                     {day.exercises.map((exercise, index) => {
-                      const thumb = getExerciseStageListThumb(exercise.exercise_external_id);
+                      const thumb =
+                        clientFacingExerciseThumb(exercise) ||
+                        getExerciseStageListThumb(exercise.exercise_external_id);
+                      const displayName = clientFacingExerciseName(exercise);
+                      const hasClientAlias = Boolean(exercise.client_label_ar?.trim());
                       return (
                         <tr
                           key={`${exercise.exercise_id}-${index}`}
@@ -779,7 +712,10 @@ export function AdminProgramBuilder({
                               <button type="button" className="cc-builder-ex" disabled={locked} onClick={() => setPicker(index)}>
                                 {thumb ? <img src={thumb} alt="" className="cc-builder-thumb" /> : <span className="cc-builder-thumb" />}
                                 <span className="cc-builder-ex-name">
-                                  <strong>{exercise.exercise_name_ar || "اختيار تمرين"}</strong>
+                                  <strong>{displayName || "اختيار تمرين"}</strong>
+                                  {hasClientAlias ? (
+                                    <small className="cc-muted">مكتبة: {exercise.exercise_name_ar}</small>
+                                  ) : null}
                                 </span>
                               </button>
                               <select
@@ -808,29 +744,66 @@ export function AdminProgramBuilder({
                             />
                           </td>
                           <td>
-                            <input
-                              disabled={locked}
-                              value={formatReps(exercise)}
-                              onChange={(event) => updateWeeks(patchExercise(draft, weekIndex, dayIndex, index, parseRepsInput(event.target.value)))}
-                            />
+                            <div className="cc-builder-combo">
+                              <input
+                                list={`reps-presets-${exercise.exercise_id}-${index}`}
+                                disabled={locked}
+                                value={formatReps(exercise)}
+                                onChange={(event) =>
+                                  updateWeeks(patchExercise(draft, weekIndex, dayIndex, index, parseRepsInput(event.target.value)))
+                                }
+                                aria-label="التكرارات"
+                              />
+                              <datalist id={`reps-presets-${exercise.exercise_id}-${index}`}>
+                                {PRESCRIPTION_REP_PRESETS.map((preset) => (
+                                  <option key={preset} value={preset} />
+                                ))}
+                              </datalist>
+                            </div>
                           </td>
                           <td>
-                            <input
-                              disabled={locked}
-                              value={formatRest(exercise.rest_seconds)}
-                              onChange={(event) =>
-                                updateWeeks(patchExercise(draft, weekIndex, dayIndex, index, { rest_seconds: parseRestInput(event.target.value) }))
-                              }
-                            />
+                            <div className="cc-builder-combo">
+                              <input
+                                list={`rest-presets-${exercise.exercise_id}-${index}`}
+                                disabled={locked}
+                                value={formatRest(exercise.rest_seconds)}
+                                onChange={(event) =>
+                                  updateWeeks(
+                                    patchExercise(draft, weekIndex, dayIndex, index, {
+                                      rest_seconds: parseRestInput(event.target.value),
+                                    }),
+                                  )
+                                }
+                                aria-label="الراحة"
+                              />
+                              <datalist id={`rest-presets-${exercise.exercise_id}-${index}`}>
+                                {PRESCRIPTION_REST_PRESETS.map((preset) => (
+                                  <option key={preset} value={preset} />
+                                ))}
+                              </datalist>
+                            </div>
                           </td>
                           <td>
-                            <input
-                              disabled={locked}
-                              value={formatRir(exercise.rir)}
-                              onChange={(event) =>
-                                updateWeeks(patchExercise(draft, weekIndex, dayIndex, index, { rir: parseRir(event.target.value) }))
-                              }
-                            />
+                            <div className="cc-builder-combo">
+                              <input
+                                list={`rir-presets-${exercise.exercise_id}-${index}`}
+                                disabled={locked}
+                                value={formatRir(exercise.rir)}
+                                onChange={(event) =>
+                                  updateWeeks(
+                                    patchExercise(draft, weekIndex, dayIndex, index, {
+                                      rir: parseRir(event.target.value),
+                                    }),
+                                  )
+                                }
+                                aria-label="RIR"
+                              />
+                              <datalist id={`rir-presets-${exercise.exercise_id}-${index}`}>
+                                {PRESCRIPTION_RIR_PRESETS.map((preset) => (
+                                  <option key={preset} value={preset} />
+                                ))}
+                              </datalist>
+                            </div>
                           </td>
                           <td>
                             <input
@@ -848,13 +821,42 @@ export function AdminProgramBuilder({
                               onChange={(event) => updateWeeks(patchExercise(draft, weekIndex, dayIndex, index, { notes_ar: event.target.value }))}
                             />
                           </td>
-                          <td>
+                          <td className="cc-builder-row-actions">
+                            <button
+                              type="button"
+                              className="cc-icon-btn"
+                              disabled={!exercise.exercise_id && !exercise.exercise_external_id}
+                              aria-label="معاينة كعميل"
+                              title="معاينة كعميل"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedExercise(index);
+                                setClientPreviewIndex(index);
+                              }}
+                            >
+                              <Play size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="cc-icon-btn"
+                              disabled={locked}
+                              aria-label="تعديل عرض العميل"
+                              title="تعديل عرض العميل"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setSelectedExercise(index);
+                                setClientEditIndex(index);
+                              }}
+                            >
+                              <Pencil size={16} />
+                            </button>
                             <button
                               type="button"
                               className="cc-icon-btn"
                               disabled={locked}
                               aria-label="نسخ التمرين"
-                              onClick={() => {
+                              onClick={(event) => {
+                                event.stopPropagation();
                                 updateWeeks(patchExercises(draft, weekIndex, dayIndex, duplicateExerciseAt(day.exercises, index)));
                                 setSelectedExercise(index + 1);
                               }}
@@ -866,7 +868,8 @@ export function AdminProgramBuilder({
                               className="cc-icon-btn is-danger"
                               disabled={locked}
                               aria-label="حذف التمرين"
-                              onClick={() =>
+                              onClick={(event) => {
+                                event.stopPropagation();
                                 updateWeeks(
                                   patchExercises(
                                     draft,
@@ -874,8 +877,8 @@ export function AdminProgramBuilder({
                                     dayIndex,
                                     day.exercises.filter((_, rowIndex) => rowIndex !== index),
                                   ),
-                                )
-                              }
+                                );
+                              }}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -889,9 +892,26 @@ export function AdminProgramBuilder({
               </div>
               <div className="cc-builder-day__actions">
                 {day.exercises.length > 0 ? (
-                  <button type="button" className="cc-builder-add-ex" disabled={locked} onClick={() => setPicker("add")}>
-                    إضافة تمرين +
-                  </button>
+                  <>
+                    <button type="button" className="cc-builder-add-ex" disabled={locked} onClick={() => setPicker("add")}>
+                      إضافة تمرين +
+                    </button>
+                    <button
+                      type="button"
+                      className="cc-btn"
+                      disabled={locked}
+                      onClick={() => {
+                        const weekday = WEEKDAY_CALENDAR_ORDER[dayIndex] ?? "sun";
+                        const nextDay = convertDayType(day, "rest", `${WEEKDAY_LABELS_AR[weekday]} — راحة`);
+                        const nextDays = week.days.map((row, index) => (index === dayIndex ? nextDay : row));
+                        updateWeeks(patchDay(draft, weekIndex, dayIndex, nextDay), {
+                          days_per_week: Math.max(1, countWorkoutDays(nextDays)),
+                        });
+                      }}
+                    >
+                      <Moon size={16} /> يوم راحة
+                    </button>
+                  </>
                 ) : null}
                 <button
                   type="button"
@@ -1201,12 +1221,14 @@ export function AdminProgramBuilder({
                 ) : (
                   <ul>
                     {day.exercises.map((exercise, index) => {
-                      const thumb = getExerciseStageListThumb(exercise.exercise_external_id);
+                      const thumb =
+                        clientFacingExerciseThumb(exercise) ||
+                        getExerciseStageListThumb(exercise.exercise_external_id);
                       return (
                         <li key={`${exercise.exercise_id}-${index}`}>
                           {thumb ? <img src={thumb} alt="" className="cc-builder-thumb" /> : <span className="cc-builder-thumb" />}
                           <span>
-                            <strong>{exercise.exercise_name_ar}</strong>
+                            <strong>{clientFacingExerciseName(exercise)}</strong>
                             <small className="cc-muted">
                               {exercise.sets} × {formatReps(exercise)} · راحة {formatRest(exercise.rest_seconds)}
                               {exercise.rir != null ? ` · RIR ${exercise.rir}` : ""}
@@ -1221,6 +1243,27 @@ export function AdminProgramBuilder({
             </div>
           </div>
         </div>
+      ) : null}
+
+      <AdminClientExercisePreview
+        open={clientPreviewIndex != null && day.day_type === "workout"}
+        exercises={day.exercises}
+        startIndex={clientPreviewIndex ?? 0}
+        dayTitle={day.title_ar || "حصة اليوم"}
+        onClose={() => setClientPreviewIndex(null)}
+      />
+
+      {clientEditIndex != null && day.exercises[clientEditIndex] ? (
+        <AdminClientExerciseEditDialog
+          open
+          exercise={day.exercises[clientEditIndex]!}
+          templateId={draft.id}
+          locked={locked}
+          onClose={() => setClientEditIndex(null)}
+          onSave={(patch) => {
+            updateWeeks(patchExercise(draft, weekIndex, dayIndex, clientEditIndex, patch));
+          }}
+        />
       ) : null}
 
       <AdminExercisePicker

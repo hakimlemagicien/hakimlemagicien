@@ -233,7 +233,7 @@ const formatted = formatClientActivityEvent(event);
 assert(formatted.what.length > 0, "activity what");
 assert(formatted.source === "admin", "activity source");
 assert(trainingLocationLabel("both") === "منزل + نادي", "training location label");
-assert(directoryPlanLabelAr("premium") === "احترافي", "arabic premium label");
+assert(directoryPlanLabelAr("premium") === "PRO", "arabic premium label");
 assert(directoryOperationalStatus(sampleRow) === "attention", "unread is follow-up status");
 assert(paginationPages(1, 11).includes("gap"), "pagination collapses long ranges");
 assert(formatAdminActivityStamp(null) === "—", "missing activity is a dash");

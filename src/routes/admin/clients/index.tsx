@@ -287,9 +287,9 @@ function AdminClientsPage() {
             <select value={planFilter} onChange={(event) => setPlanFilter(event.target.value as typeof planFilter)}>
               <option value="all">الكل</option>
               <option value="vip">Internal VIP</option>
-              <option value="premium">Premium</option>
-              <option value="essential">Essential</option>
-              <option value="free">Free</option>
+              <option value="premium">PRO</option>
+              <option value="essential">PLUS</option>
+              <option value="free">FREE</option>
             </select>
           </label>
           <label className="cc-filter">

@@ -348,7 +348,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         {vipCheckoutBlocked ? (
           <p className="mt-3 rounded-2xl border border-[#E8E4DE] bg-white px-3.5 py-3 text-[11.5px] leading-[1.7] text-neutral-700">
-            باقة VIP ليست متاحة للشراء العام. Essential و Premium متاحان عبر /app/upgrade للمستخدمين
+            باقة VIP ليست متاحة للشراء العام. PLUS و PRO متاحان عبر /app/upgrade للمستخدمين
             المسجّلين.
           </p>
         ) : null}

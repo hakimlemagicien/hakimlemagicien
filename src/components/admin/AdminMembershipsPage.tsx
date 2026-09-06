@@ -161,8 +161,8 @@ export function AdminMembershipsPage() {
           }
         >
           <option value="all">كل الخطط</option>
-          <option value="essential">Essential</option>
-          <option value="premium">Premium</option>
+          <option value="essential">PLUS</option>
+          <option value="premium">PRO</option>
           <option value="vip">Internal VIP</option>
         </select>
         <select

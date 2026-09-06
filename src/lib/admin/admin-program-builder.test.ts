@@ -1,5 +1,8 @@
 import { emptyProgramDraft, emptyProgramExercise, validateProgramCoverFile } from "./admin-programs-api";
 import {
+  PRESCRIPTION_REP_PRESETS,
+  PRESCRIPTION_REST_PRESETS,
+  PRESCRIPTION_RIR_PRESETS,
   addWeekToDraft,
   applyPatternToSelection,
   copyDayToClipboard,
@@ -14,6 +17,10 @@ import {
   parseRepsInput,
   parseRestInput,
   pasteDayFromClipboard,
+  programTargetGenderFromMetadata,
+  programTargetGenderLabel,
+  clientFacingExerciseName,
+  clientFacingExerciseThumb,
   serializeBuilderMetadata,
   slugFromProgramName,
   summarizeProgramDraft,
@@ -30,6 +37,12 @@ assert(formatReps({ reps_min: 8, reps_max: 10, reps_label: "8-10" }) === "8-10",
 assert(parseRestInput("90s") === 90, "parse rest");
 assert(formatRest(90) === "90s", "format rest");
 assert(slugFromProgramName("Muscle Build 4 Days").includes("muscle"), "slug from name");
+assert(PRESCRIPTION_REP_PRESETS[0] === "8-4", "rep presets start low volume");
+assert(PRESCRIPTION_REST_PRESETS.includes("180s"), "rest presets include 180s");
+assert(PRESCRIPTION_RIR_PRESETS.join(",") === "0,1,2,3,5", "rir presets");
+assert(programTargetGenderFromMetadata({ target_gender: "female" }) === "female", "gender female");
+assert(programTargetGenderFromMetadata({}) === "all", "gender default all");
+assert(programTargetGenderLabel("male") === "ذكور فقط", "gender label male");
 
 const exercise = {
   ...emptyProgramExercise(),
@@ -99,6 +112,31 @@ const hydrated = hydrateProgramBuilder({
 const hydratedEx = hydrated.weeks[0]?.days.find((day) => day.exercises.length)?.exercises[0];
 assert(hydratedEx?.tempo === "2-0-2", "hydrate tempo");
 assert(hydratedEx?.rir === 2, "hydrate rir");
+
+draft.weeks[0]!.days.find((day) => day.exercises.length)!.exercises[0] = {
+  ...exercise,
+  client_label_ar: "ضغط صدر للهدف",
+  client_thumb_url: "https://example.com/thumb.webp",
+};
+const withClientFacing = serializeBuilderMetadata(draft);
+assert(
+  withClientFacing.exercises?.some((row) => row.client_label_ar === "ضغط صدر للهدف"),
+  "serialize client label",
+);
+assert(
+  withClientFacing.exercises?.some((row) => row.client_thumb_url === "https://example.com/thumb.webp"),
+  "serialize client thumb",
+);
+const hydratedClient = hydrateProgramBuilder({
+  ...emptyProgramDraft(),
+  metadata: { builder: withClientFacing },
+  weeks: draft.weeks,
+});
+const hydratedClientEx = hydratedClient.weeks[0]?.days.find((day) => day.exercises.length)?.exercises[0];
+assert(hydratedClientEx?.client_label_ar === "ضغط صدر للهدف", "hydrate client label");
+assert(clientFacingExerciseName(hydratedClientEx!) === "ضغط صدر للهدف", "client facing name prefers alias");
+assert(clientFacingExerciseThumb(hydratedClientEx!) === "https://example.com/thumb.webp", "client facing thumb");
+assert(clientFacingExerciseName({ ...exercise, exercise_name_ar: "بنش برس", client_label_ar: "" }) === "بنش برس", "falls back to library name");
 
 const patterned = applyPatternToSelection(
   [

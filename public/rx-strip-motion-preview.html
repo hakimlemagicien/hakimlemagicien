@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>معاينة موشن بطاقة RX</title>
+    <style>
+      :root {
+        --bg: #f6f3ef;
+        --card: #ebe7e2;
+        --ink: #1c1917;
+        --muted: #78716c;
+        --primary: #f97316;
+        --frame: 390px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "SF Pro Text", "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(180deg, #fff8f1 0%, var(--bg) 40%, #efe8e0 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        padding: 28px 16px 48px;
+      }
+      h1 {
+        margin: 0 auto 8px;
+        max-width: 920px;
+        text-align: center;
+        font-size: 1.35rem;
+        font-weight: 900;
+      }
+      .sub {
+        margin: 0 auto 28px;
+        max-width: 920px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+      .grid {
+        max-width: 920px;
+        margin: 0 auto;
+        display: grid;
+        gap: 22px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 840px) {
+        .grid { grid-template-columns: 1fr 1fr; }
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid rgba(28, 25, 23, 0.08);
+        border-radius: 24px;
+        padding: 16px 14px 18px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 900;
+      }
+      .panel-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .replay {
+        flex-shrink: 0;
+        border: 0;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.75rem;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .stage {
+        display: grid;
+        place-items: center;
+        min-height: 148px;
+        padding: 18px 8px;
+        background: #faf7f3;
+        border-radius: 18px;
+      }
+      .phone {
+        width: min(100%, var(--frame));
+      }
+
+      /* Shared RX card look */
+      .rx-card {
+        position: relative;
+        border-radius: 20px;
+        background: rgba(231, 229, 228, 0.9);
+        padding: 14px 8px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        isolation: isolate;
+      }
+      .cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+      }
+      .icon {
+        width: 20px;
+        height: 20px;
+        color: var(--primary);
+      }
+      .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(28, 25, 23, 0.7);
+      }
+      .value {
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ========== 1) Pulse Aura ========== */
+      .m1 .rx-card::before {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 23px;
+        border: 2px solid rgba(249, 115, 22, 0.55);
+        animation: m1-ring 1.6s ease-out infinite;
+        pointer-events: none;
+        z-index: -1;
+      }
+      .m1 .rx-card::after {
+        content: "";
+        position: absolute;
+        inset: -10px;
+        border-radius: 28px;
+        box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.35);
+        animation: m1-glow 1.6s ease-out infinite;
+        pointer-events: none;
+        z-index: -2;
+      }
+      .m1.is-playing .rx-card { animation: m1-breathe 1.6s ease-in-out 3; }
+      @keyframes m1-ring {
+        0% { opacity: 0.95; transform: scale(0.98); }
+        100% { opacity: 0; transform: scale(1.08); }
+      }
+      @keyframes m1-glow {
+        0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+        100% { box-shadow: 0 0 0 18px rgba(249, 115, 22, 0); }
+      }
+      @keyframes m1-breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+      }
+
+      /* ========== 2) Soft Lift ========== */
+      .m2.is-playing .rx-card {
+        animation: m2-lift 5s ease-in-out 1;
+      }
+      @keyframes m2-lift {
+        0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        20% { transform: translateY(-6px) scale(1.015); box-shadow: 0 14px 28px -18px rgba(28,25,23,0.35); }
+        40% { transform: translateY(-2px) scale(1.008); box-shadow: 0 10px 22px -16px rgba(28,25,23,0.28); }
+        60% { transform: translateY(-7px) scale(1.018); box-shadow: 0 16px 30px -18px rgba(249,115,22,0.28); }
+        80% { transform: translateY(-3px) scale(1.01); box-shadow: 0 12px 24px -16px rgba(28,25,23,0.25); }
+      }
+
+      /* ========== 3) Orbit Border ========== */
+      .m3 .rx-card {
+        background:
+          linear-gradient(rgba(231,229,228,0.96), rgba(231,229,228,0.96)) padding-box,
+          conic-gradient(from var(--angle, 0deg), rgba(249,115,22,0.05), rgba(249,115,22,0.95), rgba(249,115,22,0.05)) border-box;
+        border: 2px solid transparent;
+      }
+      .m3.is-playing .rx-card {
+        animation: m3-orbit 5s linear 1;
+      }
+      @property --angle {
+        syntax: "<angle>";
+        inherits: false;
+        initial-value: 0deg;
+      }
+      @keyframes m3-orbit {
+        to { --angle: 360deg; }
+      }
+
+      /* ========== 4) Sheen Sweep ========== */
+      .m4 .rx-card { overflow: hidden; }
+      .m4 .rx-card::before {
+        content: "";
+        position: absolute;
+        inset: -40% -60%;
+        background: linear-gradient(
+          105deg,
+          transparent 35%,
+          rgba(255,255,255,0.55) 48%,
+          rgba(249,115,22,0.18) 52%,
+          transparent 65%
+        );
+        transform: translateX(-40%);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .m4.is-playing .rx-card::before {
+        animation: m4-sheen 5s ease-in-out 1;
+      }
+      .m4.is-playing .rx-card {
+        animation: m4-frame 5s ease-in-out 1;
+      }
+      @keyframes m4-sheen {
+        0% { opacity: 0; transform: translateX(-55%); }
+        15%, 85% { opacity: 1; }
+        100% { opacity: 0; transform: translateX(55%); }
+      }
+      @keyframes m4-frame {
+        0%, 100% { box-shadow: inset 0 0 0 0 rgba(249,115,22,0); }
+        40%, 60% { box-shadow: inset 0 0 0 1.5px rgba(249,115,22,0.35); }
+      }
+
+      /* ========== 5) Dual Ripple ========== */
+      .m5 .rx-wrap {
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+      .m5 .rx-wrap::before,
+      .m5 .rx-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 22px;
+        border: 1.5px solid rgba(249, 115, 22, 0.5);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .m5.is-playing .rx-wrap::before {
+        animation: m5-ripple 5s ease-out 1;
+      }
+      .m5.is-playing .rx-wrap::after {
+        animation: m5-ripple 5s ease-out 1;
+        animation-delay: 0.55s;
+      }
+      .m5.is-playing .rx-card {
+        animation: m5-nudge 5s ease-in-out 1;
+      }
+      @keyframes m5-ripple {
+        0% { opacity: 0.75; transform: scale(1); }
+        70% { opacity: 0; transform: scale(1.14); }
+        100% { opacity: 0; transform: scale(1.14); }
+      }
+      @keyframes m5-nudge {
+        0%, 100% { transform: scale(1); }
+        12% { transform: scale(1.025); }
+        24% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        62% { transform: scale(1); }
+      }
+
+      .hint {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 0.72rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>5 موشنات حول بطاقة الإحصائيات</h1>
+    <p class="sub">اضغط «إعادة» لمعاينة الحركة لمدة ~5 ثوانٍ حول البطاقة بالكامل. اختر الرقم الذي تفضّله.</p>
+
+    <div class="grid" id="grid"></div>
+
+    <script>
+      const icons = {
+        layers: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>',
+        refresh: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
+        weight: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2.5 2.5 0 0 0 0 5H9"/><path d="M17.5 8a2.5 2.5 0 0 1 0 5H15"/><path d="M9 13v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6"/></svg>',
+        timer: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/></svg>',
+      };
+
+      const variants = [
+        {
+          id: "m1",
+          title: "1 — Pulse Aura",
+          desc: "هالة برتقالية تنبض وتتوسع حول حدود البطاقة مع تنفّس خفيف للحجم.",
+          wrap: false,
+        },
+        {
+          id: "m2",
+          title: "2 — Soft Lift",
+          desc: "رفع ناعم للبطاقة بالكامل مع ظل يتحرك وكأنها تطفو فوق الشاشة.",
+          wrap: false,
+        },
+        {
+          id: "m3",
+          title: "3 — Orbit Border",
+          desc: "حدّ دوار (conic) يدور حول البطاقة كمسار طاقة مستمر.",
+          wrap: false,
+        },
+        {
+          id: "m4",
+          title: "4 — Sheen Sweep",
+          desc: "لمعة تمر عبر سطح البطاقة مع إطار داخلي خفيف يظهر أثناء المسح.",
+          wrap: false,
+        },
+        {
+          id: "m5",
+          title: "5 — Dual Ripple",
+          desc: "موجتان متتاليتان تخرجان من حدود البطاقة مع نَبْض حجم خفيف.",
+          wrap: true,
+        },
+      ];
+
+      function cardHtml() {
+        const cells = [
+          ["layers", "المجموعات", "4"],
+          ["refresh", "التكرارات", "10–8"],
+          ["weight", "الوزن", "—"],
+          ["timer", "الراحة", "90 ثانية"],
+        ];
+        return `
+          <div class="rx-card">
+            ${cells
+              .map(
+                ([k, label, value]) => `
+              <div class="cell">
+                ${icons[k]}
+                <div class="label">${label}</div>
+                <div class="value">${value}</div>
+              </div>`
+              )
+              .join("")}
+          </div>`;
+      }
+
+      const grid = document.getElementById("grid");
+      variants.forEach((v) => {
+        const panel = document.createElement("section");
+        panel.className = `panel ${v.id}`;
+        panel.innerHTML = `
+          <div class="panel-head">
+            <div>
+              <h2>${v.title}</h2>
+              <p>${v.desc}</p>
+            </div>
+            <button class="replay" type="button">إعادة</button>
+          </div>
+          <div class="stage">
+            <div class="phone">
+              ${v.wrap ? `<div class="rx-wrap">${cardHtml()}</div>` : cardHtml()}
+            </div>
+          </div>
+          <p class="hint">الموشن يعمل ~5 ثوانٍ ثم يتوقف</p>
+        `;
+        const btn = panel.querySelector(".replay");
+        const play = () => {
+          panel.classList.remove("is-playing");
+          void panel.offsetWidth;
+          panel.classList.add("is-playing");
+          window.clearTimeout(panel._t);
+          panel._t = window.setTimeout(() => panel.classList.remove("is-playing"), 5200);
+        };
+        btn.addEventListener("click", play);
+        grid.appendChild(panel);
+        // auto-play once staggered
+        window.setTimeout(play, 250 * variants.indexOf(v));
+      });
+    </script>
+  </body>
+</html>

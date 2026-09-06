@@ -202,7 +202,7 @@ function MealAlternativesPage() {
           if (!canRecordMealSwap(entitlements)) {
             openUpgradeWithContext(
               "SWAP_LIMIT",
-              "Premium يمنحك مرونة أكبر في تغيير الوجبات وبدائل متعددة.",
+              "PRO يمنحك مرونة أكبر في تغيير الوجبات وبدائل متعددة.",
             );
             return;
           }
@@ -216,7 +216,7 @@ function MealAlternativesPage() {
             if (error.code === "daily_meal_swap_limit_reached") {
               openUpgradeWithContext(
                 "SWAP_LIMIT",
-                "Premium يمنحك مرونة أكبر في تغيير الوجبات.",
+                "PRO يمنحك مرونة أكبر في تغيير الوجبات.",
               );
             }
           });

@@ -70,8 +70,8 @@ assert(membershipsPage.includes("type=\"search\""), "search input");
 
 // T8–T11 plans
 assert(membershipPlanLabel("free") !== "VIP", "free label");
-assert(membershipPlanLabel("essential").includes("Essential") || membershipPlanLabel("essential") === "Essential", "essential");
-assert(membershipPlanLabel("premium").includes("Premium") || membershipPlanLabel("premium") === "Premium", "premium");
+assert(membershipPlanLabel("essential").includes("PLUS") || membershipPlanLabel("essential") === "PLUS", "essential");
+assert(membershipPlanLabel("premium").includes("PRO") || membershipPlanLabel("premium") === "PRO", "premium");
 assert(isInternalVipTier("vip"), "vip internal");
 
 // T12–T15 catalog prices

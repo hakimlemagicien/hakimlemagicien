@@ -45,6 +45,8 @@ export type BuilderExerciseRecord = {
   pattern?: ExercisePattern | null;
   pattern_group?: string | null;
   alternatives?: ExerciseAlternative[];
+  client_label_ar?: string | null;
+  client_thumb_url?: string | null;
 };
 
 export type BuilderDayRecord = {
@@ -104,6 +106,36 @@ export function slugFromProgramName(name: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
   return slug || `program-${Date.now().toString(36)}`;
+}
+
+export const PRESCRIPTION_REP_PRESETS = ["8-4", "10-8", "12-10", "15-12", "20-15", "30-20"] as const;
+export const PRESCRIPTION_REST_PRESETS = ["5s", "10s", "15s", "20s", "30s", "60s", "90s", "120s", "160s", "180s"] as const;
+export const PRESCRIPTION_RIR_PRESETS = ["0", "1", "2", "3", "5"] as const;
+
+export type ProgramTargetGender = "male" | "female" | "all";
+
+export function programTargetGenderFromMetadata(metadata: Record<string, unknown> | null | undefined): ProgramTargetGender {
+  const value = String(metadata?.target_gender ?? "").trim().toLowerCase();
+  if (value === "male" || value === "female") return value;
+  return "all";
+}
+
+export function programTargetGenderLabel(gender: ProgramTargetGender): string {
+  if (gender === "male") return "ذكور فقط";
+  if (gender === "female") return "إناث فقط";
+  return "الكل";
+}
+
+export function clientFacingExerciseName(exercise: AdminProgramExercise): string {
+  const alias = exercise.client_label_ar?.trim();
+  if (alias) return alias;
+  return exercise.exercise_name_ar?.trim() || "تمرين";
+}
+
+export function clientFacingExerciseThumb(exercise: AdminProgramExercise): string | null {
+  const override = exercise.client_thumb_url?.trim();
+  if (override) return override;
+  return null;
 }
 
 export function parseRepsInput(raw: string): Pick<AdminProgramExercise, "reps_min" | "reps_max" | "reps_label"> {
@@ -344,6 +376,8 @@ export function hydrateProgramBuilder(detail: AdminProgramDetail): AdminProgramD
             pattern: extra.pattern ?? exercise.pattern,
             pattern_group: extra.pattern_group ?? exercise.pattern_group,
             alternatives: extra.alternatives ?? exercise.alternatives,
+            client_label_ar: extra.client_label_ar ?? exercise.client_label_ar ?? "",
+            client_thumb_url: extra.client_thumb_url ?? exercise.client_thumb_url ?? "",
           };
         });
         return withEstimatedMinutes({
@@ -372,7 +406,9 @@ export function serializeBuilderMetadata(draft: AdminProgramDetail): BuilderMeta
           (exercise.role && exercise.role !== "main") ||
           (exercise.pattern && exercise.pattern !== "none") ||
           Boolean(exercise.pattern_group) ||
-          Boolean(exercise.alternatives?.length);
+          Boolean(exercise.alternatives?.length) ||
+          Boolean(exercise.client_label_ar?.trim()) ||
+          Boolean(exercise.client_thumb_url?.trim());
         if (!hasExtras) return;
         exercises.push({
           week: weekIndex,
@@ -384,6 +420,8 @@ export function serializeBuilderMetadata(draft: AdminProgramDetail): BuilderMeta
           pattern: exercise.pattern ?? "none",
           pattern_group: exercise.pattern_group ?? null,
           alternatives: exercise.alternatives ?? [],
+          client_label_ar: exercise.client_label_ar ?? "",
+          client_thumb_url: exercise.client_thumb_url ?? "",
         });
       });
     });

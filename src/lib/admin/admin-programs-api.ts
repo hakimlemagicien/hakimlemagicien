@@ -34,6 +34,10 @@ export type AdminProgramExercise = {
   exercise_name_ar?: string;
   exercise_name_en?: string;
   exercise_external_id?: string;
+  /** Client-facing alias — does not change library exercise name. */
+  client_label_ar?: string | null;
+  /** Client-facing thumbnail override URL. */
+  client_thumb_url?: string | null;
   rir?: number | null;
   tempo?: string | null;
   role?: "warmup" | "main" | "accessory" | "finisher";
@@ -201,6 +205,8 @@ export function emptyProgramExercise(exercise?: {
     exercise_name_ar: exercise?.name_ar,
     exercise_name_en: exercise?.name_en,
     exercise_external_id: exercise?.external_id,
+    client_label_ar: "",
+    client_thumb_url: "",
     rir: 2,
     tempo: "",
     role: "main",
@@ -293,6 +299,42 @@ export async function uploadProgramCoverImage(input: {
   const folder = input.templateId?.trim() || `drafts/${user.id}`;
   const ext = programCoverExtension(input.file);
   const path = `${folder}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage.from(PROGRAM_COVER_BUCKET).upload(path, input.file, {
+    upsert: true,
+    contentType: input.file.type || undefined,
+    cacheControl: "3600",
+  });
+  if (uploadError) {
+    throw new Error(
+      uploadError.message.includes("Bucket not found") || uploadError.message.includes("not found")
+        ? "مخزن صور البرامج غير مفعّل بعد. طبّق هجرة program-covers ثم أعد المحاولة."
+        : "فشل رفع الصورة. أعد المحاولة.",
+    );
+  }
+
+  const { data } = supabase.storage.from(PROGRAM_COVER_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) throw new Error("تعذر الحصول على رابط الصورة بعد الرفع.");
+  return data.publicUrl;
+}
+
+/** Client-facing exercise thumbnail override for program builder (alias art, not library thumb). */
+export async function uploadProgramClientThumb(input: {
+  file: File;
+  templateId?: string | null;
+}): Promise<string> {
+  const validation = validateProgramCoverFile(input.file);
+  if (validation) throw new Error(validation);
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) throw new Error("يجب تسجيل الدخول لرفع الصورة.");
+
+  const folder = input.templateId?.trim() || `drafts/${user.id}`;
+  const ext = programCoverExtension(input.file);
+  const path = `${folder}/client-thumbs/${Date.now()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage.from(PROGRAM_COVER_BUCKET).upload(path, input.file, {
     upsert: true,

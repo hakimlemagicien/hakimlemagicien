@@ -94,9 +94,9 @@ const VIP_FEATURES: MembershipFeatures = {
 
 const MEMBERSHIP_TIER_LABELS_AR: Record<MembershipTier, string> = {
   visitor: "زائر",
-  free: "مجاني",
-  essential: "أساسي",
-  premium: "بريميوم",
+  free: "FREE",
+  essential: "PLUS",
+  premium: "PRO",
   vip: "VIP",
   admin: "أدمن",
 };

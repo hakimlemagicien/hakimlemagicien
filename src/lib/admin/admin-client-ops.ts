@@ -78,12 +78,12 @@ export function directoryOperationalTone(status: DirectoryOperationalStatus): Ad
   return "active";
 }
 
-/** Presentation-only Arabic plan labels for the clients directory. Catalog IDs stay English. */
+/** Presentation-only plan labels for the clients directory. Catalog IDs stay English. */
 export function directoryPlanLabelAr(plan: string | null | undefined): string {
   const value = plan?.toLowerCase();
-  if (value === "premium") return "احترافي";
-  if (value === "essential") return "أساسي";
-  if (value === "free") return "مجاني";
+  if (value === "premium") return "PRO";
+  if (value === "essential") return "PLUS";
+  if (value === "free") return "FREE";
   if (value === "vip") return "VIP داخلي";
   return planLabel(plan);
 }

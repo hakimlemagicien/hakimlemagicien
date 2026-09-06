@@ -24,7 +24,7 @@ const SURFACE_COPY: Record<
   },
   DIRECT_UPGRADE: {
     title: "اختر الباقة المناسبة لك",
-    subtitle: "Essential أو Premium — بدون VIP للبيع العام.",
+    subtitle: "PLUS أو PRO — بدون VIP للبيع العام.",
     cta: "عرض الباقات",
     upgradeHeadline: "اختر الباقة المناسبة لك",
   },
@@ -37,8 +37,8 @@ const SURFACE_COPY: Record<
   SWAP_LIMIT: {
     title: "استخدمت تغييرك اليومي",
     subtitle: "هل تحتاج مرونة أكبر في اختياراتك الغذائية؟",
-    cta: "اكتشف Premium",
-    upgradeHeadline: "مرونة أكبر مع Premium",
+    cta: "اكتشف PRO",
+    upgradeHeadline: "مرونة أكبر مع PRO",
   },
 };
 
@@ -202,7 +202,7 @@ export function MealSwapLimitState({
     <div className="rounded-2xl border border-[#E9D5FF] bg-gradient-to-b from-[#F7F1FF] to-white p-4 text-right" dir="rtl">
       <p className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">استخدمت تغييرك اليومي</p>
       <p className="mt-1 font-[Tajawal] text-[12px] leading-relaxed text-[#64748B]">
-        هل تحتاج مرونة أكبر في اختياراتك الغذائية؟ Premium يمنحك خيارات أوسع وبدائل أكثر.
+        هل تحتاج مرونة أكبر في اختياراتك الغذائية؟ PRO يمنحك خيارات أوسع وبدائل أكثر.
       </p>
       <div className="mt-3 flex flex-col gap-2">
         <UpgradeSurfaceLink
@@ -210,7 +210,7 @@ export function MealSwapLimitState({
           plan="premium"
           className="flex min-h-11 items-center justify-center rounded-xl bg-[#7C3AED] px-4 font-[Tajawal] text-[13px] font-extrabold text-white"
         >
-          اكتشف Premium
+          اكتشف PRO
         </UpgradeSurfaceLink>
         <button
           type="button"
@@ -293,9 +293,9 @@ export function FeatureComparison() {
       <div className="hidden md:block">
         <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] bg-[#FAF8F5] px-2 py-2 text-center font-[Tajawal] text-[10px] font-extrabold text-[#0F172A]">
           <span className="text-right">الميزة</span>
-          <span>Free</span>
-          <span>Essential</span>
-          <span>Premium</span>
+          <span>FREE</span>
+          <span>PLUS</span>
+          <span>PRO</span>
         </div>
         <ComparisonTable rows={COMPARISON_ROWS} />
       </div>
@@ -320,7 +320,7 @@ export function FeatureComparison() {
                 <div className="border-t border-[#E8E4DE]/60 bg-[#FAF8F5]/60">
                   <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] px-2 py-1.5 text-center font-[Tajawal] text-[9px] font-extrabold text-[#94A3B8]">
                     <span className="text-right">الميزة</span>
-                    <span>Free</span>
+                    <span>FREE</span>
                     <span>Ess.</span>
                     <span>Prem.</span>
                   </div>
@@ -344,9 +344,9 @@ export function FeatureComparison() {
           <div className="border-t border-[#E8E4DE]">
             <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] bg-[#FAF8F5] px-2 py-2 text-center font-[Tajawal] text-[9px] font-extrabold text-[#0F172A]">
               <span className="text-right">الميزة</span>
-              <span>Free</span>
-              <span>Essential</span>
-              <span>Premium</span>
+              <span>FREE</span>
+              <span>PLUS</span>
+              <span>PRO</span>
             </div>
             <ComparisonTable rows={COMPARISON_ROWS} />
           </div>

@@ -18,9 +18,9 @@ export type AdminStatusKind =
 
 const PLAN_LABELS: Record<string, string> = {
   vip: "VIP",
-  premium: "Premium",
-  essential: "Essential",
-  free: "Free",
+  premium: "PRO",
+  essential: "PLUS",
+  free: "FREE",
   visitor: "زائر",
   admin: "Admin",
 };
