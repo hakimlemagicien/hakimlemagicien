@@ -61,9 +61,26 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
 
     async function bootstrap() {
       const searchParams = new URLSearchParams(window.location.search);
+      const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
+      if (oauthError) {
+        if (!cancelled) {
+          setError(translateAuthError({ message: oauthError, code: searchParams.get("error") ?? "" }));
+          setStage("login");
+        }
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete("error");
+        clean.searchParams.delete("error_description");
+        clean.searchParams.delete("error_code");
+        window.history.replaceState(null, "", `${clean.pathname}${clean.search}`);
+        if (!cancelled) setReady(true);
+        return;
+      }
       const code = searchParams.get("code");
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete("code");
+        window.history.replaceState(null, "", `${clean.pathname}${clean.search}`);
         if (exchangeError && !cancelled) setError(translateAuthError(exchangeError));
       }
 
@@ -175,7 +192,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/app` },
+        options: { redirectTo: `${window.location.origin}/auth` },
       });
       if (oauthError) throw oauthError;
     } catch (err: unknown) {

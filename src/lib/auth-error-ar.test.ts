@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { quizOtpStatusCopy, translateAuthError } from "./auth-error-ar.ts";
 import { quizMeasureCopy } from "./quiz-measure-copy.ts";
 
@@ -10,6 +12,12 @@ assert.equal(
 assert.equal(translateAuthError({ message: 'Email address "x@qa.test" is invalid' }).includes("Email address"), false, "no English leak");
 assert.equal(translateAuthError({ message: "Invalid login credentials" }).includes("كلمة المرور"), true, "login creds");
 assert.equal(translateAuthError({ message: "Token has expired or is invalid" }).includes("صلاحية"), true, "expired");
+assert.equal(translateAuthError({ message: "access_denied" }).includes("إلغاء"), true, "oauth cancel");
+assert.equal(
+  translateAuthError({ message: "Unsupported provider: provider is not enabled" }).includes("Google"),
+  true,
+  "provider disabled",
+);
 assert.equal(translateAuthError("البريد غير صالح"), "البريد غير صالح", "keep Arabic");
 
 const failedSend = quizOtpStatusCopy({
@@ -43,5 +51,11 @@ assert.equal(male.subtitle.includes("تحصلي"), false, "male not تحصلي")
 const female = quizMeasureCopy("female");
 assert.equal(female.subtitle.includes("أدخلي"), true, "female أدخلي");
 assert.equal(female.subtitle.includes("تحصلي"), true, "female تحصلي");
+
+const authExperience = readFileSync(resolve(process.cwd(), "src/components/auth/AuthExperience.tsx"), "utf8");
+assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/auth`'), true, "oauth callback is /auth");
+assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/app`'), false, "oauth does not callback /app");
+assert.equal(authExperience.includes('onOAuth("google")'), true, "google button wired");
+assert.equal(authExperience.includes('onOAuth("apple")'), true, "apple button left in place");
 
 console.log("auth-error-ar tests passed");

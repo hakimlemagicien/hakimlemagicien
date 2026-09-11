@@ -60,6 +60,16 @@ export function translateAuthError(error: unknown, fallback = "تعذّر إكم
   if (haystack.includes("password") && (haystack.includes("weak") || haystack.includes("least") || haystack.includes("characters"))) {
     return "كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل.";
   }
+  if (
+    haystack.includes("access_denied") ||
+    haystack.includes("user cancelled") ||
+    haystack.includes("user_cancelled")
+  ) {
+    return "تم إلغاء الدخول. يمكنك المحاولة مرة أخرى.";
+  }
+  if (haystack.includes("provider is not enabled") || haystack.includes("unsupported provider")) {
+    return "الدخول عبر Google غير متاح حالياً. استخدم البريد وكلمة المرور أو أعد المحاولة لاحقاً.";
+  }
 
   if (message && !looksEnglish(message)) return message;
   return fallback;
