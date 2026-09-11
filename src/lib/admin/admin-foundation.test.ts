@@ -20,7 +20,7 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 assert(COMMAND_CENTER_PRODUCT === "MAAKFIT", "product identity is MAAKFIT");
-assert(COMMAND_CENTER_DOMAIN === "hakimlemagicien.com", "domain is unchanged in phase 1");
+assert(COMMAND_CENTER_DOMAIN === "maakfit.com", "command center uses canonical product domain");
 assert(CLIENT_APP_PREFIX === "/app", "client prefix");
 assert(isClientAppPath("/app"), "/app is client");
 assert(isClientAppPath("/app/nutrition"), "/app child is client");

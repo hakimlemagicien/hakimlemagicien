@@ -1,9 +1,9 @@
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
 import { sendAdminNotificationEmail } from "../_shared/send-email.ts";
 import { createSupabaseAdmin, createSupabaseUserClient } from "../_shared/supabase-admin.ts";
+import { siteUrl as resolveSiteUrl } from "../_shared/site-url.ts";
 
 const DEFAULT_ADMIN_EMAIL = "support@hakimlemagicien.com";
-const DEFAULT_SITE_URL = "https://hakimlemagicien.com";
 
 type RequestBody = {
   conversationId?: string;
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!conversation) return jsonResponse({ error: "conversation_not_found" }, 404);
 
-  const siteUrl = (Deno.env.get("SITE_URL") ?? DEFAULT_SITE_URL).replace(/\/$/, "");
+  const siteUrl = resolveSiteUrl();
   const preview =
     message.kind === "image" ? "صورة" : message.kind === "voice" ? "رسالة صوتية" : (message.body ?? "");
 

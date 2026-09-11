@@ -45,6 +45,7 @@ import type {
   ProfileNotificationPrefs,
 } from "@/lib/platform/profile-settings-storage";
 import { LEGAL_ROUTES, SITE_SUPPORT_EMAIL, SITE_WHATSAPP_URL } from "@/lib/site-legal";
+import { PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
 import {
   ProfileField,
   ProfileFieldGrid,
@@ -586,7 +587,7 @@ export function ProfileAboutSection() {
         <ProfileRowButton
           icon={<ExternalLink className="h-4 w-4" />}
           title="الموقع الرسمي"
-          href="https://hakimlemagicien.com"
+          href={PRODUCTION_APP_ORIGIN}
         />
         <ProfileRowButton
           icon={<Shield className="h-4 w-4" />}

@@ -28,7 +28,8 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 | صندوق الكوتش | `/admin/messages` | ✅ في الكود — يحتاج تحقق إنتاج |
 | مسار `/onboarding` مستقل | — | ❌ غير موجود |
 
-**الإنتاج:** https://hakimlemagicien.com  
+**الإنتاج:** https://maakfit.com  
+**Fallback أثناء الانتقال:** https://hakimlemagicien.com (نفس تطبيق Vercel — لا يُقطع حتى اكتمال الـ cutover)  
 **PRODUCTION Supabase:** `ufgrbpakuemamggwypdh` (`hakim-coaching`)  
 **STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — لا يُستخدم Production كـ Staging. الخريطة: [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)  
 **الفرع الحالي للعمل:** `feat/admin-command-center-foundation`  

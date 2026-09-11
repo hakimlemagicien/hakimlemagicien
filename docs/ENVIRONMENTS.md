@@ -6,7 +6,7 @@
 
 | Environment | App origin | Supabase project | Project ref | Supabase URL identity |
 |-------------|------------|------------------|-------------|------------------------|
-| **PRODUCTION** | https://hakimlemagicien.com | `hakim-coaching` | `ufgrbpakuemamggwypdh` | `https://ufgrbpakuemamggwypdh.supabase.co` |
+| **PRODUCTION** | https://maakfit.com (canonical)<br>https://hakimlemagicien.com (temporary dual-host fallback) | `hakim-coaching` | `ufgrbpakuemamggwypdh` | `https://ufgrbpakuemamggwypdh.supabase.co` |
 | **STAGING** | **Canonical (target):** https://staging.hakimlemagicien.com — `PF-4 PENDING_VERCEL_CLAIM`.<br>**Interim (non-durable):** https://temporary-brisk-gorge-e447l9k.vercel.app | `hakim-coaching-staging` | `dxerwrdpcflpnjvsnrjq` | `https://dxerwrdpcflpnjvsnrjq.supabase.co` |
 | **LOCAL / DEVELOPMENT** | `http://localhost:5173` (Vite) | use `.env.local` only | must not silently default to Production for Staging work | local or explicit env file |
 
@@ -43,7 +43,7 @@ Names (no values):
 | `VITE_SUPABASE_URL` / `SUPABASE_URL` | Project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_PUBLISHABLE_KEY` | Browser key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server only |
-| `SITE_URL` | Auth/email links (Edge Functions) |
+| `SITE_URL` | Auth/email links (Edge Functions). Production fallback is `https://maakfit.com`. Keep `hakimlemagicien.com` in Auth Redirect URLs until the old origin is detached. |
 | `VITE_PADDLE_*` | Payments — do not put live Paddle tokens on Staging |
 
 Staging credentials live in gitignored `.env.staging.local` and must be copied into **Vercel Preview/Staging scope only**, never Production scope.

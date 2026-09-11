@@ -76,7 +76,7 @@ export async function generateAndEmailAccessLink(
             ${cta}
           </a>
         </p>
-        <p style="color: #94A3B8; font-size: 12px;">hakimlemagicien.com</p>
+        <p style="color: #94A3B8; font-size: 12px;">maakfit.com</p>
       </div>
     `,
   });

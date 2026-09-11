@@ -7,6 +7,7 @@ import { TrustStatistics } from "@/components/TrustStatistics";
 import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import { SiteFooter } from "@/components/SiteFooter";
 import coachImg from "@/assets/coach-photo.png";
+import { LEGACY_PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
 
 const ProblemSection = lazy(() =>
   import("@/components/ProblemSection").then((m) => ({ default: m.ProblemSection })),
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/coaching")({
     ],
     links: [
       { rel: "preload", href: coachImg, as: "image", fetchPriority: "high" },
-      { rel: "canonical", href: "https://hakimlemagicien.com/coaching" },
+      { rel: "canonical", href: `${LEGACY_PRODUCTION_APP_ORIGIN}/coaching` },
     ],
   }),
   component: CoachingPage,
