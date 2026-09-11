@@ -89,6 +89,7 @@ assert(gateSource.includes('rpc("get_my_onboarding_state")'), "uses official onb
 assert(authExperience.includes("resolveAuthenticatedDestination"), "AuthExperience wired");
 assert(platformRoute.includes("resolveAuthenticatedDestination"), "platform gate wired");
 assert(indexRoute.includes("resolveAuthenticatedDestination"), "index gate wired");
-assert(authExperience.includes('provider: "google" | "apple"'), "Apple OAuth entry unchanged");
+assert(authExperience.includes('provider: "google" | "apple"'), "Apple OAuth handler kept");
+assert(authExperience.includes("SHOW_APPLE_LOGIN = false"), "Apple button deferred in UI");
 
 console.log("auth-onboarding-gate.test.ts: PASS");

@@ -56,6 +56,8 @@ const authExperience = readFileSync(resolve(process.cwd(), "src/components/auth/
 assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/auth`'), true, "oauth callback is /auth");
 assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/app`'), false, "oauth does not callback /app");
 assert.equal(authExperience.includes('onOAuth("google")'), true, "google button wired");
-assert.equal(authExperience.includes('onOAuth("apple")'), true, "apple button left in place");
+assert.equal(authExperience.includes("SHOW_APPLE_LOGIN = false"), true, "apple login deferred in UI");
+assert.equal(authExperience.includes('provider: "google" | "apple"'), true, "apple oauth handler kept");
+assert.equal(authExperience.includes("function AppleMark"), true, "apple mark kept for re-enable");
 
 console.log("auth-error-ar tests passed");

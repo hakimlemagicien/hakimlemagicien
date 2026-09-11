@@ -26,6 +26,9 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const QuizPage = lazy(() => import("@/routes/quiz").then((module) => ({ default: module.QuizPage })));
 
+/** Deferred until Apple Developer Program — keep OAuth handler + mark for re-enable. */
+const SHOW_APPLE_LOGIN = false;
+
 type AuthMode = "signin" | "set-password";
 type AuthStage = "welcome" | "login" | "quiz";
 
@@ -414,10 +417,12 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
                     <GoogleMark />
                     Google
                   </button>
-                  <button type="button" disabled={loading} onClick={() => void onOAuth("apple")}>
-                    <AppleMark />
-                    Apple
-                  </button>
+                  {SHOW_APPLE_LOGIN ? (
+                    <button type="button" disabled={loading} onClick={() => void onOAuth("apple")}>
+                      <AppleMark />
+                      Apple
+                    </button>
+                  ) : null}
                 </div>
                 <p className="auth-login__signup">
                   ليس لديك حساب؟{" "}
