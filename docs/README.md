@@ -179,7 +179,17 @@
 | Dry-run / rollback (PF-2, PF-3) — بلا تطبيق إنتاج | [`TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md`](./TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md) |
 | البيئات | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) |
 | SHA المعتمد | `4d80f8d366909a2a6cf9217803c9c62277b66954` |
-| الحالة | `STAGING_COHORT_APPROVED` — **لا** دمج `main`، **لا** Production |
+| الحالة | V2 pin: `STAGING_COHORT_APPROVED` (2026-08-22). V1 launch gate: `APPROVED` / `MANUAL_MEMBERSHIP_ONLY` (2026-09-11) — [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) · [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) |
+
+---
+
+## V1 launch closure (CEO 2026-09-11)
+
+| الموضوع | المرجع |
+|---------|--------|
+| قرار CEO — بوابة الإطلاق | [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) |
+| قائمة إغلاق البوابات المتبقية | [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) |
+| الوضع | `MANUAL_MEMBERSHIP_ONLY` · Staging مؤجّل لـ V1 · التركيز: تحقق محلي → Production smoke |
 
 ---
 

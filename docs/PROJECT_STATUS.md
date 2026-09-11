@@ -34,7 +34,8 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 **STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — لا يُستخدم Production كـ Staging. الخريطة: [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)  
 **الفرع الحالي للعمل:** `feat/admin-command-center-foundation`  
 **Training V2 pin:** `4d80f8d366909a2a6cf9217803c9c62277b66954` — Staging cohort only  
-**CEO 2026-08-22:** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED` — انظر [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md)
+**CEO 2026-08-22 (تاريخي — Training V2 pin):** `STAGING_COHORT_APPROVED` — انظر [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md)  
+**CEO 2026-09-11 (ساري — بوابة إطلاق V1):** `V1_PUBLIC_LAUNCH_GATE = APPROVED` · الوضع `MANUAL_MEMBERSHIP_ONLY` · **Staging لـ V1 = `DEFERRED`** (مسار `LOCAL_THEN_PRODUCTION`) · Paddle ما زال `NOT_APPROVED` — انظر [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) · المتبقي: [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md)
 
 ---
 
@@ -167,4 +168,4 @@ Quiz: gender → goals → … → contact → reveal
 
 ---
 
-**آخر مراجعة:** 2026-08-22 — CEO: Staging cohort لـ Training Engine V2 على `4d80f8d` + `dxerwrdpcflpnjvsnrjq`. الإنتاج غير معتمد. بوابات PF-1…PF-4 مفتوحة.
+**آخر مراجعة:** 2026-09-11 — CEO أغلق بوابة إطلاق V1 (`APPROVED` / `MANUAL_MEMBERSHIP_ONLY`) وأجّل Staging لما بعد V1. التركيز التالي: تحقق محلي ثم Production smoke. Paddle والكيان القانوني يبقيان قبل الدفع الذاتي.
