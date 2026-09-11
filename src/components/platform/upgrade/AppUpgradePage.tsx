@@ -22,7 +22,7 @@ const PLAN_POSITIONING: Record<
 > = {
   free: { headline: "ابدأ واكتشف MAAKFIT" },
   essential: { headline: "برنامجك الكامل للتدريب والتغذية", badge: "الأفضل للبدء بجدية" },
-  premium: { headline: "مزيد من الخيارات والتخصيص أثناء رحلتك", badge: "الأكثر مرونة" },
+  premium: { headline: "مزيد من الخيارات والتخصيص أثناء رحلتك", badge: "الأكثر ترويجاً" },
 };
 
 function tierRank(tier: EntitlementTier): number {

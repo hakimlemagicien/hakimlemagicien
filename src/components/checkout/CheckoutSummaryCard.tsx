@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { PRODUCT_SUMMARY } from "@/lib/site-legal";
 import { buildCheckoutDisclosure, resolvePaidTierId } from "@/lib/legal/billing";
+import { formatIllustrativeDaily } from "@/lib/pricing-presentation";
 import type { CheckoutTier } from "./types";
 
 function TrophySvg() {
@@ -69,9 +70,12 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
             يتجدد بـ {disclosure.renewalAmount} {disclosure.currency}
           </div>
         ) : null}
-        {tier.pricePerDay ? (
+        {tier.totalPrice ? (
           <div className="mt-1 text-[9px] font-medium text-neutral-400">
-            حوالي ${tier.pricePerDay} يومياً
+            {formatIllustrativeDaily(
+              Number(String(tier.totalPrice).replace(/[^0-9.]/g, "")),
+              months === 6 ? 180 : 90,
+            )}
           </div>
         ) : null}
       </div>

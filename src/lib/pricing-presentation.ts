@@ -70,6 +70,8 @@ export function formatOfficialTotal(totalUsd: number | string, currency = "USD")
 
 /**
  * Illustrative daily copy only — never the charged amount.
+ * Under $1/day: ceil to the next cent, then +$0.01 so we can say «أقل من X.XX$».
+ * Example: 87 ÷ 90 ≈ 0.966 → أقل من 0.98$ يومياً
  */
 export function formatIllustrativeDaily(totalUsd: number | string, days: number): string {
   const n = typeof totalUsd === "string" ? Number(totalUsd) : totalUsd;
@@ -77,12 +79,25 @@ export function formatIllustrativeDaily(totalUsd: number | string, days: number)
   if (!daily) return "";
 
   if (daily < 1) {
-    if (daily >= 0.9) return "أقل من 1 دولار يومياً";
-    return `حوالي ${daily.toFixed(2)} دولار يومياً`;
+    const ceilingCent = Math.ceil(daily * 100 - 1e-9) / 100;
+    const framed = Number((ceilingCent + 0.01).toFixed(2));
+    return `أقل من ${framed.toFixed(2)}$ يومياً`;
   }
 
   const pretty = daily >= 10 ? daily.toFixed(0) : daily.toFixed(1).replace(/\.0$/, "");
-  return `حوالي ${pretty} دولار يومياً`;
+  return `حوالي ${pretty}$ يومياً`;
+}
+
+/** Numeric daily rate string for compact UI chips (e.g. quiz tabs). */
+export function illustrativeDailyAmount(totalUsd: number | string, days: number): string {
+  const n = typeof totalUsd === "string" ? Number(totalUsd) : totalUsd;
+  const daily = approxDailyRate(n, days);
+  if (!daily) return "";
+  if (daily < 1) {
+    const ceilingCent = Math.ceil(daily * 100 - 1e-9) / 100;
+    return Number((ceilingCent + 0.01).toFixed(2)).toFixed(2);
+  }
+  return daily >= 10 ? daily.toFixed(0) : daily.toFixed(2);
 }
 
 export function formatSavings(amountUsd: number, note?: string): string | null {
@@ -135,6 +150,32 @@ export const FREE_TIER: FreeTierCatalog = {
   ],
 };
 
+/** Adopted PLUS bullets (Sep 2026) — keep display name PLUS, internal id essential. */
+export const PLUS_PLAN_FEATURES = [
+  "برنامج تدريبي كامل مخصص",
+  "خطة تغذية كاملة حسب هدفك",
+  "إمكانية تغيير تمرين أو وجبة",
+  "متابعة تقدمك داخل المنصة",
+] as const;
+
+/** Adopted PRO bullets (Sep 2026) — keep display name PRO, internal id premium. */
+export const PRO_PLAN_FEATURES = [
+  "كل مزايا PLUS",
+  "مراجعة تقدم دورية كل أسبوعين",
+  "تحسينات مناسبة على البرنامج حسب تقدمك",
+  "خيارات غذائية أوسع",
+  "بديل لأي تمرين",
+  "الأولوية في الدعم",
+  "تحكم كامل في برنامجك",
+] as const;
+
+export const VIP_PLAN_FEATURES = [
+  "كل مزايا PRO",
+  "دعم يومي بأولوية أعلى (ليس 24/7 وليس رداً فورياً مضموناً)",
+  "متابعة أقرب مع Coach Hakim",
+  "تعديلات أسرع عند الملاءمة",
+] as const;
+
 /**
  * Official paid catalog.
  * Core product = PLUS (id: essential). PRO/VIP add progression & services on top.
@@ -150,14 +191,7 @@ export const PAID_TIERS: PaidTierCatalog[] = [
     name: "PLUS",
     tagline: "خطتك الكاملة",
     role: "التدريب والتغذية الشخصية الكاملة والمزايا الأساسية المدفوعة",
-    features: [
-      "برنامج تدريبي مخصص كامل",
-      "خطة تغذية شخصية كاملة",
-      "متابعة التقدم داخل المنصة",
-      "دعم الحساب والفوترة عبر قنوات الدعم العامة",
-      "بدون دردشة الكوتش البشرية (PRO/VIP)",
-    ],
-    popular: true,
+    features: [...PLUS_PLAN_FEATURES],
     terms: [
       term(3, 87),
       term(6, 149, {
@@ -170,14 +204,9 @@ export const PAID_TIERS: PaidTierCatalog[] = [
     id: "premium",
     name: "PRO",
     tagline: "خطتك التي تتطور معك",
-    role: "التطور الذكي، التحليلات والمرونة الأعلى",
-    features: [
-      "كل مزايا PLUS",
-      "تطور ذكي للبرنامج حسب تقدمك",
-      "تحليلات أعمق ومرونة أعلى",
-      "دردشة الكوتش مع Coach Hakim",
-      "مراجعة تقدم دورية كل أسبوعين",
-    ],
+    role: "أعلى مرونة ومتابعة داخل البرنامج",
+    features: [...PRO_PLAN_FEATURES],
+    popular: true,
     terms: [
       term(3, 147),
       term(6, 249, {
@@ -191,12 +220,7 @@ export const PAID_TIERS: PaidTierCatalog[] = [
     name: "VIP",
     tagline: "أعلى مستوى متابعة شخصية — ليست 24/7",
     role: "أعلى مستوى خدمة ومتابعة",
-    features: [
-      "كل مزايا PRO",
-      "دعم يومي بأولوية أعلى (ليس 24/7 وليس رداً فورياً مضموناً)",
-      "متابعة أقرب مع Coach Hakim",
-      "تعديلات أسرع عند الملاءمة",
-    ],
+    features: [...VIP_PLAN_FEATURES],
     terms: [
       term(3, 397),
       term(6, 647, {

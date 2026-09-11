@@ -2,6 +2,13 @@ import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
 import { createOnboardingDraft, syncOnboardingDisplayName } from "@/lib/quiz-onboarding-api";
 import { userHasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import {
+  formatIllustrativeDaily,
+  illustrativeDailyAmount,
+  PLUS_PLAN_FEATURES,
+  PRO_PLAN_FEATURES,
+  VIP_PLAN_FEATURES,
+} from "@/lib/pricing-presentation";
 import { quizMeasureCopy } from "@/lib/quiz-measure-copy";
 import { supabase } from "@/integrations/supabase/client";
 import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
@@ -4171,15 +4178,9 @@ const PRICING_TIERS: PricingTier[] = [
     id: "transform",
     name: "PLUS",
     tagline: "خطتك الكاملة — التدريب والتغذية الشخصية والمزايا الأساسية المدفوعة.",
-    pricePerDay: "0.97",
+    pricePerDay: illustrativeDailyAmount(87, 90),
     totalPrice: "87",
-    features: [
-      "خطة تدريب مخصصة كاملة",
-      "خطة تغذية شخصية كاملة",
-      "متابعة التقدم داخل المنصة",
-      "دعم الحساب والفوترة",
-      "بدون دردشة الكوتش البشرية",
-    ],
+    features: [...PLUS_PLAN_FEATURES],
     primary: "#FF6B00",
     primarySoft: "#FFE6D2",
     primaryBg: "#FFF6EE",
@@ -4189,36 +4190,24 @@ const PRICING_TIERS: PricingTier[] = [
   {
     id: "pro",
     name: "PRO",
-    tagline: "خطتك التي تتطور معك — التطور الذكي والتحليلات والمرونة الأعلى.",
-    pricePerDay: "1.63",
+    tagline: "خطتك التي تتطور معك — أعلى مرونة ومتابعة داخل البرنامج.",
+    pricePerDay: illustrativeDailyAmount(147, 90),
     totalPrice: "147",
-    features: [
-      "كل مزايا PLUS",
-      "تطور ذكي للبرنامج حسب تقدمك",
-      "مرونة أعلى في تغيير الوجبات",
-      "بدائل متعددة حيث تدعمها الخطة",
-      "بدون دردشة الكوتش البشرية",
-    ],
-    primary: "#2563EB",
-    primarySoft: "#DBEAFE",
-    primaryBg: "#F2F7FF",
-    ring: "#93B8F2",
-    Icon: Star,
-    topBadge: "الأكثر اختياراً",
+    features: [...PRO_PLAN_FEATURES],
+    primary: "#7C3AED",
+    primarySoft: "#EDE3FF",
+    primaryBg: "#F7F1FF",
+    ring: "#C4A7F2",
+    Icon: Gem,
+    topBadge: "الأكثر ترويجاً",
   },
   {
     id: "vip",
     name: "VIP",
     tagline: "متابعة أقرب ودعم يومي بأولوية أعلى — ليس 24/7 وليس رداً فورياً مضموناً.",
-    pricePerDay: "4.41",
+    pricePerDay: illustrativeDailyAmount(397, 90),
     totalPrice: "397",
-    features: [
-      "كل مزايا PRO",
-      "دعم يومي بأولوية أعلى",
-      "متابعة أقرب مع Coach Hakim",
-      "تعديلات أسرع عند الملاءمة",
-      "ليس دعماً على مدار الساعة",
-    ],
+    features: [...VIP_PLAN_FEATURES],
     primary: "#7C3AED",
     primarySoft: "#EDE3FF",
     primaryBg: "#F7F1FF",
@@ -4304,7 +4293,7 @@ function PricingPriceRing({ tier, mounted, className = "" }: { tier: PricingTier
           </div>
           <div className="text-[9px] text-neutral-500 font-bold mt-0.5">الإجمالي · 3 أشهر</div>
           <div className="mt-0.5 text-[8px] font-medium text-neutral-400">
-            حوالي {tier.pricePerDay}$ يومياً
+            {formatIllustrativeDaily(Number(tier.totalPrice), 90)}
           </div>
         </div>
       </div>
@@ -4314,7 +4303,7 @@ function PricingPriceRing({ tier, mounted, className = "" }: { tier: PricingTier
 
 function PricingValueCompare({ tier }: { tier: PricingTier }) {
   const snackApprox = tier.id === "transform" ? "3" : tier.id === "pro" ? "5" : "11";
-  const compareBg = tier.id === "transform" ? "#FFF4EB" : tier.id === "pro" ? "#F2F7FF" : "#F7F1FF";
+  const compareBg = tier.id === "transform" ? "#FFF4EB" : "#F7F1FF";
 
   return (
     <div className="mt-2 relative" dir="rtl">
@@ -4349,7 +4338,7 @@ function PricingValueCompare({ tier }: { tier: PricingTier }) {
 
           <div className="flex-1 text-right min-w-0 flex flex-col justify-center">
             <div className="pri-heading text-[11px] leading-snug" style={{ color: tier.primary }}>
-              حوالي {tier.pricePerDay}$ يومياً...
+              {formatIllustrativeDaily(Number(tier.totalPrice), 90)}...
             </div>
             <p className="mt-1 text-[9px] text-neutral-600 leading-[1.55]">
               أقل من ثمن كوب قهوة ووجبة خفيفة، استثمار في برنامجك لمدة{" "}
@@ -4815,7 +4804,9 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
                     ${tierMeta.totalPrice} · 3 أشهر
                   </div>
                   <div className="text-[9px] font-medium text-neutral-400">
-                    ≈ ${tierMeta.pricePerDay}/يوم
+                    {Number(tierMeta.pricePerDay) < 1
+                      ? `أقل من $${tierMeta.pricePerDay}/يوم`
+                      : `≈ $${tierMeta.pricePerDay}/يوم`}
                   </div>
                 </button>
               );

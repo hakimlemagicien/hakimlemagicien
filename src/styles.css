@@ -10941,7 +10941,7 @@ body.is-membership-pass-open {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 8px 0 6px;
+  margin: 12px 0 10px;
   color: #9a938b;
   font-size: 12px;
   font-weight: 800;
@@ -10959,6 +10959,15 @@ body.is-membership-pass-open {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.auth-login__social.is-single {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-login__social.is-single button {
+  width: min(100%, 220px);
 }
 
 .auth-login__social button {
@@ -10980,7 +10989,7 @@ body.is-membership-pass-open {
 }
 
 .auth-login__signup {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   color: #6f675f;
   font-size: 13px;
   font-weight: 600;

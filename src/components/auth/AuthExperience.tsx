@@ -412,7 +412,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
             {mode === "signin" ? (
               <>
                 <div className="auth-login__or">أو</div>
-                <div className="auth-login__social">
+                <div className={`auth-login__social${!SHOW_APPLE_LOGIN ? " is-single" : ""}`}>
                   <button type="button" disabled={loading} onClick={() => void onOAuth("google")}>
                     <GoogleMark />
                     Google
