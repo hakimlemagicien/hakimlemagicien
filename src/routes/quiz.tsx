@@ -1,7 +1,7 @@
 import { createLead } from "@/lib/lead-api";
 import { buildLeadInsertFromQuiz, buildQuizAnswersPayload, type QuizAnswersInput } from "@/lib/quiz-answers-builder";
-import { createOnboardingDraft } from "@/lib/quiz-onboarding-api";
-import { userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { createOnboardingDraft, syncOnboardingDisplayName } from "@/lib/quiz-onboarding-api";
+import { userHasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { quizMeasureCopy } from "@/lib/quiz-measure-copy";
 import { supabase } from "@/integrations/supabase/client";
 import { QUIZ_PROGRESS_TOTAL } from "@/lib/quiz-step-progress";
@@ -85,7 +85,6 @@ import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
 import gluteGrowth from "@/assets/glute-growth.png";
 import trainingEnvHomeImg from "@/assets/training-env-home.png";
 import trainingEnvGymImg from "@/assets/training-env-gym.png";
-import trainingEnvAnywhereImg from "@/assets/training-env-anywhere.png";
 import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
 import feminineTonedBody from "@/assets/feminine-toned-body.png";
 import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
@@ -198,6 +197,7 @@ export function QuizPage() {
     activityLevel,
     investment,
     bodyType,
+    trainingEnvironment,
   };
 
   const totalSteps = QUIZ_PROGRESS_TOTAL;
@@ -1147,38 +1147,45 @@ function AgeScreen({
         </div>
 
         {/* Picker card */}
-        <div className="relative mt-5 mx-1 flex-1 min-h-0 flex flex-col">
+        <div className="relative mt-8 mx-1 flex-1 min-h-0 flex flex-col">
           <div
             className="relative rounded-[28px] bg-white/85 backdrop-blur-sm ring-1 ring-black/5 flex-1 min-h-0"
             style={{ boxShadow: "0 20px 50px -25px rgba(255,107,0,0.25), 0 10px 30px -15px rgba(0,0,0,0.08)" }}
           >
             {/* floating calendar badge */}
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 grid h-12 w-12 place-items-center rounded-full bg-white ring-1 ring-black/5"
+            <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-30 grid h-12 w-12 place-items-center rounded-full bg-white ring-1 ring-black/5"
               style={{ boxShadow: "0 8px 20px -8px rgba(255,107,0,0.4)" }}>
               <Calendar className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
             </div>
 
-            {/* Wheel */}
-            <div className="relative h-full overflow-hidden rounded-[28px] pt-4">
-              {/* Selected band lines */}
-              <div className="pointer-events-none absolute left-4 right-4 top-1/2 -translate-y-1/2 z-10" style={{ height: ITEM_H }}>
+            {/* Wheel — band and scroller share the same box (no pt offset) so number + سنة stay aligned */}
+            <div className="relative h-full overflow-hidden rounded-[28px]">
+              <div
+                className="pointer-events-none absolute inset-x-4 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center"
+                style={{ height: ITEM_H }}
+              >
                 <div className="absolute inset-x-0 top-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
                 <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
-                {/* سنة label */}
-                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-base font-medium text-neutral-400">سنة</div>
+                <div className="absolute inset-y-0 end-5 flex items-center text-base font-medium text-neutral-400">
+                  سنة
+                </div>
               </div>
 
-              {/* Top/bottom fade overlays */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-1/3 z-20"
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/3"
                 style={{ background: "linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }} />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 z-20"
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1/3"
                 style={{ background: "linear-gradient(0deg,rgba(255,255,255,0.95),rgba(255,255,255,0))" }} />
 
               <div
                 ref={scrollerRef}
                 onScroll={onScroll}
                 className="h-full overflow-y-scroll scrollbar-none"
-                style={{ scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch", paddingTop: "calc(50% - 28px)", paddingBottom: "calc(50% - 28px)" }}
+                style={{
+                  scrollSnapType: "y mandatory",
+                  WebkitOverflowScrolling: "touch",
+                  paddingTop: `calc(50% - ${ITEM_H / 2}px)`,
+                  paddingBottom: `calc(50% - ${ITEM_H / 2}px)`,
+                }}
               >
                 {AGES.map((n) => {
                   const dist = Math.abs(n - age);
@@ -1199,6 +1206,7 @@ function AgeScreen({
                         fontSize: active ? 32 : 24,
                       }}
                       className="flex items-center justify-center leading-none"
+                      aria-current={active ? "true" : undefined}
                     >
                       {n}
                     </div>
@@ -2654,7 +2662,7 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
 type TrainingEnvironmentValue = "home" | "gym" | "anywhere";
 
 const TRAINING_ENVIRONMENTS: {
-  id: TrainingEnvironmentValue;
+  id: Exclude<TrainingEnvironmentValue, "anywhere">;
   title: string;
   desc: string;
   image: string;
@@ -2671,12 +2679,6 @@ const TRAINING_ENVIRONMENTS: {
     desc: "برنامج يعتمد على أجهزة النادي والأوزان الحرة لتحقيق أفضل النتائج.",
     image: trainingEnvGymImg,
   },
-  {
-    id: "anywhere",
-    title: "في أي مكان",
-    desc: "أحب التنوع وأريد برنامجاً يمكنني تنفيذه في المنزل أو النادي.",
-    image: trainingEnvAnywhereImg,
-  },
 ];
 
 function TrainingEnvironmentScreen({
@@ -2689,7 +2691,9 @@ function TrainingEnvironmentScreen({
   onNext: (value: TrainingEnvironmentValue) => void;
 }) {
   const ORANGE = "#FF6B00";
-  const [selected, setSelected] = useState<TrainingEnvironmentValue | null>(initialValue ?? null);
+  const initialSelected =
+    initialValue === "home" || initialValue === "gym" ? initialValue : null;
+  const [selected, setSelected] = useState<TrainingEnvironmentValue | null>(initialSelected);
 
   return (
     <div
@@ -3055,6 +3059,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   const [fadingOverlay, setFadingOverlay] = useState(false);
   const [overlayProgress, setOverlayProgress] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", country: "ae", customDial: "" });
+  const [oauthSession, setOauthSession] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
@@ -3072,6 +3077,24 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
     return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase.auth.getUser();
+      if (cancelled || !data.user) return;
+      if (!userHasOAuthIdentity(data.user)) return;
+      const oauthEmail = (data.user.email ?? "").trim().toLowerCase();
+      setOauthSession(true);
+      setForm((prev) => ({
+        ...prev,
+        email: oauthEmail || prev.email,
+      }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const isOtherCountry = form.country === "other";
   const country = isOtherCountry
     ? OTHER_COUNTRY
@@ -3086,7 +3109,8 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
     || "أخرى".includes(countryQuery)
     || "other".includes(countryQuery.toLowerCase());
 
-  const canContinueIdentity = form.name.trim().length >= 2 && isQuizEmail(form.email);
+  const canContinueIdentity =
+    form.name.trim().length >= 2 && (oauthSession ? Boolean(form.email.trim()) : isQuizEmail(form.email));
   const canSubmitPhone = form.phone.trim().length >= 7 && (!isOtherCountry || form.customDial.trim().length >= 1);
 
   const submitLead = async () => {
@@ -3125,6 +3149,14 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
           lastStep: "contact",
         }),
       });
+
+      if (oauthSession) {
+        try {
+          await syncOnboardingDisplayName(contactPayload.fullName);
+        } catch (syncError) {
+          console.error("[quiz] oauth display name sync failed:", syncError);
+        }
+      }
 
       onDone(
         contactPayload.fullName,
@@ -3211,7 +3243,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
           </div>
           <p className="mt-1.5 text-[13px] text-neutral-600 leading-relaxed px-2">
             {phase === "identity"
-              ? "أدخل اسمك وبريدك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
+              ? oauthSession
+                ? "أدخل اسمك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
+                : "أدخل اسمك وبريدك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
               : "أضف دولتك ورقم هاتفك للمتابعة داخل التطبيق."}
           </p>
         </div>
@@ -3234,18 +3268,20 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
                   className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-right placeholder:text-neutral-400"
                 />
               </FieldRow>
-              <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="example@email.com"
-                  dir="ltr"
-                  autoComplete="email"
-                  enterKeyHint="next"
-                  className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
-                />
-              </FieldRow>
+              {oauthSession ? null : (
+                <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="example@email.com"
+                    dir="ltr"
+                    autoComplete="email"
+                    enterKeyHint="next"
+                    className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                  />
+                </FieldRow>
+              )}
             </>
           ) : (
             <>

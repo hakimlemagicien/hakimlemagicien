@@ -18,12 +18,13 @@ import {
   QUIZ_EMAIL_OTP_LENGTH,
   sendEmailVerificationOtp,
   setUserPassword,
+  syncOnboardingDisplayName,
   updateDraftEmail,
   verifyEmailOtp,
   clearOnboardingClientState,
 } from "@/lib/quiz-onboarding-api";
 import { updateMyAvatar } from "@/lib/platform/profile-api";
-import { markPasswordRequiredIfUnset, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { markPasswordRequiredIfUnset, userHasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { quizOtpStatusCopy, translateAuthError } from "@/lib/auth-error-ar";
 import { getQuizProgressBarState } from "@/lib/quiz-step-progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -222,9 +223,20 @@ export function VerifyEmailScreen({
   useEffect(() => {
     if (!activeEmail) return;
     if (lastOtpEmailRef.current === activeEmail) return;
-    lastOtpEmailRef.current = activeEmail;
 
     void (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session && userHasOAuthIdentity(data.session.user)) {
+        lastOtpEmailRef.current = activeEmail;
+        return;
+      }
+      if (data.session) {
+        // Email session already verified — skip OTP send while parent advances.
+        lastOtpEmailRef.current = activeEmail;
+        return;
+      }
+
+      lastOtpEmailRef.current = activeEmail;
       try {
         setError(null);
         setSending(true);
@@ -488,8 +500,53 @@ export function CreatePasswordScreen({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [oauthSkipping, setOauthSkipping] = useState(true);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   const canSubmit = password.length >= 8 && password === confirmPassword;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (cancelled) return;
+        if (!userHasOAuthIdentity(data.user)) {
+          setOauthSkipping(false);
+          return;
+        }
+
+        // Google/Apple: skip password — optional later from account settings.
+        if (name.trim()) {
+          try {
+            await syncOnboardingDisplayName(name);
+          } catch (syncError) {
+            console.error("[onboarding] oauth display name sync failed:", syncError);
+          }
+        }
+        const draftToken = getStoredDraftToken();
+        if (draftToken) {
+          try {
+            await finalizeOnboarding(draftToken);
+          } catch (finalizeError) {
+            console.error("[onboarding] finalize after oauth skip failed:", finalizeError);
+          }
+        }
+        if (!cancelled) onDoneRef.current();
+      } catch (err) {
+        if (!cancelled) {
+          setOauthSkipping(false);
+          setError(translateAuthError(err, "تعذّر إكمال التسجيل."));
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [name]);
 
   async function handleSubmit() {
     if (!canSubmit || loading) return;
@@ -511,6 +568,29 @@ export function CreatePasswordScreen({
     } finally {
       setLoading(false);
     }
+  }
+
+  if (oauthSkipping) {
+    return (
+      <OnboardingShell
+        step={step}
+        title={
+          <>
+            جاري <span style={{ color: ORANGE }}>تجهيز حسابك</span>
+          </>
+        }
+        subtitle="تم تسجيل دخولك عبر Google أو Apple — نكمل إعداد ملفك بدون كلمة مرور."
+        onBack={onBack}
+      >
+        <div className="flex min-h-[160px] items-center justify-center">
+          <div
+            className="h-10 w-10 animate-spin rounded-full border-2 border-orange-200 border-t-[#FF6B00]"
+            aria-label="جاري التجهيز"
+          />
+        </div>
+        <ErrorNote message={error} />
+      </OnboardingShell>
+    );
   }
 
   return (

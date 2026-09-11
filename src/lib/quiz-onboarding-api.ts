@@ -226,6 +226,28 @@ export async function setUserPassword(password: string, fullName?: string): Prom
   clearPasswordRequiredLocally();
 }
 
+/** Persist quiz display name for OAuth users (no password step). Prefer this over Google/Apple account name. */
+export async function syncOnboardingDisplayName(fullName: string): Promise<void> {
+  const trimmed = fullName.trim();
+  if (!trimmed) return;
+
+  const { data: authData, error: authError } = await supabase.auth.updateUser({
+    data: { full_name: trimmed },
+  });
+  if (authError) throw authError;
+
+  const userId = authData.user?.id;
+  if (!userId) return;
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .update({ full_name: trimmed })
+    .eq("id", userId);
+  if (profileError) {
+    console.error("[onboarding] failed to sync quiz display name to profiles:", profileError);
+  }
+}
+
 function getFileExtension(file: File): string {
   const fromName = file.name.split(".").pop()?.toLowerCase();
   if (fromName && ["jpg", "jpeg", "png", "webp"].includes(fromName)) return fromName === "jpeg" ? "jpg" : fromName;

@@ -262,20 +262,15 @@ function greetingPrefix(date = new Date()): string {
   return "مساء الخير";
 }
 
-/** Client first name — profile first, then quiz onboarding, then fallback. */
+/** Client first name — quiz onboarding name wins over Google/Apple profile name. */
 export function resolveClientFirstName(displayName?: string | null): string {
-  const membershipFirst = displayName?.trim().split(/\s+/)[0];
-  const isGeneric =
-    !membershipFirst ||
-    membershipFirst === DAILY_GREETING_NAME_FALLBACK ||
-    membershipFirst.toLowerCase() === "batal";
-
-  if (!isGeneric) return membershipFirst;
-
   const quizFirst = readQuizProgress()?.userName?.trim().split(/\s+/)[0];
   if (quizFirst) return quizFirst;
 
-  return membershipFirst || DAILY_GREETING_NAME_FALLBACK;
+  const membershipFirst = displayName?.trim().split(/\s+/)[0];
+  if (membershipFirst) return membershipFirst;
+
+  return DAILY_GREETING_NAME_FALLBACK;
 }
 
 export function buildTimeGreeting(displayName: string, date = new Date()): string {
