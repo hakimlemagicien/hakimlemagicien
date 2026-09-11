@@ -2,6 +2,7 @@
 
 **Authority:** [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) (2026-09-11)  
 **Launch mode:** `MANUAL_MEMBERSHIP_ONLY`  
+**Verify path:** `LOCAL_THEN_PRODUCTION` (Staging deferred post-V1)  
 **Goal:** Close every remaining gate until V1 is publicly operable under manual membership.
 
 ---
@@ -12,22 +13,31 @@
 |------|--------|
 | CEO production launch gate | ✅ `APPROVED` — 2026-09-11 |
 | Launch mode recorded | ✅ `MANUAL_MEMBERSHIP_ONLY` |
+| Staging required for V1 | ✅ `DEFERRED` — not required |
 | Live Paddle | ❌ still `NOT_APPROVED` (by design) |
 
 ---
 
-## Gate 1 — Staging product loop (P0 — next)
+## Gate 1 — Staging product loop (deferred)
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Staging migration `client_v1_auto_assign_training` present | ☐ | Confirm RPC on `dxerwrdpcflpnjvsnrjq` |
-| Free: personalized preview, 1 exercise/day, no assignment row | ☐ | Staging E2E |
-| Paid (admin grant): auto-assign → workout runtime | ☐ | Staging E2E |
-| Exception / validation blocked → review queue | ☐ | Staging E2E |
-| Failure states (no catalog / blocked) | ☐ | Staging E2E |
-| Mobile 390px smoke (home, workout, nutrition) | ☐ | Staging |
+| Staging E2E / Staging migration gate | ⏭️ `DEFERRED_POST_V1` | CEO: introduce Staging in later releases |
 
-**Exit:** `STAGING_V1_LOOP_PASS`
+**Exit for V1:** N/A — skipped by CEO decision.
+
+---
+
+## Gate 1b — Local verification (P0 — next)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| `npm run build` | ☐ | Must pass before Production deploy |
+| Targeted contract/unit tests (training/nutrition/billing as touched) | ☐ | `npm test` or scoped suite |
+| Local Free preview smoke (if local/dev DB available) | ☐ | 1 exercise/day preview behaviour |
+| Local Paid/manual path smoke (if feasible) | ☐ | else cover on Production smoke only |
+
+**Exit:** `LOCAL_V1_VERIFY_PASS`
 
 ---
 
@@ -71,11 +81,12 @@
 
 ---
 
-## Gate 5 — Platform hygiene (P2)
+## Gate 5 — Platform hygiene (P2 / post-V1)
 
 | Item | Status |
 |------|--------|
-| Canonical Staging URL (PF-4) | ☐ |
+| Introduce durable Staging environment | ☐ post-V1 when project scales |
+| Canonical Staging URL (PF-4) | ☐ post-V1 |
 | Domain cutover `maakfit.com` complete / dual-host retired | ☐ when ready |
 | OS push notifications | ☐ post-V1 |
 
@@ -83,9 +94,8 @@
 
 ## Current focus
 
-**Done:** Gate 0 — CEO.  
-**Now:** Gate 1 — Staging product loop.  
-**Agent note (2026-09-11):** this Cloud Agent VM has no `.env.staging.local` / Staging service-role secrets, so live Staging migration + E2E cannot be executed here yet. Provide Staging credentials (or run the scripts from a machine that has them) to continue Gate 1.
+**Done:** Gate 0 — CEO (including Staging deferred for V1).  
+**Now:** Gate 1b — Local verification → then Gate 2 Production smoke.  
 
-**Blocked on CEO:** nothing for Gate 0.  
+**Blocked on CEO:** nothing for V1 path.  
 **Still needs CEO input later:** Gate 3 legal fields (when starting self-serve marketing).

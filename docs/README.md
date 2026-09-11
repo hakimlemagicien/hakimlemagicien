@@ -183,6 +183,16 @@
 
 ---
 
+## V1 launch closure (CEO 2026-09-11)
+
+| الموضوع | المرجع |
+|---------|--------|
+| قرار CEO — بوابة الإطلاق | [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) |
+| قائمة إغلاق البوابات المتبقية | [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) |
+| الوضع | `MANUAL_MEMBERSHIP_ONLY` · Staging مؤجّل لـ V1 · التركيز: تحقق محلي → Production smoke |
+
+---
+
 ## Nutrition Library V2 — كتالوج التشغيل (2026-08-22)
 
 | الموضوع | المرجع |

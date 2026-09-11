@@ -1,7 +1,7 @@
 # MAAKFIT V1 — Production Release Execution
 
-**Date:** 2026-09-02  
-**Mode:** Staging verified → Production apply → smoke  
+**Date:** 2026-09-02 (sign-off updated 2026-09-11)  
+**Mode:** Local verify → Production apply/smoke (Staging deferred for V1 per CEO)  
 **Branch:** `feat/admin-command-center-foundation`
 
 ---
@@ -13,8 +13,9 @@
 | Production DB migration approval | ☑ | Applied 2026-09-02 — M1–M4 + training auto-assign |
 | Public launch with manual membership only | ☑ | Paddle not approved — `MANUAL_MEMBERSHIP_ONLY` |
 | **CEO V1 public launch gate** | ☑ | **2026-09-11** — [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md) `APPROVED` |
+| **Staging required for V1** | ☑ deferred | CEO: `V1_STAGING_GATE = DEFERRED` — local → Production |
 | Legal entity / governing law / effective date | ☐ | `policy-catalog.ts` TBD — owner must supply before self-serve checkout marketing |
-| Deploy `main` / Production smoke complete | ☐ | After Staging loop PASS + CI — see [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) |
+| Deploy `main` / Production smoke complete | ☐ | After local verify PASS + CI — see [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) |
 
 **Recorded launch mode:** `MANUAL_MEMBERSHIP_ONLY` — new paid clients via admin membership override until Paddle sandbox/production validation completes.
 

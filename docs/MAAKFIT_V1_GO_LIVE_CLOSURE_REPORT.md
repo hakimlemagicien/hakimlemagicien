@@ -197,17 +197,17 @@ When CEO approves Production:
 
 ## FINAL DECISION (updated 2026-09-11)
 
-# **MAAKFIT_V1_CEO_GATE_CLOSED — STAGING_LOOP_NEXT**
+# **MAAKFIT_V1_CEO_GATE_CLOSED — LOCAL_THEN_PRODUCTION**
 
-**CEO:** `V1_PUBLIC_LAUNCH_GATE = APPROVED` · mode `MANUAL_MEMBERSHIP_ONLY` — [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md)
+**CEO:** `V1_PUBLIC_LAUNCH_GATE = APPROVED` · mode `MANUAL_MEMBERSHIP_ONLY` · `V1_STAGING_GATE = DEFERRED` — [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md)
 
 **Minimum actions remaining:**
 
-1. Apply/confirm `20260902130000_client_v1_auto_assign_training.sql` on **Staging** (Dashboard SQL or IPv4 pooler CLI).
-2. Complete Staging scenarios A–D + 390px smoke (Free, Paid normal, Exception, Failure).
-3. Confirm upgrade/membership → `workout_program` → auto-assign on Staging (admin override acceptable if checkout not live).
-4. Production smoke under manual membership → then mark checklist Gate 2 pass.
+1. Local verification: `npm run build` + targeted tests + local smoke where possible.
+2. Confirm required Production migrations / RPCs on Production.
+3. Production smoke under manual membership (Free preview, Paid grant, nutrition, coach inbox, billing).
+4. Mark checklist Gate 1b + Gate 2 pass.
 
 Tracker: [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md)
 
-**STOP was CEO Production gate — now closed. Next stop: Staging product loop.**
+**STOP was CEO Production gate — now closed. Staging not required for V1. Next stop: local verify → Production smoke.**
