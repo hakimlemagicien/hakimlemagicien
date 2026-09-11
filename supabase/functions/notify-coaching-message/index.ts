@@ -3,7 +3,7 @@ import { sendAdminNotificationEmail } from "../_shared/send-email.ts";
 import { createSupabaseAdmin, createSupabaseUserClient } from "../_shared/supabase-admin.ts";
 import { siteUrl as resolveSiteUrl } from "../_shared/site-url.ts";
 
-const DEFAULT_ADMIN_EMAIL = "support@hakimlemagicien.com";
+const DEFAULT_ADMIN_EMAIL = "support@maakfit.com";
 
 type RequestBody = {
   conversationId?: string;

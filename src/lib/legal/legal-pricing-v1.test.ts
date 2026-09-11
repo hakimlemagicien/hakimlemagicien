@@ -1,5 +1,5 @@
 import { PAID_TIERS, getTermOffer } from "../pricing-presentation";
-import { CHECKOUT_CONSENT_COPY, CURRENT_SITE_ORIGIN, LEGAL_ENTITY_STATUS, GOVERNING_LAW_STATUS, POLICY_VERSION } from "./policy-catalog";
+import { CHECKOUT_CONSENT_COPY, CURRENT_SITE_ORIGIN, CURRENT_SUPPORT_EMAIL, LEGAL_ENTITY_STATUS, GOVERNING_LAW_STATUS, POLICY_VERSION } from "./policy-catalog";
 import { getLegalDocument } from "./policy-content";
 import {
   QUIZ_TIER_TO_PAID,
@@ -47,12 +47,17 @@ assert(LEGAL_ENTITY_STATUS === "TBD", "do not invent legal entity");
 assert(GOVERNING_LAW_STATUS === "TBD", "do not invent governing law");
 assert(POLICY_VERSION === "v1.0", "policy version");
 assert(CURRENT_SITE_ORIGIN === "https://maakfit.com", "legal origin follows canonical product domain");
+assert(CURRENT_SUPPORT_EMAIL === "support@maakfit.com", "official support mailbox");
+assert(!CURRENT_SUPPORT_EMAIL.includes("hakimlemagicien.com"), "support email cut over from legacy domain");
 assert(CHECKOUT_CONSENT_COPY.ar.includes("MAAKFIT"), "official consent copy");
 
 const termsAr = getLegalDocument("terms", "ar");
 const termsEn = getLegalDocument("terms", "en");
 assert(termsAr.sections.length >= 10 && termsEn.sections.length >= 10, "terms bilingual");
 assert(termsAr.title.includes("MAAKFIT") && termsEn.title.includes("MAAKFIT"), "product brand");
+assert(termsAr.sections.some((s) => s.body.join(" ").includes("support@maakfit.com")), "terms contact uses maakfit support");
+assert(getLegalDocument("privacy", "ar").sections.some((s) => s.body.join(" ").includes("support@maakfit.com")), "privacy contact uses maakfit support");
+assert(getLegalDocument("refund", "ar").sections.some((s) => s.body.join(" ").includes("support@maakfit.com")), "refund contact uses maakfit support");
 assert(!termsAr.sections.some((s) => s.body.join(" ").includes("FZ-LLC")), "no legacy entity in terms");
 assert(!getLegalDocument("privacy", "ar").sections.some((s) => /100%\s*secure|آمنة 100%/i.test(s.body.join(" "))), "no 100% secure claim");
 assert(getLegalDocument("refund", "ar").sections.some((s) => s.body.join(" ").includes("14")), "14 day eligible window");
