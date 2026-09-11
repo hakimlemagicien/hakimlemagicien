@@ -16,7 +16,8 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CREATE_PASSWORD_LOCATION, PASSWORD_SET_META_KEY, clearPasswordRequiredLocally, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { PASSWORD_SET_META_KEY, clearPasswordRequiredLocally } from "@/lib/auth-password-gate";
+import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { translateAuthError } from "@/lib/auth-error-ar";
 import { clearOnboardingClientState } from "@/lib/quiz-onboarding-api";
 import appLogo from "@/assets/app-logo.png";
@@ -99,11 +100,8 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
 
       const { data } = await supabase.auth.getSession();
       if (!cancelled && data.session && mode !== "set-password" && stageRef.current !== "quiz") {
-        if (userNeedsPasswordSetup(data.session.user)) {
-          navigate(CREATE_PASSWORD_LOCATION);
-        } else {
-          navigate({ to: "/app" });
-        }
+        const destination = await resolveAuthenticatedDestination(data.session.user);
+        if (!cancelled) navigate(destination);
       }
       if (!cancelled) setReady(true);
     }
@@ -120,11 +118,10 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       // Quiz onboarding owns routing after email OTP. Do not dump the client into /app.
       if (stageRef.current === "quiz") return;
       if (session && mode !== "set-password") {
-        if (userNeedsPasswordSetup(session.user)) {
-          navigate(CREATE_PASSWORD_LOCATION);
-        } else {
-          navigate({ to: "/app" });
-        }
+        void resolveAuthenticatedDestination(session.user).then((destination) => {
+          if (stageRef.current === "quiz") return;
+          navigate(destination);
+        });
       }
     });
 

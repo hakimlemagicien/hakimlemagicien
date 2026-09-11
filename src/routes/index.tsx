@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { QuizPage } from "@/routes/quiz";
 import { AuthExperience } from "@/components/auth/AuthExperience";
@@ -49,10 +49,7 @@ export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) {
-      if (userNeedsPasswordSetup(data.user)) {
-        throw redirect(CREATE_PASSWORD_LOCATION);
-      }
-      throw redirect({ to: "/app" });
+      throw redirect(await resolveAuthenticatedDestination(data.user));
     }
   },
   pendingComponent: AppEntryPending,

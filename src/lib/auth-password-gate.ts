@@ -42,14 +42,15 @@ function isPasswordRequiredLocally(): boolean {
   }
 }
 
-function hasOAuthIdentity(user: User): boolean {
+export function userHasOAuthIdentity(user: User | null | undefined): boolean {
+  if (!user) return false;
   return (user.identities ?? []).some((identity) => identity.provider && identity.provider !== "email");
 }
 
 export function userNeedsPasswordSetup(user: User | null | undefined): boolean {
   if (!user) return false;
   if (user.user_metadata?.[PASSWORD_SET_META_KEY] === true) return false;
-  if (hasOAuthIdentity(user)) return false;
+  if (userHasOAuthIdentity(user)) return false;
   if (user.user_metadata?.[PASSWORD_SET_META_KEY] === false) return true;
   return isPasswordRequiredLocally();
 }
@@ -65,7 +66,7 @@ export async function markPasswordRequiredIfUnset(): Promise<void> {
     return;
   }
   if (user.user_metadata?.[PASSWORD_SET_META_KEY] === false) return;
-  if (hasOAuthIdentity(user)) {
+  if (userHasOAuthIdentity(user)) {
     clearPasswordRequiredLocally();
     return;
   }

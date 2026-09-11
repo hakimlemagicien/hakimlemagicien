@@ -8,6 +8,7 @@ import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
 
@@ -58,8 +59,9 @@ export const Route = createFileRoute("/_platform")({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.user) throw redirect({ to: "/auth" });
-      if (userNeedsPasswordSetup(session.user)) {
-        throw redirect(CREATE_PASSWORD_LOCATION);
+      const destination = await resolveAuthenticatedDestination(session.user);
+      if (destination.to !== "/app") {
+        throw redirect(destination);
       }
       return { user: session.user };
     } catch (error) {
