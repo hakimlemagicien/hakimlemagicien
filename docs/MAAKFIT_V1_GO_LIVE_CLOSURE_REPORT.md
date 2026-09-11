@@ -195,15 +195,19 @@ When CEO approves Production:
 
 ---
 
-## FINAL DECISION
+## FINAL DECISION (updated 2026-09-11)
 
-# **MAAKFIT_V1_GO_LIVE_BLOCKED**
+# **MAAKFIT_V1_CEO_GATE_CLOSED — STAGING_LOOP_NEXT**
 
-**Minimum actions to unblock:**
+**CEO:** `V1_PUBLIC_LAUNCH_GATE = APPROVED` · mode `MANUAL_MEMBERSHIP_ONLY` — [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md)
 
-1. Apply `20260902130000_client_v1_auto_assign_training.sql` on **Staging** (Dashboard SQL or IPv4 pooler CLI).
+**Minimum actions remaining:**
+
+1. Apply/confirm `20260902130000_client_v1_auto_assign_training.sql` on **Staging** (Dashboard SQL or IPv4 pooler CLI).
 2. Complete Staging scenarios A–D + 390px smoke (Free, Paid normal, Exception, Failure).
 3. Confirm upgrade/membership → `workout_program` → auto-assign on Staging (admin override acceptable if checkout not live).
-4. CEO re-run closure gate → if PASS → **MAAKFIT_V1_READY_FOR_PRODUCTION** → separate Production approval.
+4. Production smoke under manual membership → then mark checklist Gate 2 pass.
 
-**STOP — awaiting CEO Production gate.**
+Tracker: [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md)
+
+**STOP was CEO Production gate — now closed. Next stop: Staging product loop.**
