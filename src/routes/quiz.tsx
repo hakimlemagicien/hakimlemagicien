@@ -4804,9 +4804,7 @@ function PricingScreen({ name, total = 14, onBack, onSelectTier }: { name: strin
                     ${tierMeta.totalPrice} · 3 أشهر
                   </div>
                   <div className="text-[9px] font-medium text-neutral-400">
-                    {Number(tierMeta.pricePerDay) < 1
-                      ? `أقل من $${tierMeta.pricePerDay}/يوم`
-                      : `≈ $${tierMeta.pricePerDay}/يوم`}
+                    أقل من ${tierMeta.pricePerDay}/يوم
                   </div>
                 </button>
               );

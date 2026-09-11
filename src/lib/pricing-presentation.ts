@@ -69,35 +69,30 @@ export function formatOfficialTotal(totalUsd: number | string, currency = "USD")
 }
 
 /**
- * Illustrative daily copy only — never the charged amount.
- * Under $1/day: ceil to the next cent, then +$0.01 so we can say «أقل من X.XX$».
- * Example: 87 ÷ 90 ≈ 0.966 → أقل من 0.98$ يومياً
+ * Illustrative daily framing for every paid tier:
+ * ceil to the next cent, then +$0.01 so copy can always say «أقل من X.XX$».
+ * Example: 87 ÷ 90 ≈ 0.966 → 0.98 · 147 ÷ 90 ≈ 1.633 → 1.65
  */
-export function formatIllustrativeDaily(totalUsd: number | string, days: number): string {
+export function framedIllustrativeDaily(totalUsd: number | string, days: number): number {
   const n = typeof totalUsd === "string" ? Number(totalUsd) : totalUsd;
   const daily = approxDailyRate(n, days);
-  if (!daily) return "";
+  if (!daily) return 0;
+  const ceilingCent = Math.ceil(daily * 100 - 1e-9) / 100;
+  return Number((ceilingCent + 0.01).toFixed(2));
+}
 
-  if (daily < 1) {
-    const ceilingCent = Math.ceil(daily * 100 - 1e-9) / 100;
-    const framed = Number((ceilingCent + 0.01).toFixed(2));
-    return `أقل من ${framed.toFixed(2)}$ يومياً`;
-  }
-
-  const pretty = daily >= 10 ? daily.toFixed(0) : daily.toFixed(1).replace(/\.0$/, "");
-  return `حوالي ${pretty}$ يومياً`;
+/** Illustrative daily copy only — never the charged amount. */
+export function formatIllustrativeDaily(totalUsd: number | string, days: number): string {
+  const framed = framedIllustrativeDaily(totalUsd, days);
+  if (!framed) return "";
+  return `أقل من ${framed.toFixed(2)}$ يومياً`;
 }
 
 /** Numeric daily rate string for compact UI chips (e.g. quiz tabs). */
 export function illustrativeDailyAmount(totalUsd: number | string, days: number): string {
-  const n = typeof totalUsd === "string" ? Number(totalUsd) : totalUsd;
-  const daily = approxDailyRate(n, days);
-  if (!daily) return "";
-  if (daily < 1) {
-    const ceilingCent = Math.ceil(daily * 100 - 1e-9) / 100;
-    return Number((ceilingCent + 0.01).toFixed(2)).toFixed(2);
-  }
-  return daily >= 10 ? daily.toFixed(0) : daily.toFixed(2);
+  const framed = framedIllustrativeDaily(totalUsd, days);
+  if (!framed) return "";
+  return framed.toFixed(2);
 }
 
 export function formatSavings(amountUsd: number, note?: string): string | null {
