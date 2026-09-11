@@ -3,9 +3,13 @@ import { LegalPageShell } from "@/components/legal/LegalPageShell";
 import { ContactSupportForm } from "@/components/legal/ContactSupportForm";
 import { parseLegalSearch } from "@/lib/legal/legal-search";
 import { CURRENT_SUPPORT_EMAIL } from "@/lib/legal/policy-catalog";
+import { productionCanonicalUrl } from "@/lib/env/assert-environment";
 
 export const Route = createFileRoute("/contact")({
   validateSearch: parseLegalSearch,
+  head: () => ({
+    links: [{ rel: "canonical", href: productionCanonicalUrl("/contact") }],
+  }),
   component: ContactPage,
 });
 

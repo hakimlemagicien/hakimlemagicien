@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { productionCanonicalUrl } from "@/lib/env/assert-environment";
 import type { Json } from "@/integrations/supabase/types";
 import { markPasswordRequiredIfUnset, markPasswordRequiredLocally, clearPasswordRequiredLocally, PASSWORD_SET_META_KEY } from "@/lib/auth-password-gate";
 import { clearLeadCredentials } from "@/lib/lead-storage";
@@ -90,7 +91,7 @@ export function getQuizVerifyEmailRedirectUrl(): string {
   if (typeof window !== "undefined") {
     return `${window.location.origin}/quiz?step=createPassword`;
   }
-  return "https://hakimlemagicien.com/quiz?step=createPassword";
+  return `${productionCanonicalUrl("/quiz")}?step=createPassword`;
 }
 
 function hasAuthCallbackParams(searchParams: URLSearchParams, hashParams: URLSearchParams): boolean {

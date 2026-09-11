@@ -4,6 +4,7 @@ import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-pas
 import { supabase } from "@/integrations/supabase/client";
 import { QuizPage } from "@/routes/quiz";
 import { AuthExperience } from "@/components/auth/AuthExperience";
+import { productionCanonicalUrl } from "@/lib/env/assert-environment";
 
 function AppEntryPending() {
   return (
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/")({
         content: "سجّل دخولك أو ابدأ تقييمك المجاني للحصول على خطتك المخصصة.",
       },
     ],
-    links: [{ rel: "canonical", href: "https://hakimlemagicien.com/" }],
+    links: [{ rel: "canonical", href: productionCanonicalUrl("/") }],
   }),
   component: AppEntry,
 });

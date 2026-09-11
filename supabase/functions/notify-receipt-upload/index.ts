@@ -1,9 +1,9 @@
 import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
 import { sendAdminNotificationEmail } from "../_shared/send-email.ts";
 import { createSupabaseAdmin } from "../_shared/supabase-admin.ts";
+import { siteUrl as resolveSiteUrl } from "../_shared/site-url.ts";
 
 const DEFAULT_ADMIN_EMAIL = "support@hakimlemagicien.com";
-const DEFAULT_SITE_URL = "https://hakimlemagicien.com";
 
 type RequestBody = {
   leadId?: string;
@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
   }
 
   const adminEmail = Deno.env.get("ADMIN_NOTIFICATION_EMAIL") ?? DEFAULT_ADMIN_EMAIL;
-  const siteUrl = (Deno.env.get("SITE_URL") ?? DEFAULT_SITE_URL).replace(/\/$/, "");
+  const siteUrl = resolveSiteUrl();
 
   const amount =
     lead.payment_amount != null

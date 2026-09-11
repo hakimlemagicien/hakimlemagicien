@@ -1,3 +1,5 @@
+import { PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
+
 export const POLICY_VERSION = "v1.0" as const;
 export const POLICY_REFERENCE_LANGUAGE: "TBD" = "TBD";
 export const LEGAL_ENTITY_STATUS = "TBD" as const;
@@ -10,8 +12,9 @@ export { V1_LAUNCH_MODE, CHECKOUT_SELF_SERVE_ENABLED } from "@/lib/platform/laun
 /** Legacy string found in the repo — not the approved MAAKFIT legal entity. */
 export const LEGACY_LEGAL_ENTITY_UNVERIFIED = "Hakim Coaching FZ-LLC";
 
+/** Keep until maakfit.com mailbox + Resend/SPF are verified. */
 export const CURRENT_SUPPORT_EMAIL = "support@hakimlemagicien.com";
-export const CURRENT_SITE_ORIGIN = "https://hakimlemagicien.com";
+export const CURRENT_SITE_ORIGIN = PRODUCTION_APP_ORIGIN;
 export const CURRENT_WHATSAPP = "+971505129019";
 export const CURRENT_WHATSAPP_URL = "https://wa.me/971505129019";
 

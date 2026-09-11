@@ -3,9 +3,12 @@
 project_id = "ufgrbpakuemamggwypdh"
 
 [auth]
-site_url = "https://hakimlemagicien.com"
+site_url = "https://maakfit.com"
 additional_redirect_urls = [
+  "https://maakfit.com/**",
+  "https://www.maakfit.com/**",
   "https://hakimlemagicien.com/**",
+  "https://www.hakimlemagicien.com/**",
   "http://localhost:5173/**",
   "http://localhost:5176/**",
   "http://localhost:5177/**",

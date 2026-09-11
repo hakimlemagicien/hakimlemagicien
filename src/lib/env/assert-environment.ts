@@ -3,8 +3,18 @@
 export const PRODUCTION_SUPABASE_REF = "ufgrbpakuemamggwypdh";
 export const STAGING_SUPABASE_REF = "dxerwrdpcflpnjvsnrjq";
 
-export const PRODUCTION_APP_ORIGIN = "https://hakimlemagicien.com";
+/** Canonical production product origin. Dual-host fallback stays on LEGACY_* during cutover. */
+export const PRODUCTION_APP_ORIGIN = "https://maakfit.com";
+export const PRODUCTION_APP_HOST = "maakfit.com";
+export const LEGACY_PRODUCTION_APP_ORIGIN = "https://hakimlemagicien.com";
+export const LEGACY_PRODUCTION_WWW_ORIGIN = "https://www.hakimlemagicien.com";
 export const STAGING_APP_ORIGIN = "https://staging.hakimlemagicien.com";
+
+export function productionCanonicalUrl(pathname = "/"): string {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (path === "/") return `${PRODUCTION_APP_ORIGIN}/`;
+  return `${PRODUCTION_APP_ORIGIN}${path}`;
+}
 
 /** Auth email redirects must use the canonical Staging host, not a Preview *.vercel.app origin. */
 export function resolveAppOrigin(appEnv: string, windowOrigin?: string | null): string {

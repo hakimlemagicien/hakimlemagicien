@@ -20,6 +20,7 @@ import {
 import { QuizLoginEntry } from "@/components/quiz/QuizLoginEntry";
 import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
 import { createFileRoute } from "@tanstack/react-router";
+import { productionCanonicalUrl } from "@/lib/env/assert-environment";
 import { useEffect, useState, type ReactElement } from "react";
 import {
   ChevronLeft,
@@ -127,6 +128,7 @@ export const Route = createFileRoute("/quiz")({
       { title: "ابدأ تقييمك المجاني — MAAKFIT" },
       { name: "description", content: "ابدأ تحليلك الشخصي المجاني للحصول على خطتك المخصصة." },
     ],
+    links: [{ rel: "canonical", href: productionCanonicalUrl("/quiz") }],
   }),
   component: QuizPage,
 });

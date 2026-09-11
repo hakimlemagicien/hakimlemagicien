@@ -39,11 +39,11 @@
 ## 3. خريطة المسارات
 
 ```
-hakimlemagicien.com/
+maakfit.com/                  canonical product origin (dual-host fallback: hakimlemagicien.com)
 ├── /                 بوابة ذكية
 │                      بدون جلسة → Quiz
 │                      مع جلسة    → /app
-├── /coaching         Landing تسويقية (تصميم محمي)
+├── /coaching         Landing تسويقية (تصميم محمي — canonical أثناء الانتقال: hakimlemagicien.com/coaching)
 ├── /quiz             نفس Quiz (legacy)
 ├── /auth             تسجيل دخول / كلمة مرور
 ├── /privacy          سياسة الخصوصية (ar/en ?lang=)

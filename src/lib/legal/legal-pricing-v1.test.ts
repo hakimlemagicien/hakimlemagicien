@@ -1,5 +1,5 @@
 import { PAID_TIERS, getTermOffer } from "../pricing-presentation";
-import { CHECKOUT_CONSENT_COPY, LEGAL_ENTITY_STATUS, GOVERNING_LAW_STATUS, POLICY_VERSION } from "./policy-catalog";
+import { CHECKOUT_CONSENT_COPY, CURRENT_SITE_ORIGIN, LEGAL_ENTITY_STATUS, GOVERNING_LAW_STATUS, POLICY_VERSION } from "./policy-catalog";
 import { getLegalDocument } from "./policy-content";
 import {
   QUIZ_TIER_TO_PAID,
@@ -46,6 +46,7 @@ assert(isRenewalReminderWindowOpen(soon.toISOString(), new Date()), "reminder wi
 assert(LEGAL_ENTITY_STATUS === "TBD", "do not invent legal entity");
 assert(GOVERNING_LAW_STATUS === "TBD", "do not invent governing law");
 assert(POLICY_VERSION === "v1.0", "policy version");
+assert(CURRENT_SITE_ORIGIN === "https://maakfit.com", "legal origin follows canonical product domain");
 assert(CHECKOUT_CONSENT_COPY.ar.includes("MAAKFIT"), "official consent copy");
 
 const termsAr = getLegalDocument("terms", "ar");

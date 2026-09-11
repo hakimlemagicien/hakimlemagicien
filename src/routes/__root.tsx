@@ -17,7 +17,7 @@ import { MotionProvider } from "../components/motion/MotionProvider";
 import { startVisualPropertiesEngine } from "../lib/design-lab/visual-editor";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/pwa";
-import { assertEnvironmentIsolation } from "../lib/env/assert-environment";
+import { assertEnvironmentIsolation, PRODUCTION_APP_ORIGIN } from "../lib/env/assert-environment";
 
 assertEnvironmentIsolation();
 
@@ -91,6 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "application-name", content: "MAAKFIT" },
       { name: "author", content: "MAAKFIT" },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${PRODUCTION_APP_ORIGIN}/` },
       { name: "twitter:card", content: "summary_large_image" },
       { title: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
       { property: "og:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },

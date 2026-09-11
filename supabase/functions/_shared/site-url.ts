@@ -1,4 +1,6 @@
-const PRODUCTION_SITE_URL = "https://hakimlemagicien.com";
+const PRODUCTION_SITE_URL = "https://maakfit.com";
+/** Dual-host fallback — do not delete until hakimlemagicien.com stops serving the app. */
+export const LEGACY_PRODUCTION_SITE_URL = "https://hakimlemagicien.com";
 
 export function siteUrl(): string {
   const raw = Deno.env.get("SITE_URL") ?? PRODUCTION_SITE_URL;

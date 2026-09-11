@@ -2,7 +2,8 @@
 
 تطبيق عربي (RTL) — **المنتج = `/app`**. صفحة `/coaching` تسويق فقط. `/` = Quiz للزائر أو تحويل للجلسة إلى التطبيق.
 
-**الإنتاج:** [hakimlemagicien.com](https://hakimlemagicien.com)  
+**الإنتاج:** [maakfit.com](https://maakfit.com)  
+**Fallback أثناء الانتقال:** [hakimlemagicien.com](https://hakimlemagicien.com)  
 **PRODUCTION Supabase:** `ufgrbpakuemamggwypdh`  
 **STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — انظر [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md)  
 **المستودع:** GitHub `main`

@@ -5,7 +5,7 @@
 
 export const COMMAND_CENTER_PRODUCT = "MAAKFIT" as const;
 export const COMMAND_CENTER_IDENTITY = "Coach Hakim" as const;
-export const COMMAND_CENTER_DOMAIN = "hakimlemagicien.com" as const;
+export const COMMAND_CENTER_DOMAIN = "maakfit.com" as const;
 
 export const CLIENT_APP_PREFIX = "/app" as const;
 export const ADMIN_APP_PREFIX = "/admin" as const;
