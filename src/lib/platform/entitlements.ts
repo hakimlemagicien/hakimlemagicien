@@ -36,7 +36,8 @@ export const FREE_ENTITLEMENTS: EntitlementsSnapshot = {
   subscriptionStatus: "free",
   cancelAtPeriodEnd: false,
   training: {
-    allowedExercisesPerSession: 1,
+    /** FREE V1: structure preview only — no playable exercise content. */
+    allowedExercisesPerSession: 0,
     fullSession: false,
     previewExercises: true,
     advancedFeatures: false,
@@ -101,7 +102,10 @@ export function normalizeEntitlements(raw: unknown): EntitlementsSnapshot {
     subscriptionStatus: String(source.subscription_status ?? (tier === "free" ? "free" : "active")),
     cancelAtPeriodEnd: readBool(source.cancel_at_period_end, false),
     training: {
-      allowedExercisesPerSession: readInt(training.allowed_exercises_per_session, 1),
+      allowedExercisesPerSession: readInt(
+        training.allowed_exercises_per_session,
+        tier === "free" ? 0 : 99,
+      ),
       fullSession: readBool(training.full_session, tier !== "free"),
       previewExercises: readBool(training.preview_exercises, tier === "free"),
       advancedFeatures: readBool(training.advanced_features, tier === "premium" || tier === "vip"),
@@ -131,6 +135,7 @@ export function isExerciseUnlockedByEntitlements(
   opts: { isToday: boolean },
 ): boolean {
   if (ent.training.fullSession) return true;
+  if (ent.training.allowedExercisesPerSession <= 0) return false;
   if (!opts.isToday) return false;
   return orderIndex < ent.training.allowedExercisesPerSession;
 }

@@ -199,8 +199,9 @@ export function resolveWeekdayPlan(
   return emptyRestPlan(dayId);
 }
 
-export function isFreeUnlockedExerciseIndex(orderIndex: number) {
-  return orderIndex === 0;
+export function isFreeUnlockedExerciseIndex(_orderIndex: number) {
+  /** FREE Membership V1: no playable free exercise. */
+  return false;
 }
 
 export function formatWorkoutDayLabel(date: Date, dayName: string) {

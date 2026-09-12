@@ -1,16 +1,23 @@
 /**
- * V1 product copy — single source for Free personalized preview vs Paid full program.
+ * FREE Membership V1 — training product copy.
+ * Structure preview + promo only. No one-exercise-per-day language.
  */
 export const TRAINING_PRODUCT_COPY = {
-  freePreviewBadge: "معاينة مجانية — برنامجك الشخصي",
+  freePreviewBadge: "اكتشف برنامجك الشخصي",
   paidActiveBadge: "برنامجك مفعّل بالكامل",
-  upgradeCta: "اشترك لفتح برنامجك بالكامل",
-  freePreviewFooter: (totalExercises: number) =>
-    `تمرين واحد متاح اليوم من أصل ${totalExercises} في برنامجك الشخصي — اشترك لفتح الحصة كاملة.`,
-  freePreviewOtherDay:
-    "محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتمرينك المجاني أو اشترك لفتح الأسبوع.",
+  upgradeCta: "افتح برنامجك الكامل",
+  upgradeCtaBody: "فعّل عضويتك للوصول إلى جميع الحصص والتمارين والتفاصيل.",
+  freePreviewFooter: (_totalExercises: number) =>
+    "تم تجهيز هيكل برنامجك حسب هدفك ومستواك. فعّل عضويتك لفتح تفاصيل الحصص والتمارين.",
+  freePreviewOtherDay: "محتوى هذا اليوم للمعاينة فقط — فعّل عضويتك لفتح تفاصيل الحصص.",
   freePreviewLoadingTitle: "جاري تجهيز برنامجك الشخصي…",
-  freePreviewLoadingBody: "ستظهر حصتك كاملة — تمرين واحد فقط متاح يومياً في المعاينة المجانية.",
+  freePreviewLoadingBody: "نجهّز هيكل برنامجك حسب هدفك ومستواك.",
+  freeSessionLockedTitle: "محتوى الحصة متاح بعد تفعيل العضوية",
+  freeSessionLockedBody: (exerciseCount: number, durationMin: number) =>
+    `${exerciseCount} تمارين · ${durationMin} دقيقة`,
+  freePromoTitle: "كيف يعمل برنامج MAAKFIT",
+  freePromoBody:
+    "برنامجك يتبع هدفك ومستواك. بعد التفعيل تحصل على الحصص الكاملة وفيديوهات التمارين والتدرج وتتبع النتائج.",
   completeProfileTitle: "أكمل بياناتك لعرض برنامجك",
   completeProfileBody:
     "نستخدم إجابات الاستبيان أولًا. نسألك فقط عن أي معلومة ناقصة لتفعيل Strategy Matrix.",
@@ -28,16 +35,14 @@ export const TRAINING_PRODUCT_COPY = {
   paidReviewPendingBody:
     "نستخدم إجابات الاستبيان أولاً مع 5 أيام افتراضياً. إن بقي الهدف ناقصاً نسألك عنه فقط.",
   paidNoProgramTitle: "جاري تفعيل برنامجك من بيانات الاستبيان",
-  lockedOverlayLight: "معاينة مجانية — اشترك للوصول الكامل",
-  lockedOverlayStrong: "محتوى مقفل — اشترك لفتح برنامجك",
-  homeFreeWorkoutSubtitle: "معاينة مجانية — برنامجك الشخصي",
+  lockedOverlayLight: "معاينة الهيكل — فعّل عضويتك لفتح التفاصيل",
+  lockedOverlayStrong: "محتوى مقفل — فعّل عضويتك لفتح برنامجك",
+  homeFreeWorkoutSubtitle: "اكتشف هيكل برنامجك الشخصي",
   homePaidWorkoutSubtitle: "برنامجك مفعّل بالكامل",
-  exerciseLockedTodayOnly: "التمرين المجاني متاح في يوم اليوم فقط — اشترك لفتح كل الأيام.",
-  exerciseLockedOnePerDay: (total: number) =>
-    `تمرين واحد فقط متاح اليوم من أصل ${total} في برنامجك الشخصي — اشترك لفتح الباقي.`,
-  upgradeSheetTraining:
-    "برنامجك الشخصي جاهز — اشترك لفتح الحصة كاملة والتقدم والمتابعة.",
-  comparisonFreeProgram: "معاينة شخصية",
+  exerciseLockedTodayOnly: "تفاصيل التمارين متاحة بعد تفعيل العضوية.",
+  exerciseLockedOnePerDay: (_total: number) => "تفاصيل التمارين متاحة بعد تفعيل العضوية.",
+  upgradeSheetTraining: "فعّل عضويتك للوصول إلى جميع الحصص والتمارين والتفاصيل.",
+  comparisonFreeProgram: "معاينة هيكل البرنامج",
   comparisonPaidProgram: "برنامج مفعّل",
   holdBadge: "جاري إعداد برنامجك",
   holdTitle: "نحن نجهّز لك برنامجك الشخصي",
@@ -48,4 +53,11 @@ export const TRAINING_PRODUCT_COPY = {
   holdUpgradeCta: "ترقية الآن",
   holdNotify: "سنقوم بإشعارك فور جاهزية برنامجك.",
   holdExplore: "يمكنك إكمال استكشاف التطبيق أو الاطلاع على محتوى تعليمي أثناء الانتظار.",
+} as const;
+
+export const NUTRITION_PRODUCT_COPY = {
+  freeIntro: "ابدأ يومك بوجبة مناسبة لهدفك.",
+  freeUpgradeCta: "افتح خطتك الغذائية الكاملة",
+  freeUpgradeBody: "فعّل عضويتك للوصول إلى جميع وجبات اليوم والكميات والبدائل.",
+  lockedMealLabel: "مقفلة — فعّل العضوية للفتح",
 } as const;

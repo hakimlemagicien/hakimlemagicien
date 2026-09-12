@@ -75,7 +75,7 @@ PAYMENTS_V1_P7_QA_SECURITY_E2E_CLOSED
 | خطوة | النتيجة |
 |---|---|
 | Login | **PASS** |
-| `get_my_entitlements` | **PASS** — تمرين واحد، `full_session: false` |
+| `get_my_entitlements` | **PASS** — FREE V1: `allowed_exercises_per_session: 0`, structure preview, `full_session: false` |
 | Upgrade → Checkout prep | **PASS** (API) — `PAYMENT_PROVIDER_UNAVAILABLE` |
 | تفعيل عضوية | **PASS** — لم يحدث |
 

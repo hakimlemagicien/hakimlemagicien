@@ -77,6 +77,8 @@ maakfit.com/                  canonical product origin (dual-host fallback: haki
 
 التحقق من الجلسة لتطبيق `/app`: `src/routes/_platform/route.tsx` عبر `getSession()`.
 
+**عضوية FREE V1:** انظر [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) — تدريب = فيديو تعريفي + معاينة هيكل فقط؛ تغذية = فطور حقيقي حسب الهدف + باقي الوجبات مقفلة.
+
 ---
 
 ## 4. معمارية الواجهة داخل `/app`

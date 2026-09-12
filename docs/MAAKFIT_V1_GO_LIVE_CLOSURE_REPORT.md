@@ -187,7 +187,7 @@ When CEO approves Production:
    - Verify: `SELECT proname FROM pg_proc WHERE proname = 'client_assign_generated_v2_program';`
 3. **Deploy** Production Vercel (`main` → `deploy.yml` prod).
 4. **Smoke tests** (Production):
-   - Free account: personalized preview, 1 exercise/day, locked remainder, no assignment row.
+   - Free account: personalized structure preview + promo video, exercises locked, goal breakfast open, no assignment row. See `FREE_MEMBERSHIP_V1.md`.
    - Paid account (manual grant if checkout not live): auto-assign → workout runtime full access.
    - Exception cohort: review queue, no unsafe auto-assign.
 5. **Monitor** assignment RPC errors + `PROGRAM_VALIDATION_BLOCKED` queue for 24h.

@@ -32,7 +32,8 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 **Fallback أثناء الانتقال:** https://hakimlemagicien.com (نفس تطبيق Vercel — لا يُقطع حتى اكتمال الـ cutover)  
 **PRODUCTION Supabase:** `ufgrbpakuemamggwypdh` (`hakim-coaching`)  
 **STAGING Supabase:** `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`) — لا يُستخدم Production كـ Staging. الخريطة: [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)  
-**الفرع الحالي للعمل:** `feat/admin-command-center-foundation`  
+**FREE Membership V1:** [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) — معاينة هيكل + فيديو تعريفي + فطور حسب الهدف (لا تمرين مجاني يومي)  
+**الفرع الحالي للعمل:** `main`  
 **Training V2 pin:** `4d80f8d366909a2a6cf9217803c9c62277b66954` — Staging cohort only  
 **CEO 2026-08-22:** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED` — انظر [`TRAINING_ENGINE_V2_STAGING_COHORT.md`](./TRAINING_ENGINE_V2_STAGING_COHORT.md)
 

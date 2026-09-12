@@ -105,15 +105,15 @@ export function TrainingFreeConversionPanel({
 export function NutritionFreeConversionBanner() {
   return (
     <div className="rounded-2xl border border-[#D8EFE0] bg-[#F0FAF4] p-3.5 text-right" dir="rtl">
-      <p className="font-[Tajawal] text-[13px] font-black text-[#166534]">وجبتك المجانية لليوم جاهزة 🥗</p>
+      <p className="font-[Tajawal] text-[13px] font-black text-[#166534]">ابدأ يومك بوجبة مناسبة لهدفك</p>
       <p className="mt-1 font-[Tajawal] text-[11px] leading-relaxed text-[#166534]/85">
-        الخطة الكاملة تنظّم بقية وجباتك حسب هدفك الغذائي.
+        فطورك مفتوح — فعّل عضويتك لفتح خطتك الغذائية الكاملة.
       </p>
       <UpgradeSurfaceLink
         surface="NUTRITION"
         className="mt-2 inline-block font-[Tajawal] text-[12px] font-extrabold text-primary underline-offset-2 hover:underline"
       >
-        فتح خطتي الغذائية
+        افتح خطتك الغذائية الكاملة
       </UpgradeSurfaceLink>
     </div>
   );

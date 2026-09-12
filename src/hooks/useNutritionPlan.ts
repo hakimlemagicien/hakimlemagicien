@@ -56,15 +56,18 @@ function plannedFromSlots(slots: MealSlot[]): MacroTotals {
 
 export function useNutritionPlan(
   selectedDateKey?: string,
-  opts?: { catalogPreview?: boolean },
+  opts?: { catalogPreview?: boolean; breakfastGoalKey?: string | null },
 ) {
   const queryClient = useQueryClient();
   const { userId, snapshot } = usePlatformActivity();
   const dateKey = selectedDateKey ?? todayKey();
   const isSelectedToday = dateKey === todayKey();
   const catalogPreview = Boolean(opts?.catalogPreview);
+  const breakfastGoalKey = opts?.breakfastGoalKey ?? null;
   const [tick, setTick] = useState(0);
-  const [catalogSlots, setCatalogSlots] = useState<MealSlot[]>(() => getNutritionMealSlots());
+  const [catalogSlots, setCatalogSlots] = useState<MealSlot[]>(() =>
+    getNutritionMealSlots({ breakfastGoalKey }),
+  );
   const runtimeQuery = useAssignedNutritionRuntime(!catalogPreview);
   const refetchRuntime = runtimeQuery.refetch;
 
@@ -81,9 +84,13 @@ export function useNutritionPlan(
 
   useEffect(() => {
     void hydrateMealLibraryFromSupabase().then(() => {
-      setCatalogSlots(getNutritionMealSlots());
+      setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey }));
     });
-  }, []);
+  }, [breakfastGoalKey]);
+
+  useEffect(() => {
+    setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey }));
+  }, [breakfastGoalKey]);
 
   const assignmentReason = catalogPreview ? "preview" : runtimeQuery.data?.reason;
   const assignedSlots = useMemo(() => {

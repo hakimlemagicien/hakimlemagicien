@@ -40,8 +40,11 @@ import {
   MEAL_STATUS_LABELS,
   buildCurrentWeekDays,
   getTodayDateKey,
+  resolveFreeBreakfastGoalKey,
   type MealStatus,
 } from "@/lib/platform/nutrition-experience";
+import { NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
+import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { cn } from "@/lib/utils";
 
 type MacroTone = "protein" | "carbs" | "fat";
@@ -101,12 +104,19 @@ function NutritionDashboardPage() {
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [booting, setBooting] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const breakfastGoalKey = useMemo(
+    () => resolveFreeBreakfastGoalKey(readQuizProgress()?.goalId),
+    [],
+  );
 
-  const plan = useNutritionPlan(selectedDateKey, { catalogPreview: freePreview });
+  const plan = useNutritionPlan(selectedDateKey, {
+    catalogPreview: freePreview,
+    breakfastGoalKey: freePreview ? breakfastGoalKey : null,
+  });
   const isSelectedToday = selectedDateKey === todayKey;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const openNutritionUpgrade = () =>
-    openUpgradeWithContext("NUTRITION", "الخطة الكاملة تنظّم بقية وجباتك حسب هدفك الغذائي.");
+    openUpgradeWithContext("NUTRITION", NUTRITION_PRODUCT_COPY.freeUpgradeBody);
   const swapLabel = mealSwapAllowanceLabel(entitlements);
 
   useEffect(() => {
@@ -363,11 +373,23 @@ function NutritionDashboardPage() {
                 </motion.div>
               )}
               {freePreview ? (
-                <p className="px-0.5 text-[9px] font-medium leading-snug text-muted-foreground">
-                  {freeDayFullyLocked
-                    ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة وجبتك المجانية أو فعّل برنامجك."
-                    : "🔓 وجبتك المجانية لليوم جاهزة — باقي الوجبات مقفلة حتى تفعّل خطتك الغذائية."}
-                </p>
+                <div className="space-y-2 px-0.5 pt-1">
+                  <p className="text-[11px] font-bold leading-snug text-foreground">
+                    {NUTRITION_PRODUCT_COPY.freeIntro}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openNutritionUpgrade}
+                    className="flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground"
+                  >
+                    {NUTRITION_PRODUCT_COPY.freeUpgradeCta}
+                  </button>
+                  <p className="text-center text-[9px] font-medium leading-snug text-muted-foreground">
+                    {freeDayFullyLocked
+                      ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة فطورك أو فعّل عضويتك."
+                      : NUTRITION_PRODUCT_COPY.freeUpgradeBody}
+                  </p>
+                </div>
               ) : null}
             </section>
           </NutritionMotionSection>
@@ -454,37 +476,19 @@ function MealTimelineCard({
         aria-label={`${slotLabel}: وجبة مقفلة. فعّل خطتك الغذائية للوصول.`}
         className={cn(
           nutritionCardClass,
-          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-0 py-0 text-right transition active:scale-[0.99] active:bg-muted/25",
+          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-3 py-3 text-right transition active:scale-[0.99] active:bg-muted/25",
         )}
       >
-        <div
-          className="relative shrink-0 overflow-hidden rounded-s-[24px] bg-gradient-to-br from-muted via-muted/80 to-muted/60"
-          style={{ width: imageSize, height: imageSize }}
-          aria-hidden
-        >
-          <span className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.12)_0px,rgba(255,255,255,0.12)_8px,transparent_8px,transparent_16px)]" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+          <Lock className="h-4 w-4" strokeWidth={2.4} />
+        </span>
+        <div className="min-w-0 flex-1 text-right">
+          <p className="text-[13px] font-black text-foreground">{slotLabel}</p>
+          <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">
+            🔒 مقفلة — فعّل العضوية للفتح
+          </p>
         </div>
-
-        <div
-          className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right blur-[3px] select-none"
-          aria-hidden
-        >
-          <div className="h-2.5 w-16 rounded-full bg-muted-foreground/25" />
-          <div className="h-4 w-28 rounded-full bg-foreground/15" />
-          <div className="h-2.5 w-36 rounded-full bg-muted-foreground/20" />
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1 blur-[2px]" aria-hidden>
-          <span className="grid h-7 w-7 place-items-center rounded-full border border-border/60 bg-muted" />
-          <ChevronLeft className="h-4 w-4 text-muted-foreground/50" />
-        </div>
-
-        <NutritionLockedOverlay
-          active
-          asVisual
-          intensity="medium"
-          message="وجبة إضافية — أكمل خطتك الغذائية"
-        />
+        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/70" />
       </button>
     );
   }

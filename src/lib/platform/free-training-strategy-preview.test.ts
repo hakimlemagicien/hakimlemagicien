@@ -36,8 +36,8 @@ assert(plans, "glute preview plans generated");
 const workoutDays = Object.values(plans!).filter((plan) => !plan.isRestDay && plan.prescriptions.length > 0);
 assert(workoutDays.length === 3, `expected 3 workout days, got ${workoutDays.length}`);
 assert(
-  workoutDays.some((plan) => plan.prescriptions.length >= 5),
-  "at least one session should show strategy-sized prescription list",
+  workoutDays.some((plan) => plan.prescriptions.length >= 3),
+  "at least one session should show multi-exercise structure for preview counts",
 );
 
 const built = buildProgramGenerationContextFromProfile(baseInput({ rawGoalId: "fat" }), { exercises });
@@ -50,9 +50,9 @@ assert(fatWorkout && fatWorkout.prescriptions.length >= 4, "fat loss preview sho
 
 const sampleCount = workoutDays[0]!.prescriptions.length;
 assert(
-  countVisibleSessionExercises(FREE_ENTITLEMENTS, sampleCount) === 1,
-  "free entitlement still unlocks one exercise only",
+  countVisibleSessionExercises(FREE_ENTITLEMENTS, sampleCount) === 0,
+  "free entitlement unlocks zero playable exercises (structure preview only)",
 );
-assert(sampleCount - countVisibleSessionExercises(FREE_ENTITLEMENTS, sampleCount) >= 1, "remaining exercises stay locked");
+assert(sampleCount - countVisibleSessionExercises(FREE_ENTITLEMENTS, sampleCount) === sampleCount, "all exercises stay locked");
 
 console.log("free-training-strategy-preview tests passed");

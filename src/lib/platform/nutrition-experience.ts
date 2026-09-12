@@ -2,9 +2,12 @@ import {
   findContractAlternatives,
   formatMealAmount,
   getMealByExternalId,
+  listMealsByTypeAndGoal,
   mealDeliveryPath,
   type MealLibraryRecord,
 } from "./meal-library";
+import { mapQuizGoalToClientGoalId } from "./nutrition-strategy/goal-profile-resolver";
+import type { ClientGoalId } from "./nutrition-strategy/types";
 
 export type MealStatus = "upcoming" | "current" | "completed" | "skipped";
 
@@ -154,6 +157,39 @@ function requireLibraryMeal(externalId: string): MealLibraryRecord {
   return meal;
 }
 
+function pickGoalBreakfastExternalId(goalKey?: string | null): string {
+  const ranked = listMealsByTypeAndGoal("breakfast", goalKey ?? undefined);
+  if (ranked[0]) return ranked[0].external_id;
+  const anyBreakfast = listMealsByTypeAndGoal("breakfast");
+  return anyBreakfast[0]?.external_id ?? "MEAL-001";
+}
+
+/**
+ * Map quiz / client goal → Meal Library `suitable_goals` key for FREE breakfast.
+ */
+export function resolveFreeBreakfastGoalKey(
+  quizGoalId?: string | null,
+  clientGoalId?: ClientGoalId | null,
+): string {
+  const client =
+    clientGoalId ?? mapQuizGoalToClientGoalId(quizGoalId) ?? ("GENERAL_HEALTH_FITNESS" as ClientGoalId);
+  const map: Record<ClientGoalId, string> = {
+    FAT_LOSS: "fat_loss",
+    MUSCLE_GAIN: "muscle_gain",
+    BODY_RECOMPOSITION: "maintenance",
+    GLUTE_GROWTH: "muscle_gain",
+    WAIST_DEFINITION: "fat_loss",
+    UPPER_BODY_DEFINITION: "muscle_gain",
+    FEMININE_BALANCED_BODY: "maintenance",
+    STRENGTH_PERFORMANCE: "muscle_gain",
+    FITNESS_ENDURANCE: "maintenance",
+    MOBILITY_RECOVERY: "maintenance",
+    POSTURE_BACK_HEALTH: "maintenance",
+    GENERAL_HEALTH_FITNESS: "maintenance",
+  };
+  return map[client] ?? "maintenance";
+}
+
 function buildPilotSlot(input: {
   id: string;
   slotLabel: string;
@@ -221,8 +257,16 @@ const NUTRITION_PLAN_SLOT_DEFS = [
   },
 ] as const;
 
-export function getNutritionMealSlots(): MealSlot[] {
-  return NUTRITION_PLAN_SLOT_DEFS.map((slot) => buildPilotSlot(slot));
+export function getNutritionMealSlots(opts?: {
+  breakfastGoalKey?: string | null;
+}): MealSlot[] {
+  const breakfastId = pickGoalBreakfastExternalId(opts?.breakfastGoalKey);
+  return NUTRITION_PLAN_SLOT_DEFS.map((slot) =>
+    buildPilotSlot({
+      ...slot,
+      defaultExternalId: slot.id === "breakfast" ? breakfastId : slot.defaultExternalId,
+    }),
+  );
 }
 
 export const NUTRITION_MEAL_SLOTS: MealSlot[] = getNutritionMealSlots();
@@ -308,8 +352,11 @@ export function getMealByAlternativeId(
   return slot.alternatives.find((item) => item.id === alternativeId) ?? slot.defaultMeal;
 }
 
-export function findMealSlot(slotId: string): MealSlot | undefined {
-  return getNutritionMealSlots().find((slot) => slot.id === slotId);
+export function findMealSlot(
+  slotId: string,
+  opts?: { breakfastGoalKey?: string | null },
+): MealSlot | undefined {
+  return getNutritionMealSlots(opts).find((slot) => slot.id === slotId);
 }
 
 export function resolveMealStatus(input: {

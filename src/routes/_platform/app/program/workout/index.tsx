@@ -16,6 +16,10 @@ import {
 import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { WorkoutMotivationCta } from "@/components/platform/workout/WorkoutMotivationCta";
+import {
+  FreeSessionStructureLock,
+  FreeTrainingPromoVideo,
+} from "@/components/platform/workout/FreeTrainingMembershipPreview";
 import { WorkoutCalendarOverlay } from "@/components/platform/workout/WorkoutCalendarOverlay";
 import {
   ExerciseLockedCard,
@@ -458,7 +462,7 @@ function TodayWorkoutBriefCard({
   notice?: string;
   why?: string;
 }) {
-  const fullyLocked = lockedPreview && lockedPreviewIntensity === "strong";
+  const fullyLocked = Boolean(lockedPreview);
   const startClassName =
     "workout-start-cta relative flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary text-sm font-black text-primary-foreground transition-transform duration-[120ms] active:scale-[0.97]";
 
@@ -468,8 +472,14 @@ function TodayWorkoutBriefCard({
         aria-hidden
         className="workout-start-cta__streak pointer-events-none absolute inset-y-[-30%] left-0 w-[38%] bg-gradient-to-r from-transparent via-yellow-200/90 to-transparent"
       />
-      <Zap className="workout-start-cta__zap relative h-4 w-4 fill-current" strokeWidth={2.4} />
-      <span className="relative">{ctaLabel ?? "ابدأ تمرين"}</span>
+      {fullyLocked ? (
+        <Lock className="relative h-4 w-4" strokeWidth={2.4} />
+      ) : (
+        <Zap className="workout-start-cta__zap relative h-4 w-4 fill-current" strokeWidth={2.4} />
+      )}
+      <span className="relative">
+        {fullyLocked ? TRAINING_PRODUCT_COPY.upgradeCta : (ctaLabel ?? "ابدأ تمرين")}
+      </span>
     </>
   );
 
@@ -853,15 +863,8 @@ function WorkoutDayPage() {
   const [goalHeroVersion, setGoalHeroVersion] = useState(0);
   const goalSettingsQuery = useHeroGoalSettings();
   const isSelectedToday = selectedDayId === todayId;
-  const freeDayFullyLocked = freePreview && !isSelectedToday;
-  const lockedReason = freeDayFullyLocked
-    ? TRAINING_PRODUCT_COPY.freePreviewOtherDay
-    : TRAINING_PRODUCT_COPY.upgradeSheetTraining;
   const openTrainingUpgrade = () =>
-    openUpgradeWithContext(
-      "TRAINING",
-      freeDayFullyLocked ? lockedReason : TRAINING_PRODUCT_COPY.upgradeSheetTraining,
-    );
+    openUpgradeWithContext("TRAINING", TRAINING_PRODUCT_COPY.upgradeSheetTraining);
 
   const trainingQuery = useQuery({
     queryKey: PROFILE_TRAINING_KEY,
@@ -964,14 +967,19 @@ function WorkoutDayPage() {
     ? previewPlans[selectedDayId] ?? resolveWeekdayPlan(selectedDayId, true, previewPlans)
     : resolveWeekdayPlan(selectedDayId, hasWorkoutProgram);
   const sessionQuery = useWorkoutDaySession(
-    !hold.active && (freePreview || previewPlans) && !selectedPlan.isRestDay ? selectedPlan : null,
+    !hold.active && !freePreview && Boolean(previewPlans || hasWorkoutProgram) && !selectedPlan.isRestDay
+      ? selectedPlan
+      : null,
   );
   const sessionExercises = sessionQuery.data?.exercises ?? [];
   const todayKey = continuity.todayKey;
   const applyStoredProgress = selectedEntry.dateKey === todayKey;
   const sessionViews = buildSessionExerciseViews(sessionExercises, applyStoredProgress);
+  const structureExerciseCount = freePreview
+    ? (selectedPlan.prescriptions?.length ?? 0)
+    : sessionExercises.length;
   const workoutStats = {
-    exercises: sessionExercises.length,
+    exercises: structureExerciseCount,
     minutes: selectedPlan.durationMin,
     points: selectedPlan.points,
   };
@@ -1232,6 +1240,9 @@ function WorkoutDayPage() {
 
         {showWeeklySchedule ? (
         <>
+        {freePreview ? (
+          <FreeTrainingPromoVideo className={cn(WORKOUT_SECTION_PULL.step1, WORKOUT_CARD_BLEED)} />
+        ) : null}
         <section
           className={cn(
             "platform-card space-y-3.5 rounded-3xl p-4",
@@ -1283,13 +1294,15 @@ function WorkoutDayPage() {
               0,
             )}
             lockedPreview={freePreview && !selectedPlan.isRestDay}
-            lockedPreviewIntensity={freeDayFullyLocked ? "strong" : "light"}
+            lockedPreviewIntensity="strong"
             onLockedClick={openTrainingUpgrade}
             ctaLabel={
-              isSelectedToday &&
-              (interrupted || continuity.decision?.action === "RESUME_SESSION")
-                ? "استكمل التمرين"
-                : undefined
+              freePreview
+                ? TRAINING_PRODUCT_COPY.upgradeCta
+                : isSelectedToday &&
+                    (interrupted || continuity.decision?.action === "RESUME_SESSION")
+                  ? "استكمل التمرين"
+                  : undefined
             }
             why={whyCopy}
             notice={
@@ -1308,6 +1321,14 @@ function WorkoutDayPage() {
             <p className="border-t border-border/45 pt-3.5 text-center text-[10px] font-medium text-muted-foreground">
               لا توجد تمارين في هذا اليوم — اختر يوم تدريب لمعاينة الحصة.
             </p>
+          ) : freePreview ? (
+            <FreeSessionStructureLock
+              dayLabel={selectedDayLabel}
+              muscleTitle={sessionTitle}
+              exerciseCount={structureExerciseCount}
+              durationMin={selectedPlan.durationMin || 60}
+              onUpgrade={openTrainingUpgrade}
+            />
           ) : sessionQuery.isLoading ? (
             <p className="border-t border-border/45 pt-3.5 text-center text-[10px] font-bold text-muted-foreground">
               جاري تحميل تمارين الحصة…
@@ -1329,8 +1350,8 @@ function WorkoutDayPage() {
             <SessionExercisesSection
               exercises={sessionViews}
               dayId={selectedDayId}
-              freePreview={freePreview}
-              freeDayFullyLocked={freeDayFullyLocked}
+              freePreview={false}
+              freeDayFullyLocked={false}
               entitlements={entitlements}
               onLockedClick={openTrainingUpgrade}
             />
@@ -1339,9 +1360,7 @@ function WorkoutDayPage() {
           {!selectedPlan.isRestDay ? (
             <WorkoutMotivationCta
               points={workoutStats.points}
-              dayId={selectedDayId}
               freePreview={freePreview}
-              freeTrialAvailable={freePreview && isSelectedToday}
               onLockedClick={openTrainingUpgrade}
             />
           ) : null}

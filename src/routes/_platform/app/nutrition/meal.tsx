@@ -3,10 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Lock, MoreVertical, Sparkles } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import {
-  NUTRITION_DAY_LOCKED_REASON,
-  NUTRITION_LOCKED_REASON,
   NutritionEmptyState,
-  NutritionLockedOverlay,
   NutritionMealImage,
   NutritionMotionSection,
   NutritionOfflineBanner,
@@ -25,7 +22,10 @@ import {
   findMealSlot,
   getTodayDateKey,
   isFreeUnlockedMealSlot,
+  resolveFreeBreakfastGoalKey,
 } from "@/lib/platform/nutrition-experience";
+import { NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
+import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { cn } from "@/lib/utils";
 
 type MealSearch = {
@@ -48,19 +48,23 @@ function MealDetailsPage() {
   const freePreview = !features.nutrition_plan;
   const online = useOnlineStatus();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const plan = useNutritionPlan(date, { catalogPreview: freePreview });
+  const breakfastGoalKey = freePreview
+    ? resolveFreeBreakfastGoalKey(readQuizProgress()?.goalId)
+    : null;
+  const plan = useNutritionPlan(date, {
+    catalogPreview: freePreview,
+    breakfastGoalKey,
+  });
   const entry = plan.meals.find((item) => item.slot.id === mealId);
-  const slot = entry?.slot ?? (freePreview ? findMealSlot(mealId) : undefined);
+  const slot =
+    entry?.slot ??
+    (freePreview ? findMealSlot(mealId, { breakfastGoalKey }) : undefined);
   const unlocked = isFreeUnlockedMealSlot({
     slotId: mealId,
     dateKey: plan.dateKey,
     hasNutritionPlan: !freePreview,
     todayKey: getTodayDateKey(),
   });
-  const lockedReason =
-    plan.dateKey === getTodayDateKey()
-      ? NUTRITION_LOCKED_REASON
-      : NUTRITION_DAY_LOCKED_REASON;
 
   if (!slot || !entry) {
     return (
@@ -70,6 +74,36 @@ function MealDetailsPage() {
           title="لا توجد وجبات اليوم."
           description="عد إلى لوحة التغذية لاختيار وجبة من خطتك اليومية."
         />
+      </PlatformStack>
+    );
+  }
+
+  if (!unlocked) {
+    return (
+      <PlatformStack className="gap-3.5 pb-4">
+        <NutritionOfflineBanner online={online} />
+        <PlatformDetailHeader title={slot.slotLabel} backTo="/app/nutrition" />
+        <NutritionMotionSection>
+          <div className={cn(nutritionCardClass, "space-y-3 p-5 text-center")}>
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-muted text-muted-foreground">
+              <Lock className="h-6 w-6" strokeWidth={2.3} />
+            </span>
+            <h2 className="text-[16px] font-black text-foreground">{slot.slotLabel}</h2>
+            <p className="text-[12px] font-bold text-muted-foreground">
+              {NUTRITION_PRODUCT_COPY.lockedMealLabel}
+            </p>
+            <button
+              type="button"
+              onClick={() => openUpgrade(NUTRITION_PRODUCT_COPY.freeUpgradeBody)}
+              className="mt-1 flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground"
+            >
+              {NUTRITION_PRODUCT_COPY.freeUpgradeCta}
+            </button>
+            <p className="text-[10px] font-medium text-muted-foreground">
+              {NUTRITION_PRODUCT_COPY.freeUpgradeBody}
+            </p>
+          </div>
+        </NutritionMotionSection>
       </PlatformStack>
     );
   }
@@ -105,15 +139,8 @@ function MealDetailsPage() {
               height={420}
               sizes="(max-width: 430px) 100vw, 390px"
               priority
-              className={cn("h-full w-full", !unlocked && "opacity-70 saturate-75")}
+              className="h-full w-full"
             />
-            {!unlocked ? (
-              <span className="absolute inset-0 grid place-items-center bg-black/25">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-primary shadow-sm">
-                  <Lock className="h-5 w-5" strokeWidth={2.3} />
-                </span>
-              </span>
-            ) : null}
           </div>
           <div className="space-y-3 p-4 text-right">
             <div>
@@ -175,14 +202,6 @@ function MealDetailsPage() {
               </li>
             ))}
           </ul>
-          {!unlocked ? (
-            <NutritionLockedOverlay
-              active
-              intensity="medium"
-              message="مكونات مقفلة — فعّل برنامجك"
-              onUnlockClick={() => openUpgrade(lockedReason)}
-            />
-          ) : null}
         </section>
       </NutritionMotionSection>
       ) : null}
@@ -201,58 +220,22 @@ function MealDetailsPage() {
               </li>
             ))}
           </ol>
-          {!unlocked ? (
-            <NutritionLockedOverlay
-              active
-              intensity="strong"
-              message="طريقة التحضير مقفلة — فعّل برنامجك"
-              onUnlockClick={() => openUpgrade(lockedReason)}
-            />
-          ) : null}
         </section>
       </NutritionMotionSection>
       ) : null}
 
       <NutritionMotionSection delay={0.2} className="space-y-2.5">
-        {unlocked ? (
-          <>
-            <MealLogButton
-              completed={isCompleted}
-              onLog={() => plan.markCompleted(slot.id)}
-            />
-            <Link
-              to="/app/nutrition/alternatives"
-              search={{ mealId: slot.id, date: plan.dateKey }}
-              className="flex h-12 w-full items-center justify-center rounded-2xl border border-primary/30 bg-card text-sm font-black text-primary transition active:scale-[0.98]"
-            >
-              استبدال الوجبة
-            </Link>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => openUpgrade(lockedReason)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-cta transition active:scale-[0.98]"
-            >
-              <Lock className="h-4 w-4" strokeWidth={2.2} />
-              فعّل البرنامج لتسجيل الوجبة
-            </button>
-            <button
-              type="button"
-              onClick={() => openUpgrade(lockedReason)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-card text-sm font-black text-primary transition active:scale-[0.98]"
-            >
-              <Lock className="h-4 w-4" strokeWidth={2.2} />
-              استبدال الوجبة
-            </button>
-          </>
-        )}
-        {!unlocked ? (
-          <p className="text-center text-[9px] font-medium text-muted-foreground">
-            🔓 وجبة الفطور ليوم اليوم متاحة مجاناً — باقي الوجبات تحتاج تفعيل البرنامج.
-          </p>
-        ) : null}
+        <MealLogButton
+          completed={isCompleted}
+          onLog={() => plan.markCompleted(slot.id)}
+        />
+        <Link
+          to="/app/nutrition/alternatives"
+          search={{ mealId: slot.id, date: plan.dateKey }}
+          className="flex h-12 w-full items-center justify-center rounded-2xl border border-primary/30 bg-card text-sm font-black text-primary transition active:scale-[0.98]"
+        >
+          استبدال الوجبة
+        </Link>
       </NutritionMotionSection>
     </PlatformStack>
   );

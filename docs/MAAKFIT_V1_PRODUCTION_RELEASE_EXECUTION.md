@@ -65,7 +65,7 @@ WHERE n.nspname = 'public'
 
 ## Production smoke (post-deploy)
 
-1. **Free:** Quiz goal → `/app/program/workout` — preview visible, one exercise/day, no assignment row.
+1. **Free:** Quiz goal → `/app/program/workout` — promo video + program structure preview, exercises locked, no assignment row. Nutrition: goal breakfast open, remaining meals locked. See [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md).
 2. **Paid (manual grant):** Admin override Essential → auto-assign → runtime `ok`.
 3. **Nutrition:** Admin generate Strategy V1 → client runtime + one swap.
 4. **Mobile 390px:** Home, workout, nutrition — no horizontal scroll, CTAs tappable.

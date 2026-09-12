@@ -15,6 +15,7 @@
 | 1 | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) | أين وصلنا الآن — الحالة الحية |
 | 1b | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) | PRODUCTION vs STAGING vs LOCAL — عزل قواعد البيانات |
 | 2 | [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md) | معمارية المنتج: تسويق منفصل عن التطبيق |
+| 2b | [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) | عقد العضو المجاني: معاينة هيكل + فطور حسب الهدف |
 | 3 | [`PROJECT_REPORT.md`](./PROJECT_REPORT.md) | تقرير مراجعة كامل + فرص تحسين تجربة المستخدم |
 | 4 | [`../AGENTS.md`](../AGENTS.md) | قواعد العمل للـ AI: Git، Build، المناطق المحمية |
 | 5 | [`../README.md`](../README.md) | مدخل سريع للمستودع |

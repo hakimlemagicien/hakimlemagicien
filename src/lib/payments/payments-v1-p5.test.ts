@@ -22,16 +22,18 @@ function assert(condition: unknown, message: string): asserts condition {
 
 const userId = "11111111-2222-3333-4444-555555555555";
 
-// T1–T3 Free training
+// T1–T3 Free training — FREE Membership V1: structure only (0 playable exercises)
 assert(isTrainingPreviewMode(FREE_ENTITLEMENTS), "T1 free enters training preview mode");
 assert(
-  isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }),
-  "T2 free exercise #1 available",
+  !isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }),
+  "T2 free exercise #1 locked (structure preview only)",
 );
 assert(
   !isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 1, { isToday: true }),
   "T3 free exercise #2+ locked",
 );
+assert(FREE_ENTITLEMENTS.training.allowedExercisesPerSession === 0, "T2b allowedExercisesPerSession=0");
+assert(FREE_ENTITLEMENTS.training.previewExercises, "T2c structure preview on");
 
 // T8–T12 Nutrition free
 assert(!FREE_ENTITLEMENTS.nutrition.fullDay, "T8 free nutrition preview");

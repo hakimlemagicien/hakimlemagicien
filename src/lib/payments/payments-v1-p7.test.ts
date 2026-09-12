@@ -68,10 +68,11 @@ const premium = normalizeEntitlements({
   coach_chat: false,
 });
 
-// T1 Free training entitlement
+// T1 Free training entitlement — structure preview, no playable exercise
 assert(isTrainingPreviewMode(FREE_ENTITLEMENTS), "T1");
-assert(isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }), "T1 exercise 1");
+assert(!isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }), "T1 exercise 1 locked");
 assert(!isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 1, { isToday: true }), "T1 exercise 2 locked");
+assert(FREE_ENTITLEMENTS.training.allowedExercisesPerSession === 0, "T1 allowed=0");
 
 // T2 Free nutrition entitlement
 assert(
