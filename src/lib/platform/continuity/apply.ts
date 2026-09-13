@@ -2,6 +2,7 @@ import type { ClientTrainingRuntime } from "@/lib/platform/assigned-program-api"
 import { formatRepsLabel } from "@/lib/platform/training-assignment";
 import type { TodayWorkoutPrescription } from "@/lib/platform/today-workout";
 import { applySessionPresentationToPlan } from "@/lib/platform/session-muscle-presentation";
+import { preferredMediaVariantFromAssignment } from "@/lib/platform/exercise-media-variants";
 import type { WeekdayId, WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 import { emptyRestPlan } from "@/lib/platform/weekly-workout-schedule";
 import type { ContinuityDecision, ContinuityProgramDay, ContinuitySessionFact } from "./types";
@@ -88,6 +89,7 @@ export function runtimeDayToPlan(
     calories: day.estimated_calories ?? 0,
     points: 100,
     programDayId: day.day_id ?? programDayId,
+    preferredMediaVariant: preferredMediaVariantFromAssignment(runtime.assignment),
   });
 }
 

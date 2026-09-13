@@ -23,8 +23,8 @@ import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   getExerciseStageCover,
   getExerciseStageGuide,
-  getExerciseStageListThumb,
 } from "@/lib/platform/exercise-stage-media";
+import { resolvePreferredExerciseStillThumb } from "@/lib/platform/exercise-media-variants";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { formatExerciseVolume } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
@@ -281,7 +281,17 @@ function ExercisePlayerStage({
     externalId: currentExercise.external_id,
     videoStatus: currentExercise.videoStatus,
   });
-  const stillPoster = hasRealVideo ? null : getExerciseStageCover(currentExercise.external_id);
+  const femaleStill = resolvePreferredExerciseStillThumb({
+    externalId: currentExercise.external_id,
+    preferredVariant: currentExercise.preferredMediaVariant ?? "STANDARD",
+    metadata: currentExercise.mediaVariantsMetadata,
+  });
+  const stageCover = getExerciseStageCover(currentExercise.external_id);
+  const stillPoster = hasRealVideo
+    ? null
+    : femaleStill
+      ? { src: femaleStill, alt: currentExercise.name }
+      : stageCover;
   return (
     <div className="bg-background pb-2">
       <header className="space-y-2 px-1 pt-1">
@@ -656,7 +666,14 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
                       externalId: exercise.external_id,
                       videoStatus: exercise.videoStatus,
                     });
-                    const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
+                    const stillThumb = preferVideoThumb
+                      ? null
+                      : resolvePreferredExerciseStillThumb({
+                          externalId: exercise.external_id,
+                          preferredVariant: exercise.preferredMediaVariant ?? "STANDARD",
+                          metadata: exercise.mediaVariantsMetadata,
+                        });
+
 
                     return (
                       <button

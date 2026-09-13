@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { formatRepsLabel, ISO_DAY_TO_WEEKDAY } from "@/lib/platform/training-assignment";
 import { applySessionPresentationToPlan } from "@/lib/platform/session-muscle-presentation";
+import { preferredMediaVariantFromAssignment } from "@/lib/platform/exercise-media-variants";
 import type { TodayWorkoutPrescription } from "@/lib/platform/today-workout";
 import type { WeekdayId, WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 
@@ -17,6 +18,8 @@ export type ClientTrainingRuntime = {
     duration_weeks: number | null;
     days_per_week: number | null;
     progression_strategy?: string | null;
+    /** Frozen at assign from template_contract; missing → treat as STANDARD. */
+    preferred_media_variant?: "FEMALE" | "STANDARD";
   } | null;
   days: Array<{
     day_id?: string;
@@ -73,6 +76,7 @@ export async function fetchMyTrainingRuntime(): Promise<ClientTrainingRuntime> {
       duration_weeks: assignment.duration_weeks == null ? null : Number(assignment.duration_weeks),
       days_per_week: assignment.days_per_week == null ? null : Number(assignment.days_per_week),
       progression_strategy: (assignment.progression_strategy as string | null) ?? null,
+      preferred_media_variant: preferredMediaVariantFromAssignment(assignment),
     },
     days: ((row.days as ClientTrainingRuntime["days"]) ?? []).map((day) => ({
       ...day,
@@ -90,6 +94,7 @@ export async function fetchMyTrainingRuntime(): Promise<ClientTrainingRuntime> {
 
 export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<WeekdayId, WeekdayWorkoutPlan> {
   const ids: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const preferredMediaVariant = preferredMediaVariantFromAssignment(runtime.assignment);
   const rest = (id: WeekdayId): WeekdayWorkoutPlan => ({
     id,
     muscleTitle: "",
@@ -99,6 +104,7 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
     durationMin: 0,
     calories: 0,
     points: 0,
+    preferredMediaVariant,
   });
   const map = Object.fromEntries(ids.map((id) => [id, rest(id)])) as Record<WeekdayId, WeekdayWorkoutPlan>;
   if (runtime.reason !== "ok") return map;
@@ -129,6 +135,7 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
       calories: day.estimated_calories ?? 0,
       points: isRest ? 0 : 100,
       programDayId: day.day_id,
+      preferredMediaVariant,
     });
   }
   return map;

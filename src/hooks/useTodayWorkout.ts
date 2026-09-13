@@ -6,6 +6,10 @@ import {
 } from "@/lib/platform/exercise-library";
 import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
 import {
+  resolvePreferredExerciseStillThumb,
+  resolvePreferredExerciseVideoPlayback,
+} from "@/lib/platform/exercise-media-variants";
+import {
   TODAY_WORKOUT_BRIEF,
   TODAY_WORKOUT_PRESCRIPTIONS,
   type TodayWorkoutPrescription,
@@ -19,6 +23,7 @@ import { activityRoleLabelAr } from "@/lib/platform/training-templates/activity-
 import {
   getWeekdayIdFromDate,
   resolveWeekdayPlan,
+  type WeekdayId,
   type WeekdayWorkoutPlan,
 } from "@/lib/platform/weekly-workout-schedule";
 
@@ -33,17 +38,45 @@ export type TodayWorkoutSession = {
 async function buildSessionExercise(
   prescription: TodayWorkoutPrescription,
   details: ExerciseDetails,
+  preferredMediaVariant: "FEMALE" | "STANDARD" = "STANDARD",
 ): Promise<WorkoutSessionExercise> {
+  const metadata =
+    details.metadata && typeof details.metadata === "object"
+      ? (details.metadata as Record<string, unknown>)
+      : null;
+
+  const femaleStill = resolvePreferredExerciseStillThumb({
+    externalId: details.external_id,
+    preferredVariant: preferredMediaVariant,
+    metadata,
+  });
+
+  const playback = resolvePreferredExerciseVideoPlayback({
+    externalId: details.external_id,
+    preferredVariant: preferredMediaVariant,
+    metadata,
+    standardVideoPath: details.video_path,
+    standardVideoStatus: details.video_status,
+  });
+
   const listMedia = resolveExerciseListMediaPath({
     status: details.video_status,
     thumbnailPath: details.thumbnail_path,
     videoPath: details.video_path,
   });
-  const thumbnailUrl = await fetchResolvedExerciseMediaUrl({
-    status: listMedia.status,
-    path: listMedia.path,
-    kind: listMedia.kind,
-  });
+  const thumbnailUrl =
+    femaleStill ??
+    (await fetchResolvedExerciseMediaUrl({
+      status: listMedia.status,
+      path: listMedia.path,
+      kind: listMedia.kind,
+    }));
+
+  const videoPath = playback.path ?? details.video_path;
+  const videoStatus =
+    playback.usePublicPath && playback.path
+      ? ("ready" as const)
+      : details.video_status;
 
   return {
     id: details.id,
@@ -57,8 +90,10 @@ async function buildSessionExercise(
     restLabel: formatRestLabel(prescription.rest_seconds),
     suggestedWeightKg: prescription.suggested_weight_kg ?? 0,
     thumbnailUrl,
-    videoStatus: details.video_status,
-    videoPath: details.video_path,
+    preferredMediaVariant,
+    mediaVariantsMetadata: metadata,
+    videoStatus,
+    videoPath,
     instructionsStatus: details.instructions_status,
     instructionsVideoPath: details.instructions_video_path,
     coachNotes: prescription.notes_ar ?? details.coach_notes,
@@ -94,13 +129,14 @@ async function fetchWorkoutDaySession(plan: WeekdayWorkoutPlan): Promise<TodayWo
   const byExternalId = new Map(rows.map((row) => [row.external_id, row]));
 
   const missingExternalIds = externalIds.filter((id) => !byExternalId.has(id));
+  const preferredMediaVariant = plan.preferredMediaVariant === "FEMALE" ? "FEMALE" : "STANDARD";
   const exercises = (
     await Promise.all(
       plan.prescriptions.map(async (prescription) => {
         const details = byExternalId.get(prescription.external_id);
         if (!details) return null;
         try {
-          return await buildSessionExercise(prescription, details);
+          return await buildSessionExercise(prescription, details, preferredMediaVariant);
         } catch {
           return null;
         }

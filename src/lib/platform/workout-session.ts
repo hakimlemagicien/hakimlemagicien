@@ -22,6 +22,11 @@ export type WorkoutSessionExercise = {
   restLabel: string;
   suggestedWeightKg: number;
   thumbnailUrl: string | null;
+  /** Template media preference — FEMALE for Glute contracts; default STANDARD. */
+  preferredMediaVariant?: "FEMALE" | "STANDARD";
+  /** exercises.metadata (media_variants) for FEMALE resolve. */
+  mediaVariantsMetadata?: Record<string, unknown> | null;
+
   videoStatus: ExerciseMediaStatus;
   videoPath: string | null;
   instructionsStatus: ExerciseMediaStatus;

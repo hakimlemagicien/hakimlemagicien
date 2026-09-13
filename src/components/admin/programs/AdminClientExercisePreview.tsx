@@ -30,6 +30,7 @@ import {
   getExerciseStageCover,
   getExerciseStageListThumb,
 } from "@/lib/platform/exercise-stage-media";
+import { resolvePreferredExerciseStillThumb } from "@/lib/platform/exercise-media-variants";
 import type { ExerciseMediaStatus } from "@/lib/platform/exercise-media";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ type Props = {
   exercises: AdminProgramExercise[];
   startIndex: number;
   dayTitle: string;
+  preferredMediaVariant?: "FEMALE" | "STANDARD";
   onClose: () => void;
 };
 
@@ -92,7 +94,14 @@ function ExerciseRxStrip({
   );
 }
 
-export function AdminClientExercisePreview({ open, exercises, startIndex, dayTitle, onClose }: Props) {
+export function AdminClientExercisePreview({
+  open,
+  exercises,
+  startIndex,
+  dayTitle,
+  preferredMediaVariant = "STANDARD",
+  onClose,
+}: Props) {
   const [index, setIndex] = useState(startIndex);
   const [phase, setPhase] = useState<PreviewPhase>("ready");
   const [setNumber, setSetNumber] = useState(1);
@@ -188,13 +197,26 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
   const overrideThumb = clientFacingExerciseThumb(current);
   const media = current.exercise_id ? mediaById[current.exercise_id] : undefined;
   const stageCover = getExerciseStageCover(externalId);
-  const listThumb = overrideThumb || getExerciseStageListThumb(externalId) || stageCover?.src || null;
+  const listThumb =
+    overrideThumb ||
+    resolvePreferredExerciseStillThumb({
+      externalId,
+      preferredVariant: preferredMediaVariant,
+    }) ||
+    getExerciseStageListThumb(externalId) ||
+    stageCover?.src ||
+    null;
   const totalSets = Math.max(1, current.sets || 1);
   const repsLabel = formatReps(current) || "—";
   const restLabel = formatRestSeconds(current.rest_seconds);
   const weightLabel = current.suggested_weight_kg != null ? `${current.suggested_weight_kg} كغ` : "—";
   const progressPct = Math.round(((safeIndex + (setNumber - 1) / totalSets) / Math.max(list.length, 1)) * 100);
-  const bundledSrc = media?.useBundled && externalId ? `/exercises/${externalId}/video/exercise.mp4` : null;
+  const bundledSrc =
+    preferredMediaVariant === "FEMALE" && externalId
+      ? `/exercises/${externalId}/female/video/exercise.mp4`
+      : media?.useBundled && externalId
+        ? `/exercises/${externalId}/video/exercise.mp4`
+        : null;
   const sessionActive = phase === "active" || phase === "rest";
   const currentDoneSets = completedSets[safeIndex] ?? 0;
 
@@ -383,6 +405,10 @@ export function AdminClientExercisePreview({ open, exercises, startIndex, dayTit
                     const isDone = doneSets >= total;
                     const thumb =
                       clientFacingExerciseThumb(exercise) ||
+                      resolvePreferredExerciseStillThumb({
+                        externalId: exercise.exercise_external_id,
+                        preferredVariant: preferredMediaVariant,
+                      }) ||
                       getExerciseStageListThumb(exercise.exercise_external_id) ||
                       getExerciseStageCover(exercise.exercise_external_id ?? "")?.src ||
                       null;

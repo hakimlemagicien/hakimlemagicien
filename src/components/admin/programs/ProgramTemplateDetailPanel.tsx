@@ -1,17 +1,37 @@
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ProgramTemplateBadges } from "@/components/admin/programs/ProgramTemplateBadges";
 import {
   activityRoleLabelAr,
   mapLegacyExerciseRoleToActivityLabel,
   presentDetail,
-  type TemplatePresentation,
 } from "@/lib/admin/admin-template-ui";
 import type { AdminProgramDetail } from "@/lib/admin/admin-programs-api";
 import { formatReps, formatRest } from "@/lib/admin/admin-program-builder";
+import {
+  fetchGluteFemaleMediaVariantStates,
+  isGluteFemaleMediaTemplateSlug,
+  presentFemaleMediaAdminReadiness,
+} from "@/lib/platform/exercise-media-variants";
 
 export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDetail }) {
   const presentation = presentDetail(detail);
   const contract = presentation.contract;
+  const gluteApplies =
+    contract?.media_preference.preferred_media_variant === "FEMALE" ||
+    isGluteFemaleMediaTemplateSlug(detail.slug);
+  const statesQuery = useQuery({
+    queryKey: ["admin-glute-female-media-states", detail.slug],
+    queryFn: fetchGluteFemaleMediaVariantStates,
+    enabled: gluteApplies,
+    staleTime: 60_000,
+  });
+  const femaleMedia = presentFemaleMediaAdminReadiness({
+    templateSlug: detail.slug,
+    preferredMediaVariant: contract?.media_preference.preferred_media_variant ?? null,
+    states: statesQuery.data,
+    includeP0: true,
+  });
 
   return (
     <section className="tpl-detail" aria-label="تفاصيل القالب المنظمة">
@@ -113,6 +133,22 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
             <>
               <MetaRow label="تمارين ناقصة" value={String(contract.library_readiness.missing_exercise_count)} />
               <MetaRow label="وسائط ناقصة" value={String(contract.library_readiness.missing_media_count)} />
+            </>
+          ) : null}
+          {femaleMedia.applies ? (
+            <>
+              <MetaRow label="صور أنثوية" value={femaleMedia.images_label} />
+              <MetaRow label="ميديا عرض أنثوية" value={femaleMedia.display_label} />
+              <MetaRow label="فيديو أنثوي حقيقي" value={femaleMedia.real_videos_label} />
+              <MetaRow label="ترقية الفيديو" value={femaleMedia.video_upgrade_label_ar} />
+              <MetaRow label="إطلاق Glute" value={femaleMedia.release_label_ar} />
+              {femaleMedia.p0 ? (
+                <>
+                  <MetaRow label="P0 صور" value={femaleMedia.p0.images_label} />
+                  <MetaRow label="P0 عرض" value={femaleMedia.p0.display_label} />
+                  <MetaRow label="P0 فيديو حقيقي" value={femaleMedia.p0.real_videos_label} />
+                </>
+              ) : null}
             </>
           ) : null}
         </DetailBlock>

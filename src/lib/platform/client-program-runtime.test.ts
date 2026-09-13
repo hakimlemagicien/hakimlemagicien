@@ -33,6 +33,7 @@ const assigned: ClientTrainingRuntime = {
     template_version: 1,
     duration_weeks: 8,
     days_per_week: 4,
+    preferred_media_variant: "FEMALE",
   },
   days: [
     {
@@ -63,6 +64,7 @@ const assigned: ClientTrainingRuntime = {
 const plans = runtimeToWeekdayPlans(assigned);
 assert(!plans.mon.isRestDay, "assigned Monday workout is used");
 assert(plans.mon.prescriptions[0]?.assignmentExerciseId === "ex1", "prescription keeps snapshot exercise id");
+assert(plans.mon.preferredMediaVariant === "FEMALE", "runtime preference propagates to weekday plan");
 assert(plans.sun.isRestDay, "unmapped days stay rest");
 
 const paidEmpty = resolveWeekdayPlan("mon", true);

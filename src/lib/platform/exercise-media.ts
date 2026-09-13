@@ -97,6 +97,8 @@ export async function fetchExerciseMediaUrl(path: string | null): Promise<string
   const value = path?.trim();
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return value;
+  // Public Vite assets (female/standard packs under /public/exercises/...)
+  if (value.startsWith("/exercises/")) return value;
 
   const objectPath = normalizeStorageObjectPath(value);
 

@@ -53,7 +53,7 @@ import {
   type WeekDayEntry,
   type WeekdayId,
 } from "@/lib/platform/weekly-workout-schedule";
-import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { resolvePreferredExerciseStillThumb } from "@/lib/platform/exercise-media-variants";
 import {
   formatExerciseVolume,
   type WorkoutSessionExercise,
@@ -626,7 +626,14 @@ function SessionExercisePathRow({
     externalId: exercise.external_id,
     videoStatus: exercise.videoStatus,
   });
-  const stillThumb = preferVideoThumb ? null : getExerciseStageListThumb(exercise.external_id);
+  const stillThumb = preferVideoThumb
+    ? null
+    : resolvePreferredExerciseStillThumb({
+        externalId: exercise.external_id,
+        preferredVariant: exercise.preferredMediaVariant ?? "STANDARD",
+        metadata: exercise.mediaVariantsMetadata,
+      });
+
   const thumbClass = cn(
     "h-full w-full object-cover object-center",
     !isUnlocked && "opacity-45 saturate-50",

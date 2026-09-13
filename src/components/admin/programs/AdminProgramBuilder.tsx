@@ -94,6 +94,10 @@ import {
 import { presentDetail } from "@/lib/admin/admin-template-ui";
 import { ProgramTemplateBadges } from "@/components/admin/programs/ProgramTemplateBadges";
 import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import {
+  preferredMediaVariantFromTemplateMetadata,
+  resolvePreferredExerciseStillThumb,
+} from "@/lib/platform/exercise-media-variants";
 
 type Props = {
   draft: AdminProgramDetail;
@@ -151,6 +155,10 @@ export function AdminProgramBuilder({
   const debouncedQuery = useDebouncedValue(libQuery);
   const builder = builderMetadataFrom(draft.metadata);
   const targetGender = programTargetGenderFromMetadata(draft.metadata);
+  const preferredMediaVariant = useMemo(
+    () => preferredMediaVariantFromTemplateMetadata(draft.metadata as Record<string, unknown>),
+    [draft.metadata],
+  );
   const week = draft.weeks[weekIndex] ?? draft.weeks[0];
   const day = week?.days[dayIndex] ?? week?.days[0];
   const locked = structureLocked || Boolean(draft.archived_at);
@@ -1236,6 +1244,10 @@ export function AdminProgramBuilder({
                     {day.exercises.map((exercise, index) => {
                       const thumb =
                         clientFacingExerciseThumb(exercise) ||
+                        resolvePreferredExerciseStillThumb({
+                          externalId: exercise.exercise_external_id,
+                          preferredVariant: preferredMediaVariant,
+                        }) ||
                         getExerciseStageListThumb(exercise.exercise_external_id);
                       return (
                         <li key={`${exercise.exercise_id}-${index}`}>
@@ -1263,6 +1275,7 @@ export function AdminProgramBuilder({
         exercises={day.exercises}
         startIndex={clientPreviewIndex ?? 0}
         dayTitle={day.title_ar || "حصة اليوم"}
+        preferredMediaVariant={preferredMediaVariant}
         onClose={() => setClientPreviewIndex(null)}
       />
 

@@ -28,6 +28,8 @@ export type WeekdayWorkoutPlan = {
   calories: number;
   points: number;
   programDayId?: string;
+  /** From template media_preference — FEMALE for Glute contracts. */
+  preferredMediaVariant?: "FEMALE" | "STANDARD";
 };
 
 const WEEKDAY_IDS: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];

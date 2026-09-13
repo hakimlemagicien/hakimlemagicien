@@ -39,6 +39,14 @@ assert(migration.includes("client_program_weeks_own_select"), "owner read on wee
 assert(migration.includes("GRANT SELECT ON public.client_program_weeks TO authenticated"), "select only on snapshot weeks");
 assert(migration.includes("REVOKE ALL ON public.client_program_weeks FROM anon, authenticated"), "default deny then select grant");
 
+const mediaVariantMigration = readFileSync(
+  join(root, "supabase/migrations/20260913140000_freeze_preferred_media_variant_on_assignment.sql"),
+  "utf8",
+);
+assert(mediaVariantMigration.includes("preferred_media_variant"), "freeze preferred_media_variant column");
+assert(mediaVariantMigration.includes("media_preference"), "reads template media_preference");
+assert(mediaVariantMigration.includes("DEFAULT 'STANDARD'"), "historical default STANDARD");
+
 const browser = readFileSync(join(root, "src/integrations/supabase/client.ts"), "utf8");
 assert(!browser.includes("SERVICE_ROLE"), "no service_role in browser");
 

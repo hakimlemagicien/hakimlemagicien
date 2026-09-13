@@ -14,6 +14,11 @@ import {
   APPROVED_36_TEMPLATE_REFS,
   type Approved36TemplateRef,
 } from "./approved-36-reference";
+import {
+  GLUTE_FEMALE_MEDIA_REQUIRED_EXTERNAL_IDS,
+  calculateFemaleMediaCompleteness,
+  calculateGluteFemaleMediaCompleteness,
+} from "@/lib/platform/exercise-media-variants";
 
 export type ImportReadiness =
   | "READY_FOR_IMPORT"
@@ -490,8 +495,30 @@ export function auditDifficultyMismatches(v2: V2Exercise[] = loadV2()) {
   return { review_candidates: review, status: "CLASSIFIED" as const };
 }
 
-/** Female media variants are not modeled on exercise rows today. */
+/** Female media variants live on exercises.metadata.media_variants — not duplicate exercise rows. */
 export function auditFemaleMedia(v2: V2Exercise[] = loadV2(), relevantIds?: string[]) {
+  const gluteScope =
+    !relevantIds?.length ||
+    relevantIds.every((id) =>
+      (GLUTE_FEMALE_MEDIA_REQUIRED_EXTERNAL_IDS as readonly string[]).includes(id),
+    );
+
+  if (gluteScope && (!relevantIds?.length || relevantIds.length === GLUTE_FEMALE_MEDIA_REQUIRED_EXTERNAL_IDS.length)) {
+    const completeness = calculateGluteFemaleMediaCompleteness([]);
+    return {
+      TOTAL_RELEVANT_EXERCISES: completeness.required_exercises,
+      FEMALE_MEDIA_READY: completeness.fully_complete_exercises,
+      STANDARD_ONLY: completeness.required_exercises - completeness.fully_complete_exercises,
+      MEDIA_MISSING: 0,
+      FEMALE_MEDIA_COVERAGE_PERCENT: Math.round(completeness.full_percent),
+      FEMALE_IMAGES_READY: completeness.female_images_ready,
+      FEMALE_VIDEOS_READY: completeness.female_videos_ready,
+      FEMALE_MEDIA_COMPLETENESS_REQUIRED_BEFORE_RELEASE: true,
+      resolution_order: ["FEMALE", "STANDARD", "MEDIA_MISSING"] as const,
+      note: "Variants via exercises.metadata.media_variants + public/exercises/<id>/female/. Completeness independent of runtime STANDARD fallback.",
+    };
+  }
+
   const relevant = relevantIds?.length
     ? v2.filter((e) => relevantIds.includes(e.external_id))
     : v2.filter((e) => {
@@ -500,21 +527,22 @@ export function auditFemaleMedia(v2: V2Exercise[] = loadV2(), relevantIds?: stri
         return g.includes("glute") || m === "GLUTES" || e.exercise_type === "warmup" || e.exercise_type === "mobility";
       });
 
-  const TOTAL_RELEVANT_EXERCISES = relevant.length;
-  const FEMALE_MEDIA_READY = 0;
-  const STANDARD_ONLY = TOTAL_RELEVANT_EXERCISES; // identity exists; female variant absent
-  const MEDIA_MISSING = 0; // standard pack may still be partial — counted in general media
-  const FEMALE_MEDIA_COVERAGE_PERCENT = TOTAL_RELEVANT_EXERCISES === 0 ? 0 : Math.round((FEMALE_MEDIA_READY / TOTAL_RELEVANT_EXERCISES) * 100);
+  const completeness = calculateFemaleMediaCompleteness(
+    relevant.map((e) => e.external_id),
+    [],
+  );
 
   return {
-    TOTAL_RELEVANT_EXERCISES,
-    FEMALE_MEDIA_READY,
-    STANDARD_ONLY,
-    MEDIA_MISSING,
-    FEMALE_MEDIA_COVERAGE_PERCENT,
+    TOTAL_RELEVANT_EXERCISES: completeness.required_exercises,
+    FEMALE_MEDIA_READY: completeness.fully_complete_exercises,
+    STANDARD_ONLY: completeness.required_exercises - completeness.fully_complete_exercises,
+    MEDIA_MISSING: 0,
+    FEMALE_MEDIA_COVERAGE_PERCENT: Math.round(completeness.full_percent),
+    FEMALE_IMAGES_READY: completeness.female_images_ready,
+    FEMALE_VIDEOS_READY: completeness.female_videos_ready,
     FEMALE_MEDIA_COMPLETENESS_REQUIRED_BEFORE_RELEASE: true,
     resolution_order: ["FEMALE", "STANDARD", "MEDIA_MISSING"] as const,
-    note: "Canonical exercise identity remains single. Female variants are preference/media only — not duplicated records. No female media fields exist on library rows yet (METADATA_MODEL_GAP).",
+    note: "Canonical exercise identity remains single. Female variants are preference/media only — not duplicated records.",
   };
 }
 
