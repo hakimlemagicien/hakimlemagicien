@@ -80,6 +80,7 @@ import {
 import { WeeklySchedulePreview } from "@/components/admin/WeeklySchedulePreview";
 import { AdminExercisePicker } from "@/components/admin/AdminExercisePicker";
 import { TemplateRecommendationPanel } from "@/components/admin/programs/TemplateRecommendationPanel";
+import { ClientTrainingAutoAssignPanel } from "@/components/admin/ClientTrainingAutoAssignPanel";
 import { TemplateStructurePreview } from "@/components/admin/programs/ProgramTemplateDetailPanel";
 import {
   assessClientProgramEditImpact,
@@ -1176,6 +1177,26 @@ export function ClientTrainingWorkspace({
       ) : null}
 
       <ClientTrainingGoalCard overview={overview} onUpdated={onOverviewRefresh} onConfirm={onConfirm} />
+
+      <ClientTrainingAutoAssignPanel
+        clientId={clientId}
+        activeTemplateSlug={
+          detail?.name_ar ||
+          (detail?.source_template_id ? detail.source_template_id.slice(0, 8) : null)
+        }
+        assignmentVersion={detail?.template_version ?? null}
+        progressionStrategy={detail?.progression_strategy ?? null}
+        assignmentSourceLabel={
+          detail
+            ? programSourceLabel(
+                resolveProgramSource({
+                  source_template_id: detail.source_template_id,
+                  generation_source: detail.generation_source,
+                }),
+              )
+            : null
+        }
+      />
 
       <AdminCard>
         <TemplateRecommendationPanel
