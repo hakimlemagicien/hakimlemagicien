@@ -1,0 +1,163 @@
+{
+  "phase": "10/10",
+  "environment": "LOCAL",
+  "generated_at": "2026-09-13T02:32:42.864Z",
+  "cr_026": "Treadmill Brisk Walk",
+  "cr_027": "Brisk Walk (Outdoor / Neighborhood / Indoor Fallback)",
+  "daily_activity_used": false,
+  "pilot_fat_loss_version": 2,
+  "canonical_count": 37,
+  "pilot_count": 4,
+  "remaining_count": 33,
+  "structural_fails": [],
+  "structural_pass": true,
+  "broken_reference_count": 0,
+  "quiz_mapping": "12/12",
+  "resolver_results": {
+    "fat_beg_gym_3": {
+      "status": "MATCHED_WITH_REVIEW",
+      "slug": "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D"
+    },
+    "muscle_int_gym_4_06a": {
+      "status": "MATCHED",
+      "slug": "MUSCLE_GAIN_UPPER_LOWER_INTERMEDIATE_GYM_4D"
+    },
+    "muscle_int_gym_5_06b": {
+      "status": "MATCHED",
+      "slug": "MUSCLE_GAIN_ADVANCED_SPLIT_INTERMEDIATE_GYM_5D"
+    },
+    "glute_beg_gym": {
+      "status": "MATCHED_WITH_REVIEW",
+      "slug": "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D"
+    },
+    "glute_home": {
+      "status": "NO_EXACT_MATCH",
+      "slug": null,
+      "fallback": "NO_EXACT_MATCH"
+    },
+    "insufficient": {
+      "status": "INSUFFICIENT_CONTEXT"
+    }
+  },
+  "coverage": {
+    "cells": 120,
+    "exact": 37,
+    "gaps": 83,
+    "known_product_gaps_sample": [
+      {
+        "primary_strategy": "FAT_LOSS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 3,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "FAT_LOSS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 4,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "FAT_LOSS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 5,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "GYM",
+        "days": 3,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "GYM",
+        "days": 4,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "GYM",
+        "days": 5,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 3,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 4,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GENERAL_FITNESS",
+        "level": "INTERMEDIATE",
+        "environment": "HOME",
+        "days": 5,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GLUTE_FOCUS",
+        "level": "BEGINNER",
+        "environment": "HOME",
+        "days": 3,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GLUTE_FOCUS",
+        "level": "BEGINNER",
+        "environment": "HOME",
+        "days": 4,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      },
+      {
+        "primary_strategy": "GLUTE_FOCUS",
+        "level": "BEGINNER",
+        "environment": "HOME",
+        "days": 5,
+        "status": "NO_EXACT_TEMPLATE",
+        "action": "NEW_TEMPLATE_RECOMMENDED",
+        "matching_slugs": []
+      }
+    ]
+  },
+  "legacy_assignment_cr001_cardio_rows": 12,
+  "legacy_assignments_mutated": false,
+  "duplicate_exercises": [],
+  "duplicate_templates": [],
+  "issues": [],
+  "ok": true
+}

@@ -98,6 +98,13 @@ MAAKFIT **تطبيق رسمي معتمد** (منصة يومية عربية RTL)�
 - Supabase: auth، RLS، migrations، Edge Functions
 - أداء إلزامي: [`v1/PERFORMANCE.md`](./v1/PERFORMANCE.md)
 
+### نظام قوالب برامج التدريب V1
+- **الحالة:** QA_APPROVED (Phase 10/10) — [`TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md`](./TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md)
+- **Canonical templates:** **37** (تسمية تاريخية 36/36 بسبب 06A+06B) — المرجع: [`TRAINING_PROGRAM_TEMPLATE_MASTER_REFERENCE_V1.md`](./TRAINING_PROGRAM_TEMPLATE_MASTER_REFERENCE_V1.md)
+- **Local + Staging:** 37/37 محققة؛ Production **لم يُنشر** لهذه المنظومة
+- **PRODUCTION_RELEASE_READINESS:** CONDITIONAL — Glute محجوب بميديا أنثوية (`BLOCKED_BY_FEMALE_MEDIA`)
+- **لا auto-assign** — تعيين يدوي + لقطات إصدارية مجمّدة
+
 ---
 
 ## 4. جزئي أو يحتاج تحقق

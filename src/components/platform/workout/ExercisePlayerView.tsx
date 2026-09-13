@@ -308,7 +308,8 @@ function ExercisePlayerStage({
               </motion.h1>
             </AnimatePresence>
             <p className="text-[10px] font-bold text-muted-foreground">
-              تمرين {exerciseIndex + 1} من {totalExercises} · الجولة {currentSetNumber} من {currentExercise.sets}
+              {currentExercise.activityRoleLabel ?? "تمرين"} {exerciseIndex + 1} من {totalExercises} ·
+              الجولة {currentSetNumber} من {currentExercise.sets}
             </p>
           </div>
           <div className="h-9 w-9" />

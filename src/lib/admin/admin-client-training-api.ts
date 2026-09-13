@@ -16,6 +16,9 @@ export type AdminAssignmentSummary = {
   assigned_at: string;
   ended_at: string | null;
   snapshot_complete: boolean;
+  /** Present after Phase 7 list RPC — may be null on older environments. */
+  generation_source?: string | null;
+  progression_strategy?: string | null;
 };
 
 export type AdminAssignmentExercise = {
@@ -156,6 +159,8 @@ export async function listAdminClientAssignments(clientId: string, offset = 0) {
     assigned_at: String(row.assigned_at),
     ended_at: (row.ended_at as string | null) ?? null,
     snapshot_complete: Boolean(row.snapshot_complete),
+    generation_source: (row.generation_source as string | null | undefined) ?? null,
+    progression_strategy: (row.progression_strategy as string | null | undefined) ?? null,
   }));
   return {
     rows,

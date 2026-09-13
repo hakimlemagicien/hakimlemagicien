@@ -713,6 +713,9 @@ function SessionExercisePathRow({
         >
           {index}. {exercise.name}
         </p>
+        {exercise.activityRoleLabel ? (
+          <p className="mt-0.5 text-[10px] font-bold text-primary/90">{exercise.activityRoleLabel}</p>
+        ) : null}
         {isActive ? (
           <p className="mt-0.5 text-[10px] font-black text-primary">التمرين الحالي</p>
         ) : null}

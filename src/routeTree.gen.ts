@@ -22,6 +22,9 @@ import { Route as PlatformRouteRouteImport } from './routes/_platform/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as DevTemplatePhase6LocalDbRouteImport } from './routes/dev/template-phase6-local-db'
+import { Route as DevTemplatePhase5PilotsRouteImport } from './routes/dev/template-phase5-pilots'
+import { Route as DevTemplatePhase4UiRouteImport } from './routes/dev/template-phase4-ui'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
 import { Route as AdminStudioRouteImport } from './routes/admin/studio'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -136,6 +139,22 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const DevTemplatePhase6LocalDbRoute =
+  DevTemplatePhase6LocalDbRouteImport.update({
+    id: '/dev/template-phase6-local-db',
+    path: '/dev/template-phase6-local-db',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DevTemplatePhase5PilotsRoute = DevTemplatePhase5PilotsRouteImport.update({
+  id: '/dev/template-phase5-pilots',
+  path: '/dev/template-phase5-pilots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevTemplatePhase4UiRoute = DevTemplatePhase4UiRouteImport.update({
+  id: '/dev/template-phase4-ui',
+  path: '/dev/template-phase4-ui',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
   id: '/support',
@@ -436,6 +455,9 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
+  '/dev/template-phase4-ui': typeof DevTemplatePhase4UiRoute
+  '/dev/template-phase5-pilots': typeof DevTemplatePhase5PilotsRoute
+  '/dev/template-phase6-local-db': typeof DevTemplatePhase6LocalDbRoute
   '/admin/': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
   '/app/billing': typeof PlatformAppBillingRoute
@@ -498,6 +520,9 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
+  '/dev/template-phase4-ui': typeof DevTemplatePhase4UiRoute
+  '/dev/template-phase5-pilots': typeof DevTemplatePhase5PilotsRoute
+  '/dev/template-phase6-local-db': typeof DevTemplatePhase6LocalDbRoute
   '/admin': typeof AdminIndexRoute
   '/app/achievements': typeof PlatformAppAchievementsRoute
   '/app/billing': typeof PlatformAppBillingRoute
@@ -564,6 +589,9 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/studio': typeof AdminStudioRoute
   '/admin/support': typeof AdminSupportRoute
+  '/dev/template-phase4-ui': typeof DevTemplatePhase4UiRoute
+  '/dev/template-phase5-pilots': typeof DevTemplatePhase5PilotsRoute
+  '/dev/template-phase6-local-db': typeof DevTemplatePhase6LocalDbRoute
   '/admin/': typeof AdminIndexRoute
   '/_platform/app/achievements': typeof PlatformAppAchievementsRoute
   '/_platform/app/billing': typeof PlatformAppBillingRoute
@@ -630,6 +658,9 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/studio'
     | '/admin/support'
+    | '/dev/template-phase4-ui'
+    | '/dev/template-phase5-pilots'
+    | '/dev/template-phase6-local-db'
     | '/admin/'
     | '/app/achievements'
     | '/app/billing'
@@ -692,6 +723,9 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/studio'
     | '/admin/support'
+    | '/dev/template-phase4-ui'
+    | '/dev/template-phase5-pilots'
+    | '/dev/template-phase6-local-db'
     | '/admin'
     | '/app/achievements'
     | '/app/billing'
@@ -757,6 +791,9 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/studio'
     | '/admin/support'
+    | '/dev/template-phase4-ui'
+    | '/dev/template-phase5-pilots'
+    | '/dev/template-phase6-local-db'
     | '/admin/'
     | '/_platform/app/achievements'
     | '/_platform/app/billing'
@@ -808,6 +845,9 @@ export interface RootRouteChildren {
   QuizRoute: typeof QuizRoute
   RefundRoute: typeof RefundRoute
   TermsRoute: typeof TermsRoute
+  DevTemplatePhase4UiRoute: typeof DevTemplatePhase4UiRoute
+  DevTemplatePhase5PilotsRoute: typeof DevTemplatePhase5PilotsRoute
+  DevTemplatePhase6LocalDbRoute: typeof DevTemplatePhase6LocalDbRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -902,6 +942,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/dev/template-phase6-local-db': {
+      id: '/dev/template-phase6-local-db'
+      path: '/dev/template-phase6-local-db'
+      fullPath: '/dev/template-phase6-local-db'
+      preLoaderRoute: typeof DevTemplatePhase6LocalDbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/template-phase5-pilots': {
+      id: '/dev/template-phase5-pilots'
+      path: '/dev/template-phase5-pilots'
+      fullPath: '/dev/template-phase5-pilots'
+      preLoaderRoute: typeof DevTemplatePhase5PilotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/template-phase4-ui': {
+      id: '/dev/template-phase4-ui'
+      path: '/dev/template-phase4-ui'
+      fullPath: '/dev/template-phase4-ui'
+      preLoaderRoute: typeof DevTemplatePhase4UiRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/support': {
       id: '/admin/support'
@@ -1438,6 +1499,9 @@ const rootRouteChildren: RootRouteChildren = {
   QuizRoute: QuizRoute,
   RefundRoute: RefundRoute,
   TermsRoute: TermsRoute,
+  DevTemplatePhase4UiRoute: DevTemplatePhase4UiRoute,
+  DevTemplatePhase5PilotsRoute: DevTemplatePhase5PilotsRoute,
+  DevTemplatePhase6LocalDbRoute: DevTemplatePhase6LocalDbRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

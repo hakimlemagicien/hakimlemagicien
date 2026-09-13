@@ -1,0 +1,351 @@
+{
+  "phase": "9/10",
+  "task": "FINAL_CANONICAL_TEMPLATE_IMPORT",
+  "environment": "LOCAL_ONLY",
+  "generated_at": "2026-09-13T01:34:34.619Z",
+  "canonical_template_count": 37,
+  "pilot_keys": [
+    "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+    "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+    "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+    "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D"
+  ],
+  "remaining_keys": [
+    "FAT_LOSS_FOUNDATION_BEGINNER_GYM_4D",
+    "FAT_LOSS_PROGRESS_INTERMEDIATE_GYM_4D",
+    "FAT_LOSS_FOUNDATION_BEGINNER_HOME_3D",
+    "MUSCLE_GAIN_FOUNDATION_BEGINNER_GYM_3D",
+    "MUSCLE_GAIN_UPPER_LOWER_INTERMEDIATE_GYM_4D",
+    "MUSCLE_GAIN_ADVANCED_SPLIT_INTERMEDIATE_GYM_5D",
+    "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_GYM_3D",
+    "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_GYM_4D",
+    "GENERAL_FITNESS_FOUNDATION_BEGINNER_GYM_3D",
+    "GENERAL_FITNESS_FOUNDATION_BEGINNER_HOME_3D",
+    "STRENGTH_FOUNDATION_BEGINNER_GYM_3D",
+    "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D",
+    "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_GYM_4D",
+    "ENDURANCE_FOUNDATION_BEGINNER_GYM_3D",
+    "ENDURANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+    "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_GYM_3D",
+    "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_GYM_4D",
+    "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_GYM_3D",
+    "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_GYM_4D",
+    "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_GYM_3D",
+    "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+    "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D",
+    "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_HOME_3D",
+    "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_HOME_4D",
+    "STRENGTH_FOUNDATION_BEGINNER_HOME_3D",
+    "STRENGTH_PROGRESS_INTERMEDIATE_HOME_4D",
+    "ENDURANCE_FOUNDATION_BEGINNER_HOME_3D",
+    "ENDURANCE_PROGRESS_INTERMEDIATE_HOME_4D",
+    "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_HOME_3D",
+    "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_HOME_4D",
+    "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_HOME_3D",
+    "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_HOME_4D",
+    "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_HOME_4D"
+  ],
+  "library_additions": {
+    "treadmill": {
+      "external_id": "CR-026",
+      "present": true
+    },
+    "home": {
+      "external_id": "CR-027",
+      "present": true
+    },
+    "distinct_from_cr001": true
+  },
+  "import_run_1": {
+    "storage": "LOCAL_DB",
+    "database_applied": true,
+    "canonical_template_count": 37,
+    "remaining_expected": 33,
+    "imported_count": 33,
+    "created_count": 33,
+    "updated_count": 0,
+    "failed": [],
+    "template_ids": {
+      "FAT_LOSS_FOUNDATION_BEGINNER_GYM_4D": "4fd786b3-4240-4c78-b908-3ca049a2a6ca",
+      "FAT_LOSS_FOUNDATION_BEGINNER_HOME_3D": "33ebfd41-acc7-46db-a9bd-1926a398558e",
+      "FAT_LOSS_PROGRESS_INTERMEDIATE_GYM_4D": "e657ce3d-9a3c-4c47-a184-18d19c5e2acf",
+      "MUSCLE_GAIN_FOUNDATION_BEGINNER_GYM_3D": "b3547d95-4098-44fd-93c6-7c465a1c5409",
+      "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D": "0120cc2b-ae90-44e8-b4f1-ce1dbeea4c2d",
+      "MUSCLE_GAIN_UPPER_LOWER_INTERMEDIATE_GYM_4D": "5033eee6-5b55-4051-999d-3b3f34cc2512",
+      "MUSCLE_GAIN_ADVANCED_SPLIT_INTERMEDIATE_GYM_5D": "c2e3a58d-c4dc-445d-a425-94c269762118",
+      "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_GYM_3D": "539631b1-fad0-4ab2-8795-9c23ee375285",
+      "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_HOME_3D": "9b1b4520-dcd4-4922-9270-04217d9bb91e",
+      "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_GYM_4D": "a10db010-6687-403a-8a91-83a0d0ef7603",
+      "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_HOME_4D": "ff125637-1d71-45f9-a34e-e9a276622e05",
+      "GENERAL_FITNESS_FOUNDATION_BEGINNER_GYM_3D": "e33d605a-793b-4683-811c-348472c37513",
+      "GENERAL_FITNESS_FOUNDATION_BEGINNER_HOME_3D": "5791df6e-77af-4c3b-8d17-87b94d507690",
+      "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D": "dc7f99bb-c397-497f-889e-e0714c200aaa",
+      "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_GYM_4D": "1ba919c4-bc60-4de7-b8dc-983fa44465a5",
+      "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_GYM_3D": "1bc613f2-072b-41b8-968e-2c371ff286d5",
+      "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_GYM_4D": "7a22ed5b-4381-4c53-82c7-2057b09a3297",
+      "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_HOME_4D": "57e81972-71d7-4e28-920a-2e5070db4654",
+      "STRENGTH_FOUNDATION_BEGINNER_GYM_3D": "6ab4e460-10ec-4e2e-b44e-7dd3fe13b9d3",
+      "STRENGTH_FOUNDATION_BEGINNER_HOME_3D": "f6d66f21-2d73-4ec2-b806-1f78b2467c5f",
+      "STRENGTH_PROGRESS_INTERMEDIATE_HOME_4D": "a78dbfc6-82a5-4dfe-9331-bd742ee61480",
+      "ENDURANCE_FOUNDATION_BEGINNER_GYM_3D": "90dd758b-7044-41a3-b5f4-16187cc0657f",
+      "ENDURANCE_FOUNDATION_BEGINNER_HOME_3D": "d1e20bd7-efcf-45dc-9b0b-dec69d16de02",
+      "ENDURANCE_PROGRESS_INTERMEDIATE_GYM_4D": "22a74363-9046-42de-9254-95c59d721f8e",
+      "ENDURANCE_PROGRESS_INTERMEDIATE_HOME_4D": "ee8f3d62-2463-4620-8b8f-14b7f043e7be",
+      "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_HOME_3D": "b724dc24-301d-44b9-bb6a-33154a88216d",
+      "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_GYM_3D": "753a4269-ed43-4c6d-9f34-34d62a8903ec",
+      "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_GYM_4D": "e0422759-6f73-4086-94ea-cedbd84fb482",
+      "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_HOME_4D": "f59dd1bd-040a-4547-9ab5-772712a032fa",
+      "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_HOME_3D": "b1353a1d-3925-4f72-846e-2bfb10f98022",
+      "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_GYM_3D": "3cea6847-812a-4cc9-9d6e-0798f1a92b4e",
+      "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_GYM_4D": "111af7d7-69db-4bd9-a43f-fa3b246a4a9f",
+      "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_HOME_4D": "404a3823-64da-425c-85fc-56cf2f4b1809"
+    },
+    "broken_exercise_references": 0,
+    "missing_external_ids": [],
+    "treadmill_brisk_walk_external_id": "CR-026",
+    "home_brisk_walk_external_id": "CR-027",
+    "pilot_existing": 0,
+    "total_canonical_in_db": 33,
+    "duplicates": 0,
+    "published": 33,
+    "idempotent": true
+  },
+  "import_run_2": {
+    "created_count": 0,
+    "updated_count": 33,
+    "imported_count": 33,
+    "total_canonical_in_db": 33
+  },
+  "pilot_migration": {
+    "report": {
+      "storage": "LOCAL_DB",
+      "database_applied": true,
+      "imported_count": 4,
+      "updated_count": 0,
+      "created_count": 4,
+      "templates": [
+        "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+        "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+        "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+        "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D"
+      ],
+      "template_ids": {
+        "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D": "0d898151-cd2d-478b-8463-8757c83c10e4",
+        "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D": "1ca91992-217a-49ab-bda4-62b2dca1de6e",
+        "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D": "93a017fc-2227-430f-8d1d-efe655d94efb",
+        "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D": "1596835e-10d5-4e50-9cdd-9d08ad38f637"
+      },
+      "contract_valid": 4,
+      "broken_exercise_references": 0,
+      "missing_external_ids": [],
+      "session_policy_issues": [],
+      "idempotent": true,
+      "duplicates": 0,
+      "published": 4
+    },
+    "fat_loss_cardio_ids": [
+      {
+        "external_id": "CR-026",
+        "activity_role": "GENERAL_WARM_UP"
+      },
+      {
+        "external_id": "CR-026",
+        "activity_role": "POST_WORKOUT_CARDIO"
+      },
+      {
+        "external_id": "CR-026",
+        "activity_role": "GENERAL_WARM_UP"
+      },
+      {
+        "external_id": "CR-026",
+        "activity_role": "POST_WORKOUT_CARDIO"
+      },
+      {
+        "external_id": "CR-026",
+        "activity_role": "GENERAL_WARM_UP"
+      },
+      {
+        "external_id": "CR-026",
+        "activity_role": "POST_WORKOUT_CARDIO"
+      }
+    ],
+    "legacy_assignment_uses_old_cardio_identity": false,
+    "legacy_assignments_mutated": false
+  },
+  "verification": {
+    "present_count": 37,
+    "missing": [],
+    "unknown_extra_canonical_slugs": [],
+    "duplicate_canonical_slugs": [],
+    "fat_loss_gym_4d_roles": [
+      {
+        "activity_role": "GENERAL_WARM_UP",
+        "external_id": "CR-026",
+        "c": "4"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "AB-001",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "AB-011",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BA-006",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BA-010",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BA-016",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BA-017",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BA-023",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BI-001",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "BI-002",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "CH-003",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "CH-012",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "GL-001",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "GL-002",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "GL-007",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-003",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-004",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-005",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-007",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-009",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "LE-010",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "SH-002",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "SH-005",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "TR-001",
+        "c": "1"
+      },
+      {
+        "activity_role": "MAIN_RESISTANCE",
+        "external_id": "TR-002",
+        "c": "1"
+      },
+      {
+        "activity_role": "POST_WORKOUT_CARDIO",
+        "external_id": "CR-026",
+        "c": "4"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-001",
+        "c": "1"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-002",
+        "c": "2"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-003",
+        "c": "1"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-010",
+        "c": "1"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-013",
+        "c": "1"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-020",
+        "c": "1"
+      },
+      {
+        "activity_role": "TARGETED_DYNAMIC_WARM_UP",
+        "external_id": "WU-021",
+        "c": "1"
+      }
+    ],
+    "idempotency_pass": true
+  },
+  "staging_changed": false,
+  "production_changed": false
+}

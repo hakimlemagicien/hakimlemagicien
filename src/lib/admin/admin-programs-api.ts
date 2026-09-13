@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import { ADMIN_LIBRARY_MAX_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
 import { hydrateProgramBuilder } from "./admin-program-builder";
 import { buildSevenDayWeek } from "./admin-program-ops";
 
@@ -18,6 +18,11 @@ export type AdminProgramListItem = {
   assignment_count: number;
   updated_at: string;
   training_location: string | null;
+  /** Phase 5: list RPC may return template_contract projection. */
+  metadata?: Record<string, unknown> | null;
+  template_contract?: Record<string, unknown> | null;
+  primary_strategy?: string | null;
+  library_readiness?: string | null;
 };
 
 export type AdminProgramExercise = {
@@ -41,6 +46,8 @@ export type AdminProgramExercise = {
   rir?: number | null;
   tempo?: string | null;
   role?: "warmup" | "main" | "accessory" | "finisher";
+  /** Phase 5+ richer activity role (warmup ≠ ramp-up ≠ power ≠ cardio). */
+  activity_role?: string | null;
   pattern?: "none" | "superset" | "circuit" | "dropset";
   pattern_group?: string | null;
   alternatives?: Array<{
@@ -81,6 +88,11 @@ export type AdminProgramDetail = AdminProgramListItem & {
 };
 
 function mapList(row: Record<string, unknown>): AdminProgramListItem {
+  const templateContract =
+    row.template_contract && typeof row.template_contract === "object"
+      ? (row.template_contract as Record<string, unknown>)
+      : null;
+  const metadata = templateContract ? { template_contract: templateContract } : null;
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -96,6 +108,10 @@ function mapList(row: Record<string, unknown>): AdminProgramListItem {
     assignment_count: Number(row.assignment_count ?? 0),
     updated_at: String(row.updated_at),
     training_location: (row.training_location as string | null) ?? null,
+    metadata,
+    template_contract: templateContract,
+    primary_strategy: (row.primary_strategy as string | null) ?? null,
+    library_readiness: (row.library_readiness as string | null) ?? null,
   };
 }
 
@@ -105,13 +121,15 @@ export async function listAdminProgramTemplates(opts: {
   level?: string | null;
   status?: string | null;
   offset?: number;
+  /** Defaults to max page (50) so V1 canonical set (37) fits one Admin page when filters are clear. */
+  limit?: number;
 }) {
   const { data, error } = await supabase.rpc("admin_list_program_templates", {
     p_query: opts.query?.trim() || null,
     p_goal: opts.goal || null,
     p_level: opts.level || null,
     p_status: opts.status || null,
-    p_limit: clampAdminLibraryLimit(ADMIN_LIBRARY_PAGE_SIZE),
+    p_limit: clampAdminLibraryLimit(opts.limit ?? ADMIN_LIBRARY_MAX_PAGE_SIZE, ADMIN_LIBRARY_MAX_PAGE_SIZE),
     p_offset: Math.max(opts.offset ?? 0, 0),
   });
   if (error) throw error;

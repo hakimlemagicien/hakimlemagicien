@@ -87,6 +87,12 @@ import {
 } from "@/lib/admin/admin-programs-api";
 import { WEEKDAY_LABELS_AR } from "@/lib/admin/coach-override-form";
 import { WEEKDAY_CALENDAR_ORDER } from "@/lib/platform/strategy-matrix/weekdays";
+import {
+  ProgramTemplateDetailPanel,
+  TemplateStructurePreview,
+} from "@/components/admin/programs/ProgramTemplateDetailPanel";
+import { presentDetail } from "@/lib/admin/admin-template-ui";
+import { ProgramTemplateBadges } from "@/components/admin/programs/ProgramTemplateBadges";
 import { getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
 
 type Props = {
@@ -150,6 +156,7 @@ export function AdminProgramBuilder({
   const locked = structureLocked || Boolean(draft.archived_at);
   const estimated = day ? estimateDayMinutes(day) : 0;
   const summary = useMemo(() => summarizeProgramDraft(draft), [draft]);
+  const presentation = useMemo(() => presentDetail(draft), [draft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -419,6 +426,12 @@ export function AdminProgramBuilder({
             </label>
           </div>
         </div>
+      </section>
+
+      <section className="cc-builder__card tpl-builder-contract" aria-label="عقد القالب الموحد">
+        <ProgramTemplateBadges presentation={presentation} />
+        <ProgramTemplateDetailPanel detail={draft} />
+        <TemplateStructurePreview detail={draft} />
       </section>
 
       <details className="cc-builder__card cc-builder__extras">

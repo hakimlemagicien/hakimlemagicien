@@ -15,6 +15,7 @@ import {
   type WorkoutSessionExercise,
   type WorkoutSessionMeta,
 } from "@/lib/platform/workout-session";
+import { activityRoleLabelAr } from "@/lib/platform/training-templates/activity-roles";
 import {
   getWeekdayIdFromDate,
   resolveWeekdayPlan,
@@ -64,6 +65,10 @@ async function buildSessionExercise(
     assignmentId: prescription.assignmentId,
     assignmentExerciseId: prescription.assignmentExerciseId,
     assignmentDayId: prescription.assignmentDayId,
+    activityRole: prescription.activity_role ?? null,
+    activityRoleLabel: prescription.activity_role
+      ? activityRoleLabelAr(prescription.activity_role)
+      : null,
   };
 }
 

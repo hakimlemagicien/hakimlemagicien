@@ -13922,5 +13922,82 @@
     "difficulty": "intermediate",
     "v2_metadata_status": "APPROVED",
     "legacy_equipment_label": "NO_EQUIPMENT"
+  },
+  {
+    "external_id": "CR-026",
+    "name_en": "Treadmill Brisk Walk",
+    "name_ar": "مشي سريع على جهاز المشي",
+    "group": "Cardio",
+    "exercise_type": "cardio",
+    "primary_muscle_canonical": "FULL_BODY",
+    "secondary_muscles_canonical": [],
+    "muscle_contributions": [
+      {
+        "muscle": "FULL_BODY",
+        "contribution": "DIRECT_PRIMARY"
+      }
+    ],
+    "primary_movement_role": "LOCOMOTION",
+    "secondary_movement_roles": [],
+    "substitution_group": "CONDITIONING",
+    "mechanics": "NOT_APPLICABLE",
+    "loading_type": "CARDIO_MACHINE",
+    "required_equipment": [
+      "TREADMILL"
+    ],
+    "equipment_state": "HAS_EQUIPMENT",
+    "location_compatibility": [
+      "GYM"
+    ],
+    "is_bodyweight": false,
+    "is_unilateral": false,
+    "execution_sides": "BILATERAL",
+    "supports_timed_prescription": true,
+    "prescription_mode": "DURATION",
+    "conditioning_class": "STEADY_CARDIO",
+    "complexity": "LOW",
+    "beginner_eligible": true,
+    "difficulty": "beginner",
+    "v2_metadata_status": "APPROVED",
+    "legacy_equipment_label": "TREADMILL",
+    "notes": "Distinct from CR-001 Treadmill Run — brisk walk pace only"
+  },
+  {
+    "external_id": "CR-027",
+    "name_en": "Brisk Walk (Outdoor / Neighborhood / Indoor Fallback)",
+    "name_ar": "مشي سريع (خارجي / حي / بديل داخلي آمن)",
+    "group": "Cardio",
+    "exercise_type": "cardio",
+    "primary_muscle_canonical": "FULL_BODY",
+    "secondary_muscles_canonical": [],
+    "muscle_contributions": [
+      {
+        "muscle": "FULL_BODY",
+        "contribution": "DIRECT_PRIMARY"
+      }
+    ],
+    "primary_movement_role": "LOCOMOTION",
+    "secondary_movement_roles": [],
+    "substitution_group": "CONDITIONING",
+    "mechanics": "NOT_APPLICABLE",
+    "loading_type": "OTHER",
+    "required_equipment": [],
+    "equipment_state": "NO_EQUIPMENT",
+    "location_compatibility": [
+      "HOME",
+      "GYM"
+    ],
+    "is_bodyweight": true,
+    "is_unilateral": false,
+    "execution_sides": "BILATERAL",
+    "supports_timed_prescription": true,
+    "prescription_mode": "DURATION",
+    "conditioning_class": "STEADY_CARDIO",
+    "complexity": "LOW",
+    "beginner_eligible": true,
+    "difficulty": "beginner",
+    "v2_metadata_status": "APPROVED",
+    "legacy_equipment_label": "NO_EQUIPMENT",
+    "notes": "Outdoor/neighborhood preferred; indoor fallback when outdoor not suitable — not machine-dependent"
   }
 ]

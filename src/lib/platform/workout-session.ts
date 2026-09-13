@@ -30,6 +30,9 @@ export type WorkoutSessionExercise = {
   assignmentId?: string;
   assignmentExerciseId?: string;
   assignmentDayId?: string;
+  /** From program template / snapshot — used for Client role chips. */
+  activityRole?: string | null;
+  activityRoleLabel?: string | null;
 };
 
 export const EFFORT_LABELS: Record<EffortLevel, string> = {

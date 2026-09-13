@@ -2591,6 +2591,22 @@
       "equipment": "NO_EQUIPMENT",
       "level": "intermediate",
       "status": "placeholder"
+    },
+    {
+      "id": "CR-026",
+      "name": "Treadmill Brisk Walk",
+      "name_ar": "مشي سريع على جهاز المشي",
+      "equipment": "TREADMILL",
+      "level": "beginner",
+      "status": "placeholder"
+    },
+    {
+      "id": "CR-027",
+      "name": "Brisk Walk (Outdoor / Neighborhood / Indoor Fallback)",
+      "name_ar": "مشي سريع (خارجي / حي / بديل داخلي آمن)",
+      "equipment": "NO_EQUIPMENT",
+      "level": "beginner",
+      "status": "placeholder"
     }
   ]
 }

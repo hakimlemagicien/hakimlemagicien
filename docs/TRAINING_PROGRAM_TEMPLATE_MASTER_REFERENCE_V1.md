@@ -1,0 +1,112 @@
+# مرجع ماستر قوالب برامج التدريب — V1 (نهائي)
+
+**الحالة:** IMPLEMENTED  
+**العدد الفيزيائي المعتمد:** **37**  
+**التسمية التاريخية:** `36/36` (عيب ترقيم — انظر أدناه)  
+**المصدر البرمجي:** `src/lib/platform/training-templates/phase9/canonical-locked-master.ts`  
+**Production:** غير منشور كـ Release جاهز بالكامل (راجع تقرير Phase 10)
+
+---
+
+## 1) قاعدة العدد
+
+| البند | القيمة |
+|-------|--------|
+| Canonical physical count | **37** |
+| Historical label | 36/36 |
+| Pilot origin | 4 |
+| Phase 9 imported | 33 |
+| 06A + 06B | قالبان منفصلان |
+
+**سبب فرق 36↔37:** الرقم التاريخي `06` انقسم إلى `06A` و`06B` بينما استمرت الترقيم حتى 36. التسمية «36/36» عيب ترقيم وليست العدد الفيزيائي.
+
+لا يُعاد فتح هذا القرار. لا يُعاد العدد إلى 33 أو 36 كعدد فعلي.
+
+---
+
+## 2) المفاتيح الـ37
+
+| IDX | TEMPLATE_KEY | STRATEGY | LEVEL | ENV | DAYS |
+|-----|--------------|----------|-------|-----|-----:|
+| 01 | `FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D` | FAT_LOSS | BEGINNER | GYM | 3 |
+| 02 | `FAT_LOSS_FOUNDATION_BEGINNER_GYM_4D` | FAT_LOSS | BEGINNER | GYM | 4 |
+| 03 | `FAT_LOSS_PROGRESS_INTERMEDIATE_GYM_4D` | FAT_LOSS | INTERMEDIATE | GYM | 4 |
+| 04 | `FAT_LOSS_FOUNDATION_BEGINNER_HOME_3D` | FAT_LOSS | BEGINNER | HOME | 3 |
+| 05 | `MUSCLE_GAIN_FOUNDATION_BEGINNER_GYM_3D` | MUSCLE_GAIN | BEGINNER | GYM | 3 |
+| 06A | `MUSCLE_GAIN_UPPER_LOWER_INTERMEDIATE_GYM_4D` | MUSCLE_GAIN | INTERMEDIATE | GYM | 4 |
+| 06B | `MUSCLE_GAIN_ADVANCED_SPLIT_INTERMEDIATE_GYM_5D` | MUSCLE_GAIN | INTERMEDIATE | GYM | 5 |
+| 07 | `BODY_RECOMPOSITION_FOUNDATION_BEGINNER_GYM_3D` | BODY_RECOMPOSITION | BEGINNER | GYM | 3 |
+| 08 | `BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_GYM_4D` | BODY_RECOMPOSITION | INTERMEDIATE | GYM | 4 |
+| 09 | `GENERAL_FITNESS_FOUNDATION_BEGINNER_GYM_3D` | GENERAL_FITNESS | BEGINNER | GYM | 3 |
+| 10 | `GENERAL_FITNESS_FOUNDATION_BEGINNER_HOME_3D` | GENERAL_FITNESS | BEGINNER | HOME | 3 |
+| 11 | `STRENGTH_FOUNDATION_BEGINNER_GYM_3D` | STRENGTH | BEGINNER | GYM | 3 |
+| 12 | `STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D` | STRENGTH | INTERMEDIATE | GYM | 4 |
+| 13 | `GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D` | GLUTE_FOCUS | BEGINNER | GYM | 3 |
+| 14 | `GLUTE_FOCUS_PROGRESS_INTERMEDIATE_GYM_4D` | GLUTE_FOCUS | INTERMEDIATE | GYM | 4 |
+| 15 | `ENDURANCE_FOUNDATION_BEGINNER_GYM_3D` | ENDURANCE | BEGINNER | GYM | 3 |
+| 16 | `ENDURANCE_PROGRESS_INTERMEDIATE_GYM_4D` | ENDURANCE | INTERMEDIATE | GYM | 4 |
+| 17 | `MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_GYM_3D` | MOBILITY_FUNCTIONAL | BEGINNER | GYM | 3 |
+| 18 | `MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_GYM_4D` | MOBILITY_FUNCTIONAL | INTERMEDIATE | GYM | 4 |
+| 19 | `HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_GYM_3D` | HEALTHY_AGING_ACTIVE_LIFE | BEGINNER | GYM | 3 |
+| 20 | `HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_GYM_4D` | HEALTHY_AGING_ACTIVE_LIFE | INTERMEDIATE | GYM | 4 |
+| 21 | `ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_GYM_3D` | ATHLETIC_PERFORMANCE | BEGINNER | GYM | 3 |
+| 22 | `ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_GYM_4D` | ATHLETIC_PERFORMANCE | INTERMEDIATE | GYM | 4 |
+| 23 | `MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D` | MUSCLE_GAIN | BEGINNER | HOME | 3 |
+| 24 | `MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D` | MUSCLE_GAIN | INTERMEDIATE | HOME | 4 |
+| 25 | `BODY_RECOMPOSITION_FOUNDATION_BEGINNER_HOME_3D` | BODY_RECOMPOSITION | BEGINNER | HOME | 3 |
+| 26 | `BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_HOME_4D` | BODY_RECOMPOSITION | INTERMEDIATE | HOME | 4 |
+| 27 | `STRENGTH_FOUNDATION_BEGINNER_HOME_3D` | STRENGTH | BEGINNER | HOME | 3 |
+| 28 | `STRENGTH_PROGRESS_INTERMEDIATE_HOME_4D` | STRENGTH | INTERMEDIATE | HOME | 4 |
+| 29 | `ENDURANCE_FOUNDATION_BEGINNER_HOME_3D` | ENDURANCE | BEGINNER | HOME | 3 |
+| 30 | `ENDURANCE_PROGRESS_INTERMEDIATE_HOME_4D` | ENDURANCE | INTERMEDIATE | HOME | 4 |
+| 31 | `MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_HOME_3D` | MOBILITY_FUNCTIONAL | BEGINNER | HOME | 3 |
+| 32 | `MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_HOME_4D` | MOBILITY_FUNCTIONAL | INTERMEDIATE | HOME | 4 |
+| 33 | `HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_HOME_3D` | HEALTHY_AGING_ACTIVE_LIFE | BEGINNER | HOME | 3 |
+| 34 | `HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_HOME_4D` | HEALTHY_AGING_ACTIVE_LIFE | INTERMEDIATE | HOME | 4 |
+| 35 | `ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D` | ATHLETIC_PERFORMANCE | BEGINNER | HOME | 3 |
+| 36 | `ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_HOME_4D` | ATHLETIC_PERFORMANCE | INTERMEDIATE | HOME | 4 |
+
+---
+
+## 3) متغيرات غير موجودة عمدًا (Product Coverage Gaps)
+
+ليست أخطاء استيراد. الـ Resolver لا يخترع fallback صامتًا لها:
+
+- Glute HOME (أي مستوى/أيام)
+- General Fitness Intermediate (GYM أو HOME)
+- Fat Loss Intermediate HOME
+- `MUSCLE_GAIN_PROGRESS_INTERMEDIATE_GYM_5D` العام (استُبدل بـ 06A/06B)
+- Strength GYM 5D
+
+---
+
+## 4) سياسات تشغيل مختصرة
+
+| المجال | السياسة |
+|--------|---------|
+| Warm-up | 3 أنشطة مناسبة للجلسة (عادة 1 عام + 2 مستهدف) — خارج Main Resistance وSmart |
+| Main Resistance | 6 تمارين عند نص التسلسل — بدون Warm-up / Ramp-Up / Power / Cardio / Mobility |
+| Smart AUTO | `WEIGHT` + `REPS` فقط |
+| Coach-only | Sets / Rest / Exercise / Replacement / Days / Cardio / ROM / complexity / bands |
+| Fat Loss GYM cardio | `CR-026` مشي سريع — ليس `CR-001` Run |
+| HOME Fat Loss cardio | بدون اشتراط جهاز مشي |
+| Glute release | يتطلب Female Media قبل `RELEASE_READY` |
+| Snapshots | نسخ مجمّدة — تحديث الماستر لا يغيّر التعيينات القديمة |
+
+---
+
+## 5) Quiz Goal → Primary Strategy (12/12)
+
+**رجال:** fat · muscle · fitness · athletic · shape · gain  
+**نساء:** fat · glutes · waist · body · fit · tone  
+
+التفاصيل في `primary-strategy.ts` — لا تُغيَّر سياسة المنتج هنا.
+
+---
+
+## 6) مراجع مرتبطة
+
+- تقرير QA النهائي: [`TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md`](./TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md)
+- عقد موحّد: [`TRAINING_TEMPLATE_UNIFIED_CONTRACT.md`](./TRAINING_TEMPLATE_UNIFIED_CONTRACT.md)
+- تغطية المسارات: [`TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md`](./TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md)
+- Female Media: [`TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md`](./TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md)

@@ -1,29 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AdminConceptKpiRow,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
   AdminSearchInput,
-  AdminTable,
 } from "@/components/admin/AdminPage";
 import { AdminFilterBar, AdminSkeletonRows, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
 import {
   AdminLibraryDialogs,
-  AdminLibraryStatusBadge,
   AdminPagination,
   useDebouncedValue,
   useUnsavedNavigation,
 } from "@/components/admin/AdminLibraryKit";
 import { AdminProgramBuilder } from "@/components/admin/programs/AdminProgramBuilder";
+import { ProgramTemplateCard } from "@/components/admin/programs/ProgramTemplateCard";
+import { TemplateRecommendationDemoStates } from "@/components/admin/programs/TemplateRecommendationDemoStates";
 import {
-  ADMIN_LIBRARY_PAGE_SIZE,
-  PROGRAM_GOALS,
-  PROGRAM_LEVELS,
+  ADMIN_LIBRARY_MAX_PAGE_SIZE,
   PROGRAM_VERSIONING_COMPLETION_REQUIRED,
-  programGoalLabel,
-  programLevelLabel,
-  programStatusLabel,
   translateLibraryError,
   validateProgramDraft,
   type LibrarySaveState,
@@ -43,27 +38,37 @@ import {
   publishAdminProgramTemplate,
   saveAdminProgramTemplate,
   type AdminProgramDetail,
-  type AdminProgramListItem,
 } from "@/lib/admin/admin-programs-api";
-import { formatAdminDate } from "@/lib/admin/admin-status";
+import { buildSevenDayWeek, weekMatchesDaysPerWeek } from "@/lib/admin/admin-program-ops";
 import {
-  PROGRAM_LOCATIONS,
-  buildSevenDayWeek,
-  programLocationLabel,
-  weekMatchesDaysPerWeek,
-  type ProgramLocation,
-} from "@/lib/admin/admin-program-ops";
+  libraryReadinessLabelAr,
+  matchesTemplatePresentation,
+  presentListItem,
+  primaryStrategyLabelAr,
+} from "@/lib/admin/admin-template-ui";
+import { listPilotAdminDetails } from "@/lib/platform/training-templates";
+import {
+  LIBRARY_READINESS_STATES,
+  PRIMARY_TRAINING_STRATEGIES,
+  TEMPLATE_ENVIRONMENTS,
+  TEMPLATE_LEVELS,
+} from "@/lib/platform/training-templates";
+import { CANONICAL_ALL_KEYS, CANONICAL_TEMPLATE_COUNT } from "@/lib/platform/training-templates/phase9/canonical-locked-master";
+
+const CANONICAL_SLUG_SET = new Set<string>(CANONICAL_ALL_KEYS);
 
 export function ProgramLibraryManager() {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query);
-  const [goal, setGoal] = useState("");
+  const [primaryStrategy, setPrimaryStrategy] = useState("");
   const [level, setLevel] = useState("");
   const [status, setStatus] = useState("");
   const [daysFilter, setDaysFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  const [environmentFilter, setEnvironmentFilter] = useState("");
+  const [readinessFilter, setReadinessFilter] = useState("");
+  const [canonicalOnly, setCanonicalOnly] = useState(true);
   const [offset, setOffset] = useState(0);
-  const [rows, setRows] = useState<AdminProgramListItem[]>([]);
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof listAdminProgramTemplates>>["rows"]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +80,7 @@ export function ProgramLibraryManager() {
   const [publishIssues, setPublishIssues] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
   const [openPreview, setOpenPreview] = useState(false);
+  const [showQaDemo, setShowQaDemo] = useState(false);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
   const structureLocked = Boolean(draft?.is_published && !draft.archived_at);
@@ -85,21 +91,14 @@ export function ProgramLibraryManager() {
     setError(null);
     void listAdminProgramTemplates({
       query: debouncedQuery,
-      goal: goal || null,
-      level: level || null,
+      goal: null,
+      level: level ? level.toLowerCase() : null,
       status: status || null,
       offset,
     })
       .then((result) => {
         if (cancelled) return;
-        setRows(
-          result.rows.filter((row) => {
-            const daysOk = !daysFilter || String(row.days_per_week) === daysFilter;
-            const locationOk =
-              !locationFilter || String(row.training_location ?? "").toUpperCase() === locationFilter;
-            return daysOk && locationOk;
-          }),
-        );
+        setRows(result.rows);
         setTotal(result.totalCount);
       })
       .catch((err) => {
@@ -111,7 +110,59 @@ export function ProgramLibraryManager() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, goal, level, status, offset, daysFilter, locationFilter]);
+  }, [debouncedQuery, level, status, offset]);
+
+  const visibleRows = useMemo(() => {
+    const pilotDetails = listPilotAdminDetails();
+    const pilotAsList = pilotDetails.map((detail) => ({
+      id: detail.id,
+      slug: detail.slug,
+      name_ar: detail.name_ar,
+      name_en: detail.name_en,
+      goal: detail.goal,
+      level: detail.level,
+      duration_weeks: detail.duration_weeks,
+      days_per_week: detail.days_per_week,
+      version: detail.version,
+      is_published: detail.is_published,
+      archived_at: detail.archived_at,
+      assignment_count: detail.assignment_count,
+      updated_at: detail.updated_at,
+      training_location: detail.training_location,
+      metadata: detail.metadata,
+      template_contract: (detail.metadata?.template_contract as Record<string, unknown>) ?? null,
+    }));
+    const bySlug = new Map<string, (typeof rows)[number]>();
+    for (const row of rows) bySlug.set(row.slug, row);
+    for (const pilot of pilotAsList) {
+      const existing = bySlug.get(pilot.slug);
+      // Phase 6: DB rows with template_contract take precedence; merge pilot-local only when missing/legacy.
+      if (!existing || !existing.metadata?.template_contract) {
+        bySlug.set(pilot.slug, { ...existing, ...pilot, id: existing?.id ?? pilot.id });
+      }
+    }
+    return [...bySlug.values()].filter((row) => {
+      if (canonicalOnly && !CANONICAL_SLUG_SET.has(row.slug)) return false;
+      const presentation = presentListItem(row);
+      return matchesTemplatePresentation(presentation, {
+        primary_strategy: primaryStrategy || undefined,
+        level: level || undefined,
+        environment: environmentFilter || undefined,
+        days: daysFilter || undefined,
+        status: status || undefined,
+        library_readiness: readinessFilter || undefined,
+      });
+    });
+  }, [rows, primaryStrategy, level, environmentFilter, daysFilter, status, readinessFilter, canonicalOnly]);
+
+  const canonicalInLibrary = useMemo(
+    () => rows.filter((row) => CANONICAL_SLUG_SET.has(row.slug)).length,
+    [rows],
+  );
+  const canonicalVisible = useMemo(
+    () => visibleRows.filter((row) => CANONICAL_SLUG_SET.has(row.slug)).length,
+    [visibleRows],
+  );
 
   const openItem = (id: string | "new", preview = false) =>
     guard(() => {
@@ -134,6 +185,22 @@ export function ProgramLibraryManager() {
       return;
     }
     let cancelled = false;
+    if (String(selectedId).startsWith("pilot-local-")) {
+      const fromCatalog = listPilotAdminDetails().find((row) => row.id === selectedId);
+      if (fromCatalog) {
+        setDraft(fromCatalog);
+        setBaseline(JSON.stringify(fromCatalog));
+        setSaveState("saved");
+        setFieldErrors({});
+        setPublishIssues([]);
+      } else {
+        // Avoid stuck AdminSkeletonRows (selectedId set, draft null).
+        setError("تعذّر تحميل قالب Pilot المحلي.");
+        setSelectedId(null);
+        setDraft(null);
+      }
+      return;
+    }
     void getAdminProgramTemplate(selectedId)
       .then((item) => {
         if (cancelled) return;
@@ -150,7 +217,13 @@ export function ProgramLibraryManager() {
         setFieldErrors({});
         setPublishIssues([]);
       })
-      .catch((err) => setError(translateLibraryError(err)));
+      .catch((err) => {
+        if (cancelled) return;
+        // Phase 8: failed load previously left selectedId set with draft=null → infinite skeleton / error boundary.
+        setError(translateLibraryError(err));
+        setSelectedId(null);
+        setDraft(null);
+      });
     return () => {
       cancelled = true;
     };
@@ -163,19 +236,12 @@ export function ProgramLibraryManager() {
   const refreshList = async () => {
     const result = await listAdminProgramTemplates({
       query: debouncedQuery,
-      goal: goal || null,
-      level: level || null,
+      goal: null,
+      level: level ? level.toLowerCase() : null,
       status: status || null,
       offset,
     });
-    setRows(
-      result.rows.filter((row) => {
-        const daysOk = !daysFilter || String(row.days_per_week) === daysFilter;
-        const locationOk =
-          !locationFilter || String(row.training_location ?? "").toUpperCase() === locationFilter;
-        return daysOk && locationOk;
-      }),
-    );
+    setRows(result.rows);
     setTotal(result.totalCount);
   };
 
@@ -237,6 +303,7 @@ export function ProgramLibraryManager() {
             rest_seconds: exercise.rest_seconds,
             suggested_weight_kg: exercise.suggested_weight_kg,
             notes_ar: exercise.notes_ar,
+            activity_role: exercise.activity_role ?? null,
           })),
         })),
       }));
@@ -286,7 +353,7 @@ export function ProgramLibraryManager() {
     if (!targetId) return;
     setConfirm({
       title: "أرشفة القالب",
-      body: `الأرشفة تخفي القالب من خيارات التعيين. التعيينات الحالية تبقى كما هي.`,
+      body: "الأرشفة تخفي القالب من خيارات التعيين. التعيينات الحالية تبقى كما هي.",
       confirmLabel: "أرشفة",
       tone: "danger",
       onConfirm: () => {
@@ -355,36 +422,43 @@ export function ProgramLibraryManager() {
       <AdminPageHeader
         kicker="التدريب"
         title="البرامج التدريبية"
-        subtitle="قوالب البرامج للأسبوع والتمارين. القالب ليس برنامج العميل المعيّن."
+        subtitle="قوالب البرامج — الجمهور، الغرض، الاستراتيجية، المستوى، المكان، الأيام، الجاهزية."
         actions={
-          <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
-            برنامج جديد
-          </button>
+          <>
+            <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setShowQaDemo((v) => !v)}>
+              {showQaDemo ? "إخفاء مراجعة التوصية" : "مراجعة حالات التوصية"}
+            </button>
+            <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
+              برنامج جديد
+            </button>
+          </>
         }
       />
-      <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · التعيينات الحالية لا تُعدَّل صامتة.</p>
+      <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · التوصية لا تعيّن تلقائياً.</p>
       <AdminConceptKpiRow
         loading={loading}
         metrics={[
           {
+            id: "canonical",
+            label: "Canonical V1",
+            value: `${canonicalVisible.toLocaleString("ar-AE")} / ${CANONICAL_TEMPLATE_COUNT}`,
+            hint: canonicalOnly
+              ? "عرض القوالب الكانونية فقط (ماستر V1)"
+              : `في الصفحة من أصل ${canonicalInLibrary} كانوني محمّل`,
+            tone: canonicalVisible === CANONICAL_TEMPLATE_COUNT ? "positive" : "neutral",
+          },
+          {
             id: "programs",
-            label: "البرامج",
+            label: "إجمالي المكتبة",
             value: total.toLocaleString("ar-AE"),
-            hint: "قوالب في المكتبة",
+            hint: "كل الصفوف من قاعدة البيانات (يشمل نسخًا غير كانونية إن وُجدت)",
             tone: total > 0 ? "positive" : "neutral",
           },
           {
             id: "page",
             label: "في هذه الصفحة",
-            value: rows.length.toLocaleString("ar-AE"),
-            hint: "نتائج التصفية الحالية",
-          },
-          {
-            id: "adherence",
-            label: "متوسط الالتزام",
-            value: "—",
-            hint: "لا التزام برامج معتمد في هذه الشاشة",
-            tone: "unavailable",
+            value: visibleRows.length.toLocaleString("ar-AE"),
+            hint: "بعد الفلاتر الحالية",
           },
           {
             id: "assigned",
@@ -395,21 +469,24 @@ export function ProgramLibraryManager() {
           },
         ]}
       />
+
+      {showQaDemo ? <TemplateRecommendationDemoStates /> : null}
+
       <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم البرنامج" label="بحث البرامج" />
       <AdminFilterBar>
         <label className="cc-filter">
-          الهدف
+          الاستراتيجية
           <select
-            value={goal}
+            value={primaryStrategy}
             onChange={(event) => {
-              setGoal(event.target.value);
+              setPrimaryStrategy(event.target.value);
               setOffset(0);
             }}
           >
             <option value="">الكل</option>
-            {PROGRAM_GOALS.map((item) => (
+            {PRIMARY_TRAINING_STRATEGIES.map((item) => (
               <option key={item} value={item}>
-                {programGoalLabel(item)}
+                {primaryStrategyLabelAr(item)}
               </option>
             ))}
           </select>
@@ -424,9 +501,26 @@ export function ProgramLibraryManager() {
             }}
           >
             <option value="">الكل</option>
-            {PROGRAM_LEVELS.map((item) => (
+            {TEMPLATE_LEVELS.map((item) => (
               <option key={item} value={item}>
-                {programLevelLabel(item)}
+                {item === "BEGINNER" ? "مبتدئ" : item === "INTERMEDIATE" ? "متوسط" : "متقدم"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          المكان
+          <select
+            value={environmentFilter}
+            onChange={(event) => {
+              setEnvironmentFilter(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {TEMPLATE_ENVIRONMENTS.map((item) => (
+              <option key={item} value={item}>
+                {item === "HOME" ? "منزل" : "صالة"}
               </option>
             ))}
           </select>
@@ -441,26 +535,9 @@ export function ProgramLibraryManager() {
             }}
           >
             <option value="">الكل</option>
-            {[2, 3, 4, 5].map((days) => (
+            {[3, 4, 5].map((days) => (
               <option key={days} value={String(days)}>
                 {days}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="cc-filter">
-          المكان
-          <select
-            value={locationFilter}
-            onChange={(event) => {
-              setLocationFilter(event.target.value);
-              setOffset(0);
-            }}
-          >
-            <option value="">الكل</option>
-            {PROGRAM_LOCATIONS.map((item) => (
-              <option key={item} value={item}>
-                {programLocationLabel(item)}
               </option>
             ))}
           </select>
@@ -476,78 +553,70 @@ export function ProgramLibraryManager() {
           >
             <option value="">الكل</option>
             <option value="draft">مسودة</option>
-            <option value="published">نشط</option>
+            <option value="published">منشور</option>
             <option value="archived">مؤرشف</option>
+          </select>
+        </label>
+        <label className="cc-filter">
+          جاهزية المكتبة
+          <select
+            value={readinessFilter}
+            onChange={(event) => {
+              setReadinessFilter(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="">الكل</option>
+            {LIBRARY_READINESS_STATES.map((item) => (
+              <option key={item} value={item}>
+                {libraryReadinessLabelAr(item)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="cc-filter">
+          نطاق المكتبة
+          <select
+            value={canonicalOnly ? "canonical" : "all"}
+            onChange={(event) => {
+              setCanonicalOnly(event.target.value === "canonical");
+              setOffset(0);
+            }}
+          >
+            <option value="canonical">Canonical V1 فقط ({CANONICAL_TEMPLATE_COUNT})</option>
+            <option value="all">الكل (يشمل نسخًا غير كانونية)</option>
           </select>
         </label>
       </AdminFilterBar>
       {error ? <AdminErrorState message={error} onRetry={() => setOffset(0)} /> : null}
       {loading ? (
         <AdminSkeletonRows rows={8} />
-      ) : rows.length === 0 ? (
-        <AdminEmptyState title="لا قوالب مطابقة" body="أنشئ قالباً أو غيّر الفلاتر." />
+      ) : visibleRows.length === 0 ? (
+        <AdminEmptyState
+          title="لا قوالب مطابقة"
+          body={rows.length === 0 ? "لا توجد قوالب بعد. أنشئ قالباً جديداً." : "الفلاتر قد تخفي النتائج. غيّر التصفية."}
+        />
       ) : (
-        <AdminTable>
-          <thead>
-            <tr>
-              <th>البرنامج</th>
-              <th>الهدف</th>
-              <th>المستوى</th>
-              <th>أيام</th>
-              <th>المكان</th>
-              <th>الإصدار</th>
-              <th>الحالة</th>
-              <th>تحديث</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className={row.id === selectedId ? "is-selected" : undefined}>
-                <td>
-                  <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
-                    {row.name_ar}
-                  </button>
-                </td>
-                <td>{programGoalLabel(row.goal)}</td>
-                <td>{programLevelLabel(row.level)}</td>
-                <td>{row.days_per_week}</td>
-                <td>{programLocationLabel(row.training_location as ProgramLocation)}</td>
-                <td>V{row.version}</td>
-                <td>
-                  <AdminLibraryStatusBadge
-                    status={row.archived_at ? "archived" : row.is_published ? "published" : "draft"}
-                    label={programStatusLabel(row.is_published, row.archived_at)}
-                  />
-                </td>
-                <td>{formatAdminDate(row.updated_at)}</td>
-                <td>
-                  <div className="cc-row-actions">
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => openItem(row.id)}>
-                      فتح
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => openItem(row.id, true)}>
-                      معاينة
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => clone(row.id, "duplicate")}>
-                      نسخ القالب
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => clone(row.id, "new_version")}>
-                      نسخة جديدة
-                    </button>
-                    {!row.archived_at ? (
-                      <button type="button" className="cc-btn cc-btn--ghost" onClick={() => archive(row.id)}>
-                        أرشفة
-                      </button>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </AdminTable>
+        <div className="tpl-card-grid" aria-label="قائمة قوالب البرامج">
+          {visibleRows.map((row) => {
+            const presentation = presentListItem(row);
+            return (
+              <ProgramTemplateCard
+                key={row.id}
+                row={row}
+                presentation={presentation}
+                selected={row.id === selectedId}
+                onOpen={() => openItem(row.id)}
+                onPreview={() => openItem(row.id, true)}
+                onClone={() => clone(row.id, "duplicate")}
+                onNewVersion={() => clone(row.id, "new_version")}
+                onArchive={!row.archived_at ? () => archive(row.id) : undefined}
+              />
+            );
+          })}
+        </div>
       )}
-      <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={setOffset} />
+      <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_MAX_PAGE_SIZE} total={total} onPage={setOffset} />
       <AdminLibraryDialogs request={confirm} onClose={() => setConfirm(null)} />
     </>
   );

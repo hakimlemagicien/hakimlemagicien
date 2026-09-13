@@ -1,0 +1,1578 @@
+{
+  "phase": "8/10",
+  "phase_name": "EXERCISE_LIBRARY_COMPATIBILITY_MEDIA_AND_CONTENT_READINESS_AUDIT",
+  "generated_at": "2026-09-12T23:35:47.963Z",
+  "provenance": {
+    "approved_36_source": "PROVISIONAL_IN_REPO — official content pack not checked into repository; Pilot 4 keys are APPROVED_EXERCISE.",
+    "catalog_source": "scripts/exercise-library.json",
+    "v2_source": "scripts/exercise-library-v2-metadata.json",
+    "core_100_source": "src/lib/platform/strategy-matrix/config/core-100-external-ids.ts"
+  },
+  "counts": {
+    "exercise_library_total": 321,
+    "v2_total": 321,
+    "core_100": 100,
+    "by_type": {
+      "strength": 246,
+      "warmup": 25,
+      "mobility": 25,
+      "cardio": 25
+    },
+    "approved_36": 36,
+    "templates_imported_total": 4,
+    "template_5_plus_imported": 0
+  },
+  "core_100": {
+    "expected_count": 100,
+    "unique_count": 100,
+    "missing_from_library": [],
+    "duplicate_in_core_list": [],
+    "result": "PASS"
+  },
+  "known_ids": {
+    "result": "PASS",
+    "rows": [
+      {
+        "external_id": "WU-001",
+        "expected_name_en": "Arm Circles",
+        "found": true,
+        "actual_name_en": "Arm Circles",
+        "name_match": true
+      },
+      {
+        "external_id": "WU-002",
+        "expected_name_en": "Leg Swings",
+        "found": true,
+        "actual_name_en": "Leg Swings",
+        "name_match": true
+      },
+      {
+        "external_id": "LE-003",
+        "expected_name_en": "Goblet Squat",
+        "found": true,
+        "actual_name_en": "Goblet Squat",
+        "name_match": true
+      },
+      {
+        "external_id": "CH-003",
+        "expected_name_en": "Dumbbell Bench Press",
+        "found": true,
+        "actual_name_en": "Dumbbell Bench Press",
+        "name_match": true
+      },
+      {
+        "external_id": "BA-016",
+        "expected_name_en": "Seated Cable Row",
+        "found": true,
+        "actual_name_en": "Seated Cable Row",
+        "name_match": true
+      },
+      {
+        "external_id": "BA-023",
+        "expected_name_en": "Romanian Deadlift",
+        "found": true,
+        "actual_name_en": "Romanian Deadlift",
+        "name_match": true
+      },
+      {
+        "external_id": "SH-005",
+        "expected_name_en": "Lateral Raise",
+        "found": true,
+        "actual_name_en": "Lateral Raise",
+        "name_match": true
+      },
+      {
+        "external_id": "AB-011",
+        "expected_name_en": "Dead Bug",
+        "found": true,
+        "actual_name_en": "Dead Bug",
+        "name_match": true
+      },
+      {
+        "external_id": "CR-001",
+        "expected_name_en": "Treadmill Run",
+        "found": true,
+        "actual_name_en": "Treadmill Run",
+        "name_match": true
+      },
+      {
+        "external_id": "CH-002",
+        "expected_name_en": "Incline Bench Press",
+        "found": true,
+        "actual_name_en": "Incline Bench Press",
+        "name_match": true
+      },
+      {
+        "external_id": "SH-027",
+        "expected_name_en": "Smith Machine Press",
+        "found": true,
+        "actual_name_en": "Smith Machine Press",
+        "name_match": true
+      },
+      {
+        "external_id": "AB-001",
+        "expected_name_en": "Crunch",
+        "found": true,
+        "actual_name_en": "Crunch",
+        "name_match": true
+      }
+    ]
+  },
+  "duplicates": {
+    "duplicate_external_ids": [],
+    "duplicate_slugs": [],
+    "near_duplicate_names": [],
+    "variation_note": "Large substitution_groups (e.g. SQUAT_PATTERN) are intentional equipment/movement variations — not accidental merges."
+  },
+  "warmups": {
+    "count": 25,
+    "expected_approx": 25,
+    "supports_3_per_session_across_36": true,
+    "by_region": {
+      "shoulder": [
+        "WU-001",
+        "WU-010",
+        "WU-013",
+        "WU-019",
+        "WU-021",
+        "WU-024"
+      ],
+      "lower-body": [
+        "WU-002",
+        "WU-005",
+        "WU-011",
+        "WU-017",
+        "WU-018"
+      ],
+      "hip": [
+        "WU-003",
+        "WU-020",
+        "WU-022"
+      ],
+      "general cardio": [
+        "WU-004",
+        "WU-015",
+        "WU-023"
+      ],
+      "movement preparation": [
+        "WU-006",
+        "WU-007",
+        "WU-009",
+        "WU-016",
+        "WU-025"
+      ],
+      "spine/trunk": [
+        "WU-008",
+        "WU-012"
+      ],
+      "ankle": [
+        "WU-014"
+      ]
+    },
+    "status": "CLASSIFIED_SUFFICIENT"
+  },
+  "mobility": {
+    "count": 25,
+    "expected_approx": 25,
+    "by_kind": {
+      "dynamic mobility": [
+        "MO-001",
+        "MO-008",
+        "MO-018"
+      ],
+      "controlled ROM": [
+        "MO-002",
+        "MO-007",
+        "MO-009",
+        "MO-011",
+        "MO-012",
+        "MO-013",
+        "MO-014",
+        "MO-015",
+        "MO-016",
+        "MO-017",
+        "MO-024",
+        "MO-025"
+      ],
+      "static stretch": [
+        "MO-003",
+        "MO-004",
+        "MO-005",
+        "MO-006",
+        "MO-010",
+        "MO-019",
+        "MO-020",
+        "MO-021",
+        "MO-022",
+        "MO-023"
+      ]
+    },
+    "by_area": {
+      "shoulders": [
+        "MO-001",
+        "MO-012",
+        "MO-023"
+      ],
+      "thoracic spine": [
+        "MO-002",
+        "MO-013"
+      ],
+      "hips": [
+        "MO-003",
+        "MO-004",
+        "MO-009"
+      ],
+      "general movement control": [
+        "MO-005",
+        "MO-006",
+        "MO-008",
+        "MO-010",
+        "MO-011",
+        "MO-014",
+        "MO-015",
+        "MO-016",
+        "MO-017",
+        "MO-018",
+        "MO-019",
+        "MO-020",
+        "MO-021",
+        "MO-022",
+        "MO-024",
+        "MO-025"
+      ],
+      "ankles": [
+        "MO-007"
+      ]
+    },
+    "status": "CLASSIFIED_SUFFICIENT",
+    "gaps_for_families": []
+  },
+  "cardio": {
+    "treadmill_brisk_walk": {
+      "status": "ABSENT",
+      "fat_loss_gym_cardio_activity": "ADDITION_REQUIRED",
+      "duration_prescription_supported": true,
+      "matching_ids": [],
+      "near_miss": {
+        "external_id": "CR-015",
+        "name_en": "Incline Walk"
+      }
+    },
+    "home": {
+      "HOME_AEROBIC_OPTIONS_COUNT": 6,
+      "HOME_CARDIO_READINESS": "ADDITION_REQUIRED",
+      "options": [
+        {
+          "external_id": "WU-015",
+          "name_en": "Light Jog",
+          "exercise_type": "warmup"
+        },
+        {
+          "external_id": "WU-022",
+          "name_en": "Glute Bridge March",
+          "exercise_type": "warmup"
+        },
+        {
+          "external_id": "WU-023",
+          "name_en": "March in Place",
+          "exercise_type": "warmup"
+        },
+        {
+          "external_id": "CR-005",
+          "name_en": "Jump Rope",
+          "exercise_type": "cardio"
+        },
+        {
+          "external_id": "CR-006",
+          "name_en": "Burpees",
+          "exercise_type": "cardio"
+        },
+        {
+          "external_id": "CR-007",
+          "name_en": "Mountain Climbers",
+          "exercise_type": "cardio"
+        }
+      ],
+      "has_brisk_walk": false,
+      "has_march_in_place": true,
+      "low_impact_count": 2
+    },
+    "gym_cardio_count": 25
+  },
+  "power": {
+    "candidate_count": 8,
+    "classified": [
+      {
+        "external_id": "WU-002",
+        "name_en": "Leg Swings",
+        "environment": [
+          "GYM",
+          "HOME",
+          "NO_EQUIPMENT"
+        ],
+        "tags": [
+          "LOW_COMPLEXITY"
+        ]
+      },
+      {
+        "external_id": "WU-004",
+        "name_en": "Jumping Jacks",
+        "environment": [
+          "GYM",
+          "HOME",
+          "NO_EQUIPMENT"
+        ],
+        "tags": [
+          "JUMP_REQUIRED"
+        ]
+      },
+      {
+        "external_id": "WU-019",
+        "name_en": "Arm Swings",
+        "environment": [
+          "GYM",
+          "HOME",
+          "NO_EQUIPMENT"
+        ],
+        "tags": [
+          "LOW_COMPLEXITY"
+        ]
+      },
+      {
+        "external_id": "GL-017",
+        "name_en": "Kettlebell Swing",
+        "environment": [
+          "GYM",
+          "HOME"
+        ],
+        "tags": [
+          "LOW_COMPLEXITY"
+        ]
+      },
+      {
+        "external_id": "CR-005",
+        "name_en": "Jump Rope",
+        "environment": [
+          "GYM",
+          "HOME"
+        ],
+        "tags": [
+          "JUMP_REQUIRED"
+        ]
+      },
+      {
+        "external_id": "CR-008",
+        "name_en": "Battle Ropes",
+        "environment": [
+          "GYM"
+        ],
+        "tags": [
+          "LOW_COMPLEXITY"
+        ]
+      },
+      {
+        "external_id": "CR-010",
+        "name_en": "Sprint Intervals",
+        "environment": [
+          "GYM"
+        ],
+        "tags": [
+          "SPACE_REQUIRED",
+          "MODERATE_COMPLEXITY"
+        ]
+      },
+      {
+        "external_id": "CR-014",
+        "name_en": "HIIT Circuit",
+        "environment": [
+          "GYM"
+        ],
+        "tags": [
+          "LOW_COMPLEXITY"
+        ]
+      }
+    ],
+    "beginner_home_options": 5,
+    "note": "Athletic Performance does not require Olympic lifts or mandatory jumping.",
+    "status": "CLASSIFIED"
+  },
+  "ramp_up": {
+    "RAMP_UP_LIBRARY_MODEL": "SUPPORTED",
+    "reason": "Same exercise identity + activity_role=EXERCISE_SPECIFIC_RAMP_UP + distinct load/reps prescription is already used by Pilot 4 and persisted in DB/RPC."
+  },
+  "home_equipment": {
+    "home_compatible_count": 180,
+    "equipment_bucket_counts": {
+      "DUMBBELL": 71,
+      "BENCH": 1,
+      "BODYWEIGHT": 99,
+      "BAND": 6,
+      "OTHER": 3,
+      "KETTLEBELL": 1
+    },
+    "CAPABILITY_METADATA_GAP": true,
+    "exercises_with_implicit_capability_deps": 7,
+    "missing_capability_fields": [
+      "training_space",
+      "available_load",
+      "load_increment_granularity",
+      "safe_band_anchor",
+      "stable_bench_or_chair",
+      "stable_elevated_surface"
+    ],
+    "note": "Do not mark HOME compatible merely because no machine exists — location_compatibility is present but client capability metadata is not on exercise rows."
+  },
+  "gym_equipment": {
+    "gym_compatible_count": 321,
+    "specialty_review_count": 37,
+    "specialty_examples": [
+      {
+        "external_id": "CH-010",
+        "name_en": "Cable Fly High",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "CH-011",
+        "name_en": "Cable Fly Low",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "CH-015",
+        "name_en": "Incline Smith Machine Bench Press",
+        "reason": "Smith machine"
+      },
+      {
+        "external_id": "BA-009",
+        "name_en": "Straight Arm Pulldown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BA-015",
+        "name_en": "One Arm Cable Row",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BA-016",
+        "name_en": "Seated Cable Row",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BA-027",
+        "name_en": "Face Pull",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "SH-009",
+        "name_en": "Cable Lateral Raise",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "SH-017",
+        "name_en": "Cable Rear Delt Fly",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "SH-023",
+        "name_en": "Cross Body Cable Raise",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "SH-026",
+        "name_en": "Cable Y Raise",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "SH-027",
+        "name_en": "Smith Machine Press",
+        "reason": "Smith machine"
+      },
+      {
+        "external_id": "BI-006",
+        "name_en": "Cable Curl",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BI-011",
+        "name_en": "Bayesian Cable Curl",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BI-017",
+        "name_en": "Cable Hammer Curl",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "BI-020",
+        "name_en": "Lying Cable Curl",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-001",
+        "name_en": "Tricep Pushdown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-002",
+        "name_en": "Rope Pushdown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-009",
+        "name_en": "Cable Overhead Extension",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-011",
+        "name_en": "Single Arm Pushdown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-015",
+        "name_en": "Reverse Grip Pushdown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "TR-016",
+        "name_en": "V-Bar Pushdown",
+        "reason": "cable station"
+      },
+      {
+        "external_id": "FO-012",
+        "name_en": "Sledgehammer Levering",
+        "reason": "specialty machine/attachment"
+      },
+      {
+        "external_id": "LE-015",
+        "name_en": "Smith Machine Squat",
+        "reason": "Smith machine"
+      },
+      {
+        "external_id": "GL-003",
+        "name_en": "Cable Kickback",
+        "reason": "cable station"
+      }
+    ],
+    "status": "CLASSIFIED"
+  },
+  "difficulty": {
+    "review_candidates": [
+      {
+        "external_id": "LE-011",
+        "name_en": "Nordic Curl",
+        "reason": "advanced technical lift — review before Beginner Foundation"
+      },
+      {
+        "external_id": "LE-014",
+        "name_en": "Pistol Squat",
+        "reason": "advanced technical lift — review before Beginner Foundation"
+      },
+      {
+        "external_id": "CR-006",
+        "name_en": "Burpees",
+        "reason": "high-impact / jump — needs readiness gate"
+      }
+    ],
+    "status": "CLASSIFIED"
+  },
+  "female_media": {
+    "TOTAL_RELEVANT_EXERCISES": 75,
+    "FEMALE_MEDIA_READY": 0,
+    "STANDARD_ONLY": 75,
+    "MEDIA_MISSING": 0,
+    "FEMALE_MEDIA_COVERAGE_PERCENT": 0,
+    "FEMALE_MEDIA_COMPLETENESS_REQUIRED_BEFORE_RELEASE": true,
+    "resolution_order": [
+      "FEMALE",
+      "STANDARD",
+      "MEDIA_MISSING"
+    ],
+    "note": "Canonical exercise identity remains single. Female variants are preference/media only — not duplicated records. No female media fields exist on library rows yet (METADATA_MODEL_GAP)."
+  },
+  "media": {
+    "MEDIA_READY": 0,
+    "MEDIA_PARTIAL": 321,
+    "MEDIA_MISSING": 0,
+    "ab001": {
+      "external_id": "AB-001",
+      "catalog_status": "placeholder",
+      "local_asset_video_known": true,
+      "db_video_status_observed": "placeholder",
+      "note": "Historical local exercise.mp4 exists under core-100 content pack; local DB row remains placeholder with empty video_path."
+    }
+  },
+  "runtime_activity_role_rendering": {
+    "GENERAL_WARM_UP": "GENERIC_RENDERING",
+    "TARGETED_DYNAMIC_WARM_UP": "GENERIC_RENDERING",
+    "EXERCISE_SPECIFIC_RAMP_UP": "GENERIC_RENDERING",
+    "MAIN_RESISTANCE": "FULLY_RENDERED",
+    "POST_WORKOUT_CARDIO": "GENERIC_RENDERING",
+    "AEROBIC_ENDURANCE_BLOCK": "GENERIC_RENDERING",
+    "CONTROLLED_AEROBIC_INTERVAL_BLOCK": "NOT_SUPPORTED",
+    "POWER_SKILL_BLOCK": "GENERIC_RENDERING",
+    "MOBILITY_ACTIVITY": "GENERIC_RENDERING",
+    "DAILY_ACTIVITY": "NOT_SUPPORTED"
+  },
+  "family_readiness": [
+    {
+      "family": "FAT_LOSS",
+      "gym": "CONTENT_GAPS",
+      "home": "CONTENT_GAPS",
+      "notes": "Needs distinct treadmill brisk walk (GYM) and low-impact HOME aerobic options."
+    },
+    {
+      "family": "MUSCLE_GAIN",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "Core strength library adequate; HOME capability metadata gap remains."
+    },
+    {
+      "family": "BODY_RECOMPOSITION",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "Sequences not locked; library patterns exist."
+    },
+    {
+      "family": "GENERAL_FITNESS",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "Warm-up + strength coverage adequate; media partial."
+    },
+    {
+      "family": "STRENGTH",
+      "gym": "READY_WITH_REVIEW",
+      "home": "CONTENT_GAPS",
+      "notes": "GYM-primary family; HOME strength templates not in provisional 36 set."
+    },
+    {
+      "family": "ENDURANCE",
+      "gym": "READY_WITH_REVIEW",
+      "home": "CONTENT_GAPS",
+      "notes": "Machine cardio plentiful in GYM; HOME aerobic options thin."
+    },
+    {
+      "family": "MOBILITY_FUNCTIONAL",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "25 mobility exercises present; programming sequences not locked."
+    },
+    {
+      "family": "HEALTHY_AGING_ACTIVE_LIFE",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "Prefer low-impact; jump-heavy power candidates must be gated."
+    },
+    {
+      "family": "ATHLETIC_PERFORMANCE",
+      "gym": "READY_WITH_REVIEW",
+      "home": "READY_WITH_REVIEW",
+      "notes": "Power block candidates exist; jumping not mandatory."
+    },
+    {
+      "family": "GLUTE_FOCUS",
+      "gym": "READY_WITH_REVIEW",
+      "home": "CONTENT_GAPS",
+      "notes": "Female media completeness required before release; HOME sequences not yet defined."
+    }
+  ],
+  "template_36_readiness": [
+    {
+      "TEMPLATE_KEY": "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "FAT_LOSS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "APPROVED_EXERCISE",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "EXERCISE_LIBRARY_ADDITION_REQUIRED:TREADMILL_BRISK_WALK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "Fat Loss GYM requires Treadmill Brisk Walk."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "FAT_LOSS_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "FAT_LOSS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "HOME_AEROBIC_ADDITION_REQUIRED",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "HOME aerobic options incomplete."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "FAT_LOSS_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "FAT_LOSS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "EXERCISE_LIBRARY_ADDITION_REQUIRED:TREADMILL_BRISK_WALK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "Fat Loss GYM requires Treadmill Brisk Walk."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "FAT_LOSS_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "FAT_LOSS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "HOME_AEROBIC_ADDITION_REQUIRED",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "HOME aerobic options incomplete."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "MUSCLE_GAIN_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "MUSCLE_GAIN",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "MUSCLE_GAIN",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "APPROVED_EXERCISE",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": [
+        "Pilot 4 already imported; media mostly placeholder."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "MUSCLE_GAIN",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_GYM_5D",
+      "PRIMARY_STRATEGY": "MUSCLE_GAIN",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 5,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "BODY_RECOMPOSITION",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "BODY_RECOMPOSITION",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "BODY_RECOMPOSITION",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "BODY_RECOMPOSITION",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "GENERAL_FITNESS_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "GENERAL_FITNESS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "GENERAL_FITNESS_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "GENERAL_FITNESS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "GENERAL_FITNESS_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "GENERAL_FITNESS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "GENERAL_FITNESS_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "GENERAL_FITNESS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "GLUTE_FOCUS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": "COVERAGE_0_PERCENT",
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "Female media completeness required before release."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "GLUTE_FOCUS_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "GLUTE_FOCUS",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "NOT_YET_DEFINED",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": "COVERAGE_0_PERCENT",
+      "OVERALL_IMPORT_READINESS": "BLOCKED_BY_REFERENCE",
+      "notes": [
+        "Exercise sequence not defined in project reference."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "GLUTE_FOCUS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": "COVERAGE_0_PERCENT",
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "Female media completeness required before release."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "GLUTE_FOCUS",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "NOT_YET_DEFINED",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": "COVERAGE_0_PERCENT",
+      "OVERALL_IMPORT_READINESS": "BLOCKED_BY_REFERENCE",
+      "notes": [
+        "Exercise sequence not defined in project reference."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "ATHLETIC_PERFORMANCE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "CANDIDATES_AVAILABLE",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "ATHLETIC_PERFORMANCE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "APPROVED_EXERCISE",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "CANDIDATES_AVAILABLE",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": [
+        "Pilot 4 already imported; media mostly placeholder."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "ATHLETIC_PERFORMANCE",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "CANDIDATES_AVAILABLE",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_HOME_4D",
+      "PRIMARY_STRATEGY": "ATHLETIC_PERFORMANCE",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "CANDIDATES_AVAILABLE",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "STRENGTH_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "STRENGTH",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "STRENGTH",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "APPROVED_EXERCISE",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": [
+        "Pilot 4 already imported; media mostly placeholder."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "STRENGTH_PROGRESS_INTERMEDIATE_GYM_5D",
+      "PRIMARY_STRATEGY": "STRENGTH",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 5,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "ENDURANCE_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "ENDURANCE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "ENDURANCE_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "ENDURANCE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "HOME_AEROBIC_ADDITION_REQUIRED",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "CONTENT_ADDITION_REQUIRED",
+      "notes": [
+        "HOME aerobic options incomplete."
+      ]
+    },
+    {
+      "TEMPLATE_KEY": "ENDURANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+      "PRIMARY_STRATEGY": "ENDURANCE",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 4,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "MOBILITY_FUNCTIONAL",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "MOBILITY_FUNCTIONAL",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_HOME_3D",
+      "PRIMARY_STRATEGY": "MOBILITY_FUNCTIONAL",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_HOME_3D",
+      "PRIMARY_STRATEGY": "HEALTHY_AGING_ACTIVE_LIFE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_GYM_3D",
+      "PRIMARY_STRATEGY": "HEALTHY_AGING_ACTIVE_LIFE",
+      "LEVEL": "BEGINNER",
+      "ENVIRONMENT": "GYM",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "N_A",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    },
+    {
+      "TEMPLATE_KEY": "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_HOME_3D",
+      "PRIMARY_STRATEGY": "HEALTHY_AGING_ACTIVE_LIFE",
+      "LEVEL": "INTERMEDIATE",
+      "ENVIRONMENT": "HOME",
+      "DAYS": 3,
+      "EXERCISE_REFERENCE_STATUS": "CANDIDATE_FOR_REVIEW",
+      "WARMUP_STATUS": "LIBRARY_SUFFICIENT",
+      "CARDIO_STATUS": "LIBRARY_OK",
+      "POWER_STATUS": "N_A_OR_OPTIONAL",
+      "HOME_CAPABILITY_STATUS": "CAPABILITY_METADATA_GAP",
+      "MEDIA_STATUS": "MEDIA_PARTIAL",
+      "FEMALE_MEDIA_STATUS": null,
+      "OVERALL_IMPORT_READINESS": "READY_WITH_REVIEW",
+      "notes": []
+    }
+  ],
+  "readiness_counts": {
+    "READY_FOR_IMPORT": 0,
+    "READY_WITH_REVIEW": 27,
+    "CONTENT_ADDITION_REQUIRED": 7,
+    "BLOCKED_BY_REFERENCE": 2
+  },
+  "missing_exercises": [
+    {
+      "classification": "EXERCISE_LIBRARY_ADDITION_REQUIRED",
+      "desired_name": "Treadmill Brisk Walk",
+      "movement_pattern": "AEROBIC_WALK",
+      "primary_muscles": [
+        "CARDIOVASCULAR",
+        "LEGS"
+      ],
+      "environment": "GYM",
+      "equipment": [
+        "TREADMILL"
+      ],
+      "difficulty": "beginner",
+      "activity_role": "POST_WORKOUT_CARDIO / GENERAL_WARM_UP (duration)",
+      "reason": "Fat Loss GYM requires distinct brisk walk (10 min start + 15 min end). Must not silently encode as Treadmill Run.",
+      "similar_existing": [
+        {
+          "external_id": "CR-001",
+          "name_en": "Treadmill Run",
+          "match": "POSSIBLE_DUPLICATE"
+        },
+        {
+          "external_id": "CR-015",
+          "name_en": "Incline Walk",
+          "match": "POSSIBLE_DUPLICATE"
+        }
+      ],
+      "duplicate_risk": "MEDIUM"
+    },
+    {
+      "classification": "EXERCISE_LIBRARY_ADDITION_REQUIRED",
+      "desired_name": "Brisk Walk (Outdoor / Neighborhood)",
+      "movement_pattern": "AEROBIC_WALK",
+      "primary_muscles": [
+        "CARDIOVASCULAR"
+      ],
+      "environment": "HOME",
+      "equipment": [
+        "NO_EQUIPMENT"
+      ],
+      "difficulty": "beginner",
+      "activity_role": "POST_WORKOUT_CARDIO / AEROBIC_ENDURANCE_BLOCK",
+      "reason": "HOME fat-loss / endurance templates need machine-free brisk walk distinct from March in Place and Jump Rope.",
+      "similar_existing": [
+        {
+          "external_id": "WU-023",
+          "name_en": "March in Place",
+          "match": "POSSIBLE_DUPLICATE"
+        },
+        {
+          "external_id": "CR-016",
+          "name_en": "Outdoor Run",
+          "match": "POSSIBLE_DUPLICATE"
+        }
+      ],
+      "duplicate_risk": "MEDIUM"
+    }
+  ],
+  "missing_media_work": {
+    "policy": "Catalog status mostly placeholder; DB video_status=placeholder for all local rows observed.",
+    "female_variants": "0 female media variants modeled",
+    "ab001_local_video": "Present in assets; not wired in local DB video_path",
+    "blocking_for_import": false,
+    "visible_readiness_issue": true
+  },
+  "pilot_4_regression": {
+    "templates": 4,
+    "broken_references": 0,
+    "result": "PASS",
+    "audits": [
+      {
+        "template_key": "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+        "total_exercise_references": 30,
+        "unique_external_ids": [
+          "CR-001",
+          "WU-001",
+          "WU-003",
+          "LE-003",
+          "CH-012",
+          "BA-001",
+          "SH-001",
+          "GL-001",
+          "BI-001",
+          "LE-007",
+          "CH-003",
+          "BA-010",
+          "SH-005",
+          "GL-002",
+          "TR-001",
+          "LE-001",
+          "CH-001",
+          "BA-006",
+          "SH-002",
+          "GL-017",
+          "AB-001"
+        ],
+        "core_100_references": 18,
+        "full_library_references": 12,
+        "missing_exercises": [],
+        "missing_media": 0,
+        "broken_references": 0,
+        "library_readiness": "READY"
+      },
+      {
+        "template_key": "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+        "total_exercise_references": 27,
+        "unique_external_ids": [
+          "WU-001",
+          "WU-002",
+          "CH-004",
+          "CH-007",
+          "BA-013",
+          "SH-002",
+          "BI-002",
+          "TR-001",
+          "AB-006",
+          "LE-003",
+          "LE-008",
+          "GL-002",
+          "LE-007",
+          "CA-001",
+          "AB-001",
+          "BA-006",
+          "SH-005",
+          "GL-001"
+        ],
+        "core_100_references": 21,
+        "full_library_references": 6,
+        "missing_exercises": [],
+        "missing_media": 0,
+        "broken_references": 0,
+        "library_readiness": "READY"
+      },
+      {
+        "template_key": "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+        "total_exercise_references": 40,
+        "unique_external_ids": [
+          "WU-001",
+          "WU-002",
+          "WU-003",
+          "CH-001",
+          "BA-001",
+          "SH-001",
+          "BA-010",
+          "BI-001",
+          "TR-001",
+          "LE-001",
+          "LE-004",
+          "GL-001",
+          "LE-009",
+          "CA-001",
+          "AB-006",
+          "CH-012",
+          "BA-006",
+          "SH-002",
+          "BA-013",
+          "BI-002",
+          "TR-003",
+          "LE-003",
+          "LE-007",
+          "GL-002",
+          "LE-008",
+          "AB-001"
+        ],
+        "core_100_references": 28,
+        "full_library_references": 12,
+        "missing_exercises": [],
+        "missing_media": 0,
+        "broken_references": 0,
+        "library_readiness": "READY"
+      },
+      {
+        "template_key": "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D",
+        "total_exercise_references": 30,
+        "unique_external_ids": [
+          "WU-001",
+          "WU-002",
+          "WU-003",
+          "CH-004",
+          "CH-007",
+          "BA-013",
+          "SH-002",
+          "FO-003",
+          "AB-006",
+          "BI-002",
+          "LE-003",
+          "LE-008",
+          "GL-002",
+          "BA-006",
+          "SH-005",
+          "AB-001",
+          "CA-001",
+          "LE-007",
+          "GL-017",
+          "AB-008"
+        ],
+        "core_100_references": 21,
+        "full_library_references": 9,
+        "missing_exercises": [],
+        "missing_media": 0,
+        "broken_references": 0,
+        "library_readiness": "READY"
+      }
+    ]
+  },
+  "admin_editor": {
+    "status": "PASS",
+    "prior_gap": "ProgramLibraryManager stuck on AdminSkeletonRows when getAdminProgramTemplate fails (selectedId set, draft null).",
+    "fix": "Clear selectedId + draft on load failure / missing pilot-local row (ProgramLibraryManager.tsx)."
+  },
+  "recommendation_defaults": {
+    "classification": "EXPLICIT_DEFAULT_USED",
+    "when_client_context_absent": "Admin TemplateRecommendationPanel supplies coach level/days (+ HOME equipment) defaults",
+    "resolver_behavior": "INSUFFICIENT_CONTEXT when level/days/environment missing — no silent inference in resolver",
+    "phase_10_ui_labeling_recommended": true
+  },
+  "phase_7_gaps_carried": [
+    "Coach Override reason not fully historical",
+    "In-progress workout replacement safety not newly hardened"
+  ],
+  "migrations_created": 0,
+  "staging_changed": false,
+  "production_changed": false,
+  "phase_9": {
+    "ready": "PARTIAL",
+    "importable_batches": [
+      {
+        "batch": "PILOT_4_ALREADY_IMPORTED",
+        "keys": [
+          "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+          "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+          "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+          "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D"
+        ],
+        "action": "DO_NOT_REIMPORT"
+      },
+      {
+        "batch": "READY_WITH_REVIEW_SEQUENCES",
+        "keys": [
+          "MUSCLE_GAIN_FOUNDATION_BEGINNER_GYM_3D",
+          "MUSCLE_GAIN_FOUNDATION_BEGINNER_HOME_3D",
+          "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D",
+          "MUSCLE_GAIN_PROGRESS_INTERMEDIATE_GYM_5D",
+          "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_GYM_3D",
+          "BODY_RECOMPOSITION_FOUNDATION_BEGINNER_HOME_3D",
+          "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_GYM_4D",
+          "BODY_RECOMPOSITION_PROGRESS_INTERMEDIATE_HOME_4D",
+          "GENERAL_FITNESS_FOUNDATION_BEGINNER_GYM_3D",
+          "GENERAL_FITNESS_FOUNDATION_BEGINNER_HOME_3D",
+          "GENERAL_FITNESS_PROGRESS_INTERMEDIATE_GYM_4D",
+          "GENERAL_FITNESS_PROGRESS_INTERMEDIATE_HOME_4D",
+          "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_GYM_3D",
+          "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D",
+          "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+          "ATHLETIC_PERFORMANCE_PROGRESS_INTERMEDIATE_HOME_4D",
+          "STRENGTH_FOUNDATION_BEGINNER_GYM_3D",
+          "STRENGTH_PROGRESS_INTERMEDIATE_GYM_4D",
+          "STRENGTH_PROGRESS_INTERMEDIATE_GYM_5D",
+          "ENDURANCE_FOUNDATION_BEGINNER_GYM_3D",
+          "ENDURANCE_PROGRESS_INTERMEDIATE_GYM_4D",
+          "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_HOME_3D",
+          "MOBILITY_FUNCTIONAL_FOUNDATION_BEGINNER_GYM_3D",
+          "MOBILITY_FUNCTIONAL_PROGRESS_INTERMEDIATE_HOME_3D",
+          "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_HOME_3D",
+          "HEALTHY_AGING_ACTIVE_LIFE_FOUNDATION_BEGINNER_GYM_3D",
+          "HEALTHY_AGING_ACTIVE_LIFE_PROGRESS_INTERMEDIATE_HOME_3D"
+        ],
+        "action": "PM_DECISION_REQUIRED — sequences mostly CANDIDATE_FOR_REVIEW; media partial"
+      },
+      {
+        "batch": "CONTENT_ADDITION_REQUIRED",
+        "keys": [
+          "FAT_LOSS_FOUNDATION_BEGINNER_GYM_3D",
+          "FAT_LOSS_FOUNDATION_BEGINNER_HOME_3D",
+          "FAT_LOSS_PROGRESS_INTERMEDIATE_GYM_4D",
+          "FAT_LOSS_PROGRESS_INTERMEDIATE_HOME_4D",
+          "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D",
+          "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_GYM_4D",
+          "ENDURANCE_FOUNDATION_BEGINNER_HOME_3D"
+        ],
+        "action": "BLOCK_UNTIL_ADDITIONS_OR_EXPLICIT_PM_WAIVER"
+      },
+      {
+        "batch": "BLOCKED_BY_REFERENCE",
+        "keys": [
+          "GLUTE_FOCUS_FOUNDATION_BEGINNER_HOME_3D",
+          "GLUTE_FOCUS_PROGRESS_INTERMEDIATE_HOME_4D"
+        ],
+        "action": "DO_NOT_IMPORT"
+      }
+    ]
+  }
+}

@@ -18,6 +18,8 @@ export type TodayWorkoutPrescription = {
   assignmentExerciseId?: string;
   assignmentDayId?: string;
   notes_ar?: string;
+  /** Template activity role from assignment snapshot (presentation). */
+  activity_role?: string | null;
 };
 
 export const TODAY_WORKOUT_PRESCRIPTIONS: TodayWorkoutPrescription[] = [

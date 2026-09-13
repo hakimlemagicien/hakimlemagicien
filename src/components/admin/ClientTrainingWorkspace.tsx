@@ -35,6 +35,14 @@ import {
   type AdminSetLogRow,
 } from "@/lib/admin/admin-client-training-api";
 import {
+  ASSIGNMENT_HISTORY_FILTERS,
+  buildReplaceConfirmationBody,
+  filterAssignmentHistory,
+  presentAssignmentHistoryRow,
+  templateVersionLabel,
+  type AssignmentHistoryFilter,
+} from "@/lib/admin/admin-assignment-history";
+import {
   assignmentStatusLabel,
   currentWeekNumber,
   formatRepsLabel,
@@ -71,6 +79,8 @@ import {
 } from "@/lib/admin/coach-override-form";
 import { WeeklySchedulePreview } from "@/components/admin/WeeklySchedulePreview";
 import { AdminExercisePicker } from "@/components/admin/AdminExercisePicker";
+import { TemplateRecommendationPanel } from "@/components/admin/programs/TemplateRecommendationPanel";
+import { TemplateStructurePreview } from "@/components/admin/programs/ProgramTemplateDetailPanel";
 import {
   assessClientProgramEditImpact,
   assessTemplateCompatibility,
@@ -245,6 +255,9 @@ export function ClientTrainingWorkspace({
   const [strategySaving, setStrategySaving] = useState(false);
   const [strategyError, setStrategyError] = useState<string | null>(null);
   const [exerciseMeta, setExerciseMeta] = useState<Record<string, ExerciseV2Metadata>>({});
+  const [recommendationPreview, setRecommendationPreview] = useState<AdminProgramDetail | null>(null);
+  const [recommendationPreviewError, setRecommendationPreviewError] = useState<string | null>(null);
+  const [recommendationCatalog, setRecommendationCatalog] = useState<AdminProgramDetail[]>([]);
   const templateQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(editing && draft && detail && JSON.stringify(draft.weeks) !== JSON.stringify(detail.weeks));
   const guard = useUnsavedNavigation(dirty, onConfirm);
@@ -355,6 +368,29 @@ export function ClientTrainingWorkspace({
         setError(translateLibraryError(err));
       });
   }, [assignStep, templateQuery, pickerGoal, pickerLevel, pickerDays]);
+
+  // Phase 6: load published DB templates (with contracts) for recommendation catalog.
+  useEffect(() => {
+    let cancelled = false;
+    void listAdminProgramTemplates({ status: "published" })
+      .then(async (result) => {
+        if (cancelled) return;
+        const pilotLike = result.rows.filter(
+          (row) => Boolean(row.primary_strategy) || Boolean(row.template_contract),
+        );
+        const details = await Promise.all(
+          pilotLike.slice(0, 25).map((row) => getAdminProgramTemplate(row.id)),
+        );
+        if (!cancelled) setRecommendationCatalog(details);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (!cancelled) setRecommendationCatalog([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!detail) {
@@ -876,8 +912,14 @@ export function ClientTrainingWorkspace({
     onConfirm({
       title: replace ? "استبدال البرنامج النشط" : "تأكيد تعيين البرنامج",
       body: replace
-        ? `البرنامج الحالي (${detail?.name_ar ?? overview.assignment?.name_ar ?? "النشط"}) سيصبح تاريخاً بحالة مستبدل. البرنامج الجديد: ${preview.name_ar} إصدار ${preview.version} اعتباراً من ${startsOn}. السجل السابق يبقى.`
-        : `تعيين ${preview.name_ar} إصدار ${preview.version} للعميل من ${startsOn}. تُنشأ لقطة مستقلة ولن يغيّر تعديل القالب لاحقاً هذا البرنامج.`,
+        ? buildReplaceConfirmationBody({
+            currentName: detail?.name_ar ?? overview.assignment?.name_ar,
+            currentVersion: detail?.template_version ?? overview.assignment?.template_version,
+            newName: preview.name_ar,
+            newVersion: preview.version,
+            startsOn,
+          })
+        : `تعيين ${preview.name_ar} ${templateVersionLabel(preview.version)} للعميل من ${startsOn}. تُنشأ لقطة مستقلة ولن يغيّر تعديل القالب لاحقاً هذا البرنامج.`,
       confirmLabel: replace ? "استبدال وتعيين" : "تعيين",
       tone: replace ? "danger" : "primary",
       onConfirm: () => {
@@ -1104,6 +1146,7 @@ export function ClientTrainingWorkspace({
           rows={history}
           total={historyTotal}
           offset={historyOffset}
+          currentAssignmentId={detail?.id ?? overview.assignment?.id ?? null}
           onPage={(next) => {
             setHistoryOffset(next);
             void listAdminClientAssignments(clientId, next).then((list) => {
@@ -1133,6 +1176,66 @@ export function ClientTrainingWorkspace({
       ) : null}
 
       <ClientTrainingGoalCard overview={overview} onUpdated={onOverviewRefresh} onConfirm={onConfirm} />
+
+      <AdminCard>
+        <TemplateRecommendationPanel
+          clientId={clientId}
+          goal={overview.goal}
+          trainingType={overview.training_type}
+          level={detail?.level ?? null}
+          daysPerWeek={detail?.days_per_week ?? null}
+          catalogDetails={recommendationCatalog}
+          catalogIncludesFixtures={false}
+          includeInMemoryPilots={false}
+          onPreviewRecommended={(templateId) => {
+            setRecommendationPreviewError(null);
+            setRecommendationPreview(null);
+            if (templateId.startsWith("tpl-")) {
+              setRecommendationPreviewError(
+                "المعاينة من فهرس التطوير (fixture) — القالب غير مخزّن في قاعدة البيانات بعد. لا تعيين تلقائي.",
+              );
+              return;
+            }
+            void getAdminProgramTemplate(templateId)
+              .then((row) => setRecommendationPreview(row))
+              .catch((err) => setRecommendationPreviewError(translateLibraryError(err)));
+          }}
+          onAssignClick={(templateId) => {
+            setRecommendationPreview(null);
+            setRecommendationPreviewError(null);
+            if (templateId.startsWith("tpl-")) {
+              setAssignStep("pick");
+              setRecommendationPreviewError(
+                "القالب الموصى به من فهرس التطوير — اختر قالباً منشوراً من المكتبة يدوياً.",
+              );
+              return;
+            }
+            // Open Program Template assign flow with recommended template preselected (not auto-assign).
+            void getAdminProgramTemplate(templateId)
+              .then((full) => {
+                setPreview(full);
+                setAssignStep("preview");
+              })
+              .catch((err) => setError(translateLibraryError(err)));
+          }}
+        />
+        {recommendationPreviewError ? (
+          <p className="tpl-rec__goal-note" role="status">
+            {recommendationPreviewError}
+          </p>
+        ) : null}
+        {recommendationPreview ? (
+          <div className="tpl-rec-preview-wrap">
+            <div className="cc-row-actions">
+              <strong>معاينة القالب الموصى به (قراءة فقط)</strong>
+              <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setRecommendationPreview(null)}>
+                إغلاق المعاينة
+              </button>
+            </div>
+            <TemplateStructurePreview detail={recommendationPreview} />
+          </div>
+        ) : null}
+      </AdminCard>
 
       <AdminCard>
         <h2 className="cc-section__title">البرنامج الحالي</h2>
@@ -1188,7 +1291,11 @@ export function ClientTrainingWorkspace({
             </div>
             <div>
               <dt>الإصدار</dt>
-              <dd>V{detail.template_version}</dd>
+              <dd>{templateVersionLabel(detail.template_version)}</dd>
+            </div>
+            <div>
+              <dt>تاريخ التعيين</dt>
+              <dd>{formatAdminDate(detail.assigned_at)}</dd>
             </div>
             <div>
               <dt>تاريخ البداية</dt>
@@ -1206,6 +1313,12 @@ export function ClientTrainingWorkspace({
               <dt>لقطة مكتملة</dt>
               <dd>{detail.snapshot_complete ? "نعم" : "لا — تعيين قديم يحتاج مراجعة"}</dd>
             </div>
+            {detail.source_template_id ? (
+              <div>
+                <dt>قالب المصدر</dt>
+                <dd className="cc-muted">{detail.source_template_id}</dd>
+              </div>
+            ) : null}
           </dl>
         ) : (
           <AdminEmptyState
@@ -1897,6 +2010,7 @@ export function ClientTrainingWorkspace({
         rows={history}
         total={historyTotal}
         offset={historyOffset}
+        currentAssignmentId={detail?.id ?? overview.assignment?.id ?? null}
         onPage={(next) => {
           setHistoryOffset(next);
           void listAdminClientAssignments(clientId, next).then((list) => {
@@ -1956,6 +2070,27 @@ function TemplateAssignPreview({
   return (
     <>
       <dl className="cc-dl">
+        {overview.assignment?.status === "active" || overview.assignment?.status === "scheduled" ? (
+          <>
+            <div>
+              <dt>البرنامج الحالي</dt>
+              <dd>
+                {detail?.name_ar ?? overview.assignment?.name_ar ?? "—"} ·{" "}
+                {templateVersionLabel(detail?.template_version ?? overview.assignment?.template_version)}
+              </dd>
+            </div>
+            <div>
+              <dt>الحالة الحالية</dt>
+              <dd>{assignmentStatusLabel(overview.assignment.status)}</dd>
+            </div>
+          </>
+        ) : null}
+        <div>
+          <dt>القالب المحدد</dt>
+          <dd>
+            {preview.name_ar} · {templateVersionLabel(preview.version)}
+          </dd>
+        </div>
         <div>
           <dt>الهدف</dt>
           <dd>{programGoalLabel(preview.goal)}</dd>
@@ -1971,8 +2106,8 @@ function TemplateAssignPreview({
           </dd>
         </div>
         <div>
-          <dt>الإصدار</dt>
-          <dd>V{preview.version}</dd>
+          <dt>إصدار القالب</dt>
+          <dd>{templateVersionLabel(preview.version)}</dd>
         </div>
       </dl>
       <p className={`cc-compat cc-compat--${compatibility.status.toLowerCase()}`}>
@@ -2005,9 +2140,10 @@ function TemplateAssignPreview({
           );
         })}
       </ul>
-      {overview.assignment?.status === "active" ? (
+      {overview.assignment?.status === "active" || overview.assignment?.status === "scheduled" ? (
         <p className="cc-field__error" role="alert">
-          يوجد برنامج نشط. التعيين الجديد يستبدله بعد التأكيد ويُبقي التاريخ.
+          استبدال صريح فقط: يُنشئ لقطة جديدة ويُبقي التعيين السابق في التاريخ بحالة مستبدل. المعاينة لا تغيّر
+          البرنامج.
         </p>
       ) : null}
       <AdminField label="تاريخ البداية" htmlFor="starts_on">
@@ -2077,24 +2213,69 @@ function HistoryList({
   offset,
   onPage,
   onOpen,
+  currentAssignmentId,
 }: {
   rows: AdminAssignmentSummary[];
   total: number;
   offset: number;
   onPage: (offset: number) => void;
   onOpen: (id: string) => void;
+  currentAssignmentId?: string | null;
 }) {
+  const [filter, setFilter] = useState<AssignmentHistoryFilter>("all");
+  const visible = filterAssignmentHistory(rows, filter);
+
   return (
     <AdminCard>
       <h2 className="cc-section__title">تاريخ البرامج</h2>
-      {rows.length === 0 ? <AdminEmptyState title="لا تاريخ تعيين" body="ستظهر هنا البرامج السابقة والحالية والمجدولة." /> : null}
-      {rows.map((row) => (
-        <button key={row.id} type="button" className="cc-row-btn" onClick={() => onOpen(row.id)}>
-          {row.name_ar || "برنامج"} · {assignmentStatusLabel(row.status)} · {row.source_template_id ? "قالب" : "Matrix"} · إصدار {row.template_version} ·{" "}
-          {formatAdminDate(row.assigned_at)}
-          {row.snapshot_complete ? "" : " · لقطة ناقصة"}
-        </button>
-      ))}
+      <p className="cc-muted">
+        القالب ≠ لقطة العميل. الاستبدال ينشئ تعييناً جديداً ويبقي السجل السابق. لا ترقية تلقائية.
+      </p>
+      <div className="cc-row-actions" role="group" aria-label="تصفية التاريخ">
+        {ASSIGNMENT_HISTORY_FILTERS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={filter === item.id ? "cc-btn cc-btn--primary" : "cc-btn"}
+            onClick={() => setFilter(item.id)}
+          >
+            {item.label_ar}
+          </button>
+        ))}
+      </div>
+      {visible.length === 0 ? (
+        <AdminEmptyState title="لا تاريخ تعيين" body="ستظهر هنا البرامج السابقة والحالية والمجدولة." />
+      ) : null}
+      <ul className="tpl-assignment-history" aria-label="قائمة تاريخ البرامج">
+        {visible.map((row) => {
+          const presented = presentAssignmentHistoryRow(row);
+          const isCurrent =
+            presented.isCurrent && (!currentAssignmentId || currentAssignmentId === row.id);
+          return (
+            <li key={row.id}>
+              <button
+                type="button"
+                className={isCurrent ? "cc-row-btn is-current-assignment" : "cc-row-btn"}
+                onClick={() => onOpen(row.id)}
+              >
+                <span className="cc-row-btn__title">
+                  {isCurrent ? "الحالي · " : ""}
+                  {presented.title}
+                </span>
+                <span className="cc-muted">
+                  {presented.versionLabel} · {presented.statusLabel} · {presented.sourceLabel} · تطور:{" "}
+                  {presented.progressionLabel}
+                </span>
+                <span className="cc-muted">
+                  تعيين {formatAdminDate(row.assigned_at)}
+                  {row.ended_at ? ` · استبدال/إنهاء ${formatAdminDate(row.ended_at)}` : ""}
+                  {row.snapshot_complete ? "" : " · لقطة ناقصة"}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
       <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={onPage} />
     </AdminCard>
   );

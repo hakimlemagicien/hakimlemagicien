@@ -38,6 +38,7 @@ export type ClientTrainingRuntime = {
       rest_seconds: number;
       suggested_weight_kg: number | null;
       notes_ar: string | null;
+      activity_role?: string | null;
     }>;
   }>;
 };
@@ -76,7 +77,13 @@ export async function fetchMyTrainingRuntime(): Promise<ClientTrainingRuntime> {
     days: ((row.days as ClientTrainingRuntime["days"]) ?? []).map((day) => ({
       ...day,
       day_id: day.day_id ?? (day as { day_id?: string }).day_id,
-      exercises: day.exercises ?? [],
+      exercises: (day.exercises ?? []).map((exercise) => ({
+        ...exercise,
+        activity_role:
+          (exercise as { activity_role?: string | null }).activity_role ??
+          (exercise as { activityRole?: string | null }).activityRole ??
+          null,
+      })),
     })),
   };
 }
@@ -110,6 +117,7 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
       assignmentExerciseId: exercise.id,
       assignmentDayId: day.day_id,
       notes_ar: exercise.notes_ar ?? undefined,
+      activity_role: exercise.activity_role ?? null,
     }));
     map[weekday] = applySessionPresentationToPlan({
       id: weekday,

@@ -16,6 +16,31 @@
 | 1b | [`ENVIRONMENTS.md`](./ENVIRONMENTS.md) | PRODUCTION vs STAGING vs LOCAL — عزل قواعد البيانات |
 | 2 | [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md) | معمارية المنتج: تسويق منفصل عن التطبيق |
 | 2b | [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) | عقد العضو المجاني: معاينة هيكل + فطور حسب الهدف |
+| 2c | [`TRAINING_TEMPLATE_UNIFIED_CONTRACT.md`](./TRAINING_TEMPLATE_UNIFIED_CONTRACT.md) | عقد قوالب التدريب الموحد + جسر Primary Strategy |
+| 2d | [`TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md`](./TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md) | تدقيق تغطية المسارات Strategy×Level×Env×Days + فجوات القوالب |
+| 2e | [`phase4-visual-evidence/README.md`](./phase4-visual-evidence/README.md) | أدلة بصرية Phase 4 — مكتبة القوالب + لوحة التوصية |
+| 2f | [`phase5-visual-evidence/README.md`](./phase5-visual-evidence/README.md) | أدلة بصرية Phase 5 — Pilot 4 قوالب حقيقية |
+| 2g | [`TRAINING_TEMPLATE_PHASE5_PILOT4_REPORT.md`](./TRAINING_TEMPLATE_PHASE5_PILOT4_REPORT.md) | تقرير Phase 5 — استيراد Pilot 4 والتحقق الشامل |
+| 2h | [`phase6-visual-evidence/README.md`](./phase6-visual-evidence/README.md) | أدلة بصرية Phase 6 — Local DB + تعيين يدوي + runtime |
+| 2i | [`TRAINING_TEMPLATE_PHASE6_REAL_LOCAL_DB_REPORT.md`](./TRAINING_TEMPLATE_PHASE6_REAL_LOCAL_DB_REPORT.md) | تقرير Phase 6 — قاعدة محلية حقيقية + معاينة + تعيين |
+| 2j | [`phase7-visual-evidence/README.md`](./phase7-visual-evidence/README.md) | أدلة بصرية Phase 7 — إصدارات التعيين + التاريخ |
+| 2k | [`TRAINING_TEMPLATE_PHASE7_VERSIONED_ASSIGNMENT_REPORT.md`](./TRAINING_TEMPLATE_PHASE7_VERSIONED_ASSIGNMENT_REPORT.md) | تقرير Phase 7 — تجميد الإصدار + استبدال + تاريخ |
+| 2l | [`TRAINING_TEMPLATE_PHASE8_LIBRARY_READINESS_AUDIT.md`](./TRAINING_TEMPLATE_PHASE8_LIBRARY_READINESS_AUDIT.md) | تقرير Phase 8 — تدقيق جاهزية المكتبة والوسائط قبل استيراد 32 قالب |
+| 2m | [`data/training-template-phase8-readiness.json`](./data/training-template-phase8-readiness.json) | مخرجات Phase 8 الآلية (تدقيق فقط — ليست مصدر حقيقة) |
+| 2n | [`TRAINING_TEMPLATE_PHASE9A_CONTENT_READINESS_PACKAGE.md`](./TRAINING_TEMPLATE_PHASE9A_CONTENT_READINESS_PACKAGE.md) | Phase 9A — حزمة جاهزية المحتوى قبل الاستيراد الجماعي |
+| 2o | [`data/training-template-phase9a-content-readiness.json`](./data/training-template-phase9a-content-readiness.json) | مخرجات Phase 9A الآلية (مواصفات محتوى — ليست مصدر حقيقة) |
+| 2p | [`TRAINING_TEMPLATE_EXERCISE_SEQUENCE_MASTER_V1.md`](./TRAINING_TEMPLATE_EXERCISE_SEQUENCE_MASTER_V1.md) | Phase 9 — حزمة تسلسلات التمارين (متطابقة مع الماستر المُصالح) |
+| 2q | [`data/training-template-exercise-sequence-master-v1.json`](./data/training-template-exercise-sequence-master-v1.json) | Phase 9 — تسلسلات JSON |
+| 2r | [`TRAINING_TEMPLATE_LIBRARY_ADDITIONS_REQUIRED.md`](./TRAINING_TEMPLATE_LIBRARY_ADDITIONS_REQUIRED.md) | مواصفات إضافات المكتبة المطلوبة |
+| 2s | [`TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md`](./TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md) | بيان ميديا أنثوية (Glute GYM فقط) |
+| 2t | [`TRAINING_TEMPLATE_MASTER_RECONCILIATION_REPORT.md`](./TRAINING_TEMPLATE_MASTER_RECONCILIATION_REPORT.md) | Phase 9 — مصالحة نهائية للماستر (37 قيدًا / تسمية تاريخية 36/36) |
+| 2u | [`TRAINING_TEMPLATE_PHASE9_FINAL_IMPORT_REPORT.md`](./TRAINING_TEMPLATE_PHASE9_FINAL_IMPORT_REPORT.md) | Phase 9 — استيراد Local للـ37 قالبًا + CR-026/CR-027 |
+| 2v | [`TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md`](./TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md) | Phase 10 — QA كامل + Staging + قرار إغلاق V1 |
+| 2v2 | [`TRAINING_TEMPLATE_ADMIN_37_VISIBILITY_DEFECT_REPORT.md`](./TRAINING_TEMPLATE_ADMIN_37_VISIBILITY_DEFECT_REPORT.md) | Phase 10 — إصلاح ظهور 37 قالبًا في `/admin/programs` |
+| 2w | [`TRAINING_PROGRAM_TEMPLATE_MASTER_REFERENCE_V1.md`](./TRAINING_PROGRAM_TEMPLATE_MASTER_REFERENCE_V1.md) | المرجع النهائي لماستر الـ37 قالبًا |
+| 2x | [`phase10-visual-evidence/README.md`](./phase10-visual-evidence/README.md) | أدلة بصرية Phase 10 |
+| 2y | [`data/training-template-phase10-local-qa.json`](./data/training-template-phase10-local-qa.json) | مخرجات QA Local الآلية |
+| 2z | [`data/training-template-phase10-staging-qa.json`](./data/training-template-phase10-staging-qa.json) | مخرجات QA Staging الآلية |
 | 3 | [`PROJECT_REPORT.md`](./PROJECT_REPORT.md) | تقرير مراجعة كامل + فرص تحسين تجربة المستخدم |
 | 4 | [`../AGENTS.md`](../AGENTS.md) | قواعد العمل للـ AI: Git، Build، المناطق المحمية |
 | 5 | [`../README.md`](../README.md) | مدخل سريع للمستودع |

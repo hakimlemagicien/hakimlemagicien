@@ -12,6 +12,12 @@ import {
 } from "@/lib/admin/admin-program-ops";
 import type { SessionMuscleRegion } from "@/lib/platform/session-muscle-presentation";
 import { summarizeSessionMuscles } from "@/lib/platform/session-muscle-presentation";
+import {
+  readTemplateContractFromMetadata,
+  type ProgramTemplateContractV1,
+} from "@/lib/platform/training-templates";
+
+export type { ProgramTemplateContractV1 };
 
 export const EXERCISE_ROLES = ["warmup", "main", "accessory", "finisher"] as const;
 export type ExerciseRole = (typeof EXERCISE_ROLES)[number];
@@ -42,6 +48,8 @@ export type BuilderExerciseRecord = {
   rir?: number | null;
   tempo?: string | null;
   role?: ExerciseRole | null;
+  /** Phase 2/5 activity role — richer than legacy warmup/main/finisher. */
+  activity_role?: string | null;
   pattern?: ExercisePattern | null;
   pattern_group?: string | null;
   alternatives?: ExerciseAlternative[];
@@ -118,6 +126,13 @@ export function programTargetGenderFromMetadata(metadata: Record<string, unknown
   const value = String(metadata?.target_gender ?? "").trim().toLowerCase();
   if (value === "male" || value === "female") return value;
   return "all";
+}
+
+/** Phase 2: read Unified Template Contract from metadata when present (dev/admin helper). */
+export function programTemplateContractFromMetadata(
+  metadata: Record<string, unknown> | null | undefined,
+): ProgramTemplateContractV1 | null {
+  return readTemplateContractFromMetadata(metadata);
 }
 
 export function programTargetGenderLabel(gender: ProgramTargetGender): string {
@@ -373,6 +388,7 @@ export function hydrateProgramBuilder(detail: AdminProgramDetail): AdminProgramD
             rir: extra.rir ?? exercise.rir,
             tempo: extra.tempo ?? exercise.tempo,
             role: extra.role ?? exercise.role,
+            activity_role: extra.activity_role ?? exercise.activity_role,
             pattern: extra.pattern ?? exercise.pattern,
             pattern_group: extra.pattern_group ?? exercise.pattern_group,
             alternatives: extra.alternatives ?? exercise.alternatives,
@@ -404,6 +420,7 @@ export function serializeBuilderMetadata(draft: AdminProgramDetail): BuilderMeta
           exercise.rir != null ||
           Boolean(exercise.tempo?.trim()) ||
           (exercise.role && exercise.role !== "main") ||
+          Boolean(exercise.activity_role) ||
           (exercise.pattern && exercise.pattern !== "none") ||
           Boolean(exercise.pattern_group) ||
           Boolean(exercise.alternatives?.length) ||
@@ -415,13 +432,14 @@ export function serializeBuilderMetadata(draft: AdminProgramDetail): BuilderMeta
           day: dayIndex,
           sort: exercise.sort_order ?? exerciseIndex,
           rir: exercise.rir ?? null,
-          tempo: exercise.tempo ?? "",
-          role: exercise.role ?? "main",
-          pattern: exercise.pattern ?? "none",
+          tempo: exercise.tempo ?? null,
+          role: exercise.role ?? null,
+          activity_role: exercise.activity_role ?? null,
+          pattern: exercise.pattern ?? null,
           pattern_group: exercise.pattern_group ?? null,
           alternatives: exercise.alternatives ?? [],
-          client_label_ar: exercise.client_label_ar ?? "",
-          client_thumb_url: exercise.client_thumb_url ?? "",
+          client_label_ar: exercise.client_label_ar ?? null,
+          client_thumb_url: exercise.client_thumb_url ?? null,
         });
       });
     });
