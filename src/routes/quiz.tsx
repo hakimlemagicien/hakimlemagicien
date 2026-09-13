@@ -28,7 +28,7 @@ import { QuizLoginEntry } from "@/components/quiz/QuizLoginEntry";
 import { CheckoutScreen } from "@/components/checkout/CheckoutScreen";
 import { createFileRoute } from "@tanstack/react-router";
 import { productionCanonicalUrl } from "@/lib/env/assert-environment";
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type ReactElement } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -56,7 +56,6 @@ import {
   Gem,
   Shield,
 } from "lucide-react";
-import { useRef } from "react";
 import maleImg from "@/assets/ذكر.png";
 import femaleImg from "@/assets/quiz-gender-female.png";
 import gymBg from "@/assets/quiz-gym-bg.jpg";
@@ -3059,6 +3058,16 @@ function isQuizEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function ensureQuizFieldVisible(target: EventTarget | null) {
+  const el = target instanceof HTMLElement ? target : null;
+  if (!el) return;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    });
+  });
+}
+
 function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, email: string, isDubai: boolean, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
   const [phase, setPhase] = useState<"identity" | "phone">("identity");
@@ -3070,6 +3079,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   const [submitting, setSubmitting] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
+  const [fieldFocused, setFieldFocused] = useState(false);
+  const [keyboardPad, setKeyboardPad] = useState(0);
+  const contactScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const DURATION = 10000;
@@ -3101,6 +3113,47 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
       cancelled = true;
     };
   }, []);
+
+  // iOS/Android soft keyboard: keep focused field above the keyboard inside the fixed quiz shell.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardPad(inset > 48 ? inset : 0);
+    };
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    sync();
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+    };
+  }, []);
+
+  const compactForKeyboard = fieldFocused || keyboardPad > 0;
+
+  const onFieldFocus = (event: FocusEvent<HTMLElement>) => {
+    setFieldFocused(true);
+    ensureQuizFieldVisible(event.target);
+  };
+  const onFieldBlur = () => {
+    // Delay so tap on CTA still works before compact layout expands.
+    window.setTimeout(() => {
+      const active = document.activeElement;
+      if (active instanceof HTMLInputElement && contactScrollRef.current?.contains(active)) return;
+      setFieldFocused(false);
+    }, 80);
+  };
+
+  // Re-center the focused field after the soft keyboard finishes resizing.
+  useEffect(() => {
+    if (keyboardPad <= 0) return;
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement)) return;
+    if (!contactScrollRef.current?.contains(active)) return;
+    ensureQuizFieldVisible(active);
+  }, [keyboardPad]);
 
   const isOtherCountry = form.country === "other";
   const country = isOtherCountry
@@ -3207,7 +3260,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         </div>
       )}
 
-      <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
+      <div className="relative flex min-h-0 h-full flex-col px-5 pt-3 pb-3">
         <ProgressHeader
           step="contact"
           onBack={() => {
@@ -3216,161 +3269,179 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
           }}
         />
 
-        <div className="mt-4 text-center">
-          <h1 className="font-[Tajawal] text-[25px] font-black leading-[1.25] text-neutral-900">
-            لقد وجدت
-            <br />
-            <span className="program-match-title relative inline-block pb-2" style={{ color: ORANGE }}>
-              البرنامج المناسب لك
-              <span className="program-match-lines" aria-hidden="true">
-                <span className="program-match-line program-match-line-1" />
-                <span className="program-match-line program-match-line-2" />
-              </span>
-            </span>
-          </h1>
-          <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-7 text-neutral-600">
-            بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
-          </p>
-        </div>
-
-        <div className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-2">
-            <Target className="h-5 w-5" style={{ color: ORANGE }} />
-            <h3 className="text-[18px] font-black text-neutral-900">
-              {phase === "identity" ? (
-                <>
-                  افتح <span style={{ color: ORANGE }}>خطتك</span> داخل التطبيق
-                </>
-              ) : (
-                <>
-                  بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
-                </>
-              )}
-            </h3>
-          </div>
-          <p className="mt-1.5 text-[13px] text-neutral-600 leading-relaxed px-2">
-            {phase === "identity"
-              ? oauthSession
-                ? "أدخل اسمك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
-                : "أدخل اسمك وبريدك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
-              : "أضف دولتك ورقم هاتفك للمتابعة داخل التطبيق."}
-          </p>
-        </div>
-
         <div
-          key={phase}
-          className="mt-6 flex-1 min-h-0 flex flex-col justify-start gap-5 animate-[fadeIn_.35s_ease-out]"
+          ref={contactScrollRef}
+          className="mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]"
+          style={{ paddingBottom: Math.max(12, keyboardPad + (compactForKeyboard ? 24 : 8)) }}
         >
-          {phase === "identity" ? (
-            <>
-              <FieldRow icon={<UserIcon />} label="الاسم">
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="مثال: أحمد"
-                  dir="rtl"
-                  autoComplete="name"
-                  autoCapitalize="words"
-                  enterKeyHint="next"
-                  className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-right placeholder:text-neutral-400"
-                />
-              </FieldRow>
-              {oauthSession ? null : (
-                <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
+          {!compactForKeyboard ? (
+            <div className="mt-2 text-center">
+              <h1 className="font-[Tajawal] text-[25px] font-black leading-[1.25] text-neutral-900">
+                لقد وجدت
+                <br />
+                <span className="program-match-title relative inline-block pb-2" style={{ color: ORANGE }}>
+                  البرنامج المناسب لك
+                  <span className="program-match-lines" aria-hidden="true">
+                    <span className="program-match-line program-match-line-1" />
+                    <span className="program-match-line program-match-line-2" />
+                  </span>
+                </span>
+              </h1>
+              <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-7 text-neutral-600">
+                بناءً على إجاباتك، قمت بتحليل هدفك وحالتك الحالية لتحديد أفضل استراتيجية مناسبة لك.
+              </p>
+            </div>
+          ) : null}
+
+          <div className={`text-center ${compactForKeyboard ? "mt-1" : "mt-6"}`}>
+            <div className="flex items-center justify-center gap-2">
+              <Target className="h-5 w-5 shrink-0" style={{ color: ORANGE }} />
+              <h3 className={`font-black text-neutral-900 ${compactForKeyboard ? "text-[16px]" : "text-[18px]"}`}>
+                {phase === "identity" ? (
+                  <>
+                    افتح <span style={{ color: ORANGE }}>خطتك</span> داخل التطبيق
+                  </>
+                ) : (
+                  <>
+                    بقيت <span style={{ color: ORANGE }}>خطوة أخيرة</span> فقط
+                  </>
+                )}
+              </h3>
+            </div>
+            {!compactForKeyboard ? (
+              <p className="mt-1.5 text-[13px] text-neutral-600 leading-relaxed px-2">
+                {phase === "identity"
+                  ? oauthSession
+                    ? "أدخل اسمك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
+                    : "أدخل اسمك وبريدك للمتابعة داخل التطبيق وفتح برنامجك المخصص."
+                  : "أضف دولتك ورقم هاتفك للمتابعة داخل التطبيق."}
+              </p>
+            ) : null}
+          </div>
+
+          <div
+            key={phase}
+            className="mt-5 flex flex-col justify-start gap-5 animate-[fadeIn_.35s_ease-out]"
+          >
+            {phase === "identity" ? (
+              <>
+                <FieldRow icon={<UserIcon />} label="الاسم">
                   <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="example@email.com"
-                    dir="ltr"
-                    autoComplete="email"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onFocus={onFieldFocus}
+                    onBlur={onFieldBlur}
+                    placeholder="مثال: أحمد"
+                    dir="rtl"
+                    autoComplete="name"
+                    autoCapitalize="words"
                     enterKeyHint="next"
-                    className="quiz-input w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                    className="quiz-input relative z-[1] w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-right placeholder:text-neutral-400"
                   />
                 </FieldRow>
-              )}
-            </>
-          ) : (
-            <>
-              <FieldRow icon={<GlobeIcon />} label="الدولة">
-                <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center justify-between w-full min-h-12">
-                  <ChevronDown className="h-4 w-4 text-neutral-500" />
-                  <div className="flex items-center gap-2">
-                    <span className="text-[16px]">{country.name}</span>
-                    <span className="text-base leading-none">{country.flag}</span>
-                  </div>
-                </button>
-              </FieldRow>
-              <FieldRow icon={<WhatsAppIcon />} label="رقم الهاتف">
-                <div className="flex items-center gap-2.5 w-full" dir="ltr">
-                  {isOtherCountry ? (
-                    <div className="flex min-h-12 items-center gap-0.5 rounded-md bg-neutral-50 px-2.5 ring-1 ring-black/5">
-                      <span className="text-[16px] font-semibold text-neutral-700">+</span>
-                      <input
-                        value={form.customDial}
-                        onChange={(e) => setForm({ ...form, customDial: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                        placeholder="xxx"
-                        dir="ltr"
-                        inputMode="numeric"
-                        autoComplete="tel-country-code"
-                        aria-label="رمز الدولة"
-                        className="w-[3.25rem] bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
-                        style={{ fontSize: 16, minHeight: 48 }}
-                      />
-                    </div>
-                  ) : (
-                    <button type="button" onClick={() => setCountryOpen(true)} className="flex min-h-12 items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-2 ring-1 ring-black/5">
-                      <span className="text-base leading-none">{country.flag}</span>
-                      <span className="text-[16px] font-semibold">{country.dial}</span>
-                      <ChevronDown className="h-3 w-3 text-neutral-500" />
-                    </button>
-                  )}
-                  <input
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
-                    placeholder={isOtherCountry ? "رقم هاتفك" : form.country === "ma" ? "6X XXX XXXX" : "5X XXX XXXX"}
-                    dir="ltr"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    enterKeyHint="done"
-                    className="quiz-input min-h-12 flex-1 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
-                  />
-                </div>
-                {isOtherCountry && (
-                  <p className="mt-2 text-[12px] leading-5 text-neutral-500 text-right">أدخل رمز دولتك ثم رقم هاتفك.</p>
+                {oauthSession ? null : (
+                  <FieldRow icon={<MailIcon />} label="البريد الإلكتروني">
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onFocus={onFieldFocus}
+                      onBlur={onFieldBlur}
+                      placeholder="example@email.com"
+                      dir="ltr"
+                      autoComplete="email"
+                      enterKeyHint="next"
+                      className="quiz-input relative z-[1] w-full min-h-12 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                    />
+                  </FieldRow>
                 )}
-              </FieldRow>
-            </>
-          )}
-        </div>
+              </>
+            ) : (
+              <>
+                <FieldRow icon={<GlobeIcon />} label="الدولة">
+                  <button type="button" onClick={() => setCountryOpen(true)} className="flex items-center justify-between w-full min-h-12">
+                    <ChevronDown className="h-4 w-4 text-neutral-500" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-[16px]">{country.name}</span>
+                      <span className="text-base leading-none">{country.flag}</span>
+                    </div>
+                  </button>
+                </FieldRow>
+                <FieldRow icon={<WhatsAppIcon />} label="رقم الهاتف">
+                  <div className="flex items-center gap-2.5 w-full" dir="ltr">
+                    {isOtherCountry ? (
+                      <div className="flex min-h-12 items-center gap-0.5 rounded-md bg-neutral-50 px-2.5 ring-1 ring-black/5">
+                        <span className="text-[16px] font-semibold text-neutral-700">+</span>
+                        <input
+                          value={form.customDial}
+                          onChange={(e) => setForm({ ...form, customDial: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                          onFocus={onFieldFocus}
+                          onBlur={onFieldBlur}
+                          placeholder="xxx"
+                          dir="ltr"
+                          inputMode="numeric"
+                          autoComplete="tel-country-code"
+                          aria-label="رمز الدولة"
+                          className="w-[3.25rem] bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                          style={{ fontSize: 16, minHeight: 48 }}
+                        />
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setCountryOpen(true)} className="flex min-h-12 items-center gap-1 rounded-md bg-neutral-50 px-2.5 py-2 ring-1 ring-black/5">
+                        <span className="text-base leading-none">{country.flag}</span>
+                        <span className="text-[16px] font-semibold">{country.dial}</span>
+                        <ChevronDown className="h-3 w-3 text-neutral-500" />
+                      </button>
+                    )}
+                    <input
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                      onFocus={onFieldFocus}
+                      onBlur={onFieldBlur}
+                      placeholder={isOtherCountry ? "رقم هاتفك" : form.country === "ma" ? "6X XXX XXXX" : "5X XXX XXXX"}
+                      dir="ltr"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      enterKeyHint="done"
+                      className="quiz-input relative z-[1] min-h-12 flex-1 bg-transparent outline-none text-[16px] leading-6 text-left placeholder:text-neutral-400"
+                    />
+                  </div>
+                  {isOtherCountry && (
+                    <p className="mt-2 text-[12px] leading-5 text-neutral-500 text-right">أدخل رمز دولتك ثم رقم هاتفك.</p>
+                  )}
+                </FieldRow>
+              </>
+            )}
+          </div>
 
-        <button
-          type="button"
-          disabled={phase === "identity" ? !canContinueIdentity : !canSubmitPhone || submitting}
-          onClick={() => {
-            if (phase === "identity") {
-              if (!canContinueIdentity) return;
-              setPhase("phone");
-              return;
-            }
-            void submitLead();
-          }}
-          className={`mt-4 w-full rounded-[12px] py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${(phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting) ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
-          style={{
-            background: "linear-gradient(180deg,#FF8534,#FF6B00)",
-            boxShadow:
-              (phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting)
-                ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
-                : "none",
-          }}
-        >
-          <span>{phase === "identity" ? "متابعة" : submitting ? "جاري الحفظ..." : "متابعة"}</span>
-          <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
-        </button>
+          <button
+            type="button"
+            disabled={phase === "identity" ? !canContinueIdentity : !canSubmitPhone || submitting}
+            onClick={() => {
+              if (phase === "identity") {
+                if (!canContinueIdentity) return;
+                setPhase("phone");
+                return;
+              }
+              void submitLead();
+            }}
+            className={`mt-5 w-full shrink-0 rounded-[12px] py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${(phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting) ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+            style={{
+              background: "linear-gradient(180deg,#FF8534,#FF6B00)",
+              boxShadow:
+                (phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting)
+                  ? "0 14px 30px -10px rgba(255,107,0,0.55), 0 0 0 6px rgba(255,107,0,0.08)"
+                  : "none",
+            }}
+          >
+            <span>{phase === "identity" ? "متابعة" : submitting ? "جاري الحفظ..." : "متابعة"}</span>
+            <ArrowLeft className="h-5 w-5" strokeWidth={2.6} />
+          </button>
 
-        <div className="mt-2 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
-          <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
-          <span>معلوماتك تبقى خاصة وآمنة</span>
+          <div className="mt-2 mb-1 flex items-center justify-center gap-2 text-[11.5px] text-neutral-500">
+            <Lock className="h-3.5 w-3.5" style={{ color: "#FF6B00" }} />
+            <span>معلوماتك تبقى خاصة وآمنة</span>
+          </div>
         </div>
       </div>
 
