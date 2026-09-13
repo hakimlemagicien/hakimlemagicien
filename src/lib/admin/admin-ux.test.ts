@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { buildAttentionQueue } from "./admin-attention";
 import { isAdminNavActive, listAdminNavHrefs } from "./admin-nav";
 import {
@@ -13,6 +15,13 @@ import {
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
+
+const styles = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
+assert(styles.includes(".cc-inbox.is-thread .cc-inbox__context"), "mobile inbox hides desktop context pane");
+assert(styles.includes(".cc-shell:has(.cc-inbox-page)"), "phone shell locks height for messages page");
+assert(styles.includes(".cc-inbox-page > .cc-inbox"), "inbox flex-fills remaining phone viewport");
+assert(styles.includes(".cc-thread__chat .coach-chat__composer"), "admin composer stays in-flow on phones");
+assert(styles.includes(".cc-inbox__list") && styles.includes("flex: 1"), "conversation list can scroll inside pane");
 
 const queue = buildAttentionQueue({
   inbox: [

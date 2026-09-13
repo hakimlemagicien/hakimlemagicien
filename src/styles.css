@@ -14111,9 +14111,17 @@ button.cc-directory-summary__card {
 .cc-inbox__listpane {
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   border-inline-end: 1px solid #e7e0d6;
   background: #fff;
+}
+
+.cc-inbox__threadpane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .cc-inbox__toolbar {
@@ -14174,6 +14182,8 @@ button.cc-directory-summary__card {
   gap: 2px;
   margin: 0;
   padding: 0 8px 16px;
+  min-height: 0;
+  flex: 1;
   overflow: auto;
   list-style: none;
 }
@@ -14264,7 +14274,9 @@ button.cc-directory-summary__card {
 .cc-thread {
   display: flex;
   min-width: 0;
-  min-height: 100%;
+  min-height: 0;
+  height: 100%;
+  flex: 1;
   flex-direction: column;
   background: #f7f4f0;
 }
@@ -14325,6 +14337,22 @@ button.cc-directory-summary__card {
   flex: 1;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+}
+
+/* Admin thread: keep composer in-flow so the message list keeps a real height on phones. */
+.cc-thread__chat .coach-chat__composer {
+  position: sticky;
+  inset-inline: auto;
+  bottom: 0;
+  z-index: 5;
+  max-width: none;
+  margin-inline: 0;
+  width: 100%;
+}
+
+.cc-thread__chat .coach-chat__thread {
+  padding-bottom: 16px;
 }
 
 .cc-thread__draft {
@@ -14356,6 +14384,12 @@ button.cc-directory-summary__card {
 @media (max-width: 1024px) {
   .cc-inbox {
     grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .cc-inbox:not(.is-thread) .cc-inbox__listpane {
+    height: 100%;
+    overflow: hidden;
   }
 
   .cc-inbox.is-thread .cc-inbox__listpane {
@@ -14363,6 +14397,17 @@ button.cc-directory-summary__card {
   }
 
   .cc-inbox:not(.is-thread) .cc-inbox__threadpane {
+    display: none;
+  }
+
+  .cc-inbox.is-thread .cc-inbox__threadpane {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Context column is desktop-only; on phones it stole the grid and hid the thread. */
+  .cc-inbox.is-thread .cc-inbox__context {
     display: none;
   }
 
@@ -16487,9 +16532,78 @@ button.cc-directory-summary__card {
   }
 }
 
+/* Phone inbox: fill the remaining viewport so «المحادثات» is visible without hunting below KPIs. */
+@media (max-width: 1024px) {
+  .cc-shell:has(.cc-inbox-page) {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .cc-shell:has(.cc-inbox-page) .cc-main {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .cc-workspace:has(.cc-inbox-page) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    height: auto;
+    padding: 12px 12px 0;
+    overflow: hidden;
+  }
+
+  .cc-inbox-page {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cc-inbox-page > .cc-page-header {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .cc-inbox-page > .cc-page-header .cc-page-sub {
+    display: none;
+  }
+
+  .cc-inbox-page > .cc-concept-kpi {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .cc-inbox-page > .cc-concept-kpi .cc-kpi-card__hint {
+    display: none;
+  }
+
+  .cc-inbox-page > .cc-inbox {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+}
+
 @media (max-width: 720px) {
   .cc-concept-kpi {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cc-inbox-page > .cc-concept-kpi {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cc-inbox-page > .cc-page-header__actions .cc-btn--ghost {
+    display: none;
   }
 }
 
