@@ -3233,7 +3233,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+    <div className="relative flex h-full min-h-0 w-full flex-col animate-[fadeIn_.5s_ease-out]">
       <GymBackdrop />
       {showOverlay && (
         <div
