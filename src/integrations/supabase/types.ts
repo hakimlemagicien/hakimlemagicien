@@ -806,6 +806,7 @@ export type Database = {
           progression_state: Json
           progression_status: string
           progression_strategy: string
+          preferred_media_variant: string
           source_template_id: string | null
           starts_on: string | null
           status: string
@@ -831,6 +832,7 @@ export type Database = {
           progression_state?: Json
           progression_status?: string
           progression_strategy?: string
+          preferred_media_variant?: string
           source_template_id?: string | null
           starts_on?: string | null
           status?: string
@@ -856,6 +858,7 @@ export type Database = {
           progression_state?: Json
           progression_status?: string
           progression_strategy?: string
+          preferred_media_variant?: string
           source_template_id?: string | null
           starts_on?: string | null
           status?: string
@@ -4977,4 +4980,3 @@ export const Constants = {
     },
   },
 } as const
-{"_tag":"Error","error":{"code":"UnknownError","message":"Timeout while shutting down PostHog. Some events may not have been sent."}}

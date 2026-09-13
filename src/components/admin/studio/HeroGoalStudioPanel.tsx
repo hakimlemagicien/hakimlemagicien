@@ -18,8 +18,6 @@ import {
 } from "lucide-react";
 import { AdminCard, AdminSection } from "@/components/admin/AdminPage";
 import {
-  adminResetHeroGoalCardTheme,
-  adminResetHeroGoalFraming,
   adminSaveHeroGoalCardTheme,
   adminSaveHeroGoalFraming,
 } from "@/lib/admin/admin-hero-goal-settings-api";
@@ -27,9 +25,9 @@ import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import {
   formatHeroGoalSettingsError,
   invalidateHeroGoalSettings,
+  aliasHeroGoalFramingKeysForBundledAssets,
 } from "@/lib/platform/hero-goal-settings-api";
 import {
-  HERO_APP_PREVIEW_HEIGHT,
   HERO_APP_PREVIEW_WIDTH,
   HeroAppFaithfulPreview,
 } from "@/components/admin/studio/HeroAppChromePreview";
@@ -46,12 +44,9 @@ import {
   HERO_CARD_COLOR_PRESETS,
   HERO_FRAMING_LIMITS,
   HERO_GOAL_SETTINGS_CHANGED_EVENT,
+  bumpHeroGoalSettingsRevision,
   panHeroGoalFraming,
   panHeroGoalFramingVertical,
-  removeHeroGoalCardThemeFromManifest,
-  removeHeroGoalFramingFromManifest,
-  resetHeroGoalCardTheme,
-  resetHeroGoalFraming,
   saveHeroGoalCardTheme,
   saveHeroGoalFraming,
   toggleHeroGoalFlip,
@@ -66,7 +61,7 @@ import {
   listHeroReviewSlots,
   type HeroReviewSlot,
 } from "@/lib/platform/hero-review-studio";
-import { listHeroGoalAssetEntries } from "@/lib/platform/hero-goals-asset-index";
+import { getHourlyRotationIndex, listHeroGoalAssetEntries } from "@/lib/platform/hero-goals-asset-index";
 import { cn } from "@/lib/utils";
 
 type ReviewMode = "single" | "grid";
@@ -94,24 +89,28 @@ function HeroFramingPanel({
   cardTheme,
   statusMessage,
   busy = false,
+  dirty = false,
   onZoom,
   onPan,
   onPanVertical,
   onFlip,
   onCardColor,
   onReset,
+  onPublish,
 }: {
   gender: HeroGender;
   framing: HeroGoalFraming;
   cardTheme: HeroGoalCardTheme;
   statusMessage: string | null;
   busy?: boolean;
+  dirty?: boolean;
   onZoom: (direction: "in" | "out") => void;
   onPan: (direction: "left" | "right") => void;
   onPanVertical: (direction: "up" | "down") => void;
   onFlip: () => void;
   onCardColor: (color: string | null) => void;
   onReset: () => void;
+  onPublish: () => void;
 }) {
   const colorPresets = useMemo(() => {
     if (gender !== "female") return [...HERO_CARD_COLOR_PRESETS];
@@ -126,13 +125,13 @@ function HeroFramingPanel({
         <div>
           <p className="text-sm font-black text-foreground">ضبط موضع الصورة</p>
           <p className="text-xs font-medium text-muted-foreground">
-            كبّر / صغّر، حرّك، اعكس الصورة، أو غيّر لون البطاقة — يُطبَّق فوراً بدون حفظ أو نشر
+            عدّل بحرية في المعاينة — لا يُنشر للتطبيق إلا بعد ضغط «تحديث التطبيق»
           </p>
         </div>
         <div className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[10px] font-mono text-muted-foreground">
           scale {framing.scale.toFixed(2)} · x {framing.offsetX}px · y {framing.offsetY}px
           {framing.flipX ? " · معكوس" : ""}
-          {busy ? " · جاري التحديث…" : ""}
+          {busy ? " · جاري النشر…" : dirty ? " · مسودة" : ""}
         </div>
       </div>
 
@@ -267,12 +266,25 @@ function HeroFramingPanel({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
+          onClick={onPublish}
+          disabled={busy || !dirty}
+          className={cn(
+            "inline-flex h-11 flex-[2] items-center justify-center gap-1.5 rounded-full px-4 text-xs font-black disabled:opacity-50",
+            dirty
+              ? "bg-primary text-primary-foreground"
+              : "border border-border bg-card text-muted-foreground",
+          )}
+        >
+          تحديث التطبيق
+        </button>
+        <button
+          type="button"
           onClick={onReset}
-          disabled={busy}
+          disabled={busy || !dirty}
           className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 text-xs font-black disabled:opacity-50"
         >
           <RotateCcw className="h-4 w-4" aria-hidden />
-          إعادة ضبط
+          تراجع عن المسودة
         </button>
       </div>
 
@@ -339,12 +351,19 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
   const queryClient = useQueryClient();
   const settingsQuery = useHeroGoalSettings();
   const totalAssets = useMemo(() => countHeroReviewAssets(), [settingsQuery.dataUpdatedAt]);
+  const [draftDirty, setDraftDirty] = useState(false);
   const draftDirtyRef = useRef(false);
   const prevFramingKeyRef = useRef<string | null>(null);
   const prevCardThemeKeyRef = useRef<string | null>(null);
 
   const markDraftDirty = useCallback(() => {
     draftDirtyRef.current = true;
+    setDraftDirty(true);
+  }, []);
+
+  const clearDraftDirty = useCallback(() => {
+    draftDirtyRef.current = false;
+    setDraftDirty(false);
   }, []);
 
   const mode: ReviewMode = search.mode === "grid" ? "grid" : "single";
@@ -405,21 +424,21 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     const framingKeyChanged = prevFramingKeyRef.current !== framingKey;
     prevFramingKeyRef.current = framingKey;
     if (framingKeyChanged) {
-      draftDirtyRef.current = false;
+      clearDraftDirty();
       setSaveMessage(null);
     }
     syncFramingFromStore(framingKeyChanged);
-  }, [framingKey, settingsQuery.dataUpdatedAt, syncFramingFromStore]);
+  }, [framingKey, settingsQuery.dataUpdatedAt, syncFramingFromStore, clearDraftDirty]);
 
   useEffect(() => {
     const cardThemeKeyChanged = prevCardThemeKeyRef.current !== cardThemeKey;
     prevCardThemeKeyRef.current = cardThemeKey;
     if (cardThemeKeyChanged) {
-      draftDirtyRef.current = false;
+      clearDraftDirty();
       setSaveMessage(null);
     }
     syncCardThemeFromStore(cardThemeKeyChanged);
-  }, [cardThemeKey, settingsQuery.dataUpdatedAt, syncCardThemeFromStore]);
+  }, [cardThemeKey, settingsQuery.dataUpdatedAt, syncCardThemeFromStore, clearDraftDirty]);
 
   useEffect(() => {
     function syncFromServer() {
@@ -462,26 +481,31 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     patchSearch({ asset: index });
   }
 
-  async function persistFramingLive(
+  const liveRotationIndex = getHourlyRotationIndex();
+  const liveAssetIndex =
+    assetCount > 0 ? Math.abs(Math.floor(liveRotationIndex)) % assetCount : 0;
+  const liveAsset = slot.assets[liveAssetIndex] ?? null;
+  const editingLiveAsset = Boolean(currentAsset && liveAsset && currentAsset.fileName === liveAsset.fileName);
+
+  async function publishToApp(
     nextFraming: HeroGoalFraming,
     nextTheme: HeroGoalCardTheme,
   ) {
-    if (saving) return;
+    if (saving || !currentAsset || !framingKey) return;
     setSaving(true);
     setSaveMessage(null);
     try {
-      if (framingKey && currentAsset) {
-        await adminSaveHeroGoalFraming({
-          gender,
-          goalId,
-          assetFileName: currentAsset.fileName,
-          framing: nextFraming,
-        });
-        const saved = applyHeroGoalFramingToManifest(framingKey, nextFraming);
-        if (import.meta.env.DEV) saveHeroGoalFraming(framingKey, saved);
-        setSavedFraming(saved);
-        setDraftFraming(saved);
-      }
+      await adminSaveHeroGoalFraming({
+        gender,
+        goalId,
+        assetFileName: currentAsset.fileName,
+        framing: nextFraming,
+      });
+      const saved = applyHeroGoalFramingToManifest(framingKey, nextFraming);
+      if (import.meta.env.DEV) saveHeroGoalFraming(framingKey, saved);
+      aliasHeroGoalFramingKeysForBundledAssets();
+      setSavedFraming(saved);
+      setDraftFraming(saved);
 
       await adminSaveHeroGoalCardTheme({
         gender,
@@ -492,11 +516,15 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
       if (import.meta.env.DEV) saveHeroGoalCardTheme(cardThemeKey, savedTheme);
       setSavedCardTheme(savedTheme);
       setDraftCardTheme(savedTheme);
-      draftDirtyRef.current = false;
-      window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+      clearDraftDirty();
+      bumpHeroGoalSettingsRevision();
       await invalidateHeroGoalSettings(queryClient);
-      setSaveMessage("تم التحديث مباشرة في التطبيق");
-      window.setTimeout(() => setSaveMessage(null), 2500);
+      setSaveMessage(
+        editingLiveAsset
+          ? "تم النشر — حدّث صفحة /app أو ارجع إليها لترى الإطار فورًا"
+          : `تم النشر لهذه الصورة — التطبيق يعرض الآن صورة ${liveAssetIndex + 1}/${assetCount}؛ الإطار يظهر عند تدويرها`,
+      );
+      window.setTimeout(() => setSaveMessage(null), 5000);
     } catch (error) {
       setSaveMessage(formatHeroGoalSettingsError(error));
       window.setTimeout(() => setSaveMessage(null), 8000);
@@ -505,50 +533,12 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
     }
   }
 
-  useEffect(() => {
-    if (!draftDirtyRef.current || !currentAsset) return;
-    const timer = window.setTimeout(() => {
-      void persistFramingLive(draftFraming, draftCardTheme);
-    }, 450);
-    return () => window.clearTimeout(timer);
-    // Persist only when drafts change after a user edit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftFraming, draftCardTheme]);
-
-  async function handleResetFraming() {
-    if (saving) return;
-    setSaving(true);
-    setSaveMessage(null);
-    try {
-      if (framingKey && currentAsset) {
-        await adminResetHeroGoalFraming({
-          gender,
-          goalId,
-          assetFileName: currentAsset.fileName,
-        });
-        removeHeroGoalFramingFromManifest(framingKey);
-        if (import.meta.env.DEV) resetHeroGoalFraming(framingKey);
-      }
-
-      await adminResetHeroGoalCardTheme({ gender, goalId });
-      removeHeroGoalCardThemeFromManifest(cardThemeKey);
-      if (import.meta.env.DEV) resetHeroGoalCardTheme(cardThemeKey);
-
-      setSavedFraming(DEFAULT_HERO_GOAL_FRAMING);
-      setDraftFraming(DEFAULT_HERO_GOAL_FRAMING);
-      setSavedCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
-      setDraftCardTheme(DEFAULT_HERO_GOAL_CARD_THEME);
-      draftDirtyRef.current = false;
-      window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
-      await invalidateHeroGoalSettings(queryClient);
-      setSaveMessage("تمت إعادة الضبط الافتراضي");
-      window.setTimeout(() => setSaveMessage(null), 3200);
-    } catch (error) {
-      setSaveMessage(formatHeroGoalSettingsError(error));
-      window.setTimeout(() => setSaveMessage(null), 8000);
-    } finally {
-      setSaving(false);
-    }
+  function handleDiscardDraft() {
+    setDraftFraming(savedFraming);
+    setDraftCardTheme(savedCardTheme);
+    clearDraftDirty();
+    setSaveMessage("تمت استعادة آخر نسخة منشورة");
+    window.setTimeout(() => setSaveMessage(null), 2500);
   }
 
   return (
@@ -702,6 +692,7 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                   cardTheme={draftCardTheme}
                   statusMessage={saveMessage}
                   busy={saving}
+                  dirty={draftDirty}
                   onZoom={(direction) => {
                     markDraftDirty();
                     setDraftFraming((current) => zoomHeroGoalFraming(current, direction));
@@ -722,7 +713,10 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
                     markDraftDirty();
                     setDraftCardTheme({ color });
                   }}
-                  onReset={handleResetFraming}
+                  onReset={handleDiscardDraft}
+                  onPublish={() => {
+                    void publishToApp(draftFraming, draftCardTheme);
+                  }}
                 />
               </AdminSection>
             ) : null}
@@ -732,9 +726,26 @@ export function HeroGoalStudioPanel({ search }: { search: HeroGoalStudioSearch }
             <AdminSection title="المعاينة — مطابقة /app">
               <div className="flex flex-col items-center gap-2">
                 <p className="text-center text-xs font-medium text-muted-foreground">
-                  عرض {HERO_APP_PREVIEW_WIDTH}px · هامش 16px · ارتفاع البطاقة 50% من{" "}
-                  {HERO_APP_PREVIEW_HEIGHT}px
+                  نفس بطاقة العميل (`HomeHeroCard`) · عرض {HERO_APP_PREVIEW_WIDTH}px · هامش 16px · ارتفاع{" "}
+                  {Math.round(HERO_APP_PREVIEW_WIDTH * 1.082)}px
                 </p>
+                {assetCount > 1 ? (
+                  <p
+                    className={cn(
+                      "max-w-[390px] text-center text-[11px] font-bold",
+                      editingLiveAsset ? "text-primary" : "text-amber-700",
+                    )}
+                  >
+                    {editingLiveAsset
+                      ? `هذه الصورة هي المعروضة الآن في التطبيق (تدوير ساعة · صورة ${liveAssetIndex + 1}/${assetCount})`
+                      : `التطبيق يعرض الآن صورة ${liveAssetIndex + 1}/${assetCount}${liveAsset ? ` (${liveAsset.fileName})` : ""} — اضبطها أو انتظر التدوير لترى نفس الإطار`}
+                  </p>
+                ) : null}
+                {draftDirty ? (
+                  <p className="text-center text-[11px] font-bold text-amber-700">
+                    مسودة محلية — اضغط «تحديث التطبيق» للنشر
+                  </p>
+                ) : null}
                 <HeroAppFaithfulPreview hero={hero} />
               </div>
             </AdminSection>

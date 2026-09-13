@@ -1,6 +1,7 @@
 import { resolveHomeGoalHeroImageSrc } from "@/lib/platform/home-goal-hero-images";
 import {
   getHourlyRotationIndex,
+  listHeroGoalAssetEntries,
   pickHeroGoalAsset,
 } from "@/lib/platform/hero-goals-asset-index";
 import type { UserGoal } from "@/lib/platform/home-hub";
@@ -8,7 +9,7 @@ import { resolveUserGoal } from "@/lib/platform/home-hub";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import coachPhoto from "@/assets/coach-photo.png";
 import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
-import { attachHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
+import { buildHeroGoalFramingKey, getHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 import {
   homeBucketForCanonicalGoal,
   isCanonicalTrainingGoal,
@@ -146,6 +147,7 @@ export function resolveHeroGoalImage(input: {
   const rotationIndex = input.rotationIndex ?? getHourlyRotationIndex();
   const alt = GOAL_ID_ALTS[resolvedGoalId] || "جسم أحلامك حسب هدفك";
 
+  const entries = listHeroGoalAssetEntries(gender, resolvedGoalId);
   const folderSrc = pickHeroGoalAsset({
     gender,
     goalId: resolvedGoalId,
@@ -158,10 +160,21 @@ export function resolveHeroGoalImage(input: {
     rotationIndex,
   });
 
-  return attachHeroGoalFraming({
-    src: folderSrc ?? contentSrc ?? coachPhoto,
+  const src = folderSrc ?? contentSrc ?? coachPhoto;
+  const entry =
+    entries.find((row) => row.url === src) ??
+    (entries.length > 0
+      ? entries[Math.abs(Math.floor(rotationIndex)) % entries.length]
+      : undefined);
+  const framingKey = entry
+    ? `${gender}:${resolvedGoalId}:${entry.fileName}`
+    : buildHeroGoalFramingKey(gender, resolvedGoalId, src);
+
+  return {
+    src: entry?.url ?? src,
     alt,
     gender,
     goalId: resolvedGoalId,
-  });
+    framing: getHeroGoalFraming(framingKey),
+  };
 }

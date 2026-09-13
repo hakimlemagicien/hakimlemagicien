@@ -11,6 +11,18 @@ export function assetFileName(src: string): string {
   }
 }
 
+/**
+ * Vite production URLs hash assets (`name-Ab12Cd34.webp`).
+ * Admin + Supabase store the original `fileName` — strip the hash so lookups match.
+ */
+export function stripViteContentHash(fileName: string): string {
+  return fileName.replace(/-[A-Za-z0-9_-]{7,12}(\.[A-Za-z0-9]+)$/, "$1");
+}
+
+export function canonicalHeroAssetFileName(srcOrFileName: string): string {
+  return stripViteContentHash(assetFileName(srcOrFileName));
+}
+
 export type HeroGoalFraming = {
   scale: number;
   offsetX: number;
@@ -36,10 +48,29 @@ const OFFSET_STEP = 6;
 export const HERO_GOAL_FRAMING_MANIFEST: Record<string, HeroGoalFraming> = {};
 
 export const HERO_GOAL_SETTINGS_CHANGED_EVENT = "maakfit:hero-goal-settings-changed";
+/** Cross-tab signal so /app refetches after admin publishes. */
+export const HERO_GOAL_SETTINGS_REVISION_KEY = "maakfit_hero_goal_settings_rev";
 
 function notifyHeroGoalSettingsChanged(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(HERO_GOAL_SETTINGS_CHANGED_EVENT));
+}
+
+export function bumpHeroGoalSettingsRevision(): void {
+  if (!canUseStorage()) {
+    notifyHeroGoalSettingsChanged();
+    return;
+  }
+  const rev = String(Date.now());
+  window.localStorage.setItem(HERO_GOAL_SETTINGS_REVISION_KEY, rev);
+  try {
+    const channel = new BroadcastChannel("maakfit-hero-goal-settings");
+    channel.postMessage({ type: "revision", rev });
+    channel.close();
+  } catch {
+    // BroadcastChannel may be unavailable — localStorage + same-tab event still help.
+  }
+  notifyHeroGoalSettingsChanged();
 }
 
 function canUseStorage(): boolean {
@@ -60,7 +91,41 @@ export function buildHeroGoalFramingKey(
   goalId: string,
   src: string,
 ): string {
-  return `${gender}:${goalId}:${assetFileName(src)}`;
+  return `${gender}:${goalId}:${canonicalHeroAssetFileName(src)}`;
+}
+
+function framingLookupKeys(key: string): string[] {
+  const parts = key.split(":");
+  if (parts.length < 3) return [key];
+  const gender = parts[0]!;
+  const goalId = parts[1]!;
+  const file = parts.slice(2).join(":");
+  const canonical = stripViteContentHash(file);
+  const keys = [`${gender}:${goalId}:${canonical}`];
+  if (canonical !== file) keys.push(`${gender}:${goalId}:${file}`);
+  return keys;
+}
+
+function framingFromManifest(key: string): HeroGoalFraming | null {
+  for (const candidate of framingLookupKeys(key)) {
+    const manifest = HERO_GOAL_FRAMING_MANIFEST[candidate];
+    if (manifest) return clampFraming(manifest);
+  }
+
+  const parts = key.split(":");
+  if (parts.length >= 3) {
+    const gender = parts[0]!;
+    const goalId = parts[1]!;
+    const file = canonicalHeroAssetFileName(parts.slice(2).join(":"));
+    const prefix = `${gender}:${goalId}:`;
+    for (const [manifestKey, framing] of Object.entries(HERO_GOAL_FRAMING_MANIFEST)) {
+      if (!manifestKey.startsWith(prefix)) continue;
+      const manifestFile = canonicalHeroAssetFileName(manifestKey.slice(prefix.length));
+      if (manifestFile === file) return clampFraming(framing);
+    }
+  }
+
+  return null;
 }
 
 function readStorageMap(): Record<string, HeroGoalFraming> {
@@ -81,12 +146,17 @@ function writeStorageMap(map: Record<string, HeroGoalFraming>): void {
 }
 
 export function getHeroGoalFraming(key: string): HeroGoalFraming {
+  // Server hydrate (manifest) wins over DEV localStorage so publish → /app is reliable.
+  const fromManifest = framingFromManifest(key);
+  if (fromManifest) return fromManifest;
+
   if (import.meta.env.DEV) {
-    const stored = readStorageMap()[key];
-    if (stored) return clampFraming(stored);
+    for (const candidate of framingLookupKeys(key)) {
+      const stored = readStorageMap()[candidate];
+      if (stored) return clampFraming(stored);
+    }
   }
-  const manifest = HERO_GOAL_FRAMING_MANIFEST[key];
-  if (manifest) return clampFraming(manifest);
+
   return DEFAULT_HERO_GOAL_FRAMING;
 }
 
@@ -128,6 +198,10 @@ export function heroCoachTransformStyle(input: {
   const baseScale = 0.98 * framing.scale;
   const scaleX = framing.flipX ? -baseScale : baseScale;
   return {
+    ["--hero-framing-x" as string]: `${framing.offsetX}px`,
+    ["--hero-framing-y" as string]: `${framing.offsetY}px`,
+    ["--hero-framing-sx" as string]: String(scaleX),
+    ["--hero-framing-sy" as string]: String(baseScale),
     transform: `translateY(${framing.offsetY}px) scale(${scaleX}, ${baseScale}) translateX(${framing.offsetX}px)`,
   };
 }
@@ -232,12 +306,12 @@ function writeCardThemeMap(map: Record<string, HeroGoalCardTheme>): void {
 }
 
 export function getHeroGoalCardTheme(key: string): HeroGoalCardTheme {
+  const manifest = HERO_GOAL_CARD_THEME_MANIFEST[key];
+  if (manifest) return clampCardTheme(manifest);
   if (import.meta.env.DEV) {
     const stored = readCardThemeMap()[key];
     if (stored) return clampCardTheme(stored);
   }
-  const manifest = HERO_GOAL_CARD_THEME_MANIFEST[key];
-  if (manifest) return clampCardTheme(manifest);
   return DEFAULT_HERO_GOAL_CARD_THEME;
 }
 

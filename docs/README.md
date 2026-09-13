@@ -32,7 +32,17 @@
 | 2p | [`TRAINING_TEMPLATE_EXERCISE_SEQUENCE_MASTER_V1.md`](./TRAINING_TEMPLATE_EXERCISE_SEQUENCE_MASTER_V1.md) | Phase 9 — حزمة تسلسلات التمارين (متطابقة مع الماستر المُصالح) |
 | 2q | [`data/training-template-exercise-sequence-master-v1.json`](./data/training-template-exercise-sequence-master-v1.json) | Phase 9 — تسلسلات JSON |
 | 2r | [`TRAINING_TEMPLATE_LIBRARY_ADDITIONS_REQUIRED.md`](./TRAINING_TEMPLATE_LIBRARY_ADDITIONS_REQUIRED.md) | مواصفات إضافات المكتبة المطلوبة |
-| 2s | [`TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md`](./TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md) | بيان ميديا أنثوية (Glute GYM فقط) |
+| 2s | [`TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md`](./TRAINING_TEMPLATE_FEMALE_MEDIA_MANIFEST_V1.md) | بيان ميديا أنثوية (Glute GYM فقط) — محدّث بعد Audit |
+| 2s1 | [`GLUTE_FEMALE_MEDIA_RELEASE_AUDIT.md`](./GLUTE_FEMALE_MEDIA_RELEASE_AUDIT.md) | بوابة إطلاق Glute — تدقيق ميديا أنثوية |
+| 2s2 | [`data/glute-female-media-manifest-v1.json`](./data/glute-female-media-manifest-v1.json) | حزمة إنتاج ميديا أنثوية (machine-readable) |
+| 2s3 | [`GLUTE_FEMALE_MEDIA_PRODUCTION_PLAN.md`](./GLUTE_FEMALE_MEDIA_PRODUCTION_PLAN.md) | خطة إنتاج الصور/الفيديو لقوالب Glute |
+| 2s4 | [`GLUTE_FEMALE_MEDIA_TECHNICAL_HANDOFF.md`](./GLUTE_FEMALE_MEDIA_TECHNICAL_HANDOFF.md) | تسليم تقني — نموذج متغير FEMALE |
+| 2s5 | [`FEMALE_EXERCISE_MEDIA_VARIANT_TECHNICAL_REPORT.md`](./FEMALE_EXERCISE_MEDIA_VARIANT_TECHNICAL_REPORT.md) | أساس تقني لمتغير FEMALE (قبل إنتاج الميديا) |
+| 2s6 | [`FEMALE_MEDIA_PREFERENCE_RUNTIME_HANDOFF_REPORT.md`](./FEMALE_MEDIA_PREFERENCE_RUNTIME_HANDOFF_REPORT.md) | إغلاق تمرير تفضيل FEMALE عبر Snapshot→Runtime |
+| 2s7 | [`GLUTE_FEMALE_MEDIA_P0_PRODUCTION_REPORT.md`](./GLUTE_FEMALE_MEDIA_P0_PRODUCTION_REPORT.md) | إنتاج ميديا أنثوية P0 (صور + فجوة فيديو) |
+| 2s8 | [`TRAINING_AUTO_ASSIGN_AND_ADMIN_REVIEW_SYSTEM_REPORT.md`](./TRAINING_AUTO_ASSIGN_AND_ADMIN_REVIEW_SYSTEM_REPORT.md) | تعيين تلقائي آمن + صندوق مراجعة الأدمن |
+| 2s9 | [`TRAINING_SCHEDULED_ASSIGNMENT_ACTIVATION_CLOSURE_REPORT.md`](./TRAINING_SCHEDULED_ASSIGNMENT_ACTIVATION_CLOSURE_REPORT.md) | إغلاق ترقية scheduled→active (lazy) |
+| 2s10 | [`TRAINING_AUTO_ASSIGN_PRODUCTION_RECONCILE_REPORT.md`](./TRAINING_AUTO_ASSIGN_PRODUCTION_RECONCILE_REPORT.md) | مصالحة عملاء Production الحاليين |
 | 2t | [`TRAINING_TEMPLATE_MASTER_RECONCILIATION_REPORT.md`](./TRAINING_TEMPLATE_MASTER_RECONCILIATION_REPORT.md) | Phase 9 — مصالحة نهائية للماستر (37 قيدًا / تسمية تاريخية 36/36) |
 | 2u | [`TRAINING_TEMPLATE_PHASE9_FINAL_IMPORT_REPORT.md`](./TRAINING_TEMPLATE_PHASE9_FINAL_IMPORT_REPORT.md) | Phase 9 — استيراد Local للـ37 قالبًا + CR-026/CR-027 |
 | 2v | [`TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md`](./TRAINING_TEMPLATE_SYSTEM_V1_FINAL_QA_REPORT.md) | Phase 10 — QA كامل + Staging + قرار إغلاق V1 |

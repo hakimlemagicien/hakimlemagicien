@@ -1,6 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  applyHeroGoalFramingToManifest,
+  assetFileName,
+  canonicalHeroAssetFileName,
+  HERO_GOAL_FRAMING_MANIFEST,
   hydrateHeroGoalSettings,
   type HeroGoalCardTheme,
   type HeroGoalFraming,
@@ -9,6 +13,8 @@ import {
   hydrateHeroGoalImageOverrides,
   type HeroGoalImageOverride,
 } from "@/lib/platform/hero-goal-image-overrides";
+import { listHeroGoalAssetEntries } from "@/lib/platform/hero-goals-asset-index";
+import type { HeroGender } from "@/lib/platform/hero-goal-images";
 
 export const HERO_GOAL_SETTINGS_QUERY_KEY = ["hero-goal-settings"] as const;
 
@@ -126,6 +132,33 @@ export async function fetchHeroGoalSettings(): Promise<HeroGoalSettingsSnapshot>
 export async function loadHeroGoalSettings(): Promise<HeroGoalSettingsSnapshot> {
   const snapshot = await fetchHeroGoalSettings();
   hydrateHeroGoalSettings(snapshot);
+  // Production Vite hashes asset URLs (`name-BxKaQ3R0.png`). Admin/DB store the
+  // original fileName — alias hashed basenames so /app framing lookups hit.
+  aliasHeroGoalFramingKeysForBundledAssets();
   hydrateHeroGoalImageOverrides(snapshot.images);
   return snapshot;
+}
+
+/** Register framing under hashed Vite basenames so production lookups match DB keys. */
+export function aliasHeroGoalFramingKeysForBundledAssets(): void {
+  const keys = Object.keys(HERO_GOAL_FRAMING_MANIFEST);
+  for (const key of keys) {
+    const parts = key.split(":");
+    if (parts.length < 3) continue;
+    const gender = parts[0] as HeroGender;
+    if (gender !== "male" && gender !== "female") continue;
+    const goalId = parts[1]!;
+    const fileName = parts.slice(2).join(":");
+    const framing = HERO_GOAL_FRAMING_MANIFEST[key];
+    if (!framing) continue;
+    const canonical = canonicalHeroAssetFileName(fileName);
+
+    for (const entry of listHeroGoalAssetEntries(gender, goalId)) {
+      const entryCanonical = canonicalHeroAssetFileName(entry.fileName);
+      if (entry.fileName !== fileName && entryCanonical !== canonical) continue;
+      const hashedBase = assetFileName(entry.url);
+      if (!hashedBase || hashedBase === fileName) continue;
+      applyHeroGoalFramingToManifest(`${gender}:${goalId}:${hashedBase}`, framing);
+    }
+  }
 }

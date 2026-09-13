@@ -60,6 +60,8 @@ export type ExerciseDetails = ExerciseLibraryItem & {
   instructions_status: ExerciseMediaStatus;
   video_path: string | null;
   instructions_video_path: string | null;
+  /** Optional JSONB — includes media_variants when selected. */
+  metadata?: Record<string, unknown> | null;
 };
 
 const database = supabase as unknown as SupabaseClient;
@@ -109,7 +111,8 @@ export async function fetchExerciseDetails(exerciseId: string): Promise<Exercise
       youtube_url,
       instructions_status,
       video_path,
-      instructions_video_path
+      instructions_video_path,
+      metadata
     `)
     .eq("id", exerciseId)
     .eq("is_active", true)
@@ -133,7 +136,8 @@ export async function fetchExerciseDetailsByExternalId(
       youtube_url,
       instructions_status,
       video_path,
-      instructions_video_path
+      instructions_video_path,
+      metadata
     `)
     .eq("external_id", externalId)
     .eq("is_active", true)
@@ -159,7 +163,8 @@ export async function fetchExercisesByExternalIds(
       youtube_url,
       instructions_status,
       video_path,
-      instructions_video_path
+      instructions_video_path,
+      metadata
     `)
     .in("external_id", externalIds)
     .eq("is_active", true);

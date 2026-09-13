@@ -37,6 +37,7 @@ import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { formatWaterLiters } from "@/lib/platform/water-storage";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
+import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
 import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
 import { MEMBER_RESULT_STORIES } from "@/lib/platform/member-results-stories";
@@ -404,6 +405,9 @@ function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
     if (img?.complete && img.naturalWidth > 0) setLoaded(true);
   }, [image.src]);
 
+  // Always apply framing (don't wait for onLoad) so studio publishes are visible immediately.
+  const framingStyle = heroCoachTransformStyle({ framing: image.framing, loaded: true });
+
   return (
     <div className={cn("platform-home-hero__figure", image.gender === "female" ? "is-female" : "is-male")}>
       <img
@@ -415,7 +419,7 @@ function HeroGoalFigure({ image }: { image: HeroGoalImage }) {
         fetchPriority="high"
         decoding="async"
         onLoad={() => setLoaded(true)}
-        style={heroCoachTransformStyle({ framing: image.framing, loaded })}
+        style={framingStyle}
         className={cn(
           "platform-home-hero__coach",
           image.gender === "female" ? "is-female" : "is-male",
@@ -434,6 +438,7 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
   const [started, setStarted] = useState(false);
   const [settingsVersion, setSettingsVersion] = useState(0);
   const hourlyRotation = useHourlyRotationIndex();
+  const heroSettingsQuery = useHeroGoalSettings();
 
   useEffect(() => {
     const sync = () => setSettingsVersion((value) => value + 1);
@@ -449,13 +454,19 @@ export function HomeHeroCard({ hero }: { hero: HeroState }) {
       goalId: hero.heroImage.goalId,
       rotationIndex: hourlyRotation,
     });
-  }, [hero.heroImage, hourlyRotation, settingsVersion]);
+  }, [hero.heroImage, hourlyRotation, settingsVersion, heroSettingsQuery.dataUpdatedAt]);
 
   const cardTheme = useMemo(
     () =>
       hero.heroCardTheme ??
       getHeroGoalCardTheme(buildHeroGoalCardThemeKey(hero.heroImage.gender, hero.heroImage.goalId)),
-    [hero.heroCardTheme, hero.heroImage.gender, hero.heroImage.goalId, settingsVersion],
+    [
+      hero.heroCardTheme,
+      hero.heroImage.gender,
+      hero.heroImage.goalId,
+      settingsVersion,
+      heroSettingsQuery.dataUpdatedAt,
+    ],
   );
   const cardSurfaceStyle = heroCardSurfaceStyle(cardTheme);
   const missionIsRoute = hero.missionHref.startsWith("/");

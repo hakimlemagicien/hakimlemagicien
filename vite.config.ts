@@ -54,6 +54,16 @@ export default defineConfig(({ command, mode }) => {
       chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
+          // Keep hero-goal filenames stable so admin framing keys match /app lookups.
+          assetFileNames: (assetInfo) => {
+            const file = assetInfo.names?.[0] ?? assetInfo.name ?? "";
+            const original = (assetInfo as { originalFileNames?: string[] }).originalFileNames?.[0] ?? "";
+            const path = `${original} ${file}`;
+            if (/hero-goals|hero-goal-/i.test(path)) {
+              return "assets/hero-goals/[name][extname]";
+            }
+            return "assets/[name]-[hash][extname]";
+          },
           manualChunks(id) {
             if (
               id.includes("/src/routes/admin/") ||
