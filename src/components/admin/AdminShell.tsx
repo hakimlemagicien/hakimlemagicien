@@ -118,7 +118,11 @@ export function AdminShell() {
       if (event.key === "Escape") setDrawerOpen(false);
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.body.classList.add("is-admin-nav-open");
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.classList.remove("is-admin-nav-open");
+    };
   }, [drawerOpen]);
 
   useEffect(() => {
@@ -181,7 +185,11 @@ export function AdminShell() {
 
   return (
     <StaffPermissionsProvider session={staffSession} loading={staffLoading}>
-    <div className="cc-shell cc-shell--dark-nav" dir="rtl" lang="ar">
+    <div
+      className={drawerOpen ? "cc-shell cc-shell--dark-nav is-nav-open" : "cc-shell cc-shell--dark-nav"}
+      dir="rtl"
+      lang="ar"
+    >
       <a className="cc-skip" href="#cc-workspace">
         تخطي إلى المحتوى
       </a>
@@ -198,6 +206,7 @@ export function AdminShell() {
         id={drawerId}
         className={drawerOpen ? "cc-sidebar cc-sidebar--dark is-open" : "cc-sidebar cc-sidebar--dark"}
         aria-label="تنقل مركز التشغيل"
+        role="navigation"
       >
         <div className="cc-sidebar__brand">
           <p className="cc-sidebar__logo">MAAKFIT</p>
@@ -254,8 +263,12 @@ export function AdminShell() {
             className="cc-icon-btn cc-topbar__menu"
             aria-expanded={drawerOpen}
             aria-controls={drawerId}
+            aria-haspopup="dialog"
             aria-label={drawerOpen ? "إغلاق القائمة" : "فتح القائمة"}
-            onClick={() => setDrawerOpen((open) => !open)}
+            onClick={(event) => {
+              event.stopPropagation();
+              setDrawerOpen((open) => !open);
+            }}
           >
             {drawerOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

@@ -1,7 +1,7 @@
+import { useEffect, useId, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { AdminLibraryStatusBadge } from "@/components/admin/AdminLibraryKit";
-import { ProgramTemplateBadges } from "@/components/admin/programs/ProgramTemplateBadges";
 import type { TemplatePresentation } from "@/lib/admin/admin-template-ui";
-import { formatAdminDate } from "@/lib/admin/admin-status";
 import type { AdminProgramListItem } from "@/lib/admin/admin-programs-api";
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
   selected?: boolean;
   onOpen: () => void;
   onPreview: () => void;
-  onClone: () => void;
+  onClone?: () => void;
   onNewVersion: () => void;
   onArchive?: () => void;
 };
@@ -21,68 +21,81 @@ export function ProgramTemplateCard({
   selected,
   onOpen,
   onPreview,
-  onClone,
   onNewVersion,
   onArchive,
 }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const rootRef = useRef<HTMLElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const run = (action: () => void) => {
+    setMenuOpen(false);
+    action();
+  };
+
   return (
-    <article className={["tpl-card", selected ? "is-selected" : ""].filter(Boolean).join(" ")}>
-      <header className="tpl-card__header">
-        <button type="button" className="tpl-card__title" onClick={onOpen}>
-          {presentation.name}
-        </button>
-        <AdminLibraryStatusBadge
-          status={row.archived_at ? "archived" : row.is_published ? "published" : "draft"}
-          label={presentation.status_label}
-        />
-      </header>
+    <article
+      ref={rootRef}
+      className={["tpl-card", menuOpen ? "is-open" : "", selected ? "is-selected" : ""].filter(Boolean).join(" ")}
+    >
+      <button
+        type="button"
+        className="tpl-card__main"
+        aria-expanded={menuOpen}
+        aria-controls={menuId}
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span className="tpl-card__title-block">
+          <strong className="tpl-card__title">{presentation.name}</strong>
+          <AdminLibraryStatusBadge
+            status={row.archived_at ? "archived" : row.is_published ? "published" : "draft"}
+            label={presentation.status_label}
+          />
+        </span>
+        <span className="tpl-card__chevron" aria-hidden="true">
+          <ChevronDown size={18} />
+        </span>
+      </button>
 
-      <ProgramTemplateBadges presentation={presentation} />
-
-      <dl className="tpl-card__meta">
-        <div>
-          <dt>الجمهور المستهدف</dt>
-          <dd>{presentation.target_audience ?? "غير متوفر (قالب قديم)"}</dd>
-        </div>
-        <div>
-          <dt>الغرض</dt>
-          <dd>{presentation.template_purpose ?? "غير متوفر (قالب قديم)"}</dd>
-        </div>
-        {presentation.admin_summary ? (
-          <div>
-            <dt>ملخص إداري</dt>
-            <dd>{presentation.admin_summary}</dd>
-          </div>
-        ) : null}
-        <div>
-          <dt>الإصدار</dt>
-          <dd>الإصدار {presentation.version}</dd>
-        </div>
-        <div>
-          <dt>آخر تحديث</dt>
-          <dd>{formatAdminDate(row.updated_at)}</dd>
-        </div>
-      </dl>
-
-      <div className="tpl-card__actions cc-row-actions">
-        <button type="button" className="cc-btn cc-btn--ghost" onClick={onOpen}>
-          عرض القالب
-        </button>
-        <button type="button" className="cc-btn cc-btn--ghost" onClick={onPreview}>
-          معاينة
-        </button>
-        <button type="button" className="cc-btn cc-btn--ghost" onClick={onClone}>
-          نسخ
-        </button>
-        <button type="button" className="cc-btn cc-btn--ghost" onClick={onNewVersion}>
-          نسخة جديدة
-        </button>
-        {onArchive ? (
-          <button type="button" className="cc-btn cc-btn--ghost" onClick={onArchive}>
-            أرشفة
+      {menuOpen ? (
+        <div id={menuId} className="tpl-card__menu" role="menu" aria-label={`خيارات ${presentation.name}`}>
+          <button type="button" role="menuitem" className="tpl-card__menu-item" onClick={() => run(onOpen)}>
+            تعديل القالب
           </button>
-        ) : null}
-      </div>
+          <button type="button" role="menuitem" className="tpl-card__menu-item" onClick={() => run(onPreview)}>
+            معاينة لعميل
+          </button>
+          <button type="button" role="menuitem" className="tpl-card__menu-item" onClick={() => run(onNewVersion)}>
+            نسخة جديدة
+          </button>
+          {onArchive ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="tpl-card__menu-item tpl-card__menu-item--danger"
+              onClick={() => run(onArchive)}
+            >
+              أرشفة
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }

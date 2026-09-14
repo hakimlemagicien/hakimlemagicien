@@ -11,7 +11,7 @@ type TrainingToolCardProps = {
   children: ReactNode;
 };
 
-/** Status card that opens tool content in a blurred-backdrop modal (no page scroll). */
+/** Status card that opens tool content in an Apple-style sheet (blurred backdrop). */
 export function TrainingToolCard({
   title,
   preview,
@@ -70,20 +70,21 @@ export function TrainingToolCard({
                 onClick={(event) => event.stopPropagation()}
               >
                 <header className="cc-tool-card-modal__header">
+                  <div className="cc-tool-card-modal__grabber" aria-hidden="true" />
                   <div className="cc-tool-card-modal__heading">
                     <h2 id={titleId} className="cc-tool-card-modal__title">
                       {title}
                     </h2>
                     <p className="cc-tool-card-modal__preview">{preview}</p>
+                    <span className={`cc-tool-card__badge cc-tool-card__badge--${tone}`}>{statusLabel}</span>
                   </div>
-                  <span className={`cc-tool-card__badge cc-tool-card__badge--${tone}`}>{statusLabel}</span>
                   <button
                     type="button"
                     className="cc-tool-card-modal__close"
                     onClick={() => setOpen(false)}
                     aria-label="إغلاق"
                   >
-                    إغلاق
+                    <span aria-hidden="true">×</span>
                   </button>
                 </header>
                 <div className="cc-tool-card-modal__body">{children}</div>

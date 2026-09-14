@@ -27,9 +27,13 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
       <AdminClientAvatar name={overview.full_name} avatarPath={overview.avatar_path} size="lg" />
       <div className="cc-client-hero__text">
         <h2>{overview.full_name || "بدون اسم"}</h2>
-        <p>{overview.email || overview.phone || "بدون بريد"}</p>
         <p>
-          {presentClientTrainingGoal(overview.goal).displayAr} · {trainingLocationLabel(overview.training_type)} · انضم{" "}
+          {overview.email || overview.phone || "بدون بريد"}
+          {" · "}
+          {presentClientTrainingGoal(overview.goal).displayAr}
+          {" · "}
+          {trainingLocationLabel(overview.training_type)}
+          {" · انضم "}
           {formatAdminDate(overview.created_at)}
         </p>
         <div className="cc-client-hero__badges">

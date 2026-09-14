@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  ChevronDown,
   Copy,
   GripVertical,
   ImagePlus,
@@ -64,7 +65,6 @@ import {
   programTargetGenderLabel,
   setBuilderField,
   summarizeProgramDraft,
-  targetMuscleLabelsForDay,
   totalSetsForDay,
   workoutOrdinal,
   type DayClipboard,
@@ -114,6 +114,51 @@ type Props = {
   onCloneVersion?: () => void;
 };
 
+type BuilderSectionId = "info" | "contract" | "notes" | "schedule" | "tools";
+
+function BuilderSheet({
+  id,
+  step,
+  openId,
+  onToggle,
+  title,
+  summary,
+  children,
+}: {
+  id: BuilderSectionId;
+  step: number;
+  openId: BuilderSectionId | null;
+  onToggle: (id: BuilderSectionId) => void;
+  title: string;
+  summary?: string;
+  children: ReactNode;
+}) {
+  const open = openId === id;
+  return (
+    <section className={open ? "cc-builder-sheet is-open" : "cc-builder-sheet"} role="listitem">
+      <button
+        type="button"
+        className="cc-builder-sheet__trigger"
+        aria-expanded={open}
+        onClick={() => onToggle(id)}
+      >
+        <span className="cc-builder-sheet__step" aria-hidden="true">
+          {step}
+        </span>
+        <span className="cc-builder-sheet__titles">
+          <strong>{title}</strong>
+          {summary ? <span className="cc-builder-sheet__summary">{summary}</span> : null}
+        </span>
+        <span className={open ? "cc-builder-sheet__action is-open" : "cc-builder-sheet__action"}>
+          {open ? "إخفاء" : "تعديل"}
+          <ChevronDown size={16} aria-hidden />
+        </span>
+      </button>
+      {open ? <div className="cc-builder-sheet__panel">{children}</div> : null}
+    </section>
+  );
+}
+
 export function AdminProgramBuilder({
   draft,
   setDraft,
@@ -143,6 +188,7 @@ export function AdminProgramBuilder({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const [clipboard, setClipboard] = useState<DayClipboard | null>(null);
   const [picker, setPicker] = useState<"add" | number | null>(null);
+  const [openSection, setOpenSection] = useState<BuilderSectionId | null>("schedule");
   const [libQuery] = useState("");
   const [libMuscle] = useState("");
   const [libEquipment] = useState("");
@@ -198,6 +244,12 @@ export function AdminProgramBuilder({
     // Only when switching weeks — do not steal a rest-day click.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekIndex]);
+
+  useEffect(() => {
+    if (openSection === "tools" && day?.day_type !== "workout") {
+      setOpenSection("schedule");
+    }
+  }, [day?.day_type, openSection]);
 
   if (!week || !day) return null;
 
@@ -271,17 +323,41 @@ export function AdminProgramBuilder({
     );
   };
 
+  const toggleSection = (id: BuilderSectionId) => {
+    setOpenSection((current) => (current === id ? null : id));
+  };
+
+  const scheduleSummary = `${summary.weeks} أسابيع · ${summary.workoutDays} أيام · ${summary.exercises} تمارين`;
+  const dayToolsSummary =
+    day.day_type === "workout"
+      ? `${day.exercises.length} تمارين · ${estimated} د`
+      : "يوم راحة";
+  const infoSummary = [
+    programGoalLabel(draft.goal),
+    programLevelLabel(draft.level),
+    `${draft.days_per_week} أيام/أسبوع`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="cc-builder">
-      <div className="cc-builder__toolbar">
-        <button type="button" className="cc-btn cc-btn--ghost" onClick={onBack}>
-          العودة للقائمة
-        </button>
-        <AdminLibraryStatusBadge
-          status={draft.archived_at ? "archived" : draft.is_published ? "published" : "draft"}
-          label={programStatusLabel(draft.is_published, draft.archived_at)}
-        />
-        <span className="cc-muted">قالب برنامج · V{draft.version}</span>
+      <header className="cc-builder__toolbar">
+        <div className="cc-builder__toolbar-main">
+          <button type="button" className="cc-btn cc-btn--ghost" onClick={onBack}>
+            العودة للقائمة
+          </button>
+          <div className="cc-builder__toolbar-identity">
+            <AdminLibraryStatusBadge
+              status={draft.archived_at ? "archived" : draft.is_published ? "published" : "draft"}
+              label={programStatusLabel(draft.is_published, draft.archived_at)}
+            />
+            <div>
+              <strong>تعديل القالب</strong>
+              <span>V{draft.version}</span>
+            </div>
+          </div>
+        </div>
         <div className="cc-builder__toolbar-meta">
           <AdminSaveState state={saveState} />
           <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPreviewOpen(true)}>
@@ -301,13 +377,15 @@ export function AdminProgramBuilder({
             </button>
           ) : null}
         </div>
-      </div>
+      </header>
 
-      <p className="cc-contract">تعديل القالب (PROGRAM_TEMPLATE) لا يغيّر برامج العملاء المعيّنة.</p>
-      {PROGRAM_VERSIONING_COMPLETION_REQUIRED ? (
-        <p className="cc-muted">لقطة الهيكل غير مكتملة بعد. لا تعامل رقم الإصدار كتجميد كامل للمحتوى.</p>
-      ) : null}
-      {locked ? <p className="cc-muted">القالب المنشور للقراءة. أنشئ نسخة جديدة لتعديل الحصص حتى لا تتأثر التعيينات.</p> : null}
+      <div className="cc-builder-notice" role="note">
+        <p>تعديل هذا القالب لا يغيّر برامج العملاء المعيّنة.</p>
+        {locked ? <p>القالب منشور للقراءة — اضغط «نسخة جديدة» للتعديل.</p> : null}
+        {PROGRAM_VERSIONING_COMPLETION_REQUIRED && !locked ? (
+          <p>لقطة الهيكل غير مكتملة بعد؛ رقم الإصدار ليس تجميدًا كاملًا.</p>
+        ) : null}
+      </div>
       {firstFieldError(fieldErrors) ? <p className="cc-field__error">{firstFieldError(fieldErrors)}</p> : null}
       {publishIssues.length ? (
         <div className="cc-builder-issues" role="alert">
@@ -317,287 +395,318 @@ export function AdminProgramBuilder({
         </div>
       ) : null}
 
-      <section className="cc-builder__card cc-builder__info">
-        <button
-          type="button"
-          className="cc-builder__cover"
-          disabled={Boolean(draft.archived_at)}
-          onClick={() => {
-            setCoverUrl(builder.cover_image_url ?? "");
-            setCoverFile(null);
-            setCoverPreview(builder.cover_image_url || null);
-            setCoverError(null);
-            setCoverOpen(true);
-          }}
+      <div className="cc-builder-sheets" role="list" aria-label="أقسام تعديل القالب">
+        <p className="cc-builder-sheets__label">اختر قسمًا لتعديله — قسم واحد مفتوح في كل مرة</p>
+        <BuilderSheet
+          id="info"
+          step={1}
+          openId={openSection}
+          onToggle={toggleSection}
+          title="معلومات البرنامج"
+          summary={infoSummary}
         >
-          {builder.cover_image_url ? <img src={builder.cover_image_url} alt="" /> : <span>غلاف</span>}
-          <span className="cc-builder__cover-btn">
-            <ImagePlus size={14} /> تغيير
-          </span>
-        </button>
-        <div>
-          <div className="cc-builder__info-head">
-            <h3>معلومات البرنامج</h3>
-            <p className="cc-muted">للمدرب فقط · العميل يرى الهدف لا اسم القالب</p>
-          </div>
-          <div className="cc-builder__fields">
-            <label className="cc-builder__field">
-              اسم البرنامج
-              <input value={draft.name_ar} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, name_ar: event.target.value })} />
-            </label>
-            <label className="cc-builder__field">
-              الهدف
-              <select value={draft.goal ?? ""} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, goal: event.target.value })}>
-                {PROGRAM_GOALS.map((item) => (
-                  <option key={item} value={item}>
-                    {programGoalLabel(item)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="cc-builder__field">
-              المستوى
-              <select value={draft.level ?? ""} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, level: event.target.value })}>
-                {PROGRAM_LEVELS.map((item) => (
-                  <option key={item} value={item}>
-                    {programLevelLabel(item)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="cc-builder__field">
-              المكان
-              <select
-                value={draft.training_location ?? "GYM"}
-                disabled={Boolean(draft.archived_at)}
-                onChange={(event) => setDraft({ ...draft, training_location: event.target.value })}
-              >
-                {PROGRAM_LOCATIONS.map((item) => (
-                  <option key={item} value={item}>
-                    {programLocationLabel(item)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="cc-builder__field">
-              الجنس
-              <select
-                value={targetGender}
-                disabled={Boolean(draft.archived_at)}
-                onChange={(event) => {
-                  const next = event.target.value as ProgramTargetGender;
-                  setDraft({
-                    ...draft,
-                    metadata: {
-                      ...draft.metadata,
-                      target_gender: next,
-                    },
-                  });
-                }}
-              >
-                {(["all", "male", "female"] as const).map((item) => (
-                  <option key={item} value={item}>
-                    {programTargetGenderLabel(item)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="cc-builder__field">
-              أيام/أسبوع
-              <select
-                value={String(draft.days_per_week)}
-                disabled={locked}
-                onChange={(event) => {
-                  const days = Number(event.target.value) || 3;
-                  setDraft({
-                    ...draft,
-                    days_per_week: days,
-                    weeks: draft.weeks.map((row) => rebuildWeekKeepingWorkouts(row, days)),
-                  });
-                }}
-              >
-                {[2, 3, 4, 5, 6].map((days) => (
-                  <option key={days} value={String(days)}>
-                    {days}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="cc-builder__field">
-              مدة مستهدفة
-              <input
-                type="number"
-                value={String(draft.session_minutes ?? 60)}
-                disabled={Boolean(draft.archived_at)}
-                onChange={(event) => setDraft({ ...draft, session_minutes: Number(event.target.value) || 60 })}
-              />
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <section className="cc-builder__card tpl-builder-contract" aria-label="عقد القالب الموحد">
-        <ProgramTemplateBadges presentation={presentation} />
-        <ProgramTemplateDetailPanel detail={draft} />
-        <TemplateStructurePreview detail={draft} />
-      </section>
-
-      <details className="cc-builder__card cc-builder__extras">
-        <summary>ملاحظات المدرب · التقدم · الوصف · المعدات</summary>
-        <div className="cc-builder__fields cc-builder__fields--extras">
-          <label className="cc-builder__field">
-            ملاحظات الأسبوع
-            <input
-              value={week.notes_ar ?? ""}
-              disabled={locked}
-              onChange={(event) =>
-                setDraft({
-                  ...draft,
-                  weeks: draft.weeks.map((row, index) => (index === weekIndex ? { ...row, notes_ar: event.target.value } : row)),
-                })
-              }
-            />
-          </label>
-          <label className="cc-builder__field">
-            ملاحظات المدرب
-            <input
-              value={builder.coach_notes ?? ""}
-              disabled={Boolean(draft.archived_at)}
-              onChange={(event) => setDraft(setBuilderField(draft, { coach_notes: event.target.value }))}
-            />
-          </label>
-          <label className="cc-builder__field">
-            قواعد التقدم أسبوعياً
-            <input
-              value={builder.progression_notes ?? ""}
-              disabled={Boolean(draft.archived_at)}
-              onChange={(event) => setDraft(setBuilderField(draft, { progression_notes: event.target.value }))}
-            />
-          </label>
-          <label className="cc-builder__field">
-            المعدات
-            <input value={draft.equipment} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, equipment: event.target.value })} />
-          </label>
-          <label className="cc-builder__field cc-builder__field--wide">
-            وصف البرنامج
-            <textarea
-              value={draft.description_ar ?? ""}
-              disabled={Boolean(draft.archived_at)}
-              onChange={(event) => setDraft({ ...draft, description_ar: event.target.value })}
-            />
-          </label>
-        </div>
-      </details>
-
-      <section className="cc-builder__card cc-builder__schedule">
-        <div className="cc-builder__schedule-head">
-          <div className="cc-builder__weeks">
-            {draft.weeks.map((row, index) => (
-              <button
-                key={row.week_number ?? index}
-                type="button"
-                className={index === weekIndex ? "cc-builder__week-tab is-active" : "cc-builder__week-tab"}
-                onClick={() => {
-                  setWeekIndex(index);
-                  setDayIndex(0);
-                  setSelectedExercise(0);
-                }}
-              >
-                الأسبوع {index + 1}
-              </button>
-            ))}
+          <div className="cc-builder__info">
             <button
               type="button"
-              className="cc-builder__add"
-              disabled={locked}
+              className="cc-builder__cover"
+              disabled={Boolean(draft.archived_at)}
               onClick={() => {
-                const next = addWeekToDraft(draft);
-                setDraft(next);
-                setWeekIndex(next.weeks.length - 1);
-                setDayIndex(0);
+                setCoverUrl(builder.cover_image_url ?? "");
+                setCoverFile(null);
+                setCoverPreview(builder.cover_image_url || null);
+                setCoverError(null);
+                setCoverOpen(true);
               }}
             >
-              إضافة أسبوع +
+              {builder.cover_image_url ? <img src={builder.cover_image_url} alt="" /> : <span>غلاف</span>}
+              <span className="cc-builder__cover-btn">
+                <ImagePlus size={14} /> تغيير
+              </span>
             </button>
-            <button type="button" className="cc-builder__add" disabled={locked} onClick={() => setDraft(duplicateWeekInDraft(draft, weekIndex))}>
-              نسخ الأسبوع
-            </button>
+            <div>
+              <p className="cc-muted cc-builder-sheet__hint">للمدرب فقط · العميل يرى الهدف لا اسم القالب</p>
+              <div className="cc-builder__fields">
+                <label className="cc-builder__field">
+                  اسم البرنامج
+                  <input value={draft.name_ar} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, name_ar: event.target.value })} />
+                </label>
+                <label className="cc-builder__field">
+                  الهدف
+                  <select value={draft.goal ?? ""} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, goal: event.target.value })}>
+                    {PROGRAM_GOALS.map((item) => (
+                      <option key={item} value={item}>
+                        {programGoalLabel(item)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cc-builder__field">
+                  المستوى
+                  <select value={draft.level ?? ""} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, level: event.target.value })}>
+                    {PROGRAM_LEVELS.map((item) => (
+                      <option key={item} value={item}>
+                        {programLevelLabel(item)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cc-builder__field">
+                  المكان
+                  <select
+                    value={draft.training_location ?? "GYM"}
+                    disabled={Boolean(draft.archived_at)}
+                    onChange={(event) => setDraft({ ...draft, training_location: event.target.value })}
+                  >
+                    {PROGRAM_LOCATIONS.map((item) => (
+                      <option key={item} value={item}>
+                        {programLocationLabel(item)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cc-builder__field">
+                  الجنس
+                  <select
+                    value={targetGender}
+                    disabled={Boolean(draft.archived_at)}
+                    onChange={(event) => {
+                      const next = event.target.value as ProgramTargetGender;
+                      setDraft({
+                        ...draft,
+                        metadata: {
+                          ...draft.metadata,
+                          target_gender: next,
+                        },
+                      });
+                    }}
+                  >
+                    {(["all", "male", "female"] as const).map((item) => (
+                      <option key={item} value={item}>
+                        {programTargetGenderLabel(item)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cc-builder__field">
+                  أيام/أسبوع
+                  <select
+                    value={String(draft.days_per_week)}
+                    disabled={locked}
+                    onChange={(event) => {
+                      const days = Number(event.target.value) || 3;
+                      setDraft({
+                        ...draft,
+                        days_per_week: days,
+                        weeks: draft.weeks.map((row) => rebuildWeekKeepingWorkouts(row, days)),
+                      });
+                    }}
+                  >
+                    {[2, 3, 4, 5, 6].map((days) => (
+                      <option key={days} value={String(days)}>
+                        {days}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="cc-builder__field">
+                  مدة مستهدفة
+                  <input
+                    type="number"
+                    value={String(draft.session_minutes ?? 60)}
+                    disabled={Boolean(draft.archived_at)}
+                    onChange={(event) => setDraft({ ...draft, session_minutes: Number(event.target.value) || 60 })}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="cc-builder__days">
-          {week.days.map((row, index) => {
-            const rest = row.day_type !== "workout";
-            const ordinal = workoutOrdinal(week, index);
-            return (
+        </BuilderSheet>
+
+        <BuilderSheet
+          id="contract"
+          step={2}
+          openId={openSection}
+          onToggle={toggleSection}
+          title="ملخص القالب"
+          summary="الشارات والهيكل"
+        >
+          <div className="tpl-builder-contract" aria-label="عقد القالب الموحد">
+            <ProgramTemplateBadges presentation={presentation} />
+            <ProgramTemplateDetailPanel detail={draft} />
+            <TemplateStructurePreview detail={draft} />
+          </div>
+        </BuilderSheet>
+
+        <BuilderSheet
+          id="notes"
+          step={3}
+          openId={openSection}
+          onToggle={toggleSection}
+          title="الملاحظات والوصف"
+          summary="ملاحظات · تقدم · معدات"
+        >
+          <div className="cc-builder__fields cc-builder__fields--extras">
+            <label className="cc-builder__field">
+              ملاحظات الأسبوع
+              <input
+                value={week.notes_ar ?? ""}
+                disabled={locked}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    weeks: draft.weeks.map((row, index) => (index === weekIndex ? { ...row, notes_ar: event.target.value } : row)),
+                  })
+                }
+              />
+            </label>
+            <label className="cc-builder__field">
+              ملاحظات المدرب
+              <input
+                value={builder.coach_notes ?? ""}
+                disabled={Boolean(draft.archived_at)}
+                onChange={(event) => setDraft(setBuilderField(draft, { coach_notes: event.target.value }))}
+              />
+            </label>
+            <label className="cc-builder__field">
+              قواعد التقدم أسبوعياً
+              <input
+                value={builder.progression_notes ?? ""}
+                disabled={Boolean(draft.archived_at)}
+                onChange={(event) => setDraft(setBuilderField(draft, { progression_notes: event.target.value }))}
+              />
+            </label>
+            <label className="cc-builder__field">
+              المعدات
+              <input value={draft.equipment} disabled={Boolean(draft.archived_at)} onChange={(event) => setDraft({ ...draft, equipment: event.target.value })} />
+            </label>
+            <label className="cc-builder__field cc-builder__field--wide">
+              وصف البرنامج
+              <textarea
+                value={draft.description_ar ?? ""}
+                disabled={Boolean(draft.archived_at)}
+                onChange={(event) => setDraft({ ...draft, description_ar: event.target.value })}
+              />
+            </label>
+          </div>
+        </BuilderSheet>
+
+        <BuilderSheet
+          id="schedule"
+          step={4}
+          openId={openSection}
+          onToggle={toggleSection}
+          title="جدول التدريب والحصص"
+          summary={scheduleSummary}
+        >
+          <div className="cc-builder__schedule">
+            <div className="cc-builder__schedule-head">
+              <div className="cc-builder__weeks">
+                {draft.weeks.map((row, index) => (
+                  <button
+                    key={row.week_number ?? index}
+                    type="button"
+                    className={index === weekIndex ? "cc-builder__week-tab is-active" : "cc-builder__week-tab"}
+                    onClick={() => {
+                      setWeekIndex(index);
+                      setDayIndex(0);
+                      setSelectedExercise(0);
+                    }}
+                  >
+                    الأسبوع {index + 1}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="cc-builder__add"
+                  disabled={locked}
+                  onClick={() => {
+                    const next = addWeekToDraft(draft);
+                    setDraft(next);
+                    setWeekIndex(next.weeks.length - 1);
+                    setDayIndex(0);
+                  }}
+                >
+                  إضافة أسبوع +
+                </button>
+                <button type="button" className="cc-builder__add" disabled={locked} onClick={() => setDraft(duplicateWeekInDraft(draft, weekIndex))}>
+                  نسخ الأسبوع
+                </button>
+              </div>
+            </div>
+            <div className="cc-builder__days">
+              {week.days.map((row, index) => {
+                const rest = row.day_type !== "workout";
+                const ordinal = workoutOrdinal(week, index);
+                return (
+                  <button
+                    key={row.day_number ?? index}
+                    type="button"
+                    className={[
+                      "cc-builder__day-tab",
+                      index === dayIndex ? "is-active" : "",
+                      rest ? "is-rest" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    onClick={() => {
+                      setDayIndex(index);
+                      setSelectedExercise(0);
+                    }}
+                  >
+                    <strong>{rest ? "راحة" : row.title_ar || `اليوم ${ordinal}`}</strong>
+                    <small>{rest ? "بدون تمارين" : `${row.exercises.length} تمرين`}</small>
+                  </button>
+                );
+              })}
               <button
-                key={row.day_number ?? index}
                 type="button"
-                className={[
-                  "cc-builder__day-tab",
-                  index === dayIndex ? "is-active" : "",
-                  rest ? "is-rest" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                className="cc-builder__add"
+                disabled={locked || week.days.every((row) => row.day_type === "workout")}
                 onClick={() => {
-                  setDayIndex(index);
-                  setSelectedExercise(0);
+                  const weekday = WEEKDAY_CALENDAR_ORDER[week.days.findIndex((row) => row.day_type !== "workout")] ?? "sun";
+                  const nextWeek = addWorkoutDayInWeek(week, WEEKDAY_LABELS_AR[weekday]);
+                  const daysPerWeek = countWorkoutDays(nextWeek.days);
+                  updateWeeks(
+                    draft.weeks.map((row, index) => (index === weekIndex ? nextWeek : row)),
+                    { days_per_week: daysPerWeek },
+                  );
                 }}
               >
-                <strong>{rest ? "راحة" : row.title_ar || `اليوم ${ordinal}`}</strong>
-                <small>{rest ? "بدون تمارين" : `${row.exercises.length} تمرين`}</small>
+                إضافة يوم +
               </button>
-            );
-          })}
-          <button
-            type="button"
-            className="cc-builder__add"
-            disabled={locked || week.days.every((row) => row.day_type === "workout")}
-            onClick={() => {
-              const weekday = WEEKDAY_CALENDAR_ORDER[week.days.findIndex((row) => row.day_type !== "workout")] ?? "sun";
-              const nextWeek = addWorkoutDayInWeek(week, WEEKDAY_LABELS_AR[weekday]);
-              const daysPerWeek = countWorkoutDays(nextWeek.days);
-              updateWeeks(
-                draft.weeks.map((row, index) => (index === weekIndex ? nextWeek : row)),
-                { days_per_week: daysPerWeek },
-              );
-            }}
-          >
-            إضافة يوم +
-          </button>
-        </div>
-        <div className="cc-builder-kpis" aria-label="ملخص البرنامج قبل النشر">
-          <span>
-            <b>{summary.weeks}</b> أسابيع
-          </span>
-          <span>
-            <b>{summary.workoutDays}</b> أيام تدريب
-          </span>
-          <span>
-            <b>{summary.exercises}</b> تمارين
-          </span>
-          <span>
-            <b>{summary.muscles.join(" · ") || "—"}</b> عضلات
-          </span>
-          <span>
-            <b>{summary.equipment.join("، ") || draft.equipment || "—"}</b> معدات
-          </span>
-        </div>
-      </section>
-
-      <div className="cc-builder__workspace">
-        <section className="cc-builder__card cc-builder-day">
-          <div className="cc-builder-day__head">
-            <div className="cc-builder-day__title">
-              <Pencil size={16} />
-              <input
-                value={day.title_ar}
-                disabled={locked || day.day_type !== "workout"}
-                onChange={(event) => updateWeeks(patchDay(draft, weekIndex, dayIndex, { title_ar: event.target.value }))}
-              />
             </div>
-            <span className="cc-builder-est">مدة الحصة المقدرة: {day.day_type === "workout" ? estimated : 0} دقيقة</span>
+            <div className="cc-builder-kpis" aria-label="ملخص البرنامج قبل النشر">
+              <span>
+                <b>{summary.weeks}</b> أسابيع
+              </span>
+              <span>
+                <b>{summary.workoutDays}</b> أيام تدريب
+              </span>
+              <span>
+                <b>{summary.exercises}</b> تمارين
+              </span>
+              <span>
+                <b>{summary.muscles.join(" · ") || "—"}</b> عضلات
+              </span>
+              <span>
+                <b>{summary.equipment.join("، ") || draft.equipment || "—"}</b> معدات
+              </span>
+            </div>
           </div>
+
+          <div className="cc-builder__workspace">
+            <section className="cc-builder-day">
+              <div className="cc-builder-day__head">
+                <div className="cc-builder-day__title">
+                  <Pencil size={16} />
+                  <input
+                    value={day.title_ar}
+                    disabled={locked || day.day_type !== "workout"}
+                    onChange={(event) => updateWeeks(patchDay(draft, weekIndex, dayIndex, { title_ar: event.target.value }))}
+                  />
+                </div>
+                <span className="cc-builder-est">مدة الحصة المقدرة: {day.day_type === "workout" ? estimated : 0} دقيقة</span>
+              </div>
 
           {day.day_type !== "workout" ? (
             <div className="cc-builder-rest">
@@ -967,88 +1076,90 @@ export function AdminProgramBuilder({
             </>
           )}
         </section>
-      </div>
-
-      {day.day_type === "workout" ? (
-        <details className="cc-builder__card cc-builder-footer">
-          <summary>
-            أدوات اليوم · بدائل وأنماط وملاحظات
-            <span className="cc-muted">
-              {day.exercises.length} تمارين · {estimated} د · {totalSetsForDay(day)} مجموعات
-              {targetMuscleLabelsForDay(day).length ? ` · ${targetMuscleLabelsForDay(day).join(" - ")}` : ""}
-            </span>
-          </summary>
-          <div className="cc-builder-footer__grid">
-            <section>
-              <h3>بدائل التمرين المحدد</h3>
-              {!selected ? <p className="cc-muted">اختر تمريناً من الجدول.</p> : null}
-              {(selected?.alternatives ?? []).map((alt) => (
-                <div key={alt.exercise_id} className="cc-builder-alt-row">
-                  <span>{alt.name_ar}</span>
-                  <button
-                    type="button"
-                    className="cc-btn cc-btn--ghost"
-                    disabled={locked}
-                    onClick={() =>
-                      replaceExercise(
-                        {
-                          id: alt.exercise_id,
-                          name_ar: alt.name_ar,
-                          name_en: alt.name_en ?? alt.name_ar,
-                          external_id: alt.external_id,
-                        } as AdminExerciseListItem,
-                        selectedExercise,
-                      )
-                    }
-                  >
-                    استبدال
-                  </button>
-                </div>
-              ))}
-              {alternativeCandidates.slice(0, 5).map((item) => (
-                <div key={item.id} className="cc-builder-alt-row">
-                  <span>{item.name_ar}</span>
-                  <button type="button" className="cc-plus-btn" disabled={locked} onClick={() => addAlternative(item)}>
-                    +
-                  </button>
-                </div>
-              ))}
-            </section>
-            <section>
-              <h3>ملاحظات اليوم</h3>
-              <textarea
-                value={day.notes_ar ?? ""}
-                disabled={locked}
-                onChange={(event) => updateWeeks(patchDay(draft, weekIndex, dayIndex, { notes_ar: event.target.value }))}
-              />
-            </section>
-            <section>
-              <h3>أنماط متقدمة</h3>
-              <div className="cc-builder-pattern">
-                {(["superset", "circuit", "dropset"] as ExercisePattern[]).map((pattern) => (
-                  <button
-                    key={pattern}
-                    type="button"
-                    className={selected?.pattern === pattern ? "is-active" : undefined}
-                    disabled={locked || !selected}
-                    onClick={() =>
-                      selected &&
-                      updateWeeks(patchExercises(draft, weekIndex, dayIndex, applyPatternToSelection(day.exercises, selectedExercise, pattern)))
-                    }
-                  >
-                    {exercisePatternLabel(pattern)}
-                  </button>
-                ))}
-              </div>
-              {selected?.pattern && selected.pattern !== "none" ? (
-                <p className="cc-muted">
-                  {exerciseRoleLabel(selected.role)} · {exercisePatternLabel(selected.pattern)}
-                </p>
-              ) : null}
-            </section>
           </div>
-        </details>
-      ) : null}
+        </BuilderSheet>
+
+        {day.day_type === "workout" ? (
+          <BuilderSheet
+            id="tools"
+            step={5}
+            openId={openSection}
+            onToggle={toggleSection}
+            title="أدوات اليوم"
+            summary={dayToolsSummary}
+          >
+            <div className="cc-builder-footer__grid">
+              <section>
+                <h3>بدائل التمرين المحدد</h3>
+                {!selected ? <p className="cc-muted">اختر تمريناً من الجدول.</p> : null}
+                {(selected?.alternatives ?? []).map((alt) => (
+                  <div key={alt.exercise_id} className="cc-builder-alt-row">
+                    <span>{alt.name_ar}</span>
+                    <button
+                      type="button"
+                      className="cc-btn cc-btn--ghost"
+                      disabled={locked}
+                      onClick={() =>
+                        replaceExercise(
+                          {
+                            id: alt.exercise_id,
+                            name_ar: alt.name_ar,
+                            name_en: alt.name_en ?? alt.name_ar,
+                            external_id: alt.external_id,
+                          } as AdminExerciseListItem,
+                          selectedExercise,
+                        )
+                      }
+                    >
+                      استبدال
+                    </button>
+                  </div>
+                ))}
+                {alternativeCandidates.slice(0, 5).map((item) => (
+                  <div key={item.id} className="cc-builder-alt-row">
+                    <span>{item.name_ar}</span>
+                    <button type="button" className="cc-plus-btn" disabled={locked} onClick={() => addAlternative(item)}>
+                      +
+                    </button>
+                  </div>
+                ))}
+              </section>
+              <section>
+                <h3>ملاحظات اليوم</h3>
+                <textarea
+                  value={day.notes_ar ?? ""}
+                  disabled={locked}
+                  onChange={(event) => updateWeeks(patchDay(draft, weekIndex, dayIndex, { notes_ar: event.target.value }))}
+                />
+              </section>
+              <section>
+                <h3>أنماط متقدمة</h3>
+                <div className="cc-builder-pattern">
+                  {(["superset", "circuit", "dropset"] as ExercisePattern[]).map((pattern) => (
+                    <button
+                      key={pattern}
+                      type="button"
+                      className={selected?.pattern === pattern ? "is-active" : undefined}
+                      disabled={locked || !selected}
+                      onClick={() =>
+                        selected &&
+                        updateWeeks(patchExercises(draft, weekIndex, dayIndex, applyPatternToSelection(day.exercises, selectedExercise, pattern)))
+                      }
+                    >
+                      {exercisePatternLabel(pattern)}
+                    </button>
+                  ))}
+                </div>
+                {selected?.pattern && selected.pattern !== "none" ? (
+                  <p className="cc-muted">
+                    {exerciseRoleLabel(selected.role)} · {exercisePatternLabel(selected.pattern)}
+                  </p>
+                ) : null}
+              </section>
+            </div>
+          </BuilderSheet>
+        ) : null}
+      </div>
 
       {coverOpen ? (
         <div
