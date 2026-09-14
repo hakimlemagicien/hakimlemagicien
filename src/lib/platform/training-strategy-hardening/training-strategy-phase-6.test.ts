@@ -147,6 +147,8 @@ assert(workspace.includes("assignAdminClientProgram"), "legacy template path exi
 assert(workspace.includes("assignGeneratedV2Program"), "V2 path exists");
 assert(workspace.includes("validateV2AssignmentPayload"), "V2 gate in UI");
 assert(workspace.includes("validateCandidateBeforeAssign"), "stale gate in UI");
+assert(workspace.includes("v2GenerationOverridesRef"), "assign uses stable overrides ref");
+assert(workspace.includes("priorContextFingerprint: null"), "manual generate skips prior stale gate");
 assert(workspace.includes("assigningInFlight"), "duplicate assign guard");
 
 // --- Security static ---
