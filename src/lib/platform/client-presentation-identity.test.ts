@@ -54,15 +54,16 @@ const maleFat = resolveClientPresentationIdentity({
 assert.equal(maleFat.mediaGoalId, "fat");
 assert.equal(maleFat.goalLabel, "خسارة الدهون");
 
-// TEST D — Female + Muscle Gain
+// TEST D — Female + Muscle Gain (media slot remaps to tone; label follows slot)
 const femaleMuscle = resolveClientPresentationIdentity({
   gender: "female",
   goalId: "MUSCLE_GROWTH",
   goalText: "بناء العضلات",
 });
 assert.equal(femaleMuscle.gender, "female");
-assert.equal(femaleMuscle.goalLabel, "بناء العضلات");
 assert.equal(femaleMuscle.mediaGoalId, "tone");
+assert.equal(femaleMuscle.goalLabel, "تحسين شكل الصدر");
+assert.equal(femaleMuscle.goalLabel.includes("أنثوي"), false);
 
 // TEST E — Unknown gender → no slot / no invented female media path
 const unknown = resolveClientPresentationIdentity({
@@ -101,7 +102,14 @@ const workoutHeroSource = readFileSync(
   resolve(process.cwd(), "src/lib/platform/workout-goal-hero-images.ts"),
   "utf8",
 );
-assert.ok(workoutHeroSource.includes("coachPhoto"));
+assert.equal(
+  resolveClientGoalLabelForGender(null, "body", "جسم متناسق وأنثوي").includes("أنثوي"),
+  false,
+);
+assert.equal(resolveClientGoalLabelForGender(null, "body"), "غير محدد");
+
+assert.ok(workoutHeroSource.includes("listHeroGoalAssets"));
+assert.equal(workoutHeroSource.includes("coachPhoto"), false);
 assert.equal(workoutHeroSource.includes("workout-goal-stack-1"), false);
 
 console.log("client-presentation-identity.test.ts: A–E PASS");

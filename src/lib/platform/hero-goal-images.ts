@@ -117,9 +117,18 @@ export function heroSrcBelongsToSlot(src: string, gender: HeroGender, goalId: st
   const entries = listHeroGoalAssetEntries(gender, goalId);
   if (entries.some((row) => row.url === src)) return true;
   const otherGender: HeroGender = gender === "female" ? "male" : "female";
-  if (listHeroGoalAssetEntries(otherGender, goalId).some((row) => row.url === src)) return false;
+  // Reject anything that belongs to the opposite gender catalog (any goal).
+  const otherEntries = listHeroGoalAssetEntries(otherGender, goalId);
+  if (otherEntries.some((row) => row.url === src)) return false;
+  for (const folder of ["fat", "muscle", "fitness", "athletic", "shape", "gain", "glutes", "waist", "body", "fit", "tone"]) {
+    if (listHeroGoalAssetEntries(otherGender, folder).some((row) => row.url === src)) return false;
+  }
   if (gender === "male" && /hero-goal-women|\/بنات\//i.test(src)) return false;
   if (gender === "female" && /hero-goal-man|\/ذكور\//i.test(src)) return false;
+  // Male coach stock must never back a female goal card.
+  if (gender === "female" && /coach-photo/i.test(src)) return false;
+  // Hashed Vite URLs and CMS storage paths lack folder markers — allow only after
+  // opposite-gender catalog / path checks above.
   return true;
 }
 
@@ -197,7 +206,12 @@ export function resolveHeroGoalImage(input: {
     (candidate): candidate is string =>
       Boolean(candidate) && heroSrcBelongsToSlot(candidate!, gender, resolvedGoalId),
   );
-  const src = isolatedSrc ?? entries[0]?.url ?? coachPhoto;
+  const catalogSafe = entries.find((row) => heroSrcBelongsToSlot(row.url, gender, resolvedGoalId));
+  // Never fall back to the male coach photo for female clients.
+  const src =
+    isolatedSrc ??
+    catalogSafe?.url ??
+    (gender === "male" ? coachPhoto : catalogSafe?.url ?? entries[0]?.url ?? "");
   const entry = entries.find((row) => row.url === src);
   const framingKey = entry
     ? `${gender}:${resolvedGoalId}:${entry.fileName}`

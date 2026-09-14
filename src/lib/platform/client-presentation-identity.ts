@@ -76,47 +76,56 @@ export type ClientPresentationIdentity = {
 function isFemaleOnlyGoalKey(key: string): boolean {
   if ((FEMALE_ONLY_GOAL_IDS as readonly string[]).includes(key)) return true;
   if (isCanonicalTrainingGoal(key) && FEMALE_ONLY_CANONICAL.has(key)) return true;
-  return /أنثوي|feminine|مؤخر|خصر أنحف/i.test(key);
+  return /أنثوي|انثوي|feminine|مؤخر|خصر أنحف/i.test(key);
 }
 
 /**
  * Display label for a raw goal id/text, gated by gender.
  * Males never receive feminine-only catalog copy (e.g. «جسم متناسق وأنثوي»).
+ * Unknown gender also never receives feminine-only copy (avoids mixed cards before identity loads).
  */
 export function resolveClientGoalLabelForGender(
   gender: HeroGender | null | undefined,
   ...sources: Array<string | null | undefined>
 ): string {
   const resolvedGender = normalizeHeroGender(gender);
+  const blockFeminine = resolvedGender !== "female";
 
   for (const raw of sources) {
     const key = raw?.trim();
     if (!key) continue;
 
-    if (resolvedGender === "male" && isFemaleOnlyGoalKey(key)) {
-      const remapped = MALE_SAFE_LABEL_FOR_FEMALE_GOAL[key];
-      if (remapped) return remapped;
+    if (blockFeminine && isFemaleOnlyGoalKey(key)) {
+      if (resolvedGender === "male") {
+        const remapped = MALE_SAFE_LABEL_FOR_FEMALE_GOAL[key];
+        if (remapped) return remapped;
+      }
       continue;
     }
 
     if (isCanonicalTrainingGoal(key)) {
-      if (resolvedGender === "male" && FEMALE_ONLY_CANONICAL.has(key)) {
-        return MALE_SAFE_LABEL_FOR_FEMALE_GOAL[key] ?? TRAINING_V2_GOAL_LABELS_AR.ATHLETIC_PHYSIQUE;
+      if (blockFeminine && FEMALE_ONLY_CANONICAL.has(key)) {
+        return (
+          MALE_SAFE_LABEL_FOR_FEMALE_GOAL[key] ?? TRAINING_V2_GOAL_LABELS_AR.ATHLETIC_PHYSIQUE
+        );
       }
       return TRAINING_V2_GOAL_LABELS_AR[key];
     }
 
     const mapped = GOAL_LABELS[key] ?? GOAL_LABELS[key.toLowerCase()];
     if (mapped) {
-      if (resolvedGender === "male" && isFemaleOnlyGoalKey(key)) {
+      if (blockFeminine && isFemaleOnlyGoalKey(key)) {
         return MALE_SAFE_LABEL_FOR_FEMALE_GOAL[key] ?? "جسم رياضي ومتناسق";
+      }
+      if (blockFeminine && /أنثوي|مؤخر|خصر أنحف/i.test(mapped)) {
+        continue;
       }
       return mapped;
     }
 
     if (/[\u0600-\u06FF]/.test(key)) {
-      if (resolvedGender === "male" && /أنثوي|مؤخر/.test(key)) {
-        return "جسم رياضي ومتناسق";
+      if (blockFeminine && /أنثوي|انثوي|مؤخر|خصر أنحف/i.test(key)) {
+        return resolvedGender === "male" ? "جسم رياضي ومتناسق" : "غير محدد";
       }
       return key;
     }
@@ -143,8 +152,10 @@ export function resolveClientPresentationIdentity(input: {
     goalText: input.goalText,
   });
 
+  // Prefer the resolved media slot id so title and photos cannot diverge.
   const goalLabel = resolveClientGoalLabelForGender(
     gender,
+    slot?.goalId,
     input.goalId,
     input.goalText,
     ...(input.goalSources ?? []),
@@ -208,6 +219,7 @@ export function canonicalGoalsForGender(gender: HeroGender | null | undefined): 
 export function assertNoCrossGenderMedia(src: string, gender: HeroGender): boolean {
   if (gender === "male" && /hero-goal-women|\/بنات\//i.test(src)) return false;
   if (gender === "female" && /hero-goal-man|\/ذكور\//i.test(src)) return false;
+  if (gender === "female" && /coach-photo/i.test(src)) return false;
   return true;
 }
 

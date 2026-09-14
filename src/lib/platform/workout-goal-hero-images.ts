@@ -8,23 +8,16 @@ import { listContentSlotAssets, pickContentSlotAsset } from "@/lib/platform/cont
 import type { HeroGender } from "@/lib/platform/hero-goal-slot";
 import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
 import { listHeroGoalImageOverrides } from "@/lib/platform/hero-goal-image-overrides";
-import { resolveClientGoalLabelForGender } from "@/lib/platform/client-presentation-identity";
-import coachPhoto from "@/assets/coach-photo.png";
+import { listHeroGoalAssets } from "@/lib/platform/hero-goals-asset-index";
+import {
+  assertNoCrossGenderMedia,
+  resolveClientGoalLabelForGender,
+} from "@/lib/platform/client-presentation-identity";
 
 export type WorkoutGoalHeroFolder = GoalHeroFolder;
 
 /** 12 quiz goals — 6 ذكور + 6 بنات. */
 export const WORKOUT_GOAL_HERO_FOLDERS = GOAL_HERO_FOLDERS;
-
-/** Gender-safe neutral fallback — never cross-gender stock. */
-function neutralFallbackStack(gender: HeroGender, label: string) {
-  void gender;
-  return [
-    { src: coachPhoto, alt: `${label} — MAAKFIT` },
-    { src: coachPhoto, alt: `${label} — برنامجك` },
-    { src: coachPhoto, alt: `${label} — هدفك` },
-  ];
-}
 
 export type WorkoutGoalHeroPhoto = {
   src: string;
@@ -38,6 +31,22 @@ export type WorkoutGoalCardStudioImage = {
   source: "cms" | "content" | "default";
 };
 
+function genderSafeUrls(gender: HeroGender, urls: string[]): string[] {
+  return urls.filter((url) => assertNoCrossGenderMedia(url, gender));
+}
+
+/**
+ * Same-gender catalog fallback — never the male coach photo for female slots
+ * (that produced «جسم متناسق وأنثوي» beside a male image when workout content was empty).
+ */
+function catalogFallbackStack(gender: HeroGender, goalId: string, label: string): WorkoutGoalHeroPhoto[] {
+  const urls = genderSafeUrls(gender, listHeroGoalAssets(gender, goalId)).slice(0, 3);
+  return urls.map((src, index) => ({
+    src,
+    alt: `${label} — صورة ${index + 1}`,
+  }));
+}
+
 export function resolveWorkoutGoalHeroFolder(gender: HeroGender, goalId?: string | null): WorkoutGoalHeroFolder | null {
   return resolveGoalHeroFolder(gender, goalId);
 }
@@ -47,9 +56,15 @@ export function listWorkoutGoalCardStudioImages(
   gender: HeroGender,
   goalId: string,
 ): WorkoutGoalCardStudioImage[] {
-  const overrides = listHeroGoalImageOverrides("workout", gender, goalId);
+  const overrides = genderSafeUrls(
+    gender,
+    listHeroGoalImageOverrides("workout", gender, goalId).map((item) => item.url),
+  );
   if (overrides.length > 0) {
-    return overrides.map((item) => ({
+    const full = listHeroGoalImageOverrides("workout", gender, goalId).filter((item) =>
+      assertNoCrossGenderMedia(item.url, gender),
+    );
+    return full.map((item) => ({
       url: item.url,
       fileName: item.fileName,
       id: item.id,
@@ -59,11 +74,14 @@ export function listWorkoutGoalCardStudioImages(
 
   const folder = resolveWorkoutGoalHeroFolder(gender, goalId);
   if (folder) {
-    const contentUrls = listContentSlotAssets({
-      collection: "workout-goal-hero",
-      dirName: folder.dirName,
+    const contentUrls = genderSafeUrls(
       gender,
-    });
+      listContentSlotAssets({
+        collection: "workout-goal-hero",
+        dirName: folder.dirName,
+        gender,
+      }),
+    );
     if (contentUrls.length > 0) {
       return contentUrls.map((url, index) => ({
         url,
@@ -73,9 +91,9 @@ export function listWorkoutGoalCardStudioImages(
     }
   }
 
-  return neutralFallbackStack(gender, folder?.labelAr ?? "هدفك").map((photo, index) => ({
+  return catalogFallbackStack(gender, goalId, folder?.labelAr ?? "هدفك").map((photo, index) => ({
     url: photo.src,
-    fileName: `neutral-fallback-${index + 1}.png`,
+    fileName: photo.src.split("/").pop() ?? `catalog-${index + 1}`,
     source: "default" as const,
   }));
 }
@@ -96,14 +114,17 @@ export function resolveWorkoutGoalHeroPhotos(input: {
   const gender = slot.gender;
   const goalId = slot.goalId;
   const folder = resolveWorkoutGoalHeroFolder(gender, goalId);
+  // Label must follow the resolved media slot — never a cross-gender leftover string.
   const label =
-    input.goalLabel?.trim() ||
     resolveClientGoalLabelForGender(gender, goalId) ||
+    input.goalLabel?.trim() ||
     folder?.labelAr ||
     "هدفك";
 
   if (goalId) {
-    const overrides = listHeroGoalImageOverrides("workout", gender, goalId);
+    const overrides = listHeroGoalImageOverrides("workout", gender, goalId).filter((item) =>
+      assertNoCrossGenderMedia(item.url, gender),
+    );
     if (overrides.length > 0) {
       return overrides.slice(0, 3).map((item, index) => ({
         src: item.url,
@@ -112,23 +133,25 @@ export function resolveWorkoutGoalHeroPhotos(input: {
     }
   }
 
-  const custom = folder
-    ? pickContentSlotAsset({
-        collection: "workout-goal-hero",
-        dirName: folder.dirName,
-        gender,
-        limit: 3,
-      })
-    : [];
+  const custom = genderSafeUrls(
+    gender,
+    folder
+      ? pickContentSlotAsset({
+          collection: "workout-goal-hero",
+          dirName: folder.dirName,
+          gender,
+          limit: 3,
+        })
+      : [],
+  );
 
   if (custom.length === 0) {
-    return neutralFallbackStack(gender, label);
+    return catalogFallbackStack(gender, goalId, label);
   }
 
+  const catalogPad = catalogFallbackStack(gender, goalId, label).map((p) => p.src);
   const picked =
-    custom.length >= 3
-      ? custom.slice(0, 3)
-      : [...custom, ...neutralFallbackStack(gender, label).map((p) => p.src)].slice(0, 3);
+    custom.length >= 3 ? custom.slice(0, 3) : [...custom, ...catalogPad].slice(0, 3);
 
   return picked.map((src, index) => ({
     src,

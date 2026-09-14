@@ -28,7 +28,6 @@ import {
 } from "@/lib/platform/profile-settings-storage";
 import { getBodyMeasurements, getMarketingPhotoConsent } from "@/lib/platform/progress-storage";
 import { buildProgressDashboard } from "@/lib/platform/progress-experience";
-import { readQuizProgress } from "@/lib/quiz-progress-storage";
 
 export const PROFILE_DETAILS_KEY = ["profile", "details"] as const;
 export const PROFILE_TRAINING_KEY = ["profile", "training"] as const;
@@ -87,7 +86,8 @@ export function useProfileExperience() {
   );
 
   const programSummary = useMemo(
-    () => buildProgramSummary(profile, training, readQuizProgress()?.goalId),
+    // Signed-in profile only — device quiz leftovers mix another person's goal card.
+    () => buildProgramSummary(profile, training, null),
     [profile, training],
   );
 
