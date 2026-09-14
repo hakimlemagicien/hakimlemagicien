@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { ClipboardList, Search } from "lucide-react";
 import { ClientTrainingGoalCard } from "@/components/admin/ClientTrainingGoalCard";
 import { ClientProgressionStrategyCard } from "@/components/admin/ClientProgressionStrategyCard";
 import { TrainingToolCard, type TrainingToolCardTone } from "@/components/admin/TrainingToolCard";
@@ -179,7 +180,7 @@ function strategyResolutionErrorMessage(code: string): string {
   }
 }
 
-type AssignStep = "closed" | "source" | "pick" | "preview" | "review";
+type AssignStep = "closed" | "hub" | "source" | "pick" | "preview" | "review";
 type OverrideUiState =
   | "idle"
   | "editing"
@@ -219,7 +220,8 @@ export function ClientTrainingWorkspace({
   const [saveState, setSaveState] = useState<LibrarySaveState>("saved");
   const [editing, setEditing] = useState(false);
   const [assignStep, setAssignStep] = useState<AssignStep>("closed");
-  const [v2Busy, setV2Busy] = useState(false);
+  const [pickerListOpen, setPickerListOpen] = useState(false);
+  const [pickerFiltersOpen, setPickerFiltersOpen] = useState(false);  const [v2Busy, setV2Busy] = useState(false);
   const [assigningInFlight, setAssigningInFlight] = useState(false);
   const [v2Candidate, setV2Candidate] = useState<TrainingAssignmentCandidate | null>(null);
   const [overrideUi, setOverrideUi] = useState<OverrideUiState>("idle");
@@ -1126,6 +1128,17 @@ export function ClientTrainingWorkspace({
     setPickerStatus("published");
     setPickerError(null);
     setPreview(null);
+    setPickerListOpen(false);
+    setPickerFiltersOpen(false);
+    setAssignStep("hub");
+  };
+
+  const openPublishedPicker = () => {
+    setPickerStatus("published");
+    setPickerError(null);
+    setPreview(null);
+    setPickerListOpen(false);
+    setPickerFiltersOpen(false);
     setAssignStep("pick");
   };
 
@@ -1532,7 +1545,9 @@ export function ClientTrainingWorkspace({
                 ? "معاينة البرنامج للعميل"
                 : assignStep === "source"
                   ? "طريقة إنشاء البرنامج"
-                  : "القوالب المنشورة"}
+                  : assignStep === "hub"
+                    ? "تعيين برنامج للعميل"
+                    : "اختيار برنامج منشور"}
             </h2>
             <button
               type="button"
@@ -1541,16 +1556,40 @@ export function ClientTrainingWorkspace({
                 setAssignStep("closed");
                 setPreview(null);
                 setPickerError(null);
+                setPickerListOpen(false);
               }}
             >
               إغلاق
             </button>
           </div>
+
+          {assignStep === "hub" ? (
+            <div className="cc-assign-hub">
+              <p className="cc-muted cc-assign-hub__hint">
+                اختر برنامجًا منشورًا ثم عاينه قبل التفعيل. تعيين المدرب له الأولوية القصوى.
+              </p>
+              <button type="button" className="cc-assign-hub__select" onClick={openPublishedPicker}>
+                <span className="cc-assign-hub__icon" aria-hidden>
+                  <ClipboardList size={28} />
+                </span>
+                <span className="cc-assign-hub__copy">
+                  <strong>تحديد برنامج للعميل</strong>
+                  <em>افتح قائمة منظمة للقوالب المنشورة — بدون عرض الكل دفعة واحدة</em>
+                </span>
+              </button>
+              <div className="cc-assign-hub__alt">
+                <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setAssignStep("source")}>
+                  خيارات أخرى
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           {assignStep === "source" ? (
             <>
               <p className="cc-muted">اختيار المصدر يبدأ المسار فقط. لن يُغيَّر برنامج العميل حتى الاعتماد.</p>
               <div className="cc-source-grid">
-                <button type="button" className="cc-source-card" onClick={openChangeProgram}>
+                <button type="button" className="cc-source-card" onClick={openPublishedPicker}>
                   <strong>قالب جاهز</strong>
                   <span>اختر قالباً منشوراً من المكتبة، عاينه كما سيظهر للعميل، ثم اعتمده فوراً.</span>
                 </button>
@@ -1566,68 +1605,104 @@ export function ClientTrainingWorkspace({
                   <span>توليد من ملف العميل ثم مراجعة وتعيين عبر المحرّك الحالي.</span>
                 </button>
               </div>
+              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => setAssignStep("hub")}>
+                رجوع
+              </button>
             </>
           ) : null}
+
           {assignStep === "pick" ? (
             <div className="cc-assign-pick">
-              <div className="cc-assign-pick__intro">
-                <div>
-                  <strong>اختر برنامجاً منشوراً</strong>
-                  <p className="cc-muted">
-                    بعد الاختيار ستظهر معاينة كاملة كما يراها العميل. الاعتماد يفعّل البرنامج فوراً في التطبيق بدون نشر.
-                  </p>
-                </div>
-                <div className="cc-assign-pick__intro-actions">
-                  <Link to="/admin/programs" className="cc-btn cc-btn--ghost cc-btn--compact" preload={false}>
-                    فتح مكتبة البرامج
-                  </Link>
-                  <button
-                    type="button"
-                    className="cc-btn cc-btn--ghost cc-btn--compact"
-                    onClick={() => setAssignStep("source")}
-                  >
-                    محرك الاستراتيجية
-                  </button>
-                </div>
+              <div className="cc-assign-pick__toolbar">
+                <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => setAssignStep("hub")}>
+                  رجوع
+                </button>
+                <Link to="/admin/programs" className="cc-btn cc-btn--ghost cc-btn--compact" preload={false}>
+                  مكتبة البرامج
+                </Link>
               </div>
 
-              <div className="cc-assign-pick__filters">
+              <div className="cc-assign-pick__search">
                 <AdminSearchInput
                   value={pickerQuery}
-                  onChange={setPickerQuery}
-                  placeholder="ابحث بالاسم أو المعرّف…"
-                  label="بحث القوالب"
+                  onChange={(value) => {
+                    setPickerQuery(value);
+                    if (value.trim()) setPickerListOpen(true);
+                  }}
+                  placeholder="ابحث باسم البرنامج…"
+                  label="بحث"
                 />
-                <AdminSelect value={pickerStatus} onChange={(value) => setPickerStatus(value as "" | "published" | "draft")}>
-                  <option value="published">منشور فقط</option>
-                  <option value="">منشور + مسودة</option>
-                  <option value="draft">مسودة فقط</option>
-                </AdminSelect>
-                <AdminSelect value={pickerGoal} onChange={setPickerGoal}>
-                  <option value="">كل الأهداف</option>
-                  {PROGRAM_GOALS.map((goal) => (
-                    <option key={goal} value={goal}>
-                      {programGoalLabel(goal)}
-                    </option>
-                  ))}
-                </AdminSelect>
-                <AdminSelect value={pickerLevel} onChange={setPickerLevel}>
-                  <option value="">كل المستويات</option>
-                  {PROGRAM_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {programLevelLabel(level)}
-                    </option>
-                  ))}
-                </AdminSelect>
-                <AdminSelect value={pickerDays} onChange={setPickerDays}>
-                  <option value="">أيام/أسبوع</option>
-                  {[3, 4, 5, 6].map((days) => (
-                    <option key={days} value={String(days)}>
-                      {days} أيام
-                    </option>
-                  ))}
-                </AdminSelect>
               </div>
+
+              <div className="cc-assign-pick__chips" role="group" aria-label="تصفية سريعة">
+                {PROGRAM_GOALS.map((goal) => (
+                  <button
+                    key={goal}
+                    type="button"
+                    className={pickerGoal === goal ? "cc-assign-chip is-active" : "cc-assign-chip"}
+                    onClick={() => {
+                      setPickerGoal(pickerGoal === goal ? "" : goal);
+                      setPickerListOpen(true);
+                    }}
+                  >
+                    {programGoalLabel(goal)}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="cc-assign-pick__reveal"
+                onClick={() => {
+                  setPickerFiltersOpen(false);
+                  setPickerListOpen(true);
+                }}
+              >
+                <Search size={18} aria-hidden />
+                <span>
+                  <strong>عرض البرامج المنشورة</strong>
+                  <em>
+                    {pickerLoading
+                      ? "جاري التحميل…"
+                      : `${pickerRows.filter((row) => row.is_published).length.toLocaleString("ar-AE")} قالب متاح`}
+                  </em>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="cc-assign-pick__filters-toggle"
+                aria-expanded={pickerFiltersOpen}
+                onClick={() => setPickerFiltersOpen((open) => !open)}
+              >
+                {pickerFiltersOpen ? "إخفاء التصفية المتقدمة" : "تصفية متقدمة"}
+              </button>
+
+              {pickerFiltersOpen ? (
+                <div className="cc-assign-pick__filters">
+                  <AdminSelect value={pickerStatus} onChange={(value) => setPickerStatus(value as "" | "published" | "draft")}>
+                    <option value="published">منشور فقط</option>
+                    <option value="">منشور + مسودة</option>
+                    <option value="draft">مسودة فقط</option>
+                  </AdminSelect>
+                  <AdminSelect value={pickerLevel} onChange={(value) => { setPickerLevel(value); setPickerListOpen(true); }}>
+                    <option value="">كل المستويات</option>
+                    {PROGRAM_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {programLevelLabel(level)}
+                      </option>
+                    ))}
+                  </AdminSelect>
+                  <AdminSelect value={pickerDays} onChange={(value) => { setPickerDays(value); setPickerListOpen(true); }}>
+                    <option value="">أيام/أسبوع</option>
+                    {[3, 4, 5, 6].map((days) => (
+                      <option key={days} value={String(days)}>
+                        {days} أيام
+                      </option>
+                    ))}
+                  </AdminSelect>
+                </div>
+              ) : null}
 
               {pickerError ? (
                 <div className="cc-inline-alert" role="alert">
@@ -1642,61 +1717,54 @@ export function ClientTrainingWorkspace({
                 </div>
               ) : null}
 
-              {pickerLoading ? <AdminSkeletonRows rows={5} /> : null}
-
-              {!pickerLoading && !pickerError && pickerRows.length === 0 ? (
-                <AdminEmptyState
-                  title="لا قوالب منشورة مطابقة"
-                  body="انشر قالباً من مكتبة البرامج ليظهر هنا. التعيين للعميل يعمل مباشرة بعد الاعتماد."
-                />
-              ) : null}
-
-              {!pickerLoading && pickerRows.length > 0 ? (
-                <>
-                  <p className="cc-assign-pick__count">
-                    {pickerRows.filter((row) => row.is_published).length.toLocaleString("ar-AE")} قالب منشور
-                  </p>
-                  <ul className="cc-picker-list" aria-label="قائمة القوالب للتعيين">
-                    {pickerRows.map((row) => (
-                      <li key={row.id}>
-                        <button
-                          type="button"
-                          className="cc-row-btn cc-assign-pick__row"
-                          onClick={() => {
-                            if (!row.is_published) {
-                              setPickerError(
-                                `«${row.name_ar}» ما زال مسودة. انشره من مكتبة البرامج أولاً.`,
-                              );
-                              return;
-                            }
-                            setPickerError(null);
-                            void getAdminProgramTemplate(row.id)
-                              .then((full) => {
-                                setPreview(full);
-                                setAssignStep("preview");
-                              })
-                              .catch((err) => {
-                                console.error(err);
-                                setPickerError(translateLibraryError(err));
-                              });
-                          }}
-                        >
-                          <span className="cc-assign-pick__row-main">
+              {pickerListOpen ? (
+                <div className="cc-assign-pick__list-wrap">
+                  {pickerLoading ? <AdminSkeletonRows rows={4} /> : null}
+                  {!pickerLoading && !pickerError && pickerRows.length === 0 ? (
+                    <AdminEmptyState
+                      title="لا قوالب مطابقة"
+                      body="غيّر البحث أو التصفية، أو انشر قالباً من مكتبة البرامج."
+                    />
+                  ) : null}
+                  {!pickerLoading && pickerRows.length > 0 ? (
+                    <ul className="cc-assign-pick__list" aria-label="قائمة القوالب للتعيين">
+                      {pickerRows.map((row) => (
+                        <li key={row.id}>
+                          <button
+                            type="button"
+                            className="cc-assign-pick__item"
+                            onClick={() => {
+                              if (!row.is_published) {
+                                setPickerError(`«${row.name_ar}» ما زال مسودة. انشره من مكتبة البرامج أولاً.`);
+                                return;
+                              }
+                              setPickerError(null);
+                              void getAdminProgramTemplate(row.id)
+                                .then((full) => {
+                                  setPreview(full);
+                                  setAssignStep("preview");
+                                })
+                                .catch((err) => {
+                                  console.error(err);
+                                  setPickerError(translateLibraryError(err));
+                                });
+                            }}
+                          >
                             <strong>{row.name_ar}</strong>
-                            <em>
-                              {programGoalLabel(row.goal)} · {programLevelLabel(row.level)} · {row.days_per_week} أيام ·
-                              الإصدار {row.version}
-                            </em>
-                          </span>
-                          <AdminStatusBadge tone={row.is_published ? "published" : "draft"}>
-                            {row.is_published ? "منشور" : "مسودة"}
-                          </AdminStatusBadge>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
+                            <AdminStatusBadge tone={row.is_published ? "published" : "draft"}>
+                              {row.is_published ? "منشور" : "مسودة"}
+                            </AdminStatusBadge>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="cc-muted cc-assign-pick__wait">
+                  اضغط «عرض البرامج المنشورة» أو اختر هدفاً لعرض القائمة.
+                </p>
+              )}
             </div>
           ) : null}
           {preview && (assignStep === "preview" || assignStep === "review") ? (
@@ -1709,7 +1777,10 @@ export function ClientTrainingWorkspace({
               assigning={assigningInFlight}
               onAssignStrategy={setAssignStrategy}
               onStartsOn={setStartsOn}
-              onBack={() => setAssignStep("pick")}
+              onBack={() => {
+                setPickerListOpen(true);
+                setAssignStep("pick");
+              }}
               onConfirm={() =>
                 confirmAssign(
                   detail?.status === "active" ||

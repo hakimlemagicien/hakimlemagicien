@@ -84,6 +84,7 @@ export function ProgramLibraryManager() {
   const [showQaDemo, setShowQaDemo] = useState(false);
   const [syncingCanonical, setSyncingCanonical] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
   const structureLocked = Boolean(draft?.is_published && !draft.archived_at);
@@ -474,29 +475,27 @@ export function ProgramLibraryManager() {
       <AdminPageHeader
         kicker="التدريب"
         title="البرامج التدريبية"
-        subtitle="قوالب البرامج: الجمهور، الغرض، الاستراتيجية، المستوى، المكان، الأيام، والجاهزية."
+        subtitle="قوالب جاهزة للتعيين من ملف العميل"
         actions={
           <>
-            <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setShowQaDemo((v) => !v)}>
-              {showQaDemo ? "إخفاء مراجعة التوصية" : "مراجعة حالات التوصية"}
-            </button>
-            <button type="button" className="cc-btn" disabled={syncingCanonical} onClick={runCanonicalSync}>
-              {syncingCanonical ? "جاري الاستيراد…" : `استيراد ونشر المعتمدة (${CANONICAL_TEMPLATE_COUNT})`}
-            </button>
             <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
               برنامج جديد
+            </button>
+            {canonicalInLibrary < CANONICAL_TEMPLATE_COUNT ? (
+              <button type="button" className="cc-btn" disabled={syncingCanonical} onClick={runCanonicalSync}>
+                {syncingCanonical ? "جاري الاستيراد…" : `استيراد المعتمدة (${CANONICAL_TEMPLATE_COUNT})`}
+              </button>
+            ) : null}
+            <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setShowQaDemo((v) => !v)}>
+              {showQaDemo ? "إخفاء التوصية" : "حالات التوصية"}
             </button>
           </>
         }
       />
-      <p className="cc-contract">
-        قالب البرنامج منفصل عن برنامج العميل. التعيين يدوي من المدرب وله الأولوية القصوى — العميل يرى البرنامج الذي يعيّنه المدرب.
-      </p>
       {syncStatus ? <p className="cc-muted">{syncStatus}</p> : null}
       {canonicalInLibrary < CANONICAL_TEMPLATE_COUNT ? (
         <p className="cc-inline-alert" role="status">
-          قاعدة البيانات فيها {canonicalInLibrary.toLocaleString("ar-AE")} من أصل {CANONICAL_TEMPLATE_COUNT} قالبًا معتمدًا.
-          اضغط «استيراد ونشر المعتمدة» لإظهار الكل وإتاحتها للتعيين.
+          في قاعدة البيانات {canonicalInLibrary.toLocaleString("ar-AE")} / {CANONICAL_TEMPLATE_COUNT} قالبًا معتمدًا — استورد الماستر لإظهار الكل.
         </p>
       ) : null}
       <AdminConceptKpiRow
@@ -504,40 +503,34 @@ export function ProgramLibraryManager() {
         metrics={[
           {
             id: "canonical",
-            label: "المعتمدة في قاعدة البيانات",
+            label: "المعتمدة",
             value: `${canonicalInLibrary.toLocaleString("ar-AE")} / ${CANONICAL_TEMPLATE_COUNT}`,
-            hint:
-              canonicalInLibrary < CANONICAL_TEMPLATE_COUNT
-                ? "ناقصة — استورد الماستر ثم عيّن من ملف العميل"
-                : "الماستر الكامل منشور وجاهز للتعيين",
+            hint: canonicalInLibrary === CANONICAL_TEMPLATE_COUNT ? "جاهزة للتعيين" : "ناقصة في قاعدة البيانات",
             tone: canonicalInLibrary === CANONICAL_TEMPLATE_COUNT ? "positive" : "neutral",
           },
           {
-            id: "programs",
-            label: "إجمالي المكتبة",
-            value: total.toLocaleString("ar-AE"),
-            hint: "كل الصفوف من قاعدة البيانات",
-            tone: total > 0 ? "positive" : "neutral",
-          },
-          {
             id: "page",
-            label: "في هذه الصفحة",
+            label: "المعروضة",
             value: visibleRows.length.toLocaleString("ar-AE"),
-            hint: canonicalOnly ? "بعد فلتر المعتمدة" : "بعد الفلاتر الحالية",
-          },
-          {
-            id: "assigned",
-            label: "العملاء المعينون",
-            value: "—",
-            hint: "التعيين من ملف العميل — أولوية المدرب",
-            tone: "unavailable",
+            hint: canonicalOnly ? "نطاق المعتمدة" : "بعد الفلاتر",
           },
         ]}
       />
 
       {showQaDemo ? <TemplateRecommendationDemoStates /> : null}
 
-      <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم البرنامج" label="بحث البرامج" />
+      <div className="cc-library-toolbar">
+        <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم البرنامج" label="بحث البرامج" />
+        <button
+          type="button"
+          className="cc-btn cc-btn--ghost"
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          {filtersOpen ? "إخفاء التصفية" : "تصفية"}
+        </button>
+      </div>
+      {filtersOpen ? (
       <AdminFilterBar>
         <label className="cc-filter">
           الاستراتيجية
@@ -653,6 +646,7 @@ export function ProgramLibraryManager() {
           </select>
         </label>
       </AdminFilterBar>
+      ) : null}
       {error ? <AdminErrorState message={error} onRetry={() => setOffset(0)} /> : null}
       {loading ? (
         <AdminSkeletonRows rows={8} />
