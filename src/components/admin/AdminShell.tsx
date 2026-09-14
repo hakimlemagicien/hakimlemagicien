@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bell, ChevronDown, Menu, Search, X } from "lucide-react";
+import { Bell, ChevronDown, HelpCircle, LogOut, Menu, Search, Settings, X } from "lucide-react";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
@@ -15,6 +15,7 @@ import { purgeDesignLabFromDocument } from "@/lib/design-lab/visual-editor";
 import { checkAdminAccess } from "@/lib/admin/admin-access";
 import { canAccessNavItem, canAccessRoute, STAFF_ROLE_LABELS, type StaffSession } from "@/lib/admin/admin-permissions";
 import { StaffPermissionsProvider } from "@/components/admin/StaffPermissionsContext";
+import { personInitials, todayContextLabel } from "@/lib/admin/admin-status";
 
 const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
   unreadThreads: 0,
@@ -41,6 +42,7 @@ function AdminNavLink({
   const later = item.status === "foundation";
   const count = navCount(item.to, snapshot);
   const Icon = adminNavIcon(item.id);
+  const label = command ? "الرئيسية" : item.label;
   return (
     <Link
       to={item.to}
@@ -50,13 +52,13 @@ function AdminNavLink({
         .filter(Boolean)
         .join(" ")}
       aria-current={active ? "page" : undefined}
-      aria-label={later ? `${item.label} — قريبًا` : item.label}
+      aria-label={later ? `${label} — قريبًا` : label}
     >
       <span className="cc-nav-link__main">
         <span className="cc-nav-icon" aria-hidden>
           <Icon className="cc-nav-link__icon" />
         </span>
-        <span>{item.label}</span>
+        <span>{label}</span>
       </span>
       {count > 0 ? (
         <b className="cc-nav-badge" title="يحتاج انتباهاً">
@@ -92,6 +94,13 @@ export function AdminShell() {
   const drawerId = useId();
   const menuId = useId();
   const attention = snapshotAttentionCount(snapshot);
+  const dateLabel = todayContextLabel();
+  const initials = personInitials("Coach Hakim");
+  const roleLabel = staffSession
+    ? staffSession.staffRole === "super_admin"
+      ? "مدير المنصة"
+      : STAFF_ROLE_LABELS[staffSession.staffRole]
+    : "مدير المنصة";
 
   useEffect(() => {
     purgeDesignLabFromDocument();
@@ -191,7 +200,17 @@ export function AdminShell() {
       >
         <div className="cc-sidebar__brand">
           <p className="cc-sidebar__logo">MAAKFIT</p>
-          <p className="cc-sidebar__logo-sub">ADMIN</p>
+          <p className="cc-sidebar__logo-sub">أقوى نسخة منك</p>
+        </div>
+
+        <div className="cc-sidebar__profile cc-sidebar__profile--top">
+          <span className="cc-sidebar__avatar" aria-hidden>
+            {initials}
+          </span>
+          <div>
+            <strong>Coach Hakim</strong>
+            <span>{roleLabel}</span>
+          </div>
         </div>
 
         <nav className="cc-sidebar__nav">
@@ -215,21 +234,14 @@ export function AdminShell() {
         </nav>
 
         <footer className="cc-sidebar__footer">
-          <div className="cc-sidebar__profile">
-            <span className="cc-sidebar__avatar" aria-hidden>
-              CH
-            </span>
-            <div>
-              <strong>Coach Hakim</strong>
-              <span>
-                {staffSession
-                  ? staffSession.staffRole === "super_admin"
-                    ? "مدير المنصة"
-                    : STAFF_ROLE_LABELS[staffSession.staffRole]
-                  : "مدير المنصة"}
-              </span>
-            </div>
-          </div>
+          <Link to="/admin/settings" preload={false} search={{ tab: "team" }} className="cc-sidebar__foot-link">
+            <HelpCircle className="h-4 w-4" aria-hidden />
+            مساعدة الفريق
+          </Link>
+          <button type="button" className="cc-sidebar__foot-link" onClick={() => void signOut()}>
+            <LogOut className="h-4 w-4" aria-hidden />
+            تسجيل الخروج
+          </button>
           <AdminEnvironmentBadge />
         </footer>
       </aside>
@@ -247,6 +259,8 @@ export function AdminShell() {
             {drawerOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
+          <p className="cc-topbar__date">{dateLabel}</p>
+
           <form className="cc-topbar__search" onSubmit={submitSearch} role="search">
             <Search className="h-4 w-4" aria-hidden />
             <input
@@ -258,6 +272,17 @@ export function AdminShell() {
           </form>
 
           <div className="cc-topbar__actions">
+            <span className="cc-lang-chip" aria-label="لغة الواجهة">
+              العربية
+            </span>
+            <Link
+              to="/admin/settings"
+              preload={false}
+              className="cc-icon-btn"
+              aria-label="إعدادات الفريق والصلاحيات"
+            >
+              <Settings className="h-4 w-4" />
+            </Link>
             <a
               href="/admin#attention"
               className="cc-icon-btn cc-topbar__bell"
@@ -276,12 +301,18 @@ export function AdminShell() {
                 aria-controls={menuId}
                 onClick={() => setMenuOpen((open) => !open)}
               >
-                <span className="cc-account__name">Admin</span>
+                <span className="cc-account__avatar" aria-hidden>
+                  {initials}
+                </span>
+                <span className="cc-account__name">{accountLabel}</span>
                 <ChevronDown className="h-4 w-4" aria-hidden />
               </button>
               {menuOpen ? (
                 <div id={menuId} className="cc-account__menu" role="menu">
                   <p className="cc-account__menu-label">{accountLabel}</p>
+                  <Link to="/admin/settings" preload={false} role="menuitem" className="cc-btn cc-btn--ghost">
+                    الإعدادات
+                  </Link>
                   <button type="button" role="menuitem" className="cc-btn cc-btn--ghost" onClick={() => void signOut()}>
                     خروج
                   </button>

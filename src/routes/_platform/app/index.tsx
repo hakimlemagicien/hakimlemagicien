@@ -31,7 +31,8 @@ import {
   resolveClientFirstName,
   shouldShowActivateCta,
 } from "@/lib/platform/home-hub";
-import { readHomeGoalContext, resolveHeroGoalImage } from "@/lib/platform/hero-goal-images";
+import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
+import { useLockedHeroGoalImage } from "@/hooks/useLockedHeroGoalImage";
 import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
 import { hydrateDiscoverFromSupabase } from "@/lib/platform/discover-content-api";
 import {
@@ -67,7 +68,7 @@ function useOnlineStatus() {
 function PlatformHomePage() {
   const { displayName, tier, is_paid, features, avatarUrl, loading, error, refreshMembership } =
     useMembership();
-  const { snapshot: activity } = usePlatformActivity();
+  const { snapshot: activity, userId } = usePlatformActivity();
   const count = activity.activityStreak;
   const hakimPoints = activity.hakimPoints;
   const isOnline = useOnlineStatus();
@@ -91,11 +92,28 @@ function PlatformHomePage() {
     queryFn: fetchMyProfileDetails,
     staleTime: 30_000,
   });
-  const { gender, goalId, goal } = readHomeGoalContext({
-    gender: trainingQuery.data?.answers.gender,
-    goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal ?? profileQuery.data?.goal,
-    goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
-  });
+  const identityPending = trainingQuery.isPending || profileQuery.isPending;
+  const slot = useMemo(
+    () =>
+      identityPending
+        ? null
+        : resolveAuthoritativeHeroSlot({
+            gender: trainingQuery.data?.answers.gender,
+            goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal ?? profileQuery.data?.goal,
+            goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
+          }),
+    [
+      identityPending,
+      trainingQuery.data?.answers.gender,
+      trainingQuery.data?.answers.goalId,
+      trainingQuery.data?.goal,
+      profileQuery.data?.goal,
+    ],
+  );
+  const lockedHero = useLockedHeroGoalImage({ userId, identityPending, slot });
+  const gender = slot?.gender;
+  const goalId = slot?.goalId;
+  const goal = slot?.goal ?? "fitness";
   const clientName = resolveClientFirstName(displayName);
   const viewerGender = gender === "male" || gender === "female" ? gender : null;
 
@@ -113,14 +131,16 @@ function PlatformHomePage() {
   });
 
   const dashboard = useMemo(() => {
-    if (loading) return null;
+    if (loading || !lockedHero.ready) return null;
+    const heroImage = lockedHero.image;
+    if (!heroImage) return null;
     return {
       hero: buildHeroState({
         displayName,
         goal,
         streak: count,
         hakimPoints,
-        heroImage: resolveHeroGoalImage({ goal, gender, goalId }),
+        heroImage,
         features,
         activity,
       }),
@@ -136,7 +156,8 @@ function PlatformHomePage() {
       discover: resolveHomeDiscoverPreview(discoverQuery.data ?? [], buildDiscoverPreviewItems(goal)),
     };
   }, [
-    loading,
+    lockedHero.ready,
+    lockedHero.image,
     displayName,
     goal,
     goalId,
@@ -152,7 +173,7 @@ function PlatformHomePage() {
     discoverQuery.data,
   ]);
 
-  if (loading) {
+  if (loading || identityPending || !lockedHero.ready) {
     return (
       <PlatformStack>
         <HomeDashboardSkeleton />

@@ -434,23 +434,34 @@ export function resolveProgramTemplate(
     })),
   ];
 
-  // Near candidates (same strategy, mismatched dims) for visibility — never exact
-  const nearPool = catalog
+  // Near candidates (same strategy, mismatched dims) — ranked for best-available assign
+  const nearRanked = catalog
     .filter((t) => t.status === "PUBLISHED" && t.is_published && !t.archived)
     .filter((t) => t.contract.primary_strategy === strategy)
     .filter((t) => !exactDimCandidates.some((exact) => exact.id === t.id))
-    .slice(0, 5)
+    .filter((t) => !isLibraryBlocking(t.contract.library_readiness.state))
     .map((t) => ({
-      id: t.id,
-      slug: t.slug,
-      match_class: "NEAR" as const,
+      template: t,
       mismatched_dimensions: nearMismatches(t, strategy, level, environment, days),
-      library_readiness: t.contract.library_readiness.state,
       equipment: assessEquipmentCompatibility({
         template: t,
         availableEquipment: input.available_equipment,
       }),
-    }));
+    }))
+    .sort((a, b) => {
+      const dim = a.mismatched_dimensions.length - b.mismatched_dimensions.length;
+      if (dim !== 0) return dim;
+      return a.template.slug.localeCompare(b.template.slug);
+    });
+
+  const nearPool = nearRanked.slice(0, 8).map((row) => ({
+    id: row.template.id,
+    slug: row.template.slug,
+    match_class: "NEAR" as const,
+    mismatched_dimensions: row.mismatched_dimensions,
+    library_readiness: row.template.contract.library_readiness.state,
+    equipment: row.equipment,
+  }));
 
   let autoWinner: ResolvableTemplateRecord | null = null;
   let status: TemplateResolverStatus = "NO_EXACT_MATCH";
@@ -458,6 +469,7 @@ export function resolveProgramTemplate(
   let fallback_class: TemplateResolverResult["fallback_class"] = "NO_EXACT_MATCH";
   let fallback_reason: string | null = null;
   let compatibility_status: TemplateResolverResult["compatibility_status"] = "UNKNOWN";
+  let dimensions_changed: string[] = [];
 
   if (exactSafe.length > 0) {
     autoWinner = pickDeterministicWinner(exactSafe.map((row) => row.template));
@@ -481,18 +493,32 @@ export function resolveProgramTemplate(
       for (const signal of row.template.contract.review_signals) reviewSignals.add(signal);
     }
   } else if (afterDays.length > 0) {
-    // Dimensional exact existed but all blocked
+    // Dimensional exact existed but all blocked — still offer best same-strategy template
     status = "NO_COMPATIBLE_TEMPLATE";
     fallback_class = "NO_COMPATIBLE_TEMPLATE";
     fallback_reason = "EXACT_DIMENSIONS_BLOCKED_BY_ELIGIBILITY_OR_READINESS";
     reviewSignals.add("COACH_REVIEW_REQUIRED");
     compatibility_status = "INCOMPATIBLE";
+    if (nearRanked[0]) {
+      autoWinner = nearRanked[0].template;
+      fallback_used = true;
+      fallback_class = "CONTEXTUAL_MATCH";
+      dimensions_changed = nearRanked[0].mismatched_dimensions;
+      compatibility_status = "REVIEW";
+    }
   } else {
     status = "NO_EXACT_MATCH";
     fallback_class = "NO_EXACT_MATCH";
     fallback_used = false;
     fallback_reason = "NO_APPROVED_TEMPLATE_FOR_STRATEGY_LEVEL_ENV_DAYS";
     reviewSignals.add("COACH_REVIEW_REQUIRED");
+    if (nearRanked[0]) {
+      autoWinner = nearRanked[0].template;
+      fallback_used = true;
+      fallback_class = "CONTEXTUAL_MATCH";
+      dimensions_changed = nearRanked[0].mismatched_dimensions;
+      compatibility_status = "REVIEW";
+    }
     if (strategy === "GLUTE_FOCUS" && environment === "HOME") {
       reviewSignals.add("TRAINING_ENVIRONMENT_REVIEW_RECOMMENDED");
     }
@@ -502,7 +528,7 @@ export function resolveProgramTemplate(
     if (baseTrace.days_filtered_count === 0 && baseTrace.environment_filtered_count > 0) {
       reviewSignals.add("TRAINING_FREQUENCY_REVIEW_RECOMMENDED");
     }
-    compatibility_status = "REVIEW";
+    if (!autoWinner) compatibility_status = "REVIEW";
   }
 
   // Attach near candidates for NO_EXACT_MATCH visibility
@@ -566,7 +592,7 @@ export function resolveProgramTemplate(
     fallback_used,
     fallback_class,
     fallback_reason,
-    dimensions_changed: [],
+    dimensions_changed,
     coach_override_required:
       status !== "MATCHED" || reviewSignals.has("COACH_REVIEW_REQUIRED") || coach_override_applied,
     coach_override_applied,

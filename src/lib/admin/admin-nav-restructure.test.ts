@@ -37,6 +37,10 @@ assert(Boolean(HomeIcon), "lucide home");
 
 const system = ADMIN_NAV_GROUPS.find((g) => g.id === "system")?.items ?? [];
 assert(system.some((i) => i.to === "/admin/settings" && i.label === "إدارة الفريق والصلاحيات" && i.status === "live"), "staff at settings");
+assert(!system.some((i) => i.to === "/admin/support"), "support not in sidebar");
+assert(!system.some((i) => i.to === "/admin/audit"), "audit not in sidebar");
 assert(system.filter((i) => i.status === "foundation").map((i) => i.label).join(",") === "الإشعارات,التحليلات", "coming soon pair");
+assert(isAdminNavActive("/admin/support", "/admin/settings"), "support highlights team hub");
+assert(isAdminNavActive("/admin/audit", "/admin/settings"), "audit highlights team hub");
 
 console.log("admin-nav-restructure.test.ts passed");

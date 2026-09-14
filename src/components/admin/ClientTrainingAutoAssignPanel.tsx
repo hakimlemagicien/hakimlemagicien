@@ -1,8 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AdminCard, AdminStatusBadge } from "@/components/admin/AdminPage";
 import { supabase } from "@/integrations/supabase/client";
-import type { TrainingAssignmentDecisionState } from "@/lib/platform/training-auto-assign";
+import { formatAdminDate } from "@/lib/admin/admin-status";
+import { resolverStatusLabelAr } from "@/lib/admin/admin-template-ui";
+import { progressionStrategyLabel } from "@/lib/platform/progression-strategy";
+import {
+  applyTrainingAssignmentDecision,
+  resolveDecisionForClient,
+  type TrainingAssignmentDecisionState,
+} from "@/lib/platform/training-auto-assign";
+import type { TemplateResolverStatus } from "@/lib/platform/training-templates";
 
 const LABELS: Record<string, string> = {
   AUTO_ASSIGNED: "تعيين تلقائي",
@@ -57,19 +66,44 @@ async function fetchLatestReview(clientId: string): Promise<LatestReview | null>
   return data ?? null;
 }
 
+function displayValue(value: string | number | null | undefined): string {
+  if (value == null || value === "") return "—";
+  return String(value);
+}
+
+function resolverSummaryAr(trace: Record<string, unknown> | null | undefined): string {
+  if (!trace) return "—";
+  const status = String(trace.status ?? "").trim();
+  const compatibility = String(trace.compatibility_status ?? "").trim();
+  const parts = [
+    status ? resolverStatusLabelAr(status as TemplateResolverStatus) : "",
+    compatibility ? resolverStatusLabelAr(compatibility as TemplateResolverStatus) : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "—";
+}
+
 export function ClientTrainingAutoAssignPanel({
   clientId,
   activeTemplateSlug,
   assignmentVersion,
   progressionStrategy,
   assignmentSourceLabel,
+  hasActiveProgram,
+  onAssigned,
 }: {
   clientId: string;
   activeTemplateSlug?: string | null;
   assignmentVersion?: number | null;
   progressionStrategy?: string | null;
   assignmentSourceLabel?: string | null;
+  hasActiveProgram?: boolean;
+  onAssigned?: () => void;
 }) {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const reviewQuery = useQuery({
     queryKey: ["client-training-assignment-review", clientId],
     queryFn: () => fetchLatestReview(clientId),
@@ -84,77 +118,127 @@ export function ClientTrainingAutoAssignPanel({
       : state === "REVIEW_REQUIRED" || state === "BLOCKED_NO_EXACT_MATCH"
         ? ("review" as const)
         : ("foundation" as const);
+  const managementLabel = coachManaged
+    ? `${progressionStrategyLabel("COACH_MANAGED")} — محمي`
+    : state
+      ? (LABELS[state] ?? state)
+      : "تلقائي";
+
+  const items = [
+    { label: "القالب النشط", value: displayValue(activeTemplateSlug) },
+    { label: "إصدار التعيين", value: displayValue(assignmentVersion) },
+    { label: "المصدر", value: displayValue(assignmentSourceLabel || review?.assignment_source) },
+    { label: "حالة الإدارة", value: managementLabel },
+    { label: "السابق", value: displayValue(review?.previous_template_slug) },
+    { label: "الموصى به", value: displayValue(review?.recommended_template_slug) },
+    { label: "آخر تعيين", value: displayValue(review?.assigned_template_slug) },
+    {
+      label: "المراجعة",
+      value: review ? (review.is_reviewed ? "تمت المراجعة" : "غير مراجعة") : "لا إشعار بعد",
+    },
+    { label: "السريان", value: review?.effective_at ? formatAdminDate(review.effective_at) : "—" },
+    { label: "المطابقة", value: resolverSummaryAr(review?.resolver_trace), wide: true },
+    {
+      label: "السبب",
+      value: displayValue(review?.reason_summary ?? review?.reason_code),
+      wide: true,
+    },
+  ];
+
+  const runAutoAssign = async () => {
+    setBusy(true);
+    setActionError(null);
+    setActionMessage(null);
+    try {
+      const { decision, resolver, context, contextFingerprint } = await resolveDecisionForClient({
+        clientId,
+        clientKind: hasActiveProgram ? "EXISTING" : "NEW",
+        activeAssignment: null,
+      });
+      if (!decision.should_assign || !decision.recommended_template_id) {
+        setActionError(decision.reason_summary || "لا يوجد قالب مناسب للتعيين التلقائي.");
+        await applyTrainingAssignmentDecision({
+          clientId,
+          clientKind: hasActiveProgram ? "EXISTING" : "NEW",
+          decision,
+          resolver,
+          context,
+          contextFingerprint,
+        });
+        await reviewQuery.refetch();
+        return;
+      }
+      const result = await applyTrainingAssignmentDecision({
+        clientId,
+        clientKind: hasActiveProgram ? "EXISTING" : "NEW",
+        decision: {
+          ...decision,
+          should_replace: Boolean(hasActiveProgram),
+        },
+        resolver,
+        context,
+        contextFingerprint,
+      });
+      setActionMessage(
+        result.assigned
+          ? `تم التعيين التلقائي: ${decision.recommended_template_slug ?? decision.recommended_template_id}`
+          : decision.reason_summary,
+      );
+      await queryClient.invalidateQueries({ queryKey: ["client-training-assignment-review", clientId] });
+      onAssigned?.();
+    } catch (err) {
+      console.error(err);
+      setActionError(err instanceof Error ? err.message : "تعذر التعيين التلقائي.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <AdminCard>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="cc-section__title" style={{ margin: 0 }}>
-          مركز تحكم التعيين
-        </h2>
-        {state ? <AdminStatusBadge tone={tone}>{LABELS[state] ?? state}</AdminStatusBadge> : null}
+    <AdminCard className="cc-assign-card">
+      <div className="cc-assign-card__head">
+        <div className="cc-assign-card__title-wrap">
+          <h2 className="cc-assign-card__title">مركز تحكم التعيين</h2>
+          {state ? <AdminStatusBadge tone={tone}>{LABELS[state] ?? state}</AdminStatusBadge> : null}
+        </div>
+        <div className="cc-assign-card__actions">
+          <button
+            type="button"
+            className="cc-btn cc-btn--primary cc-btn--compact"
+            disabled={busy || coachManaged}
+            onClick={() => void runAutoAssign()}
+          >
+            {busy ? "جاري التعيين…" : hasActiveProgram ? "إعادة التعيين التلقائي" : "تعيين تلقائي الآن"}
+          </button>
+          <Link to="/admin/notifications" className="cc-btn cc-btn--compact">
+            صندوق المراجعات
+          </Link>
+          <Link to="/admin/programs" className="cc-btn cc-btn--ghost cc-btn--compact">
+            مكتبة القوالب
+          </Link>
+        </div>
       </div>
-      <p className="cc-muted">
-        تغيير قالب العميل يتم عبر التعيين/إعادة التعيين/تدخل المدرب فقط — بدون Deploy. القالب الرئيسي لا يغيّر
-        اللقطات التاريخية.
+      <p className="cc-assign-card__hint">
+        النظام يعيّن أفضل قالب منشور مناسب لهدف العميل تلقائياً بدون انتظار المدرب. الإدارة اليدوية تبقى متاحة عند الحاجة.
       </p>
-      <dl className="cc-dl">
-        <div>
-          <dt>القالب النشط</dt>
-          <dd>{activeTemplateSlug || "—"}</dd>
-        </div>
-        <div>
-          <dt>إصدار التعيين</dt>
-          <dd>{assignmentVersion ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>مصدر التعيين</dt>
-          <dd>{assignmentSourceLabel || review?.assignment_source || "—"}</dd>
-        </div>
-        <div>
-          <dt>حالة Auto / Override</dt>
-          <dd>{coachManaged ? "COACH_OVERRIDE_ACTIVE (محمي)" : state ? LABELS[state] ?? state : "—"}</dd>
-        </div>
-        <div>
-          <dt>القالب السابق (آخر قرار)</dt>
-          <dd>{review?.previous_template_slug ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>الموصى به</dt>
-          <dd>{review?.recommended_template_slug ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>المعيَّن (آخر قرار)</dt>
-          <dd>{review?.assigned_template_slug ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>سبب التوصية</dt>
-          <dd>{review?.reason_summary ?? review?.reason_code ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>ملخص Resolver</dt>
-          <dd className="text-xs">
-            {review?.resolver_trace
-              ? `${String(review.resolver_trace.status ?? "—")} · ${String(review.resolver_trace.compatibility_status ?? "—")}`
-              : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt>تاريخ السريان</dt>
-          <dd>{review?.effective_at ? new Date(review.effective_at).toLocaleString("ar") : "—"}</dd>
-        </div>
-        <div>
-          <dt>مراجعة الأدمن</dt>
-          <dd>{review ? (review.is_reviewed ? "تمت المراجعة" : "غير مراجعة") : "لا إشعار بعد"}</dd>
-        </div>
+      {actionMessage ? (
+        <p className="cc-assign-card__hint" role="status">
+          {actionMessage}
+        </p>
+      ) : null}
+      {actionError ? (
+        <p className="cc-field__error" role="alert">
+          {actionError}
+        </p>
+      ) : null}
+      <dl className="cc-assign-card__meta">
+        {items.map((item) => (
+          <div key={item.label} className={item.wide ? "cc-assign-card__item is-wide" : "cc-assign-card__item"}>
+            <dt>{item.label}</dt>
+            <dd title={item.value}>{item.value}</dd>
+          </div>
+        ))}
       </dl>
-      <div className="cc-row-actions" style={{ marginTop: 12 }}>
-        <Link to="/admin/notifications" className="cc-btn">
-          صندوق المراجعات
-        </Link>
-        <Link to="/admin/programs" className="cc-btn cc-btn--ghost">
-          مكتبة القوالب
-        </Link>
-      </div>
     </AdminCard>
   );
 }

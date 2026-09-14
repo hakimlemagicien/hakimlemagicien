@@ -369,7 +369,7 @@ try {
   assert.equal(newDecision.decision_state, "AUTO_ASSIGNED");
   assert.equal(newDecision.requires_admin_approval, false);
 
-  // Missing equipment → REVIEW_REQUIRED (no silent guess)
+  // Missing equipment → MATCHED_WITH_REVIEW still auto-assigns (notify admin)
   const reviewResolver = recommendTemplateForClient(
     { clientId: "new-review", goal: "fat", trainingType: "gym", level: "BEGINNER", daysPerWeek: 3 },
     catalog,
@@ -378,7 +378,8 @@ try {
     clientKind: "NEW",
     resolver: reviewResolver,
   });
-  assert.equal(reviewDecision.decision_state, "REVIEW_REQUIRED");
+  assert.equal(reviewDecision.decision_state, "AUTO_ASSIGNED");
+  assert.equal(reviewDecision.should_assign, Boolean(reviewResolver.recommended_template_id));
 
   const blockedResolver = recommendTemplateForClient(
     { clientId: "new2", goal: "glutes", trainingType: "home", level: "BEGINNER", daysPerWeek: 3 },
@@ -388,7 +389,14 @@ try {
     clientKind: "NEW",
     resolver: blockedResolver,
   });
-  assert.equal(blockedDecision.decision_state, "BLOCKED_NO_EXACT_MATCH");
+  // Prefer auto-assign when a same-strategy published template exists; otherwise blocked.
+  if (blockedResolver.recommended_template_id) {
+    assert.equal(blockedDecision.decision_state, "AUTO_ASSIGNED");
+    assert.equal(blockedDecision.should_assign, true);
+  } else {
+    assert.equal(blockedDecision.decision_state, "BLOCKED_NO_EXACT_MATCH");
+    assert.equal(blockedDecision.should_assign, false);
+  }
 
   // Snapshot immutability: replaced assignments remain in history
   const history = await client.query<{ status: string; c: string }>(

@@ -113,7 +113,7 @@ function baseResolver(over: Partial<TemplateResolverResult> = {}): TemplateResol
   assert.equal(d.should_assign, false);
 }
 
-// D) missing context
+// D) missing context without recommendation
 {
   const d = decideTrainingAssignment({
     clientKind: "NEW",
@@ -123,7 +123,7 @@ function baseResolver(over: Partial<TemplateResolverResult> = {}): TemplateResol
   assert.equal(d.should_assign, false);
 }
 
-// E) coverage gap
+// E) coverage gap without recommendation
 {
   const d = decideTrainingAssignment({
     clientKind: "NEW",
@@ -149,14 +149,32 @@ function baseResolver(over: Partial<TemplateResolverResult> = {}): TemplateResol
   assert.equal(d.requires_admin_approval, false);
 }
 
-// MATCHED_WITH_REVIEW is not silent auto
+// MATCHED_WITH_REVIEW with template → auto-assign + admin notify
 {
   const d = decideTrainingAssignment({
     clientKind: "NEW",
     resolver: baseResolver({ status: "MATCHED_WITH_REVIEW", compatibility_status: "REVIEW" }),
   });
-  assert.equal(d.decision_state, "REVIEW_REQUIRED");
-  assert.equal(d.should_assign, false);
+  assert.equal(d.decision_state, "AUTO_ASSIGNED");
+  assert.equal(d.should_assign, true);
+  assert.equal(d.reason_code, "MATCHED_WITH_REVIEW_AUTO");
+  assert.equal(d.admin_review_only, true);
+}
+
+// Best-available near match → auto-assign
+{
+  const d = decideTrainingAssignment({
+    clientKind: "NEW",
+    resolver: baseResolver({
+      status: "NO_EXACT_MATCH",
+      fallback_used: true,
+      fallback_class: "CONTEXTUAL_MATCH",
+      compatibility_status: "REVIEW",
+    }),
+  });
+  assert.equal(d.decision_state, "AUTO_ASSIGNED");
+  assert.equal(d.should_assign, true);
+  assert.equal(d.reason_code, "BEST_AVAILABLE_TEMPLATE");
 }
 
 // Idempotency key stable

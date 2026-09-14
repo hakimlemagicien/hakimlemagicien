@@ -110,7 +110,7 @@ const locationPayload = buildCoachOverridePayload("TRAINING_LOCATION_CHANGE", {
 assert("trainingLocation" in locationPayload && locationPayload.trainingLocation === "GYM", "location payload");
 
 // T23 program library boundary
-assert(trainingWorkspace.includes("Strategy Matrix"), "legacy warning");
+assert(trainingWorkspace.includes("محرك الاستراتيجية"), "legacy warning");
 
 // T26–T28 exercise library
 assert(exerciseLib.includes("LibraryImpactWarningCard"), "exercise warning");

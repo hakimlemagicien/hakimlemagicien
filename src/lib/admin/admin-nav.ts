@@ -77,9 +77,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "system",
     label: "الإدارة والنظام",
     items: [
-      { id: "support", to: "/admin/support", label: "الدعم", status: "live", requiredPermission: "support.manage" },
       { id: "staff", to: "/admin/settings", label: "إدارة الفريق والصلاحيات", status: "live", requiredPermission: "staff.manage" },
-      { id: "audit", to: "/admin/audit", label: "سجل العمليات", status: "live", requiredPermission: "audit.read" },
       { id: "notifications", to: "/admin/notifications", label: "الإشعارات", status: "foundation" },
       { id: "analytics", to: "/admin/analytics", label: "التحليلات", status: "foundation" },
     ],
@@ -134,6 +132,21 @@ export function listAdminNavHrefs(): string[] {
 export function isAdminNavActive(pathname: string, href: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
   const target = href.replace(/\/+$/, "") || "/";
+
+  // Support + audit live under the team hub entry in the sidebar.
+  if (target === "/admin/settings") {
+    if (
+      path === "/admin/settings" ||
+      path.startsWith("/admin/settings/") ||
+      path === "/admin/support" ||
+      path.startsWith("/admin/support/") ||
+      path === "/admin/audit" ||
+      path.startsWith("/admin/audit/")
+    ) {
+      return true;
+    }
+  }
+
   if (target === "/admin") return path === "/admin";
   if (!(path === target || path.startsWith(`${target}/`))) return false;
   const longerMatch = listAdminNavHrefs().some((other) => {

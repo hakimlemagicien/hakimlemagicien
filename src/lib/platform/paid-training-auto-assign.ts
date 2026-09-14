@@ -39,9 +39,9 @@ async function clientAssignProgramTemplate(input: {
 
 /**
  * V1 paid auto-assign:
- * 1) Template Resolver exact+safe → AUTO_ASSIGNED (no admin approval)
- * 2) Else unsafe/missing → REVIEW_REQUIRED / BLOCKED + Admin Review notification
- * 3) Else fall back to Strategy Matrix generation path (existing)
+ * 1) Template Resolver recommends a published template → AUTO_ASSIGN (no coach wait)
+ * 2) Else fall back to Strategy Matrix generation
+ * 3) Else REVIEW/BLOCKED notification (last resort — library empty / profile missing)
  */
 export async function runPaidTrainingAutoAssignment(input: {
   userId: string;
@@ -64,7 +64,7 @@ export async function runPaidTrainingAutoAssignment(input: {
       activeAssignment: null,
     });
 
-    if (decision.decision_state === "AUTO_ASSIGNED" && decision.recommended_template_id) {
+    if (decision.should_assign && decision.recommended_template_id) {
       const assigned = await clientAssignProgramTemplate({
         templateId: decision.recommended_template_id,
         startsOn: todayIsoDate(),
@@ -86,7 +86,7 @@ export async function runPaidTrainingAutoAssignment(input: {
       return { status: "assigned", assignmentId: assigned.id || null, path: "template" };
     }
 
-    // Exact unsafe / missing / coverage gap / coach-protected: never silent fallback.
+    // No recommended template: record review / blocked, then try matrix fallback below.
     if (
       decision.decision_state === "REVIEW_REQUIRED" ||
       decision.decision_state === "BLOCKED_NO_EXACT_MATCH" ||
@@ -103,16 +103,13 @@ export async function runPaidTrainingAutoAssignment(input: {
         asClient: true,
       });
 
-      if (decision.decision_state === "REVIEW_REQUIRED") {
-        return { status: "review_required", reasonCode: decision.reason_code };
-      }
-      if (decision.decision_state === "BLOCKED_NO_EXACT_MATCH") {
-        return { status: "blocked", reasonCode: decision.reason_code };
-      }
       if (decision.decision_state === "COACH_OVERRIDE_ACTIVE") {
         return { status: "blocked", reasonCode: decision.reason_code };
       }
-      return { status: "skipped", reason: "already_assigned" };
+      if (decision.decision_state === "NO_CHANGE_REQUIRED") {
+        return { status: "skipped", reason: "already_assigned" };
+      }
+      // Continue to matrix fallback for empty recommendation — do not leave client without a program.
     }
   } catch (error) {
     console.warn("[paid-training-auto-assign] template path failed, trying matrix", error);

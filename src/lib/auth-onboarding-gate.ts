@@ -1,11 +1,14 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { CREATE_PASSWORD_LOCATION, userHasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import { checkAdminAccess, sanitizeAdminReturnPath } from "@/lib/admin/admin-access";
 
 export type PostAuthLocation =
   | typeof CREATE_PASSWORD_LOCATION
   | { to: "/app" }
-  | { to: "/quiz" };
+  | { to: "/quiz" }
+  | { to: "/admin" }
+  | { href: string };
 
 /** Parse official get_my_onboarding_state payload — no duplicate onboarding rules. */
 export function isOnboardingCompleteFromState(state: unknown): boolean {
@@ -34,12 +37,31 @@ export async function fetchMyOnboardingComplete(): Promise<boolean> {
   return isOnboardingCompleteFromState(data);
 }
 
+async function staffPostAuthLocation(preferredRedirect?: string | null): Promise<PostAuthLocation | null> {
+  try {
+    await checkAdminAccess();
+  } catch {
+    return null;
+  }
+  const safe = sanitizeAdminReturnPath(preferredRedirect);
+  if (safe === "/admin") return { to: "/admin" };
+  return { href: safe };
+}
+
 /**
- * Email/password → /app (or create-password) unchanged.
- * OAuth identity → /quiz until onboarding_completed, else /app.
+ * Email/password → /app (or create-password) unchanged for clients.
+ * Staff → /admin (or safe redirect back into admin).
+ * OAuth identity → /quiz until onboarding_completed, else /app — unless staff.
  */
-export async function resolveAuthenticatedDestination(user: User): Promise<PostAuthLocation> {
+export async function resolveAuthenticatedDestination(
+  user: User,
+  options?: { redirect?: string | null },
+): Promise<PostAuthLocation> {
   if (userNeedsPasswordSetup(user)) return CREATE_PASSWORD_LOCATION;
+
+  const staffDestination = await staffPostAuthLocation(options?.redirect);
+  if (staffDestination) return staffDestination;
+
   if (!userHasOAuthIdentity(user)) return { to: "/app" };
   return oauthPostAuthLocation(await fetchMyOnboardingComplete());
 }

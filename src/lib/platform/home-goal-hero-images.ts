@@ -1,14 +1,15 @@
 import { resolveGoalHeroFolder } from "@/lib/platform/goal-hero-folder-catalog";
 import { CONTENT_ASSETS_ROOT } from "@/lib/platform/content/catalog";
 import { pickContentSlotAsset } from "@/lib/platform/content/asset-index";
-import type { HeroGender } from "@/lib/platform/hero-goal-images";
-import { inferGoalIdFromText, readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import type { HeroGender } from "@/lib/platform/hero-goal-slot";
+import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
 
 export const HOME_GOAL_HERO_ASSETS_ROOT = `${CONTENT_ASSETS_ROOT}/home-goal-hero`;
 
 /**
  * Picks one image for `platform-home-hero__visual`.
  * Only reads from the client's gender folder (`ذكور` or `بنات`).
+ * Never consults device quiz storage — slot identity is the caller's job.
  */
 export function resolveHomeGoalHeroImageSrc(input: {
   gender?: HeroGender | null;
@@ -16,25 +17,21 @@ export function resolveHomeGoalHeroImageSrc(input: {
   goalLabel?: string | null;
   rotationIndex?: number;
 }): string | null {
-  const context = readHomeGoalContext({
+  const slot = resolveAuthoritativeHeroSlot({
     gender: input.gender,
     goalId: input.goalId,
     goalText: input.goalLabel,
   });
-  const gender = context.gender;
-  const goalId =
-    inferGoalIdFromText(input.goalId, gender) ??
-    context.goalId ??
-    inferGoalIdFromText(input.goalLabel, gender);
+  if (!slot) return null;
 
-  const folder = goalId ? resolveGoalHeroFolder(gender, goalId) : null;
+  const folder = resolveGoalHeroFolder(slot.gender, slot.goalId);
   if (!folder) return null;
 
   return (
     pickContentSlotAsset({
       collection: "home-goal-hero",
       dirName: folder.dirName,
-      gender,
+      gender: slot.gender,
       rotationIndex: input.rotationIndex,
       limit: 1,
     })[0] ?? null

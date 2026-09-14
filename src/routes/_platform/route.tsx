@@ -84,13 +84,15 @@ function PlatformLayout() {
   const { hold, loading: holdLoading } = useProgramPreparationHold({
     coachAssigned: runtimeQuery.data?.reason === "ok",
   });
+  // Assign immediately even during preparation hold so the program is ready when the hold ends
+  // (or unlocks early once runtime becomes ok).
   usePaidTrainingAutoAssign({
-    enabled: !membership.loading && Boolean(userId) && !hold.active && !holdLoading,
+    enabled: !membership.loading && Boolean(userId) && !holdLoading,
     userId,
     membershipTier: membership.tier,
     hasWorkoutProgram,
     runtimeReason: runtimeQuery.data?.reason,
-    runtimeLoading: runtimeQuery.isLoading || hold.active || holdLoading,
+    runtimeLoading: runtimeQuery.isLoading || holdLoading,
   });
 
   useEffect(() => {

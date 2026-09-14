@@ -2,6 +2,11 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProgramTemplateBadges } from "@/components/admin/programs/ProgramTemplateBadges";
 import {
+  contractNoteLabelAr,
+  contractTokenLabelAr,
+  contractTokenListAr,
+} from "@/lib/admin/admin-contract-labels";
+import {
   activityRoleLabelAr,
   mapLegacyExerciseRoleToActivityLabel,
   presentDetail,
@@ -51,7 +56,7 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
           <MetaRow label="المستوى" value={presentation.level_label} />
           <MetaRow label="المكان" value={presentation.environment_label} />
           <MetaRow label="الأيام" value={presentation.days_label} />
-          <MetaRow label="الإصدار" value={`V${presentation.version}`} />
+          <MetaRow label="الإصدار" value={`الإصدار ${presentation.version}`} />
           <MetaRow label="الحالة" value={presentation.status_label} />
         </DetailBlock>
 
@@ -69,29 +74,41 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
 
         <DetailBlock title="الأهلية">
           {contract ? (
-            <ul className="tpl-list">
+            <ul className="tpl-list tpl-list--plain">
               <li>
-                البيئة: {contract.eligibility.environment_requirements.join(" · ") || "—"}
+                <span>البيئة</span>
+                <strong>
+                  {contractTokenListAr(contract.eligibility.environment_requirements)}
+                </strong>
               </li>
               <li>
-                معدات مطلوبة:{" "}
-                {contract.eligibility.equipment_requirements.length
-                  ? contract.eligibility.equipment_requirements.join(" · ")
-                  : "لا متطلبات صريحة"}
+                <span>معدات مطلوبة</span>
+                <strong>
+                  {contract.eligibility.equipment_requirements.length
+                    ? contractTokenListAr(contract.eligibility.equipment_requirements)
+                    : "لا متطلبات صريحة"}
+                </strong>
               </li>
               <li>
-                قدرات منزلية:{" "}
-                {contract.eligibility.capability_requirements.length
-                  ? contract.eligibility.capability_requirements
-                      .map((item) => `${item.key}${item.required ? " (مطلوب)" : ""}`)
-                      .join(" · ")
-                  : "—"}
+                <span>قدرات منزلية</span>
+                <strong>
+                  {contract.eligibility.capability_requirements.length
+                    ? contract.eligibility.capability_requirements
+                        .map(
+                          (item) =>
+                            `${contractTokenLabelAr(item.key)}${item.required ? " (مطلوب)" : ""}`,
+                        )
+                        .join(" · ")
+                    : "—"}
+                </strong>
               </li>
               <li>
-                شروط مراجعة:{" "}
-                {contract.eligibility.review_conditions.length
-                  ? contract.eligibility.review_conditions.join(" · ")
-                  : "لا"}
+                <span>شروط مراجعة</span>
+                <strong>
+                  {contract.eligibility.review_conditions.length
+                    ? contractTokenListAr(contract.eligibility.review_conditions)
+                    : "لا"}
+                </strong>
               </li>
             </ul>
           ) : (
@@ -101,9 +118,9 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
 
         <DetailBlock title="إشارات المراجعة">
           {contract?.review_signals?.length ? (
-            <ul className="tpl-list">
+            <ul className="tpl-chip-row">
               {contract.review_signals.map((signal) => (
-                <li key={signal}>{signal}</li>
+                <li key={signal}>{contractTokenLabelAr(signal)}</li>
               ))}
             </ul>
           ) : (
@@ -111,14 +128,16 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
           )}
         </DetailBlock>
 
-        <DetailBlock title="سياسة الانتقال">
+        <DetailBlock title="سياسة الانتقال" wide>
           {contract?.transition_policies?.length ? (
-            <ul className="tpl-list">
+            <ul className="tpl-list tpl-list--plain">
               {contract.transition_policies.map((policy, index) => (
                 <li key={`${policy.from_label ?? "from"}-${index}`}>
-                  {policy.from_label ?? "—"} → {policy.to_label ?? "—"}
-                  {policy.advisory ? " (استشاري)" : ""}
-                  {policy.notes ? ` — ${policy.notes}` : ""}
+                  <span>
+                    من {contractTokenLabelAr(policy.from_label)} إلى {contractTokenLabelAr(policy.to_label)}
+                    {policy.advisory ? " · استشاري" : ""}
+                  </span>
+                  {policy.notes ? <strong>{contractNoteLabelAr(policy.notes)}</strong> : null}
                 </li>
               ))}
             </ul>
@@ -127,12 +146,18 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
           )}
         </DetailBlock>
 
-        <DetailBlock title="جاهزية المكتبة">
+        <DetailBlock title="جاهزية المكتبة" wide>
           <MetaRow label="الحالة" value={presentation.library_readiness_label} />
           {contract ? (
             <>
-              <MetaRow label="تمارين ناقصة" value={String(contract.library_readiness.missing_exercise_count)} />
-              <MetaRow label="وسائط ناقصة" value={String(contract.library_readiness.missing_media_count)} />
+              <MetaRow
+                label="تمارين ناقصة"
+                value={String(contract.library_readiness.missing_exercise_count)}
+              />
+              <MetaRow
+                label="وسائط ناقصة"
+                value={String(contract.library_readiness.missing_media_count)}
+              />
             </>
           ) : null}
           {femaleMedia.applies ? (
@@ -141,38 +166,63 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
               <MetaRow label="ميديا عرض أنثوية" value={femaleMedia.display_label} />
               <MetaRow label="فيديو أنثوي حقيقي" value={femaleMedia.real_videos_label} />
               <MetaRow label="ترقية الفيديو" value={femaleMedia.video_upgrade_label_ar} />
-              <MetaRow label="إطلاق Glute" value={femaleMedia.release_label_ar} />
+              <MetaRow label="إطلاق تركيز الأرداف" value={femaleMedia.release_label_ar} />
               {femaleMedia.p0 ? (
                 <>
-                  <MetaRow label="P0 صور" value={femaleMedia.p0.images_label} />
-                  <MetaRow label="P0 عرض" value={femaleMedia.p0.display_label} />
-                  <MetaRow label="P0 فيديو حقيقي" value={femaleMedia.p0.real_videos_label} />
+                  <MetaRow label="صور المرحلة الأولى" value={femaleMedia.p0.images_label} />
+                  <MetaRow label="عرض المرحلة الأولى" value={femaleMedia.p0.display_label} />
+                  <MetaRow label="فيديو المرحلة الأولى" value={femaleMedia.p0.real_videos_label} />
                 </>
               ) : null}
             </>
           ) : null}
         </DetailBlock>
 
-        <DetailBlock title="تفضيل الوسائط">
+        <DetailBlock title="تفضيل الوسائط" wide>
           {contract ? (
-            <ul className="tpl-list">
-              <li>المُظهر المفضّل: {contract.media_preference.preferred_demonstrator}</li>
-              <li>نسخة الوسائط: {contract.media_preference.preferred_media_variant}</li>
+            <ul className="tpl-list tpl-list--plain">
+              <li>
+                <span>المُظهر المفضّل</span>
+                <strong>{contractTokenLabelAr(contract.media_preference.preferred_demonstrator)}</strong>
+              </li>
+              <li>
+                <span>نسخة الوسائط</span>
+                <strong>{contractTokenLabelAr(contract.media_preference.preferred_media_variant)}</strong>
+              </li>
             </ul>
           ) : (
             <p className="cc-muted">غير متوفر.</p>
           )}
         </DetailBlock>
 
-        <DetailBlock title="التقدّم وضوابط المدرب">
+        <DetailBlock title="التقدّم وضوابط المدرب" wide>
           {contract?.progression ? (
-            <ul className="tpl-list">
-              <li>استراتيجيات متوافقة: {contract.progression.compatible_strategies.join(" · ")}</li>
-              <li>متغيرات ذكية: {contract.progression.smart_auto_variables.join(" · ") || "—"}</li>
-              <li>
-                متغيرات المدرب: {contract.progression.coach_controlled_variables.join(" · ") || "—"}
-              </li>
-            </ul>
+            <div className="tpl-progress-block">
+              <p className="tpl-progress-block__label">استراتيجيات متوافقة</p>
+              <ul className="tpl-chip-row">
+                {contract.progression.compatible_strategies.map((item) => (
+                  <li key={item}>{contractTokenLabelAr(item)}</li>
+                ))}
+              </ul>
+              <p className="tpl-progress-block__label">متغيرات ذكية</p>
+              <ul className="tpl-chip-row">
+                {(contract.progression.smart_auto_variables.length
+                  ? contract.progression.smart_auto_variables
+                  : ["—"]
+                ).map((item) => (
+                  <li key={item}>{contractTokenLabelAr(item)}</li>
+                ))}
+              </ul>
+              <p className="tpl-progress-block__label">متغيرات المدرب</p>
+              <ul className="tpl-chip-row">
+                {(contract.progression.coach_controlled_variables.length
+                  ? contract.progression.coach_controlled_variables
+                  : ["—"]
+                ).map((item) => (
+                  <li key={item}>{contractTokenLabelAr(item)}</li>
+                ))}
+              </ul>
+            </div>
           ) : (
             <p className="cc-muted">يُعرض من العقد عند توفره. القالب القديم لا يخترع سياسة تقدّم.</p>
           )}
@@ -182,9 +232,17 @@ export function ProgramTemplateDetailPanel({ detail }: { detail: AdminProgramDet
   );
 }
 
-function DetailBlock({ title, children }: { title: string; children: ReactNode }) {
+function DetailBlock({
+  title,
+  children,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
   return (
-    <section className="tpl-detail__block">
+    <section className={wide ? "tpl-detail__block tpl-detail__block--wide" : "tpl-detail__block"}>
       <h3>{title}</h3>
       {children}
     </section>
@@ -271,7 +329,7 @@ export function TemplateStructurePreview({
   );
 }
 
-export function TemplatePresentationSummary({ presentation }: { presentation: TemplatePresentation }) {
+export function TemplatePresentationSummary({ presentation }: { presentation: ReturnType<typeof presentDetail> }) {
   return (
     <div className="tpl-summary">
       <ProgramTemplateBadges presentation={presentation} />

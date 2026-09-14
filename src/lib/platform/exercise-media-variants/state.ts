@@ -1,7 +1,4 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { getVariantAsset, isVariantAssetReady, readMediaVariantsMap } from "./metadata";
-import { publicExerciseVariantImageThumbPath, publicExerciseVariantVideoPath } from "./paths";
 import type { ExerciseMediaVariant, ExerciseMediaVariantStatus } from "./types";
 
 export type ExerciseMediaVariantStateRow = {
@@ -61,34 +58,6 @@ export function describeExerciseMediaVariantState(input: {
       : statusOrMissing(false, stdVid?.status ?? null),
     FEMALE_IMAGE: statusOrMissing(isVariantAssetReady(femImg), femImg?.status ?? null),
     FEMALE_VIDEO: statusOrMissing(isVariantAssetReady(femVid), femVid?.status ?? null),
-  };
-}
-
-/** Node-only disk probe for Local import QA — not used as browser SoT. */
-export function probePublicFemaleAssetsOnDisk(
-  externalId: string,
-  workspaceRoot = process.cwd(),
-): {
-  femaleImageReady: boolean;
-  femaleVideoReady: boolean;
-  femaleTemporaryStillVideo: boolean;
-} {
-  const imgRel = publicExerciseVariantImageThumbPath(externalId, "FEMALE").replace(/^\//, "");
-  const vidRel = publicExerciseVariantVideoPath(externalId, "FEMALE").replace(/^\//, "");
-  const img = join(workspaceRoot, "public", imgRel);
-  const vid = join(workspaceRoot, "public", vidRel);
-  const stillMarker = join(
-    workspaceRoot,
-    "public",
-    `exercises/${externalId.trim().toUpperCase()}/female/video/exercise.still.png`,
-  );
-  const videoExists = existsSync(vid);
-  const temporary = videoExists && existsSync(stillMarker);
-  return {
-    femaleImageReady: existsSync(img),
-    /** Real video only — temporary still-as-video excluded. */
-    femaleVideoReady: videoExists && !temporary,
-    femaleTemporaryStillVideo: temporary,
   };
 }
 

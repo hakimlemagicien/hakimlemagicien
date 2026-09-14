@@ -163,7 +163,7 @@ export function AdminMembershipsPage() {
           <option value="all">كل الخطط</option>
           <option value="essential">PLUS</option>
           <option value="premium">PRO</option>
-          <option value="vip">Internal VIP</option>
+          <option value="vip">VIP داخلي</option>
         </select>
         <select
           className="cc-input"

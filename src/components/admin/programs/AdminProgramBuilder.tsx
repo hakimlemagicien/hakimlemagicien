@@ -303,7 +303,7 @@ export function AdminProgramBuilder({
         </div>
       </div>
 
-      <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · تعديل القالب لا يغيّر برامج العملاء المعيّنة.</p>
+      <p className="cc-contract">تعديل القالب (PROGRAM_TEMPLATE) لا يغيّر برامج العملاء المعيّنة.</p>
       {PROGRAM_VERSIONING_COMPLETION_REQUIRED ? (
         <p className="cc-muted">لقطة الهيكل غير مكتملة بعد. لا تعامل رقم الإصدار كتجميد كامل للمحتوى.</p>
       ) : null}

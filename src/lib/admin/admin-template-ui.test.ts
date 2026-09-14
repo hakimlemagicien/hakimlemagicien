@@ -280,4 +280,25 @@ for (const id of [
   assert.ok(demo.result.status, id);
 }
 
+{
+  const contract = createEmptyTemplateContract({
+    primaryStrategy: "FAT_LOSS",
+    level: "BEGINNER",
+    environment: "GYM",
+    daysPerWeek: 3,
+    targetAudience:
+      "Beginner client training in a gym whose primary goal is fat loss and who needs a sustainable full-body resistance + programmed cardio foundation.",
+    templatePurpose: "Preserve/build resistance training capacity while supporting fat-loss goals.",
+  });
+  const presentation = presentProgramTemplate({
+    name_ar: "أساس خسارة الدهون",
+    is_published: true,
+    metadata: { template_contract: contract },
+  });
+  assert.match(presentation.target_audience ?? "", /[\u0600-\u06FF]/);
+  assert.match(presentation.template_purpose ?? "", /[\u0600-\u06FF]/);
+  assert.match(presentation.admin_summary ?? "", /خسارة الدهون/);
+  assert.equal(presentation.environment_label, "صالة");
+}
+
 console.log("admin-template-ui Phase 4 tests passed");

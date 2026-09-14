@@ -1,6 +1,7 @@
 /**
  * Training Auto-Assign + Admin Review — decision states and pure decision logic.
- * Reuses Template Resolver. Never invents context. No silent downgrade.
+ * Reuses Template Resolver. Prefer auto-assign whenever a published template is recommended.
+ * Coach override remains protected. Missing recommendation → admin review / blocked.
  */
 
 import type { TemplateResolverResult, TemplateResolverStatus } from "@/lib/platform/training-templates";
@@ -45,7 +46,7 @@ export type TrainingAssignmentDecision = {
   recommended_template_slug: string | null;
   reason_code: string;
   reason_summary: string;
-  requires_admin_approval: false; // Safe exact match never waits on admin
+  requires_admin_approval: false; // Auto-assign never waits on admin approval
   admin_review_only: boolean;
 };
 
@@ -67,32 +68,58 @@ function mapResolverToBlockedOrReview(status: TemplateResolverStatus): {
     return {
       state: "REVIEW_REQUIRED",
       code: "INSUFFICIENT_CONTEXT",
-      summary: "سياق التدريب غير كافٍ — لا تخمين تلقائي",
+      summary: "سياق التدريب غير كافٍ — لا قالب قابل للتعيين",
     };
   }
   if (status === "NO_EXACT_MATCH" || status === "NO_COMPATIBLE_TEMPLATE") {
     return {
       state: "BLOCKED_NO_EXACT_MATCH",
       code: status,
-      summary: "لا يوجد قالب مطابق آمن — لا تخفيض صامت",
+      summary: "لا يوجد قالب منشور مناسب في المكتبة",
     };
   }
   if (status === "MATCHED_WITH_REVIEW") {
     return {
       state: "REVIEW_REQUIRED",
       code: "MATCHED_WITH_REVIEW",
-      summary: "تطابق مع إشارات مراجعة — يتطلب تدخل مدرب",
+      summary: "تطابق مع إشارات مراجعة — بدون معرّف قالب",
     };
   }
   return {
     state: "REVIEW_REQUIRED",
     code: status,
-    summary: "تعيين تلقائي غير آمن — مراجعة مطلوبة",
+    summary: "تعيين تلقائي غير ممكن — مراجعة مطلوبة",
+  };
+}
+
+function assignReasonForResolver(resolver: TemplateResolverResult): { code: string; summary: string } {
+  if (isExactSafeMatch(resolver)) {
+    return {
+      code: "EXACT_SAFE_MATCH",
+      summary: "تطابق تام وآمن — تعيين تلقائي بدون موافقة أدمن",
+    };
+  }
+  if (resolver.status === "MATCHED_WITH_REVIEW" || resolver.fallback_class === "REVIEW_REQUIRED_MATCH") {
+    return {
+      code: "MATCHED_WITH_REVIEW_AUTO",
+      summary: "تطابق مع مراجعة — تعيين تلقائي مع إشعار للأدمن",
+    };
+  }
+  if (resolver.fallback_used || resolver.fallback_class === "CONTEXTUAL_MATCH") {
+    return {
+      code: "BEST_AVAILABLE_TEMPLATE",
+      summary: "أفضل قالب منشور مناسب للهدف — تعيين تلقائي مع إشعار للأدمن",
+    };
+  }
+  return {
+    code: "AUTO_ASSIGN_RECOMMENDED_TEMPLATE",
+    summary: "تعيين تلقائي للقالب الموصى به",
   };
 }
 
 /**
  * Pure decision: Template Resolver result + active assignment → action.
+ * Product rule: never leave an entitled client without a program when a template is recommended.
  */
 export function decideTrainingAssignment(
   input: DecideTrainingAssignmentInput,
@@ -113,23 +140,23 @@ export function decideTrainingAssignment(
     };
   }
 
-  if (!isExactSafeMatch(resolver)) {
+  const recommendedId = resolver.recommended_template_id;
+  const recommendedSlug = resolver.recommended_template_slug;
+
+  if (!recommendedId) {
     const mapped = mapResolverToBlockedOrReview(resolver.status);
     return {
       decision_state: mapped.state,
       should_assign: false,
       should_replace: false,
-      recommended_template_id: resolver.recommended_template_id,
-      recommended_template_slug: resolver.recommended_template_slug,
+      recommended_template_id: null,
+      recommended_template_slug: null,
       reason_code: mapped.code,
       reason_summary: mapped.summary,
       requires_admin_approval: false,
       admin_review_only: true,
     };
   }
-
-  const recommendedId = resolver.recommended_template_id!;
-  const recommendedSlug = resolver.recommended_template_slug;
 
   if (activeAssignment?.source_template_id === recommendedId) {
     return {
@@ -145,6 +172,9 @@ export function decideTrainingAssignment(
     };
   }
 
+  const reason = assignReasonForResolver(resolver);
+  const notifyAdmin = !isExactSafeMatch(resolver);
+
   if (clientKind === "NEW" || !activeAssignment) {
     return {
       decision_state: "AUTO_ASSIGNED",
@@ -152,10 +182,10 @@ export function decideTrainingAssignment(
       should_replace: false,
       recommended_template_id: recommendedId,
       recommended_template_slug: recommendedSlug,
-      reason_code: "EXACT_SAFE_MATCH",
-      reason_summary: "تطابق تام وآمن — تعيين تلقائي بدون موافقة أدمن",
+      reason_code: reason.code,
+      reason_summary: reason.summary,
       requires_admin_approval: false,
-      admin_review_only: true,
+      admin_review_only: notifyAdmin,
     };
   }
 
@@ -165,10 +195,10 @@ export function decideTrainingAssignment(
     should_replace: true,
     recommended_template_id: recommendedId,
     recommended_template_slug: recommendedSlug,
-    reason_code: "EXACT_SAFE_MATCH_DIFFERENT_TEMPLATE",
-    reason_summary: "قالب مختلف مطابق وآمن — تحديث عبر snapshot جديد",
+    reason_code: `${reason.code}_REPLACE`,
+    reason_summary: `${reason.summary} — تحديث عبر snapshot جديد`,
     requires_admin_approval: false,
-    admin_review_only: true,
+    admin_review_only: notifyAdmin,
   };
 }
 

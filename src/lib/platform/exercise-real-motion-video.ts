@@ -8,12 +8,11 @@ const assetVideoModules = import.meta.glob(
   { eager: true },
 );
 
-const publicVideoModules = import.meta.glob(
-  "../../../public/exercises/*/video/exercise.mp4",
-  { eager: true },
-);
-
-/** Known public copies when Vite cannot resolve public/ via glob at build time. */
+/**
+ * Do not glob `public/exercises/**`. Vite throws if those files are imported from JS,
+ * which crashed `/admin/programs` (AdminExercisePicker lives in the programs bundle).
+ * Public copies are addressed by URL (`/exercises/<id>/video/exercise.mp4`) at runtime.
+ */
 const PUBLIC_REAL_MOTION_VIDEO_FALLBACK_IDS = ["AB-001", "BI-002", "CH-015", "LE-015"] as const;
 
 function externalIdFromVideoPath(path: string): string | null {
@@ -27,11 +26,6 @@ function externalIdFromVideoPath(path: string): string | null {
 const BUNDLED_REAL_MOTION_VIDEO_IDS = new Set<string>(PUBLIC_REAL_MOTION_VIDEO_FALLBACK_IDS);
 
 for (const path of Object.keys(assetVideoModules)) {
-  const id = externalIdFromVideoPath(path);
-  if (id) BUNDLED_REAL_MOTION_VIDEO_IDS.add(id);
-}
-
-for (const path of Object.keys(publicVideoModules)) {
   const id = externalIdFromVideoPath(path);
   if (id) BUNDLED_REAL_MOTION_VIDEO_IDS.add(id);
 }

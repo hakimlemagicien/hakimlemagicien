@@ -161,7 +161,9 @@ export function canAccessNavItem(
   if (!session) return false;
   if (!permission) return true;
   if (hasAdminPermission(session, permission)) return true;
+  // clients.read and clients.basic_read are equivalent for portal entry / client lists
   if (permission === "clients.read" && hasAdminPermission(session, "clients.basic_read")) return true;
+  if (permission === "clients.basic_read" && hasAdminPermission(session, "clients.read")) return true;
   return false;
 }
 

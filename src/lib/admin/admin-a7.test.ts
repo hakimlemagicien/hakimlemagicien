@@ -120,6 +120,10 @@ assert(permissionsSource.includes("meal.safety_edit"), "meal safety perm");
 // T44–T45 destructive
 assert(staffPanel.includes("cc-danger-zone"), "danger zone");
 assert(!staffPanel.includes("deleteClient"), "no raw delete");
+assert(staffPanel.includes("تغيير كلمة المرور"), "staff password action");
+assert(staffPanel.includes("setStaffPassword"), "staff password API");
+assert(staffPanel.includes("AdminTeamHubTabs"), "team hub tabs");
+assert(!staffPanel.includes("active: true },\n          { id: \"roles\""), "no dual active team/roles");
 
 // T46–T50 audit
 assert(migration.includes("staff_role_changed"), "role audit event");

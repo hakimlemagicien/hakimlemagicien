@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient, uploadUserAvatar } from "@/lib/quiz-onboarding-api";
+import { normalizeHeroGender } from "@/lib/platform/hero-goal-slot";
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
@@ -125,7 +126,7 @@ export async function fetchMyTrainingProfile(): Promise<TrainingProfileSnapshot 
     trainingType: data.training_type ?? null,
     completedAt: data.completed_at ?? null,
     answers: {
-      gender: (answers.gender as "male" | "female" | null) ?? null,
+      gender: normalizeHeroGender(answers.gender),
       heightCm: typeof answers.heightCm === "number" ? answers.heightCm : null,
       weightKg: typeof answers.weightKg === "number" ? answers.weightKg : null,
       targetWeightKg: typeof answers.targetWeightKg === "number" ? answers.targetWeightKg : null,

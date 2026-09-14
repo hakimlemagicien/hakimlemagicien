@@ -42,12 +42,25 @@ function getAuthCallbackType(): "invite" | "recovery" | null {
 
 type AuthExperienceProps = {
   startOnLogin?: boolean;
+  /** Safe admin return path from /auth?redirect=/admin... */
+  postLoginRedirect?: string;
 };
 
-export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
+export function AuthExperience({ startOnLogin = false, postLoginRedirect }: AuthExperienceProps) {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const [stage, setStage] = useState<AuthStage>(startOnLogin ? "login" : "welcome");
+  const stageRef = useRef(stage);
+  stageRef.current = stage;
+
+  async function goAfterAuth(user: Parameters<typeof resolveAuthenticatedDestination>[0]) {
+    const destination = await resolveAuthenticatedDestination(user, { redirect: postLoginRedirect });
+    if ("href" in destination) {
+      window.location.assign(destination.href);
+      return;
+    }
+    navigate(destination);
+  }
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,8 +70,6 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const stageRef = useRef(stage);
-  stageRef.current = stage;
 
   useEffect(() => {
     let cancelled = false;
@@ -103,8 +114,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
 
       const { data } = await supabase.auth.getSession();
       if (!cancelled && data.session && mode !== "set-password" && stageRef.current !== "quiz") {
-        const destination = await resolveAuthenticatedDestination(data.session.user);
-        if (!cancelled) navigate(destination);
+        if (!cancelled) await goAfterAuth(data.session.user);
       }
       if (!cancelled) setReady(true);
     }
@@ -121,9 +131,8 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       // Quiz onboarding owns routing after email OTP. Do not dump the client into /app.
       if (stageRef.current === "quiz") return;
       if (session && mode !== "set-password") {
-        void resolveAuthenticatedDestination(session.user).then((destination) => {
+        void goAfterAuth(session.user).then(() => {
           if (stageRef.current === "quiz") return;
-          navigate(destination);
         });
       }
     });
@@ -132,7 +141,7 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [navigate, mode]);
+  }, [navigate, mode, postLoginRedirect]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -150,7 +159,12 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
         if (updateError) throw updateError;
         clearPasswordRequiredLocally();
         window.history.replaceState(null, "", window.location.pathname);
-        navigate({ to: "/app" });
+        const { data } = await supabase.auth.getUser();
+        if (data.user) {
+          await goAfterAuth(data.user);
+        } else {
+          navigate({ to: "/app" });
+        }
         return;
       }
 
@@ -190,9 +204,12 @@ export function AuthExperience({ startOnLogin = false }: AuthExperienceProps) {
     setNotice(null);
     setLoading(true);
     try {
+      const redirectTo = postLoginRedirect
+        ? `${window.location.origin}/auth?redirect=${encodeURIComponent(postLoginRedirect)}`
+        : `${window.location.origin}/auth`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/auth` },
+        options: { redirectTo },
       });
       if (oauthError) throw oauthError;
     } catch (err: unknown) {

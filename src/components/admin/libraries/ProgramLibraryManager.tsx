@@ -113,6 +113,7 @@ export function ProgramLibraryManager() {
   }, [debouncedQuery, level, status, offset]);
 
   const visibleRows = useMemo(() => {
+    try {
     const pilotDetails = listPilotAdminDetails();
     const pilotAsList = pilotDetails.map((detail) => ({
       id: detail.id,
@@ -153,6 +154,10 @@ export function ProgramLibraryManager() {
         library_readiness: readinessFilter || undefined,
       });
     });
+    } catch (err) {
+      console.error(err);
+      return rows;
+    }
   }, [rows, primaryStrategy, level, environmentFilter, daysFilter, status, readinessFilter, canonicalOnly]);
 
   const canonicalInLibrary = useMemo(
@@ -332,7 +337,7 @@ export function ProgramLibraryManager() {
     setConfirm({
       title: "نشر القالب",
       body: PROGRAM_VERSIONING_COMPLETION_REQUIRED
-        ? "بعد النشر يصبح القالب متاحاً للتعيين. تعديل الهيكل لاحقاً يتطلب نسخة جديدة حتى لا تتأثر تعيينات العملاء. PROGRAM_VERSIONING_COMPLETION_REQUIRED."
+        ? "بعد النشر يصبح القالب متاحاً للتعيين. تعديل الهيكل لاحقاً يتطلب نسخة جديدة حتى لا تتأثر تعيينات العملاء."
         : "سيتم نشر القالب للتعيين.",
       confirmLabel: "نشر",
       onConfirm: () => {
@@ -422,7 +427,7 @@ export function ProgramLibraryManager() {
       <AdminPageHeader
         kicker="التدريب"
         title="البرامج التدريبية"
-        subtitle="قوالب البرامج — الجمهور، الغرض، الاستراتيجية، المستوى، المكان، الأيام، الجاهزية."
+        subtitle="قوالب البرامج: الجمهور، الغرض، الاستراتيجية، المستوى، المكان، الأيام، والجاهزية."
         actions={
           <>
             <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setShowQaDemo((v) => !v)}>
@@ -434,17 +439,17 @@ export function ProgramLibraryManager() {
           </>
         }
       />
-      <p className="cc-contract">PROGRAM_TEMPLATE ≠ CLIENT_ASSIGNED_PROGRAM · التوصية لا تعيّن تلقائياً.</p>
+      <p className="cc-contract">قالب البرنامج (PROGRAM_TEMPLATE) منفصل عن برنامج العميل المعيّن. التوصية لا تعيّن تلقائياً.</p>
       <AdminConceptKpiRow
         loading={loading}
         metrics={[
           {
             id: "canonical",
-            label: "Canonical V1",
+            label: "القوالب المعتمدة",
             value: `${canonicalVisible.toLocaleString("ar-AE")} / ${CANONICAL_TEMPLATE_COUNT}`,
             hint: canonicalOnly
-              ? "عرض القوالب الكانونية فقط (ماستر V1)"
-              : `في الصفحة من أصل ${canonicalInLibrary} كانوني محمّل`,
+              ? "عرض القوالب المعتمدة فقط (الماستر الأول)"
+              : `في الصفحة من أصل ${canonicalInLibrary} قالب معتمد محمّل`,
             tone: canonicalVisible === CANONICAL_TEMPLATE_COUNT ? "positive" : "neutral",
           },
           {
@@ -583,8 +588,8 @@ export function ProgramLibraryManager() {
               setOffset(0);
             }}
           >
-            <option value="canonical">Canonical V1 فقط ({CANONICAL_TEMPLATE_COUNT})</option>
-            <option value="all">الكل (يشمل نسخًا غير كانونية)</option>
+            <option value="canonical">المعتمدة فقط ({CANONICAL_TEMPLATE_COUNT})</option>
+            <option value="all">الكل (يشمل النسخ غير المعتمدة)</option>
           </select>
         </label>
       </AdminFilterBar>

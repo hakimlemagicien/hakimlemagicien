@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { GOAL_HERO_FOLDERS } from "@/lib/platform/goal-hero-folder-catalog";
-import type { HeroGender } from "@/lib/platform/hero-goal-images";
+import type { HeroGender } from "@/lib/platform/hero-goal-slot";
 
 const IMAGE_EXT = /\.(webp|png|jpe?g)$/i;
 const HOUR_MS = 3_600_000;

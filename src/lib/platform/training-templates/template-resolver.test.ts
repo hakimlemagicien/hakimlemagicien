@@ -80,7 +80,7 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   assert.equal(r.recommended_template_slug, "ATHLETIC_PERFORMANCE_FOUNDATION_BEGINNER_HOME_3D");
 }
 
-// CASE 5: glutes + beginner + HOME + 3D → NO_EXACT_MATCH (gap visible)
+// CASE 5: glutes + beginner + HOME + 3D → NO_EXACT_MATCH but best same-strategy published template
 {
   const r = resolveProgramTemplate(
     {
@@ -93,8 +93,9 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   );
   assert.equal(r.status, "NO_EXACT_MATCH");
   assert.equal(r.primary_strategy, "GLUTE_FOCUS");
-  assert.equal(r.recommended_template_id, null);
-  assert.equal(r.fallback_class, "NO_EXACT_MATCH");
+  assert.equal(r.fallback_used, true);
+  assert.equal(r.fallback_class, "CONTEXTUAL_MATCH");
+  assert.ok(r.recommended_template_id, "best-available glute template recommended");
   assert.ok(!r.recommended_template_slug?.includes("MUSCLE_GAIN"), "no silent muscle fallback");
   assert.ok(r.review_signals.includes("COACH_REVIEW_REQUIRED"));
   assert.ok(r.candidate_summary.some((c) => c.match_class === "NEAR"));
@@ -201,7 +202,7 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   assert.equal(r.recommended_template_id, null);
 }
 
-// CASE 12: level mismatch only → NO_EXACT_MATCH (no silent level change)
+// CASE 12: level mismatch only → NO_EXACT_MATCH + best-available same strategy
 {
   const r = resolveProgramTemplate(
     {
@@ -214,11 +215,13 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   );
   assert.equal(r.status, "NO_EXACT_MATCH");
   assert.equal(r.resolved_level, "INTERMEDIATE");
-  assert.equal(r.dimensions_changed.length, 0);
+  assert.equal(r.fallback_class, "CONTEXTUAL_MATCH");
+  assert.ok(r.recommended_template_id);
+  assert.ok(r.dimensions_changed.includes("level"));
   assert.ok(r.review_signals.includes("PROGRAM_LEVEL_REVIEW_RECOMMENDED"));
 }
 
-// CASE 13: days mismatch → NO_EXACT_MATCH
+// CASE 13: days mismatch → NO_EXACT_MATCH + best-available
 {
   const r = resolveProgramTemplate(
     {
@@ -231,10 +234,12 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   );
   assert.equal(r.status, "NO_EXACT_MATCH");
   assert.equal(r.resolved_days, 5);
+  assert.equal(r.fallback_class, "CONTEXTUAL_MATCH");
+  assert.ok(r.recommended_template_id);
   assert.ok(r.review_signals.includes("TRAINING_FREQUENCY_REVIEW_RECOMMENDED"));
 }
 
-// CASE 14: environment mismatch → NO_EXACT_MATCH (no HOME↔GYM)
+// CASE 14: environment mismatch → NO_EXACT_MATCH + contextual same-strategy (HOME↔GYM allowed as best-available)
 {
   const gymOnlyGlute = [bySlug("GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D")];
   const r = resolveProgramTemplate(
@@ -248,7 +253,9 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   );
   assert.equal(r.status, "NO_EXACT_MATCH");
   assert.equal(r.resolved_environment, "HOME");
-  assert.equal(r.dimensions_changed.length, 0);
+  assert.equal(r.fallback_class, "CONTEXTUAL_MATCH");
+  assert.equal(r.recommended_template_slug, "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D");
+  assert.ok(r.dimensions_changed.includes("environment"));
 }
 
 // CASE 15: draft excluded

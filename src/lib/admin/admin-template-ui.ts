@@ -3,6 +3,12 @@
  * Read-only display + resolver wiring. No assignment side effects.
  */
 
+import {
+  buildAdminSummaryAr,
+  preferArabicCopy,
+  synthesizeAudienceAr,
+  synthesizePurposeAr,
+} from "@/lib/admin/admin-contract-labels";
 import { programTemplateContractFromMetadata } from "@/lib/admin/admin-program-builder";
 import type { AdminProgramDetail, AdminProgramListItem } from "@/lib/admin/admin-programs-api";
 import { mapClientTrainingLocation, type ProgramLocation } from "@/lib/admin/admin-program-ops";
@@ -174,26 +180,42 @@ export function presentProgramTemplate(input: {
   });
 
   if (contract) {
+    const primary_strategy_label = primaryStrategyLabelAr(contract.primary_strategy);
+    const level_label = templateLevelLabelAr(contract.variant.level);
+    const environment_label = templateEnvironmentLabelAr(contract.variant.environment);
+    const days_label = daysBadgeLabel(contract.variant.days_per_week);
+    const copyContext = {
+      strategyLabel: primary_strategy_label,
+      levelLabel: level_label,
+      environmentLabel: environment_label,
+      daysLabel: days_label,
+    };
     return {
       has_contract: true,
       is_legacy: false,
       name: input.name_ar,
       primary_strategy: contract.primary_strategy,
-      primary_strategy_label: primaryStrategyLabelAr(contract.primary_strategy),
+      primary_strategy_label,
       level: contract.variant.level,
-      level_label: templateLevelLabelAr(contract.variant.level),
+      level_label,
       environment: contract.variant.environment,
-      environment_label: templateEnvironmentLabelAr(contract.variant.environment),
+      environment_label,
       days: contract.variant.days_per_week,
-      days_label: daysBadgeLabel(contract.variant.days_per_week),
+      days_label,
       status,
       status_label,
       version: input.version ?? 1,
       library_readiness: contract.library_readiness.state,
       library_readiness_label: libraryReadinessLabelAr(contract.library_readiness.state),
-      target_audience: contract.target_audience?.trim() || null,
-      template_purpose: contract.template_purpose?.trim() || null,
-      admin_summary: contract.admin_summary?.trim() || null,
+      target_audience: preferArabicCopy(
+        contract.target_audience,
+        synthesizeAudienceAr(copyContext),
+      ),
+      template_purpose: preferArabicCopy(
+        contract.template_purpose,
+        synthesizePurposeAr(copyContext),
+      ),
+      admin_summary: preferArabicCopy(contract.admin_summary, buildAdminSummaryAr(copyContext)),
       contract,
     };
   }

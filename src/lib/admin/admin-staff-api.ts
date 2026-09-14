@@ -67,3 +67,32 @@ export async function updateStaffRole(userId: string, staffRole: StaffRole, reas
   });
   if (error) throw error;
 }
+
+export function validateStaffPassword(password: string): string | null {
+  const trimmed = password ?? "";
+  if (trimmed.length < 8) return "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
+  if (trimmed.length > 128) return "كلمة المرور طويلة جدًا";
+  return null;
+}
+
+export async function setStaffPassword(userId: string, newPassword: string, reason: string): Promise<void> {
+  const passwordError = validateStaffPassword(newPassword);
+  if (passwordError) throw new Error(passwordError);
+  if (reason.trim().length < 5) throw new Error("سبب التغيير مطلوب (5 أحرف على الأقل)");
+
+  const { error } = await supabase.rpc("admin_set_staff_password", {
+    p_user_id: userId,
+    p_new_password: newPassword,
+    p_reason: reason.trim(),
+  });
+  if (error) {
+    const message = error.message ?? "";
+    if (/password_too_short/i.test(message)) throw new Error("كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+    if (/password_too_long/i.test(message)) throw new Error("كلمة المرور طويلة جدًا");
+    if (/reason_required/i.test(message)) throw new Error("سبب التغيير مطلوب (5 أحرف على الأقل)");
+    if (/not_staff|staff_inactive/i.test(message)) throw new Error("يمكن تغيير كلمة المرور لحسابات الطاقم النشطة فقط");
+    if (/user_not_found/i.test(message)) throw new Error("الحساب غير موجود");
+    if (/forbidden/i.test(message)) throw new Error("ليست لديك صلاحية تغيير كلمات مرور الطاقم");
+    throw error;
+  }
+}

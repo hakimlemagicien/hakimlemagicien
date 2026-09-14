@@ -5,8 +5,8 @@ import {
 } from "@/lib/platform/goal-hero-folder-catalog";
 import { CONTENT_ASSETS_ROOT } from "@/lib/platform/content/catalog";
 import { listContentSlotAssets, pickContentSlotAsset } from "@/lib/platform/content/asset-index";
-import type { HeroGender } from "@/lib/platform/hero-goal-images";
-import { inferGoalIdFromText, readHomeGoalContext } from "@/lib/platform/hero-goal-images";
+import type { HeroGender } from "@/lib/platform/hero-goal-slot";
+import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
 import { listHeroGoalImageOverrides } from "@/lib/platform/hero-goal-image-overrides";
 import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
 import workoutGoalStack1 from "@/assets/V0/workout-goal-stack-1.webp";
@@ -84,18 +84,16 @@ export function resolveWorkoutGoalHeroPhotos(input: {
   goalId?: string | null;
   goalLabel?: string | null;
 }): WorkoutGoalHeroPhoto[] {
-  const context = readHomeGoalContext({
+  const slot = resolveAuthoritativeHeroSlot({
     gender: input.gender,
     goalId: input.goalId,
     goalText: input.goalLabel,
   });
-  const gender = context.gender;
-  const goalId =
-    inferGoalIdFromText(input.goalId, gender) ??
-    context.goalId ??
-    inferGoalIdFromText(input.goalLabel, gender);
+  if (!slot) return [];
 
-  const folder = goalId ? resolveWorkoutGoalHeroFolder(gender, goalId) : null;
+  const gender = slot.gender;
+  const goalId = slot.goalId;
+  const folder = resolveWorkoutGoalHeroFolder(gender, goalId);
   const label =
     input.goalLabel?.trim() ||
     (folder?.labelAr ?? (goalId ? resolveClientGoalLabel(goalId) : "هدفك"));

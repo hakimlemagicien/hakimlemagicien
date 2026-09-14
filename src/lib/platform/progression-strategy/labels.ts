@@ -38,8 +38,8 @@ export function progressionStrategyDescription(strategy: ProgressionStrategy): s
 }
 
 export function programSourceLabel(source: ProgramSource): string {
-  if (source === "STRATEGY_MATRIX") return "Strategy Matrix";
-  if (source === "PROGRAM_TEMPLATE") return "Program Template";
+  if (source === "STRATEGY_MATRIX") return "محرك الاستراتيجية";
+  if (source === "PROGRAM_TEMPLATE") return "قالب البرنامج";
   return "برنامج المدرب";
 }
 

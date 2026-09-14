@@ -56,7 +56,7 @@ export function ProgramTemplateCard({
         ) : null}
         <div>
           <dt>الإصدار</dt>
-          <dd>V{presentation.version}</dd>
+          <dd>الإصدار {presentation.version}</dd>
         </div>
         <div>
           <dt>آخر تحديث</dt>

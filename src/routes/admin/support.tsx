@@ -3,13 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AdminCard,
   AdminConceptKpiRow,
-  AdminConceptTabs,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
   AdminStatusBadge,
   AdminTable,
 } from "@/components/admin/AdminPage";
+import { AdminTeamHubTabs } from "@/components/admin/AdminTeamHubTabs";
 import {
   AdminConfirmDialog,
   AdminFilterBar,
@@ -144,17 +144,10 @@ function AdminSupportPage() {
   return (
     <>
       <AdminPageHeader
-        title="الدعم وإدارة الفريق"
-        subtitle="حل طلبات العملاء وتنظيم وصول فريق العمل. لا دعوة عضو وهمية من هذه الشاشة."
+        title="تذاكر الدعم"
+        subtitle="حل طلبات العملاء من داخل إدارة الفريق والصلاحيات."
       />
-      <AdminConceptTabs
-        items={[
-          { id: "tickets", label: "تذاكر الدعم", to: "/admin/support", active: true },
-          { id: "team", label: "الفريق", to: "/admin/settings" },
-          { id: "roles", label: "الأدوار والصلاحيات", to: "/admin/settings" },
-          { id: "audit", label: "سجل التدقيق", to: "/admin/audit" },
-        ]}
-      />
+      <AdminTeamHubTabs active="support" />
       <AdminConceptKpiRow
         loading={loading}
         metrics={[

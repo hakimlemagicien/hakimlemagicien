@@ -380,7 +380,7 @@ export function ExerciseLibraryManager() {
       <AdminPageHeader
         kicker="التدريب"
         title="مكتبة التمارين"
-        subtitle="مكتبة التمارين — تعديل التعريف قد يؤثر على Strategy Matrix. لا يُعاد كتابة برامج العملاء تلقائيًا."
+        subtitle="مكتبة التمارين — تعديل التعريف قد يؤثر على محرك الاستراتيجية. لا يُعاد كتابة برامج العملاء تلقائيًا."
         actions={
           <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
             تمرين جديد

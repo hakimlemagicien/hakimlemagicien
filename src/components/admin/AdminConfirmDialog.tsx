@@ -31,10 +31,12 @@ export function AdminConfirmDialog({
   const confirmRef = useRef<HTMLButtonElement>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     setReason("");
     setSubmitting(false);
+    setActionError(null);
   }, [request]);
 
   useEffect(() => {
@@ -104,6 +106,11 @@ export function AdminConfirmDialog({
             />
           </label>
         ) : null}
+        {actionError ? (
+          <p className="cc-field__error" role="alert">
+            {actionError}
+          </p>
+        ) : null}
         <div className="cc-dialog__actions">
           <button
             ref={cancelRef}
@@ -122,8 +129,16 @@ export function AdminConfirmDialog({
             onClick={() => {
               if (disabled) return;
               setSubmitting(true);
+              setActionError(null);
               void Promise.resolve(request.onConfirm(request.reasonRequired ? reason.trim() : undefined))
                 .then(() => onClose())
+                .catch((err) => {
+                  const message =
+                    err instanceof Error && err.message.trim()
+                      ? err.message
+                      : "تعذر إتمام العملية. أعد المحاولة.";
+                  setActionError(message);
+                })
                 .finally(() => setSubmitting(false));
             }}
           >

@@ -4330,6 +4330,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_set_staff_password: {
+        Args: {
+          p_new_password: string
+          p_reason?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       admin_update_staff_role: {
         Args: {
           p_reason?: string

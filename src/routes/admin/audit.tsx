@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  AdminConceptTabs,
   AdminEmptyState,
   AdminErrorState,
   AdminPageHeader,
@@ -9,6 +8,7 @@ import {
   AdminTable,
 } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
+import { AdminTeamHubTabs } from "@/components/admin/AdminTeamHubTabs";
 import {
   ADMIN_AUDIT_PAGE_SIZE,
   listAdminAuditEvents,
@@ -97,15 +97,9 @@ function AdminAuditPage() {
     <>
       <AdminPageHeader
         title="سجل العمليات"
-        subtitle="سجل التدقيق والأحداث التشغيلية — قراءة فقط."
+        subtitle="سجل التدقيق والأحداث التشغيلية — قراءة فقط، من داخل إدارة الفريق."
       />
-      <AdminConceptTabs
-        items={[
-          { id: "tickets", label: "تذاكر الدعم", to: "/admin/support" },
-          { id: "team", label: "الفريق", to: "/admin/settings" },
-          { id: "audit", label: "سجل التدقيق", to: "/admin/audit", active: true },
-        ]}
-      />
+      <AdminTeamHubTabs active="audit" />
 
       <AdminSearchInput
         label="نوع الحدث"

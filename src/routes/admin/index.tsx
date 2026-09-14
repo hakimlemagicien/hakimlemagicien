@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  ClipboardList,
   Dumbbell,
   MessageSquare,
-  UtensilsCrossed,
+  Settings,
   Users,
   Wallet,
   Zap,
@@ -12,7 +13,6 @@ import { AttentionCenter } from "@/components/admin/AttentionCenter";
 import { DashboardQuickStatus } from "@/components/admin/DashboardQuickStatus";
 import {
   AdminEmptyState,
-  AdminHonestEmpty,
   AdminPageHeader,
   AdminSection,
   AdminStatusBadge,
@@ -28,6 +28,7 @@ import {
   buildMembershipOperationalSnapshot,
   commercialTierLabel,
   formatAuditEventLabel,
+  membershipDonutGradient,
 } from "@/lib/admin/admin-dashboard-present";
 import {
   fetchAdminOperationsSnapshot,
@@ -36,7 +37,7 @@ import {
   type AdminSupportTicketListItem,
 } from "@/lib/admin/admin-ops-api";
 import { searchAdminClients, type AdminClientListItem } from "@/lib/admin/admin-clients-api";
-import { dayGreeting, formatRelativeAge, personInitials, planLabel, planStatusKind } from "@/lib/admin/admin-status";
+import { dayGreeting, formatRelativeAge, personInitials, planLabel, planStatusKind, todayContextLabel } from "@/lib/admin/admin-status";
 import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
 import type { CoachingInboxRow } from "@/lib/platform/coaching-messaging";
 
@@ -66,11 +67,12 @@ const emptyClients: LoadState<AdminClientListItem[]> = { rows: [], error: null, 
 const emptyExceptions: LoadState<AdminPaymentExceptionRow[]> = { rows: [], error: null, loading: true };
 
 const QUICK_ACTIONS = [
-  { to: "/admin/clients", label: "فتح العملاء", icon: Users },
+  { to: "/admin/programs", label: "إضافة برنامج", icon: ClipboardList },
+  { to: "/admin/clients", label: "إضافة عميل", icon: Users },
+  { to: "/admin/training/reviews", label: "مراجعات التدريب", icon: Dumbbell },
   { to: "/admin/messages", label: "فتح الرسائل", icon: MessageSquare },
   { to: "/admin/payments", label: "مراجعة المدفوعات", icon: Wallet },
-  { to: "/admin/exercises", label: "مكتبة التمارين", icon: Dumbbell },
-  { to: "/admin/nutrition", label: "مكتبة الوجبات", icon: UtensilsCrossed },
+  { to: "/admin/settings", label: "إعدادات النظام", icon: Settings },
 ] as const;
 
 function CommandCenterPage() {
@@ -273,11 +275,23 @@ function CommandCenterPage() {
     pendingReview: payments.rows.length,
   });
 
+  const membershipTotal =
+    membershipSnapshot.tierCounts.free +
+    membershipSnapshot.tierCounts.essential +
+    membershipSnapshot.tierCounts.premium;
+  const pulseItems = [
+    { id: "messages", label: "رسائل بانتظار الرد", value: snapshot.unreadThreads + snapshot.waitingThreads },
+    { id: "subs", label: "اشتراكات تحتاج انتباه", value: snapshot.subscriptionAttention },
+    { id: "pay", label: "استثناءات الدفع", value: paymentIssues },
+    { id: "support", label: "تذاكر دعم مفتوحة", value: snapshot.openSupport },
+  ];
+  const pulseMax = Math.max(1, ...pulseItems.map((item) => item.value));
+
   return (
     <div className="cc-dashboard">
       <AdminPageHeader
-        title="مركز التشغيل"
-        subtitle={`${dayGreeting(now)}، Coach Hakim — نظرة يومية على صحة وأداء التشغيل.`}
+        title={`مرحبًا بك مجددًا، Coach Hakim`}
+        subtitle={`${dayGreeting(now)} — ${todayContextLabel(now)}. نظرة يومية على ما يحتاج إجراءً.`}
         actions={
           <details className="cc-quick-menu">
             <summary className="cc-btn cc-btn--primary">
@@ -302,17 +316,123 @@ function CommandCenterPage() {
       <DashboardQuickStatus metrics={quickStatus} loading={quickStatusLoading} />
 
       <div className="cc-ops-split">
+        <section className="cc-card cc-ops-card cc-ops-card--pulse" aria-labelledby="membership-pulse-heading" aria-busy={membershipLoading}>
+          <div className="cc-section-head">
+            <div>
+              <h2 id="membership-pulse-heading" className="cc-section__title">
+                الاشتراكات والمدفوعات
+              </h2>
+              <p className="cc-section-sub">توزيع حي من العضويات المسجّلة — بدون أرقام مخترعة.</p>
+            </div>
+            <Link to="/admin/memberships" className="cc-section-head__link" preload={false}>
+              فتح الاشتراكات
+            </Link>
+          </div>
+          <div className="cc-pulse-layout">
+            <div className="cc-donut-wrap">
+              <div
+                className="cc-donut"
+                style={{ background: membershipDonutGradient(membershipSnapshot.tierCounts) }}
+                aria-hidden
+              >
+                <div className="cc-donut__hole">
+                  <strong>{(totalClients ?? membershipTotal).toLocaleString("ar-AE")}</strong>
+                  <span>عميل</span>
+                </div>
+              </div>
+              <ul className="cc-donut-legend">
+                <li>
+                  <i className="cc-dot cc-dot--premium" />
+                  {commercialTierLabel("premium")}
+                  <b>{membershipSnapshot.tierCounts.premium.toLocaleString("ar-AE")}</b>
+                </li>
+                <li>
+                  <i className="cc-dot cc-dot--essential" />
+                  {commercialTierLabel("essential")}
+                  <b>{membershipSnapshot.tierCounts.essential.toLocaleString("ar-AE")}</b>
+                </li>
+                <li>
+                  <i className="cc-dot cc-dot--free" />
+                  {commercialTierLabel("free")}
+                  <b>{membershipSnapshot.tierCounts.free.toLocaleString("ar-AE")}</b>
+                </li>
+              </ul>
+            </div>
+            <ul className="cc-pulse-bars">
+              {pulseItems.map((item) => (
+                <li key={item.id}>
+                  <div>
+                    <span>{item.label}</span>
+                    <strong>{item.value.toLocaleString("ar-AE")}</strong>
+                  </div>
+                  <span className="cc-pulse-bars__track" aria-hidden>
+                    <span style={{ width: `${Math.round((item.value / pulseMax) * 100)}%` }} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <AdminSection title="النشاطات الأخيرة">
+          <div className="cc-card cc-ops-card">
+            {audit.error ? (
+              <div className="cc-inline-alert" role="alert">
+                <span>{audit.error}</span>
+                <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadAudit()}>
+                  إعادة المحاولة
+                </button>
+              </div>
+            ) : null}
+            {!audit.loading && !audit.error && audit.rows.length === 0 ? (
+              <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة." />
+            ) : null}
+            {audit.rows.length > 0 ? (
+              <ul className="cc-timeline">
+                {audit.rows.slice(0, 6).map((row) => {
+                  const entity = auditEventEntityLabel(row);
+                  return (
+                    <li key={row.id}>
+                      <span className="cc-timeline__dot" aria-hidden />
+                      <div>
+                        <strong>{formatAuditEventLabel(row)}</strong>
+                        {entity ? <span className="cc-timeline__entity">{entity}</span> : null}
+                        {row.subjectUserId && !entity ? (
+                          <Link
+                            to="/admin/clients/$clientId"
+                            params={{ clientId: row.subjectUserId }}
+                            className="cc-timeline__entity-link"
+                            preload={false}
+                          >
+                            فتح العميل
+                          </Link>
+                        ) : null}
+                        <em>{formatRelativeAge(row.createdAt)}</em>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+            <Link to="/admin/audit" className="cc-card-footer-link" preload={false}>
+              عرض الكل
+            </Link>
+          </div>
+        </AdminSection>
+      </div>
+
+      <div className="cc-dash-grid">
         <section className="cc-dashboard__attention" aria-labelledby="attention-heading">
           <div className="cc-section-head">
             <div>
               <h2 id="attention-heading" className="cc-section__title">
-                أولويات اليوم
+                يحتاج انتباهك
               </h2>
-              <p className="cc-section-sub">الحالات التي يحتاج انتباهك ومراجعة فورية.</p>
+              <p className="cc-section-sub">العملاء والحالات التي تحتاج مراجعة فورية.</p>
             </div>
             {queue.length > 0 ? (
               <a href="#attention" className="cc-section-head__link">
-                عرض جميع الأولويات
+                عرض الكل
               </a>
             ) : null}
           </div>
@@ -327,17 +447,6 @@ function CommandCenterPage() {
           <AttentionCenter items={queue} loading={attentionLoading} />
         </section>
 
-        <AdminSection title="نشاط المنصة">
-          <div className="cc-card cc-ops-card">
-            <AdminHonestEmpty
-              title="لا رسم بياني لآخر 30 يوماً"
-              body="لا سلسلة زمنية معتمدة للمستخدمين النشطين أو العمليات المنفذة. الأرقام الحية تظهر في بطاقات الملخص وأولويات اليوم."
-            />
-          </div>
-        </AdminSection>
-      </div>
-
-      <div className="cc-dash-grid">
         <AdminSection title="العملاء الجدد">
           {clients.error ? (
             <div className="cc-inline-alert" role="alert">
@@ -373,114 +482,8 @@ function CommandCenterPage() {
             </ul>
           ) : null}
           <Link to="/admin/clients" className="cc-card-footer-link" preload={false}>
-            عرض جميع العملاء ←
+            عرض جميع العملاء
           </Link>
-        </AdminSection>
-
-        <AdminSection title="الاشتراكات والمدفوعات">
-          <ul className="cc-stat-list">
-            <li>
-              <span>اشتراكات نشطة</span>
-              <strong>{membershipSnapshot.active.toLocaleString("ar-AE")}</strong>
-            </li>
-            <li>
-              <span>تحتاج انتباه</span>
-              <strong>{membershipSnapshot.needsAttention.toLocaleString("ar-AE")}</strong>
-            </li>
-            <li>
-              <span>استثناءات الدفع</span>
-              <strong>{membershipSnapshot.paymentExceptions.toLocaleString("ar-AE")}</strong>
-            </li>
-            <li>
-              <span>مدفوعات للمراجعة</span>
-              <strong>{membershipSnapshot.pendingReview.toLocaleString("ar-AE")}</strong>
-            </li>
-          </ul>
-          {!membershipLoading && membershipRows.length > 0 ? (
-            <ul className="cc-tier-list">
-              <li>
-                <span>{commercialTierLabel("free")}</span>
-                <strong>{membershipSnapshot.tierCounts.free.toLocaleString("ar-AE")}</strong>
-              </li>
-              <li>
-                <span>{commercialTierLabel("essential")}</span>
-                <strong>{membershipSnapshot.tierCounts.essential.toLocaleString("ar-AE")}</strong>
-              </li>
-              <li>
-                <span>{commercialTierLabel("premium")}</span>
-                <strong>{membershipSnapshot.tierCounts.premium.toLocaleString("ar-AE")}</strong>
-              </li>
-            </ul>
-          ) : null}
-          <div className="cc-card-footer-links">
-            <Link to="/admin/memberships" className="cc-card-footer-link" preload={false}>
-              فتح الاشتراكات ←
-            </Link>
-            <Link to="/admin/payments" className="cc-card-footer-link" preload={false}>
-              فتح المدفوعات ←
-            </Link>
-          </div>
-        </AdminSection>
-
-        <AdminSection title="آخر العمليات">
-          {audit.error ? (
-            <div className="cc-inline-alert" role="alert">
-              <span>{audit.error}</span>
-              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadAudit()}>
-                إعادة المحاولة
-              </button>
-            </div>
-          ) : null}
-          {!audit.loading && !audit.error && audit.rows.length === 0 ? (
-            <AdminEmptyState title="لا أحداث تدقيق بعد" body="تظهر هنا آخر الإجراءات المسجّلة." />
-          ) : null}
-          {audit.rows.length > 0 ? (
-            <ul className="cc-timeline">
-              {audit.rows.slice(0, 5).map((row) => {
-                const entity = auditEventEntityLabel(row);
-                return (
-                  <li key={row.id}>
-                    <span className="cc-timeline__dot" aria-hidden />
-                    <div>
-                      <strong>{formatAuditEventLabel(row)}</strong>
-                      {entity ? <span className="cc-timeline__entity">{entity}</span> : null}
-                      {row.subjectUserId && !entity ? (
-                        <Link
-                          to="/admin/clients/$clientId"
-                          params={{ clientId: row.subjectUserId }}
-                          className="cc-timeline__entity-link"
-                          preload={false}
-                        >
-                          فتح العميل
-                        </Link>
-                      ) : null}
-                      <em>{formatRelativeAge(row.createdAt)}</em>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-          <Link to="/admin/audit" className="cc-card-footer-link" preload={false}>
-            عرض جميع العمليات ←
-          </Link>
-        </AdminSection>
-
-        <AdminSection title="صحة النظام">
-          <ul className="cc-health-grid">
-            <li>
-              <strong>خدمات الدفع</strong>
-              <span>لا فحص صحة معتمد</span>
-            </li>
-            <li>
-              <strong>خدمة البريد</strong>
-              <span>لا فحص صحة معتمد</span>
-            </li>
-            <li>
-              <strong>الإشعارات</strong>
-              <span>لا فحص صحة معتمد</span>
-            </li>
-          </ul>
         </AdminSection>
       </div>
 
@@ -490,7 +493,9 @@ function CommandCenterPage() {
             const Icon = action.icon;
             return (
               <Link key={action.to} to={action.to} className="cc-quick-action" preload={false}>
-                <Icon className="h-4 w-4" aria-hidden />
+                <span className="cc-quick-action__icon" aria-hidden>
+                  <Icon className="h-4 w-4" />
+                </span>
                 <span>{action.label}</span>
               </Link>
             );
@@ -500,3 +505,4 @@ function CommandCenterPage() {
     </div>
   );
 }
+

@@ -4,19 +4,25 @@ import {
   listHeroGoalAssetEntries,
   pickHeroGoalAsset,
 } from "@/lib/platform/hero-goals-asset-index";
-import type { UserGoal } from "@/lib/platform/home-hub";
-import { resolveUserGoal } from "@/lib/platform/home-hub";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import coachPhoto from "@/assets/coach-photo.png";
 import type { HeroGoalFraming } from "@/lib/platform/hero-goal-framing";
 import { buildHeroGoalFramingKey, getHeroGoalFraming } from "@/lib/platform/hero-goal-framing";
+import type { UserGoal } from "@/lib/platform/home-hub";
 import {
-  homeBucketForCanonicalGoal,
-  isCanonicalTrainingGoal,
-  quizHeroIdForCanonicalGoal,
-} from "@/lib/platform/training-v2-contracts";
+  normalizeHeroGender,
+  resolveAuthoritativeHeroSlot,
+  resolveGoalIdForGender,
+  type HeroGender,
+} from "@/lib/platform/hero-goal-slot";
 
-export type HeroGender = "male" | "female";
+export type { HeroGender, HeroGoalSlot } from "@/lib/platform/hero-goal-slot";
+export {
+  goalIdToUserGoal,
+  inferGoalIdFromText,
+  normalizeHeroGender,
+  resolveAuthoritativeHeroSlot,
+} from "@/lib/platform/hero-goal-slot";
 
 export type HeroGoalImage = {
   src: string;
@@ -27,12 +33,6 @@ export type HeroGoalImage = {
   /** Admin preview: skip hourly rotation and use explicit src/framing. */
   previewLocked?: boolean;
 };
-
-const MALE_GOAL_IDS = ["fat", "muscle", "fitness", "athletic", "shape", "gain"] as const;
-const FEMALE_GOAL_IDS = ["fat", "glutes", "waist", "body", "fit", "tone"] as const;
-
-type MaleGoalId = (typeof MALE_GOAL_IDS)[number];
-type FemaleGoalId = (typeof FEMALE_GOAL_IDS)[number];
 
 const GOAL_ID_ALTS: Record<string, string> = {
   fat: "جسم أحلامك — خسارة الدهون",
@@ -48,85 +48,95 @@ const GOAL_ID_ALTS: Record<string, string> = {
   tone: "جسم أحلامك — تحسين شكل الصدر",
 };
 
-function isMaleGoalId(value: string): value is MaleGoalId {
-  return (MALE_GOAL_IDS as readonly string[]).includes(value);
-}
+const HERO_SLOT_CACHE_PREFIX = "maakfit_hero_slot_v2:";
 
-function isFemaleGoalId(value: string): value is FemaleGoalId {
-  return (FEMALE_GOAL_IDS as readonly string[]).includes(value);
-}
+type CachedHeroSlot = {
+  userId: string;
+  gender: HeroGender;
+  goalId: string;
+  src: string;
+};
 
-/** Maps quiz goal ids to the platform goal buckets used on home. */
-export function goalIdToUserGoal(goalId?: string | null): UserGoal | null {
-  if (!goalId) return null;
-  if (isCanonicalTrainingGoal(goalId)) return homeBucketForCanonicalGoal(goalId);
-  if (goalId === "fat" || goalId === "waist") return "cut";
-  if (goalId === "muscle" || goalId === "gain" || goalId === "tone") return "bulk";
-  if (goalId === "glutes" || goalId === "body") return "fitness";
-  if (goalId === "athletic" || goalId === "shape" || goalId === "fitness" || goalId === "fit") return "fitness";
-  return "fitness";
-}
-
-export function inferGoalIdFromText(raw?: string | null, gender?: HeroGender | null): string | null {
-  if (!raw) return null;
-  const value = raw.trim();
-  if (!value) return null;
-  if (isCanonicalTrainingGoal(value)) {
-    return quizHeroIdForCanonicalGoal(value, gender === "male" ? "male" : "female");
+function readHeroSlotCacheStore(): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
   }
-  if (isMaleGoalId(value) || isFemaleGoalId(value)) return value;
+}
 
-  const text = value.toLowerCase();
-  if (/glute|مؤخر/.test(text)) return "glutes";
-  if (/waist|خصر/.test(text)) return "waist";
-  if (/صدر|tone/.test(text)) return "tone";
-  if (/أنثوي|feminine/.test(text)) return "body";
-  if (/gain|زيادة وزن/.test(text)) return "gain";
-  if (/athletic|رياضي ومتناسق/.test(text)) return "athletic";
-  if (/shape|شكل الجسم/.test(text)) return "shape";
-  if (/muscle|عضل|تضخيم|bulk/.test(text)) return "muscle";
-  if (/صحي ورياضي/.test(text)) return gender === "male" ? "fitness" : "fit";
-  if (/fit|لياق|طاق/.test(text)) return gender === "female" ? "fit" : "fitness";
-  if (/fat|دهون|تنشيف|cut/.test(text)) return "fat";
+export function readCachedHeroSlot(userId: string): CachedHeroSlot | null {
+  const id = userId.trim();
+  if (!id || id === "guest") return null;
+  const store = readHeroSlotCacheStore();
+  if (!store) return null;
+  try {
+    const parsed = JSON.parse(store.getItem(`${HERO_SLOT_CACHE_PREFIX}${id}`) ?? "") as CachedHeroSlot;
+    if (
+      parsed?.userId === id &&
+      (parsed.gender === "male" || parsed.gender === "female") &&
+      typeof parsed.goalId === "string" &&
+      typeof parsed.src === "string" &&
+      parsed.src.length > 0
+    ) {
+      return parsed;
+    }
+  } catch {
+    return null;
+  }
   return null;
+}
+
+export function writeCachedHeroSlot(slot: CachedHeroSlot): void {
+  const id = slot.userId.trim();
+  if (!id || id === "guest") return;
+  const store = readHeroSlotCacheStore();
+  if (!store) return;
+  try {
+    store.setItem(`${HERO_SLOT_CACHE_PREFIX}${id}`, JSON.stringify(slot));
+  } catch {
+    // quota / private mode
+  }
+}
+
+export function heroSrcBelongsToSlot(src: string, gender: HeroGender, goalId: string): boolean {
+  if (!src) return false;
+  const entries = listHeroGoalAssetEntries(gender, goalId);
+  if (entries.some((row) => row.url === src)) return true;
+  const otherGender: HeroGender = gender === "female" ? "male" : "female";
+  if (listHeroGoalAssetEntries(otherGender, goalId).some((row) => row.url === src)) return false;
+  if (gender === "male" && /hero-goal-women|\/بنات\//i.test(src)) return false;
+  if (gender === "female" && /hero-goal-man|\/ذكور\//i.test(src)) return false;
+  return true;
+}
+
+export function preloadHeroGoalImage(src: string): Promise<boolean> {
+  if (!src) return Promise.resolve(false);
+  if (typeof window === "undefined" || typeof Image === "undefined") return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = src;
+  });
 }
 
 export function readHomeGoalContext(input?: {
   gender?: HeroGender | null;
   goalId?: string | null;
   goalText?: string | null;
+  /** Device quiz is anonymous onboarding only. Signed-in clients must omit this. */
+  allowDeviceQuizFallback?: boolean;
 }) {
-  const quiz = readQuizProgress();
-  const gender: HeroGender =
-    input?.gender === "female" || quiz?.gender === "female"
-      ? "female"
-      : input?.gender === "male" || quiz?.gender === "male"
-        ? "male"
-        : "male";
-
-  const goalId =
-    inferGoalIdFromText(input?.goalId, gender) ??
-    inferGoalIdFromText(quiz?.goalId, gender) ??
-    inferGoalIdFromText(input?.goalText, gender);
-
-  const goal =
-    goalIdToUserGoal(goalId) ??
-    (input?.goalText?.trim() ? resolveUserGoal(input.goalText) : null) ??
-    "fitness";
-
-  return { gender, goalId, goal };
-}
-
-function defaultGoalIdForBucket(gender: HeroGender, goal: UserGoal): string {
-  if (goal === "cut") return "fat";
-  if (goal === "bulk") return gender === "female" ? "tone" : "muscle";
-  return gender === "female" ? "fit" : "fitness";
-}
-
-function resolveGoalId(gender: HeroGender, goal: UserGoal, goalId?: string | null): string {
-  if (gender === "female" && goalId && isFemaleGoalId(goalId)) return goalId;
-  if (gender === "male" && goalId && isMaleGoalId(goalId)) return goalId;
-  return defaultGoalIdForBucket(gender, goal);
+  const quiz = input?.allowDeviceQuizFallback ? readQuizProgress() : null;
+  const slot = resolveAuthoritativeHeroSlot({
+    gender: normalizeHeroGender(input?.gender) ?? (quiz ? normalizeHeroGender(quiz.gender) : null),
+    goalId: input?.goalId ?? quiz?.goalId ?? null,
+    goalText: input?.goalText,
+  });
+  if (slot) return slot;
+  return { gender: "male" as const, goalId: null as string | null, goal: "fitness" as const };
 }
 
 export function getHeroGoalImageSrc(gender: HeroGender, goalId: string, rotationIndex?: number): string | null {
@@ -141,9 +151,20 @@ export function resolveHeroGoalImage(input: {
   gender?: HeroGender | null;
   goalId?: string | null;
   rotationIndex?: number;
+  previewLocked?: boolean;
 }): HeroGoalImage {
-  const gender: HeroGender = input.gender === "female" ? "female" : "male";
-  const resolvedGoalId = resolveGoalId(gender, input.goal, input.goalId);
+  const gender = normalizeHeroGender(input.gender);
+  if (!gender) {
+    return {
+      src: coachPhoto,
+      alt: "MAAKFIT",
+      gender: "male",
+      goalId: "fitness",
+      previewLocked: true,
+    };
+  }
+
+  const resolvedGoalId = resolveGoalIdForGender(gender, input.goal, input.goalId);
   const rotationIndex = input.rotationIndex ?? getHourlyRotationIndex();
   const alt = GOAL_ID_ALTS[resolvedGoalId] || "جسم أحلامك حسب هدفك";
 
@@ -160,12 +181,12 @@ export function resolveHeroGoalImage(input: {
     rotationIndex,
   });
 
-  const src = folderSrc ?? contentSrc ?? coachPhoto;
-  const entry =
-    entries.find((row) => row.url === src) ??
-    (entries.length > 0
-      ? entries[Math.abs(Math.floor(rotationIndex)) % entries.length]
-      : undefined);
+  const isolatedSrc = [folderSrc, contentSrc].find(
+    (candidate): candidate is string =>
+      Boolean(candidate) && heroSrcBelongsToSlot(candidate!, gender, resolvedGoalId),
+  );
+  const src = isolatedSrc ?? entries[0]?.url ?? coachPhoto;
+  const entry = entries.find((row) => row.url === src);
   const framingKey = entry
     ? `${gender}:${resolvedGoalId}:${entry.fileName}`
     : buildHeroGoalFramingKey(gender, resolvedGoalId, src);
@@ -176,5 +197,6 @@ export function resolveHeroGoalImage(input: {
     gender,
     goalId: resolvedGoalId,
     framing: getHeroGoalFraming(framingKey),
+    previewLocked: input.previewLocked,
   };
 }

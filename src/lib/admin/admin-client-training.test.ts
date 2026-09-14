@@ -63,8 +63,8 @@ assert(workspace.includes("تاريخ البرامج"), "program history exists"
 assert(workspace.includes("محرر نسخة العميل"), "client copy editor exists");
 assert(workspace.includes("CLIENT-SPECIFIC EDIT"), "client-specific edit badge exists");
 assert(workspace.includes("ClientTrainingGoalCard"), "client goal editor exists");
-assert(workspace.includes("Strategy Matrix"), "matrix source selector exists");
-assert(workspace.includes("Program Template"), "template source selector exists");
+assert(workspace.includes("محرك الاستراتيجية"), "matrix source selector exists");
+assert(workspace.includes("قالب جاهز"), "template source selector exists");
 assert(workspace.includes("حفظ التعديلات"), "sticky save exists");
 assert(workspace.includes("prepareTrainingProgramAssignment"), "V2 orchestrator wired");
 assert(workspace.includes("رفض"), "reject action exists");
