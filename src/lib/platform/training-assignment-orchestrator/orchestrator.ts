@@ -41,6 +41,16 @@ const LOCATION_LABELS: Record<string, string> = {
   UNKNOWN: "غير محدد",
 };
 
+function sortedStrings(values: string[] | null | undefined): string[] | null {
+  if (!values?.length) return values ?? null;
+  return [...values].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Fingerprint of strategy fields that actually change generation.
+ * Coach metadata like `reason` is intentionally excluded — including it caused
+ * false STALE_STRATEGY_CONTEXT when assign rebuilt the fingerprint without overrides.
+ */
 export function buildStrategyContextFingerprint(
   strategy: TrainingStrategyInput,
   overrides?: StrategyResolutionOverrides,
@@ -52,19 +62,24 @@ export function buildStrategyContextFingerprint(
     gender: strategy.gender ?? null,
     assessedTrainingLevel: strategy.assessedTrainingLevel ?? null,
     trainingDaysPerWeek: overrides?.trainingDaysPerWeek ?? strategy.trainingDaysPerWeek ?? null,
-    preferredTrainingDays: strategy.preferredTrainingDays ?? null,
+    preferredTrainingDays: sortedStrings(strategy.preferredTrainingDays),
     sessionDurationMinutes:
       overrides?.sessionDurationMinutes ?? strategy.sessionDurationMinutes ?? null,
     trainingEnvironment: strategy.trainingEnvironment ?? null,
     trainingType: strategy.trainingType ?? null,
     locationPreference: strategy.locationPreference ?? null,
-    availableEquipment: overrides?.availableEquipment ?? strategy.availableEquipment ?? null,
-    injuryIds: strategy.injuryIds ?? null,
-    lockedExternalIds: overrides?.lockedExternalIds ?? strategy.lockedExternalIds ?? null,
-    excludedExternalIds: overrides?.excludedExternalIds ?? strategy.excludedExternalIds ?? null,
+    availableEquipment: sortedStrings(
+      overrides?.availableEquipment ?? strategy.availableEquipment ?? null,
+    ),
+    injuryIds: sortedStrings(strategy.injuryIds),
+    lockedExternalIds: sortedStrings(
+      overrides?.lockedExternalIds ?? strategy.lockedExternalIds ?? null,
+    ),
+    excludedExternalIds: sortedStrings(
+      overrides?.excludedExternalIds ?? strategy.excludedExternalIds ?? null,
+    ),
     coachProtected: overrides?.coachProtected ?? strategy.coachProtected ?? false,
     overrideLocation: overrides?.trainingLocation ?? null,
-    overrideReason: overrides?.reason ?? null,
   };
   return JSON.stringify(payload);
 }

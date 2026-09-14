@@ -160,6 +160,30 @@ assertEqual(
 );
 assert(!isAssignmentCandidateStale(first, fp), "J: same fingerprint not stale");
 
+// J2 — coach reason metadata must not create false stale (admin assign regression)
+const withReason = prepareTrainingProgramAssignment({
+  clientId: "client-a",
+  strategyInput: baseInput(),
+  exercises,
+  assignmentMode: "ASSISTED",
+  overrides: { reason: "COACH_REQUEST" },
+});
+const fpNoOverrides = buildStrategyContextFingerprint(baseInput());
+const fpReasonOnly = buildStrategyContextFingerprint(baseInput(), { reason: "COACH_REQUEST" });
+assertEqual(fpNoOverrides, fpReasonOnly, "J2: reason-only override ignored in fingerprint");
+assert(
+  !isAssignmentCandidateStale(withReason, fpNoOverrides),
+  "J2: assign without overrides not stale when only reason differed",
+);
+const fpDaysOverride = buildStrategyContextFingerprint(baseInput(), {
+  reason: "COACH_REQUEST",
+  trainingDaysPerWeek: 5,
+});
+assert(
+  isAssignmentCandidateStale(withReason, fpDaysOverride),
+  "J2: day override still marks stale",
+);
+
 // K — rejected candidate not assignable
 const rejected = rejectAssignmentCandidate(assisted, "not suitable");
 assertEqual(rejected.state, "REJECTED", "K: rejected state");

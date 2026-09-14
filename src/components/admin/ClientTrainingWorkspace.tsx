@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ClientTrainingGoalCard } from "@/components/admin/ClientTrainingGoalCard";
 import { ClientProgressionStrategyCard } from "@/components/admin/ClientProgressionStrategyCard";
@@ -249,6 +249,8 @@ export function ClientTrainingWorkspace({
     payload: Record<string, unknown> | null;
   } | null>(null);
   const [v2GenerationOverrides, setV2GenerationOverrides] = useState<StrategyResolutionOverrides | null>(null);
+  /** Stable overrides from last successful generate — avoids dialog-closure / state drift on assign. */
+  const v2GenerationOverridesRef = useRef<StrategyResolutionOverrides | null>(null);
   const [pickerQuery, setPickerQuery] = useState("");
   const [pickerGoal, setPickerGoal] = useState("");
   const [pickerLevel, setPickerLevel] = useState("");
@@ -867,8 +869,10 @@ export function ClientTrainingWorkspace({
         assignmentMode: "ASSISTED",
         membershipTier: overview.membership?.tier ?? null,
         overrides,
-        priorContextFingerprint: v2Candidate?.provenance?.contextFingerprint ?? null,
+        // Intentional coach regenerate — never treat prior candidate as a stale gate.
+        priorContextFingerprint: null,
       });
+      v2GenerationOverridesRef.current = overrides;
       setV2GenerationOverrides(overrides);
       setV2Candidate(candidate);
       setV2Preview({
@@ -1075,10 +1079,10 @@ export function ClientTrainingWorkspace({
         setError(null);
         try {
           const strategyInput = await loadAdminClientTrainingStrategyInput(clientId, overview);
-          const fingerprint = buildStrategyContextFingerprint(
-            strategyInput,
-            v2GenerationOverrides ?? { reason: "COACH_REQUEST" },
-          );
+          const assignOverrides =
+            v2GenerationOverridesRef.current ??
+            v2GenerationOverrides ?? { reason: "COACH_REQUEST" as const };
+          const fingerprint = buildStrategyContextFingerprint(strategyInput, assignOverrides);
           const staleError = validateCandidateBeforeAssign({
             candidate: approved,
             currentFingerprint: fingerprint,
@@ -1100,6 +1104,7 @@ export function ClientTrainingWorkspace({
           setDraft(row);
           setV2Preview(null);
           setV2Candidate(null);
+          v2GenerationOverridesRef.current = null;
           setV2GenerationOverrides(null);
           const list = await listAdminClientAssignments(clientId, 0);
           setHistory(list.rows);
