@@ -8,6 +8,7 @@ import {
   NOTIFICATION_CHANNELS,
   NUTRITION_BOUNDARIES,
   PROGRAM_BOUNDARIES,
+  ADMIN_CHANGE_CLASSES,
   isAdminAppPath,
   isClientAppPath,
 } from "./admin-architecture";
@@ -62,10 +63,19 @@ assert(
   "live nav is operational surfaces only",
 );
 assert(liveItems.some((item) => item.to === "/admin/clients"), "clients table is live");
-assert(liveItems.some((item) => item.to === "/admin/audit"), "audit read is live");
-assert(liveItems.some((item) => item.to === "/admin/support"), "support queue is live");
+assert(!liveItems.some((item) => item.to === "/admin/audit"), "audit lives under team hub, not sidebar");
+assert(!liveItems.some((item) => item.to === "/admin/support"), "support lives under team hub, not sidebar");
+assert(liveItems.some((item) => item.to === "/admin/settings"), "team hub settings is live");
 
 assert(PROGRAM_BOUNDARIES.template !== PROGRAM_BOUNDARIES.assigned, "template ≠ assigned program");
+assert(
+  ADMIN_CHANGE_CLASSES.contentPublish.includes("NO_CODE_DEPLOY"),
+  "content changes must not require code deploy",
+);
+assert(
+  ADMIN_CHANGE_CLASSES.softwareDeploy.includes("CODE_DEPLOY_REQUIRED"),
+  "software changes require deploy",
+);
 assert(NUTRITION_BOUNDARIES.library !== NUTRITION_BOUNDARIES.assigned, "meal library ≠ client assigned meal");
 assert(NUTRITION_BOUNDARIES.plan !== NUTRITION_BOUNDARIES.library, "nutrition plan ≠ meal library");
 assert(CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived", "publishing states");

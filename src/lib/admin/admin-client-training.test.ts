@@ -54,23 +54,37 @@ assert(!logIsLegacyUnlinked("assign-1"), "linked log is not legacy");
 
 const root = process.cwd();
 const workspace = readFileSync(join(root, "src/components/admin/ClientTrainingWorkspace.tsx"), "utf8");
-assert(workspace.includes("تعيين برنامج"), "assign action exists");
-assert(workspace.includes("استبدال التمرين"), "exercise substitution exists");
+assert(workspace.includes("إنشاء مسودة للتعديل") || workspace.includes("فتح المسودة"), "draft edit entry exists");
+assert(workspace.includes("AssignmentPublishBar"), "publish bar wired");
+assert(workspace.includes("createAdminClientProgramDraft"), "create draft API wired");
+assert(workspace.includes("publishAdminClientProgramDraft"), "publish draft API wired");
+assert(workspace.includes("حفظ المسودة") || workspace.includes("onSaveDraft"), "save draft control exists");
+assert(workspace.includes("استبدال"), "exercise substitution exists");
 assert(!workspace.includes("window.confirm"), "no window.confirm");
 assert(!workspace.includes("87%"), "no fake adherence");
 assert(workspace.includes("AdminConfirmDialog") || workspace.includes("onConfirm"), "sensitive actions confirm");
 assert(workspace.includes("تاريخ البرامج"), "program history exists");
-assert(workspace.includes("محرر نسخة العميل"), "client copy editor exists");
-assert(workspace.includes("CLIENT-SPECIFIC EDIT"), "client-specific edit badge exists");
+assert(workspace.includes("محرر مسودة العميل") || workspace.includes("محرر نسخة العميل"), "client copy editor exists");
+assert(workspace.includes("CLIENT-SPECIFIC EDIT") || workspace.includes("DRAFT — NOT LIVE"), "client-specific edit badge exists");
 assert(workspace.includes("ClientTrainingGoalCard"), "client goal editor exists");
 assert(workspace.includes("محرك الاستراتيجية"), "matrix source selector exists");
 assert(workspace.includes("قالب جاهز"), "template source selector exists");
-assert(workspace.includes("حفظ التعديلات"), "sticky save exists");
 assert(workspace.includes("prepareTrainingProgramAssignment"), "V2 orchestrator wired");
 assert(workspace.includes("رفض"), "reject action exists");
 assert(workspace.includes("ClientProgressionStrategyCard"), "progression strategy card wired");
 assert(workspace.includes("استراتيجية التطور"), "progression strategy section exists");
 assert(workspace.includes("تغيير استراتيجية التطور") || workspace.includes("ClientProgressionStrategyCard"), "change strategy action exists");
+
+const migration = readFileSync(
+  join(root, "supabase/migrations/20260914150000_client_assignment_draft_publish.sql"),
+  "utf8",
+);
+assert(migration.includes("published_assignment_immutable"), "published snapshots are immutable");
+assert(migration.includes("admin_create_client_program_draft"), "training draft create RPC");
+assert(migration.includes("admin_publish_client_program_draft"), "training publish RPC");
+assert(migration.includes("client_id = auth.uid() AND status IN ('active', 'scheduled')") || migration.includes("a.status IN ('active', 'scheduled')"), "clients never see drafts via RLS");
+assert(ASSIGNMENT_STATUSES.includes("draft"), "draft is a lifecycle status");
+assert(assignmentStatusLabel("draft") === "مسودة", "draft label");
 
 const client360 = readFileSync(join(root, "src/routes/admin/clients/$clientId.tsx"), "utf8");
 assert(client360.includes("ClientTrainingWorkspace"), "client 360 training workspace is wired");

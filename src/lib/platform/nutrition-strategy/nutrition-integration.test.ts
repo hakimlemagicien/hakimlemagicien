@@ -183,10 +183,12 @@ const consumed = computeConsumedTotals([partial]);
 assert.ok(consumed.calories > 0 && consumed.calories < 400);
 
 const workspace = readFileSync(join(ROOT, "src/components/admin/ClientNutritionWorkspace.tsx"), "utf8");
+const strategyAssign = readFileSync(join(ROOT, "src/lib/admin/admin-nutrition-strategy-assign.ts"), "utf8");
 const nutritionPlan = readFileSync(join(ROOT, "src/hooks/useNutritionPlan.ts"), "utf8");
 assert(nutritionPlan.includes("applyNutritionMealSwap"), "client strategy swap wiring");
 assert(nutritionPlan.includes("STRATEGY_V1_DYNAMIC"), "client detects strategy schema for swap");
-assert(workspace.includes("generateAdminStrategyNutrition"), "admin strategy wiring");
-assert(workspace.includes("buildStrategyAssignmentPayload"), "admin uses orchestrator");
+assert(strategyAssign.includes("generateAdminStrategyNutrition"), "admin strategy wiring");
+assert(strategyAssign.includes("buildStrategyAssignmentPayload"), "admin uses orchestrator");
+assert(workspace.includes("assignReadyMadeStrategyNutrition"), "workspace calls ready-made strategy assign");
 
 console.log("nutrition-integration.test.ts: all assertions passed");

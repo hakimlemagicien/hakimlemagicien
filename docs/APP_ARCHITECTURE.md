@@ -79,6 +79,8 @@ maakfit.com/                  canonical product origin (dual-host fallback: haki
 
 **عضوية FREE V1:** انظر [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) — تدريب = فيديو تعريفي + معاينة هيكل فقط؛ تغذية = فطور حقيقي حسب الهدف + باقي الوجبات مقفلة.
 
+**مركز تشغيل الأدمن `/admin`:** انظر [`ADMIN_COMMAND_CENTER_OPERATIONS.md`](./ADMIN_COMMAND_CENTER_OPERATIONS.md) — لوحة تحكم تشغيلية (عملاء · تدريب · تغذية · عضوية). **تعديل المحتوى التشغيلي لا يتطلب Code Deploy**؛ Deploy للبرمجيات والـ schema فقط. موبايل: شريط سفلي (الرئيسية · العملاء · التدريب · التغذية · المزيد) بدل sidebar مصغّر.
+
 ---
 
 ## 4. معمارية الواجهة داخل `/app`

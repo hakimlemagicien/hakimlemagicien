@@ -157,3 +157,41 @@ export function isAdminNavActive(pathname: string, href: string): boolean {
   });
   return !longerMatch;
 }
+
+/** Mobile Command Center bottom tabs — never dump the full sidebar here. */
+export const ADMIN_MOBILE_BOTTOM_NAV: AdminNavItem[] = [
+  { id: "home", to: "/admin", label: "الرئيسية", status: "live", requiredPermission: "clients.basic_read" },
+  { id: "clients", to: "/admin/clients", label: "العملاء", status: "live", requiredPermission: "clients.read" },
+  { id: "programs", to: "/admin/programs", label: "التدريب", status: "live", requiredPermission: "training.manage" },
+  { id: "nutrition", to: "/admin/nutrition", label: "التغذية", status: "live", requiredPermission: "meal_library.manage" },
+];
+
+/** Items under mobile «المزيد» sheet. */
+export const ADMIN_MOBILE_MORE_LINKS: AdminNavItem[] = [
+  { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live", requiredPermission: "membership.read" },
+  { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live", requiredPermission: "payments.read" },
+  { id: "messages", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
+  { id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" },
+  { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live", requiredPermission: "exercise.read" },
+  { id: "staff", to: "/admin/settings", label: "الفريق والإعدادات", status: "live", requiredPermission: "staff.manage" },
+  { id: "progress", to: "/admin/progress", label: "التقدم", status: "live", requiredPermission: "progress.read" },
+];
+
+export function isAdminMobileBottomNavActive(pathname: string, href: string): boolean {
+  if (href === "/admin/programs") {
+    const path = pathname.replace(/\/+$/, "") || "/";
+    return (
+      path === "/admin/programs" ||
+      path.startsWith("/admin/programs/") ||
+      path === "/admin/training" ||
+      path.startsWith("/admin/training/") ||
+      path === "/admin/exercises" ||
+      path.startsWith("/admin/exercises/")
+    );
+  }
+  if (href === "/admin/nutrition") {
+    const path = pathname.replace(/\/+$/, "") || "/";
+    return path === "/admin/nutrition" || path.startsWith("/admin/nutrition/");
+  }
+  return isAdminNavActive(pathname, href);
+}

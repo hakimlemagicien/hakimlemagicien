@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Crown } from "lucide-react";
 import { AdminCard, AdminEmptyState, AdminSection, AdminStatusBadge, AdminTable } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
+import { TrainingToolCard, type TrainingToolCardTone } from "@/components/admin/TrainingToolCard";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import {
   exceptionTypeLabel,
@@ -140,6 +141,19 @@ export function ClientMembershipWorkspace({ clientId, overview, sidebar }: Props
     );
   }
 
+  const membershipTone: TrainingToolCardTone = membership.is_active
+    ? lifecycle === "PAST_DUE" || lifecycle === "CANCEL_AT_PERIOD_END"
+      ? "warn"
+      : "ok"
+    : "attention";
+  const membershipStatus = membership.is_active
+    ? lifecycle === "PAST_DUE"
+      ? "يحتاج تدخل"
+      : lifecycle === "CANCEL_AT_PERIOD_END"
+        ? "ينتهي قريباً"
+        : "يعمل جيداً"
+    : "غير نشطة";
+
   return (
     <div className={sidebar ? "cc-membership-layout" : undefined}>
       <AdminSection>
@@ -150,124 +164,160 @@ export function ClientMembershipWorkspace({ clientId, overview, sidebar }: Props
           </div>
         ) : null}
 
-        <AdminCard className="cc-membership-current">
-          <div className="cc-membership-current__head">
-            <h2 className="cc-section__title">العضوية الحالية</h2>
-            <AdminStatusBadge tone={badgeTone(lifecycle)}>
-              {membership.is_active ? "نشطة" : billingStatusLabel(lifecycle)}
-            </AdminStatusBadge>
-          </div>
-          <div className="cc-membership-current__plan">
-            <span className="cc-membership-current__icon" aria-hidden>
-              <Crown size={18} />
-            </span>
-            <div>
-              <strong>
-                <AdminStatusBadge tone={directoryPlanTone(membership.tier)}>
-                  {directoryPlanLabelAr(membership.tier)}
+        <div className="cc-tool-cards" aria-label="العضوية والفوترة">
+          <TrainingToolCard
+            title="العضوية الحالية"
+            preview={`${directoryPlanLabelAr(membership.tier)}${
+              membership.next_renewal_at
+                ? ` · تجديد ${formatAdminDate(membership.next_renewal_at)}`
+                : membership.paid_period_end
+                  ? ` · حتى ${formatAdminDate(membership.paid_period_end)}`
+                  : ""
+            }`}
+            statusLabel={membershipStatus}
+            tone={membershipTone}
+          >
+            <AdminCard className="cc-membership-current">
+              <div className="cc-membership-current__head">
+                <h2 className="cc-section__title">العضوية الحالية</h2>
+                <AdminStatusBadge tone={badgeTone(lifecycle)}>
+                  {membership.is_active ? "نشطة" : billingStatusLabel(lifecycle)}
                 </AdminStatusBadge>
-              </strong>
-              <p dir="ltr">
-                {subscription ? formatMembershipPlanPrice(subscription) : membershipPlanLabel(membership.tier)}
-                {periodLabel ? ` · ${periodLabel} أشهر` : ""}
+              </div>
+              <div className="cc-membership-current__plan">
+                <span className="cc-membership-current__icon" aria-hidden>
+                  <Crown size={18} />
+                </span>
+                <div>
+                  <strong>
+                    <AdminStatusBadge tone={directoryPlanTone(membership.tier)}>
+                      {directoryPlanLabelAr(membership.tier)}
+                    </AdminStatusBadge>
+                  </strong>
+                  <p dir="ltr">
+                    {subscription ? formatMembershipPlanPrice(subscription) : membershipPlanLabel(membership.tier)}
+                    {periodLabel ? ` · ${periodLabel} أشهر` : ""}
+                  </p>
+                  {membership.next_renewal_at ? (
+                    <p className="cc-meta">التجديد القادم {formatAdminDate(membership.next_renewal_at)}</p>
+                  ) : membership.paid_period_end ? (
+                    <p className="cc-meta">الفترة المدفوعة حتى {formatAdminDate(membership.paid_period_end)}</p>
+                  ) : null}
+                </div>
+              </div>
+              <p className="cc-muted">
+                بيانات الاشتراك الحالية — دون تعديل يدوي للصلاحيات أو تفعيل وهمي. مصدر الحقيقة:{" "}
+                {membershipSourceLabel(membership.source)}
               </p>
-              {membership.next_renewal_at ? (
-                <p className="cc-meta">التجديد القادم {formatAdminDate(membership.next_renewal_at)}</p>
-              ) : membership.paid_period_end ? (
-                <p className="cc-meta">الفترة المدفوعة حتى {formatAdminDate(membership.paid_period_end)}</p>
+              <dl className="cc-dl cc-dl--inline">
+                <div>
+                  <dt>المزود</dt>
+                  <dd>{subscription?.provider || providerState.label}</dd>
+                </div>
+                <div>
+                  <dt>التجديد</dt>
+                  <dd>
+                    {membership.cancel_at_period_end
+                      ? "تم طلب إيقاف التجديد التلقائي"
+                      : membership.auto_renew
+                        ? "تجديد تلقائي"
+                        : "—"}
+                  </dd>
+                </div>
+              </dl>
+              <Link to="/admin/memberships" className="cc-btn cc-btn--outline">
+                تفعيل / تغيير العضوية
+              </Link>
+              <p className="cc-muted">
+                العمليات من مركز العضويات الحالي فقط: المستوى (tier) · الحالة · الانتهاء · التفعيل/التغيير — بدون نظام عضوية جديد.
+              </p>
+              {timeline.length > 0 ? (
+                <ol className="cc-membership-timeline">
+                  {timeline.map((item) => (
+                    <li key={item.id} className={item.done ? "is-done" : undefined}>
+                      <span>{item.label}</span>
+                      <strong>{formatAdminDate(item.date)}</strong>
+                    </li>
+                  ))}
+                </ol>
               ) : null}
-            </div>
-          </div>
-          <p className="cc-muted">
-            بيانات الاشتراك الحالية — دون تعديل يدوي للصلاحيات أو تفعيل وهمي. مصدر الحقيقة:{" "}
-            {membershipSourceLabel(membership.source)}
-          </p>
-          <dl className="cc-dl cc-dl--inline">
-            <div>
-              <dt>المزود</dt>
-              <dd>{subscription?.provider || providerState.label}</dd>
-            </div>
-            <div>
-              <dt>التجديد</dt>
-              <dd>
-                {membership.cancel_at_period_end
-                  ? "تم طلب إيقاف التجديد التلقائي"
-                  : membership.auto_renew
-                    ? "تجديد تلقائي"
-                    : "—"}
-              </dd>
-            </div>
-          </dl>
-          <Link to="/admin/memberships" className="cc-btn cc-btn--outline">
-            إدارة الاشتراك
-          </Link>
-          {timeline.length > 0 ? (
-            <ol className="cc-membership-timeline">
-              {timeline.map((item) => (
-                <li key={item.id} className={item.done ? "is-done" : undefined}>
-                  <span>{item.label}</span>
-                  <strong>{formatAdminDate(item.date)}</strong>
-                </li>
-              ))}
-            </ol>
-          ) : null}
-        </AdminCard>
+            </AdminCard>
+          </TrainingToolCard>
 
-        {exceptions.length > 0 ? (
-          <AdminCard>
-            <h3 className="cc-section__title">استثناءات الدفع</h3>
-            <ul className="cc-billing-exception-preview">
-              {exceptions.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <Link to="/admin/payments" search={{ section: "exceptions" }} className="cc-card-footer-link">
-              فتح الاستثناءات
-            </Link>
-          </AdminCard>
-        ) : null}
+          {exceptions.length > 0 ? (
+            <TrainingToolCard
+              title="استثناءات الدفع"
+              preview={`${exceptions.length} استثناء يحتاج مراجعة`}
+              statusLabel="يحتاج تدخل"
+              tone="attention"
+            >
+              <AdminCard>
+                <ul className="cc-billing-exception-preview">
+                  {exceptions.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <Link to="/admin/payments" search={{ section: "exceptions" }} className="cc-card-footer-link">
+                  فتح الاستثناءات
+                </Link>
+              </AdminCard>
+            </TrainingToolCard>
+          ) : null}
 
-        <AdminCard>
-          <h3 className="cc-section__title">سجل الفواتير</h3>
-          {loading ? <AdminSkeletonRows rows={3} /> : null}
-          {!loading && payments.length === 0 ? (
-            <p className="cc-muted">لا توجد معاملات مسجلة لهذا العميل.</p>
-          ) : null}
-          {!loading && payments.length > 0 ? (
-            <AdminTable>
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>الوصف</th>
-                  <th>المبلغ</th>
-                  <th>الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((row) => (
-                  <tr key={row.id}>
-                    <td>{formatBillingDate(row.paidAt ?? row.createdAt)}</td>
-                    <td>
-                      {membershipPlanLabel(row.tier ?? membership.tier)}
-                      {row.billingPeriodMonths ? ` · ${row.billingPeriodMonths} أشهر` : ""}
-                    </td>
-                    <td dir="ltr" style={{ textAlign: "right" }}>
-                      {row.amount} {row.currency}
-                    </td>
-                    <td>
-                      <AdminStatusBadge tone={row.status === "paid" || row.status === "completed" ? "success" : "neutral"}>
-                        {paymentHistoryStatusLabel(row.status)}
-                      </AdminStatusBadge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </AdminTable>
-          ) : null}
-          <Link to="/admin/payments" className="cc-card-footer-link">
-            عرض جميع الفواتير
-          </Link>
-        </AdminCard>
+          <TrainingToolCard
+            title="سجل الفواتير"
+            preview={
+              loading
+                ? "جاري التحميل…"
+                : payments.length > 0
+                  ? `${payments.length} معاملة`
+                  : "لا معاملات مسجلة"
+            }
+            statusLabel={payments.length > 0 ? "متوفر" : "فارغ"}
+            tone={payments.length > 0 ? "neutral" : "neutral"}
+          >
+            <AdminCard>
+              {loading ? <AdminSkeletonRows rows={3} /> : null}
+              {!loading && payments.length === 0 ? (
+                <p className="cc-muted">لا توجد معاملات مسجلة لهذا العميل.</p>
+              ) : null}
+              {!loading && payments.length > 0 ? (
+                <AdminTable>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>الوصف</th>
+                      <th>المبلغ</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map((row) => (
+                      <tr key={row.id}>
+                        <td>{formatBillingDate(row.paidAt ?? row.createdAt)}</td>
+                        <td>
+                          {membershipPlanLabel(row.tier ?? membership.tier)}
+                          {row.billingPeriodMonths ? ` · ${row.billingPeriodMonths} أشهر` : ""}
+                        </td>
+                        <td dir="ltr" style={{ textAlign: "right" }}>
+                          {row.amount} {row.currency}
+                        </td>
+                        <td>
+                          <AdminStatusBadge tone={row.status === "paid" || row.status === "completed" ? "success" : "neutral"}>
+                            {paymentHistoryStatusLabel(row.status)}
+                          </AdminStatusBadge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </AdminTable>
+              ) : null}
+              <Link to="/admin/payments" className="cc-card-footer-link">
+                عرض جميع الفواتير
+              </Link>
+            </AdminCard>
+          </TrainingToolCard>
+        </div>
       </AdminSection>
       {sidebar}
     </div>

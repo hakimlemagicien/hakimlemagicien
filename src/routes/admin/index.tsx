@@ -67,12 +67,12 @@ const emptyClients: LoadState<AdminClientListItem[]> = { rows: [], error: null, 
 const emptyExceptions: LoadState<AdminPaymentExceptionRow[]> = { rows: [], error: null, loading: true };
 
 const QUICK_ACTIONS = [
-  { to: "/admin/programs", label: "إضافة برنامج", icon: ClipboardList },
-  { to: "/admin/clients", label: "إضافة عميل", icon: Users },
-  { to: "/admin/training/reviews", label: "مراجعات التدريب", icon: Dumbbell },
-  { to: "/admin/messages", label: "فتح الرسائل", icon: MessageSquare },
-  { to: "/admin/payments", label: "مراجعة المدفوعات", icon: Wallet },
-  { to: "/admin/settings", label: "إعدادات النظام", icon: Settings },
+  { id: "add-client", to: "/admin/clients", label: "إضافة عميل", icon: Users },
+  { id: "assign-training", to: "/admin/programs", label: "تعيين برنامج", icon: Dumbbell },
+  { id: "edit-nutrition", to: "/admin/nutrition", label: "تعديل تغذية", icon: ClipboardList },
+  { id: "activate-membership", to: "/admin/memberships", label: "تفعيل عضوية", icon: Wallet },
+  { id: "messages", to: "/admin/messages", label: "فتح الرسائل", icon: MessageSquare },
+  { id: "settings", to: "/admin/settings", label: "إعدادات النظام", icon: Settings },
 ] as const;
 
 function CommandCenterPage() {
@@ -302,7 +302,7 @@ function CommandCenterPage() {
               {QUICK_ACTIONS.map((action) => {
                 const Icon = action.icon;
                 return (
-                  <Link key={action.to} to={action.to} preload={false}>
+                  <Link key={action.id} to={action.to} preload={false}>
                     <Icon className="h-4 w-4" aria-hidden />
                     <span>{action.label}</span>
                   </Link>
@@ -492,7 +492,7 @@ function CommandCenterPage() {
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
-              <Link key={action.to} to={action.to} className="cc-quick-action" preload={false}>
+              <Link key={action.id} to={action.to} className="cc-quick-action" preload={false}>
                 <span className="cc-quick-action__icon" aria-hidden>
                   <Icon className="h-4 w-4" />
                 </span>

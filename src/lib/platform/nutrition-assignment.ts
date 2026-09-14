@@ -77,6 +77,7 @@ export function validateServings(value: number): string | null {
 }
 
 export function nutritionStatusLabel(status: string): string {
+  if (status === "draft") return "مسودة";
   if (status === "scheduled") return "مجدول";
   if (status === "active") return "نشط";
   if (status === "completed") return "مكتمل";

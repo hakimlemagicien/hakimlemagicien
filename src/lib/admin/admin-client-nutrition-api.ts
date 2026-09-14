@@ -191,6 +191,45 @@ export async function generateAdminStrategyNutrition(input: {
   return mapDetail(data as Record<string, unknown>);
 }
 
+export type AdminNutritionAllergyStatus = "UNKNOWN" | "CONFIRMED_NONE" | "KNOWN_ALLERGIES";
+
+export async function getAdminClientNutritionAllergy(clientId: string): Promise<{
+  status: AdminNutritionAllergyStatus;
+  knownAllergens: string[];
+}> {
+  const { data, error } = await supabase
+    .from("client_nutrition_profiles")
+    .select("allergy_status, known_allergens")
+    .eq("client_id", clientId)
+    .maybeSingle();
+  if (error) throw error;
+  const status = (data?.allergy_status as AdminNutritionAllergyStatus | undefined) ?? "UNKNOWN";
+  return {
+    status: status === "CONFIRMED_NONE" || status === "KNOWN_ALLERGIES" ? status : "UNKNOWN",
+    knownAllergens: Array.isArray(data?.known_allergens)
+      ? (data.known_allergens as string[])
+      : [],
+  };
+}
+
+export async function setAdminClientNutritionAllergy(input: {
+  clientId: string;
+  status: "CONFIRMED_NONE" | "KNOWN_ALLERGIES";
+  allergens?: string[];
+}): Promise<void> {
+  const { error } = await (supabase as unknown as {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ error: { message: string } | null }>;
+  }).rpc("admin_set_client_nutrition_allergy", {
+    p_client_id: input.clientId,
+    p_status: input.status,
+    p_allergens: input.allergens ?? [],
+  });
+  if (error) throw error;
+}
+
 export async function createAdminNutritionTarget(clientId: string, payload: Record<string, unknown>) {
   const { data, error } = await supabase.rpc("nutrition_create_target", {
     p_client_id: clientId,
@@ -252,6 +291,36 @@ export async function saveAdminClientNutritionSlots(
   });
   if (error) throw error;
   return mapDetail(data as Record<string, unknown>);
+}
+
+export async function createAdminClientNutritionDraft(sourceAssignmentId: string) {
+  const { data, error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  }).rpc("admin_create_client_nutrition_draft", {
+    p_source_assignment_id: sourceAssignmentId,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function publishAdminClientNutritionDraft(draftAssignmentId: string, startsOn?: string | null) {
+  const { data, error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  }).rpc("admin_publish_client_nutrition_draft", {
+    p_draft_assignment_id: draftAssignmentId,
+    p_starts_on: startsOn ?? null,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function discardAdminClientNutritionDraft(draftAssignmentId: string) {
+  const { error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+  }).rpc("admin_discard_client_nutrition_draft", {
+    p_draft_assignment_id: draftAssignmentId,
+  });
+  if (error) throw error;
 }
 
 export async function listAdminClientNutritionLogs(clientId: string, offset = 0) {

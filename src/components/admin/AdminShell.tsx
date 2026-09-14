@@ -4,6 +4,7 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutAndResetClient } from "@/lib/quiz-onboarding-api";
 import { AdminEnvironmentBadge } from "@/components/admin/AdminEnvironmentBadge";
+import { AdminMobileBottomNav } from "@/components/admin/AdminMobileBottomNav";
 import { ADMIN_NAV_GROUPS, ADMIN_NAV_PRIMARY, isAdminNavActive, type AdminNavItem } from "@/lib/admin/admin-nav";
 import { adminNavIcon } from "@/lib/admin/admin-nav-icons";
 import {
@@ -325,6 +326,7 @@ export function AdminShell() {
         <main id="cc-workspace" className="cc-workspace cc-workspace--dashboard">
           <Outlet />
         </main>
+        <AdminMobileBottomNav pathname={pathname} staffSession={staffSession} />
       </div>
     </div>
     </StaffPermissionsProvider>

@@ -1,4 +1,5 @@
 export const ASSIGNMENT_STATUSES = [
+  "draft",
   "scheduled",
   "active",
   "completed",
@@ -35,6 +36,7 @@ export const WEEKDAY_TO_ISO: Record<WeekdayId, number> = {
 
 export function assignmentStatusLabel(status: string): string {
   const labels: Record<string, string> = {
+    draft: "مسودة",
     scheduled: "مجدول",
     active: "نشط",
     completed: "مكتمل",

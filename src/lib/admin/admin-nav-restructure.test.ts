@@ -43,4 +43,16 @@ assert(system.filter((i) => i.status === "foundation").map((i) => i.label).join(
 assert(isAdminNavActive("/admin/support", "/admin/settings"), "support highlights team hub");
 assert(isAdminNavActive("/admin/audit", "/admin/settings"), "audit highlights team hub");
 
+import {
+  ADMIN_MOBILE_BOTTOM_NAV,
+  ADMIN_MOBILE_MORE_LINKS,
+  isAdminMobileBottomNavActive,
+} from "./admin-nav";
+
+assert(ADMIN_MOBILE_BOTTOM_NAV.map((i) => i.label).join(",") === "الرئيسية,العملاء,التدريب,التغذية", "mobile tabs");
+assert(ADMIN_MOBILE_MORE_LINKS.length >= 5, "more sheet has secondary modules");
+assert(isAdminMobileBottomNavActive("/admin/training/reviews", "/admin/programs"), "training hub under programs tab");
+assert(isAdminMobileBottomNavActive("/admin/nutrition/operations", "/admin/nutrition"), "nutrition ops under nutrition tab");
+assert(!isAdminMobileBottomNavActive("/admin/clients", "/admin"), "clients not home");
+
 console.log("admin-nav-restructure.test.ts passed");

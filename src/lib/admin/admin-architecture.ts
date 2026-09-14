@@ -22,6 +22,19 @@ export const NUTRITION_BOUNDARIES = {
   plan: "CLIENT_NUTRITION_ASSIGNMENT",
 } as const;
 
+/**
+ * Operational content changes must never require a software deploy.
+ * Admin UI → Supabase RPC/RLS → client runtime by publish/active state.
+ */
+export const ADMIN_CHANGE_CLASSES = {
+  /** Client training/nutrition/membership operational edits — Runtime only. */
+  contentPublish: "ADMIN_CONTENT_CHANGE_NO_CODE_DEPLOY",
+  /** New UI/feature/bugfix in the admin or client apps. */
+  softwareDeploy: "SOFTWARE_FEATURE_CHANGE_CODE_DEPLOY_REQUIRED",
+  /** Tables, RPCs, RLS, enums. */
+  schemaMigration: "DATABASE_SCHEMA_CHANGE_MIGRATION_REQUIRED",
+} as const;
+
 export const CONTENT_PUBLISHING_STATES = ["draft", "review", "published", "archived"] as const;
 
 export const NOTIFICATION_CHANNELS = {

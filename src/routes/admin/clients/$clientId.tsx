@@ -36,6 +36,7 @@ import { normalizeClientAccountStatus } from "@/lib/admin/admin-client-account";
 import { ClientMembershipWorkspace } from "@/components/admin/ClientMembershipWorkspace";
 import { ClientActivityPanel } from "@/components/admin/ClientActivityPanel";
 import { ClientTrainingWorkspace } from "@/components/admin/ClientTrainingWorkspace";
+import { ClientMobileQuickActions } from "@/components/admin/ClientMobileQuickActions";
 
 const ClientNutritionWorkspace = lazy(() =>
   import("@/components/admin/ClientNutritionWorkspace").then((module) => ({
@@ -324,6 +325,7 @@ function AdminClient360Page() {
             </Suspense>
           ) : null}
 
+          <ClientMobileQuickActions clientId={clientId} />
         </>
       ) : null}
 

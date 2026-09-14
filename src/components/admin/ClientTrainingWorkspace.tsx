@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ClientTrainingGoalCard } from "@/components/admin/ClientTrainingGoalCard";
 import { ClientProgressionStrategyCard } from "@/components/admin/ClientProgressionStrategyCard";
+import { TrainingToolCard, type TrainingToolCardTone } from "@/components/admin/TrainingToolCard";
 import {
   AdminCard,
   AdminEmptyState,
@@ -23,17 +24,22 @@ import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import {
   assignAdminClientProgram,
   assignGeneratedV2Program,
+  createAdminClientProgramDraft,
+  discardAdminClientProgramDraft,
   endAdminClientProgram,
   getAdminClientAssignment,
   listAdminClientAssignments,
   listAdminClientSetLogs,
+  publishAdminClientProgramDraft,
   recordAdminAdaptiveDecision,
+  saveAdminClientAssignmentDay,
   saveAdminClientAssignmentExercises,
   type AdminAssignmentDetail,
   type AdminAssignmentExercise,
   type AdminAssignmentSummary,
   type AdminSetLogRow,
 } from "@/lib/admin/admin-client-training-api";
+import { AssignmentPublishBar } from "@/components/admin/AssignmentPublishBar";
 import {
   ASSIGNMENT_HISTORY_FILTERS,
   buildReplaceConfirmationBody,
@@ -110,10 +116,13 @@ import {
   mergeEvaluationReviews,
   parseProgressionStrategy,
   programSourceLabel,
+  progressionStatusLabel,
+  progressionStrategyLabel,
   resolveProgramSource,
   PROGRESSION_STRATEGY_OPTIONS,
   type ProgressionStrategy,
 } from "@/lib/platform/progression-strategy";
+import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
 import { CLIENT_LOOP_PROGRAM_BLOCKED } from "@/lib/platform/client-loop/types";
 import {
   applyCoachOverride,
@@ -265,6 +274,8 @@ export function ClientTrainingWorkspace({
   const [clientStrategyDays, setClientStrategyDays] = useState<number | null>(null);
   const [clientStrategyTrainingType, setClientStrategyTrainingType] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
+  const [previewAsClient, setPreviewAsClient] = useState(false);
+  const [publishBusy, setPublishBusy] = useState(false);
   const templateQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(editing && draft && detail && JSON.stringify(draft.weeks) !== JSON.stringify(detail.weeks));
   const guard = useUnsavedNavigation(dirty, onConfirm);
@@ -379,7 +390,7 @@ export function ClientTrainingWorkspace({
     const row = await getAdminClientAssignment(id);
     setDetail(row);
     setDraft(row);
-    setEditing(false);
+    setEditing(row.status === "draft");
     setSaveState("saved");
   };
 
@@ -391,12 +402,21 @@ export function ClientTrainingWorkspace({
       id ? getAdminClientAssignment(id) : Promise.resolve(null),
       listAdminClientAssignments(clientId, 0),
     ])
-      .then(([row, list]) => {
-        setDetail(row);
-        setDraft(row);
+      .then(async ([row, list]) => {
         setHistory(list.rows);
         setHistoryTotal(list.totalCount);
         setHistoryOffset(0);
+        const draftRow = list.rows.find((item) => item.status === "draft");
+        if (draftRow) {
+          const full = await getAdminClientAssignment(draftRow.id);
+          setDetail(full);
+          setDraft(full);
+          setEditing(true);
+          return;
+        }
+        setDetail(row);
+        setDraft(row);
+        setEditing(false);
       })
       .catch((err) => {
         console.error(err);
@@ -595,6 +615,10 @@ export function ClientTrainingWorkspace({
 
   const openExerciseForReview = (externalId: string, replace: boolean) => {
     if (!detail) return;
+    if (detail.status !== "draft") {
+      setError("أنشئ مسودة أولاً قبل تعديل أو استبدال تمرين.");
+      return;
+    }
     const coords = findAssignmentExerciseCoords(detail, externalId);
     setDraft(detail);
     setEditing(true);
@@ -625,8 +649,115 @@ export function ClientTrainingWorkspace({
     return exercises;
   };
 
+  const assignmentPublishMode =
+    !detail ? "none" : detail.status === "draft" ? "draft" : "published";
+  const editionLabel =
+    detail?.status === "draft"
+      ? "مسودة — غير مرئية للعميل"
+      : detail
+        ? `منشور · ${assignmentStatusLabel(detail.status)}`
+        : null;
+
+  const createProgramDraft = async () => {
+    const sourceId = overview.assignment?.id ?? detail?.id;
+    if (!sourceId) return;
+    setPublishBusy(true);
+    setError(null);
+    try {
+      const next = await createAdminClientProgramDraft(sourceId);
+      setDetail(next);
+      setDraft(next);
+      setEditing(true);
+      setSaveState("saved");
+      setPreviewAsClient(false);
+      const list = await listAdminClientAssignments(clientId, 0);
+      setHistory(list.rows);
+      setHistoryTotal(list.totalCount);
+    } catch (err) {
+      console.error(err);
+      setError(translateLibraryError(err));
+    } finally {
+      setPublishBusy(false);
+    }
+  };
+
+  const publishProgramDraft = async () => {
+    if (!detail || detail.status !== "draft") return;
+    onConfirm({
+      title: "نشر المسودة للعميل؟",
+      body: "سيصبح هذا الإصدار هو النسخة الحالية. النسخة المنشورة السابقة تُؤرشف ولا تُعدَّل destructively.",
+      confirmLabel: "Publish",
+      tone: "danger",
+      onConfirm: () => {
+        void (async () => {
+          setPublishBusy(true);
+          setError(null);
+          try {
+            const next = await publishAdminClientProgramDraft(detail.id);
+            setDetail(next);
+            setDraft(next);
+            setEditing(false);
+            setPreviewAsClient(false);
+            setSaveState("saved");
+            await onOverviewRefresh();
+            const list = await listAdminClientAssignments(clientId, 0);
+            setHistory(list.rows);
+            setHistoryTotal(list.totalCount);
+          } catch (err) {
+            console.error(err);
+            setError(translateLibraryError(err));
+          } finally {
+            setPublishBusy(false);
+          }
+        })();
+      },
+    });
+  };
+
+  const discardProgramDraft = async () => {
+    if (!detail || detail.status !== "draft") return;
+    onConfirm({
+      title: "تجاهل المسودة؟",
+      body: "ستُحذف المسودة غير المنشورة. النسخة المنشورة للعميل تبقى كما هي.",
+      confirmLabel: "تجاهل المسودة",
+      tone: "danger",
+      onConfirm: () => {
+        void (async () => {
+          setPublishBusy(true);
+          setError(null);
+          try {
+            await discardAdminClientProgramDraft(detail.id);
+            setPreviewAsClient(false);
+            const publishedId = overview.assignment?.id;
+            if (publishedId && publishedId !== detail.id) {
+              await loadAssignment(publishedId);
+            } else {
+              setDetail(null);
+              setDraft(null);
+              setEditing(false);
+            }
+            await onOverviewRefresh();
+            const list = await listAdminClientAssignments(clientId, 0);
+            setHistory(list.rows);
+            setHistoryTotal(list.totalCount);
+          } catch (err) {
+            console.error(err);
+            setError(translateLibraryError(err));
+          } finally {
+            setPublishBusy(false);
+          }
+        })();
+      },
+    });
+  };
+
   const saveDraft = async (reason?: string) => {
     if (!draft || !detail) return;
+    if (detail.status !== "draft") {
+      setError("عدّل عبر مسودة فقط — أنشئ مسودة قبل الحفظ.");
+      setSaveState("failed");
+      return;
+    }
     const invalid = draft.weeks
       .flatMap((week) => week.days.flatMap((day) => day.exercises))
       .map((exercise) => validateClientPrescription(exercise))
@@ -649,7 +780,7 @@ export function ClientTrainingWorkspace({
       onConfirm({
         title: "تعديل ذو أثر مرتفع",
         body: impact.reasons.join(" ") || "هذا التعديل يحتاج تأكيد المدرب وسبباً قبل الحفظ.",
-        confirmLabel: "حفظ مع التأكيد",
+        confirmLabel: "حفظ المسودة",
         tone: "danger",
         reasonRequired: true,
         reasonLabel: "سبب التعديل",
@@ -674,14 +805,41 @@ export function ClientTrainingWorkspace({
     );
     const removeIds = [...beforeIds].filter((id) => !afterIds.has(id));
     try {
-      const next = await saveAdminClientAssignmentExercises(detail.id, flattenExercises(draft), detail.updated_at, {
+      // Persist day meta (title/type/duration) then exercises — draft-only RPCs.
+      let expectedUpdatedAt = detail.updated_at;
+      for (const week of draft.weeks) {
+        for (const day of week.days) {
+          const before = detail.weeks
+            .flatMap((w) => w.days)
+            .find((d) => d.id === day.id);
+          if (
+            before &&
+            (before.title_ar !== day.title_ar ||
+              before.day_type !== day.day_type ||
+              before.estimated_minutes !== day.estimated_minutes)
+          ) {
+            const afterDay = await saveAdminClientAssignmentDay(
+              detail.id,
+              day.id,
+              {
+                title_ar: day.title_ar,
+                day_type: day.day_type === "rest" ? "rest" : "workout",
+                estimated_minutes: day.estimated_minutes,
+              },
+              expectedUpdatedAt,
+            );
+            expectedUpdatedAt = afterDay.updated_at;
+          }
+        }
+      }
+      const next = await saveAdminClientAssignmentExercises(detail.id, flattenExercises(draft), expectedUpdatedAt, {
         removeIds,
         reason: reason || saveReason || null,
       });
       setDetail(next);
       setDraft(next);
       setSaveState("saved");
-      setEditing(false);
+      setEditing(true);
       setSaveReason("");
     } catch (err) {
       console.error(err);
@@ -1318,9 +1476,21 @@ export function ClientTrainingWorkspace({
                 <button type="button" className="cc-btn cc-btn--ghost" onClick={openChangeProgram}>
                   تعيين برنامج
                 </button>
-                {detail.snapshot_complete && (detail.status === "active" || detail.status === "scheduled") ? (
-                  <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setEditing(true)}>
-                    تعديل البرنامج
+                {detail.snapshot_complete &&
+                (detail.status === "active" || detail.status === "scheduled" || detail.status === "draft") ? (
+                  <button
+                    type="button"
+                    className="cc-btn cc-btn--ghost"
+                    disabled={publishBusy}
+                    onClick={() => {
+                      if (detail.status === "draft") {
+                        setEditing(true);
+                        return;
+                      }
+                      void createProgramDraft();
+                    }}
+                  >
+                    {detail.status === "draft" ? "فتح المسودة" : "إنشاء مسودة للتعديل"}
                   </button>
                 ) : null}
                 {(detail.status === "active" || detail.status === "scheduled") ? (
@@ -1330,7 +1500,7 @@ export function ClientTrainingWorkspace({
                 ) : null}
               </div>
               <p className="cc-muted cc-training-cc__hint">
-                التعيين من الأدمن حي فوراً في التطبيق — بدون نشر أو برودكشن.
+                حفظ المسودة لا يغيّر ما يراه العميل. Publish فقط يفعّل النسخة — بدون code deploy.
               </p>
             </div>
           </div>
@@ -1702,11 +1872,35 @@ export function ClientTrainingWorkspace({
         </AdminCard>
       ) : null}
 
+      {detail?.snapshot_complete ? (
+        <AssignmentPublishBar
+          mode={assignmentPublishMode}
+          editionLabel={editionLabel}
+          dirty={dirty}
+          saving={saveState === "saving"}
+          publishing={publishBusy}
+          previewOpen={previewAsClient}
+          onCreateDraft={() => void createProgramDraft()}
+          onSaveDraft={() => void saveDraft()}
+          onPreview={() => {
+            setPreviewAsClient(true);
+            setEditing(true);
+          }}
+          onClosePreview={() => setPreviewAsClient(false)}
+          onPublish={() => void publishProgramDraft()}
+          onDiscardDraft={() => void discardProgramDraft()}
+        />
+      ) : null}
+
       {editing && draft?.snapshot_complete ? (
         <AdminCard>
           <header className="cc-edit-header">
-            <h2 className="cc-section__title">محرر نسخة العميل</h2>
-            <span className="cc-badge-client-edit">CLIENT-SPECIFIC EDIT</span>
+            <h2 className="cc-section__title">
+              {previewAsClient ? "معاينة كما يراها العميل" : "محرر مسودة العميل"}
+            </h2>
+            <span className="cc-badge-client-edit">
+              {detail?.status === "draft" ? "DRAFT — NOT LIVE" : "CLIENT-SPECIFIC EDIT"}
+            </span>
           </header>
           <p>
             تعديل برنامج العميل — {overview.full_name || "العميل"} · المصدر:{" "}
@@ -1717,62 +1911,127 @@ export function ClientTrainingWorkspace({
               }),
             )}
           </p>
-          <p className="cc-muted">هذه الحقول خاصة بلقطة العميل. تعديل القالب الأصلي لا يحدث من هنا.</p>
-          {dirty ? (
-            <div className="cc-sticky-save">
-              <span>● لديك تعديلات غير محفوظة</span>
-              <AdminSaveState state={saveState} />
-              <button
-                type="button"
-                className="cc-btn"
-                onClick={() =>
-                  guard(() => {
-                    setDraft(detail);
-                    setEditing(false);
-                    setSaveState("saved");
-                  })
-                }
-              >
-                إلغاء
-              </button>
-              <button type="button" className="cc-btn cc-btn--primary" disabled={saveState === "saving"} onClick={() => void saveDraft()}>
-                حفظ التعديلات
-              </button>
-            </div>
-          ) : saveState === "saved" ? (
-            <p className="cc-muted">✓ تم حفظ تعديلات برنامج العميل</p>
-          ) : saveState === "failed" ? (
-            <div className="cc-sticky-save">
-              <span>تعذر حفظ التعديلات</span>
-              <button type="button" className="cc-btn cc-btn--primary" onClick={() => void saveDraft()}>
-                إعادة المحاولة
-              </button>
-            </div>
+          <p className="cc-muted">
+            {detail?.status === "draft"
+              ? "المسودة مستقلة عن النسخة المنشورة. العميل لا يراها حتى Publish."
+              : "النسخة المنشورة للقراءة فقط — أنشئ مسودة لتعديلها."}
+          </p>
+          {saveState === "failed" ? (
+            <p className="cc-field__error" role="alert">
+              تعذر حفظ المسودة — أعد المحاولة من شريط النشر.
+            </p>
           ) : null}
           {draft.weeks.map((week, weekIndex) => (
             <section key={week.id} className="cc-week">
               <strong>الأسبوع {week.week_number}</strong>
               {week.days.map((day, dayIndex) => {
                 const presentation = sessionPresentationForDay(day);
+                const readOnly = previewAsClient || detail?.status !== "draft";
                 return (
                 <div key={day.id} className={day.day_type === "workout" ? "cc-day" : "cc-day is-rest"}>
                   <div className="cc-ing-head">
                     <span>
                       {day.title_ar || presentation.displayNameAr} · {presentation.displayNameAr} · {presentation.exerciseCount} تمارين
                     </span>
-                    {day.day_type === "workout" ? (
+                    {!readOnly && day.day_type === "workout" ? (
                       <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setPickerOpen({ week: weekIndex, day: dayIndex })}>
                         إضافة تمرين
                       </button>
                     ) : (
-                      <span className="cc-muted">راحة</span>
+                      <span className="cc-muted">{day.day_type === "rest" ? "راحة" : null}</span>
                     )}
                   </div>
+                  {!readOnly ? (
+                    <div className="cc-day-meta-edit">
+                      <label>
+                        نوع اليوم
+                        <select
+                          value={day.day_type === "rest" ? "rest" : "workout"}
+                          onChange={(event) => {
+                            const day_type = event.target.value === "rest" ? "rest" : "workout";
+                            setDraft({
+                              ...draft,
+                              weeks: draft.weeks.map((row, w) =>
+                                w !== weekIndex
+                                  ? row
+                                  : {
+                                      ...row,
+                                      days: row.days.map((item, d) =>
+                                        d !== dayIndex ? item : { ...item, day_type },
+                                      ),
+                                    },
+                              ),
+                            });
+                            setSaveState("unsaved");
+                          }}
+                        >
+                          <option value="workout">تدريب</option>
+                          <option value="rest">راحة</option>
+                        </select>
+                      </label>
+                      <label>
+                        عنوان الحصة
+                        <input
+                          value={day.title_ar ?? ""}
+                          onChange={(event) => {
+                            const title_ar = event.target.value;
+                            setDraft({
+                              ...draft,
+                              weeks: draft.weeks.map((row, w) =>
+                                w !== weekIndex
+                                  ? row
+                                  : {
+                                      ...row,
+                                      days: row.days.map((item, d) =>
+                                        d !== dayIndex ? item : { ...item, title_ar },
+                                      ),
+                                    },
+                              ),
+                            });
+                            setSaveState("unsaved");
+                          }}
+                        />
+                      </label>
+                      <label>
+                        المدة (د)
+                        <input
+                          type="number"
+                          min={0}
+                          value={day.estimated_minutes ?? ""}
+                          onChange={(event) => {
+                            const estimated_minutes = event.target.value
+                              ? Number(event.target.value)
+                              : null;
+                            setDraft({
+                              ...draft,
+                              weeks: draft.weeks.map((row, w) =>
+                                w !== weekIndex
+                                  ? row
+                                  : {
+                                      ...row,
+                                      days: row.days.map((item, d) =>
+                                        d !== dayIndex ? item : { ...item, estimated_minutes },
+                                      ),
+                                    },
+                              ),
+                            });
+                            setSaveState("unsaved");
+                          }}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
                   {day.exercises.map((exercise, exerciseIndex) => (
                     <div key={exercise.id || `${exercise.exercise_id}-${exerciseIndex}`} className="cc-ex-row">
                       <span>
                         {exercise.exercise_name_ar} <span dir="ltr">{exercise.exercise_name_en}</span>
                       </span>
+                      {readOnly ? (
+                        <span className="cc-muted">
+                          {exercise.sets}×{formatRepsLabel(exercise)} · راحة {exercise.rest_seconds}ث
+                        </span>
+                      ) : (
+                        <>
                       <label>
                         مجموعات
                         <input
@@ -1890,16 +2149,13 @@ export function ClientTrainingWorkspace({
                       <button
                         type="button"
                         className="cc-btn cc-btn--ghost"
-                        onClick={() => {
-                          setPickerQuery("");
-                          setPickerOpen({ week: weekIndex, day: dayIndex, exercise: exerciseIndex });
-                        }}
+                        onClick={() => setPickerOpen({ week: weekIndex, day: dayIndex, exercise: exerciseIndex })}
                       >
-                        استبدال التمرين
+                        استبدال
                       </button>
                       <button
                         type="button"
-                        className="cc-btn cc-btn--ghost"
+                        className="cc-btn"
                         onClick={() => {
                           setDraft({
                             ...draft,
@@ -1911,7 +2167,10 @@ export function ClientTrainingWorkspace({
                                     days: row.days.map((item, d) =>
                                       d !== dayIndex
                                         ? item
-                                        : { ...item, exercises: item.exercises.filter((_, i) => i !== exerciseIndex) },
+                                        : {
+                                            ...item,
+                                            exercises: item.exercises.filter((_, i) => i !== exerciseIndex),
+                                          },
                                     ),
                                   },
                             ),
@@ -1921,6 +2180,8 @@ export function ClientTrainingWorkspace({
                       >
                         حذف
                       </button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1928,320 +2189,389 @@ export function ClientTrainingWorkspace({
               })}
             </section>
           ))}
-          <div className="cc-editor-toolbar">
-            <button type="button" className="cc-btn cc-btn--primary" disabled={saveState === "saving"} onClick={() => void saveDraft()}>
-              حفظ نسخة العميل
-            </button>
-            <button
-              type="button"
-              className="cc-btn"
-              onClick={() =>
-                guard(() => {
-                  setDraft(detail);
-                  setEditing(false);
-                  setSaveState("saved");
-                })
-              }
-            >
-              إلغاء
-            </button>
-          </div>
         </AdminCard>
       ) : null}
 
-      <details className="cc-training-cc__details">
-        <summary>هدف التدريب</summary>
-        <ClientTrainingGoalCard overview={overview} onUpdated={onOverviewRefresh} onConfirm={onConfirm} />
-      </details>
-
-      <details className="cc-training-cc__details">
-        <summary>مركز تحكم التعيين والتوصية</summary>
-        <ClientTrainingAutoAssignPanel
-          clientId={clientId}
-          activeTemplateSlug={detail?.name_ar || null}
-          assignmentVersion={detail?.template_version ?? null}
-          progressionStrategy={detail?.progression_strategy ?? null}
-          assignmentSourceLabel={programSource}
-          hasActiveProgram={Boolean(
+      <div className="cc-tool-cards" aria-label="أدوات التدريب المتقدمة">
+        {(() => {
+          const goalPresentation = presentClientTrainingGoal(overview.goal);
+          const hasProgram = Boolean(
             detail && (detail.status === "active" || detail.status === "scheduled"),
-          )}
-          onAssigned={() => {
-            void onOverviewRefresh().then(() => {
-              void listAdminClientAssignments(clientId, 0).then((list) => {
-                setHistory(list.rows);
-                setHistoryTotal(list.totalCount);
-                const first = list.rows.find((row) => row.status === "active" || row.status === "scheduled");
-                if (first) void loadAssignment(first.id);
-              });
-            });
-          }}
-        />
-        <AdminCard>
-          <TemplateRecommendationPanel
-            clientId={clientId}
-            goal={overview.goal}
-            trainingType={clientStrategyTrainingType ?? overview.training_type}
-            level={clientStrategyLevel ?? detail?.level ?? null}
-            daysPerWeek={clientStrategyDays ?? detail?.days_per_week ?? null}
-            catalogDetails={recommendationCatalog}
-            catalogIncludesFixtures={false}
-            includeInMemoryPilots={false}
-            onPreviewRecommended={(templateId) => {
-              setRecommendationPreviewError(null);
-              setRecommendationPreview(null);
-              if (templateId.startsWith("tpl-")) {
-                setRecommendationPreviewError(
-                  "المعاينة من فهرس التطوير (fixture) — القالب غير مخزّن في قاعدة البيانات بعد.",
-                );
-                return;
-              }
-              void getAdminProgramTemplate(templateId)
-                .then((row) => setRecommendationPreview(row))
-                .catch((err) => setRecommendationPreviewError(translateLibraryError(err)));
-            }}
-            onAssignClick={(templateId) => {
-              setRecommendationPreview(null);
-              setRecommendationPreviewError(null);
-              if (templateId.startsWith("tpl-")) {
-                openChangeProgram();
-                return;
-              }
-              void getAdminProgramTemplate(templateId)
-                .then((full) => {
-                  setPreview(full);
-                  setAssignStep("preview");
-                })
-                .catch((err) => setError(translateLibraryError(err)));
-            }}
-          />
-          {recommendationPreviewError ? (
-            <p className="tpl-rec__goal-note" role="status">
-              {recommendationPreviewError}
-            </p>
-          ) : null}
-          {recommendationPreview ? (
-            <div className="tpl-rec-preview-wrap">
-              <TemplateStructurePreview detail={recommendationPreview} />
-            </div>
-          ) : null}
-          <div className="cc-editor-toolbar">
-            <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
-              {v2Busy ? "جاري توليد V2…" : "إعادة التوليد (محرك الاستراتيجية)"}
-            </button>
-          </div>
-        </AdminCard>
-      </details>
-
-      <details className="cc-training-cc__details">
-        <summary>استراتيجية التطور</summary>
-        <ClientProgressionStrategyCard
-          assignmentId={detail?.id ?? null}
-          sourceTemplateId={detail?.source_template_id ?? null}
-          generationSource={detail?.generation_source ?? null}
-          strategy={progressionView?.stored.strategy ?? parseProgressionStrategy(detail?.progression_strategy)}
-          status={progressionView?.status ?? "WAITING_FOR_DATA"}
-          lastEvaluationAt={detail?.last_progression_evaluation_at ?? null}
-          reviews={progressionView?.reviews ?? []}
-          history={progressionView?.history ?? []}
-          loading={false}
-          saving={strategySaving}
-          error={strategyError}
-          onChangeStrategy={changeProgressionStrategy}
-          onKeepExercise={keepProgressionExercise}
-          onReplaceExercise={(externalId) => openExerciseForReview(externalId, true)}
-          onReviewExercise={(externalId) => openExerciseForReview(externalId, false)}
-        />
-      </details>
-
-      <details className="cc-training-cc__details">
-        <summary>تعديلات المدرب (Coach Override)</summary>
-        <AdminCard>
-          <p className="cc-muted">
-            اطلب تعديلاً على البرنامج الحالي — المحرك يراجع الأثر والسلامة قبل أي تعيين جديد. لا يتم تعديل اللقطة مباشرة.
-          </p>
-          {!detail ? (
-            <AdminEmptyState title="لا برنامج نشط" body="عيّن برنامجاً أولاً قبل طلب تعديلات مخصصة." />
-          ) : (
+          );
+          const progressionStatus = progressionView?.status ?? "WAITING_FOR_DATA";
+          const progressionStrategy = progressionView?.stored.strategy ?? parseProgressionStrategy(detail?.progression_strategy);
+          const assignTone: TrainingToolCardTone = !hasProgram
+            ? "attention"
+            : coachManaged
+              ? "info"
+              : "ok";
+          const assignStatus = !hasProgram
+            ? "يحتاج تدخل"
+            : coachManaged
+              ? "يديره المدرب"
+              : "يعمل جيداً";
+          const assignPreview = !hasProgram
+            ? "لا يوجد برنامج نشط — عيّن قالباً أو شغّل التعيين التلقائي"
+            : `${detail?.name_ar ?? "برنامج نشط"} · ${programSource}`;
+          const progressionTone: TrainingToolCardTone =
+            progressionStatus === "ACTIVE"
+              ? "ok"
+              : progressionStatus === "REVIEW_REQUIRED"
+                ? "attention"
+                : progressionStatus === "WAITING_FOR_DATA"
+                  ? "warn"
+                  : "neutral";
+          return (
             <>
-              <div className="cc-form-grid">
-                <AdminSelect value={overrideType} onChange={(v) => { setOverrideType(v as CoachOverrideType); setOverrideUi("editing"); }}>
-                  <option value="SESSION_DURATION_CHANGE">مدة الجلسة</option>
-                  <option value="TRAINING_FREQUENCY_CHANGE">تكرار أسبوعي</option>
-                  <option value="TRAINING_DAYS_CHANGE">عدد أيام التدريب</option>
-                  <option value="PREFERRED_WEEKDAYS_CHANGE">أيام التفضيل</option>
-                  <option value="EXERCISE_REPLACE">استبدال تمرين</option>
-                  <option value="EXERCISE_EXCLUDE">استبعاد تمرين</option>
-                  <option value="EXERCISE_LOCK">قفل تمرين</option>
-                  <option value="TRAINING_LOCATION_CHANGE">بيئة التدريب</option>
-                  <option value="TEMPORARY_CONSTRAINT">قيود مؤقتة</option>
-                  <option value="AVAILABLE_EQUIPMENT_CHANGE">معدات متاحة</option>
-                </AdminSelect>
-                {(overrideType === "TRAINING_FREQUENCY_CHANGE" || overrideType === "TRAINING_DAYS_CHANGE") ? (
-                  <AdminField label="أيام/أسبوع" htmlFor="override_days">
-                    <input id="override_days" className="cc-input" value={overrideDays} onChange={(e) => setOverrideDays(e.target.value)} />
-                  </AdminField>
-                ) : null}
-                {overrideType === "SESSION_DURATION_CHANGE" ? (
-                  <AdminField label="دقائق" htmlFor="override_duration">
-                    <input id="override_duration" className="cc-input" value={overrideDuration} onChange={(e) => setOverrideDuration(e.target.value)} />
-                  </AdminField>
-                ) : null}
-                {(overrideType === "EXERCISE_REPLACE" || overrideType === "EXERCISE_EXCLUDE" || overrideType === "EXERCISE_LOCK") ? (
-                  <>
-                    <AdminField label="من (external_id)" htmlFor="override_from">
-                      <input id="override_from" className="cc-input" dir="ltr" value={overrideExerciseFrom} onChange={(e) => setOverrideExerciseFrom(e.target.value)} />
-                    </AdminField>
-                    {overrideType === "EXERCISE_REPLACE" ? (
-                      <AdminField label="إلى (external_id)" htmlFor="override_to">
-                        <input id="override_to" className="cc-input" dir="ltr" value={overrideExerciseTo} onChange={(e) => setOverrideExerciseTo(e.target.value)} />
-                      </AdminField>
-                    ) : null}
-                  </>
-                ) : null}
-                {overrideType === "TRAINING_LOCATION_CHANGE" ? (
-                  <AdminField label="الموقع المطلوب" htmlFor="override_location">
-                    <AdminSelect value={overrideLocation} onChange={(v) => setOverrideLocation(v as TrainingStrategyLocation)}>
-                      <option value="HOME">منزل</option>
-                      <option value="GYM">نادي</option>
-                      <option value="BOTH">منزل + نادي</option>
-                    </AdminSelect>
-                  </AdminField>
-                ) : null}
-                {overrideType === "PREFERRED_WEEKDAYS_CHANGE" ? (
-                  <div className="cc-weekday-picker">
-                    <span className="cc-filter__label">أيام التفضيل</span>
-                    <div className="cc-weekday-picker__options">
-                      {WEEKDAY_CALENDAR_ORDER.map((day) => (
-                        <label key={day} className="cc-filter cc-filter--checkbox">
-                          <input
-                            type="checkbox"
-                            checked={overridePreferredWeekdays.includes(day)}
-                            onChange={() => toggleWeekday(day)}
-                          />
-                          <span>{WEEKDAY_LABELS_AR[day]}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {overrideType === "AVAILABLE_EQUIPMENT_CHANGE" ? (
-                  <div className="cc-equipment-picker">
-                    <span className="cc-filter__label">المعدات المتاحة</span>
-                    <div className="cc-equipment-picker__options">
-                      {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
-                        <label key={item} className="cc-filter cc-filter--checkbox">
-                          <input
-                            type="checkbox"
-                            checked={overrideEquipment.includes(item)}
-                            onChange={() => toggleEquipment(item, setOverrideEquipment, overrideEquipment)}
-                          />
-                          <span dir="ltr">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {overrideType === "TEMPORARY_CONSTRAINT" ? (
-                  <>
-                    <AdminField label="بيئة مؤقتة" htmlFor="override_constraint_env">
-                      <AdminSelect
-                        value={overrideConstraintEnv}
-                        onChange={(v) => setOverrideConstraintEnv(v as typeof overrideConstraintEnv)}
-                      >
-                        <option value="home">منزل</option>
-                        <option value="gym">نادي</option>
-                        <option value="anywhere">أي مكان</option>
-                      </AdminSelect>
-                    </AdminField>
-                    <AdminField label="صالح حتى" htmlFor="override_constraint_until">
-                      <input
-                        id="override_constraint_until"
-                        className="cc-input"
-                        type="date"
-                        value={overrideConstraintUntil}
-                        onChange={(e) => setOverrideConstraintUntil(e.target.value)}
-                      />
-                    </AdminField>
-                    <div className="cc-equipment-picker">
-                      <span className="cc-filter__label">معدات القيد المؤقت</span>
-                      <div className="cc-equipment-picker__options">
-                        {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
-                          <label key={item} className="cc-filter cc-filter--checkbox">
-                            <input
-                              type="checkbox"
-                              checked={overrideConstraintEquipment.includes(item)}
-                              onChange={() =>
-                                toggleEquipment(item, setOverrideConstraintEquipment, overrideConstraintEquipment)
-                              }
-                            />
-                            <span dir="ltr">{item}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : null}
-                <AdminField label="ملاحظة المدرب (اختياري)" htmlFor="override_note">
-                  <input id="override_note" className="cc-input" value={overrideNote} onChange={(e) => setOverrideNote(e.target.value)} />
-                </AdminField>
-              </div>
-              {overrideReview ? (
-                <MatrixImpactCard
-                  review={overrideReview}
-                  overrideType={overrideType}
-                  coachNote={overrideNote}
-                  busy={overrideBusy}
-                  applying={overrideUi === "applying"}
-                  showAlternatives={showOverrideAlternatives}
-                  onApply={() => confirmCoachOverride()}
-                  onUseAlternative={applyOverrideAlternative}
-                  onToggleAlternatives={() => setShowOverrideAlternatives((open) => !open)}
-                  onCancel={resetOverrideReview}
+              <TrainingToolCard
+                title="هدف التدريب"
+                preview={
+                  goalPresentation.status === "MISSING"
+                    ? "لم يُحدَّد هدف بعد من الكويز أو الأدمن"
+                    : `هدفه: ${goalPresentation.displayAr}`
+                }
+                statusLabel={
+                  goalPresentation.status === "MISSING"
+                    ? "غير محدد"
+                    : goalPresentation.status === "UNMAPPED"
+                      ? "يحتاج مراجعة"
+                      : "جاهز"
+                }
+                tone={
+                  goalPresentation.status === "MISSING"
+                    ? "attention"
+                    : goalPresentation.status === "UNMAPPED"
+                      ? "warn"
+                      : "ok"
+                }
+              >
+                <ClientTrainingGoalCard overview={overview} onUpdated={onOverviewRefresh} onConfirm={onConfirm} />
+              </TrainingToolCard>
+
+              <TrainingToolCard
+                title="مركز تحكم التعيين والتوصية"
+                preview={assignPreview}
+                statusLabel={assignStatus}
+                tone={assignTone}
+              >
+                <ClientTrainingAutoAssignPanel
+                  clientId={clientId}
+                  activeTemplateSlug={detail?.name_ar || null}
+                  assignmentVersion={detail?.template_version ?? null}
+                  progressionStrategy={detail?.progression_strategy ?? null}
+                  assignmentSourceLabel={programSource}
+                  hasActiveProgram={hasProgram}
+                  onAssigned={() => {
+                    void onOverviewRefresh().then(() => {
+                      void listAdminClientAssignments(clientId, 0).then((list) => {
+                        setHistory(list.rows);
+                        setHistoryTotal(list.totalCount);
+                        const first = list.rows.find((row) => row.status === "active" || row.status === "scheduled");
+                        if (first) void loadAssignment(first.id);
+                      });
+                    });
+                  }}
                 />
+                <AdminCard>
+                  <TemplateRecommendationPanel
+                    clientId={clientId}
+                    goal={overview.goal}
+                    trainingType={clientStrategyTrainingType ?? overview.training_type}
+                    level={clientStrategyLevel ?? detail?.level ?? null}
+                    daysPerWeek={clientStrategyDays ?? detail?.days_per_week ?? null}
+                    catalogDetails={recommendationCatalog}
+                    catalogIncludesFixtures={false}
+                    includeInMemoryPilots={false}
+                    onPreviewRecommended={(templateId) => {
+                      setRecommendationPreviewError(null);
+                      setRecommendationPreview(null);
+                      if (templateId.startsWith("tpl-")) {
+                        setRecommendationPreviewError(
+                          "المعاينة من فهرس التطوير (fixture) — القالب غير مخزّن في قاعدة البيانات بعد.",
+                        );
+                        return;
+                      }
+                      void getAdminProgramTemplate(templateId)
+                        .then((row) => setRecommendationPreview(row))
+                        .catch((err) => setRecommendationPreviewError(translateLibraryError(err)));
+                    }}
+                    onAssignClick={(templateId) => {
+                      setRecommendationPreview(null);
+                      setRecommendationPreviewError(null);
+                      if (templateId.startsWith("tpl-")) {
+                        openChangeProgram();
+                        return;
+                      }
+                      void getAdminProgramTemplate(templateId)
+                        .then((full) => {
+                          setPreview(full);
+                          setAssignStep("preview");
+                        })
+                        .catch((err) => setError(translateLibraryError(err)));
+                    }}
+                  />
+                  {recommendationPreviewError ? (
+                    <p className="tpl-rec__goal-note" role="status">
+                      {recommendationPreviewError}
+                    </p>
+                  ) : null}
+                  {recommendationPreview ? (
+                    <div className="tpl-rec-preview-wrap">
+                      <TemplateStructurePreview detail={recommendationPreview} />
+                    </div>
+                  ) : null}
+                  <div className="cc-editor-toolbar">
+                    <button type="button" className="cc-btn" disabled={v2Busy} onClick={() => void generateV2()}>
+                      {v2Busy ? "جاري توليد V2…" : "إعادة التوليد (محرك الاستراتيجية)"}
+                    </button>
+                  </div>
+                </AdminCard>
+              </TrainingToolCard>
+
+              <TrainingToolCard
+                title="استراتيجية التطور"
+                preview={
+                  hasProgram
+                    ? progressionStrategyLabel(progressionStrategy)
+                    : "لا استراتيجية بدون برنامج نشط"
+                }
+                statusLabel={
+                  hasProgram ? progressionStatusLabel(progressionStatus) : "غير مفعّلة"
+                }
+                tone={hasProgram ? progressionTone : "neutral"}
+              >
+                <ClientProgressionStrategyCard
+                  assignmentId={detail?.id ?? null}
+                  sourceTemplateId={detail?.source_template_id ?? null}
+                  generationSource={detail?.generation_source ?? null}
+                  strategy={progressionStrategy}
+                  status={progressionStatus}
+                  lastEvaluationAt={detail?.last_progression_evaluation_at ?? null}
+                  reviews={progressionView?.reviews ?? []}
+                  history={progressionView?.history ?? []}
+                  loading={false}
+                  saving={strategySaving}
+                  error={strategyError}
+                  onChangeStrategy={changeProgressionStrategy}
+                  onKeepExercise={keepProgressionExercise}
+                  onReplaceExercise={(externalId) => openExerciseForReview(externalId, true)}
+                  onReviewExercise={(externalId) => openExerciseForReview(externalId, false)}
+                />
+              </TrainingToolCard>
+
+              <TrainingToolCard
+                title="تعديلات المدرب"
+                preview={
+                  hasProgram
+                    ? "جاهز لطلب تعديل آمن على البرنامج الحالي"
+                    : "عيّن برنامجاً أولاً قبل أي تعديل مخصص"
+                }
+                statusLabel={hasProgram ? (coachManaged ? "مدرب نشط" : "متاح") : "موقوف"}
+                tone={hasProgram ? (coachManaged ? "info" : "ok") : "neutral"}
+              >
+                <AdminCard>
+                  <p className="cc-muted">
+                    اطلب تعديلاً على البرنامج الحالي — المحرك يراجع الأثر والسلامة قبل أي تعيين جديد. لا يتم تعديل اللقطة مباشرة.
+                  </p>
+                  {!detail ? (
+                    <AdminEmptyState title="لا برنامج نشط" body="عيّن برنامجاً أولاً قبل طلب تعديلات مخصصة." />
+                  ) : (
+                    <>
+                      <div className="cc-form-grid">
+                        <AdminSelect value={overrideType} onChange={(v) => { setOverrideType(v as CoachOverrideType); setOverrideUi("editing"); }}>
+                          <option value="SESSION_DURATION_CHANGE">مدة الجلسة</option>
+                          <option value="TRAINING_FREQUENCY_CHANGE">تكرار أسبوعي</option>
+                          <option value="TRAINING_DAYS_CHANGE">عدد أيام التدريب</option>
+                          <option value="PREFERRED_WEEKDAYS_CHANGE">أيام التفضيل</option>
+                          <option value="EXERCISE_REPLACE">استبدال تمرين</option>
+                          <option value="EXERCISE_EXCLUDE">استبعاد تمرين</option>
+                          <option value="EXERCISE_LOCK">قفل تمرين</option>
+                          <option value="TRAINING_LOCATION_CHANGE">بيئة التدريب</option>
+                          <option value="TEMPORARY_CONSTRAINT">قيود مؤقتة</option>
+                          <option value="AVAILABLE_EQUIPMENT_CHANGE">معدات متاحة</option>
+                        </AdminSelect>
+                        {(overrideType === "TRAINING_FREQUENCY_CHANGE" || overrideType === "TRAINING_DAYS_CHANGE") ? (
+                          <AdminField label="أيام/أسبوع" htmlFor="override_days">
+                            <input id="override_days" className="cc-input" value={overrideDays} onChange={(e) => setOverrideDays(e.target.value)} />
+                          </AdminField>
+                        ) : null}
+                        {overrideType === "SESSION_DURATION_CHANGE" ? (
+                          <AdminField label="دقائق" htmlFor="override_duration">
+                            <input id="override_duration" className="cc-input" value={overrideDuration} onChange={(e) => setOverrideDuration(e.target.value)} />
+                          </AdminField>
+                        ) : null}
+                        {(overrideType === "EXERCISE_REPLACE" || overrideType === "EXERCISE_EXCLUDE" || overrideType === "EXERCISE_LOCK") ? (
+                          <>
+                            <AdminField label="من (external_id)" htmlFor="override_from">
+                              <input id="override_from" className="cc-input" dir="ltr" value={overrideExerciseFrom} onChange={(e) => setOverrideExerciseFrom(e.target.value)} />
+                            </AdminField>
+                            {overrideType === "EXERCISE_REPLACE" ? (
+                              <AdminField label="إلى (external_id)" htmlFor="override_to">
+                                <input id="override_to" className="cc-input" dir="ltr" value={overrideExerciseTo} onChange={(e) => setOverrideExerciseTo(e.target.value)} />
+                              </AdminField>
+                            ) : null}
+                          </>
+                        ) : null}
+                        {overrideType === "TRAINING_LOCATION_CHANGE" ? (
+                          <AdminField label="الموقع المطلوب" htmlFor="override_location">
+                            <AdminSelect value={overrideLocation} onChange={(v) => setOverrideLocation(v as TrainingStrategyLocation)}>
+                              <option value="HOME">منزل</option>
+                              <option value="GYM">نادي</option>
+                              <option value="BOTH">منزل + نادي</option>
+                            </AdminSelect>
+                          </AdminField>
+                        ) : null}
+                        {overrideType === "PREFERRED_WEEKDAYS_CHANGE" ? (
+                          <div className="cc-weekday-picker">
+                            <span className="cc-filter__label">أيام التفضيل</span>
+                            <div className="cc-weekday-picker__options">
+                              {WEEKDAY_CALENDAR_ORDER.map((day) => (
+                                <label key={day} className="cc-filter cc-filter--checkbox">
+                                  <input
+                                    type="checkbox"
+                                    checked={overridePreferredWeekdays.includes(day)}
+                                    onChange={() => toggleWeekday(day)}
+                                  />
+                                  <span>{WEEKDAY_LABELS_AR[day]}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {overrideType === "AVAILABLE_EQUIPMENT_CHANGE" ? (
+                          <div className="cc-equipment-picker">
+                            <span className="cc-filter__label">المعدات المتاحة</span>
+                            <div className="cc-equipment-picker__options">
+                              {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
+                                <label key={item} className="cc-filter cc-filter--checkbox">
+                                  <input
+                                    type="checkbox"
+                                    checked={overrideEquipment.includes(item)}
+                                    onChange={() => toggleEquipment(item, setOverrideEquipment, overrideEquipment)}
+                                  />
+                                  <span dir="ltr">{item}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {overrideType === "TEMPORARY_CONSTRAINT" ? (
+                          <>
+                            <AdminField label="بيئة مؤقتة" htmlFor="override_constraint_env">
+                              <AdminSelect
+                                value={overrideConstraintEnv}
+                                onChange={(v) => setOverrideConstraintEnv(v as typeof overrideConstraintEnv)}
+                              >
+                                <option value="home">منزل</option>
+                                <option value="gym">نادي</option>
+                                <option value="anywhere">أي مكان</option>
+                              </AdminSelect>
+                            </AdminField>
+                            <AdminField label="صالح حتى" htmlFor="override_constraint_until">
+                              <input
+                                id="override_constraint_until"
+                                className="cc-input"
+                                type="date"
+                                value={overrideConstraintUntil}
+                                onChange={(e) => setOverrideConstraintUntil(e.target.value)}
+                              />
+                            </AdminField>
+                            <div className="cc-equipment-picker">
+                              <span className="cc-filter__label">معدات القيد المؤقت</span>
+                              <div className="cc-equipment-picker__options">
+                                {COACH_OVERRIDE_EQUIPMENT_OPTIONS.map((item) => (
+                                  <label key={item} className="cc-filter cc-filter--checkbox">
+                                    <input
+                                      type="checkbox"
+                                      checked={overrideConstraintEquipment.includes(item)}
+                                      onChange={() =>
+                                        toggleEquipment(item, setOverrideConstraintEquipment, overrideConstraintEquipment)
+                                      }
+                                    />
+                                    <span dir="ltr">{item}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
+                        <AdminField label="ملاحظة المدرب (اختياري)" htmlFor="override_note">
+                          <input id="override_note" className="cc-input" value={overrideNote} onChange={(e) => setOverrideNote(e.target.value)} />
+                        </AdminField>
+                      </div>
+                      {overrideReview ? (
+                        <MatrixImpactCard
+                          review={overrideReview}
+                          overrideType={overrideType}
+                          coachNote={overrideNote}
+                          busy={overrideBusy}
+                          applying={overrideUi === "applying"}
+                          showAlternatives={showOverrideAlternatives}
+                          onApply={() => confirmCoachOverride()}
+                          onUseAlternative={applyOverrideAlternative}
+                          onToggleAlternatives={() => setShowOverrideAlternatives((open) => !open)}
+                          onCancel={resetOverrideReview}
+                        />
+                      ) : null}
+                      {!overrideReview ? (
+                        <div className="cc-editor-toolbar">
+                          <button type="button" className="cc-btn cc-btn--primary" disabled={overrideBusy} onClick={() => void runCoachOverrideReview()}>
+                            {overrideBusy ? "جاري المراجعة…" : "مراجعة التعديل"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                </AdminCard>
+              </TrainingToolCard>
+
+              {signals.length > 0 ? (
+                <TrainingToolCard
+                  title="إشارات موضوعية"
+                  preview={`${signals.length} إشارة تشغيلية للعرض التقني`}
+                  statusLabel={signals.length > 2 ? "مراجعة" : "مراقبة"}
+                  tone={signals.length > 2 ? "warn" : "neutral"}
+                >
+                  <AdminCard>
+                    <ul>
+                      {signals.map((signal) => (
+                        <li key={signal}>{objectiveSignalLabel(signal)}</li>
+                      ))}
+                    </ul>
+                    <p className="cc-muted">لا تُعرض نسبة التزام أو تقييم تقدّم علمي غير معتمد.</p>
+                  </AdminCard>
+                </TrainingToolCard>
               ) : null}
-              {!overrideReview ? (
-                <div className="cc-editor-toolbar">
-                  <button type="button" className="cc-btn cc-btn--primary" disabled={overrideBusy} onClick={() => void runCoachOverrideReview()}>
-                    {overrideBusy ? "جاري المراجعة…" : "مراجعة التعديل"}
-                  </button>
-                </div>
-              ) : null}
+
+              <TrainingToolCard
+                title="تاريخ البرامج"
+                preview={
+                  historyTotal > 0
+                    ? `${historyTotal} سجلّاً — آخرها ${history[0]?.name_ar ?? "برنامج"}`
+                    : "لا سجل تعيينات بعد"
+                }
+                statusLabel={historyTotal > 0 ? `${historyTotal}` : "فارغ"}
+                tone={historyTotal > 0 ? "neutral" : "neutral"}
+              >
+                <HistoryList
+                  rows={history}
+                  total={historyTotal}
+                  offset={historyOffset}
+                  currentAssignmentId={detail?.id ?? overview.assignment?.id ?? null}
+                  onPage={(next) => {
+                    setHistoryOffset(next);
+                    void listAdminClientAssignments(clientId, next).then((list) => {
+                      setHistory(list.rows);
+                      setHistoryTotal(list.totalCount);
+                    });
+                  }}
+                  onOpen={(id) => void loadAssignment(id)}
+                />
+              </TrainingToolCard>
             </>
-          )}
-        </AdminCard>
-      </details>
-
-      {signals.length > 0 ? (
-        <details className="cc-training-cc__details">
-          <summary>إشارات موضوعية (تقني)</summary>
-          <AdminCard>
-            <ul>
-              {signals.map((signal) => (
-                <li key={signal}>{objectiveSignalLabel(signal)}</li>
-              ))}
-            </ul>
-            <p className="cc-muted">لا تُعرض نسبة التزام أو تقييم تقدّم علمي غير معتمد.</p>
-          </AdminCard>
-        </details>
-      ) : null}
-
-      <details className="cc-training-cc__details">
-        <summary>تاريخ البرامج</summary>
-        <HistoryList
-          rows={history}
-          total={historyTotal}
-          offset={historyOffset}
-          currentAssignmentId={detail?.id ?? overview.assignment?.id ?? null}
-          onPage={(next) => {
-            setHistoryOffset(next);
-            void listAdminClientAssignments(clientId, next).then((list) => {
-              setHistory(list.rows);
-              setHistoryTotal(list.totalCount);
-            });
-          }}
-          onOpen={(id) => void loadAssignment(id)}
-        />
-      </details>
+          );
+        })()}
+      </div>
 
       <AdminExercisePicker
         open={Boolean(pickerOpen && draft)}

@@ -280,6 +280,59 @@ export async function saveAdminClientAssignmentExercises(
   return mapDetail(data as Record<string, unknown>);
 }
 
+export async function createAdminClientProgramDraft(sourceAssignmentId: string) {
+  const { data, error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  }).rpc("admin_create_client_program_draft", {
+    p_source_assignment_id: sourceAssignmentId,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function publishAdminClientProgramDraft(draftAssignmentId: string, startsOn?: string | null) {
+  const { data, error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  }).rpc("admin_publish_client_program_draft", {
+    p_draft_assignment_id: draftAssignmentId,
+    p_starts_on: startsOn ?? null,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
+export async function discardAdminClientProgramDraft(draftAssignmentId: string) {
+  const { error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+  }).rpc("admin_discard_client_program_draft", {
+    p_draft_assignment_id: draftAssignmentId,
+  });
+  if (error) throw error;
+}
+
+export async function saveAdminClientAssignmentDay(
+  assignmentId: string,
+  dayId: string,
+  payload: {
+    day_type?: "workout" | "rest";
+    title_ar?: string;
+    estimated_minutes?: number | null;
+    muscle_focus?: string | null;
+  },
+  expectedUpdatedAt: string | null,
+) {
+  const { data, error } = await (supabase as unknown as {
+    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+  }).rpc("admin_save_client_assignment_day", {
+    p_assignment_id: assignmentId,
+    p_day_id: dayId,
+    p_payload: payload,
+    p_expected_updated_at: expectedUpdatedAt,
+  });
+  if (error) throw error;
+  return mapDetail(data as Record<string, unknown>);
+}
+
 export async function listAdminClientSetLogs(opts: {
   clientId: string;
   exerciseId?: string | null;
