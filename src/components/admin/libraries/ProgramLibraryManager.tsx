@@ -54,6 +54,7 @@ import {
   TEMPLATE_LEVELS,
 } from "@/lib/platform/training-templates";
 import { CANONICAL_ALL_KEYS, CANONICAL_TEMPLATE_COUNT } from "@/lib/platform/training-templates/phase9/canonical-locked-master";
+import { syncCanonicalTemplatesToLibrary } from "@/lib/admin/admin-canonical-template-sync";
 
 const CANONICAL_SLUG_SET = new Set<string>(CANONICAL_ALL_KEYS);
 
@@ -81,6 +82,8 @@ export function ProgramLibraryManager() {
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
   const [openPreview, setOpenPreview] = useState(false);
   const [showQaDemo, setShowQaDemo] = useState(false);
+  const [syncingCanonical, setSyncingCanonical] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
   const structureLocked = Boolean(draft?.is_published && !draft.archived_at);
@@ -174,6 +177,50 @@ export function ProgramLibraryManager() {
       setOpenPreview(preview);
       setSelectedId(id);
     });
+
+  const runCanonicalSync = () => {
+    setConfirm({
+      title: "استيراد ونشر القوالب المعتمدة",
+      body: `سيتم إنشاء/تحديث القوالب الناقصة من الماستر المعتمد (${CANONICAL_TEMPLATE_COUNT}) ثم نشرها للتعيين. القوالب المنشورة الحالية لن تُستبدل. بعد النشر يمكن تعيين أي قالب للعميل بأولوية المدرب.`,
+      confirmLabel: syncingCanonical ? "جاري…" : "استيراد ونشر",
+      onConfirm: () => {
+        void (async () => {
+          setSyncingCanonical(true);
+          setError(null);
+          setSyncStatus("جاري مزامنة القوالب المعتمدة…");
+          try {
+            const report = await syncCanonicalTemplatesToLibrary({
+              onProgress: (done, total, slug) => {
+                setSyncStatus(`مزامنة ${done}/${total}: ${slug}`);
+              },
+            });
+            await refreshList();
+            const failNote = report.failed.length
+              ? ` · فشل ${report.failed.length}: ${report.failed
+                  .slice(0, 3)
+                  .map((row) => row.slug)
+                  .join("، ")}`
+              : "";
+            setSyncStatus(
+              `تم: ${report.present_after}/${report.expected} منشور · جديد ${report.created} · تحديث ${report.updated} · تخطي منشور ${report.skipped_published}${failNote}`,
+            );
+            if (report.present_after < report.expected || report.failed.length) {
+              setError(
+                report.missing_exercises.length
+                  ? `بعض القوالب لم تكتمل — تمارين ناقصة في المكتبة: ${report.missing_exercises.slice(0, 8).join("، ")}`
+                  : `اكتملت المزامنة جزئيًا (${report.present_after}/${report.expected}). راجع التفاصيل أعلاه.`,
+              );
+            }
+          } catch (err) {
+            setError(translateLibraryError(err));
+            setSyncStatus(null);
+          } finally {
+            setSyncingCanonical(false);
+          }
+        })();
+      },
+    });
+  };
 
   useEffect(() => {
     if (selectedId == null) {
@@ -433,43 +480,56 @@ export function ProgramLibraryManager() {
             <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setShowQaDemo((v) => !v)}>
               {showQaDemo ? "إخفاء مراجعة التوصية" : "مراجعة حالات التوصية"}
             </button>
+            <button type="button" className="cc-btn" disabled={syncingCanonical} onClick={runCanonicalSync}>
+              {syncingCanonical ? "جاري الاستيراد…" : `استيراد ونشر المعتمدة (${CANONICAL_TEMPLATE_COUNT})`}
+            </button>
             <button type="button" className="cc-btn cc-btn--primary" onClick={() => openItem("new")}>
               برنامج جديد
             </button>
           </>
         }
       />
-      <p className="cc-contract">قالب البرنامج (PROGRAM_TEMPLATE) منفصل عن برنامج العميل المعيّن. التوصية لا تعيّن تلقائياً.</p>
+      <p className="cc-contract">
+        قالب البرنامج منفصل عن برنامج العميل. التعيين يدوي من المدرب وله الأولوية القصوى — العميل يرى البرنامج الذي يعيّنه المدرب.
+      </p>
+      {syncStatus ? <p className="cc-muted">{syncStatus}</p> : null}
+      {canonicalInLibrary < CANONICAL_TEMPLATE_COUNT ? (
+        <p className="cc-inline-alert" role="status">
+          قاعدة البيانات فيها {canonicalInLibrary.toLocaleString("ar-AE")} من أصل {CANONICAL_TEMPLATE_COUNT} قالبًا معتمدًا.
+          اضغط «استيراد ونشر المعتمدة» لإظهار الكل وإتاحتها للتعيين.
+        </p>
+      ) : null}
       <AdminConceptKpiRow
         loading={loading}
         metrics={[
           {
             id: "canonical",
-            label: "القوالب المعتمدة",
-            value: `${canonicalVisible.toLocaleString("ar-AE")} / ${CANONICAL_TEMPLATE_COUNT}`,
-            hint: canonicalOnly
-              ? "عرض القوالب المعتمدة فقط (الماستر الأول)"
-              : `في الصفحة من أصل ${canonicalInLibrary} قالب معتمد محمّل`,
-            tone: canonicalVisible === CANONICAL_TEMPLATE_COUNT ? "positive" : "neutral",
+            label: "المعتمدة في قاعدة البيانات",
+            value: `${canonicalInLibrary.toLocaleString("ar-AE")} / ${CANONICAL_TEMPLATE_COUNT}`,
+            hint:
+              canonicalInLibrary < CANONICAL_TEMPLATE_COUNT
+                ? "ناقصة — استورد الماستر ثم عيّن من ملف العميل"
+                : "الماستر الكامل منشور وجاهز للتعيين",
+            tone: canonicalInLibrary === CANONICAL_TEMPLATE_COUNT ? "positive" : "neutral",
           },
           {
             id: "programs",
             label: "إجمالي المكتبة",
             value: total.toLocaleString("ar-AE"),
-            hint: "كل الصفوف من قاعدة البيانات (يشمل نسخًا غير كانونية إن وُجدت)",
+            hint: "كل الصفوف من قاعدة البيانات",
             tone: total > 0 ? "positive" : "neutral",
           },
           {
             id: "page",
             label: "في هذه الصفحة",
             value: visibleRows.length.toLocaleString("ar-AE"),
-            hint: "بعد الفلاتر الحالية",
+            hint: canonicalOnly ? "بعد فلتر المعتمدة" : "بعد الفلاتر الحالية",
           },
           {
             id: "assigned",
             label: "العملاء المعينون",
             value: "—",
-            hint: "التعيين يظهر في ملف العميل",
+            hint: "التعيين من ملف العميل — أولوية المدرب",
             tone: "unavailable",
           },
         ]}
