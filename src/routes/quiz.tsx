@@ -847,7 +847,7 @@ function MaleGoalPopCard({
   );
 }
 
-const MALE_GOAL_LEAVE_MS = 480;
+const MALE_GOAL_LEAVE_MS = 280;
 
 function GoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -2826,7 +2826,7 @@ function TrainingEnvironmentScreen({
 
 function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
   const [pct, setPct] = useState(0);
-  const DURATION = 10000;
+  const DURATION = 2500;
 
   useEffect(() => {
     const start = performance.now();
@@ -2838,7 +2838,7 @@ function AnalysisScreen({ onBack, onDone }: { onBack: () => void; onDone: () => 
       if (elapsed < DURATION) {
         raf = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => onDone(), 1000);
+        setTimeout(() => onDone(), 200);
       }
     };
     raf = requestAnimationFrame(tick);
@@ -3062,9 +3062,7 @@ function ensureQuizFieldVisible(target: EventTarget | null) {
   const el = target instanceof HTMLElement ? target : null;
   if (!el) return;
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-    });
+    el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "auto" });
   });
 }
 
@@ -3084,14 +3082,14 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
   const contactScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const DURATION = 10000;
+    const DURATION = 2500;
     const start = Date.now();
     const tick = setInterval(() => {
       const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
       setOverlayProgress(p);
       if (p >= 100) clearInterval(tick);
-    }, 50);
-    const tFade = setTimeout(() => setFadingOverlay(true), DURATION - 500);
+    }, 40);
+    const tFade = setTimeout(() => setFadingOverlay(true), DURATION - 350);
     const tHide = setTimeout(() => setShowOverlay(false), DURATION);
     return () => { clearInterval(tick); clearTimeout(tFade); clearTimeout(tHide); };
   }, []);
@@ -3237,7 +3235,19 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
       <GymBackdrop />
       {showOverlay && (
         <div
-          className={`absolute inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-500 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            setFadingOverlay(true);
+            window.setTimeout(() => setShowOverlay(false), 200);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              setFadingOverlay(true);
+              window.setTimeout(() => setShowOverlay(false), 200);
+            }
+          }}
+          className={`absolute inset-0 z-50 flex flex-col items-center justify-center px-8 text-center transition-opacity duration-300 ${fadingOverlay ? "opacity-0" : "opacity-100"}`}
           style={{ background: "linear-gradient(180deg, #FFF8F1 0%, #FAF8F5 100%)" }}
         >
           <div className="grid h-20 w-20 place-items-center rounded-full mb-6 animate-scale-in" style={{ background: "rgba(255,107,0,0.12)" }}>
@@ -3256,11 +3266,14 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
           <div className="mt-8 w-full max-w-xs h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,107,0,0.15)" }}>
             <div className="h-full rounded-full transition-[width] duration-100 ease-linear" style={{ width: `${overlayProgress}%`, background: `linear-gradient(90deg, ${ORANGE} 0%, #FFB547 100%)` }} />
           </div>
-          <div className="mt-2 text-[11.5px] text-neutral-500">{Math.ceil((100 - overlayProgress) / 10)} ثوانٍ...</div>
+          <div className="mt-2 text-[11.5px] text-neutral-500">لحظات...</div>
         </div>
       )}
 
-      <div className="relative flex min-h-0 h-full flex-col px-5 pt-3 pb-3">
+      <div
+        className="relative flex min-h-0 h-full flex-col px-5 pt-3"
+        style={{ paddingBottom: Math.max(12, keyboardPad > 0 ? keyboardPad + 8 : 12) }}
+      >
         <ProgressHeader
           step="contact"
           onBack={() => {
@@ -3272,7 +3285,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
         <div
           ref={contactScrollRef}
           className="mt-2 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch]"
-          style={{ paddingBottom: Math.max(12, keyboardPad + (compactForKeyboard ? 24 : 8)) }}
+          style={{ paddingBottom: compactForKeyboard ? 8 : 12 }}
         >
           {!compactForKeyboard ? (
             <div className="mt-2 text-center">
@@ -3413,7 +3426,9 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
               </>
             )}
           </div>
+        </div>
 
+        <div className="shrink-0 pt-3 pb-1">
           <button
             type="button"
             disabled={phase === "identity" ? !canContinueIdentity : !canSubmitPhone || submitting}
@@ -3425,7 +3440,7 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
               }
               void submitLead();
             }}
-            className={`mt-5 w-full shrink-0 rounded-[12px] py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-all ${(phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting) ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
+            className={`w-full shrink-0 rounded-[12px] py-4 text-white text-base font-black flex items-center justify-center gap-3 transition-transform ${(phase === "identity" ? canContinueIdentity : canSubmitPhone && !submitting) ? "active:scale-[0.98]" : "opacity-50 cursor-not-allowed"}`}
             style={{
               background: "linear-gradient(180deg,#FF8534,#FF6B00)",
               boxShadow:

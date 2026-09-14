@@ -2,10 +2,10 @@
 export const SELECTION_HAPTIC_MS = 25;
 
 /** Delay after haptic before viewport changes so the pulse is felt. */
-export const HAPTIC_NAV_DELAY_MS = 150;
+export const HAPTIC_NAV_DELAY_MS = 50;
 
 /** Fade-out duration before swapping quiz steps. */
-export const QUIZ_STEP_FADE_MS = 180;
+export const QUIZ_STEP_FADE_MS = 120;
 
 /**
  * Premium selection haptic. Safe on iOS Safari (no-op) and optimized for
