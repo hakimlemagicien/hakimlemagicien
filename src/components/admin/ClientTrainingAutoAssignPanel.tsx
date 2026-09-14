@@ -62,8 +62,17 @@ async function fetchLatestReview(clientId: string): Promise<LatestReview | null>
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (error) throw error;
+  if (error) {
+    if (isMissingReviewsRelation(error.message)) return null;
+    throw error;
+  }
   return data ?? null;
+}
+
+function isMissingReviewsRelation(message: string): boolean {
+  return /training_assignment_reviews|admin_upsert_training_assignment_review|admin_list_training_assignment_reviews|does not exist|42P01|42883/i.test(
+    message,
+  );
 }
 
 function displayValue(value: string | number | null | undefined): string {

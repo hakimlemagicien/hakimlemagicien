@@ -7,10 +7,12 @@ import { join } from "node:path";
 import {
   buildAdminResolverCatalog,
   buildRecommendationChecks,
+  inferLegacyTemplateContract,
   matchesTemplatePresentation,
   presentProgramTemplate,
   quizGoalIdFromClientGoal,
   recommendTemplateForClient,
+  resolvableFromListItem,
   runDemoRecommendationScenario,
   resolverStatusLabelAr,
 } from "./admin-template-ui";
@@ -299,6 +301,40 @@ for (const id of [
   assert.match(presentation.template_purpose ?? "", /[\u0600-\u06FF]/);
   assert.match(presentation.admin_summary ?? "", /خسارة الدهون/);
   assert.equal(presentation.environment_label, "صالة");
+}
+
+{
+  const legacy = inferLegacyTemplateContract({
+    slug: "preview-new-videos-sep5",
+    goal: "fitness",
+    level: "intermediate",
+    days_per_week: 3,
+    training_location: "GYM",
+  });
+  assert.ok(legacy, "infers contract from legacy columns");
+  assert.equal(legacy?.primary_strategy, "GENERAL_FITNESS");
+  assert.equal(legacy?.library_readiness.state, "APPROVED");
+  const row = resolvableFromListItem({
+    id: "00000000-0000-4000-8000-000000000099",
+    slug: "preview-new-videos-sep5",
+    name_ar: "معاينة",
+    name_en: null,
+    goal: "fitness",
+    level: "intermediate",
+    duration_weeks: 8,
+    days_per_week: 3,
+    version: 1,
+    is_published: true,
+    archived_at: null,
+    assignment_count: 0,
+    updated_at: new Date().toISOString(),
+    training_location: "GYM",
+    metadata: null,
+    template_contract: null,
+    primary_strategy: null,
+    library_readiness: null,
+  });
+  assert.ok(row?.contract, "list item without metadata becomes resolvable");
 }
 
 console.log("admin-template-ui Phase 4 tests passed");

@@ -16,9 +16,11 @@ import {
   PHASE3_FIXTURE_TEMPLATES,
   PRIMARY_TRAINING_STRATEGIES,
   activityRoleFromLegacyExerciseRole,
+  createEmptyTemplateContract,
   isLegacyProgramGoal,
   listAssignableFixtureTemplates,
   listPilotResolvableTemplates,
+  mapQuizGoalToPrimaryStrategy,
   mergeResolverCatalogPreferringPilots,
   primaryStrategyFromLegacyProgramGoal,
   resolveProgramTemplate,
@@ -341,7 +343,17 @@ export function quizGoalIdFromClientGoal(goal: string | null | undefined): strin
 }
 
 export function resolvableFromDetail(detail: AdminProgramDetail): ResolvableTemplateRecord | null {
-  const contract = programTemplateContractFromMetadata(detail.metadata);
+  const contract =
+    programTemplateContractFromMetadata(detail.metadata) ??
+    inferLegacyTemplateContract({
+      slug: detail.slug,
+      goal: detail.goal,
+      level: detail.level,
+      days_per_week: detail.days_per_week,
+      duration_weeks: detail.duration_weeks,
+      training_location: detail.training_location,
+      metadata: detail.metadata,
+    });
   if (!contract) return null;
   const status = detail.archived_at ? "ARCHIVED" : detail.is_published ? "PUBLISHED" : "DRAFT";
   return {
@@ -360,11 +372,76 @@ export function resolvableFromDetail(detail: AdminProgramDetail): ResolvableTemp
   };
 }
 
+/**
+ * When DB templates lack Unified Template Contract metadata (common in Production),
+ * synthesize a minimal contract from legacy columns so resolver/auto-assign can still run.
+ */
+export function inferLegacyTemplateContract(input: {
+  slug?: string | null;
+  goal?: string | null;
+  level?: string | null;
+  days_per_week?: number | null;
+  duration_weeks?: number | null;
+  training_location?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): ProgramTemplateContractV1 | null {
+  const quizId = quizGoalIdFromClientGoal(input.goal);
+  const mapped = mapQuizGoalToPrimaryStrategy(quizId);
+  const fromLegacy =
+    input.goal && isLegacyProgramGoal(input.goal)
+      ? primaryStrategyFromLegacyProgramGoal(input.goal)
+      : null;
+  const strategy = mapped.ok ? mapped.primaryStrategy : fromLegacy;
+  if (!strategy) return null;
+
+  const level =
+    templateLevelFromProgramLevel(String(input.level ?? "")) ??
+    ("BEGINNER" as TemplateLevel);
+  const locationRaw =
+    (typeof input.training_location === "string" && input.training_location) ||
+    (typeof input.metadata?.training_location === "string"
+      ? String(input.metadata.training_location)
+      : null);
+  const location = mapClientTrainingLocation(locationRaw ?? "gym");
+  const environment =
+    (templateEnvironmentFromLocation(location === "BOTH" ? "GYM" : location) as TemplateEnvironment) ??
+    "GYM";
+  const daysRaw = Number(input.days_per_week);
+  const daysPerWeek = Number.isFinite(daysRaw) && daysRaw >= 2 && daysRaw <= 6 ? Math.round(daysRaw) : 3;
+
+  const contract = createEmptyTemplateContract({
+    primaryStrategy: strategy,
+    level,
+    environment,
+    daysPerWeek,
+    durationWeeks: input.duration_weeks ?? null,
+    targetAudience: "legacy_published_template",
+    templatePurpose: `Legacy catalog bridge for ${input.slug ?? "template"}`,
+  });
+  contract.library_readiness = {
+    state: "APPROVED",
+    missing_exercise_count: 0,
+    missing_media_count: 0,
+    notes: "Inferred from legacy program_templates columns (no template_contract metadata).",
+  };
+  return contract;
+}
+
 /** List-row → resolvable when list RPC projects template_contract (Phase 6 DB pilots). */
 export function resolvableFromListItem(item: AdminProgramListItem): ResolvableTemplateRecord | null {
-  const contract = programTemplateContractFromMetadata(
-    item.template_contract ? { template_contract: item.template_contract } : item.metadata,
-  );
+  const contract =
+    programTemplateContractFromMetadata(
+      item.template_contract ? { template_contract: item.template_contract } : item.metadata,
+    ) ??
+    inferLegacyTemplateContract({
+      slug: item.slug,
+      goal: item.goal,
+      level: item.level,
+      days_per_week: item.days_per_week,
+      duration_weeks: item.duration_weeks,
+      training_location: item.training_location,
+      metadata: item.metadata,
+    });
   if (!contract) return null;
   const status = item.archived_at ? "ARCHIVED" : item.is_published ? "PUBLISHED" : "DRAFT";
   return {

@@ -261,6 +261,9 @@ export function ClientTrainingWorkspace({
   const [recommendationPreview, setRecommendationPreview] = useState<AdminProgramDetail | null>(null);
   const [recommendationPreviewError, setRecommendationPreviewError] = useState<string | null>(null);
   const [recommendationCatalog, setRecommendationCatalog] = useState<AdminProgramDetail[]>([]);
+  const [clientStrategyLevel, setClientStrategyLevel] = useState<string | null>(null);
+  const [clientStrategyDays, setClientStrategyDays] = useState<number | null>(null);
+  const [clientStrategyTrainingType, setClientStrategyTrainingType] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
   const templateQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(editing && draft && detail && JSON.stringify(draft.weeks) !== JSON.stringify(detail.weeks));
@@ -269,6 +272,39 @@ export function ClientTrainingWorkspace({
   useEffect(() => {
     setOverrideLocation(mapClientTrainingLocation(overview.training_type));
   }, [overview.training_type, clientId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadAdminClientTrainingStrategyInput(clientId, overview)
+      .then((strategy) => {
+        if (cancelled) return;
+        setClientStrategyLevel(
+          strategy.assessedTrainingLevel && strategy.assessedTrainingLevel !== "UNASSESSED"
+            ? strategy.assessedTrainingLevel
+            : null,
+        );
+        setClientStrategyDays(
+          typeof strategy.trainingDaysPerWeek === "number" ? strategy.trainingDaysPerWeek : null,
+        );
+        setClientStrategyTrainingType(
+          strategy.trainingEnvironment ??
+            strategy.trainingType ??
+            overview.training_type ??
+            null,
+        );
+      })
+      .catch((err) => {
+        console.warn("[ClientTrainingWorkspace] strategy load failed", err);
+        if (!cancelled) {
+          setClientStrategyLevel(null);
+          setClientStrategyDays(null);
+          setClientStrategyTrainingType(overview.training_type ?? null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [clientId, overview.goal, overview.training_type]);
 
   const overrideFormState: CoachOverrideFormState = {
     overrideDays,
@@ -988,9 +1024,9 @@ export function ClientTrainingWorkspace({
       },
       client: {
         goal: overview.goal,
-        level: detail?.level,
-        trainingType: overview.training_type,
-        daysPerWeek: detail?.days_per_week,
+        level: clientStrategyLevel ?? detail?.level,
+        trainingType: clientStrategyTrainingType ?? overview.training_type,
+        daysPerWeek: clientStrategyDays ?? detail?.days_per_week,
       },
     });
 
@@ -1944,9 +1980,9 @@ export function ClientTrainingWorkspace({
           <TemplateRecommendationPanel
             clientId={clientId}
             goal={overview.goal}
-            trainingType={overview.training_type}
-            level={detail?.level ?? null}
-            daysPerWeek={detail?.days_per_week ?? null}
+            trainingType={clientStrategyTrainingType ?? overview.training_type}
+            level={clientStrategyLevel ?? detail?.level ?? null}
+            daysPerWeek={clientStrategyDays ?? detail?.days_per_week ?? null}
             catalogDetails={recommendationCatalog}
             catalogIncludesFixtures={false}
             includeInMemoryPilots={false}

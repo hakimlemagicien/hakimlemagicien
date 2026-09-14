@@ -159,9 +159,9 @@ export function strategyInputToClientBundle(
     strategy.trainingType ??
     strategy.locationPreference ??
     null;
-  const location = mapClientTrainingLocation(locationHint);
+  const location = locationHint ? mapClientTrainingLocation(locationHint) : "BOTH";
   const env =
-    location === "BOTH"
+    !locationHint || location === "BOTH"
       ? "BOTH"
       : templateEnvironmentFromLocation(location as "HOME" | "GYM") ?? String(location);
   const levelRaw = strategy.assessedTrainingLevel ?? null;
@@ -285,9 +285,26 @@ export async function resolveDecisionForClient(input: {
     envCandidates.map((trainingType) => recommendWithDefaults(context, catalog, trainingType)),
   );
 
+  // Last resort: if catalog has published templates but strategy match failed, still assign one.
+  const withLastResort =
+    resolver.recommended_template_id || catalog.length === 0
+      ? resolver
+      : {
+          ...resolver,
+          status: "MATCHED_WITH_REVIEW" as const,
+          recommended_template_id: catalog[0]!.id,
+          recommended_template_slug: catalog[0]!.slug,
+          fallback_used: true,
+          fallback_class: "CONTEXTUAL_MATCH" as const,
+          recommendation_reason: "LAST_RESORT_PUBLISHED_TEMPLATE",
+          review_signals: Array.from(
+            new Set([...(resolver.review_signals ?? []), "COACH_REVIEW_REQUIRED" as const]),
+          ),
+        };
+
   const decision = decideTrainingAssignment({
     clientKind: input.clientKind,
-    resolver,
+    resolver: withLastResort,
     activeAssignment: input.activeAssignment,
     coachOverrideProtected:
       Boolean(strategy.coachProtected) ||
@@ -296,7 +313,7 @@ export async function resolveDecisionForClient(input: {
 
   return {
     decision,
-    resolver,
+    resolver: withLastResort,
     context,
     contextFingerprint: fingerprintClientContext({
       quizGoal: context.quizGoal,
@@ -353,48 +370,58 @@ export async function applyTrainingAssignmentDecision(input: {
     contextFingerprint: input.contextFingerprint,
   });
 
-  const review = await upsertTrainingAssignmentReview({
-    clientId: input.clientId,
-    clientKind: input.clientKind,
-    decisionState: decision.decision_state,
-    idempotencyKey,
-    asClient: input.asClient,
-    payload: {
-      quiz_goal: context?.quizGoal ?? null,
-      mapped_training_goal: resolver.primary_strategy ?? null,
-      training_level: context?.level ?? resolver.resolved_level ?? null,
-      training_environment: context?.environment ?? resolver.resolved_environment ?? null,
-      days_per_week: context?.daysPerWeek ?? resolver.resolved_days ?? null,
-      equipment_summary: (context?.equipment ?? []).join(", ") || null,
-      previous_template_id: activeAssignment?.source_template_id ?? null,
-      previous_template_slug: activeAssignment?.template_slug ?? null,
-      previous_assignment_id: activeAssignment?.id ?? null,
-      recommended_template_id: decision.recommended_template_id,
-      recommended_template_slug: decision.recommended_template_slug,
-      assigned_template_id: assigned ? decision.recommended_template_id : null,
-      assigned_template_slug: assigned ? decision.recommended_template_slug : null,
-      assignment_id: assignmentId,
-      assignment_source: input.clientKind === "EXISTING" && decision.should_replace ? "RECONCILE" : "AUTO",
-      reason_code: decision.reason_code,
-      reason_summary: decision.reason_summary,
-      resolver_trace: {
-        status: resolver.status,
-        fallback_class: resolver.fallback_class,
-        compatibility_status: resolver.compatibility_status,
-        review_signals: resolver.review_signals,
-        resolution_trace: resolver.resolution_trace,
-        recommendation_reason: resolver.recommendation_reason,
-        dimensions_changed: resolver.dimensions_changed,
+  let reviewId: string | null = null;
+  try {
+    const review = await upsertTrainingAssignmentReview({
+      clientId: input.clientId,
+      clientKind: input.clientKind,
+      decisionState: decision.decision_state,
+      idempotencyKey,
+      asClient: input.asClient,
+      payload: {
+        quiz_goal: context?.quizGoal ?? null,
+        mapped_training_goal: resolver.primary_strategy ?? null,
+        training_level: context?.level ?? resolver.resolved_level ?? null,
+        training_environment: context?.environment ?? resolver.resolved_environment ?? null,
+        days_per_week: context?.daysPerWeek ?? resolver.resolved_days ?? null,
+        equipment_summary: (context?.equipment ?? []).join(", ") || null,
+        previous_template_id: activeAssignment?.source_template_id ?? null,
+        previous_template_slug: activeAssignment?.template_slug ?? null,
+        previous_assignment_id: activeAssignment?.id ?? null,
+        recommended_template_id: decision.recommended_template_id,
+        recommended_template_slug: decision.recommended_template_slug,
+        assigned_template_id: assigned ? decision.recommended_template_id : null,
+        assigned_template_slug: assigned ? decision.recommended_template_slug : null,
+        assignment_id: assignmentId,
+        assignment_source: input.clientKind === "EXISTING" && decision.should_replace ? "RECONCILE" : "AUTO",
+        reason_code: decision.reason_code,
+        reason_summary: decision.reason_summary,
+        resolver_trace: {
+          status: resolver.status,
+          fallback_class: resolver.fallback_class,
+          compatibility_status: resolver.compatibility_status,
+          review_signals: resolver.review_signals,
+          resolution_trace: resolver.resolution_trace,
+          recommendation_reason: resolver.recommendation_reason,
+          dimensions_changed: resolver.dimensions_changed,
+        },
+        client_context: context ?? {},
+        effective_at: new Date().toISOString(),
       },
-      client_context: context ?? {},
-      effective_at: new Date().toISOString(),
-    },
-  });
+    });
+    reviewId = review.id;
+  } catch (error) {
+    // Assignment must not fail solely because review inbox migration is missing.
+    console.warn(
+      "[training-auto-assign] review upsert skipped",
+      error instanceof Error ? error.message : error,
+    );
+  }
 
   return {
     decision,
     assignmentId,
-    reviewId: review.id,
+    reviewId,
     assigned,
   };
 }
