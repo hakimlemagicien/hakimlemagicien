@@ -19,10 +19,7 @@ import {
   type ProgressDashboardData,
 } from "@/lib/platform/progress-experience";
 import type { ProfileDetails, TrainingProfileSnapshot } from "@/lib/platform/profile-api";
-import {
-  isCanonicalTrainingGoal,
-  TRAINING_V2_GOAL_LABELS_AR,
-} from "@/lib/platform/training-v2-contracts";
+import { resolveClientGoalLabelForGender } from "@/lib/platform/client-presentation-identity";
 
 export type MembershipDisplayStatus =
   | "free"
@@ -74,41 +71,15 @@ export type ProfileHubAchievement = {
   unlocked: boolean;
 };
 
-/** Quiz goal IDs → the exact Arabic labels the client chose. */
-const GOAL_LABELS: Record<string, string> = {
-  fat: "خسارة الدهون",
-  muscle: "بناء العضلات",
-  fitness: "تحسين اللياقة والطاقة",
-  athletic: "جسم رياضي ومتناسق",
-  shape: "تغيير شكل الجسم",
-  gain: "زيادة وزن صحي",
-  glutes: "تكبير المؤخرة",
-  waist: "خصر أنحف ومشدود",
-  body: "جسم متناسق وأنثوي",
-  fit: "جسم صحي ورياضي",
-  tone: "تحسين شكل الصدر",
-  cut: "خسارة الدهون",
-  bulk: "بناء العضلات",
-  recomp: "إعادة تركيب الجسم",
-  "fat-loss": "خسارة الدهون",
-  lose: "خسارة الوزن",
-  strength: "زيادة القوة",
-  weight_loss: "خسارة الوزن",
-  toning: "شد وتنسيق الجسم",
-};
-
+/**
+ * @deprecated Prefer resolveClientGoalLabelForGender with an explicit gender.
+ * Kept for call sites that only have goal ids; does not invent feminine copy
+ * unless the raw key itself is a female-only id (legacy).
+ */
 export function resolveClientGoalLabel(
   ...sources: Array<string | null | undefined>
 ): string {
-  for (const raw of sources) {
-    const key = raw?.trim();
-    if (!key) continue;
-    if (isCanonicalTrainingGoal(key)) return TRAINING_V2_GOAL_LABELS_AR[key];
-    const mapped = GOAL_LABELS[key] ?? GOAL_LABELS[key.toLowerCase()];
-    if (mapped) return mapped;
-    if (/[\u0600-\u06FF]/.test(key)) return key;
-  }
-  return "غير محدد";
+  return resolveClientGoalLabelForGender(null, ...sources);
 }
 
 export const ACTIVITY_LABELS: Record<string, string> = {
@@ -391,7 +362,8 @@ export function buildProgramSummary(
     (training?.answers ?? null) as Record<string, unknown> | null,
     training?.goal ?? profile?.goal ?? quizGoalId,
   );
-  const goalLabel = resolveClientGoalLabel(
+  const goalLabel = resolveClientGoalLabelForGender(
+    quiz.gender === "male" || quiz.gender === "female" ? quiz.gender : null,
     quiz.goalId,
     quizGoalId,
     profile?.goal,

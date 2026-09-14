@@ -65,19 +65,29 @@ export function inferGoalIdFromText(raw?: string | null, gender?: HeroGender | n
   if (!value) return null;
   if (isCanonicalTrainingGoal(value)) {
     const resolvedGender = normalizeHeroGender(gender);
-    return quizHeroIdForCanonicalGoal(value, resolvedGender === "male" ? "male" : "female");
+    if (!resolvedGender) return null;
+    return quizHeroIdForCanonicalGoal(value, resolvedGender);
   }
-  if (isMaleGoalId(value) || isFemaleGoalId(value)) return value;
+  if (isMaleGoalId(value) || isFemaleGoalId(value)) {
+    // Never keep a cross-gender catalog id; remap via bucket defaults later.
+    if (gender === "male" && isFemaleGoalId(value)) return null;
+    if (gender === "female" && isMaleGoalId(value) && value !== "fat") {
+      // fat is shared; other male-only ids remap through defaultGoalIdForBucket
+      if (value === "muscle" || value === "gain") return null;
+    }
+    return value;
+  }
 
   const text = value.toLowerCase();
-  if (/glute|مؤخر/.test(text)) return "glutes";
-  if (/waist|خصر/.test(text)) return "waist";
-  if (/صدر|tone/.test(text)) return "tone";
-  if (/أنثوي|feminine/.test(text)) return "body";
+  if (gender === "male" && /أنثوي|feminine|مؤخر/.test(text)) return null;
+  if (/glute|مؤخر/.test(text)) return gender === "female" ? "glutes" : null;
+  if (/waist|خصر/.test(text)) return gender === "female" ? "waist" : "fat";
+  if (/صدر|tone/.test(text)) return gender === "female" ? "tone" : "muscle";
+  if (/أنثوي|feminine/.test(text)) return gender === "female" ? "body" : null;
   if (/gain|زيادة وزن/.test(text)) return "gain";
-  if (/athletic|رياضي ومتناسق/.test(text)) return "athletic";
-  if (/shape|شكل الجسم/.test(text)) return "shape";
-  if (/muscle|عضل|تضخيم|bulk/.test(text)) return "muscle";
+  if (/athletic|رياضي ومتناسق/.test(text)) return gender === "female" ? "fit" : "athletic";
+  if (/shape|شكل الجسم/.test(text)) return gender === "female" ? "body" : "shape";
+  if (/muscle|عضل|تضخيم|bulk|بناء العضلات/.test(text)) return "muscle";
   if (/صحي ورياضي/.test(text)) return gender === "male" ? "fitness" : "fit";
   if (/fit|لياق|طاق/.test(text)) return gender === "female" ? "fit" : "fitness";
   if (/fat|دهون|تنشيف|cut/.test(text)) return "fat";

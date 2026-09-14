@@ -60,13 +60,12 @@ import {
 } from "@/lib/platform/workout-session";
 import { loadWorkoutProgress, peekStoredWorkoutSession, isStoredWorkoutInterrupted } from "@/lib/platform/workout-progress-storage";
 import { workoutFitsGoalCopy } from "@/lib/platform/home-hub";
-import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
+import { resolveClientPresentationIdentity } from "@/lib/platform/client-presentation-identity";
 import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
 import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
-import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
 import { HERO_GOAL_SETTINGS_CHANGED_EVENT } from "@/lib/platform/hero-goal-framing";
 import {
   resolveWorkoutGoalHeroPhotos,
@@ -908,16 +907,23 @@ function WorkoutDayPage() {
       ...(trainingQuery.data?.answers ?? {}),
     } as Record<string, unknown>;
   }, [trainingQuery.data?.answers]);
-  const goalLabel = resolveClientGoalLabel(
-    trainingQuery.data?.answers.goalId,
-    quizProgress?.goalId,
-    trainingQuery.data?.goal,
+  const presentation = useMemo(
+    () =>
+      resolveClientPresentationIdentity({
+        gender: trainingQuery.data?.answers.gender,
+        goalId: trainingQuery.data?.answers.goalId ?? null,
+        goalText: trainingQuery.data?.goal ?? null,
+        goalSources: [trainingQuery.data?.goal],
+      }),
+    [
+      trainingQuery.data?.answers.gender,
+      trainingQuery.data?.answers.goalId,
+      trainingQuery.data?.goal,
+    ],
   );
-  const { gender, goalId } = resolveAuthoritativeHeroSlot({
-    gender: trainingQuery.data?.answers.gender,
-    goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal,
-    goalText: trainingQuery.data?.goal,
-  }) ?? { gender: null, goalId: null };
+  const goalLabel = presentation.goalLabel;
+  const gender = presentation.gender;
+  const goalId = presentation.mediaGoalId;
 
   useEffect(() => {
     const sync = () => setGoalHeroVersion((value) => value + 1);

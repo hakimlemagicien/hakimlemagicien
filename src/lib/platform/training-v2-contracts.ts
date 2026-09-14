@@ -52,7 +52,7 @@ export function isCanonicalTrainingGoal(value: string | null | undefined): value
  */
 export function quizHeroIdForCanonicalGoal(
   goal: TrainingV2CanonicalGoal,
-  gender: "male" | "female" = "female",
+  gender: "male" | "female",
 ): string {
   switch (goal) {
     case "FAT_LOSS":

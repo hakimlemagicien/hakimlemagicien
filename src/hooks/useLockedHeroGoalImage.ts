@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  clearCachedHeroSlot,
   heroSrcBelongsToSlot,
   preloadHeroGoalImage,
   readCachedHeroSlot,
@@ -31,6 +32,7 @@ export function useLockedHeroGoalImage(input: {
 
     const slot = input.slot;
     if (!slot) {
+      clearCachedHeroSlot(input.userId);
       const fallback = resolveHeroGoalImage({
         goal: "fitness",
         gender: null,
@@ -58,6 +60,10 @@ export function useLockedHeroGoalImage(input: {
       cached.goalId === slot.goalId &&
       cached.src === resolved.src &&
       heroSrcBelongsToSlot(cached.src, slot.gender, slot.goalId);
+
+    if (cached && !cachedOk) {
+      clearCachedHeroSlot(input.userId);
+    }
 
     const next = cachedOk ? { ...resolved, src: cached.src, previewLocked: true } : resolved;
 

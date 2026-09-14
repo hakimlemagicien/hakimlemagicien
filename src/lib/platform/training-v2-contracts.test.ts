@@ -43,11 +43,11 @@ assert(LEGACY_GOAL_MAP.tone?.canonicalId === "TONED_ARMS_UPPER_BODY", "tone mapp
 assert(TRAINING_V2_CANONICAL_GOALS.includes("TONED_ARMS_UPPER_BODY"), "arms goal exists as catalog, not auto-map");
 assert(isCanonicalTrainingGoal("FAT_LOSS"), "FAT_LOSS is canonical");
 assert(!isCanonicalTrainingGoal("fat"), "quiz fat is not canonical");
-assertEqual(quizHeroIdForCanonicalGoal("FAT_LOSS"), "fat", "FAT_LOSS → fat hero");
-assertEqual(quizHeroIdForCanonicalGoal("GLUTE_GROWTH"), "glutes", "GLUTE_GROWTH → glutes hero");
+assertEqual(quizHeroIdForCanonicalGoal("FAT_LOSS", "female"), "fat", "FAT_LOSS → fat hero");
+assertEqual(quizHeroIdForCanonicalGoal("GLUTE_GROWTH", "female"), "glutes", "GLUTE_GROWTH → glutes hero");
 assertEqual(quizHeroIdForCanonicalGoal("POSTURE_TONED_BACK", "male"), "fitness", "posture male hero");
 assertEqual(quizHeroIdForCanonicalGoal("POSTURE_TONED_BACK", "female"), "fit", "posture female hero");
-assertEqual(quizHeroIdForCanonicalGoal("MUSCLE_GROWTH"), "muscle", "MUSCLE_GROWTH → muscle hero");
+assertEqual(quizHeroIdForCanonicalGoal("MUSCLE_GROWTH", "male"), "muscle", "MUSCLE_GROWTH → muscle hero");
 assertEqual(homeBucketForCanonicalGoal("FAT_LOSS"), "cut", "FAT_LOSS home bucket");
 assertEqual(homeBucketForCanonicalGoal("GLUTE_GROWTH"), "fitness", "GLUTE_GROWTH home bucket");
 assertEqual(homeBucketForCanonicalGoal("TONED_ARMS_UPPER_BODY"), "bulk", "arms home bucket");

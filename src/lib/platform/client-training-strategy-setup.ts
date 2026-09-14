@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { parseClientQuizAnswers } from "@/lib/platform/client-quiz-answers";
+import { canonicalGoalsForGender } from "@/lib/platform/client-presentation-identity";
 import {
   CLIENT_DEFAULT_TRAINING_DAYS_PER_WEEK,
   sanitizeTrainingLocationHints,
@@ -80,6 +81,13 @@ export const CLIENT_GOAL_PICKER_OPTIONS: Array<{
   id,
   labelAr: TRAINING_V2_GOAL_LABELS_AR[id],
 }));
+
+export function clientGoalPickerOptionsForGender(
+  gender: "male" | "female" | null | undefined,
+): Array<{ id: TrainingV2CanonicalGoal; labelAr: string }> {
+  const allowed = new Set(canonicalGoalsForGender(gender));
+  return CLIENT_GOAL_PICKER_OPTIONS.filter((row) => allowed.has(row.id));
+}
 
 export function isClientFixableStrategyReason(reason: string | null | undefined): boolean {
   if (!reason) return false;

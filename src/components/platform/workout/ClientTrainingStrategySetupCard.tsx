@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import {
   assessClientStrategySetupGaps,
   CLIENT_DEFAULT_TRAINING_ENVIRONMENT,
-  CLIENT_GOAL_PICKER_OPTIONS,
+  clientGoalPickerOptionsForGender,
   saveMyTrainingStrategySetup,
 } from "@/lib/platform/client-training-strategy-setup";
+import { normalizeHeroGender } from "@/lib/platform/hero-goal-slot";
 import { CLIENT_DEFAULT_TRAINING_DAYS_PER_WEEK } from "@/lib/platform/strategy-matrix/quiz-strategy-bridge";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import type { TrainingV2CanonicalGoal } from "@/lib/platform/training-v2-contracts";
@@ -52,6 +53,9 @@ export function ClientTrainingStrategySetupCard({
         initialDaysPerWeek ?? (initialAnswers?.trainingDaysPerWeek as number | undefined) ?? null,
     },
   });
+
+  const pickerGender = normalizeHeroGender(initialAnswers?.gender);
+  const goalOptions = clientGoalPickerOptionsForGender(pickerGender);
 
   const [goal, setGoal] = useState<TrainingV2CanonicalGoal | "">(gaps.resolvedGoal ?? "");
   const [saving, setSaving] = useState(false);
@@ -120,7 +124,7 @@ export function ClientTrainingStrategySetupCard({
             className="min-h-11 w-full rounded-xl border border-border/70 bg-background px-3 text-sm font-bold text-foreground"
           >
             <option value="">اختر هدفك</option>
-            {CLIENT_GOAL_PICKER_OPTIONS.map((option) => (
+            {goalOptions.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.labelAr}
               </option>

@@ -31,7 +31,7 @@ import {
   resolveClientFirstName,
   shouldShowActivateCta,
 } from "@/lib/platform/home-hub";
-import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
+import { resolveClientPresentationIdentity } from "@/lib/platform/client-presentation-identity";
 import { useLockedHeroGoalImage } from "@/hooks/useLockedHeroGoalImage";
 import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
 import { hydrateDiscoverFromSupabase } from "@/lib/platform/discover-content-api";
@@ -97,11 +97,12 @@ function PlatformHomePage() {
     () =>
       identityPending
         ? null
-        : resolveAuthoritativeHeroSlot({
+        : resolveClientPresentationIdentity({
             gender: trainingQuery.data?.answers.gender,
-            goalId: trainingQuery.data?.answers.goalId ?? trainingQuery.data?.goal ?? profileQuery.data?.goal,
-            goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal,
-          }),
+            goalId: trainingQuery.data?.answers.goalId ?? null,
+            goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal ?? null,
+            goalSources: [trainingQuery.data?.goal, profileQuery.data?.goal],
+          }).slot,
     [
       identityPending,
       trainingQuery.data?.answers.gender,

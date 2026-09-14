@@ -88,6 +88,18 @@ export function readCachedHeroSlot(userId: string): CachedHeroSlot | null {
   return null;
 }
 
+export function clearCachedHeroSlot(userId: string): void {
+  const id = userId.trim();
+  if (!id || id === "guest") return;
+  const store = readHeroSlotCacheStore();
+  if (!store) return;
+  try {
+    store.removeItem(`${HERO_SLOT_CACHE_PREFIX}${id}`);
+  } catch {
+    // ignore
+  }
+}
+
 export function writeCachedHeroSlot(slot: CachedHeroSlot): void {
   const id = slot.userId.trim();
   if (!id || id === "guest") return;

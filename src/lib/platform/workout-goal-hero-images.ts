@@ -8,21 +8,23 @@ import { listContentSlotAssets, pickContentSlotAsset } from "@/lib/platform/cont
 import type { HeroGender } from "@/lib/platform/hero-goal-slot";
 import { resolveAuthoritativeHeroSlot } from "@/lib/platform/hero-goal-slot";
 import { listHeroGoalImageOverrides } from "@/lib/platform/hero-goal-image-overrides";
-import { resolveClientGoalLabel } from "@/lib/platform/profile-experience";
-import workoutGoalStack1 from "@/assets/V0/workout-goal-stack-1.webp";
-import workoutGoalStack2 from "@/assets/V0/workout-goal-stack-2.webp";
-import workoutGoalStack3 from "@/assets/V0/workout-goal-stack-3.webp";
+import { resolveClientGoalLabelForGender } from "@/lib/platform/client-presentation-identity";
+import coachPhoto from "@/assets/coach-photo.png";
 
 export type WorkoutGoalHeroFolder = GoalHeroFolder;
 
 /** 12 quiz goals — 6 ذكور + 6 بنات. */
 export const WORKOUT_GOAL_HERO_FOLDERS = GOAL_HERO_FOLDERS;
 
-const DEFAULT_STACK = [
-  { src: workoutGoalStack1, alt: "جسم متناسق بعد الالتزام", fileName: "workout-goal-stack-1.webp" },
-  { src: workoutGoalStack2, alt: "تمرين بقوة وتركيز", fileName: "workout-goal-stack-2.webp" },
-  { src: workoutGoalStack3, alt: "نتيجة صحية واثقة", fileName: "workout-goal-stack-3.webp" },
-] as const;
+/** Gender-safe neutral fallback — never cross-gender stock. */
+function neutralFallbackStack(gender: HeroGender, label: string) {
+  void gender;
+  return [
+    { src: coachPhoto, alt: `${label} — MAAKFIT` },
+    { src: coachPhoto, alt: `${label} — برنامجك` },
+    { src: coachPhoto, alt: `${label} — هدفك` },
+  ];
+}
 
 export type WorkoutGoalHeroPhoto = {
   src: string;
@@ -71,9 +73,9 @@ export function listWorkoutGoalCardStudioImages(
     }
   }
 
-  return DEFAULT_STACK.map((photo) => ({
+  return neutralFallbackStack(gender, folder?.labelAr ?? "هدفك").map((photo, index) => ({
     url: photo.src,
-    fileName: photo.fileName,
+    fileName: `neutral-fallback-${index + 1}.png`,
     source: "default" as const,
   }));
 }
@@ -96,7 +98,9 @@ export function resolveWorkoutGoalHeroPhotos(input: {
   const folder = resolveWorkoutGoalHeroFolder(gender, goalId);
   const label =
     input.goalLabel?.trim() ||
-    (folder?.labelAr ?? (goalId ? resolveClientGoalLabel(goalId) : "هدفك"));
+    resolveClientGoalLabelForGender(gender, goalId) ||
+    folder?.labelAr ||
+    "هدفك";
 
   if (goalId) {
     const overrides = listHeroGoalImageOverrides("workout", gender, goalId);
@@ -118,13 +122,13 @@ export function resolveWorkoutGoalHeroPhotos(input: {
     : [];
 
   if (custom.length === 0) {
-    return DEFAULT_STACK.map((photo) => ({ src: photo.src, alt: `${label} — ${photo.alt}` }));
+    return neutralFallbackStack(gender, label);
   }
 
   const picked =
     custom.length >= 3
       ? custom.slice(0, 3)
-      : [...custom, ...DEFAULT_STACK.map((p) => p.src)].slice(0, 3);
+      : [...custom, ...neutralFallbackStack(gender, label).map((p) => p.src)].slice(0, 3);
 
   return picked.map((src, index) => ({
     src,
