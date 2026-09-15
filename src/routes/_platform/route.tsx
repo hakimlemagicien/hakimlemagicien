@@ -12,6 +12,8 @@ import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
 
+const approvedPlatformUsers = new Set<string>();
+
 function errorDetail(error: unknown) {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   if (typeof error === "string" && error.trim()) return error.trim();
@@ -59,10 +61,14 @@ export const Route = createFileRoute("/_platform")({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.user) throw redirect({ to: "/auth" });
+      if (approvedPlatformUsers.has(session.user.id)) {
+        return { user: session.user };
+      }
       const destination = await resolveAuthenticatedDestination(session.user);
       if (destination.to !== "/app") {
         throw redirect(destination);
       }
+      approvedPlatformUsers.add(session.user.id);
       return { user: session.user };
     } catch (error) {
       if (isRedirect(error)) throw error;

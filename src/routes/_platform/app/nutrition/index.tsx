@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
@@ -102,7 +102,6 @@ function NutritionDashboardPage() {
   const weekDays = useMemo(() => buildCurrentWeekDays(), []);
   const todayKey = weekDays.find((d) => d.isToday)?.dateKey ?? weekDays[0]!.dateKey;
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
-  const [booting, setBooting] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const breakfastGoalKey = useMemo(
     () => resolveFreeBreakfastGoalKey(readQuizProgress()?.goalId),
@@ -119,16 +118,9 @@ function NutritionDashboardPage() {
     openUpgradeWithContext("NUTRITION", NUTRITION_PRODUCT_COPY.freeUpgradeBody);
   const swapLabel = mealSwapAllowanceLabel(entitlements);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setBooting(false), 280);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   const retry = () => {
     setLoadError(false);
-    setBooting(true);
     plan.refresh();
-    window.setTimeout(() => setBooting(false), 280);
   };
 
   const caloriesLeft = Math.max(plan.goals.calories - plan.consumed.calories, 0);
@@ -140,7 +132,7 @@ function NutritionDashboardPage() {
     plan.meals.find((item) => item.status === "current")?.slot.id ??
     plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
 
-  if (booting || plan.runtimeLoading) {
+  if (plan.runtimeLoading) {
     return (
       <PlatformStack>
         <NutritionDashboardSkeleton />

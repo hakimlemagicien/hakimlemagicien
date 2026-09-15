@@ -88,6 +88,7 @@ function NavItem({
     return (
       <Link
         to={to}
+        preload="render"
         onClick={handlePress}
         className="platform-nav__link"
         aria-label={label}
@@ -133,6 +134,7 @@ function NavItem({
     return (
       <Link
         to={to}
+        preload="render"
         onClick={handlePress}
         className="platform-nav__link"
         aria-current={active ? "page" : undefined}
