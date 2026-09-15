@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { MoreHorizontal, StickyNote } from "lucide-react";
+import { Crown, MoreHorizontal, StickyNote } from "lucide-react";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
 import { AdminClientAvatar } from "@/components/admin/AdminClientAvatar";
@@ -46,6 +46,16 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
         </div>
       </div>
       <div className="cc-client-hero__actions">
+        <Link
+          to="/admin/clients/$clientId"
+          params={{ clientId: overview.id }}
+          search={{ tab: "membership" }}
+          hash="cc-membership-control"
+          className="cc-btn cc-btn--membership"
+        >
+          <Crown size={15} aria-hidden />
+          تغيير العضوية
+        </Link>
         {onAddNote ? (
           <button type="button" className="cc-btn cc-btn--primary" onClick={onAddNote}>
             <StickyNote size={15} aria-hidden />
@@ -81,7 +91,12 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
             <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "nutrition" }}>
               التغذية
             </Link>
-            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "membership" }}>
+            <Link
+              to="/admin/clients/$clientId"
+              params={{ clientId: overview.id }}
+              search={{ tab: "membership" }}
+              hash="cc-membership-control"
+            >
               العضوية والفوترة
             </Link>
             <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "activity" }}>

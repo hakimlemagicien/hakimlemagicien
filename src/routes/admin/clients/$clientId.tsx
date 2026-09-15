@@ -5,7 +5,6 @@ import {
   AdminCard,
   AdminEmptyState,
   AdminErrorState,
-  AdminPageHeader,
   AdminSection,
 } from "@/components/admin/AdminPage";
 import { Client360Header } from "@/components/admin/Client360Header";
@@ -161,16 +160,6 @@ function AdminClient360Page() {
         ]}
       />
 
-      <AdminPageHeader
-        title={overview?.full_name || "عميل"}
-        subtitle="مركز عمليات العميل — تدريب، تغذية، عضوية، ونشاط."
-        actions={
-          <Link to="/admin/clients" className="cc-btn cc-btn--ghost">
-            كل العملاء
-          </Link>
-        }
-      />
-
       {loading ? <AdminSkeletonRows rows={5} /> : null}
       {error ? <AdminErrorState message={error} /> : null}
       {!loading && !overview && !error ? (
@@ -178,7 +167,7 @@ function AdminClient360Page() {
       ) : null}
 
       {overview ? (
-        <>
+        <div className="cc-client-360">
           <Client360Header
             overview={overview}
             conversationId={conversationId}
@@ -205,7 +194,7 @@ function AdminClient360Page() {
             </div>
           ) : null}
 
-          <nav className="cc-tabs cc-tabs--line" aria-label="أقسام العميل">
+          <nav className="cc-tabs cc-tabs--line cc-client-360__tabs" aria-label="أقسام العميل">
             {CLIENT_360_SECTIONS.map((section) => (
               <Link
                 key={section}
@@ -290,6 +279,7 @@ function AdminClient360Page() {
             <ClientMembershipWorkspace
               clientId={clientId}
               overview={overview}
+              onUpdated={refreshOverview}
               sidebar={
                 <ClientAccountManagementPanel overview={overview} onUpdated={refreshOverview} />
               }
@@ -326,7 +316,7 @@ function AdminClient360Page() {
           ) : null}
 
           <ClientMobileQuickActions clientId={clientId} />
-        </>
+        </div>
       ) : null}
 
       <AdminConfirmDialog request={confirm} onClose={() => setConfirm(null)} />

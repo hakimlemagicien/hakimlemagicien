@@ -183,7 +183,8 @@ assert(trainingSource.includes("COACH_OVERRIDE"), "coach override preserved");
 
 // T26 payment read-only
 assert(!membershipSource.includes("updateMembership"), "no entitlement mutation");
-assert(membershipSource.includes("دون تعديل يدوي"), "read only billing");
+assert(membershipSource.includes("admin_apply_membership_override") || membershipSource.includes("applyAdminMembershipOverride") || membershipSource.includes("تفعيل / تغيير العضوية"), "membership override control");
+assert(membershipSource.includes("memberships.manage"), "membership manage gate");
 
 // T27 notes ≠ audit
 assert(!client360.includes("AdminAudit"), "notes not audit log in client 360");

@@ -24,6 +24,7 @@ export const ADMIN_PERMISSIONS = [
   "meal_library.manage",
   "meal.safety_edit",
   "membership.read",
+  "memberships.manage",
   "payments.read",
   "legacy_payments.manage",
   "payment_audit.read",
@@ -186,8 +187,13 @@ export function resolveRoutePermission(pathname: string): AdminPermission {
 }
 
 export function permissionDeniedMessage(permission: AdminPermission): string {
-  if (permission.startsWith("payment") || permission.startsWith("legacy") || permission === "membership.read") {
-    return "ليس لديك صلاحية تعديل بيانات الدفع.";
+  if (
+    permission.startsWith("payment") ||
+    permission.startsWith("legacy") ||
+    permission === "membership.read" ||
+    permission === "memberships.manage"
+  ) {
+    return "ليس لديك صلاحية تعديل بيانات الدفع أو العضوية.";
   }
   if (permission === "staff.manage") return "هذا الإجراء متاح لمدير النظام فقط.";
   if (permission === "training.manage") return "ليس لديك صلاحية عمليات التدريب.";

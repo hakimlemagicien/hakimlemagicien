@@ -1446,11 +1446,19 @@ export function ClientTrainingWorkspace({
 
   return (
     <AdminSection>
+      <div className="cc-training-page">
       {error ? <AdminErrorState message={error} /> : null}
 
       <AdminCard className="cc-training-cc__current cc-training-cc__current--primary">
         <div className="cc-training-cc__card-head">
-          <h2 className="cc-section__title">البرنامج الحالي</h2>
+          <div className="cc-training-cc__card-heading">
+            <p className="cc-training-cc__eyebrow">البرنامج الحالي</p>
+            {detail ? (
+              <h2 className="cc-training-cc__program-name">{detail.name_ar || "—"}</h2>
+            ) : (
+              <h2 className="cc-training-cc__program-name">لا برنامج معيَّن</h2>
+            )}
+          </div>
           {detail ? (
             <AdminStatusBadge tone={detail.status === "active" ? "success" : "foundation"}>
               {assignmentStatusLabel(detail.status)}
@@ -1467,32 +1475,33 @@ export function ClientTrainingWorkspace({
               <div className="cc-training-cc__cover cc-training-cc__cover--empty" aria-hidden />
             )}
             <div className="cc-training-cc__current-meta">
-              <strong>{detail.name_ar || "—"}</strong>
-              <p className="cc-muted">
-                {detail.level ? programLevelLabel(detail.level) : "—"} · {detail.days_per_week ?? "—"} أيام ·{" "}
-                {programSource || "—"}
-                {weekInfo.reason === "ok" && detail.starts_on ? ` · الأسبوع ${weekInfo.week}` : ""}
+              <p className="cc-training-cc__meta-line">
+                {detail.level ? programLevelLabel(detail.level) : "—"}
+                <span aria-hidden>·</span>
+                {detail.days_per_week ?? "—"} أيام
+                <span aria-hidden>·</span>
+                {programSource || "قالب"}
+                {weekInfo.reason === "ok" && detail.starts_on ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    الأسبوع {weekInfo.week}
+                  </>
+                ) : null}
               </p>
               <div className="cc-training-cc__chips" aria-label="ملف التدريب">
                 <span className="cc-training-cc__chip">
-                  الهدف · {programGoalLabel(mapClientGoalToProgramGoal(overview.goal)) || overview.goal || "—"}
+                  الهدف · {presentClientTrainingGoal(overview.goal).displayAr}
                 </span>
                 <span className="cc-training-cc__chip">
                   البيئة · {programLocationLabel(mapClientTrainingLocation(overview.training_type) as ProgramLocation)}
                 </span>
                 <span className="cc-training-cc__chip">
-                  الحالة · {coachManaged ? "إدارة المدرب" : "إدارة تلقائية"}
+                  {coachManaged ? "إدارة المدرب" : "إدارة تلقائية"}
                 </span>
-                {detail.starts_on ? (
-                  <span className="cc-training-cc__chip">بدأ · {formatAdminDate(detail.starts_on)}</span>
-                ) : null}
               </div>
               <div className="cc-training-cc__hero-actions">
                 <button type="button" className="cc-btn cc-btn--primary" onClick={openChangeProgram}>
                   تغيير البرنامج
-                </button>
-                <button type="button" className="cc-btn cc-btn--ghost" onClick={openChangeProgram}>
-                  تعيين برنامج
                 </button>
                 {detail.snapshot_complete &&
                 (detail.status === "active" || detail.status === "scheduled" || detail.status === "draft") ? (
@@ -1508,32 +1517,26 @@ export function ClientTrainingWorkspace({
                       void createProgramDraft();
                     }}
                   >
-                    {detail.status === "draft" ? "فتح المسودة" : "إنشاء مسودة للتعديل"}
+                    {detail.status === "draft" ? "فتح المسودة" : "تعديل مسودة"}
                   </button>
                 ) : null}
                 {(detail.status === "active" || detail.status === "scheduled") ? (
                   <button type="button" className="cc-btn cc-btn--ghost" onClick={() => requestEnd("completed")}>
-                    إنهاء البرنامج
+                    إنهاء
                   </button>
                 ) : null}
               </div>
-              <p className="cc-muted cc-training-cc__hint">
-                حفظ المسودة لا يغيّر ما يراه العميل. Publish فقط يفعّل النسخة — بدون code deploy.
-              </p>
             </div>
           </div>
         ) : (
-          <>
-            <AdminEmptyState
-              title="لا برنامج معيَّن"
-              body="اختر قالباً منشوراً واعتمده ليظهر للعميل فوراً في التطبيق."
-            />
+          <div className="cc-training-cc__empty">
+            <p className="cc-muted">عيّن قالباً منشوراً ليظهر للعميل فوراً في التطبيق.</p>
             <div className="cc-training-cc__hero-actions">
               <button type="button" className="cc-btn cc-btn--primary" onClick={openChangeProgram}>
                 تعيين برنامج
               </button>
             </div>
-          </>
+          </div>
         )}
       </AdminCard>
 
@@ -1797,25 +1800,35 @@ export function ClientTrainingWorkspace({
       {!editing && detail?.snapshot_complete && structureDays.length > 0 ? (
         <AdminCard className="cc-training-cc__week">
           <div className="cc-training-cc__card-head">
-            <h2 className="cc-section__title">هيكل الأسبوع</h2>
-            <span className="cc-muted">معاينة سريعة — التعديل من محرر نسخة العميل</span>
+            <div className="cc-training-cc__card-heading">
+              <p className="cc-training-cc__eyebrow">هيكل الأسبوع</p>
+              <h2 className="cc-training-cc__week-title">معاينة الأيام</h2>
+            </div>
+            <span className="cc-muted cc-training-cc__week-hint">التعديل من محرر نسخة العميل</span>
           </div>
           <div className="cc-training-cc__day-strip" role="tablist" aria-label="أيام البرنامج">
             {structureDays.map((day) => {
               const presentation = sessionPresentationForDay(day);
               const active = (selectedStructureDay?.id ?? null) === day.id;
+              const isRest = day.day_type !== "workout";
               return (
                 <button
                   key={day.id}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  className={active ? "cc-training-cc__day is-active" : "cc-training-cc__day"}
+                  className={[
+                    "cc-training-cc__day",
+                    active ? "is-active" : "",
+                    isRest ? "is-rest" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() => setSelectedDayNumber(day.day_number)}
                 >
                   <strong>يوم {day.day_number}</strong>
-                  <span>{day.day_type === "workout" ? presentation.displayNameAr : "راحة"}</span>
-                  <em>{day.day_type === "workout" ? `${presentation.exerciseCount} تمارين` : "—"}</em>
+                  <span>{isRest ? "راحة" : presentation.displayNameAr}</span>
+                  <em>{isRest ? "—" : `${presentation.exerciseCount} تمارين`}</em>
                 </button>
               );
             })}
@@ -1823,7 +1836,7 @@ export function ClientTrainingWorkspace({
           {selectedStructureDay ? (
             <div className="cc-training-cc__day-panel">
               {selectedStructureDay.day_type !== "workout" ? (
-                <p className="cc-muted">يوم راحة</p>
+                <p className="cc-training-cc__rest-note">يوم راحة — لا تمارين مجدولة.</p>
               ) : (
                 <ul className="cc-training-cc__ex-list">
                   {selectedStructureDay.exercises.map((exercise) => {
@@ -1833,7 +1846,7 @@ export function ClientTrainingWorkspace({
                     return (
                       <li key={exercise.id || `${exercise.exercise_external_id}-${exercise.sort_order}`}>
                         {thumb ? <img src={thumb} alt="" loading="lazy" /> : <span className="cc-training-cc__ex-ph" />}
-                        <div>
+                        <div className="cc-training-cc__ex-copy">
                           <strong>{exercise.exercise_name_ar}</strong>
                           <span className="cc-muted">
                             {exercise.sets} مجموعات · {formatRepsLabel(exercise) ?? "—"}
@@ -2647,6 +2660,8 @@ export function ClientTrainingWorkspace({
             </>
           );
         })()}
+      </div>
+
       </div>
 
       <AdminExercisePicker

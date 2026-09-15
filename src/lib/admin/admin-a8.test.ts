@@ -202,7 +202,10 @@ assert(
 // Security static gates
 assert(resolveAdminEnvironment() !== "production" || process.env.NODE_ENV === "production", "env not hardcoded prod in dev");
 assert(!payments.includes("cvv") && !payments.includes("PAN"), "no card data ui");
-assert(membershipWs.includes("دون تعديل يدوي"), "read only billing");
+assert(
+  membershipWs.includes("applyAdminMembershipOverride") || membershipWs.includes("تفعيل / تغيير العضوية"),
+  "membership override control",
+);
 assert(classifyAdminAction("legacy_payment_approve") === "SENSITIVE", "sensitive legacy");
 assert(STAFF_ROLE_LABELS.super_admin === "مدير النظام", "arabic role labels");
 assert(Object.keys(ROUTE_REQUIRED_PERMISSION).length >= 10, "route permission map");

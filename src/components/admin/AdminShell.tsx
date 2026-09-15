@@ -193,14 +193,6 @@ export function AdminShell() {
       <a className="cc-skip" href="#cc-workspace">
         تخطي إلى المحتوى
       </a>
-      {drawerOpen ? (
-        <button
-          type="button"
-          className="cc-shell__scrim"
-          aria-label="إغلاق القائمة"
-          onClick={() => setDrawerOpen(false)}
-        />
-      ) : null}
 
       <aside
         id={drawerId}
@@ -208,6 +200,17 @@ export function AdminShell() {
         aria-label="تنقل مركز التشغيل"
         role="navigation"
       >
+        <div className="cc-sidebar__mobile-top">
+          <button
+            type="button"
+            className="cc-sidebar__round-close"
+            aria-label="إغلاق القائمة"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <X className="h-5 w-5" aria-hidden />
+          </button>
+        </div>
+
         <div className="cc-sidebar__brand">
           <p className="cc-sidebar__logo">MAAKFIT</p>
           <p className="cc-sidebar__logo-sub">أقوى نسخة منك</p>
@@ -256,7 +259,12 @@ export function AdminShell() {
         </footer>
       </aside>
 
-      <div className="cc-main">
+      <div
+        className="cc-main"
+        onClick={() => {
+          if (drawerOpen) setDrawerOpen(false);
+        }}
+      >
         <header className="cc-topbar cc-topbar--light">
           <button
             type="button"

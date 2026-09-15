@@ -47,7 +47,10 @@ assert(shellSource.includes("ابحث عن عميل بالاسم أو البري
 
 // T7 — client route
 assert(hrefs.includes("/admin/clients"), "clients in nav");
-assert(clientRoute.includes('to="/admin/clients"'), "client directory link");
+assert(
+  clientRoute.includes('to: "/admin/clients"') || clientRoute.includes('to="/admin/clients"'),
+  "client directory breadcrumb",
+);
 
 // T8 — Client 360 seven tabs
 assert(CLIENT_360_SECTIONS.length === 7, "seven client 360 tabs");
