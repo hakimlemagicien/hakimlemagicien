@@ -1,10 +1,11 @@
 # Training Engine V2 — Staging cohort + merge path
 
-**CEO decision:** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED`  
-**Date:** 2026-08-22  
+**CEO decision (2026-08-22, Training V2 pin):** `STAGING_COHORT_APPROVED` / `PRODUCTION_RELEASE_NOT_APPROVED` *(historical hold for the V2 pin)*  
+**CEO decision (2026-09-11, V1 launch gate):** `V1_PUBLIC_LAUNCH_GATE = APPROVED` · `MANUAL_MEMBERSHIP_ONLY` — see [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md)  
+**Date (pin):** 2026-08-22  
 **Approved artifact:** `4d80f8d366909a2a6cf9217803c9c62277b66954`  
-**Approved database:** Staging only — `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`)  
-**Forbidden:** Production deploy, Production migrations, global V2 enablement, Production client migration
+**Approved database (pin):** Staging only — `dxerwrdpcflpnjvsnrjq` (`hakim-coaching-staging`)  
+**Note:** The 2026-08-22 Production hold applied to shipping the pinned V2 artifact blindly. V1 controlled launch work now follows [`V1_CLOSURE_CHECKLIST.md`](./V1_CLOSURE_CHECKLIST.md) under CEO 2026-09-11.
 
 Companion: [`TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md`](./TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md) · [`ENVIRONMENTS.md`](./ENVIRONMENTS.md)
 
@@ -19,8 +20,8 @@ Companion: [`TRAINING_ENGINE_V2_PRODUCTION_MIGRATION_AND_ROLLBACK.md`](./TRAININ
 | 2–3 week monitored cohort | Approved |
 | Remaining live goal scenarios during cohort | Required (QA + Coach) |
 | Decision-trace + RLS monitoring | Required (QA + Architect) |
-| Merge `4d80f8d` into `main` | **Prepared, not executed** |
-| Production (`hakimlemagicien.com` / `ufgrbpakuemamggwypdh`) | **Not approved** |
+| Merge `4d80f8d` into `main` | **Prepared, not executed** as a blind pin merge |
+| Production V1 launch (manual membership) | **Approved 2026-09-11** — see [`CEO_V1_LAUNCH_DECISION.md`](./CEO_V1_LAUNCH_DECISION.md); Staging loop still required |
 
 Working-tree files after `4d80f8d` (nutrition V2 images, uncommitted `20260820250000`, etc.) are **out of cohort scope**. Do not ship them with this pin.
 
