@@ -27,6 +27,8 @@ export type WeekdayWorkoutPlan = {
   durationMin: number;
   calories: number;
   points: number;
+  /** Safe count-only metadata used by the locked FREE assignment preview. */
+  safeExerciseCount?: number;
   programDayId?: string;
   /** From template media_preference — FEMALE for Glute contracts. */
   preferredMediaVariant?: "FEMALE" | "STANDARD";

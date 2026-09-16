@@ -46,6 +46,85 @@ export type ClientTrainingRuntime = {
   }>;
 };
 
+export type ClientTrainingPreview = {
+  reason: "ok" | "no_program" | "scheduled" | "ended" | "legacy_incomplete";
+  currentWeekNumber: number | null;
+  assignment: {
+    id: string;
+    name_ar: string | null;
+    duration_weeks: number | null;
+    days_per_week: number | null;
+  } | null;
+  days: Array<{
+    day_number: number;
+    day_type: string;
+    title_ar: string;
+    estimated_minutes: number | null;
+    exercise_count: number;
+  }>;
+};
+
+export async function fetchMyTrainingPreview(): Promise<ClientTrainingPreview> {
+  const { data, error } = await supabase.rpc("client_get_my_training_preview" as never);
+  if (error) throw error;
+  const row = (data ?? {}) as unknown as Record<string, unknown>;
+  return {
+    reason: (row.reason as ClientTrainingPreview["reason"]) || "no_program",
+    currentWeekNumber: row.current_week_number == null ? null : Number(row.current_week_number),
+    assignment: (row.assignment as ClientTrainingPreview["assignment"]) ?? null,
+    days: ((row.days as ClientTrainingPreview["days"]) ?? []).map((day) => ({
+      ...day,
+      day_number: Number(day.day_number),
+      exercise_count: Number(day.exercise_count ?? 0),
+    })),
+  };
+}
+
+/**
+ * Adapt count-only assignment metadata to the already-approved workout page.
+ * No exercise identity or prescription is synthesized or exposed.
+ */
+export function previewToWeekdayPlans(
+  preview: ClientTrainingPreview,
+): Record<WeekdayId, WeekdayWorkoutPlan> | null {
+  if (preview.reason !== "ok" || !preview.assignment) return null;
+  const ids: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const plans = Object.fromEntries(
+    ids.map((id) => [
+      id,
+      {
+        id,
+        muscleTitle: "يوم راحة",
+        targetMuscle: "راحة",
+        isRestDay: true,
+        prescriptions: [],
+        durationMin: 0,
+        calories: 0,
+        points: 0,
+        safeExerciseCount: 0,
+      },
+    ]),
+  ) as Record<WeekdayId, WeekdayWorkoutPlan>;
+
+  for (const day of preview.days) {
+    const id = ISO_DAY_TO_WEEKDAY[day.day_number];
+    if (!id) continue;
+    const isRestDay = day.day_type !== "workout" || day.exercise_count === 0;
+    plans[id] = {
+      id,
+      muscleTitle: isRestDay ? "يوم راحة" : day.title_ar,
+      targetMuscle: isRestDay ? "راحة" : day.title_ar,
+      isRestDay,
+      prescriptions: [],
+      durationMin: day.estimated_minutes ?? 0,
+      calories: 0,
+      points: isRestDay ? 0 : 100,
+      safeExerciseCount: isRestDay ? 0 : day.exercise_count,
+    };
+  }
+  return plans;
+}
+
 function emptyRuntime(reason: ClientTrainingRuntime["reason"]): ClientTrainingRuntime {
   return {
     reason,
@@ -92,7 +171,9 @@ export async function fetchMyTrainingRuntime(): Promise<ClientTrainingRuntime> {
   };
 }
 
-export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<WeekdayId, WeekdayWorkoutPlan> {
+export function runtimeToWeekdayPlans(
+  runtime: ClientTrainingRuntime,
+): Record<WeekdayId, WeekdayWorkoutPlan> {
   const ids: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const preferredMediaVariant = preferredMediaVariantFromAssignment(runtime.assignment);
   const rest = (id: WeekdayId): WeekdayWorkoutPlan => ({
@@ -106,7 +187,10 @@ export function runtimeToWeekdayPlans(runtime: ClientTrainingRuntime): Record<We
     points: 0,
     preferredMediaVariant,
   });
-  const map = Object.fromEntries(ids.map((id) => [id, rest(id)])) as Record<WeekdayId, WeekdayWorkoutPlan>;
+  const map = Object.fromEntries(ids.map((id) => [id, rest(id)])) as Record<
+    WeekdayId,
+    WeekdayWorkoutPlan
+  >;
   if (runtime.reason !== "ok") return map;
 
   for (const day of runtime.days) {

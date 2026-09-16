@@ -13,7 +13,10 @@ import {
 } from "@/components/platform/nutrition/NutritionShared";
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
-import { MealSwapAllowance, PremiumAlternativeBadge } from "@/components/platform/upgrade/upgrade-ui";
+import {
+  MealSwapAllowance,
+  PremiumAlternativeBadge,
+} from "@/components/platform/upgrade/upgrade-ui";
 import { useMembership } from "@/hooks/useMembership";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
@@ -22,10 +25,7 @@ import {
   mealSwapAllowanceLabel,
   shouldShowPremiumAlternatives,
 } from "@/lib/platform/entitlements";
-import {
-  getMealByAlternativeId,
-  getTodayDateKey,
-} from "@/lib/platform/nutrition-experience";
+import { getMealByAlternativeId, getTodayDateKey } from "@/lib/platform/nutrition-experience";
 import { formatNutritionNumber } from "@/lib/platform/meal-library";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +66,10 @@ function MealAlternativesPage() {
   const showPremiumCopy = shouldShowPremiumAlternatives(entitlements);
 
   const options = slot
-    ? [slot.defaultMeal, ...(showPremiumCopy ? slot.alternatives : slot.alternatives.slice(0, 1))].filter(
-        (item, index, list) => list.findIndex((x) => x.id === item.id) === index,
-      )
+    ? [
+        slot.defaultMeal,
+        ...(showPremiumCopy ? slot.alternatives : slot.alternatives.slice(0, 1)),
+      ].filter((item, index, list) => list.findIndex((x) => x.id === item.id) === index)
     : [];
 
   const currentId =
@@ -83,6 +84,34 @@ function MealAlternativesPage() {
           title="لا توجد بدائل معتمدة."
           description="البدائل تظهر فقط للوجبات المعتمدة غذائياً ضمن خطتك."
         />
+      </PlatformStack>
+    );
+  }
+
+  if (!unlocked) {
+    return (
+      <PlatformStack className="gap-3.5 pb-4">
+        <PlatformDetailHeader
+          title="بدائل الوجبة"
+          subtitle={slot.slotLabel}
+          backTo="/app/nutrition"
+        />
+        <section className={cn(nutritionCardClass, "p-6 text-center")}>
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
+            <Lock className="h-5 w-5" />
+          </span>
+          <h2 className="mt-3 text-base font-black">بدائل هذه الوجبة مقفلة</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            لن نعرض أسماء الوجبات أو صورها أو قيمها الغذائية قبل فتح الخطة.
+          </p>
+          <button
+            type="button"
+            onClick={() => openUpgradeWithContext("NUTRITION", "أكمل خطتك الغذائية لفتح البدائل.")}
+            className="mt-4 h-11 w-full rounded-full bg-primary text-sm font-black text-white"
+          >
+            افتح الخطة الغذائية
+          </button>
+        </section>
       </PlatformStack>
     );
   }
@@ -153,9 +182,7 @@ function MealAlternativesPage() {
               )}
 
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-black leading-snug text-foreground">
-                  {option.name}
-                </p>
+                <p className="text-[13px] font-black leading-snug text-foreground">{option.name}</p>
                 <p className="mt-0.5 text-[11px] font-bold text-primary">
                   {formatNutritionNumber(option.calories)} سعرة
                 </p>
@@ -207,19 +234,19 @@ function MealAlternativesPage() {
             return;
           }
           if (!selectedId) return;
-          void plan.adoptAlternative(slot.id, selectedId).then(() => {
-            void navigate({
-              to: "/app/nutrition/meal",
-              search: { mealId: slot.id, date: plan.dateKey },
+          void plan
+            .adoptAlternative(slot.id, selectedId)
+            .then(() => {
+              void navigate({
+                to: "/app/nutrition/meal",
+                search: { mealId: slot.id, date: plan.dateKey },
+              });
+            })
+            .catch((error: Error & { code?: string }) => {
+              if (error.code === "daily_meal_swap_limit_reached") {
+                openUpgradeWithContext("SWAP_LIMIT", "PRO يمنحك مرونة أكبر في تغيير الوجبات.");
+              }
             });
-          }).catch((error: Error & { code?: string }) => {
-            if (error.code === "daily_meal_swap_limit_reached") {
-              openUpgradeWithContext(
-                "SWAP_LIMIT",
-                "PRO يمنحك مرونة أكبر في تغيير الوجبات.",
-              );
-            }
-          });
         }}
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-cta transition active:scale-[0.98]"
       >

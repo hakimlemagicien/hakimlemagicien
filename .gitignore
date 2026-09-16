@@ -15,6 +15,7 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env.phase6
 
 # Wrangler / Cloudflare
 .wrangler/

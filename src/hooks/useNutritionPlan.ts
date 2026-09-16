@@ -26,6 +26,7 @@ import {
   type MacroTotals,
 } from "@/lib/platform/nutrition-experience";
 import type { NutritionSlotKey } from "@/lib/platform/nutrition-strategy";
+import type { TrainingMealWindow } from "@/lib/platform/customer-journey";
 import {
   NUTRITION_PLAN_CHANGE_EVENT,
   adoptMealAlternative,
@@ -56,7 +57,11 @@ function plannedFromSlots(slots: MealSlot[]): MacroTotals {
 
 export function useNutritionPlan(
   selectedDateKey?: string,
-  opts?: { catalogPreview?: boolean; breakfastGoalKey?: string | null },
+  opts?: {
+    catalogPreview?: boolean;
+    breakfastGoalKey?: string | null;
+    trainingMealWindow?: TrainingMealWindow | null;
+  },
 ) {
   const queryClient = useQueryClient();
   const { userId, snapshot } = usePlatformActivity();
@@ -64,9 +69,10 @@ export function useNutritionPlan(
   const isSelectedToday = dateKey === todayKey();
   const catalogPreview = Boolean(opts?.catalogPreview);
   const breakfastGoalKey = opts?.breakfastGoalKey ?? null;
+  const trainingMealWindow = opts?.trainingMealWindow ?? null;
   const [tick, setTick] = useState(0);
   const [catalogSlots, setCatalogSlots] = useState<MealSlot[]>(() =>
-    getNutritionMealSlots({ breakfastGoalKey }),
+    getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }),
   );
   const runtimeQuery = useAssignedNutritionRuntime(!catalogPreview);
   const refetchRuntime = runtimeQuery.refetch;
@@ -84,13 +90,13 @@ export function useNutritionPlan(
 
   useEffect(() => {
     void hydrateMealLibraryFromSupabase().then(() => {
-      setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey }));
+      setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }));
     });
-  }, [breakfastGoalKey]);
+  }, [breakfastGoalKey, trainingMealWindow]);
 
   useEffect(() => {
-    setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey }));
-  }, [breakfastGoalKey]);
+    setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }));
+  }, [breakfastGoalKey, trainingMealWindow]);
 
   const assignmentReason = catalogPreview ? "preview" : runtimeQuery.data?.reason;
   const assignedSlots = useMemo(() => {
@@ -116,20 +122,18 @@ export function useNutritionPlan(
     return next;
   }, [catalogPreview, isSelectedToday, localStatuses, runtimeQuery.data?.todayLogs]);
 
-  const choices = useMemo(
-    () => getMealChoiceMap(userId, dateKey),
-    [userId, dateKey, tick],
-  );
+  const choices = useMemo(() => getMealChoiceMap(userId, dateKey), [userId, dateKey, tick]);
 
-  const shoppingChecked = useMemo(
-    () => getShoppingChecked(userId),
-    [userId, tick],
-  );
+  const shoppingChecked = useMemo(() => getShoppingChecked(userId), [userId, tick]);
 
   const macroLayers = useMemo(() => {
     if (catalogPreview || runtimeQuery.data?.reason !== "ok") {
       const planned = plannedFromSlots(assignedSlots);
-      return { target: null as MacroTotals | null, planned, consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 } };
+      return {
+        target: null as MacroTotals | null,
+        planned,
+        consumed: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      };
     }
     return runtimeMacroLayers(runtimeQuery.data);
   }, [assignedSlots, catalogPreview, runtimeQuery.data]);
@@ -177,7 +181,9 @@ export function useNutritionPlan(
     markMealCompleted(userId, dateKey, slotId);
     const slot = assignedSlots.find((item) => item.id === slotId);
     if (slot?.assignmentSlotId && isSelectedToday) {
-      void logMyNutritionMeal(slot.assignmentSlotId, "completed", dateKey).then(() => runtimeQuery.refetch());
+      void logMyNutritionMeal(slot.assignmentSlotId, "completed", dateKey).then(() =>
+        runtimeQuery.refetch(),
+      );
     }
   };
 
@@ -185,7 +191,9 @@ export function useNutritionPlan(
     markMealSkipped(userId, dateKey, slotId);
     const slot = assignedSlots.find((item) => item.id === slotId);
     if (slot?.assignmentSlotId && isSelectedToday) {
-      void logMyNutritionMeal(slot.assignmentSlotId, "skipped", dateKey).then(() => runtimeQuery.refetch());
+      void logMyNutritionMeal(slot.assignmentSlotId, "skipped", dateKey).then(() =>
+        runtimeQuery.refetch(),
+      );
     }
   };
 
@@ -212,14 +220,18 @@ export function useNutritionPlan(
     assignmentName: runtimeQuery.data?.assignment?.name_ar ?? null,
     runtimeLoading: !catalogPreview && runtimeQuery.isLoading,
     runtimeError: !catalogPreview && runtimeQuery.isError,
-    assignmentSchema: catalogPreview ? null : runtimeQuery.data?.schema ?? null,
+    assignmentSchema: catalogPreview ? null : (runtimeQuery.data?.schema ?? null),
     markCompleted,
     markSkipped,
     adoptAlternative: async (slotId: string, alternativeId: string) => {
       if (!catalogPreview) {
         const slot = assignedSlots.find((item) => item.id === slotId);
         const runtime = runtimeQuery.data;
-        if (runtime?.reason === "ok" && runtime.schema === "STRATEGY_V1_DYNAMIC" && slot?.assignmentSlotId) {
+        if (
+          runtime?.reason === "ok" &&
+          runtime.schema === "STRATEGY_V1_DYNAMIC" &&
+          slot?.assignmentSlotId
+        ) {
           const day = runtimeToResolvedNutritionDay(runtime);
           const nutritionTarget = runtimeToNutritionTarget(runtime);
           if (day && nutritionTarget) {
@@ -266,9 +278,7 @@ export function useNutritionPlan(
 }
 
 export function useOnlineStatus() {
-  const [online, setOnline] = useState(
-    typeof navigator === "undefined" ? true : navigator.onLine,
-  );
+  const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
 
   useEffect(() => {
     const on = () => setOnline(true);

@@ -28,6 +28,21 @@ const PREMIUM_PERKS = [
   "دعم مباشر على مدار الساعة",
 ] as const;
 
+const NUTRITION_PREMIUM_PERKS = [
+  "خطة غذائية كاملة حسب هدفك",
+  "توزيع وجبات قبل وبعد التمرين",
+  "كميات وماكروز واضحة لكل وجبة",
+  "دعم مباشر على مدار الساعة",
+] as const;
+
+type HoldSurface = "training" | "nutrition";
+
+const NUTRITION_STEP_TITLES = ["تحليل بياناتك", "بناء الخطة", "توزيع الوجبات", "جاهزة لك"] as const;
+
+function stepTitle(stepId: number, fallback: string, surface: HoldSurface) {
+  return surface === "nutrition" ? NUTRITION_STEP_TITLES[stepId - 1] ?? fallback : fallback;
+}
+
 const JOURNEY_PATH = "M304 58 C 250 58, 234 16, 180 16 S 124 64, 72 64 16 24, 16 24";
 
 function holdProgress(hold: ProgramPreparationHold) {
@@ -48,7 +63,7 @@ function FlipDigits({ value, className }: { value: number; className?: string })
   );
 }
 
-function RadarDish({ hold }: { hold: ProgramPreparationHold }) {
+function RadarDish({ hold, surface }: { hold: ProgramPreparationHold; surface: HoldSurface }) {
   return (
     <div className="relative mx-auto h-[260px] w-[260px]">
       <div className="absolute inset-[15px]">
@@ -88,7 +103,7 @@ function RadarDish({ hold }: { hold: ProgramPreparationHold }) {
                         : "bg-white/90 text-muted-foreground ring-1 ring-border/60",
                     )}
                   >
-                    {step.titleAr}
+                    {stepTitle(step.id, step.titleAr, surface)}
                   </p>
                 ) : null}
               </div>
@@ -112,7 +127,8 @@ function RadarDish({ hold }: { hold: ProgramPreparationHold }) {
   );
 }
 
-function HoldWhyCard() {
+function HoldWhyCard({ surface }: { surface: HoldSurface }) {
+  const nutrition = surface === "nutrition";
   return (
     <section
       className={cn(
@@ -120,16 +136,29 @@ function HoldWhyCard() {
         HOLD_BLEED,
       )}
     >
-      <p className="text-[10px] font-black text-primary">{TRAINING_PRODUCT_COPY.holdBadge}</p>
+      <p className="text-[10px] font-black text-primary">
+        {nutrition ? "جاري إعداد تغذيتك" : TRAINING_PRODUCT_COPY.holdBadge}
+      </p>
       <h2 className="text-[17px] font-black leading-snug text-foreground">
-        {TRAINING_PRODUCT_COPY.holdTitle}
+        {nutrition ? "نحن نجهّز لك خطتك الغذائية" : TRAINING_PRODUCT_COPY.holdTitle}
       </h2>
-      <p className="text-[12px] leading-relaxed text-muted-foreground">{TRAINING_PRODUCT_COPY.holdBody}</p>
+      <p className="text-[12px] leading-relaxed text-muted-foreground">
+        {nutrition
+          ? "نحلل بياناتك وهدفك لنرتب وجباتك الأساسية ووجبتي قبل وبعد التمرين بشكل مناسب."
+          : TRAINING_PRODUCT_COPY.holdBody}
+      </p>
     </section>
   );
 }
 
-function OriginalPremiumCard({ onUpgrade }: { onUpgrade: () => void }) {
+function OriginalPremiumCard({
+  onUpgrade,
+  surface,
+}: {
+  onUpgrade: () => void;
+  surface: HoldSurface;
+}) {
+  const perks = surface === "nutrition" ? NUTRITION_PREMIUM_PERKS : PREMIUM_PERKS;
   return (
     <section className={cn("relative overflow-hidden rounded-3xl p-4 text-white", HOLD_BLEED)}>
       <OptimizedImage
@@ -152,7 +181,7 @@ function OriginalPremiumCard({ onUpgrade }: { onUpgrade: () => void }) {
           <p className="text-[12px] text-white/80">{TRAINING_PRODUCT_COPY.holdUpgradeLead}</p>
         </div>
         <ul className="space-y-1.5">
-          {PREMIUM_PERKS.map((perk) => (
+          {perks.map((perk) => (
             <li key={perk} className="flex items-center justify-end gap-2 text-[12px] font-bold">
               <span>{perk}</span>
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" strokeWidth={2.2} />
@@ -176,7 +205,7 @@ function OriginalPremiumCard({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
-function MapJourney({ hold }: { hold: ProgramPreparationHold }) {
+function MapJourney({ hold, surface }: { hold: ProgramPreparationHold; surface: HoldSurface }) {
   const progress = holdProgress(hold);
   return (
     <div aria-label="خريطة تنفيذ البرنامج" dir="rtl">
@@ -207,7 +236,7 @@ function MapJourney({ hold }: { hold: ProgramPreparationHold }) {
               step.id === hold.currentStep ? "text-primary" : "text-muted-foreground",
             )}
           >
-            {step.titleAr}
+            {stepTitle(step.id, step.titleAr, surface)}
           </p>
         ))}
       </div>
@@ -236,7 +265,13 @@ function TimerCells({ hold }: { hold: ProgramPreparationHold }) {
   );
 }
 
-function JourneyRadarCard({ hold }: { hold: ProgramPreparationHold }) {
+function JourneyRadarCard({
+  hold,
+  surface,
+}: {
+  hold: ProgramPreparationHold;
+  surface: HoldSurface;
+}) {
   return (
     <section
       className={cn(
@@ -249,24 +284,28 @@ function JourneyRadarCard({ hold }: { hold: ProgramPreparationHold }) {
         <span>خريطة الرحلة</span>
       </div>
       <div className="mt-3">
-        <RadarDish hold={hold} />
+        <RadarDish hold={hold} surface={surface} />
       </div>
       <div className="mt-3 space-y-3">
         <TimerCells hold={hold} />
-        <MapJourney hold={hold} />
+        <MapJourney hold={hold} surface={surface} />
       </div>
     </section>
   );
 }
 
-function HoldTip() {
+function HoldTip({ surface }: { surface: HoldSurface }) {
   return (
     <section className={cn("platform-card flex items-start gap-3 rounded-3xl p-4", HOLD_BLEED)}>
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary">
         <Lightbulb className="h-5 w-5" />
       </span>
       <p className="text-[12px] leading-relaxed text-muted-foreground">
-        <span className="font-black text-foreground">{TRAINING_PRODUCT_COPY.holdNotify}</span>
+        <span className="font-black text-foreground">
+          {surface === "nutrition"
+            ? "سنقوم بإشعارك فور جاهزية خطتك الغذائية."
+            : TRAINING_PRODUCT_COPY.holdNotify}
+        </span>
         <span className="mt-0.5 block">{TRAINING_PRODUCT_COPY.holdExplore}</span>
       </p>
     </section>
@@ -278,17 +317,19 @@ export function ProgramPreparationHoldCard({
   hold,
   showUpgrade,
   onUpgrade,
+  surface = "training",
 }: {
   hold: ProgramPreparationHold;
   showUpgrade: boolean;
   onUpgrade: () => void;
+  surface?: HoldSurface;
 }) {
   return (
     <div className="space-y-3.5">
-      <HoldWhyCard />
-      <JourneyRadarCard hold={hold} />
-      {showUpgrade ? <OriginalPremiumCard onUpgrade={onUpgrade} /> : null}
-      <HoldTip />
+      <HoldWhyCard surface={surface} />
+      <JourneyRadarCard hold={hold} surface={surface} />
+      {showUpgrade ? <OriginalPremiumCard onUpgrade={onUpgrade} surface={surface} /> : null}
+      <HoldTip surface={surface} />
     </div>
   );
 }

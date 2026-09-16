@@ -5,7 +5,9 @@ import {
   listMealsByTypeAndGoal,
   mealDeliveryPath,
   type MealLibraryRecord,
+  type MealType,
 } from "./meal-library";
+import { composeSixMealOrder, type TrainingMealWindow } from "./customer-journey";
 import { mapQuizGoalToClientGoalId } from "./nutrition-strategy/goal-profile-resolver";
 import type { ClientGoalId } from "./nutrition-strategy/types";
 
@@ -111,7 +113,15 @@ export const MEAL_STATUS_LABELS: Record<MealStatus, string> = {
   skipped: "لم يتم تناولها",
 };
 
-const AR_WEEKDAYS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"] as const;
+const AR_WEEKDAYS = [
+  "الأحد",
+  "الإثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+] as const;
 const AR_WEEKDAYS_SHORT = ["أحد", "إثن", "ثلا", "أرب", "خمي", "جمع", "سبت"] as const;
 
 function dateKeyFromDate(date: Date) {
@@ -172,7 +182,9 @@ export function resolveFreeBreakfastGoalKey(
   clientGoalId?: ClientGoalId | null,
 ): string {
   const client =
-    clientGoalId ?? mapQuizGoalToClientGoalId(quizGoalId) ?? ("GENERAL_HEALTH_FITNESS" as ClientGoalId);
+    clientGoalId ??
+    mapQuizGoalToClientGoalId(quizGoalId) ??
+    ("GENERAL_HEALTH_FITNESS" as ClientGoalId);
   const map: Record<ClientGoalId, string> = {
     FAT_LOSS: "fat_loss",
     MUSCLE_GAIN: "muscle_gain",
@@ -222,51 +234,44 @@ export const NUTRITION_GOALS: MacroTotals = {
  * User nutrition plan slots. Defaults are assigned from the Meal Library
  * by meal_type; alternatives come only from the package substitution_profile.
  */
-const NUTRITION_PLAN_SLOT_DEFS = [
-  {
-    id: "breakfast",
-    slotLabel: "الفطور",
-    timeLabel: "8:00 ص",
-    hour: 8,
-    minute: 0,
-    defaultExternalId: "MEAL-001",
-  },
-  {
-    id: "snack",
-    slotLabel: "سناك",
-    timeLabel: "11:00 ص",
-    hour: 11,
-    minute: 0,
-    defaultExternalId: "MEAL-186",
-  },
-  {
-    id: "lunch",
-    slotLabel: "الغداء",
-    timeLabel: "2:00 م",
-    hour: 14,
-    minute: 0,
-    defaultExternalId: "MEAL-056",
-  },
-  {
-    id: "dinner",
-    slotLabel: "العشاء",
-    timeLabel: "8:00 م",
-    hour: 20,
-    minute: 0,
-    defaultExternalId: "MEAL-126",
-  },
-] as const;
+const SLOT_CONTRACT = {
+  breakfast: { label: "الفطور", type: "breakfast", fallback: "MEAL-001" },
+  lunch: { label: "الغداء", type: "lunch", fallback: "MEAL-056" },
+  evening_meal: { label: "وجبة المساء", type: "snack", fallback: "MEAL-186" },
+  dinner: { label: "العشاء", type: "dinner", fallback: "MEAL-126" },
+  pre_workout: { label: "قبل التمرين", type: "pre_workout", fallback: "MEAL-186" },
+  post_workout: { label: "بعد التمرين", type: "post_workout", fallback: "MEAL-056" },
+} as const;
+
+function pickMealExternalId(type: MealType, goalKey: string | null | undefined, fallback: string) {
+  return (
+    listMealsByTypeAndGoal(type, goalKey ?? undefined)[0]?.external_id ??
+    listMealsByTypeAndGoal(type)[0]?.external_id ??
+    fallback
+  );
+}
 
 export function getNutritionMealSlots(opts?: {
   breakfastGoalKey?: string | null;
+  trainingMealWindow?: TrainingMealWindow | null;
 }): MealSlot[] {
-  const breakfastId = pickGoalBreakfastExternalId(opts?.breakfastGoalKey);
-  return NUTRITION_PLAN_SLOT_DEFS.map((slot) =>
-    buildPilotSlot({
-      ...slot,
-      defaultExternalId: slot.id === "breakfast" ? breakfastId : slot.defaultExternalId,
-    }),
-  );
+  const order = composeSixMealOrder(opts?.trainingMealWindow ?? "after_lunch");
+  return order.map((id, index) => {
+    const contract = SLOT_CONTRACT[id];
+    const hour = [8, 11, 14, 16, 18, 20][index] ?? 20;
+    const externalId =
+      id === "breakfast"
+        ? pickGoalBreakfastExternalId(opts?.breakfastGoalKey)
+        : pickMealExternalId(contract.type, opts?.breakfastGoalKey, contract.fallback);
+    return buildPilotSlot({
+      id,
+      slotLabel: contract.label,
+      timeLabel: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? "م" : "ص"}`,
+      hour,
+      minute: 0,
+      defaultExternalId: externalId,
+    });
+  });
 }
 
 export const NUTRITION_MEAL_SLOTS: MealSlot[] = getNutritionMealSlots();
@@ -290,8 +295,7 @@ export const SHOPPING_LIST_SEED: ShoppingItem[] = [
   { id: "e2", name: "لوز نيء", quantity: "200 غ", category: "extras" },
 ];
 
-export const WATER_TIP =
-  "اشرب كوباً مع كل وجبة وبين الوجبات — الترطيب يرفع الطاقة والالتزام.";
+export const WATER_TIP = "اشرب كوباً مع كل وجبة وبين الوجبات — الترطيب يرفع الطاقة والالتزام.";
 
 /** First meal of the day — the only unlocked slot for free members (today only). */
 export const FREE_MEMBER_UNLOCKED_MEAL_SLOT_ID = "breakfast";
@@ -325,11 +329,7 @@ export function buildCurrentWeekDays(referenceDate = new Date()): NutritionWeekD
     const dateKey = dateKeyFromDate(calendarDate);
     const isToday = dateKey === todayKey;
     const isPast = dateKey < todayKey;
-    const commitmentPct = isPast
-      ? [72, 80, 65, 90, 55, 88, 70][index] ?? 70
-      : isToday
-        ? 0
-        : 0;
+    const commitmentPct = isPast ? ([72, 80, 65, 90, 55, 88, 70][index] ?? 70) : isToday ? 0 : 0;
 
     return {
       id: AR_WEEKDAYS[index]!,
@@ -354,7 +354,7 @@ export function getMealByAlternativeId(
 
 export function findMealSlot(
   slotId: string,
-  opts?: { breakfastGoalKey?: string | null },
+  opts?: { breakfastGoalKey?: string | null; trainingMealWindow?: TrainingMealWindow | null },
 ): MealSlot | undefined {
   return getNutritionMealSlots(opts).find((slot) => slot.id === slotId);
 }

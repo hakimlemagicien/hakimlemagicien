@@ -6,6 +6,7 @@ import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { useMembership } from "@/hooks/useMembership";
 import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
+import { useCustomerJourney } from "@/hooks/useCustomerJourney";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
 import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
@@ -86,14 +87,15 @@ function PlatformLayout() {
   const membership = useMembership();
   const { userId } = usePlatformActivity();
   const hasWorkoutProgram = membership.features.workout_program;
+  const journey = useCustomerJourney();
   const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram && !membership.loading);
   const { hold, loading: holdLoading } = useProgramPreparationHold({
     coachAssigned: runtimeQuery.data?.reason === "ok",
   });
-  // Assign immediately even during preparation hold so the program is ready when the hold ends
-  // (or unlocks early once runtime becomes ok).
+  // Customer Journey V1 owns first assignment timing. Existing/grandfathered users are already ready.
   usePaidTrainingAutoAssign({
-    enabled: !membership.loading && Boolean(userId) && !holdLoading,
+    enabled:
+      !membership.loading && Boolean(userId) && !holdLoading && journey.data?.phase === "ready",
     userId,
     membershipTier: membership.tier,
     hasWorkoutProgram,

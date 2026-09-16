@@ -162,18 +162,31 @@ export function runMealLibraryTests() {
   assert(glutenMeal, "MEAL-019 exists");
   assert(glutenMeal.allergens.includes("gluten"), "wheat/gluten meals stay tagged gluten");
 
-  assertEqual(NUTRITION_MEAL_SLOTS.length, 4, "dashboard keeps four plan slots");
+  assertEqual(NUTRITION_MEAL_SLOTS.length, 6, "dashboard composes six deterministic plan slots");
   assertEqual(NUTRITION_MEAL_SLOTS[0]?.defaultMeal.id, "MEAL-001", "breakfast default");
-  assertEqual(NUTRITION_MEAL_SLOTS[1]?.defaultMeal.id, "MEAL-186", "snack default");
-  assertEqual(NUTRITION_MEAL_SLOTS[2]?.defaultMeal.id, "MEAL-056", "lunch default");
-  assertEqual(NUTRITION_MEAL_SLOTS[3]?.defaultMeal.id, "MEAL-126", "dinner default");
-  assertEqual(NUTRITION_MEAL_SLOTS[0]?.defaultMeal.calories, meal001.calories, "slot calories follow V2");
+  assertEqual(
+    NUTRITION_MEAL_SLOTS.map((slot) => slot.id),
+    ["breakfast", "lunch", "pre_workout", "post_workout", "evening_meal", "dinner"],
+    "default after-lunch ordering",
+  );
+  assertEqual(
+    NUTRITION_MEAL_SLOTS[2]?.defaultMeal.id.startsWith("MEAL-"),
+    true,
+    "pre-workout meal is approved library content",
+  );
+  assertEqual(
+    NUTRITION_MEAL_SLOTS[3]?.defaultMeal.id.startsWith("MEAL-"),
+    true,
+    "post-workout meal is approved library content",
+  );
+  assertEqual(
+    NUTRITION_MEAL_SLOTS[0]?.defaultMeal.calories,
+    meal001.calories,
+    "slot calories follow V2",
+  );
 
   for (const slot of NUTRITION_MEAL_SLOTS) {
-    const allowed = new Set([
-      slot.defaultMeal.id,
-      ...slot.alternatives.map((item) => item.id),
-    ]);
+    const allowed = new Set([slot.defaultMeal.id, ...slot.alternatives.map((item) => item.id)]);
     for (const option of [slot.defaultMeal, ...slot.alternatives]) {
       assert(allowed.has(option.id), `${slot.id} option ${option.id} is contract-approved`);
       const record = getMealByExternalId(option.id);

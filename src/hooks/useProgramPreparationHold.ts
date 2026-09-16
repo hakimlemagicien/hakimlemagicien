@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { PROFILE_DETAILS_KEY } from "@/hooks/useProfileExperience";
-import { fetchMyProfileDetails } from "@/lib/platform/profile-api";
+import { useCustomerJourney } from "@/hooks/useCustomerJourney";
 import {
-  resolveProgramPreparationHold,
+  stepForElapsedMs,
   type ProgramPreparationHold,
 } from "@/lib/platform/program-preparation-hold";
 
@@ -11,19 +9,27 @@ import {
  * Hold room for brand-new accounts only (createdAt within 2h, no coach assign).
  * Existing accounts — including founder/admin — never enter the hold room.
  */
-export function useProgramPreparationHold(input?: { coachAssigned?: boolean }) {
-  const profileQuery = useQuery({
-    queryKey: PROFILE_DETAILS_KEY,
-    queryFn: fetchMyProfileDetails,
-    staleTime: 30_000,
-  });
+export function useProgramPreparationHold(_input?: { coachAssigned?: boolean }) {
+  const journey = useCustomerJourney();
   const [now, setNow] = useState(() => Date.now());
-
-  const hold = resolveProgramPreparationHold({
-    createdAt: profileQuery.data?.createdAt ?? null,
-    now,
-    coachAssigned: input?.coachAssigned,
-  });
+  const started = Date.parse(journey.data?.preparationStartedAt ?? "");
+  const ready = Date.parse(journey.data?.preparationReadyAt ?? "");
+  const total =
+    Number.isFinite(started) && Number.isFinite(ready) ? Math.max(ready - started, 1) : 1;
+  const remainingMs = Number.isFinite(ready) ? Math.max(0, ready - now) : 0;
+  const elapsedMs = Number.isFinite(started) ? Math.max(0, now - started) : 0;
+  const active = journey.data?.phase === "preparing" && remainingMs > 0;
+  const secondsTotal = Math.floor(remainingMs / 1000);
+  const hold: ProgramPreparationHold = {
+    active,
+    remainingMs,
+    elapsedMs,
+    unlocksAt: journey.data?.preparationReadyAt ?? null,
+    hours: Math.floor(secondsTotal / 3600),
+    minutes: Math.floor((secondsTotal % 3600) / 60),
+    seconds: secondsTotal % 60,
+    currentStep: active ? stepForElapsedMs((elapsedMs / total) * (2 * 60 * 60 * 1000)) : 4,
+  };
 
   useEffect(() => {
     if (!hold.active) return;
@@ -33,8 +39,8 @@ export function useProgramPreparationHold(input?: { coachAssigned?: boolean }) {
 
   return {
     hold,
-    loading: profileQuery.isLoading,
-    createdAt: profileQuery.data?.createdAt ?? null,
+    loading: journey.isLoading,
+    createdAt: journey.data?.preparationStartedAt ?? null,
   };
 }
 

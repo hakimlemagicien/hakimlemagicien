@@ -17,6 +17,7 @@
 | 2 | [`APP_ARCHITECTURE.md`](./APP_ARCHITECTURE.md) | معمارية المنتج: تسويق منفصل عن التطبيق |
 | 2a | [`ADMIN_COMMAND_CENTER_OPERATIONS.md`](./ADMIN_COMMAND_CENTER_OPERATIONS.md) | `/admin` كـ Control Plane — Content Publish ≠ Code Deploy |
 | 2b | [`FREE_MEMBERSHIP_V1.md`](./FREE_MEMBERSHIP_V1.md) | عقد العضو المجاني: معاينة هيكل + فطور حسب الهدف |
+| 2b1 | [`CUSTOMER_JOURNEY_V1.md`](./CUSTOMER_JOURNEY_V1.md) | عقد رحلة العميل V1: العداد، المطابقة، القفل، التغذية، وفتح الاشتراك |
 | 2c | [`TRAINING_TEMPLATE_UNIFIED_CONTRACT.md`](./TRAINING_TEMPLATE_UNIFIED_CONTRACT.md) | عقد قوالب التدريب الموحد + جسر Primary Strategy |
 | 2d | [`TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md`](./TRAINING_TEMPLATE_ROUTING_COVERAGE_AUDIT.md) | تدقيق تغطية المسارات Strategy×Level×Env×Days + فجوات القوالب |
 | 2e | [`phase4-visual-evidence/README.md`](./phase4-visual-evidence/README.md) | أدلة بصرية Phase 4 — مكتبة القوالب + لوحة التوصية |

@@ -1,12 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import {
-  ChevronLeft,
-  ClipboardList,
-  LineChart,
-  Lock,
-} from "lucide-react";
+import { ChevronLeft, ClipboardList, LineChart, Lock } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { NutritionWaterCard } from "@/components/platform/water/NutritionWaterCard";
 import {
@@ -46,6 +41,10 @@ import {
 import { NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { cn } from "@/lib/utils";
+import { useCustomerJourney } from "@/hooks/useCustomerJourney";
+import { NutritionTrainingTimeQuestion } from "@/components/platform/customer-journey/NutritionTrainingTimeQuestion";
+import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
+import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 
 type MacroTone = "protein" | "carbs" | "fat";
 
@@ -95,9 +94,11 @@ function CommitmentRing({ pct }: { pct: number }) {
 }
 
 function NutritionDashboardPage() {
-  const { entitlements } = useMembership();
+  const membership = useMembership();
+  const { entitlements } = membership;
   const { openUpgradeWithContext } = useUpgradeFlow();
   const freePreview = !entitlements.nutrition.fullDay;
+  const journey = useCustomerJourney();
   const online = useOnlineStatus();
   const weekDays = useMemo(() => buildCurrentWeekDays(), []);
   const todayKey = weekDays.find((d) => d.isToday)?.dateKey ?? weekDays[0]!.dateKey;
@@ -111,7 +112,9 @@ function NutritionDashboardPage() {
   const plan = useNutritionPlan(selectedDateKey, {
     catalogPreview: freePreview,
     breakfastGoalKey: freePreview ? breakfastGoalKey : null,
+    trainingMealWindow: journey.data?.trainingMealWindow,
   });
+  const { hold, loading: holdLoading } = useProgramPreparationHold();
   const isSelectedToday = selectedDateKey === todayKey;
   const freeDayFullyLocked = freePreview && !isSelectedToday;
   const openNutritionUpgrade = () =>
@@ -132,9 +135,36 @@ function NutritionDashboardPage() {
     plan.meals.find((item) => item.status === "current")?.slot.id ??
     plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
 
+  if (holdLoading) {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionDashboardSkeleton />
+      </PlatformStack>
+    );
+  }
+
+  if (hold.active) {
+    return (
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <ProgramPreparationHoldCard
+          hold={hold}
+          surface="nutrition"
+          showUpgrade={!membership.is_paid}
+          onUpgrade={() =>
+            openUpgradeWithContext("NUTRITION", NUTRITION_PRODUCT_COPY.freeUpgradeBody)
+          }
+        />
+      </PlatformStack>
+    );
+  }
+
   if (plan.runtimeLoading) {
     return (
-      <PlatformStack>
+      <PlatformStack className="gap-3.5 pb-2">
+        <NutritionHeader />
+        <NutritionTrainingTimeQuestion />
         <NutritionDashboardSkeleton />
       </PlatformStack>
     );
@@ -144,6 +174,7 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
+        <NutritionTrainingTimeQuestion />
         <NutritionErrorCard onRetry={retry} />
       </PlatformStack>
     );
@@ -153,6 +184,7 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
+        <NutritionTrainingTimeQuestion />
         <NutritionEmptyState
           title={
             plan.assignmentReason === "scheduled"
@@ -169,6 +201,7 @@ function NutritionDashboardPage() {
     <PlatformStack className="gap-3.5 pb-2">
       <NutritionOfflineBanner online={online} />
       <NutritionHeader />
+      <NutritionTrainingTimeQuestion />
 
       {loadError ? (
         <NutritionErrorCard onRetry={retry} />
@@ -245,7 +278,11 @@ function NutritionDashboardPage() {
                     to="/app/nutrition/shopping"
                     className="inline-flex items-center gap-0.5 text-[11px] font-bold text-primary"
                   >
-                    {freePreview ? <Lock className="h-3 w-3" /> : <ClipboardList className="h-3 w-3" />}
+                    {freePreview ? (
+                      <Lock className="h-3 w-3" />
+                    ) : (
+                      <ClipboardList className="h-3 w-3" />
+                    )}
                     التسوق
                   </Link>
                 </div>
@@ -289,7 +326,10 @@ function NutritionDashboardPage() {
                             className="h-0 w-0 border-x-[4px] border-b-[5px] border-x-transparent border-b-primary"
                           />
                         ) : freePreview && !day.isToday ? (
-                          <Lock className="h-2.5 w-2.5 text-muted-foreground/80" strokeWidth={2.6} />
+                          <Lock
+                            className="h-2.5 w-2.5 text-muted-foreground/80"
+                            strokeWidth={2.6}
+                          />
                         ) : null}
                       </span>
                     </button>
@@ -305,20 +345,21 @@ function NutritionDashboardPage() {
                 <h2 className="text-[13px] font-black text-foreground">وجبات اليوم</h2>
                 <div className="flex items-center gap-2">
                   {swapLabel ? <MealSwapAllowance label={swapLabel} /> : null}
-                {plan.meals.length > 0 ? (
-                  <Link
-                    to="/app/nutrition/meal"
-                    search={{
-                      mealId:
-                        plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")
-                          ?.slot.id ?? plan.meals[0]!.slot.id,
-                      date: selectedDateKey,
-                    }}
-                    className="inline-flex items-center rounded-full border border-primary px-2.5 py-1 text-[11px] font-bold text-primary"
-                  >
-                    + تسجيل وجبة
-                  </Link>
-                ) : null}
+                  {plan.meals.length > 0 ? (
+                    <Link
+                      to="/app/nutrition/meal"
+                      search={{
+                        mealId:
+                          plan.meals.find(
+                            (item) => item.status !== "completed" && item.status !== "skipped",
+                          )?.slot.id ?? plan.meals[0]!.slot.id,
+                        date: selectedDateKey,
+                      }}
+                      className="inline-flex items-center rounded-full border border-primary px-2.5 py-1 text-[11px] font-bold text-primary"
+                    >
+                      + تسجيل وجبة
+                    </Link>
+                  ) : null}
                 </div>
               </div>
               {freePreview && isSelectedToday ? <NutritionFreeConversionBanner /> : null}
@@ -395,15 +436,7 @@ function NutritionDashboardPage() {
   );
 }
 
-function MacroStat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: MacroTone;
-}) {
+function MacroStat({ label, value, tone }: { label: string; value: number; tone: MacroTone }) {
   const toneClass =
     tone === "protein"
       ? "bg-[#E8F5E9] text-[#2E7D32]"
@@ -503,7 +536,12 @@ function MealTimelineCard({
 
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right">
         <div className="flex items-center gap-1.5">
-          <p className={cn("font-bold text-muted-foreground", featured ? "text-[11px]" : "text-[10px]")}>
+          <p
+            className={cn(
+              "font-bold text-muted-foreground",
+              featured ? "text-[11px]" : "text-[10px]",
+            )}
+          >
             {timeLabel}
           </p>
           <p className={cn("font-black text-primary", featured ? "text-[13px]" : "text-[11px]")}>
@@ -518,7 +556,12 @@ function MealTimelineCard({
         >
           {mealName}
         </p>
-        <p className={cn("font-medium text-muted-foreground", featured ? "text-[11px]" : "text-[10px]")}>
+        <p
+          className={cn(
+            "font-medium text-muted-foreground",
+            featured ? "text-[11px]" : "text-[10px]",
+          )}
+        >
           {formatNutritionNumber(calories)} سعرة · ب {formatNutritionNumber(protein)} · ك{" "}
           {formatNutritionNumber(carbs)} · د {formatNutritionNumber(fat)}
         </p>
