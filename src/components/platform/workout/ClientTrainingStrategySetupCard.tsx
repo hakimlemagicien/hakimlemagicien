@@ -20,6 +20,7 @@ type Props = {
   initialLocationPreference?: string | null;
   /** Full quiz/training answers pack — preferred over individual fields when present. */
   initialAnswers?: Record<string, unknown> | null;
+  setupBody?: string;
   onActivated: () => void | Promise<void>;
 };
 
@@ -32,6 +33,7 @@ export function ClientTrainingStrategySetupCard({
   initialTrainingType,
   initialLocationPreference,
   initialAnswers,
+  setupBody,
   onActivated,
 }: Props) {
   const gaps = assessClientStrategySetupGaps({
@@ -44,7 +46,8 @@ export function ClientTrainingStrategySetupCard({
     locationPreference: initialLocationPreference,
     answers: {
       ...(initialAnswers ?? {}),
-      goalId: initialGoalId ?? initialGoal ?? (initialAnswers?.goalId as string | undefined) ?? null,
+      goalId:
+        initialGoalId ?? initialGoal ?? (initialAnswers?.goalId as string | undefined) ?? null,
       activityLevel:
         initialActivityLevel ?? (initialAnswers?.activityLevel as string | undefined) ?? null,
       trainingEnvironment:
@@ -96,7 +99,9 @@ export function ClientTrainingStrategySetupCard({
   if (gaps.isComplete) {
     return (
       <section className="platform-card space-y-2 rounded-3xl p-4 text-center">
-        <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.paidAutoAssignLoading}</p>
+        <p className="text-sm font-black text-foreground">
+          {TRAINING_PRODUCT_COPY.paidAutoAssignLoading}
+        </p>
         <p className="text-xs text-muted-foreground">نستخدم إجاباتك من الاستبيان لتفعيل برنامجك…</p>
         {error ? (
           <p className="text-[11px] font-bold text-destructive" role="alert">
@@ -110,9 +115,11 @@ export function ClientTrainingStrategySetupCard({
   // Rare fallback: quiz goal missing/unmapped — ask goal only, never days or place.
   return (
     <section className="platform-card space-y-3 rounded-3xl p-4 text-center">
-      <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.strategySetupTitle}</p>
+      <p className="text-sm font-black text-foreground">
+        {TRAINING_PRODUCT_COPY.strategySetupTitle}
+      </p>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        {TRAINING_PRODUCT_COPY.strategySetupBody}
+        {setupBody ?? TRAINING_PRODUCT_COPY.strategySetupBody}
       </p>
 
       {gaps.needGoal ? (
@@ -145,7 +152,9 @@ export function ClientTrainingStrategySetupCard({
         onClick={() => submit()}
         className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-xs font-black text-primary-foreground disabled:opacity-60"
       >
-        {saving ? TRAINING_PRODUCT_COPY.strategySetupSaving : TRAINING_PRODUCT_COPY.strategySetupCta}
+        {saving
+          ? TRAINING_PRODUCT_COPY.strategySetupSaving
+          : TRAINING_PRODUCT_COPY.strategySetupCta}
       </button>
     </section>
   );

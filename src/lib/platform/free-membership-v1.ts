@@ -10,7 +10,7 @@ export const FREE_MEMBERSHIP_V1_CONTRACT = {
     exercise_content: false,
   },
   nutrition: {
-    breakfast: true,
+    first_meal: true,
     remaining_meals: false,
   },
   coach: false,

@@ -11,7 +11,10 @@ import {
   getNutritionMealSlots,
   resolveFreeBreakfastGoalKey,
 } from "@/lib/platform/nutrition-experience";
-import { TRAINING_PRODUCT_COPY, NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
+import {
+  TRAINING_PRODUCT_COPY,
+  NUTRITION_PRODUCT_COPY,
+} from "@/lib/platform/training-product-copy";
 import {
   FREE_MEMBERSHIP_V1_CONTRACT,
   FREE_TRAINING_PROMO_VIDEO_SRC,
@@ -21,7 +24,10 @@ assert(isTrainingPreviewMode(FREE_ENTITLEMENTS), "FREE training preview mode");
 assert(FREE_ENTITLEMENTS.training.allowedExercisesPerSession === 0, "allowed exercises = 0");
 assert(FREE_ENTITLEMENTS.training.previewExercises === true, "structure preview on");
 assert(FREE_ENTITLEMENTS.training.fullSession === false, "full session off");
-assert(!isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }), "no free exercise");
+assert(
+  !isExerciseUnlockedByEntitlements(FREE_ENTITLEMENTS, 0, { isToday: true }),
+  "no free exercise",
+);
 assert(countVisibleSessionExercises(FREE_ENTITLEMENTS, 6) === 0, "visible exercises = 0");
 
 assert(
@@ -41,6 +47,24 @@ assert(
     todayKey: "2026-09-12",
   }),
   "lunch locked",
+);
+assert(
+  isMealSlotUnlockedByEntitlements(FREE_ENTITLEMENTS, {
+    slotId: "pre_workout",
+    slotIndex: 0,
+    dateKey: "2026-09-12",
+    todayKey: "2026-09-12",
+  }),
+  "the first resolved meal is unlocked even when it is pre-workout",
+);
+assert(
+  !isMealSlotUnlockedByEntitlements(FREE_ENTITLEMENTS, {
+    slotId: "breakfast",
+    slotIndex: 2,
+    dateKey: "2026-09-12",
+    todayKey: "2026-09-12",
+  }),
+  "breakfast stays locked when meal timing places it after the first slot",
 );
 
 assert.equal(resolveFreeBreakfastGoalKey("fat"), "fat_loss");
@@ -69,6 +93,6 @@ assert(NUTRITION_PRODUCT_COPY.freeUpgradeCta.includes("غذائية"), "nutritio
 assert(!TRAINING_PRODUCT_COPY.freePreviewFooter(6).includes("تمرين واحد"), "no one-exercise copy");
 assert(FREE_TRAINING_PROMO_VIDEO_SRC.includes("training-promo"), "promo video path");
 assert(FREE_MEMBERSHIP_V1_CONTRACT.training.exercise_content === false, "exercise content off");
-assert(FREE_MEMBERSHIP_V1_CONTRACT.nutrition.breakfast === true, "breakfast on");
+assert(FREE_MEMBERSHIP_V1_CONTRACT.nutrition.first_meal === true, "first meal on");
 
 console.log("free-membership-v1 tests passed");

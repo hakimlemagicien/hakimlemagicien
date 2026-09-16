@@ -105,9 +105,11 @@ export function TrainingFreeConversionPanel({
 export function NutritionFreeConversionBanner() {
   return (
     <div className="rounded-2xl border border-[#D8EFE0] bg-[#F0FAF4] p-3.5 text-right" dir="rtl">
-      <p className="font-[Tajawal] text-[13px] font-black text-[#166534]">ابدأ يومك بوجبة مناسبة لهدفك</p>
+      <p className="font-[Tajawal] text-[13px] font-black text-[#166534]">
+        ابدأ يومك بوجبة مناسبة لهدفك
+      </p>
       <p className="mt-1 font-[Tajawal] text-[11px] leading-relaxed text-[#166534]/85">
-        فطورك مفتوح — فعّل عضويتك لفتح خطتك الغذائية الكاملة.
+        وجبتك الأولى مفتوحة — فعّل عضويتك لفتح خطتك الغذائية الكاملة.
       </p>
       <UpgradeSurfaceLink
         surface="NUTRITION"
@@ -193,13 +195,12 @@ export function PromotedPlanBadge({ label }: { label: string }) {
   );
 }
 
-export function MealSwapLimitState({
-  onStay,
-}: {
-  onStay: () => void;
-}) {
+export function MealSwapLimitState({ onStay }: { onStay: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#E9D5FF] bg-gradient-to-b from-[#F7F1FF] to-white p-4 text-right" dir="rtl">
+    <div
+      className="rounded-2xl border border-[#E9D5FF] bg-gradient-to-b from-[#F7F1FF] to-white p-4 text-right"
+      dir="rtl"
+    >
       <p className="font-[Tajawal] text-[15px] font-black text-[#0F172A]">استخدمت تغييرك اليومي</p>
       <p className="mt-1 font-[Tajawal] text-[12px] leading-relaxed text-[#64748B]">
         هل تحتاج مرونة أكبر في اختياراتك الغذائية؟ PRO يمنحك خيارات أوسع وبدائل أكثر.
@@ -235,7 +236,12 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   { feature: "الملف الشخصي", free: "✓", essential: "✓", premium: "✓" },
   { feature: "التقدم", free: "✓", essential: "✓", premium: "✓" },
   { feature: "الأدوات والمحتوى", free: "✓", essential: "✓", premium: "✓" },
-  { feature: "برنامج التدريب", free: "معاينة شخصية", essential: "برنامج مفعّل", premium: "برنامج مفعّل" },
+  {
+    feature: "برنامج التدريب",
+    free: "معاينة شخصية",
+    essential: "برنامج مفعّل",
+    premium: "برنامج مفعّل",
+  },
   { feature: "تمارين/حصة", free: "1", essential: "كامل", premium: "كامل" },
   { feature: "تغيير تمرين/وجبة", free: "—", essential: "مدعوم", premium: "مرن" },
   { feature: "التغذية", free: "وجبة/يوم", essential: "خطة كاملة", premium: "خطة كاملة" },
@@ -312,7 +318,10 @@ export function FeatureComparison() {
               >
                 <span>{group.title}</span>
                 <ChevronDown
-                  className={cn("h-4 w-4 text-[#64748B] transition-transform", isOpen && "rotate-180")}
+                  className={cn(
+                    "h-4 w-4 text-[#64748B] transition-transform",
+                    isOpen && "rotate-180",
+                  )}
                   aria-hidden
                 />
               </button>
@@ -337,7 +346,9 @@ export function FeatureComparison() {
           className="flex w-full items-center justify-center gap-1 px-3 py-2.5 font-[Tajawal] text-[11px] font-extrabold text-primary"
         >
           {expanded ? "إخفاء المقارنة الكاملة" : "عرض المقارنة الكاملة"}
-          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")} />
+          <ChevronDown
+            className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
+          />
         </button>
 
         {expanded ? (

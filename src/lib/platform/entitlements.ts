@@ -1,5 +1,3 @@
-import { FREE_MEMBER_UNLOCKED_MEAL_SLOT_ID } from "./nutrition-experience";
-
 export type EntitlementTier = "free" | "essential" | "premium" | "vip";
 
 export type TrainingEntitlements = {
@@ -116,7 +114,10 @@ export function normalizeEntitlements(raw: unknown): EntitlementsSnapshot {
       dailySwapLimit,
       swapsUsedToday: readInt(nutrition.swaps_used_today, 0),
       swapsRemainingToday,
-      multipleAlternatives: readBool(nutrition.multiple_alternatives, tier === "premium" || tier === "vip"),
+      multipleAlternatives: readBool(
+        nutrition.multiple_alternatives,
+        tier === "premium" || tier === "vip",
+      ),
       unlockedMealStrategy:
         nutrition.unlocked_meal_strategy === "all_assigned" ? "all_assigned" : "first_of_day",
       advancedFeatures: readBool(nutrition.advanced_features, tier === "premium" || tier === "vip"),
@@ -147,7 +148,9 @@ export function isMealSlotUnlockedByEntitlements(
   if (ent.nutrition.fullDay) return true;
   if (input.dateKey !== input.todayKey) return false;
   if (ent.nutrition.unlockedMealStrategy === "first_of_day") {
-    return input.slotIndex === 0 || input.slotId === FREE_MEMBER_UNLOCKED_MEAL_SLOT_ID;
+    // Training timing can move pre/post-workout slots. FREE always opens the
+    // first visible meal in the resolved day order and no later slot.
+    return input.slotIndex === 0;
   }
   return input.slotIndex < ent.nutrition.allowedMealsPerDay;
 }

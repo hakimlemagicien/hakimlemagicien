@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
 import {
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Droplets,
   Dumbbell,
   Footprints,
-  MoreVertical,
   UtensilsCrossed,
 } from "lucide-react";
 import { ReadinessAdjustmentSheet } from "@/components/platform/readiness/ReadinessAdjustmentSheet";
@@ -23,7 +24,11 @@ import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { trackReadinessEvent } from "@/lib/platform/readiness-analytics";
 import { trackTrainingEvent } from "@/lib/platform/training-progress/analytics";
-import { shouldAutoOpenReadiness, hasStartedToday, type ReadinessAnswers } from "@/lib/platform/readiness";
+import {
+  shouldAutoOpenReadiness,
+  hasStartedToday,
+  type ReadinessAnswers,
+} from "@/lib/platform/readiness";
 import { buildYourDayScore, formatYourDayDate } from "@/lib/platform/your-day";
 import { cn } from "@/lib/utils";
 export type YourDaySearch = {
@@ -37,50 +42,87 @@ const TASK_ICONS = {
   activity: Footprints,
 } as const;
 
-function DayScoreGauge({
-  score,
-  max,
-  label,
-}: {
-  score: number;
-  max: number;
-  label: string;
-}) {
-  const radius = 86;
-  const circumference = Math.PI * radius;
+function useAnimatedNumber(value: number, reduceMotion: boolean) {
+  const [displayed, setDisplayed] = useState(reduceMotion ? value : 0);
+  const currentRef = useRef(reduceMotion ? value : 0);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      currentRef.current = value;
+      setDisplayed(value);
+      return;
+    }
+
+    const from = currentRef.current;
+    const startedAt = performance.now();
+    let frame = 0;
+
+    const update = (now: number) => {
+      const progress = Math.min((now - startedAt) / 900, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const next = Math.round(from + (value - from) * eased);
+      currentRef.current = next;
+      setDisplayed(next);
+      if (progress < 1) frame = window.requestAnimationFrame(update);
+    };
+
+    frame = window.requestAnimationFrame(update);
+    return () => window.cancelAnimationFrame(frame);
+  }, [reduceMotion, value]);
+
+  return displayed;
+}
+
+function DayScoreGauge({ score, max, label }: { score: number; max: number; label: string }) {
+  const reduceMotion = Boolean(useReducedMotion());
+  const animatedScore = useAnimatedNumber(score, reduceMotion);
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
   const pct = Math.min(Math.max(score / max, 0), 1);
   const offset = circumference * (1 - pct);
   const onTrack = score >= 70;
 
   return (
-    <section className="your-day-gauge" aria-label={`إنجاز اليوم ${score} من ${max}`}>
+    <section className="your-day-gauge" aria-label={`${label}: ${score} من ${max}`}>
       <div className="your-day-gauge__arc">
-        <svg viewBox="0 0 220 128" className="your-day-gauge__svg" aria-hidden>
-          <path
-            d="M24 118 A86 86 0 0 1 196 118"
+        <svg viewBox="0 0 112 112" className="your-day-gauge__svg" aria-hidden>
+          <defs>
+            <linearGradient id="your-day-score-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor={onTrack ? "#4ADE80" : "#FB923C"} />
+              <stop offset="100%" stopColor={onTrack ? "#16A34A" : "#F97316"} />
+            </linearGradient>
+          </defs>
+          <circle
+            cx="56"
+            cy="56"
+            r={radius}
             fill="none"
-            stroke="#F3EDE7"
-            strokeWidth="14"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="9"
             strokeLinecap="round"
           />
-          <path
-            d="M24 118 A86 86 0 0 1 196 118"
+          <motion.circle
+            cx="56"
+            cy="56"
+            r={radius}
             fill="none"
-            stroke={onTrack ? "#22C55E" : "#F97316"}
-            strokeWidth="14"
+            stroke="url(#your-day-score-gradient)"
+            strokeWidth="9"
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
+            initial={reduceMotion ? false : { strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: reduceMotion ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}
+            transform="rotate(-90 56 56)"
             className="your-day-gauge__fill"
           />
         </svg>
         <div className="your-day-gauge__value">
           <p className="your-day-gauge__score">
-            <span className="tabular-nums">{score}</span>
-            <span className="your-day-gauge__of"> من {max}</span>
+            <span className="tabular-nums">{animatedScore}</span>
+            <span className="your-day-gauge__of">/{max}</span>
           </p>
-          <p className={cn("your-day-gauge__status", onTrack && "is-ready")}>{label}</p>
-          <p className="your-day-gauge__hint">يتحدث تلقائياً مع كل إنجاز</p>
+          <p className="your-day-gauge__hint">إنجاز اليوم</p>
         </div>
       </div>
     </section>
@@ -89,6 +131,7 @@ function DayScoreGauge({
 
 export function YourDayPage({ search }: { search: YourDaySearch }) {
   const navigate = useNavigate();
+  const reduceMotion = Boolean(useReducedMotion());
   const { userId, snapshot, refresh } = usePlatformActivity();
   const { features } = useMembership();
   const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program));
@@ -116,7 +159,9 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
   useEffect(() => {
     if (programViewedRef.current) return;
     programViewedRef.current = true;
-    trackTrainingEvent("training_program_viewed", { has_runtime: runtimeQuery.data?.reason === "ok" });
+    trackTrainingEvent("training_program_viewed", {
+      has_runtime: runtimeQuery.data?.reason === "ok",
+    });
   }, [runtimeQuery.data?.reason]);
 
   useEffect(() => {
@@ -210,16 +255,16 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
   return (
     <PlatformStack className="your-day">
       <header className="your-day-header">
-        <Link to="/app" aria-label="رجوع" className="your-day-header__icon">
+        <Link to="/app" preload="render" aria-label="رجوع" className="your-day-header__icon">
           <ChevronRight className="h-5 w-5" />
         </Link>
         <div className="your-day-header__titles">
           <h1>يومك</h1>
           <p>{formatYourDayDate()}</p>
         </div>
-        <button type="button" aria-label="المزيد" className="your-day-header__icon">
-          <MoreVertical className="h-5 w-5" />
-        </button>
+        <span className="your-day-header__icon is-calendar" aria-hidden>
+          <CalendarDays className="h-[18px] w-[18px]" />
+        </span>
       </header>
 
       <ReadinessCard
@@ -229,21 +274,37 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
         onKeepPlan={() => void handleKeepPlan()}
       />
 
-      <DayScoreGauge score={dayScore.total} max={dayScore.max} label={dayScore.label} />
-
-      <div className="your-day-stats" aria-label="تفاصيل النقاط">
-        {dayScore.tasks.map((task) => {
-          const Icon = TASK_ICONS[task.id];
-          return (
-            <div key={task.id} className={cn("your-day-stats__item", `is-${task.id}`, task.current >= task.total && "is-done")}>
-              <Icon className="h-3.5 w-3.5" aria-hidden />
-              <span className="tabular-nums">
-                {task.points}/{task.maxPoints}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <section className="your-day-overview" aria-label="ملخص إنجاز اليوم">
+        <DayScoreGauge score={dayScore.total} max={dayScore.max} label={dayScore.label} />
+        <div className="your-day-overview__content">
+          <p className="your-day-overview__eyebrow">تقدّمك اليوم</p>
+          <p className={cn("your-day-overview__status", dayScore.total >= 70 && "is-ready")}>
+            {dayScore.label}
+          </p>
+          <p className="your-day-overview__hint">كل خطوة تُحدّث نتيجتك فوراً</p>
+          <div className="your-day-stats" aria-label="تفاصيل النقاط">
+            {dayScore.tasks.map((task) => {
+              const Icon = TASK_ICONS[task.id];
+              return (
+                <div
+                  key={task.id}
+                  className={cn(
+                    "your-day-stats__item",
+                    `is-${task.id}`,
+                    task.current >= task.total && "is-done",
+                  )}
+                  title={`${task.title}: ${task.points} من ${task.maxPoints}`}
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden />
+                  <span className="tabular-nums">
+                    {task.points}/{task.maxPoints}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       <div className="your-day-grid">
         {dayScore.tasks.map((task) => {
@@ -269,7 +330,13 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
 
           const body = (
             <>
-              <span className={cn("your-day-task__icon", `is-${task.id}`, task.current >= task.total && "is-done")}>
+              <span
+                className={cn(
+                  "your-day-task__icon",
+                  `is-${task.id}`,
+                  task.current >= task.total && "is-done",
+                )}
+              >
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <p className="your-day-task__title">{task.title}</p>
@@ -278,7 +345,11 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
                 {task.points}/{task.maxPoints}
               </p>
               <span className={cn("your-day-task__bar", task.current >= task.total && "is-done")}>
-                <span style={{ width: `${pct}%` }} />
+                <motion.span
+                  initial={reduceMotion ? false : { width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: reduceMotion ? 0 : 0.7, ease: [0.16, 1, 0.3, 1] }}
+                />
               </span>
               {action}
             </>
@@ -301,7 +372,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
           }
 
           return (
-            <Link key={task.id} to={task.href ?? "/app"} className="your-day-task">
+            <Link key={task.id} to={task.href ?? "/app"} preload="render" className="your-day-task">
               {body}
             </Link>
           );
@@ -319,7 +390,7 @@ export function YourDayPage({ search }: { search: YourDaySearch }) {
             {dayScore.nextTask.cta}
           </button>
         ) : (
-          <Link to={dayScore.nextTask.href} className="your-day-next__cta">
+          <Link to={dayScore.nextTask.href} preload="render" className="your-day-next__cta">
             {dayScore.nextTask.cta}
           </Link>
         )}

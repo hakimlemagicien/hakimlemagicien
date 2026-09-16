@@ -10,13 +10,13 @@ This is the official V1 contract from completed onboarding through preparation, 
 
 `client_customer_journeys` owns one idempotent lifecycle row per user:
 
-| State                 | Contract                                                       |
-| --------------------- | -------------------------------------------------------------- |
-| `preparing`           | Persistent original timer is running.                          |
-| `needs_training_days` | Original timer ended; fixed +10-minute input window is active. |
-| `complete_setup`      | Required input remains missing; no fake plan is shown.         |
-| `ready`               | A real client assignment exists and is reusable for unlock.    |
-| `failed`              | No safe compatible template exists; no random fallback.        |
+| State                 | Contract                                                                                                             |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `preparing`           | Persistent original timer is running.                                                                                |
+| `needs_training_days` | Original timer ended; fixed +10-minute input window is active.                                                       |
+| `complete_setup`      | Required input remains missing; a clearly temporary starter preview may be shown, but no fake assignment is created. |
+| `ready`               | A real client assignment exists and is reusable for unlock.                                                          |
+| `failed`              | No safe compatible template exists; no random fallback.                                                              |
 
 The first authenticated `/app` shell call starts the row. `preparation_started_at` and `preparation_ready_at` are stored once; refresh, navigation, logout/login, and multiple tabs only reread them. Default duration is 120 minutes in `product_runtime_settings`, not a UI constant. Existing pre-rollout users and clients with an active/scheduled assignment are grandfathered to `ready`.
 
@@ -34,6 +34,16 @@ The answer is also written into the existing `training_profiles.answers` keys so
 
 Hard filters are: published/non-archived, authored weeks, exact mapped goal, exact gender or explicitly authored `all`, and compatible level. Missing gender metadata is not neutral. Wrong gender and wrong goal are forbidden.
 
+### Missing-goal starter experience
+
+If the signed-in profile has no usable goal, Training and Nutrition must not render an empty product surface. The UI may show a clearly labelled, deterministic starter preview while the customer completes the missing goal:
+
+- Training: muscle-building, four gym days, display-only. It is not persisted as a `CLIENT_ASSIGNED_PROGRAM`.
+- Nutrition: six deterministic meals from the approved Meal Library using the muscle-gain starter key. It is not persisted as a personalized Nutrition assignment.
+- A compact, non-blocking prompt opens the existing goal setup control. Saving the goal refreshes the authoritative resolvers and replaces the starter preview.
+- A real existing Training or Nutrition assignment always wins over the starter preview.
+- The starter experience must never be described as personalized and must never use random selection.
+
 An explicit Arabic presentation contradiction is also fail-closed during matching. The baseline `54be8ba` copy defect in `MUSCLE_GAIN_PROGRESS_INTERMEDIATE_HOME_4D` is corrected by `20260916131000_program_template_presentation_integrity.sql`, including already-created snapshots that copied the wrong title.
 
 Candidates are sorted deterministically by: smallest day distance; non-exceeding frequency on a tie; exact gender; exact level; newest template version; UUID. Thus 2→3, exact 3/4 is preferred, and 6→5 when no compatible 6-day template exists. No compatible template produces `failed/no_compatible_template`.
@@ -50,13 +60,14 @@ The full runtime is entitlement-gated at the database boundary. Locked content o
 
 Nutrition asks once: “When do you usually train?” with the eight approved meal-relative windows. The value is stored as `training_meal_window` and positions exactly six deterministic slots: four main meals (`breakfast`, `lunch`, `evening_meal`, `dinner`) plus `pre_workout` and `post_workout`.
 
-For a before-window the order is pre, post, anchor meal; for an after-window it is anchor meal, pre, post. Other main meals keep chronological order. Catalog preview meals come only from the approved Meal Library, filtered by meal type and goal with stable ordering. Existing paid Nutrition assignments and their safety/allergy rules remain authoritative; no random generic paid plan is created.
+For a before-window the order is pre, post, anchor meal; for an after-window it is anchor meal, pre, post. Other main meals keep chronological order. Catalog preview meals come only from the approved Meal Library, filtered by meal type and goal with stable ordering. Existing paid Nutrition assignments and their safety/allergy rules remain authoritative; no random generic paid plan is created. When the goal alone is missing and no real assignment exists, the temporary starter preview above is permitted.
 
-FREE exposes the full goal-matched breakfast only. All other slots show safe labels and lock state. Direct locked meal/alternatives routes do not reveal names, images, macros, ingredients, or instructions.
+FREE exposes only the first meal in the resolved daily order. Training-time placement may make that slot breakfast or a pre/post-workout meal; later slots never open merely because of their type. Every locked slot keeps the full meal-card footprint, but its visual is deliberately blurred and only the safe slot label plus upgrade state remain readable. Direct locked meal/alternatives routes do not reveal names, macros, ingredients, or instructions.
 
 ## Failure, idempotency, and rollout
 
-- Missing gender/goal: `complete_setup` with a precise failure code.
+- Missing goal: show the temporary starter preview plus the compact completion prompt; keep `complete_setup` as the source-of-truth state until the goal is saved.
+- Missing gender: do not invent gendered media; keep the completion state and use only neutral presentation.
 - Missing days: `needs_training_days`, then `complete_setup`.
 - No compatible template: `failed/no_compatible_template`.
 - Network/server failure: retry state; never local/mock content.

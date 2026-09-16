@@ -86,7 +86,14 @@ import { FREE_TRAINING_STRATEGY_PREVIEW_KEY } from "@/hooks/useFreeTrainingStrat
 import { useCustomerJourney } from "@/hooks/useCustomerJourney";
 import { useTrainingPreview } from "@/hooks/useTrainingPreview";
 import { TrainingDaysQuestion } from "@/components/platform/customer-journey/TrainingDaysQuestion";
+import { MissingGoalPrompt } from "@/components/platform/customer-journey/MissingGoalPrompt";
 import { previewToWeekdayPlans } from "@/lib/platform/assigned-program-api";
+import {
+  buildMissingGoalFallbackWorkoutPlans,
+  hasClientGoal,
+  MISSING_GOAL_FALLBACK_GOAL_ID,
+  MISSING_GOAL_FALLBACK_GOAL_LABEL,
+} from "@/lib/platform/missing-goal-fallback";
 
 function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }) {
   return (
@@ -364,10 +371,12 @@ function WorkoutGoalHero({
   overallProgress,
   goalLabel,
   photos,
+  temporary = false,
 }: {
   overallProgress: number;
   goalLabel: string;
   photos: WorkoutGoalHeroPhoto[];
+  temporary?: boolean;
 }) {
   const [activePhoto, setActivePhoto] = useState(0);
   const photoCount = Math.max(photos.length, 1);
@@ -409,11 +418,13 @@ function WorkoutGoalHero({
           <div className="text-right">
             <p className="workout-goal-hero__eyebrow">
               <Target className="h-3.5 w-3.5" strokeWidth={2.4} />
-              هدفك
+              {temporary ? "خطة البداية" : "هدفك"}
             </p>
             <h2 className="workout-goal-hero__title">{goalLabel}</h2>
             <p className="workout-goal-hero__desc">
-              برنامجك مصمم خصيصاً لك بناءً على بياناتك وسيتم تحديثه كل أسبوع.
+              {temporary
+                ? "برنامج 4 أيام في الجيم متاح الآن، وسنخصصه فور تحديد هدفك."
+                : "برنامجك مصمم خصيصاً لك بناءً على بياناتك وسيتم تحديثه كل أسبوع."}
             </p>
           </div>
 
@@ -924,15 +935,77 @@ function WorkoutDayPage() {
       ...(trainingQuery.data?.answers ?? {}),
     } as Record<string, unknown>;
   }, [trainingQuery.data?.answers]);
+  const forceMissingGoalPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("preview") === "missing-goal";
+  const missingGoal =
+    forceMissingGoalPreview ||
+    (trainingQuery.isFetched &&
+      !trainingQuery.isError &&
+      !hasClientGoal({
+        goal: trainingQuery.data?.goal,
+        goalId: trainingQuery.data?.answers.goalId,
+      }));
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const paidAutoAssignMutation = useMutationState({
+    filters: { mutationKey: PAID_TRAINING_AUTO_ASSIGN_KEY },
+    select: (mutation) => ({
+      status: mutation.state.status,
+      data: mutation.state.data as PaidTrainingAutoAssignResult | undefined,
+    }),
+  });
+  const paidAutoAssignLatest = paidAutoAssignMutation[paidAutoAssignMutation.length - 1];
+  const paidAutoAssignRunning = paidAutoAssignLatest?.status === "pending";
+  const paidAutoAssignResult = paidAutoAssignLatest?.data;
+  const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
+  const runtimeOkEarly =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok";
+  const { hold, loading: holdLoading } = useProgramPreparationHold({
+    coachAssigned: runtimeOkEarly,
+  });
+  const assignedPlans =
+    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
+      ? continuity.assignedPlans
+      : null;
+
+  const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
+    enabled: freePreview && !hasWorkoutProgram && !hold.active && !showAssignedFreePreview,
+    userId,
+    training: trainingQuery.data,
+  });
+  const freeStrategyPreviewPlans = freeStrategyPreviewQuery.data ?? null;
+  const freePreviewPlans = freeAssignedPreviewPlans ?? freeStrategyPreviewPlans;
+  const personalizedPlans = forceMissingGoalPreview
+    ? null
+    : hasWorkoutProgram
+      ? assignedPlans
+      : freePreviewPlans;
+  const fallbackPlans = useMemo(
+    () => (missingGoal ? buildMissingGoalFallbackWorkoutPlans() : null),
+    [missingGoal],
+  );
+  const showMissingGoalFallback =
+    !hold.active &&
+    missingGoal &&
+    (forceMissingGoalPreview || (!runtimeOkEarly && !personalizedPlans));
+  const previewPlans = personalizedPlans ?? (showMissingGoalFallback ? fallbackPlans : null);
   const presentation = useMemo(
     () =>
       resolveClientPresentationIdentity({
         gender: trainingQuery.data?.answers.gender,
-        goalId: trainingQuery.data?.answers.goalId ?? null,
-        goalText: trainingQuery.data?.goal ?? null,
-        goalSources: [trainingQuery.data?.goal],
+        goalId: showMissingGoalFallback
+          ? MISSING_GOAL_FALLBACK_GOAL_ID
+          : (trainingQuery.data?.answers.goalId ?? null),
+        goalText: showMissingGoalFallback
+          ? MISSING_GOAL_FALLBACK_GOAL_LABEL
+          : (trainingQuery.data?.goal ?? null),
+        goalSources: [
+          showMissingGoalFallback ? MISSING_GOAL_FALLBACK_GOAL_LABEL : trainingQuery.data?.goal,
+        ],
       }),
     [
+      showMissingGoalFallback,
       trainingQuery.data?.answers.gender,
       trainingQuery.data?.answers.goalId,
       trainingQuery.data?.goal,
@@ -959,42 +1032,6 @@ function WorkoutDayPage() {
     goalSettingsQuery.dataUpdatedAt,
     trainingQuery.isPending,
   ]);
-
-  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
-  const paidAutoAssignMutation = useMutationState({
-    filters: { mutationKey: PAID_TRAINING_AUTO_ASSIGN_KEY },
-    select: (mutation) => ({
-      status: mutation.state.status,
-      data: mutation.state.data as PaidTrainingAutoAssignResult | undefined,
-    }),
-  });
-  const paidAutoAssignLatest = paidAutoAssignMutation[paidAutoAssignMutation.length - 1];
-  const paidAutoAssignRunning = paidAutoAssignLatest?.status === "pending";
-  const paidAutoAssignResult = paidAutoAssignLatest?.data;
-  const continuity = useProgramContinuity(runtimeQuery.data, hasWorkoutProgram);
-  const runtimeOkEarly =
-    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok";
-  const { hold, loading: holdLoading } = useProgramPreparationHold({
-    coachAssigned: runtimeOkEarly,
-  });
-  const assignedPlans =
-    hasWorkoutProgram && runtimeQuery.isSuccess && runtimeQuery.data?.reason === "ok"
-      ? continuity.assignedPlans
-      : null;
-
-  const freeStrategyPreviewQuery = useFreeTrainingStrategyPreview({
-    enabled:
-      freePreview &&
-      !hasWorkoutProgram &&
-      !hold.active &&
-      !showAssignedFreePreview &&
-      Boolean(journey.data?.grandfathered),
-    userId,
-    training: trainingQuery.data,
-  });
-  const freeStrategyPreviewPlans = freeStrategyPreviewQuery.data ?? null;
-  const freePreviewPlans = freeAssignedPreviewPlans ?? freeStrategyPreviewPlans;
-  const previewPlans = hasWorkoutProgram ? assignedPlans : freePreviewPlans;
 
   useEffect(() => {
     writeStoredSelectedDay(selectedDayId);
@@ -1047,8 +1084,7 @@ function WorkoutDayPage() {
   const runtimeReason = runtimeQuery.data?.reason;
   const programName = runtimeQuery.data?.assignment?.name_ar;
   const runtimeOk = hasWorkoutProgram && runtimeQuery.isSuccess && runtimeReason === "ok";
-  const showFreeStrategyPreview =
-    freePreview && !hasWorkoutProgram && Boolean(freePreviewPlans);
+  const showFreeStrategyPreview = freePreview && !hasWorkoutProgram && Boolean(freePreviewPlans);
   const showFreePreviewIncompleteProfile =
     freePreview &&
     !showAssignedFreePreview &&
@@ -1065,15 +1101,18 @@ function WorkoutDayPage() {
     (freeStrategyPreviewQuery.isError ||
       (freeStrategyPreviewQuery.isFetched && !freeStrategyPreviewPlans));
   const showHoldRoom = hold.active;
-  const showWeeklySchedule = !showHoldRoom && (showFreeStrategyPreview || runtimeOk);
+  const showWeeklySchedule =
+    !showHoldRoom && (showFreeStrategyPreview || runtimeOk || showMissingGoalFallback);
   const showFreePreviewLoading =
     !showHoldRoom &&
+    !showMissingGoalFallback &&
     freePreview &&
     !showAssignedFreePreview &&
     !hasWorkoutProgram &&
     freeStrategyPreviewQuery.isLoading;
   const showPaidAutoAssignLoading =
     !showHoldRoom &&
+    !showMissingGoalFallback &&
     hasWorkoutProgram &&
     !runtimeOk &&
     (paidAutoAssignRunning || runtimeQuery.isLoading);
@@ -1102,6 +1141,7 @@ function WorkoutDayPage() {
     paidAutoAssignResult?.status === "review_required";
   const showStrategySetup =
     !showHoldRoom &&
+    !showMissingGoalFallback &&
     (showFreePreviewIncompleteProfile || showFreePreviewError || showPaidClientSetup);
   const showRuntimeLoading = !showHoldRoom && hasWorkoutProgram && runtimeQuery.isLoading;
   const showRuntimeError =
@@ -1157,9 +1197,11 @@ function WorkoutDayPage() {
     sessionExercises.map((exercise) => exercise.external_id),
   );
   const whyCopy =
-    !selectedPlan.isRestDay && goalLabel !== "غير محدد"
-      ? workoutFitsGoalCopy(goalLabel, sessionTitle)
-      : undefined;
+    showMissingGoalFallback && !selectedPlan.isRestDay
+      ? "هذه خطة بداية مؤقتة من 4 أيام في الجيم. حدّد هدفك لنستبدلها بالخطة الأنسب لك."
+      : !selectedPlan.isRestDay && goalLabel !== "غير محدد"
+        ? workoutFitsGoalCopy(goalLabel, sessionTitle)
+        : undefined;
 
   return (
     <PlatformStack>
@@ -1191,9 +1233,18 @@ function WorkoutDayPage() {
         overallProgress={overallProgress}
         goalLabel={goalLabel}
         photos={goalHeroPhotos}
+        temporary={showMissingGoalFallback}
       />
 
       <TrainingDaysQuestion />
+
+      {!showHoldRoom && missingGoal ? (
+        <MissingGoalPrompt
+          surface="training"
+          training={forceMissingGoalPreview ? null : trainingQuery.data}
+          onCompleted={refreshAfterStrategySetup}
+        />
+      ) : null}
 
       {showHoldRoom ? (
         <ProgramPreparationHoldCard
@@ -1444,8 +1495,8 @@ function WorkoutDayPage() {
         onClose={() => setCalendarOpen(false)}
         selectedDayId={selectedDayId}
         weeklySchedule={weeklySchedule}
-        hasWorkoutProgram={hasWorkoutProgram}
-        assignedPlans={hasWorkoutProgram ? assignedPlans : undefined}
+        hasWorkoutProgram={hasWorkoutProgram || showMissingGoalFallback}
+        assignedPlans={previewPlans ?? undefined}
         onSelectDay={setSelectedDayId}
       />
     </PlatformStack>

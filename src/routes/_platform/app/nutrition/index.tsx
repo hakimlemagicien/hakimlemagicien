@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ChevronLeft, ClipboardList, LineChart, Lock } from "lucide-react";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
@@ -45,6 +46,13 @@ import { useCustomerJourney } from "@/hooks/useCustomerJourney";
 import { NutritionTrainingTimeQuestion } from "@/components/platform/customer-journey/NutritionTrainingTimeQuestion";
 import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
+import { MissingGoalPrompt } from "@/components/platform/customer-journey/MissingGoalPrompt";
+import { PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
+import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
+import {
+  hasClientGoal,
+  MISSING_GOAL_FALLBACK_NUTRITION_GOAL,
+} from "@/lib/platform/missing-goal-fallback";
 
 type MacroTone = "protein" | "carbs" | "fat";
 
@@ -94,6 +102,7 @@ function CommitmentRing({ pct }: { pct: number }) {
 }
 
 function NutritionDashboardPage() {
+  const queryClient = useQueryClient();
   const membership = useMembership();
   const { entitlements } = membership;
   const { openUpgradeWithContext } = useUpgradeFlow();
@@ -104,14 +113,37 @@ function NutritionDashboardPage() {
   const todayKey = weekDays.find((d) => d.isToday)?.dateKey ?? weekDays[0]!.dateKey;
   const [selectedDateKey, setSelectedDateKey] = useState(todayKey);
   const [loadError, setLoadError] = useState(false);
+  const trainingProfileQuery = useQuery({
+    queryKey: PROFILE_TRAINING_KEY,
+    queryFn: fetchMyTrainingProfile,
+    staleTime: 30_000,
+  });
+  const forceMissingGoalPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("preview") === "missing-goal";
+  const missingGoal =
+    forceMissingGoalPreview ||
+    (trainingProfileQuery.isFetched &&
+      !trainingProfileQuery.isError &&
+      !hasClientGoal({
+        goal: trainingProfileQuery.data?.goal,
+        goalId: trainingProfileQuery.data?.answers.goalId,
+      }));
   const breakfastGoalKey = useMemo(
-    () => resolveFreeBreakfastGoalKey(readQuizProgress()?.goalId),
-    [],
+    () =>
+      missingGoal
+        ? MISSING_GOAL_FALLBACK_NUTRITION_GOAL
+        : resolveFreeBreakfastGoalKey(
+            trainingProfileQuery.data?.answers.goalId ?? readQuizProgress()?.goalId,
+          ),
+    [missingGoal, trainingProfileQuery.data?.answers.goalId],
   );
 
   const plan = useNutritionPlan(selectedDateKey, {
-    catalogPreview: freePreview,
-    breakfastGoalKey: freePreview ? breakfastGoalKey : null,
+    catalogPreview: freePreview || forceMissingGoalPreview,
+    starterFallback: missingGoal,
+    breakfastGoalKey: freePreview || missingGoal ? breakfastGoalKey : null,
     trainingMealWindow: journey.data?.trainingMealWindow,
   });
   const { hold, loading: holdLoading } = useProgramPreparationHold();
@@ -120,6 +152,12 @@ function NutritionDashboardPage() {
   const openNutritionUpgrade = () =>
     openUpgradeWithContext("NUTRITION", NUTRITION_PRODUCT_COPY.freeUpgradeBody);
   const swapLabel = mealSwapAllowanceLabel(entitlements);
+
+  const refreshAfterGoalSetup = async () => {
+    await queryClient.invalidateQueries({ queryKey: PROFILE_TRAINING_KEY });
+    await trainingProfileQuery.refetch();
+    plan.refresh();
+  };
 
   const retry = () => {
     setLoadError(false);
@@ -131,10 +169,6 @@ function NutritionDashboardPage() {
     plan.goals.calories > 0
       ? Math.min(100, Math.round((plan.consumed.calories / plan.goals.calories) * 100))
       : 0;
-  const nextMealId =
-    plan.meals.find((item) => item.status === "current")?.slot.id ??
-    plan.meals.find((item) => item.status !== "completed" && item.status !== "skipped")?.slot.id;
-
   if (holdLoading) {
     return (
       <PlatformStack className="gap-3.5 pb-2">
@@ -180,7 +214,12 @@ function NutritionDashboardPage() {
     );
   }
 
-  if (!freePreview && plan.assignmentReason && plan.assignmentReason !== "ok") {
+  if (
+    !freePreview &&
+    plan.assignmentReason &&
+    plan.assignmentReason !== "ok" &&
+    plan.assignmentReason !== "starter_fallback"
+  ) {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
@@ -202,6 +241,13 @@ function NutritionDashboardPage() {
       <NutritionOfflineBanner online={online} />
       <NutritionHeader />
       <NutritionTrainingTimeQuestion />
+      {missingGoal ? (
+        <MissingGoalPrompt
+          surface="nutrition"
+          training={forceMissingGoalPreview ? null : trainingProfileQuery.data}
+          onCompleted={refreshAfterGoalSetup}
+        />
+      ) : null}
 
       {loadError ? (
         <NutritionErrorCard onRetry={retry} />
@@ -212,7 +258,11 @@ function NutritionDashboardPage() {
               <div className="flex items-center justify-between gap-3" dir="rtl">
                 <div className="min-w-0 flex-1 text-center">
                   <p className="text-[11px] font-bold text-muted-foreground">
-                    {freePreview ? "معاينة المكتبة" : "مخطط اليوم من وجباتك"}
+                    {missingGoal
+                      ? "خطة بداية مؤقتة"
+                      : freePreview
+                        ? "معاينة المكتبة"
+                        : "مخطط اليوم من وجباتك"}
                   </p>
                   <p className="mt-1 text-[28px] font-black leading-none tracking-tight text-primary tabular-nums">
                     <CountUpNumber value={plan.goals.calories} />
@@ -397,7 +447,6 @@ function NutritionDashboardPage() {
                           status={status}
                           dateKey={selectedDateKey}
                           locked={!unlocked}
-                          featured={slot.id === nextMealId}
                           onLockedClick={openNutritionUpgrade}
                         />
                       </motion.div>
@@ -419,7 +468,7 @@ function NutritionDashboardPage() {
                   </button>
                   <p className="text-center text-[9px] font-medium leading-snug text-muted-foreground">
                     {freeDayFullyLocked
-                      ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة فطورك أو فعّل عضويتك."
+                      ? "🔒 محتوى هذا اليوم للمعاينة فقط — انتقل ليوم اليوم لتجربة وجبتك الأولى أو فعّل عضويتك."
                       : NUTRITION_PRODUCT_COPY.freeUpgradeBody}
                   </p>
                 </div>
@@ -473,7 +522,6 @@ function MealTimelineCard({
   status,
   dateKey,
   locked,
-  featured = false,
   onLockedClick,
 }: {
   slotId: string;
@@ -488,10 +536,9 @@ function MealTimelineCard({
   status: MealStatus;
   dateKey: string;
   locked: boolean;
-  featured?: boolean;
   onLockedClick: () => void;
 }) {
-  const imageSize = featured ? 138 : 92;
+  const imageSize = 138;
 
   if (locked) {
     return (
@@ -501,19 +548,32 @@ function MealTimelineCard({
         aria-label={`${slotLabel}: وجبة مقفلة. فعّل خطتك الغذائية للوصول.`}
         className={cn(
           nutritionCardClass,
-          "relative flex w-full items-center gap-2.5 overflow-hidden pe-3 ps-3 py-3 text-right transition active:scale-[0.99] active:bg-muted/25",
+          "relative flex min-h-[138px] w-full items-stretch overflow-hidden p-0 text-right transition active:scale-[0.99]",
         )}
       >
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
-          <Lock className="h-4 w-4" strokeWidth={2.4} />
-        </span>
-        <div className="min-w-0 flex-1 text-right">
-          <p className="text-[13px] font-black text-foreground">{slotLabel}</p>
-          <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">
-            🔒 مقفلة — فعّل العضوية للفتح
-          </p>
+        <div aria-hidden className="flex min-w-0 flex-1 items-stretch opacity-55 blur-[5px]">
+          <div className="h-[138px] w-[138px] shrink-0 overflow-hidden bg-muted">
+            <NutritionMealImage
+              src={image}
+              alt=""
+              width={276}
+              height={276}
+              sizes="138px"
+              className="h-full w-full scale-110 object-cover"
+            />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 px-4">
+            <div className="h-3 w-24 rounded-full bg-primary/50" />
+            <div className="h-5 w-4/5 rounded-full bg-foreground/55" />
+            <div className="h-3 w-3/5 rounded-full bg-muted-foreground/50" />
+          </div>
         </div>
-        <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+        <span className="absolute inset-0 flex items-center justify-center bg-background/24 px-4 backdrop-blur-[1px]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-background/88 px-4 py-2 text-[11px] font-black text-foreground shadow-lg">
+            <Lock className="h-4 w-4 text-primary" strokeWidth={2.4} />
+            {slotLabel} جاهزة — افتحها بالترقية
+          </span>
+        </span>
       </button>
     );
   }
@@ -536,32 +596,13 @@ function MealTimelineCard({
 
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-2 text-right">
         <div className="flex items-center gap-1.5">
-          <p
-            className={cn(
-              "font-bold text-muted-foreground",
-              featured ? "text-[11px]" : "text-[10px]",
-            )}
-          >
-            {timeLabel}
-          </p>
-          <p className={cn("font-black text-primary", featured ? "text-[13px]" : "text-[11px]")}>
-            {slotLabel}
-          </p>
+          <p className="text-[11px] font-bold text-muted-foreground">{timeLabel}</p>
+          <p className="text-[13px] font-black text-primary">{slotLabel}</p>
         </div>
-        <p
-          className={cn(
-            "line-clamp-2 font-black leading-snug text-foreground",
-            featured ? "text-[16px]" : "text-[14px]",
-          )}
-        >
+        <p className="line-clamp-2 text-[16px] font-black leading-snug text-foreground">
           {mealName}
         </p>
-        <p
-          className={cn(
-            "font-medium text-muted-foreground",
-            featured ? "text-[11px]" : "text-[10px]",
-          )}
-        >
+        <p className="text-[11px] font-medium text-muted-foreground">
           {formatNutritionNumber(calories)} سعرة · ب {formatNutritionNumber(protein)} · ك{" "}
           {formatNutritionNumber(carbs)} · د {formatNutritionNumber(fat)}
         </p>

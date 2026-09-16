@@ -59,6 +59,8 @@ export function useNutritionPlan(
   selectedDateKey?: string,
   opts?: {
     catalogPreview?: boolean;
+    /** Display a deterministic starter plan only when no real assignment exists. */
+    starterFallback?: boolean;
     breakfastGoalKey?: string | null;
     trainingMealWindow?: TrainingMealWindow | null;
   },
@@ -68,6 +70,7 @@ export function useNutritionPlan(
   const dateKey = selectedDateKey ?? todayKey();
   const isSelectedToday = dateKey === todayKey();
   const catalogPreview = Boolean(opts?.catalogPreview);
+  const starterFallback = Boolean(opts?.starterFallback);
   const breakfastGoalKey = opts?.breakfastGoalKey ?? null;
   const trainingMealWindow = opts?.trainingMealWindow ?? null;
   const [tick, setTick] = useState(0);
@@ -98,12 +101,22 @@ export function useNutritionPlan(
     setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }));
   }, [breakfastGoalKey, trainingMealWindow]);
 
-  const assignmentReason = catalogPreview ? "preview" : runtimeQuery.data?.reason;
+  const useStarterCatalog =
+    !catalogPreview &&
+    starterFallback &&
+    !runtimeQuery.isLoading &&
+    runtimeQuery.data?.reason !== "ok";
+  const usesCatalogPlan = catalogPreview || useStarterCatalog;
+  const assignmentReason = catalogPreview
+    ? "preview"
+    : useStarterCatalog
+      ? "starter_fallback"
+      : runtimeQuery.data?.reason;
   const assignedSlots = useMemo(() => {
-    if (catalogPreview) return catalogSlots;
+    if (usesCatalogPlan) return catalogSlots;
     if (runtimeQuery.data?.reason === "ok") return runtimeToMealSlots(runtimeQuery.data);
     return [];
-  }, [catalogPreview, catalogSlots, runtimeQuery.data]);
+  }, [catalogSlots, runtimeQuery.data, usesCatalogPlan]);
 
   const localStatuses = useMemo(
     () => getMealStatusMap(userId, dateKey, isSelectedToday),
@@ -112,7 +125,7 @@ export function useNutritionPlan(
 
   const statuses = useMemo(() => {
     const next = { ...localStatuses };
-    if (!catalogPreview && isSelectedToday) {
+    if (!usesCatalogPlan && isSelectedToday) {
       for (const log of runtimeQuery.data?.todayLogs ?? []) {
         if (log.status === "completed" || log.status === "skipped") {
           next[log.slot_key] = log.status;
@@ -120,14 +133,14 @@ export function useNutritionPlan(
       }
     }
     return next;
-  }, [catalogPreview, isSelectedToday, localStatuses, runtimeQuery.data?.todayLogs]);
+  }, [isSelectedToday, localStatuses, runtimeQuery.data?.todayLogs, usesCatalogPlan]);
 
   const choices = useMemo(() => getMealChoiceMap(userId, dateKey), [userId, dateKey, tick]);
 
   const shoppingChecked = useMemo(() => getShoppingChecked(userId), [userId, tick]);
 
   const macroLayers = useMemo(() => {
-    if (catalogPreview || runtimeQuery.data?.reason !== "ok") {
+    if (usesCatalogPlan || runtimeQuery.data?.reason !== "ok") {
       const planned = plannedFromSlots(assignedSlots);
       return {
         target: null as MacroTotals | null,
@@ -136,27 +149,27 @@ export function useNutritionPlan(
       };
     }
     return runtimeMacroLayers(runtimeQuery.data);
-  }, [assignedSlots, catalogPreview, runtimeQuery.data]);
+  }, [assignedSlots, runtimeQuery.data, usesCatalogPlan]);
 
   const target = macroLayers.target;
   const planned = macroLayers.planned;
   const consumedFromRuntime = macroLayers.consumed;
 
   const consumed = useMemo(() => {
-    if (!catalogPreview && isSelectedToday && runtimeQuery.data?.reason === "ok") {
+    if (!usesCatalogPlan && isSelectedToday && runtimeQuery.data?.reason === "ok") {
       const hasServerConsumed = (runtimeQuery.data.consumed_totals?.calories ?? 0) > 0;
       if (hasServerConsumed) return consumedFromRuntime;
     }
     return sumConsumedMacros(assignedSlots, statuses, choices);
   }, [
     assignedSlots,
-    catalogPreview,
     choices,
     consumedFromRuntime,
     isSelectedToday,
     runtimeQuery.data?.consumed_totals?.calories,
     runtimeQuery.data?.reason,
     statuses,
+    usesCatalogPlan,
   ]);
   /** @deprecated Use `planned` for slot sums and `target` for approved prescription. */
   const goals = target ?? planned;
@@ -217,14 +230,17 @@ export function useNutritionPlan(
     waterGoalMl: snapshot.waterGoalMl,
     waterSource: "LOCAL_ONLY" as const,
     assignmentReason,
-    assignmentName: runtimeQuery.data?.assignment?.name_ar ?? null,
+    assignmentName: useStarterCatalog
+      ? "خطة بداية غذائية"
+      : (runtimeQuery.data?.assignment?.name_ar ?? null),
+    isStarterFallback: useStarterCatalog,
     runtimeLoading: !catalogPreview && runtimeQuery.isLoading,
-    runtimeError: !catalogPreview && runtimeQuery.isError,
-    assignmentSchema: catalogPreview ? null : (runtimeQuery.data?.schema ?? null),
+    runtimeError: !catalogPreview && runtimeQuery.isError && !useStarterCatalog,
+    assignmentSchema: usesCatalogPlan ? null : (runtimeQuery.data?.schema ?? null),
     markCompleted,
     markSkipped,
     adoptAlternative: async (slotId: string, alternativeId: string) => {
-      if (!catalogPreview) {
+      if (!usesCatalogPlan) {
         const slot = assignedSlots.find((item) => item.id === slotId);
         const runtime = runtimeQuery.data;
         if (
