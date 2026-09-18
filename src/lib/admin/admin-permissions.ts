@@ -124,14 +124,21 @@ export const ROUTE_REQUIRED_PERMISSION: Record<string, AdminPermission> = {
   "/admin/programs": "training.manage",
   "/admin/exercises": "exercise.read",
   "/admin/nutrition/operations": "nutrition.manage",
+  "/admin/nutrition/templates": "nutrition.manage",
   "/admin/nutrition": "meal_library.manage",
   "/admin/billing": "membership.read",
   "/admin/memberships": "membership.read",
+  "/admin/commercial": "memberships.manage",
+  "/admin/automation": "staff.manage",
   "/admin/payments": "payments.read",
   "/admin/content": "content.manage",
   "/admin/studio": "content.manage",
   "/admin/support": "support.manage",
   "/admin/audit": "audit.read",
+  "/admin/alerts": "clients.basic_read",
+  "/admin/notifications": "support.manage",
+  "/admin/analytics": "audit.read",
+  "/admin/product-settings": "staff.manage",
   "/admin/settings": "staff.manage",
 };
 
@@ -163,8 +170,10 @@ export function canAccessNavItem(
   if (!permission) return true;
   if (hasAdminPermission(session, permission)) return true;
   // clients.read and clients.basic_read are equivalent for portal entry / client lists
-  if (permission === "clients.read" && hasAdminPermission(session, "clients.basic_read")) return true;
-  if (permission === "clients.basic_read" && hasAdminPermission(session, "clients.read")) return true;
+  if (permission === "clients.read" && hasAdminPermission(session, "clients.basic_read"))
+    return true;
+  if (permission === "clients.basic_read" && hasAdminPermission(session, "clients.read"))
+    return true;
   return false;
 }
 
@@ -179,7 +188,9 @@ export function canAccessRoute(
 
 export function resolveRoutePermission(pathname: string): AdminPermission {
   const path = pathname.replace(/\/+$/, "") || "/admin";
-  const entries = Object.entries(ROUTE_REQUIRED_PERMISSION).sort((a, b) => b[0].length - a[0].length);
+  const entries = Object.entries(ROUTE_REQUIRED_PERMISSION).sort(
+    (a, b) => b[0].length - a[0].length,
+  );
   for (const [route, permission] of entries) {
     if (path === route || path.startsWith(`${route}/`)) return permission;
   }

@@ -1,7 +1,4 @@
-import {
-  loadAuthoredV2Metadata,
-  toV2Contract,
-} from "@/lib/platform/exercise-library-v2-validator";
+import { loadAuthoredV2Metadata, toV2Contract } from "@/lib/platform/exercise-library-v2-validator";
 import { generateTrainingProgram } from "@/lib/platform/program-generation";
 import { TRAINING_V2_CANONICAL_GOALS } from "@/lib/platform/training-v2-contracts";
 import {
@@ -29,14 +26,7 @@ function muscleFamily(primary: string): string {
   if (["LATS", "UPPER_BACK", "BACK", "TRAPEZIUS", "RHOMBOIDS"].includes(primary)) {
     return "BACK";
   }
-  if (
-    [
-      "SHOULDERS",
-      "ANTERIOR_DELTOID",
-      "LATERAL_DELTOID",
-      "POSTERIOR_DELTOID",
-    ].includes(primary)
-  ) {
+  if (["SHOULDERS", "ANTERIOR_DELTOID", "LATERAL_DELTOID", "POSTERIOR_DELTOID"].includes(primary)) {
     return "SHOULDERS";
   }
   if (["GLUTES", "GLUTEUS_MAXIMUS", "GLUTEUS_MEDIUS", "GLUTEUS_MINIMUS"].includes(primary)) {
@@ -135,9 +125,7 @@ const locationCoverage = countBy(
 );
 
 for (const role of REQUIRED_MOVEMENT_ROLES) {
-  const alternatives = coreExercises.filter(
-    (exercise) => exercise.primary_movement_role === role,
-  );
+  const alternatives = coreExercises.filter((exercise) => exercise.primary_movement_role === role);
   assert(alternatives.length >= 2, `${role} needs at least two Core 100 alternatives`);
   assert(
     alternatives.some((exercise) => exercise.location_compatibility.includes("HOME")),
@@ -157,10 +145,7 @@ for (const muscle of REQUIRED_MUSCLE_FAMILIES) {
 }
 
 for (const [equipment, minimum] of Object.entries(REQUIRED_EQUIPMENT_COVERAGE)) {
-  assert(
-    (equipmentCoverage[equipment] ?? 0) >= minimum,
-    `${equipment} coverage below ${minimum}`,
-  );
+  assert((equipmentCoverage[equipment] ?? 0) >= minimum, `${equipment} coverage below ${minimum}`);
 }
 
 assert((locationCoverage.HOME ?? 0) >= 40, "Core 100 needs at least 40 HOME-compatible exercises");
@@ -215,14 +200,20 @@ for (const goal of TRAINING_V2_CANONICAL_GOALS) {
           warningCodes[warning.code] = (warningCodes[warning.code] ?? 0) + 1;
         }
 
-        if (result.status !== "READY" || result.validation.status === "INVALID" || !result.candidate) {
+        if (
+          result.status !== "READY" ||
+          result.validation.status === "INVALID" ||
+          !result.candidate
+        ) {
           failures.push(
             `${label}: ${result.status}/${result.validation.status} ${JSON.stringify(result.validation.errors)}`,
           );
           continue;
         }
         if (result.candidate.sessions.length !== days) {
-          failures.push(`${label}: expected ${days} sessions, got ${result.candidate.sessions.length}`);
+          failures.push(
+            `${label}: expected ${days} sessions, got ${result.candidate.sessions.length}`,
+          );
         }
 
         for (const session of result.candidate.sessions) {
@@ -239,7 +230,11 @@ for (const goal of TRAINING_V2_CANONICAL_GOALS) {
   }
 }
 
-assert(totalScenarios === 144, `expected 144 matrix scenarios, got ${totalScenarios}`);
+const expectedScenarios = TRAINING_V2_CANONICAL_GOALS.length * 4 * ENVIRONMENTS.length * 2;
+assert(
+  totalScenarios === expectedScenarios,
+  `expected ${expectedScenarios} matrix scenarios, got ${totalScenarios}`,
+);
 assert(failures.length === 0, `Core 100 QA matrix failures:\n${failures.join("\n")}`);
 
 console.log("core-100-qa.test.ts: all tests passed");

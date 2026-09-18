@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
 
+export const ADMIN_MEAL_MEDIA_BUCKET = "meal-media";
+export const ADMIN_MEAL_IMAGE_MAX_BYTES = 6 * 1024 * 1024;
+
 export type AdminMealListItem = {
   id: string;
   external_id: string;
@@ -52,6 +55,7 @@ export type AdminMealDetail = AdminMealListItem & {
   image_alt_ar: string | null;
   image_alt_en: string | null;
   notes: string | null;
+  qa: Record<string, unknown>;
   substitution_profile: Record<string, unknown>;
   ingredients: AdminMealIngredient[];
 };
@@ -98,7 +102,9 @@ export async function listAdminMeals(opts: {
   const rows = ((data ?? []) as Record<string, unknown>[]).map(mapList);
   return {
     rows,
-    totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
+    totalCount: Number(
+      (data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length,
+    ),
   };
 }
 
@@ -118,12 +124,14 @@ export async function getAdminMeal(id: string): Promise<AdminMealDetail> {
     yield_servings: num(row.yield_servings) || 1,
     preparation_steps_ar: (row.preparation_steps_ar as string[]) ?? [],
     preparation_steps_en: (row.preparation_steps_en as string[]) ?? [],
-    preparation_time_minutes: row.preparation_time_minutes == null ? null : num(row.preparation_time_minutes),
+    preparation_time_minutes:
+      row.preparation_time_minutes == null ? null : num(row.preparation_time_minutes),
     image_path: (row.image_path as string | null) ?? null,
     image_master_path: (row.image_master_path as string | null) ?? null,
     image_alt_ar: (row.image_alt_ar as string | null) ?? null,
     image_alt_en: (row.image_alt_en as string | null) ?? null,
     notes: (row.notes as string | null) ?? "",
+    qa: (row.qa as Record<string, unknown>) ?? {},
     substitution_profile: (row.substitution_profile as Record<string, unknown>) ?? {},
     ingredients: ((row.ingredients as AdminMealIngredient[]) ?? []).map((ingredient, index) => ({
       ...ingredient,
@@ -145,10 +153,89 @@ export async function saveAdminMeal(
   return getAdminMeal(String((data as { id: string }).id));
 }
 
-export async function setAdminMealStatus(id: string, status: "pilot" | "published" | "archived"): Promise<AdminMealDetail> {
+export async function setAdminMealStatus(
+  id: string,
+  status: "pilot" | "published" | "archived",
+): Promise<AdminMealDetail> {
   const { error } = await supabase.rpc("admin_set_meal_status", { p_id: id, p_status: status });
   if (error) throw error;
   return getAdminMeal(id);
+}
+
+export function validateAdminMealImage(file: File): string | null {
+  if (!file.size) return "ملف الصورة فارغ.";
+  if (file.size > ADMIN_MEAL_IMAGE_MAX_BYTES) return "حجم الصورة أكبر من 6 ميغابايت.";
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
+    return "الصيغ المسموحة: JPG أو PNG أو WebP.";
+  return null;
+}
+
+function mealImageExtension(file: File) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
+}
+
+export async function fetchAdminMealMediaUrls(
+  paths: Array<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const unique = [
+    ...new Set(
+      paths
+        .map((path) => path?.trim())
+        .filter((path): path is string => Boolean(path) && !/^https?:\/\//i.test(path!)),
+    ),
+  ];
+  if (unique.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from(ADMIN_MEAL_MEDIA_BUCKET)
+    .createSignedUrls(unique, 60 * 60);
+  if (error || !data) return {};
+  const result: Record<string, string> = {};
+  data.forEach((item, index) => {
+    if (item.signedUrl) result[unique[index]!] = item.signedUrl;
+  });
+  return result;
+}
+
+export async function uploadAdminMealImage(
+  externalId: string,
+  file: File,
+): Promise<{ path: string; signedUrl: string }> {
+  const validation = validateAdminMealImage(file);
+  if (validation) throw new Error(validation);
+  const normalizedId = externalId.trim().toUpperCase();
+  if (!/^MEAL-[A-Z0-9-]+$/.test(normalizedId))
+    throw new Error("احفظ معرّف وجبة صالحًا قبل رفع الصورة.");
+  const path = `meals/${normalizedId}/cover.${mealImageExtension(file)}`;
+  const { error } = await supabase.storage.from(ADMIN_MEAL_MEDIA_BUCKET).upload(path, file, {
+    upsert: true,
+    contentType: file.type,
+    cacheControl: "3600",
+  });
+  if (error) throw new Error(error.message || "فشل رفع صورة الوجبة.");
+  const urls = await fetchAdminMealMediaUrls([path]);
+  if (!urls[path]) throw new Error("رُفعت الصورة لكن تعذر إنشاء معاينتها.");
+  return { path, signedUrl: urls[path] };
+}
+
+export function adminMealImageSource(
+  input: {
+    external_id: string;
+    image_path?: string | null;
+    image_thumb_path?: string | null;
+    image_master_path?: string | null;
+  },
+  signed: Record<string, string>,
+  variant: "thumb" | "cover" = "cover",
+) {
+  const path =
+    variant === "thumb"
+      ? input.image_thumb_path || input.image_master_path || input.image_path
+      : input.image_master_path || input.image_path || input.image_thumb_path;
+  if (path && /^https?:\/\//i.test(path)) return path;
+  if (path && signed[path]) return signed[path];
+  return `/nutrition/meals/${input.external_id}/cover${variant === "thumb" ? "-thumb" : ""}.webp`;
 }
 
 export function emptyMealIngredient(): AdminMealIngredient {
@@ -201,6 +288,7 @@ export function emptyMealDraft(): AdminMealDetail {
     image_alt_ar: "",
     image_alt_en: "",
     notes: "",
+    qa: {},
     substitution_profile: {},
     ingredients: [emptyMealIngredient()],
   };

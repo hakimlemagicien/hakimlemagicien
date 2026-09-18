@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Dumbbell, Plus, StickyNote, UtensilsCrossed, Crown } from "lucide-react";
+import { Dumbbell, Eye, Plus, StickyNote, UtensilsCrossed, Crown } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
 type Props = {
@@ -46,6 +46,18 @@ export function ClientMobileQuickActions({ clientId }: Props) {
             <div className="cc-mobile-more-sheet__handle" aria-hidden />
             <p className="cc-mobile-more-sheet__title">إجراء سريع</p>
             <ul className="cc-mobile-more-sheet__list">
+              <li>
+                <Link
+                  to="/admin/client-preview/$clientId"
+                  params={{ clientId }}
+                  search={{ screen: "home" }}
+                  className="cc-mobile-more-link"
+                  onClick={() => setOpen(false)}
+                >
+                  <Eye className="h-4 w-4" aria-hidden />
+                  <span>عرض كتجربة العميل</span>
+                </Link>
+              </li>
               <li>
                 <Link
                   to="/admin/clients/$clientId"

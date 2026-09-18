@@ -30,6 +30,7 @@ import { Route as AdminStudioRouteImport } from './routes/admin/studio'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminProgressRouteImport } from './routes/admin/progress'
 import { Route as AdminProgramsRouteImport } from './routes/admin/programs'
+import { Route as AdminProductSettingsRouteImport } from './routes/admin/product-settings'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminNutritionRouteImport } from './routes/admin/nutrition'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
@@ -37,19 +38,25 @@ import { Route as AdminMembershipsRouteImport } from './routes/admin/memberships
 import { Route as AdminForbiddenRouteImport } from './routes/admin/forbidden'
 import { Route as AdminExercisesRouteImport } from './routes/admin/exercises'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
+import { Route as AdminCommercialRouteImport } from './routes/admin/commercial'
+import { Route as AdminAutomationRouteImport } from './routes/admin/automation'
 import { Route as AdminAuditRouteImport } from './routes/admin/audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
+import { Route as AdminAlertsRouteImport } from './routes/admin/alerts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AdminMessagesRouteRouteImport } from './routes/admin/messages/route'
 import { Route as AdminTrainingIndexRouteImport } from './routes/admin/training/index'
+import { Route as AdminNutritionIndexRouteImport } from './routes/admin/nutrition/index'
 import { Route as AdminMessagesIndexRouteImport } from './routes/admin/messages/index'
 import { Route as AdminClientsIndexRouteImport } from './routes/admin/clients/index'
 import { Route as AdminBillingIndexRouteImport } from './routes/admin/billing/index'
 import { Route as PlatformAppIndexRouteImport } from './routes/_platform/app/index'
 import { Route as AdminTrainingReviewsRouteImport } from './routes/admin/training/reviews'
+import { Route as AdminNutritionTemplatesRouteImport } from './routes/admin/nutrition/templates'
 import { Route as AdminNutritionOperationsRouteImport } from './routes/admin/nutrition/operations'
 import { Route as AdminMessagesConversationIdRouteImport } from './routes/admin/messages/$conversationId'
 import { Route as AdminClientsClientIdRouteImport } from './routes/admin/clients/$clientId'
+import { Route as AdminClientPreviewClientIdRouteImport } from './routes/admin/client-preview/$clientId'
 import { Route as PlatformAppUpgradeRouteImport } from './routes/_platform/app/upgrade'
 import { Route as PlatformAppStudioRouteImport } from './routes/_platform/app/studio'
 import { Route as PlatformAppProgressRouteImport } from './routes/_platform/app/progress'
@@ -181,6 +188,11 @@ const AdminProgramsRoute = AdminProgramsRouteImport.update({
   path: '/programs',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminProductSettingsRoute = AdminProductSettingsRouteImport.update({
+  id: '/product-settings',
+  path: '/product-settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
@@ -216,6 +228,16 @@ const AdminContentRoute = AdminContentRouteImport.update({
   path: '/content',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCommercialRoute = AdminCommercialRouteImport.update({
+  id: '/commercial',
+  path: '/commercial',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAutomationRoute = AdminAutomationRouteImport.update({
+  id: '/automation',
+  path: '/automation',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminAuditRoute = AdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -224,6 +246,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAlertsRoute = AdminAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -240,6 +267,11 @@ const AdminTrainingIndexRoute = AdminTrainingIndexRouteImport.update({
   id: '/training/',
   path: '/training/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNutritionIndexRoute = AdminNutritionIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminNutritionRoute,
 } as any)
 const AdminMessagesIndexRoute = AdminMessagesIndexRouteImport.update({
   id: '/',
@@ -266,6 +298,11 @@ const AdminTrainingReviewsRoute = AdminTrainingReviewsRouteImport.update({
   path: '/training/reviews',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminNutritionTemplatesRoute = AdminNutritionTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => AdminNutritionRoute,
+} as any)
 const AdminNutritionOperationsRoute =
   AdminNutritionOperationsRouteImport.update({
     id: '/operations',
@@ -283,6 +320,12 @@ const AdminClientsClientIdRoute = AdminClientsClientIdRouteImport.update({
   path: '/clients/$clientId',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminClientPreviewClientIdRoute =
+  AdminClientPreviewClientIdRouteImport.update({
+    id: '/client-preview/$clientId',
+    path: '/client-preview/$clientId',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
 const PlatformAppUpgradeRoute = PlatformAppUpgradeRouteImport.update({
   id: '/app/upgrade',
   path: '/app/upgrade',
@@ -441,8 +484,11 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automation': typeof AdminAutomationRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
   '/admin/forbidden': typeof AdminForbiddenRoute
@@ -450,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/nutrition': typeof AdminNutritionRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/product-settings': typeof AdminProductSettingsRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -466,14 +513,17 @@ export interface FileRoutesByFullPath {
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
   '/app/upgrade': typeof PlatformAppUpgradeRoute
+  '/admin/client-preview/$clientId': typeof AdminClientPreviewClientIdRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
+  '/admin/nutrition/templates': typeof AdminNutritionTemplatesRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/app/': typeof PlatformAppIndexRoute
   '/admin/billing/': typeof AdminBillingIndexRoute
   '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
+  '/admin/nutrition/': typeof AdminNutritionIndexRoute
   '/admin/training/': typeof AdminTrainingIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -506,15 +556,18 @@ export interface FileRoutesByTo {
   '/refund': typeof RefundRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automation': typeof AdminAutomationRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
   '/admin/forbidden': typeof AdminForbiddenRoute
   '/admin/memberships': typeof AdminMembershipsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/nutrition': typeof AdminNutritionRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/product-settings': typeof AdminProductSettingsRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -530,14 +583,17 @@ export interface FileRoutesByTo {
   '/app/progress': typeof PlatformAppProgressRoute
   '/app/studio': typeof PlatformAppStudioRoute
   '/app/upgrade': typeof PlatformAppUpgradeRoute
+  '/admin/client-preview/$clientId': typeof AdminClientPreviewClientIdRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
+  '/admin/nutrition/templates': typeof AdminNutritionTemplatesRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/app': typeof PlatformAppIndexRoute
   '/admin/billing': typeof AdminBillingIndexRoute
   '/admin/clients': typeof AdminClientsIndexRoute
   '/admin/messages': typeof AdminMessagesIndexRoute
+  '/admin/nutrition': typeof AdminNutritionIndexRoute
   '/admin/training': typeof AdminTrainingIndexRoute
   '/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -575,8 +631,11 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/messages': typeof AdminMessagesRouteRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
+  '/admin/automation': typeof AdminAutomationRoute
+  '/admin/commercial': typeof AdminCommercialRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/exercises': typeof AdminExercisesRoute
   '/admin/forbidden': typeof AdminForbiddenRoute
@@ -584,6 +643,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/nutrition': typeof AdminNutritionRouteWithChildren
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/product-settings': typeof AdminProductSettingsRoute
   '/admin/programs': typeof AdminProgramsRoute
   '/admin/progress': typeof AdminProgressRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -600,14 +660,17 @@ export interface FileRoutesById {
   '/_platform/app/progress': typeof PlatformAppProgressRoute
   '/_platform/app/studio': typeof PlatformAppStudioRoute
   '/_platform/app/upgrade': typeof PlatformAppUpgradeRoute
+  '/admin/client-preview/$clientId': typeof AdminClientPreviewClientIdRoute
   '/admin/clients/$clientId': typeof AdminClientsClientIdRoute
   '/admin/messages/$conversationId': typeof AdminMessagesConversationIdRoute
   '/admin/nutrition/operations': typeof AdminNutritionOperationsRoute
+  '/admin/nutrition/templates': typeof AdminNutritionTemplatesRoute
   '/admin/training/reviews': typeof AdminTrainingReviewsRoute
   '/_platform/app/': typeof PlatformAppIndexRoute
   '/admin/billing/': typeof AdminBillingIndexRoute
   '/admin/clients/': typeof AdminClientsIndexRoute
   '/admin/messages/': typeof AdminMessagesIndexRoute
+  '/admin/nutrition/': typeof AdminNutritionIndexRoute
   '/admin/training/': typeof AdminTrainingIndexRoute
   '/_platform/app/discover/$slug': typeof PlatformAppDiscoverSlugRoute
   '/_platform/app/discover/saved': typeof PlatformAppDiscoverSavedRoute
@@ -644,8 +707,11 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/messages'
     | '/dashboard'
+    | '/admin/alerts'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/automation'
+    | '/admin/commercial'
     | '/admin/content'
     | '/admin/exercises'
     | '/admin/forbidden'
@@ -653,6 +719,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/product-settings'
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
@@ -669,14 +736,17 @@ export interface FileRouteTypes {
     | '/app/progress'
     | '/app/studio'
     | '/app/upgrade'
+    | '/admin/client-preview/$clientId'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/admin/nutrition/operations'
+    | '/admin/nutrition/templates'
     | '/admin/training/reviews'
     | '/app/'
     | '/admin/billing/'
     | '/admin/clients/'
     | '/admin/messages/'
+    | '/admin/nutrition/'
     | '/admin/training/'
     | '/app/discover/$slug'
     | '/app/discover/saved'
@@ -709,15 +779,18 @@ export interface FileRouteTypes {
     | '/refund'
     | '/terms'
     | '/dashboard'
+    | '/admin/alerts'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/automation'
+    | '/admin/commercial'
     | '/admin/content'
     | '/admin/exercises'
     | '/admin/forbidden'
     | '/admin/memberships'
     | '/admin/notifications'
-    | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/product-settings'
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
@@ -733,14 +806,17 @@ export interface FileRouteTypes {
     | '/app/progress'
     | '/app/studio'
     | '/app/upgrade'
+    | '/admin/client-preview/$clientId'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/admin/nutrition/operations'
+    | '/admin/nutrition/templates'
     | '/admin/training/reviews'
     | '/app'
     | '/admin/billing'
     | '/admin/clients'
     | '/admin/messages'
+    | '/admin/nutrition'
     | '/admin/training'
     | '/app/discover/$slug'
     | '/app/discover/saved'
@@ -777,8 +853,11 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/messages'
     | '/_authenticated/dashboard'
+    | '/admin/alerts'
     | '/admin/analytics'
     | '/admin/audit'
+    | '/admin/automation'
+    | '/admin/commercial'
     | '/admin/content'
     | '/admin/exercises'
     | '/admin/forbidden'
@@ -786,6 +865,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/nutrition'
     | '/admin/payments'
+    | '/admin/product-settings'
     | '/admin/programs'
     | '/admin/progress'
     | '/admin/settings'
@@ -802,14 +882,17 @@ export interface FileRouteTypes {
     | '/_platform/app/progress'
     | '/_platform/app/studio'
     | '/_platform/app/upgrade'
+    | '/admin/client-preview/$clientId'
     | '/admin/clients/$clientId'
     | '/admin/messages/$conversationId'
     | '/admin/nutrition/operations'
+    | '/admin/nutrition/templates'
     | '/admin/training/reviews'
     | '/_platform/app/'
     | '/admin/billing/'
     | '/admin/clients/'
     | '/admin/messages/'
+    | '/admin/nutrition/'
     | '/admin/training/'
     | '/_platform/app/discover/$slug'
     | '/_platform/app/discover/saved'
@@ -999,6 +1082,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProgramsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/product-settings': {
+      id: '/admin/product-settings'
+      path: '/product-settings'
+      fullPath: '/admin/product-settings'
+      preLoaderRoute: typeof AdminProductSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/payments': {
       id: '/admin/payments'
       path: '/payments'
@@ -1048,6 +1138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/commercial': {
+      id: '/admin/commercial'
+      path: '/commercial'
+      fullPath: '/admin/commercial'
+      preLoaderRoute: typeof AdminCommercialRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/automation': {
+      id: '/admin/automation'
+      path: '/automation'
+      fullPath: '/admin/automation'
+      preLoaderRoute: typeof AdminAutomationRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/audit': {
       id: '/admin/audit'
       path: '/audit'
@@ -1060,6 +1164,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/admin/analytics'
       preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/alerts': {
+      id: '/admin/alerts'
+      path: '/alerts'
+      fullPath: '/admin/alerts'
+      preLoaderRoute: typeof AdminAlertsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -1082,6 +1193,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/training/'
       preLoaderRoute: typeof AdminTrainingIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/nutrition/': {
+      id: '/admin/nutrition/'
+      path: '/'
+      fullPath: '/admin/nutrition/'
+      preLoaderRoute: typeof AdminNutritionIndexRouteImport
+      parentRoute: typeof AdminNutritionRoute
     }
     '/admin/messages/': {
       id: '/admin/messages/'
@@ -1118,6 +1236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTrainingReviewsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/nutrition/templates': {
+      id: '/admin/nutrition/templates'
+      path: '/templates'
+      fullPath: '/admin/nutrition/templates'
+      preLoaderRoute: typeof AdminNutritionTemplatesRouteImport
+      parentRoute: typeof AdminNutritionRoute
+    }
     '/admin/nutrition/operations': {
       id: '/admin/nutrition/operations'
       path: '/operations'
@@ -1137,6 +1262,13 @@ declare module '@tanstack/react-router' {
       path: '/clients/$clientId'
       fullPath: '/admin/clients/$clientId'
       preLoaderRoute: typeof AdminClientsClientIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/client-preview/$clientId': {
+      id: '/admin/client-preview/$clientId'
+      path: '/client-preview/$clientId'
+      fullPath: '/admin/client-preview/$clientId'
+      preLoaderRoute: typeof AdminClientPreviewClientIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/_platform/app/upgrade': {
@@ -1424,10 +1556,14 @@ const AdminMessagesRouteRouteWithChildren =
 
 interface AdminNutritionRouteChildren {
   AdminNutritionOperationsRoute: typeof AdminNutritionOperationsRoute
+  AdminNutritionTemplatesRoute: typeof AdminNutritionTemplatesRoute
+  AdminNutritionIndexRoute: typeof AdminNutritionIndexRoute
 }
 
 const AdminNutritionRouteChildren: AdminNutritionRouteChildren = {
   AdminNutritionOperationsRoute: AdminNutritionOperationsRoute,
+  AdminNutritionTemplatesRoute: AdminNutritionTemplatesRoute,
+  AdminNutritionIndexRoute: AdminNutritionIndexRoute,
 }
 
 const AdminNutritionRouteWithChildren = AdminNutritionRoute._addFileChildren(
@@ -1436,8 +1572,11 @@ const AdminNutritionRouteWithChildren = AdminNutritionRoute._addFileChildren(
 
 interface AdminRouteRouteChildren {
   AdminMessagesRouteRoute: typeof AdminMessagesRouteRouteWithChildren
+  AdminAlertsRoute: typeof AdminAlertsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
+  AdminAutomationRoute: typeof AdminAutomationRoute
+  AdminCommercialRoute: typeof AdminCommercialRoute
   AdminContentRoute: typeof AdminContentRoute
   AdminExercisesRoute: typeof AdminExercisesRoute
   AdminForbiddenRoute: typeof AdminForbiddenRoute
@@ -1445,12 +1584,14 @@ interface AdminRouteRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminNutritionRoute: typeof AdminNutritionRouteWithChildren
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminProductSettingsRoute: typeof AdminProductSettingsRoute
   AdminProgramsRoute: typeof AdminProgramsRoute
   AdminProgressRoute: typeof AdminProgressRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStudioRoute: typeof AdminStudioRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminClientPreviewClientIdRoute: typeof AdminClientPreviewClientIdRoute
   AdminClientsClientIdRoute: typeof AdminClientsClientIdRoute
   AdminTrainingReviewsRoute: typeof AdminTrainingReviewsRoute
   AdminBillingIndexRoute: typeof AdminBillingIndexRoute
@@ -1460,8 +1601,11 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminMessagesRouteRoute: AdminMessagesRouteRouteWithChildren,
+  AdminAlertsRoute: AdminAlertsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
+  AdminAutomationRoute: AdminAutomationRoute,
+  AdminCommercialRoute: AdminCommercialRoute,
   AdminContentRoute: AdminContentRoute,
   AdminExercisesRoute: AdminExercisesRoute,
   AdminForbiddenRoute: AdminForbiddenRoute,
@@ -1469,12 +1613,14 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminNutritionRoute: AdminNutritionRouteWithChildren,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminProductSettingsRoute: AdminProductSettingsRoute,
   AdminProgramsRoute: AdminProgramsRoute,
   AdminProgressRoute: AdminProgressRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStudioRoute: AdminStudioRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminClientPreviewClientIdRoute: AdminClientPreviewClientIdRoute,
   AdminClientsClientIdRoute: AdminClientsClientIdRoute,
   AdminTrainingReviewsRoute: AdminTrainingReviewsRoute,
   AdminBillingIndexRoute: AdminBillingIndexRoute,

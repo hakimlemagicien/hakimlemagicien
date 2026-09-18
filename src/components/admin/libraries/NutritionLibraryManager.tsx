@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Eye, ImagePlus, Pencil, X } from "lucide-react";
 import {
   AdminConceptKpiRow,
   AdminEmptyState,
@@ -7,7 +8,11 @@ import {
   AdminSearchInput,
   AdminTable,
 } from "@/components/admin/AdminPage";
-import { AdminFilterBar, AdminSkeletonRows, type AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
+import {
+  AdminFilterBar,
+  AdminSkeletonRows,
+  type AdminConfirmRequest,
+} from "@/components/admin/AdminConfirmDialog";
 import {
   AdminEditorToolbar,
   AdminField,
@@ -40,17 +45,19 @@ import {
   type LibrarySaveState,
 } from "@/lib/admin/admin-libraries";
 import {
+  adminMealImageSource,
   emptyMealDraft,
   emptyMealIngredient,
+  fetchAdminMealMediaUrls,
   getAdminMeal,
   listAdminMeals,
   saveAdminMeal,
   setAdminMealStatus,
+  uploadAdminMealImage,
   type AdminMealDetail,
   type AdminMealListItem,
 } from "@/lib/admin/admin-meals-api";
 import { formatAdminDate } from "@/lib/admin/admin-status";
-import { mealDeliveryPath } from "@/lib/platform/meal-library";
 import { detectMealSensitiveChanges } from "@/lib/admin/admin-library-safety";
 import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
 import type { LibraryImpactWarning } from "@/lib/admin/admin-library-safety";
@@ -68,6 +75,10 @@ export function NutritionLibraryManager() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<AdminMealDetail | null>(null);
+  const [editorMode, setEditorMode] = useState<"preview" | "edit">("preview");
+  const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({});
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [originalIngredients, setOriginalIngredients] = useState(draft?.ingredients ?? []);
   const [allergensConfirmed, setAllergensConfirmed] = useState(false);
   const [baseline, setBaseline] = useState("");
@@ -78,7 +89,9 @@ export function NutritionLibraryManager() {
   const [subJson, setSubJson] = useState("{}");
   const dirty = Boolean(draft && JSON.stringify(draft) !== baseline);
   const guard = useUnsavedNavigation(dirty, setConfirm);
-  const ingredientsDirty = draft ? ingredientsChanged(originalIngredients, draft.ingredients) : false;
+  const ingredientsDirty = draft
+    ? ingredientsChanged(originalIngredients, draft.ingredients)
+    : false;
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +107,11 @@ export function NutritionLibraryManager() {
         if (cancelled) return;
         setRows(result.rows);
         setTotal(result.totalCount);
+        void fetchAdminMealMediaUrls(result.rows.map((row) => row.image_thumb_path)).then(
+          (urls) => {
+            if (!cancelled) setMediaUrls((current) => ({ ...current, ...urls }));
+          },
+        );
       })
       .catch((err) => {
         if (!cancelled) setError(translateLibraryError(err));
@@ -106,7 +124,12 @@ export function NutritionLibraryManager() {
     };
   }, [debouncedQuery, type, status, offset]);
 
-  const openItem = (id: string | "new") => guard(() => setSelectedId(id));
+  const openItem = (id: string | "new") =>
+    guard(() => {
+      setEditorMode(id === "new" ? "edit" : "preview");
+      setPreviewImageUrl(null);
+      setSelectedId(id);
+    });
 
   useEffect(() => {
     if (selectedId == null) {
@@ -115,6 +138,7 @@ export function NutritionLibraryManager() {
     }
     if (selectedId === "new") {
       const next = emptyMealDraft();
+      next.external_id = `MEAL-${String(Math.max(total + 1, 1)).padStart(3, "0")}`;
       setDraft(next);
       setOriginalIngredients(next.ingredients);
       setBaseline(JSON.stringify(next));
@@ -135,12 +159,19 @@ export function NutritionLibraryManager() {
         setAllergensConfirmed(false);
         setSaveState("saved");
         setFieldErrors({});
+        void fetchAdminMealMediaUrls([
+          item.image_master_path,
+          item.image_path,
+          item.image_thumb_path,
+        ]).then((urls) => {
+          if (!cancelled) setMediaUrls((current) => ({ ...current, ...urls }));
+        });
       })
       .catch((err) => setError(translateLibraryError(err)));
     return () => {
       cancelled = true;
     };
-  }, [selectedId]);
+  }, [selectedId, total]);
 
   useEffect(() => {
     if (draft && JSON.stringify(draft) !== baseline) setSaveState("unsaved");
@@ -155,6 +186,36 @@ export function NutritionLibraryManager() {
     });
     setRows(result.rows);
     setTotal(result.totalCount);
+    const urls = await fetchAdminMealMediaUrls(result.rows.map((row) => row.image_thumb_path));
+    setMediaUrls((current) => ({ ...current, ...urls }));
+  };
+
+  const closeEditor = () =>
+    guard(() => {
+      setSelectedId(null);
+      setPreviewImageUrl(null);
+    });
+
+  const uploadImage = async (file: File | null) => {
+    if (!draft || !file) return;
+    setUploadingImage(true);
+    setError(null);
+    try {
+      const uploaded = await uploadAdminMealImage(draft.external_id, file);
+      setPreviewImageUrl(uploaded.signedUrl);
+      setMediaUrls((current) => ({ ...current, [uploaded.path]: uploaded.signedUrl }));
+      setDraft({
+        ...draft,
+        image_path: uploaded.path,
+        image_master_path: uploaded.path,
+        image_thumb_path: uploaded.path,
+        image_status: "ready",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر رفع صورة الوجبة.");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const commitSave = async () => {
@@ -230,7 +291,11 @@ export function NutritionLibraryManager() {
     if (!skipImpactCheck && baseline && draft) {
       try {
         const before = JSON.parse(baseline) as Record<string, unknown>;
-        const warning = detectMealSensitiveChanges(before, draft as Record<string, unknown>, ingredientsDirty);
+        const warning = detectMealSensitiveChanges(
+          before,
+          draft as Record<string, unknown>,
+          ingredientsDirty,
+        );
         if (warning) {
           setPendingImpact(warning);
           return;
@@ -247,7 +312,12 @@ export function NutritionLibraryManager() {
     if (!draft?.id) return;
     if (next === "published" && (!canPublishMeal(draft) || dirty)) return;
     setConfirm({
-      title: next === "archived" ? "أرشفة الوجبة" : next === "published" ? "نشر الوجبة" : "إرجاع للتجريب",
+      title:
+        next === "archived"
+          ? "أرشفة الوجبة"
+          : next === "published"
+            ? "نشر الوجبة"
+            : "إرجاع للتجريب",
       body:
         next === "archived"
           ? "ستختفي الوجبة من المكتبة النشطة. السجلات التاريخية تبقى. لا حذف نهائي."
@@ -316,11 +386,22 @@ export function NutritionLibraryManager() {
       <AdminLibraryLayout
         list={
           <>
-            <AdminSearchInput value={query} onChange={setQuery} placeholder="MEAL-001 / اسم عربي / English" label="بحث الوجبات" />
+            <AdminSearchInput
+              value={query}
+              onChange={setQuery}
+              placeholder="MEAL-001 / اسم عربي / English"
+              label="بحث الوجبات"
+            />
             <AdminFilterBar>
               <label className="cc-filter">
                 النوع
-                <select value={type} onChange={(event) => { setType(event.target.value); setOffset(0); }}>
+                <select
+                  value={type}
+                  onChange={(event) => {
+                    setType(event.target.value);
+                    setOffset(0);
+                  }}
+                >
                   <option value="">الكل</option>
                   {MEAL_TYPES.map((item) => (
                     <option key={item} value={item}>
@@ -331,7 +412,13 @@ export function NutritionLibraryManager() {
               </label>
               <label className="cc-filter">
                 الحالة
-                <select value={status} onChange={(event) => { setStatus(event.target.value); setOffset(0); }}>
+                <select
+                  value={status}
+                  onChange={(event) => {
+                    setStatus(event.target.value);
+                    setOffset(0);
+                  }}
+                >
                   <option value="">الكل</option>
                   {MEAL_STATUSES.map((item) => (
                     <option key={item} value={item}>
@@ -345,7 +432,10 @@ export function NutritionLibraryManager() {
             {loading ? (
               <AdminSkeletonRows rows={8} />
             ) : rows.length === 0 ? (
-              <AdminEmptyState title="لا وجبات مطابقة" body="غيّر البحث أو أضف وجبة. لا يتم إنشاء وجبات ناقصة تلقائياً." />
+              <AdminEmptyState
+                title="لا وجبات مطابقة"
+                body="غيّر البحث أو أضف وجبة. لا يتم إنشاء وجبات ناقصة تلقائياً."
+              />
             ) : (
               <AdminTable>
                 <thead>
@@ -363,19 +453,32 @@ export function NutritionLibraryManager() {
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <tr key={row.id} className={row.id === selectedId ? "is-selected" : undefined}>
+                    <tr
+                      key={row.id}
+                      className={`cc-meal-row${row.id === selectedId ? " is-selected" : ""}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openItem(row.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") openItem(row.id);
+                      }}
+                    >
                       <td>
                         <img
                           className="cc-thumb"
-                          alt=""
+                          alt={`صورة ${row.name_ar}`}
                           loading="lazy"
-                          src={mealDeliveryPath(row.external_id, "thumb")}
+                          src={adminMealImageSource(row, mediaUrls, "thumb")}
                           width={40}
                           height={40}
                         />
                       </td>
                       <td>
-                        <button type="button" className="cc-row-btn" onClick={() => openItem(row.id)}>
+                        <button
+                          type="button"
+                          className="cc-row-btn"
+                          onClick={() => openItem(row.id)}
+                        >
                           {row.name_ar}
                         </button>
                         <div className="cc-muted">{row.external_id}</div>
@@ -387,7 +490,10 @@ export function NutritionLibraryManager() {
                         {row.protein_g}/{row.carbs_g}/{row.fat_g}
                       </td>
                       <td>
-                        <AdminLibraryStatusBadge status={row.status} label={mealStatusLabel(row.status)} />
+                        <AdminLibraryStatusBadge
+                          status={row.status}
+                          label={mealStatusLabel(row.status)}
+                        />
                       </td>
                       <td>{row.review_status || "—"}</td>
                       <td>{formatAdminDate(row.updated_at)}</td>
@@ -396,7 +502,12 @@ export function NutritionLibraryManager() {
                 </tbody>
               </AdminTable>
             )}
-            <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={setOffset} />
+            <AdminPagination
+              offset={offset}
+              pageSize={ADMIN_LIBRARY_PAGE_SIZE}
+              total={total}
+              onPage={setOffset}
+            />
           </>
         }
         editor={
@@ -404,140 +515,495 @@ export function NutritionLibraryManager() {
             <AdminEmptyState title="اختر وجبة" body="فتح عنصر يحمّل المكوّنات عند الحاجة فقط." />
           ) : (
             <form
-              className="cc-editor"
+              className="cc-editor cc-meal-editor"
               onSubmit={(event) => {
                 event.preventDefault();
                 void save();
               }}
             >
+              <div className="cc-meal-editor__head">
+                <button
+                  type="button"
+                  className="cc-icon-btn"
+                  aria-label="إغلاق"
+                  onClick={closeEditor}
+                >
+                  <X size={20} />
+                </button>
+                <div>
+                  <small>{draft.id ? draft.external_id : "وجبة جديدة"}</small>
+                  <strong>{draft.name_ar || "إنشاء وجبة"}</strong>
+                </div>
+                <div className="cc-meal-editor__modes">
+                  <button
+                    type="button"
+                    className={editorMode === "preview" ? "is-active" : ""}
+                    onClick={() => setEditorMode("preview")}
+                  >
+                    <Eye size={15} /> معاينة العميل
+                  </button>
+                  <button
+                    type="button"
+                    className={editorMode === "edit" ? "is-active" : ""}
+                    onClick={() => setEditorMode("edit")}
+                  >
+                    <Pencil size={15} /> تعديل
+                  </button>
+                </div>
+              </div>
               <AdminEditorToolbar>
                 <AdminSaveState state={saveState} />
-                <button type="submit" className="cc-btn cc-btn--primary" disabled={saveState === "saving"}>
+                <button
+                  type="submit"
+                  className="cc-btn cc-btn--primary"
+                  disabled={saveState === "saving"}
+                >
                   حفظ
                 </button>
                 {draft.id ? (
                   <>
-                    <button type="button" className="cc-btn cc-btn--primary" disabled={dirty || !canPublishMeal(draft)} onClick={() => changeStatus("published")}>
+                    <button
+                      type="button"
+                      className="cc-btn cc-btn--primary"
+                      disabled={dirty || !canPublishMeal(draft)}
+                      onClick={() => changeStatus("published")}
+                    >
                       نشر
                     </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => changeStatus("pilot")}>
+                    <button
+                      type="button"
+                      className="cc-btn cc-btn--ghost"
+                      onClick={() => changeStatus("pilot")}
+                    >
                       تجريبي
                     </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => changeStatus("archived")}>
+                    <button
+                      type="button"
+                      className="cc-btn cc-btn--ghost"
+                      onClick={() => changeStatus("archived")}
+                    >
                       أرشفة
                     </button>
                   </>
                 ) : null}
               </AdminEditorToolbar>
-              {firstFieldError(fieldErrors) ? <p className="cc-field__error">{firstFieldError(fieldErrors)}</p> : null}
-              <div className="cc-form-grid">
-                <AdminField label="MEAL ID" htmlFor="external_id" error={fieldErrors.external_id}>
-                  <AdminTextInput id="external_id" dir="ltr" value={draft.external_id} error={fieldErrors.external_id} onChange={(value) => setDraft({ ...draft, external_id: value })} />
-                </AdminField>
-                <AdminField label="الاسم العربي" htmlFor="name_ar" error={fieldErrors.name_ar}>
-                  <AdminTextInput id="name_ar" value={draft.name_ar} error={fieldErrors.name_ar} onChange={(value) => setDraft({ ...draft, name_ar: value })} />
-                </AdminField>
-                <AdminField label="English name" htmlFor="name_en" error={fieldErrors.name_en}>
-                  <AdminTextInput id="name_en" dir="ltr" value={draft.name_en} error={fieldErrors.name_en} onChange={(value) => setDraft({ ...draft, name_en: value })} />
-                </AdminField>
-                <AdminField label="النوع" htmlFor="meal_type">
-                  <AdminSelect id="meal_type" value={draft.meal_type} onChange={(value) => setDraft({ ...draft, meal_type: value })}>
-                    {MEAL_TYPES.map((item) => (
-                      <option key={item} value={item}>
-                        {mealTypeLabel(item)}
-                      </option>
-                    ))}
-                  </AdminSelect>
-                </AdminField>
-                <AdminField label="سعرات" htmlFor="calories">
-                  <AdminTextInput id="calories" type="number" value={String(draft.calories)} onChange={(value) => setDraft({ ...draft, calories: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="بروتين" htmlFor="protein_g">
-                  <AdminTextInput id="protein_g" type="number" value={String(draft.protein_g)} onChange={(value) => setDraft({ ...draft, protein_g: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="كارب" htmlFor="carbs_g">
-                  <AdminTextInput id="carbs_g" type="number" value={String(draft.carbs_g)} onChange={(value) => setDraft({ ...draft, carbs_g: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="دهون" htmlFor="fat_g">
-                  <AdminTextInput id="fat_g" type="number" value={String(draft.fat_g)} onChange={(value) => setDraft({ ...draft, fat_g: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="الحصة" htmlFor="serving_size">
-                  <AdminTextInput id="serving_size" type="number" value={String(draft.serving_size)} onChange={(value) => setDraft({ ...draft, serving_size: Number(value) || 0 })} />
-                </AdminField>
-                <AdminField label="وحدة الحصة" htmlFor="serving_unit">
-                  <AdminTextInput id="serving_unit" dir="ltr" value={draft.serving_unit} onChange={(value) => setDraft({ ...draft, serving_unit: value })} />
-                </AdminField>
-                <AdminField label="حالة المراجعة" htmlFor="review_status" hint="الحفظ لا يعني اعتماد التغذية">
-                  <AdminSelect id="review_status" value={draft.review_status ?? "edited"} onChange={(value) => setDraft({ ...draft, review_status: value })}>
-                    <option value="edited">edited</option>
-                    <option value="approved">approved</option>
-                    <option value="review_required">review_required</option>
-                  </AdminSelect>
-                </AdminField>
-              </div>
-              <AdminField label="الوصف العربي" htmlFor="description_ar">
-                <AdminTextarea id="description_ar" value={draft.description_ar ?? ""} onChange={(value) => setDraft({ ...draft, description_ar: value })} />
-              </AdminField>
-              <AdminField label="English description" htmlFor="description_en">
-                <AdminTextarea id="description_en" dir="ltr" value={draft.description_en ?? ""} onChange={(value) => setDraft({ ...draft, description_en: value })} />
-              </AdminField>
-              <AdminField label="مسببات الحساسية" htmlFor="allergens" error={fieldErrors.allergens} hint="يدوي. لا تُحسب تلقائياً من المكوّنات.">
-                <AdminTextInput id="allergens" value={listToCsv(draft.allergens)} onChange={(value) => setDraft({ ...draft, allergens: csvToList(value) })} />
-              </AdminField>
-              {ingredientsDirty ? (
-                <label className="cc-check">
-                  <input type="checkbox" checked={allergensConfirmed} onChange={(event) => setAllergensConfirmed(event.target.checked)} />
-                  راجعت مسببات الحساسية بعد تغيير المكوّنات
-                </label>
-              ) : null}
-              <div className="cc-ing-head">
-                <h3>المكوّنات</h3>
-                <button
-                  type="button"
-                  className="cc-btn cc-btn--ghost"
-                  onClick={() => setDraft({ ...draft, ingredients: [...draft.ingredients, emptyMealIngredient()] })}
+              {editorMode === "preview" ? (
+                <section
+                  className="cc-meal-client-preview"
+                  aria-label="معاينة الوجبة كما تظهر للعميل"
                 >
-                  إضافة مكوّن
-                </button>
-              </div>
-              <div className="cc-ing-list">
-                {draft.ingredients.map((ingredient, index) => (
-                  <div key={`${ingredient.ingredient_key}-${index}`} className="cc-ing-row">
-                    <AdminTextInput value={ingredient.ingredient_key} dir="ltr" onChange={(value) => setDraft({ ...draft, ingredients: draft.ingredients.map((row, i) => (i === index ? { ...row, ingredient_key: value } : row)) })} />
-                    <AdminTextInput value={ingredient.name_ar} onChange={(value) => setDraft({ ...draft, ingredients: draft.ingredients.map((row, i) => (i === index ? { ...row, name_ar: value } : row)) })} />
-                    <AdminTextInput value={ingredient.name_en} dir="ltr" onChange={(value) => setDraft({ ...draft, ingredients: draft.ingredients.map((row, i) => (i === index ? { ...row, name_en: value } : row)) })} />
-                    <AdminTextInput type="number" value={String(ingredient.quantity)} onChange={(value) => setDraft({ ...draft, ingredients: draft.ingredients.map((row, i) => (i === index ? { ...row, quantity: Number(value) || 0 } : row)) })} />
-                    <AdminTextInput value={ingredient.unit} dir="ltr" onChange={(value) => setDraft({ ...draft, ingredients: draft.ingredients.map((row, i) => (i === index ? { ...row, unit: value } : row)) })} />
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, ingredients: moveItem(draft.ingredients, index, -1) })}>
-                      أعلى
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, ingredients: moveItem(draft.ingredients, index, 1) })}>
-                      أسفل
-                    </button>
-                    <button type="button" className="cc-btn cc-btn--ghost" onClick={() => setDraft({ ...draft, ingredients: draft.ingredients.filter((_, i) => i !== index) })}>
-                      حذف
-                    </button>
+                  <img
+                    alt={`معاينة ${draft.name_ar || "الوجبة"}`}
+                    src={previewImageUrl ?? adminMealImageSource(draft, mediaUrls, "cover")}
+                  />
+                  <div className="cc-meal-client-preview__body">
+                    <span>{mealTypeLabel(draft.meal_type)}</span>
+                    <h2>{draft.name_ar || "بدون اسم"}</h2>
+                    <p>{draft.description_ar || "أضف وصفًا مختصرًا يظهر للعميل."}</p>
+                    <div className="cc-meal-client-preview__macros">
+                      <strong>
+                        {draft.calories}
+                        <small> سعرة</small>
+                      </strong>
+                      <strong>
+                        {draft.protein_g}
+                        <small> بروتين</small>
+                      </strong>
+                      <strong>
+                        {draft.carbs_g}
+                        <small> كارب</small>
+                      </strong>
+                      <strong>
+                        {draft.fat_g}
+                        <small> دهون</small>
+                      </strong>
+                    </div>
+                    <h3>المكوّنات</h3>
+                    <ul>
+                      {draft.ingredients
+                        .filter((item) => item.name_ar)
+                        .map((item, index) => (
+                          <li key={`${item.ingredient_key}-${index}`}>
+                            {item.name_ar} — {item.quantity} {item.unit}
+                          </li>
+                        ))}
+                    </ul>
+                    <h3>طريقة التحضير</h3>
+                    <ol>
+                      {draft.preparation_steps_ar.filter(Boolean).map((step, index) => (
+                        <li key={`${step}-${index}`}>{step}</li>
+                      ))}
+                    </ol>
+                    {draft.allergens.length ? (
+                      <p className="cc-meal-client-preview__warning">
+                        تنبيه حساسية: {draft.allergens.join("، ")}
+                      </p>
+                    ) : null}
                   </div>
-                ))}
+                </section>
+              ) : null}
+              {firstFieldError(fieldErrors) ? (
+                <p className="cc-field__error">{firstFieldError(fieldErrors)}</p>
+              ) : null}
+              <div
+                className={
+                  editorMode === "edit" ? "cc-meal-edit-fields" : "cc-meal-edit-fields is-collapsed"
+                }
+              >
+                <div className="cc-form-grid">
+                  <AdminField label="MEAL ID" htmlFor="external_id" error={fieldErrors.external_id}>
+                    <AdminTextInput
+                      id="external_id"
+                      dir="ltr"
+                      value={draft.external_id}
+                      error={fieldErrors.external_id}
+                      onChange={(value) => setDraft({ ...draft, external_id: value })}
+                    />
+                  </AdminField>
+                  <AdminField label="الاسم العربي" htmlFor="name_ar" error={fieldErrors.name_ar}>
+                    <AdminTextInput
+                      id="name_ar"
+                      value={draft.name_ar}
+                      error={fieldErrors.name_ar}
+                      onChange={(value) => setDraft({ ...draft, name_ar: value })}
+                    />
+                  </AdminField>
+                  <AdminField label="English name" htmlFor="name_en" error={fieldErrors.name_en}>
+                    <AdminTextInput
+                      id="name_en"
+                      dir="ltr"
+                      value={draft.name_en}
+                      error={fieldErrors.name_en}
+                      onChange={(value) => setDraft({ ...draft, name_en: value })}
+                    />
+                  </AdminField>
+                  <AdminField label="النوع" htmlFor="meal_type">
+                    <AdminSelect
+                      id="meal_type"
+                      value={draft.meal_type}
+                      onChange={(value) => setDraft({ ...draft, meal_type: value })}
+                    >
+                      {MEAL_TYPES.map((item) => (
+                        <option key={item} value={item}>
+                          {mealTypeLabel(item)}
+                        </option>
+                      ))}
+                    </AdminSelect>
+                  </AdminField>
+                  <AdminField label="سعرات" htmlFor="calories">
+                    <AdminTextInput
+                      id="calories"
+                      type="number"
+                      value={String(draft.calories)}
+                      onChange={(value) => setDraft({ ...draft, calories: Number(value) || 0 })}
+                    />
+                  </AdminField>
+                  <AdminField label="بروتين" htmlFor="protein_g">
+                    <AdminTextInput
+                      id="protein_g"
+                      type="number"
+                      value={String(draft.protein_g)}
+                      onChange={(value) => setDraft({ ...draft, protein_g: Number(value) || 0 })}
+                    />
+                  </AdminField>
+                  <AdminField label="كارب" htmlFor="carbs_g">
+                    <AdminTextInput
+                      id="carbs_g"
+                      type="number"
+                      value={String(draft.carbs_g)}
+                      onChange={(value) => setDraft({ ...draft, carbs_g: Number(value) || 0 })}
+                    />
+                  </AdminField>
+                  <AdminField label="دهون" htmlFor="fat_g">
+                    <AdminTextInput
+                      id="fat_g"
+                      type="number"
+                      value={String(draft.fat_g)}
+                      onChange={(value) => setDraft({ ...draft, fat_g: Number(value) || 0 })}
+                    />
+                  </AdminField>
+                  <AdminField label="الحصة" htmlFor="serving_size">
+                    <AdminTextInput
+                      id="serving_size"
+                      type="number"
+                      value={String(draft.serving_size)}
+                      onChange={(value) => setDraft({ ...draft, serving_size: Number(value) || 0 })}
+                    />
+                  </AdminField>
+                  <AdminField label="وحدة الحصة" htmlFor="serving_unit">
+                    <AdminTextInput
+                      id="serving_unit"
+                      dir="ltr"
+                      value={draft.serving_unit}
+                      onChange={(value) => setDraft({ ...draft, serving_unit: value })}
+                    />
+                  </AdminField>
+                  <AdminField
+                    label="حالة المراجعة"
+                    htmlFor="review_status"
+                    hint="الحفظ لا يعني اعتماد التغذية"
+                  >
+                    <AdminSelect
+                      id="review_status"
+                      value={draft.review_status ?? "edited"}
+                      onChange={(value) => setDraft({ ...draft, review_status: value })}
+                    >
+                      <option value="edited">edited</option>
+                      <option value="approved">approved</option>
+                      <option value="review_required">review_required</option>
+                    </AdminSelect>
+                  </AdminField>
+                </div>
+                <AdminField label="الوصف العربي" htmlFor="description_ar">
+                  <AdminTextarea
+                    id="description_ar"
+                    value={draft.description_ar ?? ""}
+                    onChange={(value) => setDraft({ ...draft, description_ar: value })}
+                  />
+                </AdminField>
+                <AdminField label="English description" htmlFor="description_en">
+                  <AdminTextarea
+                    id="description_en"
+                    dir="ltr"
+                    value={draft.description_en ?? ""}
+                    onChange={(value) => setDraft({ ...draft, description_en: value })}
+                  />
+                </AdminField>
+                <AdminField
+                  label="مسببات الحساسية"
+                  htmlFor="allergens"
+                  error={fieldErrors.allergens}
+                  hint="يدوي. لا تُحسب تلقائياً من المكوّنات."
+                >
+                  <AdminTextInput
+                    id="allergens"
+                    value={listToCsv(draft.allergens)}
+                    onChange={(value) => setDraft({ ...draft, allergens: csvToList(value) })}
+                  />
+                </AdminField>
+                <AdminField
+                  label="الأهداف المناسبة"
+                  htmlFor="suitable_goals"
+                  hint="مثال: fat_loss, muscle_gain, maintenance"
+                >
+                  <AdminTextInput
+                    id="suitable_goals"
+                    dir="ltr"
+                    value={listToCsv(draft.suitable_goals)}
+                    onChange={(value) => setDraft({ ...draft, suitable_goals: csvToList(value) })}
+                  />
+                </AdminField>
+                <AdminField
+                  label="وسوم التغذية"
+                  htmlFor="dietary_tags"
+                  hint="مثال: high_protein, vegetarian"
+                >
+                  <AdminTextInput
+                    id="dietary_tags"
+                    dir="ltr"
+                    value={listToCsv(draft.dietary_tags)}
+                    onChange={(value) => setDraft({ ...draft, dietary_tags: csvToList(value) })}
+                  />
+                </AdminField>
+                {ingredientsDirty ? (
+                  <label className="cc-check">
+                    <input
+                      type="checkbox"
+                      checked={allergensConfirmed}
+                      onChange={(event) => setAllergensConfirmed(event.target.checked)}
+                    />
+                    راجعت مسببات الحساسية بعد تغيير المكوّنات
+                  </label>
+                ) : null}
+                <div className="cc-ing-head">
+                  <h3>المكوّنات</h3>
+                  <button
+                    type="button"
+                    className="cc-btn cc-btn--ghost"
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        ingredients: [...draft.ingredients, emptyMealIngredient()],
+                      })
+                    }
+                  >
+                    إضافة مكوّن
+                  </button>
+                </div>
+                <div className="cc-ing-list">
+                  {draft.ingredients.map((ingredient, index) => (
+                    <div key={`${ingredient.ingredient_key}-${index}`} className="cc-ing-row">
+                      <AdminTextInput
+                        value={ingredient.ingredient_key}
+                        dir="ltr"
+                        onChange={(value) =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.map((row, i) =>
+                              i === index ? { ...row, ingredient_key: value } : row,
+                            ),
+                          })
+                        }
+                      />
+                      <AdminTextInput
+                        value={ingredient.name_ar}
+                        onChange={(value) =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.map((row, i) =>
+                              i === index ? { ...row, name_ar: value } : row,
+                            ),
+                          })
+                        }
+                      />
+                      <AdminTextInput
+                        value={ingredient.name_en}
+                        dir="ltr"
+                        onChange={(value) =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.map((row, i) =>
+                              i === index ? { ...row, name_en: value } : row,
+                            ),
+                          })
+                        }
+                      />
+                      <AdminTextInput
+                        type="number"
+                        value={String(ingredient.quantity)}
+                        onChange={(value) =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.map((row, i) =>
+                              i === index ? { ...row, quantity: Number(value) || 0 } : row,
+                            ),
+                          })
+                        }
+                      />
+                      <AdminTextInput
+                        value={ingredient.unit}
+                        dir="ltr"
+                        onChange={(value) =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.map((row, i) =>
+                              i === index ? { ...row, unit: value } : row,
+                            ),
+                          })
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="cc-btn cc-btn--ghost"
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            ingredients: moveItem(draft.ingredients, index, -1),
+                          })
+                        }
+                      >
+                        أعلى
+                      </button>
+                      <button
+                        type="button"
+                        className="cc-btn cc-btn--ghost"
+                        onClick={() =>
+                          setDraft({ ...draft, ingredients: moveItem(draft.ingredients, index, 1) })
+                        }
+                      >
+                        أسفل
+                      </button>
+                      <button
+                        type="button"
+                        className="cc-btn cc-btn--ghost"
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            ingredients: draft.ingredients.filter((_, i) => i !== index),
+                          })
+                        }
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <AdminField label="التحضير بالعربية" htmlFor="prep_ar">
+                  <AdminTextarea
+                    id="prep_ar"
+                    value={draft.preparation_steps_ar.join("\n")}
+                    onChange={(value) =>
+                      setDraft({ ...draft, preparation_steps_ar: value.split("\n") })
+                    }
+                  />
+                </AdminField>
+                <AdminField label="Preparation (EN)" htmlFor="prep_en">
+                  <AdminTextarea
+                    id="prep_en"
+                    dir="ltr"
+                    value={draft.preparation_steps_en.join("\n")}
+                    onChange={(value) =>
+                      setDraft({ ...draft, preparation_steps_en: value.split("\n") })
+                    }
+                  />
+                </AdminField>
+                <AdminField
+                  label="مسار الصورة"
+                  htmlFor="image_path"
+                  hint="العرض يستخدم صور التغذية الحالية عند توفر MEAL-ID"
+                >
+                  <AdminTextInput
+                    id="image_path"
+                    dir="ltr"
+                    value={draft.image_path ?? ""}
+                    onChange={(value) => setDraft({ ...draft, image_path: value })}
+                  />
+                </AdminField>
+                <label className="cc-meal-upload">
+                  <span>
+                    <ImagePlus size={18} /> صورة الوجبة
+                  </span>
+                  <small>JPG أو PNG أو WebP — حتى 6MB. تحفظ داخل مكتبة الوسائط الآمنة.</small>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={uploadingImage}
+                    onChange={(event) => void uploadImage(event.target.files?.[0] ?? null)}
+                  />
+                  <strong>
+                    {uploadingImage
+                      ? "جارٍ رفع الصورة…"
+                      : draft.image_status === "ready"
+                        ? "الصورة جاهزة"
+                        : "اختر صورة"}
+                  </strong>
+                </label>
+                <AdminField
+                  label="substitution_profile JSON"
+                  htmlFor="substitution_profile"
+                  error={fieldErrors.substitution_profile}
+                >
+                  <AdminTextarea
+                    id="substitution_profile"
+                    dir="ltr"
+                    value={subJson}
+                    onChange={setSubJson}
+                  />
+                </AdminField>
+                <AdminPreview title="معاينة الوجبة">
+                  <img
+                    className="cc-preview-media"
+                    alt=""
+                    src={previewImageUrl ?? adminMealImageSource(draft, mediaUrls, "cover")}
+                  />
+                  <p className="cc-preview-title">{draft.name_ar || "بدون اسم"}</p>
+                  <p>
+                    {draft.calories} kcal · P {draft.protein_g} / C {draft.carbs_g} / F{" "}
+                    {draft.fat_g}
+                  </p>
+                  <p>{draft.description_ar}</p>
+                </AdminPreview>
               </div>
-              <AdminField label="التحضير بالعربية" htmlFor="prep_ar">
-                <AdminTextarea id="prep_ar" value={draft.preparation_steps_ar.join("\n")} onChange={(value) => setDraft({ ...draft, preparation_steps_ar: value.split("\n") })} />
-              </AdminField>
-              <AdminField label="Preparation (EN)" htmlFor="prep_en">
-                <AdminTextarea id="prep_en" dir="ltr" value={draft.preparation_steps_en.join("\n")} onChange={(value) => setDraft({ ...draft, preparation_steps_en: value.split("\n") })} />
-              </AdminField>
-              <AdminField label="مسار الصورة" htmlFor="image_path" hint="العرض يستخدم صور التغذية الحالية عند توفر MEAL-ID">
-                <AdminTextInput id="image_path" dir="ltr" value={draft.image_path ?? ""} onChange={(value) => setDraft({ ...draft, image_path: value })} />
-              </AdminField>
-              <AdminField label="substitution_profile JSON" htmlFor="substitution_profile" error={fieldErrors.substitution_profile}>
-                <AdminTextarea id="substitution_profile" dir="ltr" value={subJson} onChange={setSubJson} />
-              </AdminField>
-              <AdminPreview title="معاينة الوجبة">
-                <img className="cc-preview-media" alt="" src={mealDeliveryPath(draft.external_id || "MEAL-001", "cover")} />
-                <p className="cc-preview-title">{draft.name_ar || "بدون اسم"}</p>
-                <p>{draft.calories} kcal · P {draft.protein_g} / C {draft.carbs_g} / F {draft.fat_g}</p>
-                <p>{draft.description_ar}</p>
-              </AdminPreview>
             </form>
           )
         }

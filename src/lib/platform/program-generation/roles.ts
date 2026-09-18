@@ -193,6 +193,32 @@ const ARMS_FULL_A: SessionBlueprint = {
   ],
 };
 
+const MUSCLE_FULL_A: SessionBlueprint = {
+  role: "BALANCED_FULL_BODY",
+  title: "Full body · squat, push and pull",
+  primaryRegions: ["QUADRICEPS", "CHEST", "LATS"],
+  demand: "HIGH",
+  slots: [
+    slot("QUADRICEPS", "PRIMARY", "SQUAT"),
+    slot("CHEST", "PRIMARY", "HORIZONTAL_PUSH"),
+    slot("LATS", "PRIMARY", "VERTICAL_PULL"),
+    slot("BICEPS", "SECONDARY", "ELBOW_FLEXION"),
+  ],
+};
+
+const MUSCLE_FULL_B: SessionBlueprint = {
+  role: "BALANCED_FULL_BODY",
+  title: "Full body · hinge, shoulders and arms",
+  primaryRegions: ["HAMSTRINGS", "SHOULDERS", "UPPER_BACK"],
+  demand: "HIGH",
+  slots: [
+    slot("HAMSTRINGS", "PRIMARY", "HINGE"),
+    slot("SHOULDERS", "PRIMARY", "VERTICAL_PUSH"),
+    slot("UPPER_BACK", "PRIMARY", "HORIZONTAL_PULL"),
+    slot("TRICEPS", "SECONDARY", "ELBOW_EXTENSION"),
+  ],
+};
+
 function clone(blueprint: SessionBlueprint): SessionBlueprint {
   return {
     ...blueprint,
@@ -215,7 +241,10 @@ function applyReallocation(
       if (from.includes("QUAD") && to.includes("GLUTE") && item.movementRole === "SQUAT") {
         return slot("GLUTES", "PRIMARY", "HIP_EXTENSION");
       }
-      if (from.includes("SHOULDER") && (to.includes("BICEP") || to.includes("TRICEP") || to === "ARMS")) {
+      if (
+        from.includes("SHOULDER") &&
+        (to.includes("BICEP") || to.includes("TRICEP") || to === "ARMS")
+      ) {
         if (item.movementRole === "VERTICAL_PUSH" || item.movementRole === "SHOULDER_ABDUCTION") {
           return slot("BICEPS", "PRIMARY", "ELBOW_FLEXION");
         }
@@ -231,10 +260,22 @@ function forGoal(goal: TrainingV2CanonicalGoal, days: DaysPerWeek): SessionBluep
     if (days === 2) return [FULL_BODY_A, FULL_BODY_B];
     if (days === 3) return [LOWER_GLUTE_PRIORITY, UPPER_SUPPORT, LOWER_GLUTE_SUPPORT];
     if (days === 4) return [LOWER_GLUTE_PRIORITY, UPPER_PRIORITY, LOWER_POSTERIOR, UPPER_SUPPORT];
-    return [LOWER_GLUTE_PRIORITY, UPPER_PRIORITY, LOWER_GLUTE_SUPPORT, PULL_POSTERIOR, CORE_SUPPORT];
+    return [
+      LOWER_GLUTE_PRIORITY,
+      UPPER_PRIORITY,
+      LOWER_GLUTE_SUPPORT,
+      PULL_POSTERIOR,
+      CORE_SUPPORT,
+    ];
   }
-  if (goal === "TONED_ARMS_UPPER_BODY" || goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
+  if (goal === "TONED_ARMS_UPPER_BODY") {
     if (days === 2) return [UPPER_PRIORITY, ARMS_FULL_A];
+    if (days === 3) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT];
+    if (days === 4) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, PULL_POSTERIOR];
+    return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, PULL_POSTERIOR, CORE_SUPPORT];
+  }
+  if (goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
+    if (days === 2) return [MUSCLE_FULL_A, MUSCLE_FULL_B];
     if (days === 3) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT];
     if (days === 4) return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, PULL_POSTERIOR];
     return [UPPER_PRIORITY, LOWER_SUPPORT, UPPER_SUPPORT, PULL_POSTERIOR, CORE_SUPPORT];
@@ -271,7 +312,11 @@ function forGoal(goal: TrainingV2CanonicalGoal, days: DaysPerWeek): SessionBluep
 
 export function requiredMovementRoles(goal: TrainingV2CanonicalGoal): string[] {
   if (goal === "GLUTE_GROWTH") return ["HIP_EXTENSION"];
-  if (goal === "TONED_ARMS_UPPER_BODY" || goal === "MUSCLE_GROWTH" || goal === "HEALTHY_WEIGHT_GAIN") {
+  if (
+    goal === "TONED_ARMS_UPPER_BODY" ||
+    goal === "MUSCLE_GROWTH" ||
+    goal === "HEALTHY_WEIGHT_GAIN"
+  ) {
     return ["ELBOW_FLEXION", "ELBOW_EXTENSION"];
   }
   if (goal === "POSTURE_TONED_BACK") return ["HORIZONTAL_PULL"];

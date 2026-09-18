@@ -13,7 +13,10 @@ function assert(condition: unknown, message: string): asserts condition {
 
 // T1/T2 Environment badge contract
 assert(resolveAdminEnvironment() !== "", "environment resolves");
-assert(["staging", "production", "development"].includes(resolveAdminEnvironment()), "known env bucket");
+assert(
+  ["staging", "production", "development"].includes(resolveAdminEnvironment()),
+  "known env bucket",
+);
 assert(adminEnvironmentLabel("staging") === "STAGING", "staging label");
 assert(adminEnvironmentLabel("production") === "PRODUCTION", "production label");
 
@@ -33,15 +36,19 @@ const sidebarRoutes = [
   "/admin/messages",
   "/admin/progress",
   "/admin/programs",
+  "/admin/automation",
   "/admin/exercises",
   "/admin/nutrition",
   "/admin/memberships",
   "/admin/payments",
+  "/admin/commercial",
   "/admin/content",
-  "/admin/support",
   "/admin/settings",
+  "/admin/product-settings",
   "/admin/audit",
+  "/admin/alerts",
   "/admin/notifications",
+  "/admin/analytics",
 ];
 for (const route of sidebarRoutes) {
   assert(hrefs.includes(route), `sidebar route: ${route}`);
@@ -51,6 +58,7 @@ const preservedFiles = [
   "src/routes/admin/training/reviews.tsx",
   "src/routes/admin/nutrition/operations.tsx",
   "src/routes/admin/billing/index.tsx",
+  "src/routes/admin/support.tsx",
 ];
 for (const file of preservedFiles) {
   assert(readFileSync(resolve(process.cwd(), file), "utf8").length > 0, `route file kept: ${file}`);
@@ -87,10 +95,19 @@ const quick = buildDashboardQuickStatus({
   ],
   totalClients: 42,
 });
-assert(quick.some((metric) => metric.id === "needs_attention"), "needs attention metric");
+assert(
+  quick.some((metric) => metric.id === "needs_attention"),
+  "needs attention metric",
+);
 assert(quick.length <= 5, "max five KPI cards");
-assert(quick.every((metric) => metric.icon), "kpi icons present");
-assert(quick.every((metric) => Number.isFinite(metric.value)), "numeric metrics only");
+assert(
+  quick.every((metric) => metric.icon),
+  "kpi icons present",
+);
+assert(
+  quick.every((metric) => Number.isFinite(metric.value)),
+  "numeric metrics only",
+);
 assert(!quick.some((metric) => metric.label.includes("fake")), "no fake labels");
 assert(!quick.some((metric) => String(metric.hint).includes("%")), "no fake trend analytics");
 
@@ -129,9 +146,18 @@ const queue = buildAttentionQueue({
   ],
 });
 assert(queue.length === 2, "coaching + billing exception");
-assert(queue.every((item) => item.type && item.statusLabel), "attention metadata");
-assert(queue.some((item) => item.href.includes("/admin/messages/")), "coaching CTA");
-assert(queue.some((item) => item.href.includes("/admin/payments")), "billing CTA");
+assert(
+  queue.every((item) => item.type && item.statusLabel),
+  "attention metadata",
+);
+assert(
+  queue.some((item) => item.href.includes("/admin/messages/")),
+  "coaching CTA",
+);
+assert(
+  queue.some((item) => item.href.includes("/admin/payments")),
+  "billing CTA",
+);
 
 // T9–T12 Matrix UI labels — engine statuses only
 for (const status of COACH_OVERRIDE_REVIEW_STATUSES) {
@@ -156,7 +182,10 @@ const reviewSource = readFileSync(
   "utf8",
 );
 assert(reviewSource.includes("SAFE_WITH_IMPACT"), "engine review intact");
-const core100 = readFileSync(resolve(process.cwd(), "src/lib/platform/strategy-matrix/core-100.ts"), "utf8");
+const core100 = readFileSync(
+  resolve(process.cwd(), "src/lib/platform/strategy-matrix/core-100.ts"),
+  "utf8",
+);
 assert(core100.includes("MAAKFIT_V1_CORE_100"), "core 100 intact");
 
 // T20 RTL/mobile structural classes

@@ -1,5 +1,6 @@
 export * from "./constants";
 export * from "./types";
+export * from "./nutrition-template-contract";
 export * from "./goal-profile-resolver";
 export * from "./target-engine";
 export * from "./serving-policy";

@@ -41,6 +41,16 @@ export type StrategyAssignmentSlotPayload = {
   slot_label: string;
   time_label: string;
   sort_order: number;
+  meal_snapshot?: {
+    name_ar: string;
+    calories: number;
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+    allergens: string[];
+    serving_size: number;
+    serving_unit: string;
+  };
 };
 
 export type StrategyAssignmentPersistPayload = {
@@ -126,7 +136,10 @@ function slotsToPersistPayload(day: ResolvedNutritionDay): StrategyAssignmentSlo
         ? mealBySlot.get(slot.satisfied_by_slot_key)
         : null;
       const externalId =
-        meal?.external_id ?? satisfiedMeal?.external_id ?? day.assigned_meals[0]?.external_id ?? "MEAL-001";
+        meal?.external_id ??
+        satisfiedMeal?.external_id ??
+        day.assigned_meals[0]?.external_id ??
+        "MEAL-001";
       const servings = meal?.servings ?? 1;
       return {
         slot_key: slot.slot_key,
@@ -144,6 +157,18 @@ function slotsToPersistPayload(day: ResolvedNutritionDay): StrategyAssignmentSlo
         slot_label: labels.ar,
         time_label: labels.time,
         sort_order: slot.display_order,
+        meal_snapshot: meal
+          ? {
+              name_ar: meal.meal.name_ar,
+              calories: meal.meal.calories,
+              protein_g: meal.meal.protein_g,
+              carbs_g: meal.meal.carbs_g,
+              fat_g: meal.meal.fat_g,
+              allergens: meal.meal.allergens,
+              serving_size: meal.meal.serving_size,
+              serving_unit: meal.meal.serving_unit,
+            }
+          : undefined,
       };
     });
 }
@@ -174,11 +199,44 @@ export function buildStrategyAssignmentPayload(input: {
   if (isFailClosed(targetFromEngine)) return targetFromEngine;
 
   const target = targetFromEngine;
+  const history: MealHistoryWindow = { recent_by_meal_type: {} };
+  const week: ResolvedNutritionDay[] = [];
+  for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+    const day = resolveNutritionDay({
+      client_goal: input.client_goal,
+      profile: input.profile,
+      approved_target: target,
+      day_context: input.day_context,
+      allergies: input.allergies,
+      restrictions: input.restrictions,
+      meal_history: history,
+      membership_tier: "essential",
+      date: new Date(Date.UTC(2026, 0, dayIndex + 1)).toISOString().slice(0, 10),
+    });
+    if (isFailClosed(day)) return day;
+    week.push(day);
+    for (const assigned of day.assigned_meals) {
+      const key = assigned.meal.meal_type;
+      history.recent_by_meal_type[key] = [
+        assigned.external_id,
+        ...(history.recent_by_meal_type[key] ?? []),
+      ].slice(0, 7);
+    }
+  }
+  const firstDay = week[0] ?? resolved;
   const snapshot = buildResolvedSnapshot({
-    day: resolved,
+    day: firstDay,
     target,
     dayContext: input.day_context,
   });
+  snapshot.cycle_days = 7;
+  snapshot.seven_day_cycle = week.map((day, index) => ({
+    day: index + 1,
+    ordered_slot_keys: day.ordered_slots.map((slot) => slot.slot_key),
+    slots: slotsToPersistPayload(day),
+    planned_totals: day.planned_totals,
+    validation_result: day.validation_result,
+  }));
 
   return {
     name_ar: input.name_ar ?? "خطة تغذية Strategy V1",
@@ -205,12 +263,16 @@ export function buildStrategyAssignmentPayload(input: {
       summary: `Strategy V1 assignment for ${input.client_goal}`,
       metadata: {
         validation_status: resolved.validation_result.status,
-        slot_count: resolved.ordered_slots.length,
-        codes: resolved.decision_trace.map((e) => e.code),
+        slot_count: firstDay.ordered_slots.length,
+        cycle_days: 7,
+        deterministic: true,
+        candidate_pool: "slot-safe conservative",
+        fallback_used: false,
+        codes: firstDay.decision_trace.map((e) => e.code),
       },
     },
     resolved_snapshot: snapshot,
-    slots: slotsToPersistPayload(resolved),
+    slots: slotsToPersistPayload(firstDay),
   };
 }
 
@@ -224,7 +286,11 @@ function computeTargetFromDay(
     profile: input.profile,
   });
   if ("code" in profile) {
-    return { code: "NUTRITION_PROFILE_RESOLUTION_REQUIRED", message: "Goal profile unresolved", missing: profile.missing };
+    return {
+      code: "NUTRITION_PROFILE_RESOLUTION_REQUIRED",
+      message: "Goal profile unresolved",
+      missing: profile.missing,
+    };
   }
   const target = computeNutritionTarget({
     profile: input.profile,
@@ -281,7 +347,9 @@ export function buildStrategyReplacementPayload(input: {
   allergies: AllergyState;
   name_ar?: string;
   previous_assignment_id: string;
-}): (StrategyAssignmentPersistPayload & { replaces_assignment_id: string }) | NutritionFailClosedOutcome {
+}):
+  | (StrategyAssignmentPersistPayload & { replaces_assignment_id: string })
+  | NutritionFailClosedOutcome {
   const base = buildStrategyAssignmentPayload(input);
   if (isFailClosed(base)) return base;
   return { ...base, replaces_assignment_id: input.previous_assignment_id };

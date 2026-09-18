@@ -4,6 +4,7 @@ import {
   getMealByExternalId,
   listMealsByTypeAndGoal,
   mealDeliveryPath,
+  mealImageSource,
   type MealLibraryRecord,
   type MealType,
 } from "./meal-library";
@@ -139,8 +140,8 @@ function toPlanMeal(record: MealLibraryRecord): MealAlternative {
   return {
     id: record.external_id,
     name: record.name_ar,
-    image: mealDeliveryPath(record.external_id, "thumb"),
-    coverImage: mealDeliveryPath(record.external_id, "cover"),
+    image: mealImageSource(record, "thumb"),
+    coverImage: mealImageSource(record, "cover"),
     calories: record.calories,
     protein: record.protein_g,
     carbs: record.carbs_g,
@@ -167,11 +168,41 @@ function requireLibraryMeal(externalId: string): MealLibraryRecord {
   return meal;
 }
 
-function pickGoalBreakfastExternalId(goalKey?: string | null): string {
-  const ranked = listMealsByTypeAndGoal("breakfast", goalKey ?? undefined);
+function mealAllowedByPreferences(
+  meal: MealLibraryRecord,
+  allergens: string[],
+  dislikedFoods: string[],
+) {
+  const allergenSet = new Set(allergens.map((value) => value.trim().toLocaleLowerCase("ar")));
+  if (meal.allergens.some((value) => allergenSet.has(value.trim().toLocaleLowerCase("ar"))))
+    return false;
+  const searchable = [
+    meal.name_ar,
+    meal.name_en,
+    ...meal.dietary_tags,
+    ...meal.ingredients.flatMap((item) => [item.ingredient_key, item.name_ar, item.name_en]),
+  ]
+    .join(" ")
+    .toLocaleLowerCase("ar");
+  return dislikedFoods.every(
+    (value) => !value.trim() || !searchable.includes(value.trim().toLocaleLowerCase("ar")),
+  );
+}
+
+function pickGoalBreakfastExternalId(
+  goalKey?: string | null,
+  allergens: string[] = [],
+  dislikedFoods: string[] = [],
+): string {
+  const ranked = listMealsByTypeAndGoal("breakfast", goalKey ?? undefined).filter((meal) =>
+    mealAllowedByPreferences(meal, allergens, dislikedFoods),
+  );
   if (ranked[0]) return ranked[0].external_id;
-  const anyBreakfast = listMealsByTypeAndGoal("breakfast");
-  return anyBreakfast[0]?.external_id ?? "MEAL-001";
+  const anyBreakfast = listMealsByTypeAndGoal("breakfast").filter((meal) =>
+    mealAllowedByPreferences(meal, allergens, dislikedFoods),
+  );
+  if (anyBreakfast[0]) return anyBreakfast[0].external_id;
+  throw new Error("no_safe_meal_available:breakfast");
 }
 
 /**
@@ -209,6 +240,8 @@ function buildPilotSlot(input: {
   hour: number;
   minute: number;
   defaultExternalId: string;
+  allergens?: string[];
+  dislikedFoods?: string[];
 }): MealSlot {
   const defaultRecord = requireLibraryMeal(input.defaultExternalId);
   return {
@@ -218,7 +251,11 @@ function buildPilotSlot(input: {
     hour: input.hour,
     minute: input.minute,
     defaultMeal: toPlanMeal(defaultRecord),
-    alternatives: findContractAlternatives(defaultRecord).map(toPlanMeal),
+    alternatives: findContractAlternatives(defaultRecord, undefined, input.allergens ?? [])
+      .filter((meal) =>
+        mealAllowedByPreferences(meal, input.allergens ?? [], input.dislikedFoods ?? []),
+      )
+      .map(toPlanMeal),
   };
 }
 
@@ -243,17 +280,32 @@ const SLOT_CONTRACT = {
   post_workout: { label: "بعد التمرين", type: "post_workout", fallback: "MEAL-056" },
 } as const;
 
-function pickMealExternalId(type: MealType, goalKey: string | null | undefined, fallback: string) {
-  return (
-    listMealsByTypeAndGoal(type, goalKey ?? undefined)[0]?.external_id ??
-    listMealsByTypeAndGoal(type)[0]?.external_id ??
-    fallback
-  );
+function pickMealExternalId(
+  type: MealType,
+  goalKey: string | null | undefined,
+  fallback: string,
+  allergens: string[] = [],
+  dislikedFoods: string[] = [],
+) {
+  const selected =
+    listMealsByTypeAndGoal(type, goalKey ?? undefined).find((meal) =>
+      mealAllowedByPreferences(meal, allergens, dislikedFoods),
+    )?.external_id ??
+    listMealsByTypeAndGoal(type).find((meal) =>
+      mealAllowedByPreferences(meal, allergens, dislikedFoods),
+    )?.external_id;
+  if (selected) return selected;
+  const fallbackMeal = getMealByExternalId(fallback);
+  if (fallbackMeal && mealAllowedByPreferences(fallbackMeal, allergens, dislikedFoods))
+    return fallback;
+  throw new Error(`no_safe_meal_available:${type}`);
 }
 
 export function getNutritionMealSlots(opts?: {
   breakfastGoalKey?: string | null;
   trainingMealWindow?: TrainingMealWindow | null;
+  allergens?: string[];
+  dislikedFoods?: string[];
 }): MealSlot[] {
   const order = composeSixMealOrder(opts?.trainingMealWindow ?? "after_lunch");
   return order.map((id, index) => {
@@ -261,8 +313,14 @@ export function getNutritionMealSlots(opts?: {
     const hour = [8, 11, 14, 16, 18, 20][index] ?? 20;
     const externalId =
       id === "breakfast"
-        ? pickGoalBreakfastExternalId(opts?.breakfastGoalKey)
-        : pickMealExternalId(contract.type, opts?.breakfastGoalKey, contract.fallback);
+        ? pickGoalBreakfastExternalId(opts?.breakfastGoalKey, opts?.allergens, opts?.dislikedFoods)
+        : pickMealExternalId(
+            contract.type,
+            opts?.breakfastGoalKey,
+            contract.fallback,
+            opts?.allergens,
+            opts?.dislikedFoods,
+          );
     return buildPilotSlot({
       id,
       slotLabel: contract.label,
@@ -270,6 +328,8 @@ export function getNutritionMealSlots(opts?: {
       hour,
       minute: 0,
       defaultExternalId: externalId,
+      allergens: opts?.allergens,
+      dislikedFoods: opts?.dislikedFoods,
     });
   });
 }

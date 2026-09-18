@@ -157,13 +157,9 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function PwaRegistrar() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
-
   useEffect(() => {
-    if (isAdmin) return;
     registerServiceWorker();
-  }, [isAdmin]);
+  }, []);
 
   return null;
 }

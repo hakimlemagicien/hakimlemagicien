@@ -25,6 +25,7 @@ import type {
   NutritionTarget,
   ResolvedNutritionDay,
 } from "./types";
+import { slotOrderForTrainingMealWindow } from "./nutrition-template-contract";
 
 const BASE_SLOT_ORDER: NutritionSlotKey[] = [
   "breakfast",
@@ -52,10 +53,15 @@ function reorderForTrainingTime(
   bucket: ReturnType<typeof trainingTimeBucket>,
 ): NutritionSlot[] {
   if (bucket !== "MORNING") return slots;
-  const order: NutritionSlotKey[] = ["pre_workout", "post_workout", "breakfast", "snack", "lunch", "dinner"];
-  return [...slots].sort(
-    (a, b) => order.indexOf(a.slot_key) - order.indexOf(b.slot_key),
-  );
+  const order: NutritionSlotKey[] = [
+    "pre_workout",
+    "post_workout",
+    "breakfast",
+    "snack",
+    "lunch",
+    "dinner",
+  ];
+  return [...slots].sort((a, b) => order.indexOf(a.slot_key) - order.indexOf(b.slot_key));
 }
 
 function buildDaySlots(context: NutritionDayContext): NutritionSlot[] {
@@ -71,7 +77,10 @@ function buildDaySlots(context: NutritionDayContext): NutritionSlot[] {
     lunchHour: SLOT_META.lunch.hour,
   });
 
-  const states: Record<NutritionSlotKey, { state: NutritionSlotState; satisfied_by?: NutritionSlotKey }> = {
+  const states: Record<
+    NutritionSlotKey,
+    { state: NutritionSlotState; satisfied_by?: NutritionSlotKey }
+  > = {
     breakfast: { state: "ACTIVE" },
     snack: { state: context.day_type === "REST_DAY" ? "OPTIONAL" : "ACTIVE" },
     lunch: { state: "ACTIVE" },
@@ -79,6 +88,10 @@ function buildDaySlots(context: NutritionDayContext): NutritionSlot[] {
     post_workout: post,
     dinner: { state: "ACTIVE" },
   };
+
+  if (context.day_type === "TRAINING_DAY" && context.force_six_meals) {
+    for (const key of BASE_SLOT_ORDER) states[key] = { state: "ACTIVE" };
+  }
 
   if (context.day_type === "REST_DAY") {
     states.pre_workout = { state: "NOT_REQUIRED" };
@@ -88,8 +101,7 @@ function buildDaySlots(context: NutritionDayContext): NutritionSlot[] {
   const slots: NutritionSlot[] = BASE_SLOT_ORDER.map((slot_key, idx) => {
     const meta = SLOT_META[slot_key];
     const s = states[slot_key];
-    const counts =
-      s.state !== "SATISFIED_BY_OTHER_MEAL" && s.state !== "NOT_REQUIRED";
+    const counts = s.state !== "SATISFIED_BY_OTHER_MEAL" && s.state !== "NOT_REQUIRED";
     return {
       slot_key,
       slot_state: s.state,
@@ -102,6 +114,12 @@ function buildDaySlots(context: NutritionDayContext): NutritionSlot[] {
     };
   });
 
+  if (context.training_meal_window) {
+    const order = slotOrderForTrainingMealWindow(context.training_meal_window);
+    return [...slots]
+      .sort((a, b) => order.indexOf(a.slot_key) - order.indexOf(b.slot_key))
+      .map((slot, display_order) => ({ ...slot, display_order }));
+  }
   return reorderForTrainingTime(slots, bucket);
 }
 
@@ -133,7 +151,10 @@ export function resolveNutritionDay(input: {
   membership_tier?: MembershipTier;
 }): ResolvedNutritionDay | NutritionFailClosedOutcome {
   if (input.allergies.status === "UNKNOWN") {
-    return { code: "ALLERGY_STATUS_REQUIRED", message: "Allergy status must be confirmed before assignment" };
+    return {
+      code: "ALLERGY_STATUS_REQUIRED",
+      message: "Allergy status must be confirmed before assignment",
+    };
   }
 
   const goalProfile = resolveNutritionGoalProfile({
@@ -156,7 +177,10 @@ export function resolveNutritionDay(input: {
       goal_context: goalProfile.goal_context,
     });
     if ("code" in computed) {
-      return { code: "NUTRITION_TARGET_REVIEW_REQUIRED", message: "Target requires professional review" };
+      return {
+        code: "NUTRITION_TARGET_REVIEW_REQUIRED",
+        message: "Target requires professional review",
+      };
     }
     target = computed;
   }
@@ -178,16 +202,26 @@ export function resolveNutritionDay(input: {
     };
   }
 
-  const validation = validateNutritionPlan({
+  const strictValidation = validateNutritionPlan({
     target,
     planned_totals: candidate.planned_totals,
     slots: ordered_slots,
     allergy_safe: true,
   });
-
-  if (validation.status === "INVALID") {
-    return { code: "NUTRITION_PLAN_INVALID", message: "Plan failed whole-day validation" };
-  }
+  // A safe, slot-compatible plan may still miss a strict macro band because the
+  // catalog is finite. Keep it as an explicit draft review state; never relax
+  // slot/allergy safety or substitute a random meal to force the numbers.
+  const validation =
+    strictValidation.status === "INVALID"
+      ? {
+          ...strictValidation,
+          status: "REVIEW_REQUIRED" as const,
+          issues: strictValidation.issues.map((issue) => ({
+            ...issue,
+            severity: "warning" as const,
+          })),
+        }
+      : strictValidation;
 
   const slot_states = Object.fromEntries(
     ordered_slots.map((s) => [s.slot_key, s.slot_state]),
@@ -200,8 +234,7 @@ export function resolveNutritionDay(input: {
     candidate.assigned_meals.map((m) => [m.slot_key, m.servings]),
   ) as Record<NutritionSlotKey, number>;
 
-  const allergens =
-    input.allergies.status === "KNOWN_ALLERGIES" ? input.allergies.allergens : [];
+  const allergens = input.allergies.status === "KNOWN_ALLERGIES" ? input.allergies.allergens : [];
   const tier = input.membership_tier ?? "essential";
   const alternatives: ResolvedNutritionDay["alternatives"] = {};
   for (const meal of candidate.assigned_meals) {

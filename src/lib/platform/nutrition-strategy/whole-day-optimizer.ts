@@ -1,7 +1,15 @@
-import { findContractAlternatives, getMealLibraryCatalog, type MealLibraryRecord } from "../meal-library";
+import {
+  findContractAlternatives,
+  getMealLibraryCatalog,
+  type MealLibraryRecord,
+} from "../meal-library";
 import { allergenOverlap } from "../nutrition-assignment";
 import { BEAM_WIDTH_PER_SLOT } from "./constants";
-import { scaleMealMacros, servingPolicyForMealType, servingStepsForMealType } from "./serving-policy";
+import {
+  scaleMealMacros,
+  servingPolicyForMealType,
+  servingStepsForMealType,
+} from "./serving-policy";
 import type {
   AllergyState,
   AssignedMeal,
@@ -15,6 +23,7 @@ import type {
 } from "./types";
 import { varietyPenalty } from "./variety-policy";
 import { validateNutritionPlan } from "./validate-nutrition-plan";
+import { isMealSafeForNutritionSlot } from "./nutrition-template-contract";
 
 const SLOT_MEAL_TYPE: Record<NutritionSlotKey, string> = {
   breakfast: "breakfast",
@@ -37,6 +46,27 @@ function goalCompatible(meal: MealLibraryRecord, profile: NutritionGoalProfile):
   return meal.suitable_goals.some((g) => profile.suitable_goals_filter.includes(g));
 }
 
+function restrictionSafe(meal: MealLibraryRecord, restrictions: string[]): boolean {
+  if (restrictions.length === 0) return true;
+  const searchable = [
+    meal.external_id,
+    meal.name_ar,
+    meal.name_en,
+    ...meal.dietary_tags,
+    ...meal.ingredients.flatMap((ingredient) => [
+      ingredient.ingredient_key,
+      ingredient.name_ar,
+      ingredient.name_en,
+    ]),
+  ]
+    .join(" ")
+    .toLocaleLowerCase("ar");
+  return restrictions.every((restriction) => {
+    const value = restriction.trim().toLocaleLowerCase("ar");
+    return !value || !searchable.includes(value);
+  });
+}
+
 export function buildMealCandidatePool(input: {
   slot_key: NutritionSlotKey;
   goal_profile: NutritionGoalProfile;
@@ -48,8 +78,10 @@ export function buildMealCandidatePool(input: {
   const mealType = SLOT_MEAL_TYPE[input.slot_key];
   return catalog
     .filter((meal) => meal.meal_type === mealType)
-    .filter((meal) => meal.image_status === "ready" || meal.status === "published")
+    .filter((meal) => meal.image_status === "ready" && meal.status === "published")
+    .filter((meal) => isMealSafeForNutritionSlot(input.slot_key, meal))
     .filter((meal) => allergenSafe(meal, input.allergy))
+    .filter((meal) => restrictionSafe(meal, input.restrictions))
     .filter((meal) => goalCompatible(meal, input.goal_profile))
     .sort((a, b) => a.external_id.localeCompare(b.external_id));
 }
@@ -60,9 +92,13 @@ function scoreCandidate(
   slotBudget: MacroTotals,
   varietyPen: number,
 ): number {
-  const calDist = Math.abs(macros.calories - slotBudget.calories);
-  const proDist = Math.abs(macros.protein_g - slotBudget.protein_g);
-  return calDist + proDist * 2 + varietyPen;
+  const relative = (actual: number, expected: number) =>
+    (Math.abs(actual - expected) / Math.max(expected, 1)) * 100;
+  const calDist = relative(macros.calories, slotBudget.calories);
+  const proDist = relative(macros.protein_g, slotBudget.protein_g);
+  const carbDist = relative(macros.carbs_g, slotBudget.carbs_g);
+  const fatDist = relative(macros.fat_g, slotBudget.fat_g);
+  return calDist + proDist * 1.5 + carbDist * 0.8 + fatDist * 0.8 + varietyPen;
 }
 
 function slotBudget(target: NutritionTarget, activeSlots: number): MacroTotals {
@@ -104,7 +140,7 @@ export function optimizeWholeDay(input: {
       allergy: input.allergy,
       restrictions: input.restrictions,
       catalog,
-    }).slice(0, BEAM_WIDTH_PER_SLOT * 3);
+    });
 
     const nextBeam: PartialDay[] = [];
     for (const partial of beam) {
@@ -112,8 +148,7 @@ export function optimizeWholeDay(input: {
         for (const servings of servingStepsForMealType(meal.meal_type)) {
           const macros = scaleMealMacros(meal, servings);
           const pen = varietyPenalty(meal.meal_type, meal.external_id, input.history);
-          const score =
-            partial.score + scoreCandidate(macros, input.target, budget, pen);
+          const score = partial.score + scoreCandidate(macros, input.target, budget, pen);
           nextBeam.push({
             score,
             meals: [
@@ -133,7 +168,11 @@ export function optimizeWholeDay(input: {
     }
 
     beam = nextBeam
-      .sort((a, b) => a.score - b.score || a.meals.at(-1)?.external_id.localeCompare(b.meals.at(-1)?.external_id ?? "")!)
+      .sort(
+        (a, b) =>
+          a.score - b.score ||
+          (a.meals.at(-1)?.external_id ?? "").localeCompare(b.meals.at(-1)?.external_id ?? ""),
+      )
       .slice(0, BEAM_WIDTH_PER_SLOT);
     if (beam.length === 0) return null;
   }
@@ -168,9 +207,11 @@ export function optimizeWholeDay(input: {
         }),
         { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
       );
-      return validateNutritionPlan({ target: input.target, planned_totals: totals }).status !== "INVALID";
+      return (
+        validateNutritionPlan({ target: input.target, planned_totals: totals }).status !== "INVALID"
+      );
     });
-    if (!relaxed) return null;
+    if (!relaxed) return { assigned_meals: best.meals, planned_totals, score: best.score };
     const totals = relaxed.meals.reduce(
       (sum, m) => ({
         calories: sum.calories + m.macros.calories,

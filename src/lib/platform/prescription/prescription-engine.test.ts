@@ -20,7 +20,9 @@ function assert(condition: unknown, message: string): asserts condition {
 
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
-    throw new Error(`${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    throw new Error(
+      `${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
   }
 }
 
@@ -56,17 +58,34 @@ function history(overrides: Partial<ExerciseSetHistoryItem> = {}): ExerciseSetHi
 
 const now = new Date("2026-08-21T12:00:00.000Z");
 
-assertEqual(resolveCanonicalGoal("GLUTE_GROWTH").canonicalId, "GLUTE_GROWTH", "canonical goal accepted");
+assertEqual(
+  resolveCanonicalGoal("GLUTE_GROWTH").canonicalId,
+  "GLUTE_GROWTH",
+  "canonical goal accepted",
+);
 assertEqual(resolveCanonicalGoal("fat").canonicalId, "FAT_LOSS", "legacy fat maps");
-assertEqual(resolveCanonicalGoal("tone").canonicalId, null, "tone not guessed");
-assertEqual(resolveCanonicalGoal("tone").mappingStatus, "LEGACY_UNMAPPED", "tone unmapped");
+assertEqual(
+  resolveCanonicalGoal("tone").canonicalId,
+  "TONED_ARMS_UPPER_BODY",
+  "approved tone mapping",
+);
+assertEqual(resolveCanonicalGoal("tone").mappingStatus, "MAPPED", "tone is mapped");
 assert(getGoalMuscleProfile("GLUTE_GROWTH").primary.includes("GLUTES"), "glute profile");
-assert(!getGoalMuscleProfile("SLIM_TONED_WAIST").primary.includes("RECTUS_ABDOMINIS"), "waist abs not extreme primary");
-assert(getGoalMuscleProfile("TONED_ARMS_UPPER_BODY").maintenance.includes("GLUTES"), "arms keeps lower body");
-assert(getGoalMuscleProfile("FAT_LOSS").primary.length === 0, "fat loss is balanced not primary-specialized");
+assert(
+  !getGoalMuscleProfile("SLIM_TONED_WAIST").primary.includes("RECTUS_ABDOMINIS"),
+  "waist abs not extreme primary",
+);
+assert(
+  getGoalMuscleProfile("TONED_ARMS_UPPER_BODY").maintenance.includes("GLUTES"),
+  "arms keeps lower body",
+);
+assert(
+  getGoalMuscleProfile("FAT_LOSS").primary.length === 0,
+  "fat loss is balanced not primary-specialized",
+);
 
 const unmapped = getCoreExercisePrescription({
-  goalId: "tone",
+  goalId: "not_a_real_goal",
   trainingLevel: "UNASSESSED",
   exerciseExperience: "NEW",
   exercise: ex("CH-001"),
@@ -133,8 +152,14 @@ const abduction = getCoreExercisePrescription({
   location: "GYM",
   now,
 });
-assert(abduction.rep_max === 20 || abduction.rep_min === 12, "glute accessory can use higher isolation range");
-assert(abduction.rep_min !== glute.rep_min || abduction.rep_max !== glute.rep_max, "glute goal is not one rep range");
+assert(
+  abduction.rep_max === 20 || abduction.rep_min === 12,
+  "glute accessory can use higher isolation range",
+);
+assert(
+  abduction.rep_min !== glute.rep_min || abduction.rep_max !== glute.rep_max,
+  "glute goal is not one rep range",
+);
 
 const waistCore = getCoreExercisePrescription({
   goalId: "SLIM_TONED_WAIST",
@@ -206,7 +231,11 @@ const intermediateNew = getCoreExercisePrescription({
   location: "GYM",
   now,
 });
-assertEqual(intermediateNew.status, "CALIBRATION_REQUIRED", "global intermediate + NEW exercise still calibrates");
+assertEqual(
+  intermediateNew.status,
+  "CALIBRATION_REQUIRED",
+  "global intermediate + NEW exercise still calibrates",
+);
 assert(intermediateNew.prescribed_load == null, "no inherited load for new exercise");
 assert((intermediateNew.working_sets ?? 9) <= 3, "new exercise stays conservative");
 
@@ -217,7 +246,9 @@ const stale = getCoreExercisePrescription({
   prescriptionState: "NORMAL",
   exercise: ex("CH-001"),
   location: "GYM",
-  recentHistory: [history({ sessionDate: "2026-01-01", createdAt: "2026-01-01T00:00:00.000Z", actualLoad: 90 })],
+  recentHistory: [
+    history({ sessionDate: "2026-01-01", createdAt: "2026-01-01T00:00:00.000Z", actualLoad: 90 }),
+  ],
   now,
 });
 assert(stale.prescribed_load == null, "stale peak load not reused");
@@ -278,7 +309,11 @@ const reviewRequired = getCoreExercisePrescription({
   location: "GYM",
   now,
 });
-assertEqual(reviewRequired.status, "EXERCISE_METADATA_REQUIRED", "unapproved metadata not auto-selected");
+assertEqual(
+  reviewRequired.status,
+  "EXERCISE_METADATA_REQUIRED",
+  "unapproved metadata not auto-selected",
+);
 
 const assignedFallback = getCoreExercisePrescription({
   goalId: "TONED_ARMS_UPPER_BODY",
@@ -290,18 +325,31 @@ const assignedFallback = getCoreExercisePrescription({
   now,
 });
 assertEqual(assignedFallback.used_legacy_fallback, true, "snapshot preserved");
-assertEqual(assignedFallback.prescription_reason, "V2_FALLBACK_LEGACY_PRESCRIPTION", "legacy fallback explicit");
-assert(assignedFallback.prescribed_load == null, "fallback does not treat snapshot kg as V2 baseline");
+assertEqual(
+  assignedFallback.prescription_reason,
+  "V2_FALLBACK_LEGACY_PRESCRIPTION",
+  "legacy fallback explicit",
+);
+assert(
+  assignedFallback.prescribed_load == null,
+  "fallback does not treat snapshot kg as V2 baseline",
+);
 assertEqual(assignedFallback.assigned?.suggested_weight_kg, 8, "assigned kg stays on snapshot");
 
-const eligible = filterEligibleExercises(
-  [ex("CH-001"), ex("CH-004"), ex("SH-021"), ex("BI-001")],
-  { location: "GYM", requiredMovementRole: "HORIZONTAL_PUSH" },
+const eligible = filterEligibleExercises([ex("CH-001"), ex("CH-004"), ex("SH-021"), ex("BI-001")], {
+  location: "GYM",
+  requiredMovementRole: "HORIZONTAL_PUSH",
+});
+assert(
+  eligible.every((row) => row.primary_movement_role === "HORIZONTAL_PUSH"),
+  "role filter",
 );
-assert(eligible.every((row) => row.primary_movement_role === "HORIZONTAL_PUSH"), "role filter");
 assert(!eligible.some((row) => row.external_id === "SH-021"), "unapproved excluded");
 assert(!eligible.some((row) => row.external_id === "BI-001"), "wrong role excluded");
-assert(eligible.some((row) => row.external_id === "CH-001"), "valid included");
+assert(
+  eligible.some((row) => row.external_id === "CH-001"),
+  "valid included",
+);
 
 const first = selectEligibleExercise({
   goalId: "FAT_LOSS",
@@ -420,10 +468,38 @@ assertEqual(
 );
 
 assertEqual(deriveExerciseExperienceState([]), "NEW", "no history is NEW");
-assertEqual(deriveExerciseExperienceState([history(), history({ sessionDate: "2026-08-19" })]), "CALIBRATING", "two sessions calibrating");
-assertEqual(deriveTrainingLevel({ current: "UNASSESSED", establishedExerciseCount: 0, completedWorkingSets: 0 }), "UNASSESSED", "no auto intermediate");
-assertEqual(deriveTrainingLevel({ current: "UNASSESSED", establishedExerciseCount: 2, completedWorkingSets: 6 }), "BEGINNER", "evidence → beginner only");
-assertEqual(deriveTrainingLevel({ current: "BEGINNER", establishedExerciseCount: 20, completedWorkingSets: 100 }), "BEGINNER", "no time/volume auto intermediate");
+assertEqual(
+  deriveExerciseExperienceState([history(), history({ sessionDate: "2026-08-19" })]),
+  "CALIBRATING",
+  "two sessions calibrating",
+);
+assertEqual(
+  deriveTrainingLevel({
+    current: "UNASSESSED",
+    establishedExerciseCount: 0,
+    completedWorkingSets: 0,
+  }),
+  "UNASSESSED",
+  "no auto intermediate",
+);
+assertEqual(
+  deriveTrainingLevel({
+    current: "UNASSESSED",
+    establishedExerciseCount: 2,
+    completedWorkingSets: 6,
+  }),
+  "BEGINNER",
+  "evidence → beginner only",
+);
+assertEqual(
+  deriveTrainingLevel({
+    current: "BEGINNER",
+    establishedExerciseCount: 20,
+    completedWorkingSets: 100,
+  }),
+  "BEGINNER",
+  "no time/volume auto intermediate",
+);
 
 const root = process.cwd();
 const engineSrc = readFileSync(join(root, "src/lib/platform/prescription/engine.ts"), "utf8");

@@ -4,6 +4,11 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, MessageSquare } from "lucide-react";
 import { useCoachingInbox } from "@/hooks/useCoachingInbox";
 import { formatInboxTime } from "@/lib/platform/coaching-messaging";
+import {
+  listMyProductNotifications,
+  markMyProductNotificationRead,
+  type ClientProductNotification,
+} from "@/lib/platform/product-notifications-api";
 import { cn } from "@/lib/utils";
 
 type BellButtonProps = {
@@ -22,10 +27,26 @@ export function NotificationsBell({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
   const { count, items, refresh } = useCoachingInbox({ loadItems: open });
+  const [productItems, setProductItems] = useState<ClientProductNotification[]>([]);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const unread = (Array.isArray(items) ? items : []).some((item) => !item.readAt) || count > 0;
+  const unread =
+    (Array.isArray(items) ? items : []).some((item) => !item.readAt) ||
+    productItems.some((item) => !item.is_read) ||
+    count > 0;
+
+  async function refreshProductNotifications() {
+    try {
+      setProductItems(await listMyProductNotifications());
+    } catch (error) {
+      console.warn("[product notifications]", error);
+    }
+  }
+
+  useEffect(() => {
+    void refreshProductNotifications();
+  }, []);
 
   function placePanel() {
     const rect = buttonRef.current?.getBoundingClientRect();
@@ -70,6 +91,7 @@ export function NotificationsBell({
         onClick={() => {
           setOpen((value) => !value);
           void refresh();
+          void refreshProductNotifications();
         }}
       >
         <Bell className={iconClassName} strokeWidth={bellStrokeWidth} />
@@ -84,27 +106,51 @@ export function NotificationsBell({
               aria-label="الإشعارات"
               style={{ top: coords.top, left: coords.left }}
             >
-              {items.length === 0 ? (
+              {items.length === 0 && productItems.length === 0 ? (
                 <p>لا إشعارات بعد.</p>
               ) : (
-                (Array.isArray(items) ? items : []).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={item.readAt ? undefined : "is-unread"}
-                    onClick={() => {
-                      setOpen(false);
-                      void navigate({
-                        to: "/app/support/chat",
-                        search: { from: pathname },
-                      });
-                    }}
-                  >
-                    <strong>{item.title}</strong>
-                    <span>{item.body}</span>
-                    <time>{formatInboxTime(item.createdAt)}</time>
-                  </button>
-                ))
+                <>
+                  {productItems.map((item) => (
+                    <button
+                      key={`product:${item.id}`}
+                      type="button"
+                      className={item.is_read ? undefined : "is-unread"}
+                      onClick={() => {
+                        setProductItems((current) =>
+                          current.map((row) =>
+                            row.id === item.id ? { ...row, is_read: true } : row,
+                          ),
+                        );
+                        void markMyProductNotificationRead(item.id);
+                        setOpen(false);
+                        if (item.deep_link?.startsWith("/app"))
+                          window.location.assign(item.deep_link);
+                      }}
+                    >
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
+                      <time>{formatInboxTime(item.created_at)}</time>
+                    </button>
+                  ))}
+                  {(Array.isArray(items) ? items : []).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={item.readAt ? undefined : "is-unread"}
+                      onClick={() => {
+                        setOpen(false);
+                        void navigate({
+                          to: "/app/support/chat",
+                          search: { from: pathname },
+                        });
+                      }}
+                    >
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
+                      <time>{formatInboxTime(item.createdAt)}</time>
+                    </button>
+                  ))}
+                </>
               )}
             </div>,
             document.body,

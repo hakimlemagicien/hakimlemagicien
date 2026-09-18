@@ -14,15 +14,15 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { BankId } from "@/lib/bank-details";
-import {
-  savePaymentMethod,
-  saveSelectedPlan,
-  submitPaymentProof,
-} from "@/lib/lead-api";
+import { savePaymentMethod, saveSelectedPlan, submitPaymentProof } from "@/lib/lead-api";
 import { getLeadCredentials } from "@/lib/lead-storage";
 import { mapBankToPaymentMethod } from "@/lib/payment-method-map";
 import { MEMBERSHIP_QUERY_KEY } from "@/lib/platform/membership";
-import { buildCheckoutDisclosure, CHECKOUT_DISCLOSURE_COPY, resolvePaidTierId } from "@/lib/legal/billing";
+import {
+  buildCheckoutDisclosure,
+  CHECKOUT_DISCLOSURE_COPY,
+  resolvePaidTierId,
+} from "@/lib/legal/billing";
 import { recordCheckoutConsent } from "@/lib/legal/legal-api";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -35,14 +35,12 @@ import { AgreementCheckbox } from "./AgreementCheckbox";
 import { BankTransferModal } from "./BankTransferModal";
 import { CheckoutFooter } from "./CheckoutFooter";
 import { CheckoutSummaryCard } from "./CheckoutSummaryCard";
-import {
-  PaymentMethodOption,
-  type CheckoutMethodId,
-} from "./PaymentMethodOption";
+import { PaymentMethodOption, type CheckoutMethodId } from "./PaymentMethodOption";
 import { ReceiptUploadSection } from "./ReceiptUploadSection";
 import { SecurityBanner } from "./SecurityBanner";
 import { TrustFeatures } from "./TrustCard";
 import type { CheckoutTier } from "./types";
+import { resolvePublicOffer, type ResolvedPublicOffer } from "@/lib/admin/admin-command-center-api";
 
 const PAYMENT_METHODS: {
   id: CheckoutMethodId;
@@ -107,6 +105,9 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
   const [providerMessage, setProviderMessage] = useState<string | null>(null);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
   const [cardBusy, setCardBusy] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [offer, setOffer] = useState<ResolvedPublicOffer | null>(null);
+  const [offerBusy, setOfferBusy] = useState(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -114,12 +115,62 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
     });
   }, []);
 
-  const amount = Number(tier.totalPrice);
   const credentials = getLeadCredentials();
   const planId = resolvePaidTierId(tier.id);
   const months = tier.billingPeriodMonths ?? 3;
+  const amount =
+    offer?.ok && offer.final_amount != null ? Number(offer.final_amount) : Number(tier.totalPrice);
   const disclosure = planId ? buildCheckoutDisclosure(planId, months) : null;
   const vipCheckoutBlocked = planId === "vip";
+
+  useEffect(() => {
+    if (!planId) return;
+    let cancelled = false;
+    setOfferBusy(true);
+    void resolvePublicOffer(planId, months, null)
+      .then((next) => {
+        if (!cancelled) setOffer(next);
+      })
+      .catch(() => {
+        if (!cancelled) setOffer(null);
+      })
+      .finally(() => {
+        if (!cancelled) setOfferBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [planId, months]);
+
+  useEffect(() => {
+    if (!planId || !offer?.promotion?.ends_at) return;
+    const delay = Math.max(0, new Date(offer.promotion.ends_at).getTime() - Date.now()) + 250;
+    const timer = window.setTimeout(
+      () => {
+        void resolvePublicOffer(planId, months, promoCode.trim() || null)
+          .then(setOffer)
+          .catch(() => setOffer(null));
+      },
+      Math.min(delay, 2_147_483_647),
+    );
+    return () => window.clearTimeout(timer);
+  }, [months, offer?.promotion?.ends_at, planId, promoCode]);
+
+  async function applyPromoCode() {
+    if (!planId || !promoCode.trim()) return;
+    setOfferBusy(true);
+    setProviderMessage(null);
+    try {
+      const next = await resolvePublicOffer(planId, months, promoCode.trim());
+      setOffer(next);
+      if (!next.ok) setProviderMessage("كود الخصم غير صالح أو غير متاح لهذا الطلب.");
+    } catch (error) {
+      console.error(error);
+      setProviderMessage("تعذر التحقق من كود الخصم.");
+    } finally {
+      setOfferBusy(false);
+    }
+  }
 
   const cardProviderStatus = useMemo(() => {
     if (vipCheckoutBlocked) {
@@ -164,15 +215,22 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
     setTransferSaving(true);
     try {
+      if (!planId) throw new Error("invalid_checkout_plan");
+      const validatedOffer = await resolvePublicOffer(planId, months, promoCode.trim() || null);
+      if (!validatedOffer.ok || validatedOffer.final_amount == null) {
+        throw new Error(validatedOffer.code || "offer_validation_failed");
+      }
+      const validatedAmount = Number(validatedOffer.final_amount);
+      setOffer(validatedOffer);
       await saveSelectedPlan(credentials, {
         tierId: tier.id,
         tierName: tier.name,
-        planPrice: amount,
+        planPrice: validatedAmount,
         trainingMode: "online",
       });
       await savePaymentMethod(credentials, {
         method: mapBankToPaymentMethod(bankId),
-        amount,
+        amount: validatedAmount,
         currency: "USD",
       });
       await persistConsent();
@@ -203,7 +261,8 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
   };
 
   const handlePayClick = async () => {
-    if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving || cardBusy) return;
+    if (receiptSubmitted || transferConfirmed || !legalAccepted || transferSaving || cardBusy)
+      return;
     if (vipCheckoutBlocked) {
       setProviderMessage("VIP غير متاح للشراء العام في Commercial V1.");
       return;
@@ -298,18 +357,58 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
           </p>
         </div>
 
-        <CheckoutSummaryCard tier={tier} />
+        <CheckoutSummaryCard
+          tier={tier}
+          resolvedAmount={offer?.ok ? (offer.final_amount ?? null) : null}
+          originalAmount={offer?.ok ? (offer.base_amount ?? null) : null}
+          promotionEndsAt={offer?.promotion?.ends_at ?? null}
+        />
+
+        <div className="mt-3 rounded-2xl border border-neutral-200 bg-white p-3">
+          <label
+            className="text-[11px] font-extrabold text-neutral-600"
+            htmlFor="maakfit-promo-code"
+          >
+            كود الخصم
+          </label>
+          <div className="mt-2 flex gap-2" dir="ltr">
+            <input
+              id="maakfit-promo-code"
+              value={promoCode}
+              onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
+              placeholder="MAAKFIT10"
+              className="min-w-0 flex-1 rounded-xl border border-neutral-200 px-3 py-2 text-sm font-bold uppercase"
+            />
+            <button
+              type="button"
+              disabled={offerBusy || promoCode.trim().length < 3}
+              onClick={() => void applyPromoCode()}
+              className="rounded-xl bg-[#0F172A] px-4 text-xs font-extrabold text-white disabled:opacity-50"
+            >
+              {offerBusy ? "…" : "تطبيق"}
+            </button>
+          </div>
+          {offer?.ok && offer.promo_code ? (
+            <p className="mt-2 text-[11px] font-bold text-emerald-700">
+              تم تطبيق {offer.promo_code.code} — السعر المعتمد من السيرفر ${offer.final_amount}
+            </p>
+          ) : null}
+        </div>
 
         {disclosure ? (
           <p className="mt-3 rounded-2xl border border-[#FFE0CC] bg-[#FFF8F3] px-3.5 py-3 text-[11.5px] leading-[1.7] text-neutral-700">
-            {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)} الضرائب قد تُضاف حسب الموقع ومزود الدفع لاحقاً. رسوم تحويل البنك ليست تحت سيطرة MAAKFIT.
+            {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)} الضرائب قد تُضاف حسب الموقع ومزود الدفع
+            لاحقاً. رسوم تحويل البنك ليست تحت سيطرة MAAKFIT.
           </p>
         ) : null}
 
         <section className="mt-6" aria-labelledby="payment-methods-title">
           <div className="mb-3 flex items-center justify-center gap-2">
             <Lock className="h-4 w-4 text-[#FF5A1F]" aria-hidden />
-            <h2 id="payment-methods-title" className="text-[17px] font-bold leading-tight text-[#0F172A]">
+            <h2
+              id="payment-methods-title"
+              className="text-[17px] font-bold leading-tight text-[#0F172A]"
+            >
               اختر طريقة الدفع
             </h2>
           </div>
@@ -356,7 +455,8 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
         <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-3.5 py-3">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#16A34A]" aria-hidden />
           <p className="text-[11.5px] leading-[1.65] text-neutral-600">
-            بعد رفع إيصال التحويل سيتم مراجعته وتفعيل اشتراكك وإرسال رسالة تأكيد عبر البريد الإلكتروني.
+            بعد رفع إيصال التحويل سيتم مراجعته وتفعيل اشتراكك وإرسال رسالة تأكيد عبر البريد
+            الإلكتروني.
           </p>
         </div>
 
@@ -375,9 +475,7 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
             whileTap={{ scale: ctaDisabled ? 1 : 0.98 }}
             onClick={handlePayClick}
             className={`flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[17px] font-bold transition checkout-cta-shadow disabled:cursor-not-allowed disabled:opacity-60 ${
-              receiptSubmitted
-                ? "bg-[#16A34A] text-white"
-                : "bg-[#FF5A1F] text-white"
+              receiptSubmitted ? "bg-[#16A34A] text-white" : "bg-[#FF5A1F] text-white"
             }`}
           >
             <Lock className="h-5 w-5" aria-hidden />
@@ -395,8 +493,18 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
 
         <TrustFeatures
           items={[
-            { icon: Headphones, title: "دعم الحساب", description: "متاح لكل الباقات", tone: "orange" },
-            { icon: Shield, title: "تحويل بمراجعة", description: "لا تُفعَّل المزايا قبل التأكيد", tone: "green" },
+            {
+              icon: Headphones,
+              title: "دعم الحساب",
+              description: "متاح لكل الباقات",
+              tone: "orange",
+            },
+            {
+              icon: Shield,
+              title: "تحويل بمراجعة",
+              description: "لا تُفعَّل المزايا قبل التأكيد",
+              tone: "green",
+            },
             { icon: Clock, title: "تفعيل سريع", description: "بعد تأكيد الدفع", tone: "blue" },
           ]}
         />

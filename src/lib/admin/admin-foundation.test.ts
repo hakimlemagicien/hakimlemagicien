@@ -31,7 +31,10 @@ assert(isAdminAppPath("/admin/payments"), "payments is admin");
 assert(!isAdminAppPath("/app"), "client is not admin");
 
 const hrefs = listAdminNavHrefs();
-assert(hrefs.every((href) => href.startsWith("/admin")), "nav stays inside /admin");
+assert(
+  hrefs.every((href) => href.startsWith("/admin")),
+  "nav stays inside /admin",
+);
 assert(!hrefs.some((href) => href.startsWith("/app")), "nav never points at client app");
 assert(hrefs.includes("/admin/messages"), "coaching inbox is in nav");
 assert(hrefs.includes("/admin/payments"), "payments is in nav");
@@ -49,11 +52,19 @@ assert(
       "/admin/messages",
       "/admin/progress",
       "/admin/programs",
+      "/admin/automation",
       "/admin/exercises",
       "/admin/nutrition",
+      "/admin/nutrition/templates",
+      "/admin/nutrition/operations",
       "/admin/payments",
       "/admin/memberships",
+      "/admin/commercial",
       "/admin/audit",
+      "/admin/alerts",
+      "/admin/notifications",
+      "/admin/analytics",
+      "/admin/product-settings",
       "/admin/support",
       "/admin/content",
       "/admin/studio",
@@ -62,10 +73,22 @@ assert(
   ),
   "live nav is operational surfaces only",
 );
-assert(liveItems.some((item) => item.to === "/admin/clients"), "clients table is live");
-assert(!liveItems.some((item) => item.to === "/admin/audit"), "audit lives under team hub, not sidebar");
-assert(!liveItems.some((item) => item.to === "/admin/support"), "support lives under team hub, not sidebar");
-assert(liveItems.some((item) => item.to === "/admin/settings"), "team hub settings is live");
+assert(
+  liveItems.some((item) => item.to === "/admin/clients"),
+  "clients table is live",
+);
+assert(
+  liveItems.some((item) => item.to === "/admin/audit"),
+  "audit is an operational route",
+);
+assert(
+  !liveItems.some((item) => item.to === "/admin/support"),
+  "support lives under team hub, not sidebar",
+);
+assert(
+  liveItems.some((item) => item.to === "/admin/settings"),
+  "team hub settings is live",
+);
 
 assert(PROGRAM_BOUNDARIES.template !== PROGRAM_BOUNDARIES.assigned, "template ≠ assigned program");
 assert(
@@ -76,16 +99,31 @@ assert(
   ADMIN_CHANGE_CLASSES.softwareDeploy.includes("CODE_DEPLOY_REQUIRED"),
   "software changes require deploy",
 );
-assert(NUTRITION_BOUNDARIES.library !== NUTRITION_BOUNDARIES.assigned, "meal library ≠ client assigned meal");
+assert(
+  NUTRITION_BOUNDARIES.library !== NUTRITION_BOUNDARIES.assigned,
+  "meal library ≠ client assigned meal",
+);
 assert(NUTRITION_BOUNDARIES.plan !== NUTRITION_BOUNDARIES.library, "nutrition plan ≠ meal library");
-assert(CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived", "publishing states");
-assert(NOTIFICATION_CHANNELS.admin !== NOTIFICATION_CHANNELS.client, "admin vs client notifications");
+assert(
+  CONTENT_PUBLISHING_STATES.join(",") === "draft,review,published,archived",
+  "publishing states",
+);
+assert(
+  NOTIFICATION_CHANNELS.admin !== NOTIFICATION_CHANNELS.client,
+  "admin vs client notifications",
+);
 assert(CLIENT_360_SECTIONS.includes("overview"), "client 360 has overview");
 assert(CLIENT_360_SECTIONS.includes("activity"), "client 360 has activity");
 assert(CLIENT_360_SECTIONS.includes("membership"), "client 360 has membership");
 assert(CLIENT_360_SECTIONS.length === 7, "client 360 has seven tabs");
-assert(ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "LIVE"), "live signals exist");
-assert(ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "DOMAIN_RULE_REQUIRED"), "domain rules deferred");
+assert(
+  ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "LIVE"),
+  "live signals exist",
+);
+assert(
+  ATTENTION_SIGNAL_CONTRACTS.some((item) => item.status === "DOMAIN_RULE_REQUIRED"),
+  "domain rules deferred",
+);
 
 assert(CURRENT_STAFF_ROLE === "admin", "current role remains admin");
 assert(isCurrentStaffRole("admin"), "admin is staff");

@@ -15,12 +15,30 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 const styles = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
-const shellSource = readFileSync(resolve(process.cwd(), "src/components/admin/AdminShell.tsx"), "utf8");
-const clientRoute = readFileSync(resolve(process.cwd(), "src/routes/admin/clients/$clientId.tsx"), "utf8");
-const clientHeader = readFileSync(resolve(process.cwd(), "src/components/admin/Client360Header.tsx"), "utf8");
-const matrixSource = readFileSync(resolve(process.cwd(), "src/components/admin/MatrixImpactCard.tsx"), "utf8");
-const core100 = readFileSync(resolve(process.cwd(), "src/lib/platform/strategy-matrix/core-100.ts"), "utf8");
-const reviewSource = readFileSync(resolve(process.cwd(), "src/lib/platform/coach-override/review.ts"), "utf8");
+const shellSource = readFileSync(
+  resolve(process.cwd(), "src/components/admin/AdminShell.tsx"),
+  "utf8",
+);
+const clientRoute = readFileSync(
+  resolve(process.cwd(), "src/routes/admin/clients/$clientId.tsx"),
+  "utf8",
+);
+const clientHeader = readFileSync(
+  resolve(process.cwd(), "src/components/admin/Client360Header.tsx"),
+  "utf8",
+);
+const matrixSource = readFileSync(
+  resolve(process.cwd(), "src/components/admin/MatrixImpactCard.tsx"),
+  "utf8",
+);
+const core100 = readFileSync(
+  resolve(process.cwd(), "src/lib/platform/strategy-matrix/core-100.ts"),
+  "utf8",
+);
+const reviewSource = readFileSync(
+  resolve(process.cwd(), "src/lib/platform/coach-override/review.ts"),
+  "utf8",
+);
 const routeGuard = readFileSync(resolve(process.cwd(), "src/routes/admin/route.tsx"), "utf8");
 
 // T1 — 7 navigation sections
@@ -29,11 +47,17 @@ assert(ADMIN_NAV_GROUPS.length === 6, "six daily-ops groups");
 // T2 — no duplicate navigation hrefs
 const hrefs = listAdminNavHrefs();
 assert(new Set(hrefs).size === hrefs.length, "no duplicate nav hrefs");
-assert(!hrefs.includes("/admin/exercises") || hrefs.filter((h) => h === "/admin/exercises").length === 1, "single exercises link");
+assert(
+  !hrefs.includes("/admin/exercises") || hrefs.filter((h) => h === "/admin/exercises").length === 1,
+  "single exercises link",
+);
 
 // T3 — active state helper
 assert(isAdminNavActive("/admin/clients", "/admin/clients"), "clients active");
-assert(!isAdminNavActive("/admin/clients/abc", "/admin/messages"), "messages not active on client 360");
+assert(
+  !isAdminNavActive("/admin/clients/abc", "/admin/messages"),
+  "messages not active on client 360",
+);
 
 // T4 — foundation badge
 assert(shellSource.includes("قريبًا"), "foundation soon badge in shell");
@@ -54,7 +78,11 @@ assert(
 
 // T8 — Client 360 seven tabs
 assert(CLIENT_360_SECTIONS.length === 7, "seven client 360 tabs");
-assert(CLIENT_360_SECTIONS.join(",") === "overview,training,nutrition,progress,membership,activity,notes", "tab order");
+assert(
+  CLIENT_360_SECTIONS.join(",") ===
+    "overview,training,nutrition,progress,membership,activity,notes",
+  "tab order",
+);
 
 // T9 — overview route
 assert(CLIENT_360_SECTIONS[0] === "overview", "overview default section");
@@ -98,7 +126,10 @@ assert(core100.includes("MAAKFIT_V1_CORE_100"), "core 100 intact");
 assert(reviewSource.includes("SAFE_WITH_IMPACT"), "matrix review intact");
 
 // T20 — admin guard preserved
-assert(routeGuard.includes("requireAdminRouteAccess") || routeGuard.includes("checkAdminAccess"), "admin guard");
+assert(
+  routeGuard.includes("requireAdminRouteAccess") || routeGuard.includes("checkAdminAccess"),
+  "admin guard",
+);
 
 // T21 — RTL
 assert(shellSource.includes('dir="rtl"'), "rtl shell");
@@ -119,8 +150,11 @@ assert(CLIENT_360_SECTION_LABELS.membership === "العضوية والفوترة
 assert(normalizeClient360Tab("history") === "activity", "legacy history maps to activity");
 assert(normalizeClient360Tab("messages") === "overview", "legacy messages maps to overview");
 
-// Analytics in system nav (foundation)
+// Analytics in system nav (live, grounded metrics only)
 const systemItems = ADMIN_NAV_GROUPS.find((g) => g.id === "system")?.items ?? [];
-assert(systemItems.some((item) => item.to === "/admin/analytics" && item.status === "foundation"), "analytics foundation nav");
+assert(
+  systemItems.some((item) => item.to === "/admin/analytics" && item.status === "live"),
+  "analytics live nav",
+);
 
 console.log("admin-a2 tests passed");

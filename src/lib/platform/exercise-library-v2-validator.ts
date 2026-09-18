@@ -120,9 +120,18 @@ const REQUIRED_ROLES = [
 ];
 
 export function loadExerciseCatalog(root = process.cwd()): CatalogExercise[] {
-  const data = JSON.parse(readFileSync(join(root, "scripts/exercise-library.json"), "utf8")) as Record<
+  const data = JSON.parse(
+    readFileSync(join(root, "scripts/exercise-library.json"), "utf8"),
+  ) as Record<
     string,
-    Array<{ id: string; name: string; name_ar: string; equipment: string; level: string; status: string }>
+    Array<{
+      id: string;
+      name: string;
+      name_ar: string;
+      equipment: string;
+      level: string;
+      status: string;
+    }>
   >;
   const rows: CatalogExercise[] = [];
   for (const [group, items] of Object.entries(data)) {
@@ -147,7 +156,10 @@ export function loadAuthoredV2Metadata(root = process.cwd()): AuthoredV2Record[]
   ) as AuthoredV2Record[];
 }
 
-export function toV2Contract(record: AuthoredV2Record, mediaStatus = "placeholder"): ExerciseV2Metadata {
+export function toV2Contract(
+  record: AuthoredV2Record,
+  mediaStatus = "placeholder",
+): ExerciseV2Metadata {
   return {
     external_id: record.external_id,
     name_en: record.name_en,
@@ -156,7 +168,8 @@ export function toV2Contract(record: AuthoredV2Record, mediaStatus = "placeholde
     secondary_muscles: record.secondary_muscles_canonical,
     muscle_contributions: record.muscle_contributions.map((item) => ({
       muscle: item.muscle,
-      contribution: item.contribution as ExerciseV2Metadata["muscle_contributions"][number]["contribution"],
+      contribution:
+        item.contribution as ExerciseV2Metadata["muscle_contributions"][number]["contribution"],
     })),
     primary_movement_role: record.primary_movement_role,
     secondary_movement_roles: record.secondary_movement_roles,
@@ -204,13 +217,17 @@ export function auditExerciseLibrary(root = process.cwd()): LibraryAuditReport {
   const catalog = loadExerciseCatalog(root);
   const authored = loadAuthoredV2Metadata(root);
   const mediaById = new Map(catalog.map((row) => [row.external_id, row.status]));
-  const contracts = authored.map((row) => toV2Contract(row, mediaById.get(row.external_id) ?? "placeholder"));
+  const contracts = authored.map((row) =>
+    toV2Contract(row, mediaById.get(row.external_id) ?? "placeholder"),
+  );
 
   const ids = catalog.map((row) => row.external_id);
   const idCounts = countBy(ids);
   const duplicateIds = Object.values(idCounts).filter((count) => count > 1).length;
   const missingIds = catalog.filter((row) => !row.external_id).length;
-  const invalidIds = catalog.filter((row) => row.external_id && !isValidExternalId(row.external_id)).length;
+  const invalidIds = catalog.filter(
+    (row) => row.external_id && !isValidExternalId(row.external_id),
+  ).length;
 
   const eligible = contracts.filter((row) =>
     isV2EligibleExercise({
@@ -232,7 +249,9 @@ export function auditExerciseLibrary(root = process.cwd()): LibraryAuditReport {
   const roleCoverage = countBy(eligible.map((row) => row.primary_movement_role ?? "NONE"));
   const muscleCoverage = countBy(eligible.map((row) => row.primary_muscles[0] ?? "NONE"));
   const equipmentCoverage = countBy(
-    eligible.flatMap((row) => (row.required_equipment.length ? row.required_equipment : ["NO_EQUIPMENT"])),
+    eligible.flatMap((row) =>
+      row.required_equipment.length ? row.required_equipment : ["NO_EQUIPMENT"],
+    ),
   );
   const locationCoverage = countBy(eligible.flatMap((row) => row.location_compatibility));
 
@@ -245,7 +264,8 @@ export function auditExerciseLibrary(root = process.cwd()): LibraryAuditReport {
         left.primary_movement_role === right.primary_movement_role &&
         left.primary_muscle_canonical === right.primary_muscle_canonical &&
         left.loading_type === right.loading_type &&
-        left.name_en.replace(/\s+/g, "").toLowerCase() === right.name_en.replace(/\s+/g, "").toLowerCase()
+        left.name_en.replace(/\s+/g, "").toLowerCase() ===
+          right.name_en.replace(/\s+/g, "").toLowerCase()
       ) {
         possibleDuplicates.push([left.external_id, right.external_id]);
       }
@@ -275,7 +295,9 @@ export function auditExerciseLibrary(root = process.cwd()): LibraryAuditReport {
     MISSING_PRIMARY_MUSCLE: authored.filter((row) => !row.primary_muscle_canonical).length,
     MISSING_MOVEMENT_ROLE: authored.filter((row) => !row.primary_movement_role).length,
     MISSING_EQUIPMENT: authored.filter(
-      (row) => row.equipment_state === "UNKNOWN" || (row.equipment_state === "HAS_EQUIPMENT" && !row.required_equipment.length),
+      (row) =>
+        row.equipment_state === "UNKNOWN" ||
+        (row.equipment_state === "HAS_EQUIPMENT" && !row.required_equipment.length),
     ).length,
     UNKNOWN_MECHANICS: authored.filter((row) => !row.mechanics).length,
     UNKNOWN_PRESCRIPTION_MODE: authored.filter((row) => !row.prescription_mode).length,
@@ -304,7 +326,9 @@ export function auditExerciseLibrary(root = process.cwd()): LibraryAuditReport {
       placeholder_names: catalog
         .filter((row) => /^(tbd|placeholder|todo|exercise)$/i.test(row.name_en.trim()))
         .map((row) => row.external_id),
-      id_as_name: catalog.filter((row) => row.name_en === row.external_id).map((row) => row.external_id),
+      id_as_name: catalog
+        .filter((row) => row.name_en === row.external_id)
+        .map((row) => row.external_id),
     },
   };
 }
@@ -315,8 +339,9 @@ export function assertLibraryInvariants(root = process.cwd()) {
   const report = auditExerciseLibrary(root);
   const issues: string[] = [];
 
-  if (catalog.length !== 320) issues.push(`expected 320 catalog rows, got ${catalog.length}`);
-  if (authored.length !== catalog.length) issues.push("authored V2 metadata count != catalog count");
+  if (catalog.length !== 323) issues.push(`expected 323 catalog rows, got ${catalog.length}`);
+  if (authored.length !== catalog.length)
+    issues.push("authored V2 metadata count != catalog count");
   if (report.MISSING_EXTERNAL_ID !== 0) issues.push("active exercises missing external_id");
   if (report.DUPLICATE_EXTERNAL_ID !== 0) issues.push("duplicate external_id");
   if (report.INVALID_EXTERNAL_ID !== 0) issues.push("invalid external_id format");

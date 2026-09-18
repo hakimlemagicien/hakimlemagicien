@@ -10,6 +10,7 @@ const TRAINING_OPS_LINKS = [
 
 const NUTRITION_OPS_LINKS = [
   { to: "/admin/nutrition/operations", label: "نظرة عامة", exact: true },
+  { to: "/admin/nutrition/templates", label: "قوالب التغذية", exact: false },
   { to: "/admin/clients", label: "عمليات العملاء", exact: false },
   { to: "/admin/nutrition", label: "مكتبة الوجبات", exact: false },
 ] as const;
@@ -23,7 +24,10 @@ export function TrainingOpsSubnav({ section }: Props) {
   const links = section === "training" ? TRAINING_OPS_LINKS : NUTRITION_OPS_LINKS;
 
   return (
-    <nav className="cc-ops-subnav" aria-label={section === "training" ? "أقسام التدريب" : "أقسام التغذية"}>
+    <nav
+      className="cc-ops-subnav"
+      aria-label={section === "training" ? "أقسام التدريب" : "أقسام التغذية"}
+    >
       {links.map((link) => {
         const active = link.exact
           ? pathname.replace(/\/+$/, "") === link.to

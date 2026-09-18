@@ -33,6 +33,8 @@ type MealRow = {
   preparation_steps_en: string[];
   preparation_time_minutes: number | null;
   image_master_path: string | null;
+  image_thumb_path: string | null;
+  image_path: string | null;
   image_status: string;
   image_alt_ar: string | null;
   image_alt_en: string | null;
@@ -81,11 +83,15 @@ function mapIngredient(row: IngredientRow): MealLibraryIngredient {
   };
 }
 
-function mapMeal(row: MealRow): MealLibraryRecord {
+function mapMeal(row: MealRow, signedUrls: Record<string, string>): MealLibraryRecord {
   const ingredients = [...(row.meal_ingredients ?? [])]
     .sort((a, b) => num(a.ingredient_order) - num(b.ingredient_order))
     .map(mapIngredient);
-  const imageRef = row.image_master_path || `images/${row.external_id}.png`;
+  const storedPath = row.image_master_path || row.image_path || row.image_thumb_path;
+  const imageRef =
+    (storedPath && signedUrls[storedPath]) ||
+    (storedPath && /^https?:\/\//i.test(storedPath) ? storedPath : null) ||
+    `images/${row.external_id}.png`;
 
   return {
     external_id: row.external_id,
@@ -148,6 +154,8 @@ export async function fetchMealLibraryFromSupabase(): Promise<MealLibraryRecord[
       preparation_steps_en,
       preparation_time_minutes,
       image_master_path,
+      image_thumb_path,
+      image_path,
       image_status,
       image_alt_ar,
       image_alt_en,
@@ -176,7 +184,24 @@ export async function fetchMealLibraryFromSupabase(): Promise<MealLibraryRecord[
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
-  return ((data ?? []) as unknown as MealRow[]).map(mapMeal);
+  const rows = (data ?? []) as unknown as MealRow[];
+  const paths = [
+    ...new Set(
+      rows
+        .flatMap((row) => [row.image_master_path, row.image_path, row.image_thumb_path])
+        .filter((path): path is string => Boolean(path) && !/^https?:\/\//i.test(path!)),
+    ),
+  ];
+  const signedUrls: Record<string, string> = {};
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from("meal-media")
+      .createSignedUrls(paths, 60 * 60);
+    signed?.forEach((item, index) => {
+      if (item.signedUrl) signedUrls[paths[index]!] = item.signedUrl;
+    });
+  }
+  return rows.map((row) => mapMeal(row, signedUrls));
 }
 
 async function fetchHiddenMealExternalIds(): Promise<string[]> {
@@ -190,7 +215,10 @@ let lastHydratedSource: MealLibrarySource = "json";
 
 export async function hydrateMealLibraryFromSupabase(): Promise<MealLibrarySource> {
   try {
-    const [meals, hidden] = await Promise.all([fetchMealLibraryFromSupabase(), fetchHiddenMealExternalIds()]);
+    const [meals, hidden] = await Promise.all([
+      fetchMealLibraryFromSupabase(),
+      fetchHiddenMealExternalIds(),
+    ]);
     const dbRows = dbMealCatalogIsV2(meals) ? meals : [];
     const overlaid = overlayMealCatalog(getMealLibrarySeed(), dbRows, hidden);
     setMealLibraryCatalog(overlaid);

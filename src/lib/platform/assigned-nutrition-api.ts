@@ -12,7 +12,7 @@ import {
   type ServingPolicy,
 } from "@/lib/platform/nutrition-strategy";
 import type { MealAlternative, MealSlot, MacroTotals } from "@/lib/platform/nutrition-experience";
-import { mealDeliveryPath } from "@/lib/platform/meal-library";
+import { mealDeliveryPath, mealImageSource } from "@/lib/platform/meal-library";
 
 export type NutritionTargetSnapshot = {
   calories: number;
@@ -22,7 +22,7 @@ export type NutritionTargetSnapshot = {
 };
 
 export type ClientNutritionRuntime = {
-  reason: "ok" | "no_program" | "scheduled" | "legacy_incomplete";
+  reason: "ok" | "no_program" | "scheduled" | "legacy_incomplete" | "preference_conflict";
   schema: NutritionAssignmentSchema;
   assignment: {
     id: string;
@@ -81,7 +81,9 @@ function num(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function parseMacroSnapshot(source: Record<string, unknown> | null | undefined): NutritionTargetSnapshot | null {
+function parseMacroSnapshot(
+  source: Record<string, unknown> | null | undefined,
+): NutritionTargetSnapshot | null {
   if (!source) return null;
   const calories = num(source.calories);
   if (calories <= 0 && num(source.protein_g) <= 0) return null;
@@ -151,7 +153,7 @@ export async function fetchMyNutritionRuntime(): Promise<ClientNutritionRuntime>
     target_id: (assignment?.target_id as string | null) ?? null,
     slot_keys: slots.map((s) => s.slot_key),
   });
-  return {
+  const runtime: ClientNutritionRuntime = {
     reason: (row.reason as ClientNutritionRuntime["reason"]) || "no_program",
     schema,
     assignment: assignment
@@ -165,9 +167,11 @@ export async function fetchMyNutritionRuntime(): Promise<ClientNutritionRuntime>
           strategy_version: (assignment.strategy_version as string | null) ?? null,
           library_version: (assignment.library_version as string | null) ?? null,
           target_id: (assignment.target_id as string | null) ?? null,
-          assignment_version: assignment.assignment_version == null ? null : num(assignment.assignment_version),
+          assignment_version:
+            assignment.assignment_version == null ? null : num(assignment.assignment_version),
           validation_status: (assignment.validation_status as string | null) ?? null,
-          resolved_snapshot: (assignment.resolved_snapshot as Record<string, unknown> | null) ?? null,
+          resolved_snapshot:
+            (assignment.resolved_snapshot as Record<string, unknown> | null) ?? null,
         }
       : null,
     target: parseTargetSnapshot(row),
@@ -187,13 +191,118 @@ export async function fetchMyNutritionRuntime(): Promise<ClientNutritionRuntime>
       planned_servings: log.planned_servings == null ? null : num(log.planned_servings),
     })),
   };
+  const selected = selectNutritionCycleDay(runtime);
+  if (selected.reason !== "ok" || !selected.assignment) return selected;
+  const preferences = selected.assignment.resolved_snapshot?.client_preferences as
+    | Record<string, unknown>
+    | undefined;
+  const disliked = Array.isArray(preferences?.disliked_foods)
+    ? preferences.disliked_foods.map(String)
+    : [];
+  const watched = selected.assignment.watch_allergens.map((value) =>
+    value.trim().toLocaleLowerCase("ar"),
+  );
+  const conflict = selected.slots.some((slot) => {
+    if (slot.allergens.some((value) => watched.includes(value.trim().toLocaleLowerCase("ar"))))
+      return true;
+    const meal = getMealByExternalId(slot.source_external_id);
+    if (!meal) return false;
+    const searchable = [
+      meal.name_ar,
+      meal.name_en,
+      ...meal.dietary_tags,
+      ...meal.ingredients.flatMap((item) => [item.ingredient_key, item.name_ar, item.name_en]),
+    ]
+      .join(" ")
+      .toLocaleLowerCase("ar");
+    return disliked.some(
+      (value) => value.trim() && searchable.includes(value.trim().toLocaleLowerCase("ar")),
+    );
+  });
+  return conflict ? { ...selected, reason: "preference_conflict", slots: [] } : selected;
+}
+
+type SnapshotCycleSlot = {
+  slot_key?: string;
+  source_external_id?: string;
+  servings?: number;
+  planned_servings?: number;
+  slot_label?: string;
+  time_label?: string;
+  hour?: number;
+  minute?: number;
+  slot_state?: string;
+  counts_toward_day_totals?: boolean;
+  meal_snapshot?: Record<string, unknown>;
+};
+
+/** Resolve a persisted 7-day assignment without regenerating or mutating it. */
+export function selectNutritionCycleDay(
+  runtime: ClientNutritionRuntime,
+  sessionDate = new Date().toISOString().slice(0, 10),
+): ClientNutritionRuntime {
+  const snapshot = runtime.assignment?.resolved_snapshot;
+  const cycle = snapshot?.seven_day_cycle as
+    | Array<{
+        slots?: SnapshotCycleSlot[];
+        planned_totals?: Record<string, unknown>;
+        validation_result?: Record<string, unknown>;
+        ordered_slot_keys?: string[];
+      }>
+    | undefined;
+  const startsOn = runtime.assignment?.starts_on;
+  if (!cycle?.length || !startsOn || runtime.slots.length === 0) return runtime;
+  const startMs = Date.parse(`${startsOn.slice(0, 10)}T00:00:00Z`);
+  const sessionMs = Date.parse(`${sessionDate.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isFinite(startMs) || !Number.isFinite(sessionMs)) return runtime;
+  const elapsedDays = Math.max(0, Math.floor((sessionMs - startMs) / 86_400_000));
+  const day = cycle[elapsedDays % cycle.length];
+  if (!day?.slots?.length) return runtime;
+  const baseByKey = new Map(runtime.slots.map((slot) => [slot.slot_key, slot]));
+  const selectedSlots = day.slots.map((slot) => {
+    const key = slot.slot_key ?? "";
+    const base = baseByKey.get(key);
+    const externalId = slot.source_external_id ?? "";
+    const meal = getMealByExternalId(externalId);
+    if (!base || !externalId || !meal) return null;
+    const mealSnapshot = slot.meal_snapshot ?? {};
+    return {
+      ...base,
+      source_external_id: externalId,
+      name_ar: String(mealSnapshot.name_ar ?? meal.name_ar),
+      calories: num(mealSnapshot.calories ?? meal.calories),
+      protein_g: num(mealSnapshot.protein_g ?? meal.protein_g),
+      carbs_g: num(mealSnapshot.carbs_g ?? meal.carbs_g),
+      fat_g: num(mealSnapshot.fat_g ?? meal.fat_g),
+      servings: num(slot.planned_servings ?? slot.servings) || 1,
+      allergens: (mealSnapshot.allergens as string[] | undefined) ?? meal.allergens,
+      serving_size: num(mealSnapshot.serving_size ?? meal.serving_size),
+      serving_unit: String(mealSnapshot.serving_unit ?? meal.serving_unit),
+      slot_label: slot.slot_label ?? base.slot_label,
+      time_label: slot.time_label ?? base.time_label,
+      hour: num(slot.hour ?? base.hour),
+      minute: num(slot.minute ?? base.minute),
+      slot_state: slot.slot_state ?? base.slot_state,
+      counts_toward_day_totals: slot.counts_toward_day_totals ?? base.counts_toward_day_totals,
+    };
+  });
+  if (selectedSlots.some((slot) => slot === null)) return runtime;
+  return {
+    ...runtime,
+    slots: selectedSlots as ClientNutritionRuntime["slots"],
+    ordered_slot_keys: day.ordered_slot_keys ?? selectedSlots.map((slot) => slot?.slot_key ?? ""),
+    planned_totals: parseMacroSnapshot(day.planned_totals) ?? runtime.planned_totals,
+    validation_result: day.validation_result ?? runtime.validation_result,
+  };
 }
 
 export function runtimeDayContext(runtime: ClientNutritionRuntime): NutritionDayContext {
   const snapshot = runtime.assignment?.resolved_snapshot;
   const training = snapshot?.training_context as Record<string, unknown> | undefined;
   return {
-    day_type: (runtime.day_type ?? training?.day_type ?? "REST_DAY") as NutritionDayContext["day_type"],
+    day_type: (runtime.day_type ??
+      training?.day_type ??
+      "REST_DAY") as NutritionDayContext["day_type"],
     training_time: training?.training_time as NutritionDayContext["training_time"],
     session_time: (training?.session_time as string | undefined) ?? undefined,
   };
@@ -202,7 +311,9 @@ export function runtimeDayContext(runtime: ClientNutritionRuntime): NutritionDay
 export function runtimeToNutritionTarget(runtime: ClientNutritionRuntime): NutritionTarget | null {
   const target = runtime.target;
   if (!target) return null;
-  const snapshot = runtime.assignment?.resolved_snapshot?.target_snapshot as Record<string, unknown> | undefined;
+  const snapshot = runtime.assignment?.resolved_snapshot?.target_snapshot as
+    | Record<string, unknown>
+    | undefined;
   return {
     id: runtime.assignment?.target_id ?? "runtime-target",
     version: runtime.assignment?.assignment_version ?? 1,
@@ -211,8 +322,10 @@ export function runtimeToNutritionTarget(runtime: ClientNutritionRuntime): Nutri
     carbs_g: target.carbs_g,
     fat_g: target.fat_g,
     reference_weight_kg: Number(snapshot?.reference_weight_kg ?? 0),
-    nutrition_objective: (snapshot?.nutrition_objective as NutritionTarget["nutrition_objective"]) ?? "MAINTENANCE",
-    goal_context: (snapshot?.goal_context as NutritionTarget["goal_context"]) ?? "GENERAL_HEALTH_FITNESS",
+    nutrition_objective:
+      (snapshot?.nutrition_objective as NutritionTarget["nutrition_objective"]) ?? "MAINTENANCE",
+    goal_context:
+      (snapshot?.goal_context as NutritionTarget["goal_context"]) ?? "GENERAL_HEALTH_FITNESS",
     target_source: "COACH_APPROVED",
     strategy_version: runtime.assignment?.strategy_version ?? "v1",
     target_created_at: new Date().toISOString(),
@@ -220,15 +333,20 @@ export function runtimeToNutritionTarget(runtime: ClientNutritionRuntime): Nutri
   };
 }
 
-export function runtimeToResolvedNutritionDay(runtime: ClientNutritionRuntime): ResolvedNutritionDay | null {
+export function runtimeToResolvedNutritionDay(
+  runtime: ClientNutritionRuntime,
+): ResolvedNutritionDay | null {
   if (runtime.reason !== "ok" || runtime.schema !== "STRATEGY_V1_DYNAMIC") return null;
 
   const slotStates = (runtime.slot_states ?? {}) as ResolvedNutritionDay["slot_states"];
   const slotRoles = (runtime.slot_roles ?? {}) as ResolvedNutritionDay["slot_roles"];
   const orderedSlots = runtime.slots.map((slot, index) => ({
     slot_key: slot.slot_key as NutritionSlotKey,
-    slot_state: (slot.slot_state ?? slotStates[slot.slot_key as NutritionSlotKey] ?? "ACTIVE") as ResolvedNutritionDay["ordered_slots"][number]["slot_state"],
-    slot_role: (slotRoles[slot.slot_key as NutritionSlotKey] ?? "PRIMARY_MEAL") as ResolvedNutritionDay["ordered_slots"][number]["slot_role"],
+    slot_state: (slot.slot_state ??
+      slotStates[slot.slot_key as NutritionSlotKey] ??
+      "ACTIVE") as ResolvedNutritionDay["ordered_slots"][number]["slot_state"],
+    slot_role: (slotRoles[slot.slot_key as NutritionSlotKey] ??
+      "PRIMARY_MEAL") as ResolvedNutritionDay["ordered_slots"][number]["slot_role"],
     counts_toward_day_totals: slot.counts_toward_day_totals !== false,
     display_order: index,
     hour: slot.hour,
@@ -266,7 +384,9 @@ export function runtimeToResolvedNutritionDay(runtime: ClientNutritionRuntime): 
     slot_states: slotStates,
     slot_roles: slotRoles,
     assigned_meals: assignedMeals,
-    servings: Object.fromEntries(runtime.slots.map((slot) => [slot.slot_key, slot.servings])) as ResolvedNutritionDay["servings"],
+    servings: Object.fromEntries(
+      runtime.slots.map((slot) => [slot.slot_key, slot.servings]),
+    ) as ResolvedNutritionDay["servings"],
     alternatives: {},
     planned_totals: {
       calories: planned.calories,
@@ -342,17 +462,22 @@ function toAlternativeFromSnapshot(slot: ClientNutritionRuntime["slots"][number]
   return {
     id: slot.source_external_id,
     name: slot.name_ar,
-    image: mealDeliveryPath(slot.source_external_id, "thumb"),
-    coverImage: mealDeliveryPath(slot.source_external_id, "cover"),
+    image: library
+      ? mealImageSource(library, "thumb")
+      : mealDeliveryPath(slot.source_external_id, "thumb"),
+    coverImage: library
+      ? mealImageSource(library, "cover")
+      : mealDeliveryPath(slot.source_external_id, "cover"),
     calories: macros.calories,
     protein: macros.protein,
     carbs: macros.carbs,
     fat: macros.fat,
-    ingredients: library?.ingredients.map((ingredient) => ({
-      id: `${slot.source_external_id}-${ingredient.ingredient_order}-${ingredient.ingredient_key}`,
-      name: ingredient.name_ar,
-      amount: `${ingredient.quantity * slot.servings} ${ingredient.unit}`,
-    })) ?? [],
+    ingredients:
+      library?.ingredients.map((ingredient) => ({
+        id: `${slot.source_external_id}-${ingredient.ingredient_order}-${ingredient.ingredient_key}`,
+        name: ingredient.name_ar,
+        amount: `${ingredient.quantity * slot.servings} ${ingredient.unit}`,
+      })) ?? [],
     steps: library?.preparation_steps_ar ?? [],
     allergens: slot.allergens,
     servingSize: slot.serving_size ?? undefined,
@@ -366,35 +491,37 @@ export function runtimeToMealSlots(runtime: ClientNutritionRuntime): MealSlot[] 
   return runtime.slots.map((slot) => {
     const library = getMealByExternalId(slot.source_external_id);
     const alternatives = library
-      ? findContractAlternatives(library, undefined, runtime.assignment?.watch_allergens ?? []).map((meal) => {
-          const macros = scaleMacros({
-            calories: meal.calories,
-            protein_g: meal.protein_g,
-            carbs_g: meal.carbs_g,
-            fat_g: meal.fat_g,
-            servings: slot.servings,
-          });
-          return {
-            id: meal.external_id,
-            name: meal.name_ar,
-            image: mealDeliveryPath(meal.external_id, "thumb"),
-            coverImage: mealDeliveryPath(meal.external_id, "cover"),
-            calories: macros.calories,
-            protein: macros.protein,
-            carbs: macros.carbs,
-            fat: macros.fat,
-            ingredients: meal.ingredients.map((ingredient) => ({
-              id: `${meal.external_id}-${ingredient.ingredient_order}-${ingredient.ingredient_key}`,
-              name: ingredient.name_ar,
-              amount: `${ingredient.quantity * slot.servings} ${ingredient.unit}`,
-            })),
-            steps: meal.preparation_steps_ar,
-            allergens: meal.allergens,
-            servingSize: meal.serving_size,
-            servingUnit: meal.serving_unit,
-            description: meal.description_ar,
-          };
-        })
+      ? findContractAlternatives(library, undefined, runtime.assignment?.watch_allergens ?? []).map(
+          (meal) => {
+            const macros = scaleMacros({
+              calories: meal.calories,
+              protein_g: meal.protein_g,
+              carbs_g: meal.carbs_g,
+              fat_g: meal.fat_g,
+              servings: slot.servings,
+            });
+            return {
+              id: meal.external_id,
+              name: meal.name_ar,
+              image: mealImageSource(meal, "thumb"),
+              coverImage: mealImageSource(meal, "cover"),
+              calories: macros.calories,
+              protein: macros.protein,
+              carbs: macros.carbs,
+              fat: macros.fat,
+              ingredients: meal.ingredients.map((ingredient) => ({
+                id: `${meal.external_id}-${ingredient.ingredient_order}-${ingredient.ingredient_key}`,
+                name: ingredient.name_ar,
+                amount: `${ingredient.quantity * slot.servings} ${ingredient.unit}`,
+              })),
+              steps: meal.preparation_steps_ar,
+              allergens: meal.allergens,
+              servingSize: meal.serving_size,
+              servingUnit: meal.serving_unit,
+              description: meal.description_ar,
+            };
+          },
+        )
       : [];
     return {
       id: slot.slot_key,

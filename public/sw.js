@@ -1,9 +1,12 @@
-const CACHE_NAME = "hakim-shell-v2";
+const CACHE_NAME = "maakfit-shell-v3";
 const SHELL_URLS = ["/", "/quiz"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS)).then(() => self.skipWaiting()),
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(SHELL_URLS))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -11,7 +14,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -22,6 +27,17 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Admin/auth pages contain session-sensitive operational data: network only,
+  // never persist their HTML or RPC responses in the service-worker cache.
+  if (
+    url.pathname === "/admin" ||
+    url.pathname.startsWith("/admin/") ||
+    url.pathname.startsWith("/auth")
+  ) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Always prefer network for pages so new deploys show immediately.
   if (request.mode === "navigate") {
@@ -40,7 +56,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Stale-while-revalidate for built assets: show cached, refresh in background.
-  if (url.pathname.startsWith("/assets/") || url.pathname.endsWith(".js") || url.pathname.endsWith(".css")) {
+  if (
+    url.pathname.startsWith("/assets/") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css")
+  ) {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(request);

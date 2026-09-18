@@ -1,14 +1,19 @@
-import { resolveCanonicalGoal, musclePriorityFor } from "@/lib/platform/prescription/goal-profile";
+import {
+  getGoalMuscleProfile,
+  resolveCanonicalGoal,
+  musclePriorityFor,
+} from "@/lib/platform/prescription/goal-profile";
 import { resolveExercisePriority, prescribeWorkingSets } from "@/lib/platform/prescription/sets";
 import { prescribeRest } from "@/lib/platform/prescription/effort-rest";
 import { prescribeRepOrDuration, isStrengthEligible } from "@/lib/platform/prescription/ranges";
 import type { ExerciseExperienceState } from "@/lib/platform/training-v2-contracts";
 import type { ExerciseV2Metadata } from "@/lib/platform/exercise-library-v2";
 import { buildSessionBlueprints } from "./roles";
+import { expandBlueprintToTarget, resolveSessionExerciseTarget } from "./session-composition";
 import { filterProgramCandidates, pickForSlot } from "./selection";
 import { orderSessionExercises } from "./order";
 import { estimateSessionMinutes, trimSessionToDuration } from "./duration";
-import { defaultRegionalTargets, summarizeRegionalVolume } from "./volume";
+import { defaultRegionalTargets, leadVolumeRegions, summarizeRegionalVolume } from "./volume";
 import { validateTrainingProgram, canActivateProgram } from "./validate";
 import { programDiff } from "./apply";
 import { clientProgramExplanation, PROGRAM_COPY } from "./explanations";
@@ -30,7 +35,9 @@ function catalogMap(exercises: ExerciseV2Metadata[]) {
 }
 
 function asDays(value: number): DaysPerWeek | null {
-  return (SUPPORTED_DAYS_PER_WEEK as readonly number[]).includes(value) ? (value as DaysPerWeek) : null;
+  return (SUPPORTED_DAYS_PER_WEEK as readonly number[]).includes(value)
+    ? (value as DaysPerWeek)
+    : null;
 }
 
 function prescribeExercise(input: {
@@ -41,7 +48,9 @@ function prescribeExercise(input: {
   retained: boolean;
 }): GeneratedExercise {
   const calibrating = input.experience === "NEW";
-  const levelForSets = input.context.reconditioningActive ? "BEGINNER" : input.context.trainingLevel;
+  const levelForSets = input.context.reconditioningActive
+    ? "BEGINNER"
+    : input.context.trainingLevel;
   const musclePriority = musclePriorityFor(
     resolveCanonicalGoal(input.context.goalId).canonicalId,
     input.exercise.primary_muscles,
@@ -91,7 +100,10 @@ function prescribeExercise(input: {
   };
 }
 
-function buildCandidate(context: ProgramGenerationContext, attempt: number): {
+function buildCandidate(
+  context: ProgramGenerationContext,
+  attempt: number,
+): {
   candidate: ProgramCandidate | null;
   missingSlots: Array<{ role: string; muscleFamily: string }>;
 } {
@@ -120,11 +132,22 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
     fromRegion: context.reallocation?.from_region,
     toRegion: context.reallocation?.to_region,
   });
+  const protectedRegions = [...getGoalMuscleProfile(goal).primary, ...leadVolumeRegions(goal)];
 
   const missingSlots: Array<{ role: string; muscleFamily: string }> = [];
   const sessions: GeneratedSession[] = [];
 
-  for (const [index, blueprint] of blueprints.entries()) {
+  for (const [index, authoredBlueprint] of blueprints.entries()) {
+    const blueprint = expandBlueprintToTarget(
+      authoredBlueprint,
+      resolveSessionExerciseTarget({
+        availableMinutes: context.availableMinutes,
+        trainingLevel: context.trainingLevel,
+        daysPerWeek: days,
+        demand: authoredBlueprint.demand,
+      }),
+      protectedRegions,
+    );
     const usedIds = new Set<string>();
     const usedRoles = new Set<string>();
     const picked: GeneratedExercise[] = [];
@@ -142,7 +165,8 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
         toRegion: context.reallocation?.to_region,
       });
       if (!exercise) {
-        if (slot.priority === "PRIMARY") missingSlots.push({ role: slot.movementRole ?? "ANY", muscleFamily: slot.muscleFamily });
+        if (slot.priority === "PRIMARY")
+          missingSlots.push({ role: slot.movementRole ?? "ANY", muscleFamily: slot.muscleFamily });
         continue;
       }
       picked.push(
@@ -150,7 +174,9 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
           exercise,
           context,
           sessionIndex: index,
-          experience: experienceById[exercise.external_id] ?? (previousIds.has(exercise.external_id) ? "ESTABLISHED" : "NEW"),
+          experience:
+            experienceById[exercise.external_id] ??
+            (previousIds.has(exercise.external_id) ? "ESTABLISHED" : "NEW"),
           retained: previousIds.has(exercise.external_id),
         }),
       );
@@ -159,7 +185,11 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
     }
 
     if (attempt > 0 && picked.length > 3) {
-      const droppable = [...picked].reverse().find((item) => item.exercise_priority === "OPTIONAL" || item.muscle_priority === "MAINTENANCE");
+      const droppable = [...picked]
+        .reverse()
+        .find(
+          (item) => item.exercise_priority === "OPTIONAL" || item.muscle_priority === "MAINTENANCE",
+        );
       if (droppable) {
         const filtered = picked.filter((item) => item.external_id !== droppable.external_id);
         picked.splice(0, picked.length, ...filtered);
@@ -169,7 +199,11 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
     const ordered = orderSessionExercises(picked, catalog);
     const protectedIds = new Set(locked);
     for (const item of ordered) {
-      if (item.muscle_priority === "PRIMARY" || item.exercise_priority === "REQUIRED" || item.exercise_priority === "HIGH") {
+      if (
+        item.muscle_priority === "PRIMARY" ||
+        item.exercise_priority === "REQUIRED" ||
+        item.exercise_priority === "HIGH"
+      ) {
         protectedIds.add(item.external_id);
       }
     }
@@ -177,7 +211,13 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
       ["HIP_EXTENSION", "SQUAT", "HINGE", "KNEE_FLEXION"].includes(item.movement_role ?? ""),
     );
     if (lower) protectedIds.add(lower.external_id);
-    const requiredRole = ordered.find((item) => item.movement_role && blueprint.slots.some((slot) => slot.movementRole === item.movement_role && slot.priority === "PRIMARY"));
+    const requiredRole = ordered.find(
+      (item) =>
+        item.movement_role &&
+        blueprint.slots.some(
+          (slot) => slot.movementRole === item.movement_role && slot.priority === "PRIMARY",
+        ),
+    );
     if (requiredRole) protectedIds.add(requiredRole.external_id);
     const trimmed = trimSessionToDuration(ordered, context.availableMinutes, protectedIds);
     sessions.push({
@@ -203,7 +243,9 @@ function buildCandidate(context: ProgramGenerationContext, attempt: number): {
   };
 }
 
-export function generateTrainingProgram(context: ProgramGenerationContext): ProgramGenerationResult {
+export function generateTrainingProgram(
+  context: ProgramGenerationContext,
+): ProgramGenerationResult {
   const reason = context.reason ?? "INITIAL_PROGRAM_GENERATION";
   const emptyValidation = validateTrainingProgram(null, context);
   const mapped = resolveCanonicalGoal(context.goalId).canonicalId;
@@ -320,8 +362,16 @@ export function generateTrainingProgram(context: ProgramGenerationContext): Prog
       missingSlots: last.missingSlots.filter((slot) => slot.muscleFamily),
     });
     if (last.candidate && validation.status !== "INVALID") {
-      const movement = [...new Set(last.candidate.sessions.flatMap((session) => session.exercises.map((item) => item.movement_role).filter(Boolean)))] as string[];
-      const status = canActivateProgram(validation, "READY") ? "READY" : "PROGRAM_GENERATION_BLOCKED";
+      const movement = [
+        ...new Set(
+          last.candidate.sessions.flatMap((session) =>
+            session.exercises.map((item) => item.movement_role).filter(Boolean),
+          ),
+        ),
+      ] as string[];
+      const status = canActivateProgram(validation, "READY")
+        ? "READY"
+        : "PROGRAM_GENERATION_BLOCKED";
       return {
         status,
         candidate: last.candidate,
@@ -352,7 +402,13 @@ export function generateTrainingProgram(context: ProgramGenerationContext): Prog
     validation,
     regional_volume: volume,
     movement_roles: last?.candidate
-      ? ([...new Set(last.candidate.sessions.flatMap((session) => session.exercises.map((item) => item.movement_role).filter(Boolean)))] as string[])
+      ? ([
+          ...new Set(
+            last.candidate.sessions.flatMap((session) =>
+              session.exercises.map((item) => item.movement_role).filter(Boolean),
+            ),
+          ),
+        ] as string[])
       : [],
     generation_reason: reason,
     client_explanation: clientProgramExplanation({

@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { PRODUCT_SUMMARY } from "@/lib/site-legal";
 import { buildCheckoutDisclosure, resolvePaidTierId } from "@/lib/legal/billing";
 import { formatIllustrativeDaily } from "@/lib/pricing-presentation";
@@ -28,9 +29,45 @@ function TrophySvg() {
 
 type CheckoutSummaryCardProps = {
   tier: CheckoutTier;
+  resolvedAmount?: number | null;
+  originalAmount?: number | null;
+  promotionEndsAt?: string | null;
 };
 
-export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
+function PromotionCountdown({ endsAt }: { endsAt: string }) {
+  const [remaining, setRemaining] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => setRemaining(Math.max(0, new Date(endsAt).getTime() - Date.now()));
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [endsAt]);
+  if (remaining == null)
+    return <div className="mt-1 text-[9px] font-bold text-[#C2410C]">عرض محدود</div>;
+  if (remaining <= 0)
+    return (
+      <div className="mt-1 text-[9px] font-bold text-[#B91C1C]">انتهى العرض — جارٍ تحديث السعر</div>
+    );
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / 86_400);
+  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+  const clock = [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
+  return (
+    <div className="mt-1 text-[9px] font-bold text-[#C2410C]">
+      متبقي {days ? `${days}ي ` : ""}
+      {clock}
+    </div>
+  );
+}
+
+export function CheckoutSummaryCard({
+  tier,
+  resolvedAmount,
+  originalAmount,
+  promotionEndsAt,
+}: CheckoutSummaryCardProps) {
   const planId = resolvePaidTierId(tier.id);
   const months = tier.billingPeriodMonths ?? 3;
   const disclosure = planId ? buildCheckoutDisclosure(planId, months) : null;
@@ -53,7 +90,9 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
 
       <div className="relative min-w-0 flex-1 text-right">
         <div className="text-[10.5px] font-bold text-neutral-500">الباقة المختارة</div>
-        <div className="mt-0.5 text-[17px] font-extrabold tracking-tight text-[#0F172A]">{tier.name}</div>
+        <div className="mt-0.5 text-[17px] font-extrabold tracking-tight text-[#0F172A]">
+          {tier.name}
+        </div>
         <div className="mt-1 text-[11px] leading-snug text-neutral-500">
           {PRODUCT_SUMMARY.duration} · {PRODUCT_SUMMARY.type}
         </div>
@@ -61,7 +100,14 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
 
       <div className="relative shrink-0 border-r border-orange-200/80 pr-2 text-center">
         <div className="text-[10px] font-bold text-neutral-500">السعر الإجمالي</div>
-        <div className="mt-1 text-[26px] font-extrabold leading-none text-[#FF6B00]">{tier.totalPrice}</div>
+        {originalAmount != null && resolvedAmount != null && resolvedAmount < originalAmount ? (
+          <div className="text-[11px] font-bold text-neutral-400 line-through">
+            ${originalAmount}
+          </div>
+        ) : null}
+        <div className="mt-1 text-[26px] font-extrabold leading-none text-[#FF6B00]">
+          {resolvedAmount != null ? `$${resolvedAmount}` : tier.totalPrice}
+        </div>
         <div className="mt-1 text-[10px] font-bold text-neutral-500">
           USD · {months} أشهر · تجديد تلقائي
         </div>
@@ -78,6 +124,7 @@ export function CheckoutSummaryCard({ tier }: CheckoutSummaryCardProps) {
             )}
           </div>
         ) : null}
+        {promotionEndsAt ? <PromotionCountdown endsAt={promotionEndsAt} /> : null}
       </div>
     </motion.div>
   );

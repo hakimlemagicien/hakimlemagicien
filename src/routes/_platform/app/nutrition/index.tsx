@@ -43,7 +43,8 @@ import { NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { cn } from "@/lib/utils";
 import { useCustomerJourney } from "@/hooks/useCustomerJourney";
-import { NutritionTrainingTimeQuestion } from "@/components/platform/customer-journey/NutritionTrainingTimeQuestion";
+import { NutritionSafetySetup } from "@/components/platform/customer-journey/NutritionSafetySetup";
+import { useNutritionPreferences } from "@/hooks/useNutritionPreferences";
 import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { MissingGoalPrompt } from "@/components/platform/customer-journey/MissingGoalPrompt";
@@ -108,6 +109,7 @@ function NutritionDashboardPage() {
   const { openUpgradeWithContext } = useUpgradeFlow();
   const freePreview = !entitlements.nutrition.fullDay;
   const journey = useCustomerJourney();
+  const nutritionPreferences = useNutritionPreferences();
   const online = useOnlineStatus();
   const weekDays = useMemo(() => buildCurrentWeekDays(), []);
   const todayKey = weekDays.find((d) => d.isToday)?.dateKey ?? weekDays[0]!.dateKey;
@@ -145,6 +147,8 @@ function NutritionDashboardPage() {
     starterFallback: missingGoal,
     breakfastGoalKey: freePreview || missingGoal ? breakfastGoalKey : null,
     trainingMealWindow: journey.data?.trainingMealWindow,
+    allergens: nutritionPreferences.data?.knownAllergens,
+    dislikedFoods: nutritionPreferences.data?.dislikedFoods,
   });
   const { hold, loading: holdLoading } = useProgramPreparationHold();
   const isSelectedToday = selectedDateKey === todayKey;
@@ -198,7 +202,7 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
-        <NutritionTrainingTimeQuestion />
+        <NutritionSafetySetup />
         <NutritionDashboardSkeleton />
       </PlatformStack>
     );
@@ -208,7 +212,7 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
-        <NutritionTrainingTimeQuestion />
+        <NutritionSafetySetup />
         <NutritionErrorCard onRetry={retry} />
       </PlatformStack>
     );
@@ -223,14 +227,20 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
-        <NutritionTrainingTimeQuestion />
+        <NutritionSafetySetup />
         <NutritionEmptyState
           title={
             plan.assignmentReason === "scheduled"
               ? "خطتك الغذائية مجدولة ولم تبدأ بعد"
-              : "لا توجد خطة غذائية مخصصة حالياً"
+              : plan.assignmentReason === "preference_conflict"
+                ? "أوقفنا عرض وجبة غير مناسبة لك"
+                : "لا توجد خطة غذائية مخصصة حالياً"
           }
-          description="لا تُعرض مكتبة الوجبات كخطة شخصية. سيظهر يومك هنا بعد أن يعيّن المدرب الخطة."
+          description={
+            plan.assignmentReason === "preference_conflict"
+              ? "تم حجب الخطة احترازيًا لأن إحدى الوجبات تتعارض مع الحساسية أو الأطعمة التي لا تحبها. سيظهر برنامجك بعد أن يعدله المدرب."
+              : "لا تُعرض مكتبة الوجبات كخطة شخصية. سيظهر يومك هنا بعد أن يعيّن المدرب الخطة."
+          }
         />
       </PlatformStack>
     );
@@ -240,7 +250,7 @@ function NutritionDashboardPage() {
     <PlatformStack className="gap-3.5 pb-2">
       <NutritionOfflineBanner online={online} />
       <NutritionHeader />
-      <NutritionTrainingTimeQuestion />
+      <NutritionSafetySetup />
       {missingGoal ? (
         <MissingGoalPrompt
           surface="nutrition"

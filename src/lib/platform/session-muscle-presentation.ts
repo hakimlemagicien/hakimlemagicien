@@ -119,13 +119,17 @@ export function summarizeSessionMuscles(input: {
 }): SessionMuscleSummary {
   const weights = {} as Record<SessionMuscleRegion, number>;
   const focus = (input.muscleFocus ?? "").toLowerCase();
+  const canonicalFocus = normalizeRegion(input.muscleFocus);
+
+  if (canonicalFocus) addWeight(weights, canonicalFocus, 2);
 
   if (focus.includes("صدر")) addWeight(weights, "CHEST", 2);
   if (focus.includes("ظهر")) addWeight(weights, "UPPER_BACK", 2);
   if (focus.includes("كتف") || focus.includes("أكتاف")) addWeight(weights, "SHOULDERS", 2);
   if (focus.includes("باي")) addWeight(weights, "BICEPS", 2);
   if (focus.includes("تراي")) addWeight(weights, "TRICEPS", 2);
-  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ")) addWeight(weights, "QUADRICEPS", 2);
+  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ"))
+    addWeight(weights, "QUADRICEPS", 2);
   if (focus.includes("جلوت") || focus.includes("مقعد")) addWeight(weights, "GLUTES", 2);
   if (focus.includes("بطن") || focus.includes("عضلات البطن")) addWeight(weights, "CORE", 2);
   if (focus.includes("جسم كامل") || focus.includes("كامل")) addWeight(weights, "CHEST", 1);
@@ -183,9 +187,11 @@ export function resolveVisualKey(
   const core = weights.CORE ?? 0;
 
   if (regions.length >= 5 || (lowerScore >= 4 && upperScore >= 4)) return "FULL_BODY";
+  if (lowerScore >= 3 && lowerScore >= upperScore * 2) return "LEGS";
   if (lowerScore > 0 && upperScore === 0) return "LEGS";
   if (core > 0 && upperScore === 0 && lowerScore === 0) return "CORE";
-  if (shoulders > 0 && chest === 0 && back === 0 && biceps === 0 && triceps === 0) return "SHOULDERS";
+  if (shoulders > 0 && chest === 0 && back === 0 && biceps === 0 && triceps === 0)
+    return "SHOULDERS";
   if ((biceps > 0 || triceps > 0) && chest === 0 && back === 0 && lowerScore === 0) return "ARMS";
   if (back > 0 && chest === 0 && lowerScore === 0) return "PULL";
   if (chest > 0 && back === 0 && lowerScore === 0) return "PUSH";
@@ -221,6 +227,7 @@ export function buildSessionDisplayName(
   const triceps = weights.TRICEPS ?? 0;
 
   if (regions.length >= 5 || (lowerScore >= 4 && upperScore >= 4)) return "الجسم كامل";
+  if (lowerScore >= 3 && lowerScore >= upperScore * 2) return "أرجل";
   if (lowerScore > 0 && upperScore === 0) return "أرجل";
   if (upperScore > 0 && lowerScore === 0) {
     if (chest > 0 && triceps > 0 && back === 0 && biceps === 0) return "صدر وترايسبس";

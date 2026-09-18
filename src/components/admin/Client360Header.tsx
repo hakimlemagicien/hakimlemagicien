@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Crown, MoreHorizontal, StickyNote } from "lucide-react";
+import { Crown, Eye, MoreHorizontal, StickyNote } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { AdminClientOverview } from "@/lib/admin/admin-clients-api";
 import { presentClientTrainingGoal } from "@/lib/admin/admin-client-goal";
 import { AdminClientAvatar } from "@/components/admin/AdminClientAvatar";
@@ -10,7 +11,12 @@ import {
   clientAccountStatusTone,
   normalizeClientAccountStatus,
 } from "@/lib/admin/admin-client-account";
-import { directoryPlanLabelAr, directoryPlanTone, trainingLocationLabel } from "@/lib/admin/admin-client-ops";
+import {
+  directoryPlanLabelAr,
+  directoryPlanTone,
+  trainingLocationLabel,
+} from "@/lib/admin/admin-client-ops";
+import { getClientExperiencePreview } from "@/lib/admin/admin-command-center-api";
 
 type Props = {
   overview: AdminClientOverview;
@@ -21,6 +27,23 @@ type Props = {
 export function Client360Header({ overview, conversationId, onAddNote }: Props) {
   const account = normalizeClientAccountStatus(overview.account_status);
   const plan = overview.membership?.tier;
+  const [profileMeta, setProfileMeta] = useState<{
+    gender: string | null;
+    level: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void getClientExperiencePreview(overview.id)
+      .then((preview) => {
+        if (!cancelled && preview)
+          setProfileMeta({ gender: preview.client.gender, level: preview.client.level });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [overview.id]);
 
   return (
     <header className="cc-client-hero cc-client-hero--a4">
@@ -32,6 +55,14 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
           {" · "}
           {presentClientTrainingGoal(overview.goal).displayAr}
           {" · "}
+          {profileMeta?.gender === "female"
+            ? "أنثى"
+            : profileMeta?.gender === "male"
+              ? "ذكر"
+              : "الجنس غير محدد"}
+          {" · "}
+          {profileMeta?.level || overview.assignment?.progression_strategy || "المستوى غير محدد"}
+          {" · "}
           {trainingLocationLabel(overview.training_type)}
           {" · انضم "}
           {formatAdminDate(overview.created_at)}
@@ -41,11 +72,28 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
             {clientAccountStatusLabel(account)}
           </AdminStatusBadge>
           {plan ? (
-            <AdminStatusBadge tone={directoryPlanTone(plan)}>{directoryPlanLabelAr(plan)}</AdminStatusBadge>
+            <AdminStatusBadge tone={directoryPlanTone(plan)}>
+              {directoryPlanLabelAr(plan)}
+            </AdminStatusBadge>
           ) : null}
+          <AdminStatusBadge tone={overview.assignment ? "success" : "review"}>
+            {overview.assignment ? "التدريب جاهز" : "بدون تدريب"}
+          </AdminStatusBadge>
+          <AdminStatusBadge tone={overview.nutrition_assignment ? "success" : "review"}>
+            {overview.nutrition_assignment ? "التغذية جاهزة" : "بدون تغذية"}
+          </AdminStatusBadge>
         </div>
       </div>
       <div className="cc-client-hero__actions">
+        <Link
+          to="/admin/client-preview/$clientId"
+          params={{ clientId: overview.id }}
+          search={{ screen: "home" }}
+          className="cc-btn"
+        >
+          <Eye size={15} aria-hidden />
+          عرض كتجربة العميل
+        </Link>
         <Link
           to="/admin/clients/$clientId"
           params={{ clientId: overview.id }}
@@ -72,11 +120,7 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
           </Link>
         )}
         {conversationId ? (
-          <Link
-            to="/admin/messages/$conversationId"
-            params={{ conversationId }}
-            className="cc-btn"
-          >
+          <Link to="/admin/messages/$conversationId" params={{ conversationId }} className="cc-btn">
             إرسال رسالة
           </Link>
         ) : null}
@@ -85,10 +129,18 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
             <MoreHorizontal size={16} aria-hidden />
           </summary>
           <div className="cc-row-menu__panel">
-            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "training" }}>
+            <Link
+              to="/admin/clients/$clientId"
+              params={{ clientId: overview.id }}
+              search={{ tab: "training" }}
+            >
               التدريب
             </Link>
-            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "nutrition" }}>
+            <Link
+              to="/admin/clients/$clientId"
+              params={{ clientId: overview.id }}
+              search={{ tab: "nutrition" }}
+            >
               التغذية
             </Link>
             <Link
@@ -99,7 +151,11 @@ export function Client360Header({ overview, conversationId, onAddNote }: Props) 
             >
               العضوية والفوترة
             </Link>
-            <Link to="/admin/clients/$clientId" params={{ clientId: overview.id }} search={{ tab: "activity" }}>
+            <Link
+              to="/admin/clients/$clientId"
+              params={{ clientId: overview.id }}
+              search={{ tab: "activity" }}
+            >
               النشاط
             </Link>
             {conversationId ? (

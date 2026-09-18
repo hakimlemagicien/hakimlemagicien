@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import type { TrainingMealWindow } from "@/lib/platform/customer-journey";
 
 export type AdminNutritionSlot = {
   id: string;
@@ -191,25 +192,197 @@ export async function generateAdminStrategyNutrition(input: {
   return mapDetail(data as Record<string, unknown>);
 }
 
+export async function assignAdminNutritionTemplate(input: {
+  clientId: string;
+  templateId: string;
+  payload: Record<string, unknown>;
+  startsOn: string;
+  publish: boolean;
+}): Promise<AdminNutritionAssignment> {
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("admin_assign_nutrition_template", {
+    p_client_id: input.clientId,
+    p_template_id: input.templateId,
+    p_payload: input.payload,
+    p_starts_on: input.startsOn,
+    p_publish: input.publish,
+  });
+  if (error) throw new Error(error.message);
+  return mapDetail(data as Record<string, unknown>);
+}
+
 export type AdminNutritionAllergyStatus = "UNKNOWN" | "CONFIRMED_NONE" | "KNOWN_ALLERGIES";
+
+export type AdminNutritionProfileInputs = {
+  gender: "male" | "female" | "";
+  age: string;
+  heightCm: string;
+  weightKg: string;
+  activityLevel: string;
+  bodyType: string;
+};
+
+export async function getAdminClientNutritionProfileInputs(
+  clientId: string,
+): Promise<AdminNutritionProfileInputs> {
+  const { data, error } = await (
+    supabase as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (
+            column: string,
+            value: string,
+          ) => {
+            maybeSingle: () => Promise<{
+              data: { answers?: Record<string, unknown> } | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+      };
+    }
+  )
+    .from("training_profiles")
+    .select("answers")
+    .eq("user_id", clientId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const answers = data?.answers ?? {};
+  const value = (camel: string, snake: string) => answers[camel] ?? answers[snake] ?? "";
+  const gender = value("gender", "gender");
+  return {
+    gender: gender === "male" || gender === "female" ? gender : "",
+    age: String(value("age", "age")),
+    heightCm: String(value("heightCm", "height_cm")),
+    weightKg: String(value("weightKg", "weight_kg")),
+    activityLevel: String(value("activityLevel", "activity_level")),
+    bodyType: String(value("bodyType", "body_type") || "average"),
+  };
+}
+
+export async function saveAdminClientNutritionProfileInputs(
+  clientId: string,
+  goalId: string | null,
+  inputs: AdminNutritionProfileInputs,
+): Promise<void> {
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("admin_set_client_nutrition_profile_inputs", {
+    p_client_id: clientId,
+    p_inputs: {
+      ...inputs,
+      age: Number(inputs.age),
+      heightCm: Number(inputs.heightCm),
+      weightKg: Number(inputs.weightKg),
+      goalId,
+    },
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function getAdminClientNutritionTrainingWindow(
+  clientId: string,
+): Promise<TrainingMealWindow | ""> {
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: string | null; error: { message: string } | null }>;
+    }
+  ).rpc("admin_get_client_nutrition_training_window", { p_client_id: clientId });
+  if (error) throw new Error(error.message);
+  return (data as TrainingMealWindow | null) ?? "";
+}
+
+export async function saveAdminClientNutritionTrainingWindow(
+  clientId: string,
+  window: TrainingMealWindow,
+): Promise<void> {
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("admin_set_client_nutrition_training_window", {
+    p_client_id: clientId,
+    p_window: window,
+  });
+  if (error) throw new Error(error.message);
+}
 
 export async function getAdminClientNutritionAllergy(clientId: string): Promise<{
   status: AdminNutritionAllergyStatus;
   knownAllergens: string[];
+  dislikedFoods: string[];
 }> {
-  const { data, error } = await supabase
+  const { data, error } = await (
+    supabase as unknown as {
+      from: (table: string) => {
+        select: (columns: string) => {
+          eq: (
+            column: string,
+            value: string,
+          ) => {
+            maybeSingle: () => Promise<{
+              data: {
+                allergy_status?: string;
+                known_allergens?: string[];
+                disliked_foods?: string[];
+              } | null;
+              error: { message: string } | null;
+            }>;
+          };
+        };
+      };
+    }
+  )
     .from("client_nutrition_profiles")
-    .select("allergy_status, known_allergens")
+    .select("allergy_status, known_allergens, disliked_foods")
     .eq("client_id", clientId)
     .maybeSingle();
   if (error) throw error;
   const status = (data?.allergy_status as AdminNutritionAllergyStatus | undefined) ?? "UNKNOWN";
   return {
     status: status === "CONFIRMED_NONE" || status === "KNOWN_ALLERGIES" ? status : "UNKNOWN",
-    knownAllergens: Array.isArray(data?.known_allergens)
-      ? (data.known_allergens as string[])
-      : [],
+    knownAllergens: Array.isArray(data?.known_allergens) ? (data.known_allergens as string[]) : [],
+    dislikedFoods: Array.isArray(data?.disliked_foods) ? (data.disliked_foods as string[]) : [],
   };
+}
+
+export async function setAdminClientNutritionPreferences(input: {
+  clientId: string;
+  status: "CONFIRMED_NONE" | "KNOWN_ALLERGIES";
+  allergens?: string[];
+  dislikedFoods?: string[];
+}): Promise<void> {
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("admin_set_client_nutrition_preferences", {
+    p_client_id: input.clientId,
+    p_status: input.status,
+    p_allergens: input.allergens ?? [],
+    p_disliked_foods: input.dislikedFoods ?? [],
+  });
+  if (error) throw new Error(error.message);
 }
 
 export async function setAdminClientNutritionAllergy(input: {
@@ -217,12 +390,14 @@ export async function setAdminClientNutritionAllergy(input: {
   status: "CONFIRMED_NONE" | "KNOWN_ALLERGIES";
   allergens?: string[];
 }): Promise<void> {
-  const { error } = await (supabase as unknown as {
-    rpc: (
-      fn: string,
-      args: Record<string, unknown>,
-    ) => Promise<{ error: { message: string } | null }>;
-  }).rpc("admin_set_client_nutrition_allergy", {
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("admin_set_client_nutrition_allergy", {
     p_client_id: input.clientId,
     p_status: input.status,
     p_allergens: input.allergens ?? [],
@@ -230,7 +405,10 @@ export async function setAdminClientNutritionAllergy(input: {
   if (error) throw error;
 }
 
-export async function createAdminNutritionTarget(clientId: string, payload: Record<string, unknown>) {
+export async function createAdminNutritionTarget(
+  clientId: string,
+  payload: Record<string, unknown>,
+) {
   const { data, error } = await supabase.rpc("nutrition_create_target", {
     p_client_id: clientId,
     p_payload: payload,
@@ -239,7 +417,9 @@ export async function createAdminNutritionTarget(clientId: string, payload: Reco
   return data as { target_id: string; version: number };
 }
 
-export async function getAdminClientNutritionAssignment(id: string): Promise<AdminNutritionAssignment> {
+export async function getAdminClientNutritionAssignment(
+  id: string,
+): Promise<AdminNutritionAssignment> {
   const { data, error } = await supabase.rpc("admin_get_client_nutrition_assignment", {
     p_assignment_id: id,
   });
@@ -266,7 +446,9 @@ export async function listAdminClientNutritionAssignments(clientId: string, offs
   })) satisfies AdminNutritionSummary[];
   return {
     rows,
-    totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
+    totalCount: Number(
+      (data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length,
+    ),
   };
 }
 
@@ -294,19 +476,32 @@ export async function saveAdminClientNutritionSlots(
 }
 
 export async function createAdminClientNutritionDraft(sourceAssignmentId: string) {
-  const { data, error } = await (supabase as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
-  }).rpc("admin_create_client_nutrition_draft", {
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("admin_create_client_nutrition_draft", {
     p_source_assignment_id: sourceAssignmentId,
   });
   if (error) throw error;
   return mapDetail(data as Record<string, unknown>);
 }
 
-export async function publishAdminClientNutritionDraft(draftAssignmentId: string, startsOn?: string | null) {
-  const { data, error } = await (supabase as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
-  }).rpc("admin_publish_client_nutrition_draft", {
+export async function publishAdminClientNutritionDraft(
+  draftAssignmentId: string,
+  startsOn?: string | null,
+) {
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    }
+  ).rpc("admin_publish_client_nutrition_draft", {
     p_draft_assignment_id: draftAssignmentId,
     p_starts_on: startsOn ?? null,
   });
@@ -315,9 +510,14 @@ export async function publishAdminClientNutritionDraft(draftAssignmentId: string
 }
 
 export async function discardAdminClientNutritionDraft(draftAssignmentId: string) {
-  const { error } = await (supabase as unknown as {
-    rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
-  }).rpc("admin_discard_client_nutrition_draft", {
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("admin_discard_client_nutrition_draft", {
     p_draft_assignment_id: draftAssignmentId,
   });
   if (error) throw error;
@@ -341,6 +541,8 @@ export async function listAdminClientNutritionLogs(clientId: string, offset = 0)
   })) satisfies AdminNutritionLogRow[];
   return {
     rows,
-    totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
+    totalCount: Number(
+      (data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length,
+    ),
   };
 }

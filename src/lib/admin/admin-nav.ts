@@ -31,39 +31,121 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "clients",
     label: "العملاء",
     items: [
-      { id: "clients", to: "/admin/clients", label: "العملاء", status: "live", requiredPermission: "clients.read" },
-      { id: "messages", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
-      { id: "progress", to: "/admin/progress", label: "التقدم", status: "live", requiredPermission: "progress.read" },
+      {
+        id: "clients",
+        to: "/admin/clients",
+        label: "العملاء",
+        status: "live",
+        requiredPermission: "clients.read",
+      },
+      {
+        id: "messages",
+        to: "/admin/messages",
+        label: "الرسائل",
+        status: "live",
+        requiredPermission: "messages.manage",
+      },
+      {
+        id: "progress",
+        to: "/admin/progress",
+        label: "التقدم",
+        status: "live",
+        requiredPermission: "progress.read",
+      },
     ],
   },
   {
     id: "training",
     label: "التدريب",
     items: [
-      { id: "programs", to: "/admin/programs", label: "البرامج التدريبية", status: "live", requiredPermission: "training.manage" },
-      { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live", requiredPermission: "exercise.read" },
+      {
+        id: "programs",
+        to: "/admin/programs",
+        label: "البرامج التدريبية",
+        status: "live",
+        requiredPermission: "training.manage",
+      },
+      {
+        id: "automation",
+        to: "/admin/automation",
+        label: "أتمتة البرامج",
+        status: "live",
+        requiredPermission: "staff.manage",
+      },
+      {
+        id: "exercises",
+        to: "/admin/exercises",
+        label: "مكتبة التمارين",
+        status: "live",
+        requiredPermission: "exercise.read",
+      },
     ],
   },
   {
     id: "nutrition",
     label: "التغذية",
     items: [
-      { id: "nutrition", to: "/admin/nutrition", label: "مكتبة الوجبات", status: "live", requiredPermission: "meal_library.manage" },
+      {
+        id: "nutrition-templates",
+        to: "/admin/nutrition/templates",
+        label: "قوالب التغذية",
+        status: "live",
+        requiredPermission: "nutrition.manage",
+      },
+      {
+        id: "nutrition-operations",
+        to: "/admin/nutrition/operations",
+        label: "عمليات التغذية",
+        status: "live",
+        requiredPermission: "nutrition.manage",
+      },
+      {
+        id: "nutrition",
+        to: "/admin/nutrition",
+        label: "مكتبة الوجبات",
+        status: "live",
+        requiredPermission: "meal_library.manage",
+      },
     ],
   },
   {
     id: "billing",
     label: "الاشتراكات والمدفوعات",
     items: [
-      { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live", requiredPermission: "membership.read" },
-      { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live", requiredPermission: "payments.read" },
+      {
+        id: "memberships",
+        to: "/admin/memberships",
+        label: "العضويات",
+        status: "live",
+        requiredPermission: "membership.read",
+      },
+      {
+        id: "payments",
+        to: "/admin/payments",
+        label: "المدفوعات",
+        status: "live",
+        requiredPermission: "payments.read",
+      },
+      {
+        id: "commercial",
+        to: "/admin/commercial",
+        label: "الأسعار والعروض",
+        status: "live",
+        requiredPermission: "memberships.manage",
+      },
     ],
   },
   {
     id: "content",
     label: "المحتوى",
     items: [
-      { id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" },
+      {
+        id: "content",
+        to: "/admin/content",
+        label: "المحتوى",
+        status: "live",
+        requiredPermission: "content.manage",
+      },
       {
         id: "studio",
         to: "/admin/studio",
@@ -77,9 +159,48 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: "system",
     label: "الإدارة والنظام",
     items: [
-      { id: "staff", to: "/admin/settings", label: "إدارة الفريق والصلاحيات", status: "live", requiredPermission: "staff.manage" },
-      { id: "notifications", to: "/admin/notifications", label: "الإشعارات", status: "foundation" },
-      { id: "analytics", to: "/admin/analytics", label: "التحليلات", status: "foundation" },
+      {
+        id: "staff",
+        to: "/admin/settings",
+        label: "إدارة الفريق والصلاحيات",
+        status: "live",
+        requiredPermission: "staff.manage",
+      },
+      {
+        id: "product-settings",
+        to: "/admin/product-settings",
+        label: "إعدادات المنتج",
+        status: "live",
+        requiredPermission: "staff.manage",
+      },
+      {
+        id: "alerts",
+        to: "/admin/alerts",
+        label: "المشاكل والتنبيهات",
+        status: "live",
+        requiredPermission: "clients.basic_read",
+      },
+      {
+        id: "notifications",
+        to: "/admin/notifications",
+        label: "الإشعارات",
+        status: "live",
+        requiredPermission: "support.manage",
+      },
+      {
+        id: "analytics",
+        to: "/admin/analytics",
+        label: "التحليلات",
+        status: "live",
+        requiredPermission: "audit.read",
+      },
+      {
+        id: "audit",
+        to: "/admin/audit",
+        label: "سجل التدقيق",
+        status: "live",
+        requiredPermission: "audit.read",
+      },
     ],
   },
 ];
@@ -133,15 +254,13 @@ export function isAdminNavActive(pathname: string, href: string): boolean {
   const path = pathname.replace(/\/+$/, "") || "/";
   const target = href.replace(/\/+$/, "") || "/";
 
-  // Support + audit live under the team hub entry in the sidebar.
+  // Support remains a tab inside the team hub. Audit now has its own route.
   if (target === "/admin/settings") {
     if (
       path === "/admin/settings" ||
       path.startsWith("/admin/settings/") ||
       path === "/admin/support" ||
-      path.startsWith("/admin/support/") ||
-      path === "/admin/audit" ||
-      path.startsWith("/admin/audit/")
+      path.startsWith("/admin/support/")
     ) {
       return true;
     }
@@ -160,21 +279,136 @@ export function isAdminNavActive(pathname: string, href: string): boolean {
 
 /** Mobile Command Center bottom tabs — never dump the full sidebar here. */
 export const ADMIN_MOBILE_BOTTOM_NAV: AdminNavItem[] = [
-  { id: "home", to: "/admin", label: "الرئيسية", status: "live", requiredPermission: "clients.basic_read" },
-  { id: "clients", to: "/admin/clients", label: "العملاء", status: "live", requiredPermission: "clients.read" },
-  { id: "programs", to: "/admin/programs", label: "التدريب", status: "live", requiredPermission: "training.manage" },
-  { id: "nutrition", to: "/admin/nutrition", label: "التغذية", status: "live", requiredPermission: "meal_library.manage" },
+  {
+    id: "home",
+    to: "/admin",
+    label: "الرئيسية",
+    status: "live",
+    requiredPermission: "clients.basic_read",
+  },
+  {
+    id: "clients",
+    to: "/admin/clients",
+    label: "العملاء",
+    status: "live",
+    requiredPermission: "clients.read",
+  },
+  {
+    id: "programs",
+    to: "/admin/programs",
+    label: "التدريب",
+    status: "live",
+    requiredPermission: "training.manage",
+  },
+  {
+    id: "nutrition",
+    to: "/admin/nutrition",
+    label: "التغذية",
+    status: "live",
+    requiredPermission: "meal_library.manage",
+  },
 ];
 
 /** Items under mobile «المزيد» sheet. */
 export const ADMIN_MOBILE_MORE_LINKS: AdminNavItem[] = [
-  { id: "memberships", to: "/admin/memberships", label: "العضويات", status: "live", requiredPermission: "membership.read" },
-  { id: "payments", to: "/admin/payments", label: "المدفوعات", status: "live", requiredPermission: "payments.read" },
-  { id: "messages", to: "/admin/messages", label: "الرسائل", status: "live", requiredPermission: "messages.manage" },
-  { id: "content", to: "/admin/content", label: "المحتوى", status: "live", requiredPermission: "content.manage" },
-  { id: "exercises", to: "/admin/exercises", label: "مكتبة التمارين", status: "live", requiredPermission: "exercise.read" },
-  { id: "staff", to: "/admin/settings", label: "الفريق والإعدادات", status: "live", requiredPermission: "staff.manage" },
-  { id: "progress", to: "/admin/progress", label: "التقدم", status: "live", requiredPermission: "progress.read" },
+  {
+    id: "memberships",
+    to: "/admin/memberships",
+    label: "العضويات",
+    status: "live",
+    requiredPermission: "membership.read",
+  },
+  {
+    id: "commercial",
+    to: "/admin/commercial",
+    label: "الأسعار والعروض",
+    status: "live",
+    requiredPermission: "memberships.manage",
+  },
+  {
+    id: "automation",
+    to: "/admin/automation",
+    label: "أتمتة البرامج",
+    status: "live",
+    requiredPermission: "staff.manage",
+  },
+  {
+    id: "payments",
+    to: "/admin/payments",
+    label: "المدفوعات",
+    status: "live",
+    requiredPermission: "payments.read",
+  },
+  {
+    id: "messages",
+    to: "/admin/messages",
+    label: "الرسائل",
+    status: "live",
+    requiredPermission: "messages.manage",
+  },
+  {
+    id: "content",
+    to: "/admin/content",
+    label: "المحتوى",
+    status: "live",
+    requiredPermission: "content.manage",
+  },
+  {
+    id: "notifications",
+    to: "/admin/notifications",
+    label: "الإشعارات",
+    status: "live",
+    requiredPermission: "support.manage",
+  },
+  {
+    id: "alerts",
+    to: "/admin/alerts",
+    label: "المشاكل والتنبيهات",
+    status: "live",
+    requiredPermission: "clients.basic_read",
+  },
+  {
+    id: "analytics",
+    to: "/admin/analytics",
+    label: "التحليلات",
+    status: "live",
+    requiredPermission: "audit.read",
+  },
+  {
+    id: "product-settings",
+    to: "/admin/product-settings",
+    label: "إعدادات المنتج",
+    status: "live",
+    requiredPermission: "staff.manage",
+  },
+  {
+    id: "audit",
+    to: "/admin/audit",
+    label: "سجل التدقيق",
+    status: "live",
+    requiredPermission: "audit.read",
+  },
+  {
+    id: "exercises",
+    to: "/admin/exercises",
+    label: "مكتبة التمارين",
+    status: "live",
+    requiredPermission: "exercise.read",
+  },
+  {
+    id: "staff",
+    to: "/admin/settings",
+    label: "الفريق والإعدادات",
+    status: "live",
+    requiredPermission: "staff.manage",
+  },
+  {
+    id: "progress",
+    to: "/admin/progress",
+    label: "التقدم",
+    status: "live",
+    requiredPermission: "progress.read",
+  },
 ];
 
 export function isAdminMobileBottomNavActive(pathname: string, href: string): boolean {

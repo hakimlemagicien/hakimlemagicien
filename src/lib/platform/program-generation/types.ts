@@ -1,4 +1,7 @@
-import type { ClientTrainingLevel, ExerciseExperienceState } from "@/lib/platform/training-v2-contracts";
+import type {
+  ClientTrainingLevel,
+  ExerciseExperienceState,
+} from "@/lib/platform/training-v2-contracts";
 import type { TrainingV2CanonicalGoal } from "@/lib/platform/training-v2-contracts";
 import type { ExerciseV2Metadata, LocationCompatibility } from "@/lib/platform/exercise-library-v2";
 import type { ExercisePoolVersion } from "@/lib/platform/strategy-matrix/core-100";
@@ -8,6 +11,8 @@ import type { ReallocationRequest } from "@/lib/platform/goal-intelligence/types
 
 export const SUPPORTED_DAYS_PER_WEEK = [2, 3, 4, 5] as const;
 export type DaysPerWeek = (typeof SUPPORTED_DAYS_PER_WEEK)[number];
+
+export const STANDARD_SESSION_EXERCISE_TARGET = 6 as const;
 
 export const SESSION_ROLES = [
   "LOWER_GLUTE_PRIORITY",
@@ -176,7 +181,11 @@ export type ProgramGenerationContext = {
 };
 
 export type ProgramGenerationResult = {
-  status: "READY" | "PROGRAM_REVIEW_REQUIRED" | "PROGRAM_GENERATION_BLOCKED" | "COACH_OVERRIDE_CONFLICT";
+  status:
+    | "READY"
+    | "PROGRAM_REVIEW_REQUIRED"
+    | "PROGRAM_GENERATION_BLOCKED"
+    | "COACH_OVERRIDE_CONFLICT";
   candidate: ProgramCandidate | null;
   validation: ValidationResult;
   regional_volume: RegionalVolumeSummary;

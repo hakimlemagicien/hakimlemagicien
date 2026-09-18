@@ -1,8 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { NutritionLibraryManager } from "@/components/admin/libraries/NutritionLibraryManager";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin/nutrition")({
   ssr: false,
-  head: () => ({ meta: [{ title: "التغذية | مركز التشغيل" }] }),
-  component: NutritionLibraryManager,
+  component: Outlet,
 });

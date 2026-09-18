@@ -30,7 +30,7 @@ import {
   listAdminClientNutritionLogs,
   publishAdminClientNutritionDraft,
   saveAdminClientNutritionSlots,
-  setAdminClientNutritionAllergy,
+  setAdminClientNutritionPreferences,
   type AdminNutritionAllergyStatus,
   type AdminNutritionAssignment,
   type AdminNutritionLogRow,
@@ -39,6 +39,10 @@ import {
 } from "@/lib/admin/admin-client-nutrition-api";
 import { AssignmentPublishBar } from "@/components/admin/AssignmentPublishBar";
 import { assignReadyMadeStrategyNutrition } from "@/lib/admin/admin-nutrition-strategy-assign";
+import {
+  listNutritionTemplates,
+  type NutritionTemplateRecord,
+} from "@/lib/admin/admin-nutrition-templates-api";
 import { listAdminMeals, getAdminMeal, type AdminMealListItem } from "@/lib/admin/admin-meals-api";
 import {
   ADMIN_LIBRARY_PAGE_SIZE,
@@ -155,17 +159,20 @@ export function ClientNutritionWorkspace({
   const [pickerRows, setPickerRows] = useState<AdminMealListItem[]>([]);
   const [allergyStatus, setAllergyStatus] = useState<AdminNutritionAllergyStatus>("UNKNOWN");
   const [allergyKnownRaw, setAllergyKnownRaw] = useState("");
+  const [dislikedFoodsRaw, setDislikedFoodsRaw] = useState("");
   const [strategyBusy, setStrategyBusy] = useState(false);
+  const [nutritionTemplates, setNutritionTemplates] = useState<NutritionTemplateRecord[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [previewAsClient, setPreviewAsClient] = useState(false);
   const [publishBusy, setPublishBusy] = useState(false);
   const mealQuery = useDebouncedValue(pickerQuery, 280);
   const dirty = Boolean(
     editing &&
-      draft &&
-      detail &&
-      (JSON.stringify(draft.slots) !== JSON.stringify(detail.slots) ||
-        JSON.stringify(draft.watch_allergens) !== JSON.stringify(detail.watch_allergens) ||
-        draft.name_ar !== detail.name_ar),
+    draft &&
+    detail &&
+    (JSON.stringify(draft.slots) !== JSON.stringify(detail.slots) ||
+      JSON.stringify(draft.watch_allergens) !== JSON.stringify(detail.watch_allergens) ||
+      draft.name_ar !== detail.name_ar),
   );
   const guard = useUnsavedNavigation(dirty, onConfirm);
   const watchAllergens = parseWatchAllergens(watchRaw);
@@ -196,6 +203,7 @@ export function ClientNutritionWorkspace({
       getAdminClientNutritionAllergy(clientId).catch(() => ({
         status: "UNKNOWN" as const,
         knownAllergens: [] as string[],
+        dislikedFoods: [] as string[],
       })),
     ])
       .then(async ([row, list, allergy]) => {
@@ -204,6 +212,7 @@ export function ClientNutritionWorkspace({
         setHistoryOffset(0);
         setAllergyStatus(allergy.status);
         setAllergyKnownRaw(allergy.knownAllergens.join(", "));
+        setDislikedFoodsRaw(allergy.dislikedFoods.join(", "));
         const draftRow = list.rows.find((item) => item.status === "draft");
         if (draftRow) {
           const full = await getAdminClientNutritionAssignment(draftRow.id);
@@ -222,6 +231,19 @@ export function ClientNutritionWorkspace({
       })
       .finally(() => setLoading(false));
   }, [clientId, overview.nutrition_assignment?.id]);
+
+  useEffect(() => {
+    void listNutritionTemplates()
+      .then((rows) => {
+        const published = rows.filter((row) => row.status === "published" && row.is_active);
+        setNutritionTemplates(published);
+        setSelectedTemplateId(
+          (current) =>
+            current || published.find((row) => row.is_default)?.id || published[0]?.id || "",
+        );
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   useEffect(() => {
     if (tab !== "progress" && tab !== "nutrition") return;
@@ -253,7 +275,8 @@ export function ClientNutritionWorkspace({
   }, [pickerSlot, mealQuery, pickerType]);
 
   const planned = useMemo(() => {
-    const source = editing && draft ? draft.slots : assignStep !== "closed" ? slotDrafts : detail?.slots ?? [];
+    const source =
+      editing && draft ? draft.slots : assignStep !== "closed" ? slotDrafts : (detail?.slots ?? []);
     return source.reduce(
       (sum, slot) => {
         const macros = scaleMacros({
@@ -277,13 +300,14 @@ export function ClientNutritionWorkspace({
   const assignConflicts = useMemo(
     () =>
       slotDrafts.flatMap((slot) =>
-        allergenOverlap(watchAllergens, slot.allergens).map((item) => `${NUTRITION_SLOT_LABELS[slot.slot_key]}: ${item}`),
+        allergenOverlap(watchAllergens, slot.allergens).map(
+          (item) => `${NUTRITION_SLOT_LABELS[slot.slot_key]}: ${item}`,
+        ),
       ),
     [slotDrafts, watchAllergens],
   );
 
-  const nutritionPublishMode =
-    !detail ? "none" : detail.status === "draft" ? "draft" : "published";
+  const nutritionPublishMode = !detail ? "none" : detail.status === "draft" ? "draft" : "published";
   const nutritionEditionLabel =
     detail?.status === "draft"
       ? "مسودة تغذية — غير مرئية للعميل"
@@ -515,7 +539,12 @@ export function ClientNutritionWorkspace({
       return;
     }
     try {
-      await setAdminClientNutritionAllergy({ clientId, status, allergens });
+      await setAdminClientNutritionPreferences({
+        clientId,
+        status,
+        allergens,
+        dislikedFoods: parseWatchAllergens(dislikedFoodsRaw),
+      });
       setAllergyStatus(status);
       setError(null);
     } catch (err) {
@@ -530,13 +559,16 @@ export function ClientNutritionWorkspace({
       setError(translateLibraryError({ message: "allergy_status_required" }));
       return;
     }
+    if (!selectedTemplateId) {
+      setError("اختر قالب تغذية منشورًا أولًا.");
+      return;
+    }
+    const selectedTemplate = nutritionTemplates.find((row) => row.id === selectedTemplateId);
     onConfirm({
-      title: replace ? "استبدال بخطة Strategy V1 جاهزة" : "توليد Strategy V1",
-      body: replace
-        ? `ستُستبدل الخطة الحالية بخطة تغذية جاهزة من المحرك اعتباراً من ${startsOn}. السجل السابق يبقى.`
-        : `تعيين برنامج غذائي جاهز (Strategy V1) للعميل من ${startsOn} بناءً على الهدف وبيانات الكويز.`,
-      confirmLabel: replace ? "استبدال وتوليد" : "توليد وتعيين",
-      tone: replace ? "danger" : "primary",
+      title: "إنشاء نسخة تغذية خاصة بالعميل",
+      body: `${selectedTemplate?.name_ar ?? "القالب المختار"} سيُحسب ببيانات هذا العميل ويُحفظ كمسودة. الخطة المنشورة الحالية لن تتغير حتى تضغط نشر.`,
+      confirmLabel: "إنشاء المسودة",
+      tone: "primary",
       onConfirm: () => {
         setStrategyBusy(true);
         void assignReadyMadeStrategyNutrition({
@@ -545,6 +577,9 @@ export function ClientNutritionWorkspace({
           startsOn,
           replace,
           allergy,
+          restrictions: parseWatchAllergens(dislikedFoodsRaw),
+          templateId: selectedTemplateId,
+          publish: false,
         })
           .then(async (row) => {
             setDetail(row);
@@ -564,7 +599,11 @@ export function ClientNutritionWorkspace({
     });
   };
 
-  const applyMealToSlot = async (slotKey: NutritionSlotKey, mealId: string, target: "assign" | "edit") => {
+  const applyMealToSlot = async (
+    slotKey: NutritionSlotKey,
+    mealId: string,
+    target: "assign" | "edit",
+  ) => {
     const meal = await getAdminMeal(mealId);
     if (target === "assign") {
       setSlotDrafts((rows) =>
@@ -611,7 +650,9 @@ export function ClientNutritionWorkspace({
   };
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const todayLogs = logs.filter((row) => row.session_date === todayKey && row.status === "completed");
+  const todayLogs = logs.filter(
+    (row) => row.session_date === todayKey && row.status === "completed",
+  );
   const plannedToday = detail?.slots.length ?? 0;
 
   if (loading) return <AdminSkeletonRows rows={5} />;
@@ -686,10 +727,16 @@ export function ClientNutritionWorkspace({
         </AdminCard>
       </TrainingToolCard>
 
-      <TrainingToolCard title="الخطة الغذائية" preview={planPreview} statusLabel={planStatus} tone={planTone}>
+      <TrainingToolCard
+        title="الخطة الغذائية"
+        preview={planPreview}
+        statusLabel={planStatus}
+        tone={planTone}
+      >
         <AdminCard>
           <p className="cc-muted">
-            {NUTRITION_BOUNDARIES.library} منفصل عن {NUTRITION_BOUNDARIES.assigned}. تعديل المكتبة لا يغيّر لقطة العميل.
+            {NUTRITION_BOUNDARIES.library} منفصل عن {NUTRITION_BOUNDARIES.assigned}. تعديل المكتبة
+            لا يغيّر لقطة العميل.
           </p>
           {detail ? (
             <dl className="cc-dl">
@@ -712,8 +759,8 @@ export function ClientNutritionWorkspace({
               <div>
                 <dt>مخطط اليوم من الوجبات المعيَّنة</dt>
                 <dd>
-                  {Math.round(detail.planned_calories)} سعرة · {detail.planned_protein_g} بروتين · {detail.planned_carbs_g}{" "}
-                  كارب · {detail.planned_fat_g} دهون
+                  {Math.round(detail.planned_calories)} سعرة · {detail.planned_protein_g} بروتين ·{" "}
+                  {detail.planned_carbs_g} كارب · {detail.planned_fat_g} دهون
                 </dd>
               </div>
               <div>
@@ -733,7 +780,10 @@ export function ClientNutritionWorkspace({
           )}
 
           <div className="cc-form-grid" style={{ marginTop: 12 }}>
-            <AdminField label="حالة الحساسية (مطلوبة للتوليد الجاهز)" htmlFor="nutrition_allergy_status">
+            <AdminField
+              label="حالة الحساسية (مطلوبة للتوليد الجاهز)"
+              htmlFor="nutrition_allergy_status"
+            >
               <AdminSelect
                 value={allergyStatus === "UNKNOWN" ? "" : allergyStatus}
                 onChange={(v) => {
@@ -766,19 +816,58 @@ export function ClientNutritionWorkspace({
                   />
                 </AdminField>
                 <div className="cc-editor-toolbar">
-                  <button type="button" className="cc-btn" onClick={() => void saveAllergyStatus("KNOWN_ALLERGIES")}>
+                  <button
+                    type="button"
+                    className="cc-btn"
+                    onClick={() => void saveAllergyStatus("KNOWN_ALLERGIES")}
+                  >
                     حفظ الحساسيات
                   </button>
                 </div>
               </>
             ) : null}
+            <AdminField label="أطعمة لا يحبها العميل (فاصلة)" htmlFor="nutrition_disliked_foods">
+              <input
+                id="nutrition_disliked_foods"
+                className="cc-input"
+                value={dislikedFoodsRaw}
+                onChange={(e) => setDislikedFoodsRaw(e.target.value)}
+                placeholder="فطر، تونة، بروكلي"
+              />
+            </AdminField>
+            {allergyStatus !== "UNKNOWN" ? (
+              <div className="cc-editor-toolbar">
+                <button
+                  type="button"
+                  className="cc-btn"
+                  onClick={() => void saveAllergyStatus(allergyStatus)}
+                >
+                  حفظ بيانات السلامة والتفضيلات
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="cc-editor-toolbar">
+            <label className="cc-command-field" style={{ minWidth: 240 }}>
+              <span>قالب التغذية المنشور</span>
+              <select
+                value={selectedTemplateId}
+                onChange={(event) => setSelectedTemplateId(event.target.value)}
+              >
+                <option value="">اختر قالبًا</option>
+                {nutritionTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name_ar} · V{template.version}
+                    {template.is_default ? " · افتراضي" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="button"
               className="cc-btn cc-btn--primary"
-              disabled={strategyBusy}
+              disabled={strategyBusy || !selectedTemplateId}
               onClick={() =>
                 confirmStrategyGenerate(
                   overview.nutrition_assignment?.status === "active" ||
@@ -786,13 +875,15 @@ export function ClientNutritionWorkspace({
                 )
               }
             >
-              {strategyBusy ? "جاري التوليد…" : "توليد Strategy V1"}
+              {strategyBusy ? "جاري التوليد…" : "إنشاء من القالب كمسودة"}
             </button>
             <button type="button" className="cc-btn cc-btn--primary" onClick={openManualAssign}>
               تعيين برنامج غذائي جاهز
             </button>
             {detail &&
-            (detail.status === "active" || detail.status === "scheduled" || detail.status === "draft") ? (
+            (detail.status === "active" ||
+              detail.status === "scheduled" ||
+              detail.status === "draft") ? (
               <>
                 <button
                   type="button"
@@ -808,9 +899,13 @@ export function ClientNutritionWorkspace({
                 >
                   {detail.status === "draft" ? "فتح المسودة" : "إنشاء مسودة للتعديل"}
                 </button>
-                {(detail.status === "active" || detail.status === "scheduled") ? (
+                {detail.status === "active" || detail.status === "scheduled" ? (
                   <>
-                    <button type="button" className="cc-btn" onClick={() => requestEnd("completed")}>
+                    <button
+                      type="button"
+                      className="cc-btn"
+                      onClick={() => requestEnd("completed")}
+                    >
                       إنهاء الخطة
                     </button>
                     <button
@@ -832,7 +927,11 @@ export function ClientNutritionWorkspace({
               </>
             ) : null}
             {conversationId ? (
-              <Link to="/admin/messages/$conversationId" params={{ conversationId }} className="cc-btn">
+              <Link
+                to="/admin/messages/$conversationId"
+                params={{ conversationId }}
+                className="cc-btn"
+              >
                 فتح المحادثة
               </Link>
             ) : null}
@@ -876,7 +975,8 @@ export function ClientNutritionWorkspace({
                       </p>
                       {allergenOverlap(watchAllergens, slot.allergens).length > 0 ? (
                         <p className="cc-field__error" role="alert">
-                          تعارض حساسية يحتاج مراجعة: {allergenOverlap(watchAllergens, slot.allergens).join("، ")}
+                          تعارض حساسية يحتاج مراجعة:{" "}
+                          {allergenOverlap(watchAllergens, slot.allergens).join("، ")}
                         </p>
                       ) : null}
                       <button
@@ -889,7 +989,10 @@ export function ClientNutritionWorkspace({
                       >
                         اختيار من المكتبة
                       </button>
-                      <AdminField label={`حصة ${NUTRITION_SLOT_LABELS[slot.slot_key]}`} htmlFor={`servings_${slot.slot_key}`}>
+                      <AdminField
+                        label={`حصة ${NUTRITION_SLOT_LABELS[slot.slot_key]}`}
+                        htmlFor={`servings_${slot.slot_key}`}
+                      >
                         <input
                           id={`servings_${slot.slot_key}`}
                           type="number"
@@ -914,7 +1017,9 @@ export function ClientNutritionWorkspace({
                           onChange={(event) =>
                             setSlotDrafts((rows) =>
                               rows.map((row) =>
-                                row.slot_key === slot.slot_key ? { ...row, notes_ar: event.target.value } : row,
+                                row.slot_key === slot.slot_key
+                                  ? { ...row, notes_ar: event.target.value }
+                                  : row,
                               ),
                             )
                           }
@@ -923,7 +1028,9 @@ export function ClientNutritionWorkspace({
                     </li>
                   ))}
                 </ol>
-                <p className="cc-muted">ملاحظات الكوتش الخاصة تبقى في تبويب الملاحظات، وليست تعليمات العميل.</p>
+                <p className="cc-muted">
+                  ملاحظات الكوتش الخاصة تبقى في تبويب الملاحظات، وليست تعليمات العميل.
+                </p>
                 <button
                   type="button"
                   className="cc-btn cc-btn--primary"
@@ -944,13 +1051,15 @@ export function ClientNutritionWorkspace({
                   <div>
                     <dt>مخطط من الوجبات × الحصص</dt>
                     <dd>
-                      {planned.calories} سعرة · {planned.protein} بروتين · {planned.carbs} كارب · {planned.fat} دهون
+                      {planned.calories} سعرة · {planned.protein} بروتين · {planned.carbs} كارب ·{" "}
+                      {planned.fat} دهون
                     </dd>
                   </div>
                 </dl>
                 {assignConflicts.length > 0 ? (
                   <p className="cc-field__error" role="alert">
-                    تعارض حساسية يحتاج مراجعة: {assignConflicts.join(" · ")}. لا يُمنع التعيين تلقائياً.
+                    تعارض حساسية يحتاج مراجعة: {assignConflicts.join(" · ")}. لا يُمنع التعيين
+                    تلقائياً.
                   </p>
                 ) : null}
                 <ul>
@@ -977,7 +1086,11 @@ export function ClientNutritionWorkspace({
                 <button type="button" className="cc-btn" onClick={() => setAssignStep("pick")}>
                   رجوع
                 </button>
-                <button type="button" className="cc-btn cc-btn--primary" onClick={() => setAssignStep("review")}>
+                <button
+                  type="button"
+                  className="cc-btn cc-btn--primary"
+                  onClick={() => setAssignStep("review")}
+                >
                   تأكيد المعاينة
                 </button>
                 {assignStep === "review" ? (
@@ -1066,8 +1179,8 @@ export function ClientNutritionWorkspace({
                         </p>
                         <p className="cc-meta">
                           حصة × {slot.servings}
-                          {slot.serving_unit ? ` · ${slot.serving_unit}` : ""} · {macros.calories} سعرة ·{" "}
-                          {macros.protein}ب / {macros.carbs}ك / {macros.fat}د
+                          {slot.serving_unit ? ` · ${slot.serving_unit}` : ""} · {macros.calories}{" "}
+                          سعرة · {macros.protein}ب / {macros.carbs}ك / {macros.fat}د
                         </p>
                       </div>
                     </div>
@@ -1089,7 +1202,9 @@ export function ClientNutritionWorkspace({
                               const servings = Number(event.target.value);
                               setDraft({
                                 ...draft,
-                                slots: draft.slots.map((row, i) => (i === index ? { ...row, servings } : row)),
+                                slots: draft.slots.map((row, i) =>
+                                  i === index ? { ...row, servings } : row,
+                                ),
                               });
                               setSaveState("unsaved");
                             }}
@@ -1133,7 +1248,10 @@ export function ClientNutritionWorkspace({
                       value={(draft?.watch_allergens ?? []).join(", ")}
                       onChange={(event) => {
                         if (!draft) return;
-                        setDraft({ ...draft, watch_allergens: parseWatchAllergens(event.target.value) });
+                        setDraft({
+                          ...draft,
+                          watch_allergens: parseWatchAllergens(event.target.value),
+                        });
                         setSaveState("unsaved");
                       }}
                     />
@@ -1171,7 +1289,9 @@ export function ClientNutritionWorkspace({
                 <li key={signal}>{nutritionSignalLabel(signal)}</li>
               ))}
             </ul>
-            <p className="cc-muted">لا تقييم جودة حمية ولا نسبة التزام سلوكية. الحساسية تظهر كتحذير مراجعة فقط.</p>
+            <p className="cc-muted">
+              لا تقييم جودة حمية ولا نسبة التزام سلوكية. الحساسية تظهر كتحذير مراجعة فقط.
+            </p>
           </AdminCard>
         </TrainingToolCard>
       ) : null}
@@ -1232,7 +1352,9 @@ export function ClientNutritionWorkspace({
             preview={
               hasPlan
                 ? `${overview.nutrition_assignment?.name_ar ?? "خطة"} · آخر نشاط ${
-                    overview.last_nutrition_at ? formatRelativeAge(overview.last_nutrition_at) : "لا سجل"
+                    overview.last_nutrition_at
+                      ? formatRelativeAge(overview.last_nutrition_at)
+                      : "لا سجل"
                   }`
                 : "لا خطة تغذية — يحتاج تدخل"
             }
@@ -1247,12 +1369,18 @@ export function ClientNutritionWorkspace({
                 </div>
                 <div>
                   <dt>آخر نشاط غذائي</dt>
-                  <dd>{overview.last_nutrition_at ? formatRelativeAge(overview.last_nutrition_at) : "لا سجل بعد"}</dd>
+                  <dd>
+                    {overview.last_nutrition_at
+                      ? formatRelativeAge(overview.last_nutrition_at)
+                      : "لا سجل بعد"}
+                  </dd>
                 </div>
                 <div>
                   <dt>وجبات اليوم</dt>
                   <dd>
-                    {plannedToday > 0 ? `${todayLogs.length} مكتملة / ${plannedToday} مخططة` : "لا خطة لعرض العد"}
+                    {plannedToday > 0
+                      ? `${todayLogs.length} مكتملة / ${plannedToday} مخططة`
+                      : "لا خطة لعرض العد"}
                   </dd>
                 </div>
                 <div>
@@ -1317,7 +1445,6 @@ export function ClientNutritionWorkspace({
   );
 }
 
-
 function MealPicker({
   slotKey,
   query,
@@ -1343,7 +1470,12 @@ function MealPicker({
     <div className="cc-picker" role="dialog" aria-labelledby="meal-picker-title">
       <h3 id="meal-picker-title">اختيار وجبة — {NUTRITION_SLOT_LABELS[slotKey]}</h3>
       <div className="cc-form-grid">
-        <AdminSearchInput value={query} onChange={onQuery} placeholder="بحث في الوجبات المنشورة" label="بحث" />
+        <AdminSearchInput
+          value={query}
+          onChange={onQuery}
+          placeholder="بحث في الوجبات المنشورة"
+          label="بحث"
+        />
         <AdminSelect value={type} onChange={onType}>
           <option value="">كل الأنواع</option>
           {MEAL_TYPES.map((item) => (
@@ -1354,13 +1486,17 @@ function MealPicker({
         </AdminSelect>
       </div>
       {rows.length === 0 ? (
-        <AdminEmptyState title="لا وجبات منشورة مطابقة" body="الوجبات المؤرشفة غير ظاهرة هنا افتراضياً." />
+        <AdminEmptyState
+          title="لا وجبات منشورة مطابقة"
+          body="الوجبات المؤرشفة غير ظاهرة هنا افتراضياً."
+        />
       ) : (
         <ul className="cc-picker-list">
           {rows.map((row) => (
             <li key={row.id}>
               <button type="button" className="cc-row-btn" onClick={() => onSelect(row.id)}>
-                {row.name_ar} <span dir="ltr">({row.external_id})</span> · {row.calories} سعرة · {row.meal_type}
+                {row.name_ar} <span dir="ltr">({row.external_id})</span> · {row.calories} سعرة ·{" "}
+                {row.meal_type}
               </button>
               {watchAllergens.length > 0 ? (
                 <p className="cc-muted">بعد الاختيار تُراجع الحساسية من بيانات الوجبة الكاملة.</p>
@@ -1393,7 +1529,10 @@ function LogsTable({
     <AdminCard>
       {loading ? <AdminSkeletonRows rows={3} /> : null}
       {!loading && logs.length === 0 ? (
-        <AdminEmptyState title="لا سجلات تغذية بعد" body="تظهر هنا الوجبات المكتملة من تطبيق العميل فقط." />
+        <AdminEmptyState
+          title="لا سجلات تغذية بعد"
+          body="تظهر هنا الوجبات المكتملة من تطبيق العميل فقط."
+        />
       ) : null}
       {logs.length > 0 ? (
         <div className="cc-table-wrap">
@@ -1414,14 +1553,23 @@ function LogsTable({
                   <td>{NUTRITION_SLOT_LABELS[row.slot_key as NutritionSlotKey] ?? row.slot_key}</td>
                   <td dir="ltr">{row.source_external_id}</td>
                   <td>{row.status === "completed" ? "مكتملة" : "تم التخطي"}</td>
-                  <td>{nutritionLogIsLegacyUnlinked(row.assignment_id) ? "سجل قديم غير مرتبط" : "مرتبط بالتعيين"}</td>
+                  <td>
+                    {nutritionLogIsLegacyUnlinked(row.assignment_id)
+                      ? "سجل قديم غير مرتبط"
+                      : "مرتبط بالتعيين"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : null}
-      <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={onPage} />
+      <AdminPagination
+        offset={offset}
+        pageSize={ADMIN_LIBRARY_PAGE_SIZE}
+        total={total}
+        onPage={onPage}
+      />
     </AdminCard>
   );
 }
@@ -1441,18 +1589,26 @@ function HistoryList({
 }) {
   return (
     <AdminCard>
-      {rows.length === 0 ? <AdminEmptyState title="لا تاريخ تعيين بعد" body="الاستبدال يُبقي الخطط السابقة هنا." /> : null}
+      {rows.length === 0 ? (
+        <AdminEmptyState title="لا تاريخ تعيين بعد" body="الاستبدال يُبقي الخطط السابقة هنا." />
+      ) : null}
       <ul className="cc-picker-list">
         {rows.map((row) => (
           <li key={row.id}>
             <button type="button" className="cc-row-btn" onClick={() => onOpen(row.id)}>
-              {row.name_ar || "خطة"} · {nutritionStatusLabel(row.status)} · {formatAdminDate(row.assigned_at)}
+              {row.name_ar || "خطة"} · {nutritionStatusLabel(row.status)} ·{" "}
+              {formatAdminDate(row.assigned_at)}
               {row.ended_at ? ` → ${formatAdminDate(row.ended_at)}` : ""}
             </button>
           </li>
         ))}
       </ul>
-      <AdminPagination offset={offset} pageSize={ADMIN_LIBRARY_PAGE_SIZE} total={total} onPage={onPage} />
+      <AdminPagination
+        offset={offset}
+        pageSize={ADMIN_LIBRARY_PAGE_SIZE}
+        total={total}
+        onPage={onPage}
+      />
     </AdminCard>
   );
 }

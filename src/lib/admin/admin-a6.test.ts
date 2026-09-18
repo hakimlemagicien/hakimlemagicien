@@ -19,13 +19,31 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-const billingOverview = readFileSync(resolve(process.cwd(), "src/routes/admin/billing/index.tsx"), "utf8");
-const membershipsPage = readFileSync(resolve(process.cwd(), "src/components/admin/AdminMembershipsPage.tsx"), "utf8");
+const billingOverview = readFileSync(
+  resolve(process.cwd(), "src/routes/admin/billing/index.tsx"),
+  "utf8",
+);
+const membershipsPage = readFileSync(
+  resolve(process.cwd(), "src/components/admin/AdminMembershipsPage.tsx"),
+  "utf8",
+);
 const paymentsRoute = readFileSync(resolve(process.cwd(), "src/routes/admin/payments.tsx"), "utf8");
-const membershipWorkspace = readFileSync(resolve(process.cwd(), "src/components/admin/ClientMembershipWorkspace.tsx"), "utf8");
-const exceptionsPanel = readFileSync(resolve(process.cwd(), "src/components/admin/AdminPaymentExceptionsPanel.tsx"), "utf8");
-const pspPanel = readFileSync(resolve(process.cwd(), "src/components/admin/AdminPspPaymentsPanel.tsx"), "utf8");
-const providerPanel = readFileSync(resolve(process.cwd(), "src/components/admin/AdminProviderEventsPanel.tsx"), "utf8");
+const membershipWorkspace = readFileSync(
+  resolve(process.cwd(), "src/components/admin/ClientMembershipWorkspace.tsx"),
+  "utf8",
+);
+const exceptionsPanel = readFileSync(
+  resolve(process.cwd(), "src/components/admin/AdminPaymentExceptionsPanel.tsx"),
+  "utf8",
+);
+const pspPanel = readFileSync(
+  resolve(process.cwd(), "src/components/admin/AdminPspPaymentsPanel.tsx"),
+  "utf8",
+);
+const providerPanel = readFileSync(
+  resolve(process.cwd(), "src/components/admin/AdminProviderEventsPanel.tsx"),
+  "utf8",
+);
 const styles = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
 
 const sampleRow = (overrides: Partial<AdminMemberSubscriptionRow>): AdminMemberSubscriptionRow => ({
@@ -66,12 +84,18 @@ assert(!billingOverview.includes("ARR"), "no ARR");
 // T4–T7 list/search/filters/deep link
 assert(membershipsPage.includes("فتح العميل"), "client CTA");
 assert(membershipsPage.includes('tab: "membership"'), "membership tab deep link");
-assert(membershipsPage.includes("type=\"search\""), "search input");
+assert(membershipsPage.includes('type="search"'), "search input");
 
 // T8–T11 plans
 assert(membershipPlanLabel("free") !== "VIP", "free label");
-assert(membershipPlanLabel("essential").includes("PLUS") || membershipPlanLabel("essential") === "PLUS", "essential");
-assert(membershipPlanLabel("premium").includes("PRO") || membershipPlanLabel("premium") === "PRO", "premium");
+assert(
+  membershipPlanLabel("essential").includes("PLUS") || membershipPlanLabel("essential") === "PLUS",
+  "essential",
+);
+assert(
+  membershipPlanLabel("premium").includes("PRO") || membershipPlanLabel("premium") === "PRO",
+  "premium",
+);
 assert(isInternalVipTier("vip"), "vip internal");
 
 // T12–T15 catalog prices
@@ -83,24 +107,42 @@ assert(resolveCatalogPrice("essential", 3)?.amount === 87, "catalog essential 3"
 assert(resolveCatalogPrice("premium", 6)?.amount === 249, "catalog premium 6");
 
 // T16–T21 states
-assert(resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "active" })) === "ACTIVE", "active");
-assert(resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "past_due" })) === "PAST_DUE", "past due");
 assert(
-  resolveMembershipLifecycle(sampleRow({ cancelAtPeriodEnd: true, autoRenew: false, subscriptionStatus: "active" })) ===
-    "CANCEL_AT_PERIOD_END",
+  resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "active" })) === "ACTIVE",
+  "active",
+);
+assert(
+  resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "past_due" })) === "PAST_DUE",
+  "past due",
+);
+assert(
+  resolveMembershipLifecycle(
+    sampleRow({ cancelAtPeriodEnd: true, autoRenew: false, subscriptionStatus: "active" }),
+  ) === "CANCEL_AT_PERIOD_END",
   "cancel at period end",
 );
 assert(
   resolveMembershipLifecycle(
-    sampleRow({ cancelAtPeriodEnd: true, autoRenew: false, subscriptionStatus: "cancel_at_period_end" }),
+    sampleRow({
+      cancelAtPeriodEnd: true,
+      autoRenew: false,
+      subscriptionStatus: "cancel_at_period_end",
+    }),
   ) === "PROVIDER_CONFIRMATION_PENDING",
   "provider confirmation pending",
 );
-assert(resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "expired", isActive: false })) === "EXPIRED", "expired");
-assert(resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "refunded" })) === "REFUNDED", "refunded");
+assert(
+  resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "expired", isActive: false })) ===
+    "EXPIRED",
+  "expired",
+);
+assert(
+  resolveMembershipLifecycle(sampleRow({ subscriptionStatus: "refunded" })) === "REFUNDED",
+  "refunded",
+);
 
 // T22–T28 payment history / exceptions / provider unavailable
-assert(membershipWorkspace.includes("سجل المدفوعات"), "payment history");
+assert(membershipWorkspace.includes("سجل الفواتير"), "payment history");
 assert(membershipWorkspace.includes("لا توجد معاملات مسجلة"), "empty payment history");
 assert(pspPanel.includes("فتح العميل"), "psp client link");
 assert(exceptionsPanel.includes("لا توجد استثناءات دفع"), "empty exceptions copy");
@@ -123,14 +165,20 @@ assert(!membershipWorkspace.includes("updateMembership"), "no membership mutatio
 assert(!membershipWorkspace.includes("Mark as Paid"), "no mark paid in workspace");
 
 // T41–T43 audit / source labels
-assert(membershipWorkspace.includes("سجل العمليات"), "audit link");
+assert(membershipWorkspace.includes("يُسجَّل في التدقيق"), "audit disclosure");
 assert(membershipSourceLabel("legacy_bank") === "LEGACY-MANUAL", "legacy source label");
 assert(membershipWorkspace.includes("مصدر الحقيقة"), "source of truth");
 
 // T44 dashboard integration — nav billing overview
 const billingNav = ADMIN_NAV_GROUPS.find((group) => group.id === "billing");
-assert(billingNav?.items.some((item) => item.to === "/admin/memberships"), "memberships nav");
-assert(billingNav?.items.some((item) => item.to === "/admin/payments"), "payments nav");
+assert(
+  billingNav?.items.some((item) => item.to === "/admin/memberships"),
+  "memberships nav",
+);
+assert(
+  billingNav?.items.some((item) => item.to === "/admin/payments"),
+  "payments nav",
+);
 assert(billingOverview.includes("createFileRoute"), "billing overview route kept");
 
 // T46–T48 RTL/mobile/a11y basics
@@ -153,8 +201,16 @@ const filtered = filterMembershipRows(
 );
 assert(filtered.length === 1 && filtered[0].tier === "premium", "plan filter");
 
-assert(membershipNeedsAttention(sampleRow({ subscriptionStatus: "past_due" })), "needs attention past due");
-assert(formatMembershipPlanPrice(sampleRow({ tier: "essential", billingPeriodMonths: 3, priceAmount: 87 })).includes("$87"), "price display");
+assert(
+  membershipNeedsAttention(sampleRow({ subscriptionStatus: "past_due" })),
+  "needs attention past due",
+);
+assert(
+  formatMembershipPlanPrice(
+    sampleRow({ tier: "essential", billingPeriodMonths: 3, priceAmount: 87 }),
+  ).includes("$87"),
+  "price display",
+);
 
 const quick = buildBillingQuickStatus(
   {
@@ -168,7 +224,17 @@ const quick = buildBillingQuickStatus(
     nutritionConflicts: 0,
   },
   [sampleRow({ subscriptionStatus: "past_due" })],
-  [{ exceptionId: "1", exceptionType: "legacy_bank_pending", priority: "high", subjectLabel: "x", detail: "d", occurredAt: new Date().toISOString(), href: "/admin/payments?section=legacy" }],
+  [
+    {
+      exceptionId: "1",
+      exceptionType: "legacy_bank_pending",
+      priority: "high",
+      subjectLabel: "x",
+      detail: "d",
+      occurredAt: new Date().toISOString(),
+      href: "/admin/payments?section=legacy",
+    },
+  ],
 );
 assert(quick.legacyPending === 1, "legacy pending kpi");
 assert(quick.paymentExceptions >= 1, "exceptions kpi");

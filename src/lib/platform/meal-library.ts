@@ -207,12 +207,19 @@ export function listMealsByTypeAndGoal(mealType: MealType, goal?: string): MealL
     });
 }
 
-export function mealDeliveryPath(
-  externalId: string,
-  variant: MealImageVariant = "cover",
-): string {
+export function mealDeliveryPath(externalId: string, variant: MealImageVariant = "cover"): string {
   const file = variant === "thumb" ? "cover-thumb.webp" : "cover.webp";
   return `/nutrition/meals/${externalId}/${file}`;
+}
+
+export function mealImageSource(
+  meal: MealLibraryRecord,
+  variant: MealImageVariant = "cover",
+): string {
+  const reference = meal.image.reference?.trim();
+  if (reference && (/^(https?:|blob:|data:)/i.test(reference) || reference.startsWith("/")))
+    return reference;
+  return mealDeliveryPath(meal.external_id, variant);
 }
 
 /** Future Supabase Storage object path. Always keyed by external_id. */
@@ -259,8 +266,7 @@ export function findContractAlternatives(
           return false;
         }
       }
-      const calorieDeltaPct =
-        (Math.abs(candidate.calories - meal.calories) / meal.calories) * 100;
+      const calorieDeltaPct = (Math.abs(candidate.calories - meal.calories) / meal.calories) * 100;
       if (calorieDeltaPct > profile.max_calorie_delta_pct) return false;
       const proteinDelta = Math.abs(candidate.protein_g - meal.protein_g);
       if (proteinDelta > profile.max_protein_delta_g) return false;

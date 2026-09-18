@@ -9,7 +9,11 @@ import {
   AdminSection,
 } from "@/components/admin/AdminPage";
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
-import { fetchAdminClientOverview, searchAdminClients, type AdminClientOverview } from "@/lib/admin/admin-clients-api";
+import {
+  fetchAdminClientOverview,
+  searchAdminClients,
+  type AdminClientOverview,
+} from "@/lib/admin/admin-clients-api";
 import {
   buildNutritionAttentionFromOverview,
   buildNutritionQuickStatus,
@@ -60,8 +64,8 @@ function NutritionOperationsPage() {
         title="عمليات التغذية"
         subtitle="متابعة خطط العملاء، التنبيهات الغذائية، والوصول إلى مكتبة الوجبات."
         actions={
-          <Link to="/admin/nutrition" className="cc-btn cc-btn--ghost">
-            مكتبة الوجبات
+          <Link to="/admin/nutrition/templates" className="cc-btn cc-btn--primary">
+            قوالب التغذية
           </Link>
         }
       />
@@ -77,7 +81,9 @@ function NutritionOperationsPage() {
               <span className="cc-directory-summary__label">خطط نشطة</span>
               <strong className="cc-directory-summary__value">{quickStatus.activePlans}</strong>
               {quickStatus.fromSample ? (
-                <span className="cc-directory-summary__hint">من {quickStatus.sampleSize} عميل محمّل</span>
+                <span className="cc-directory-summary__hint">
+                  من {quickStatus.sampleSize} عميل محمّل
+                </span>
               ) : null}
             </article>
             <article className="cc-directory-summary__card cc-directory-summary__card--attention">
@@ -95,6 +101,9 @@ function NutritionOperationsPage() {
 
           <h2 className="cc-section__title cc-section__title--spaced">وصول سريع</h2>
           <div className="cc-ops-quick-links">
+            <Link to="/admin/nutrition/templates" className="cc-btn cc-btn--primary">
+              قوالب التغذية
+            </Link>
             <Link to="/admin/clients" className="cc-btn">
               عمليات العملاء
             </Link>

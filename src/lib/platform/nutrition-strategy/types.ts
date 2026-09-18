@@ -86,11 +86,7 @@ export type NutritionSlotKey =
   | "post_workout"
   | "dinner";
 
-export type NutritionSlotState =
-  | "ACTIVE"
-  | "OPTIONAL"
-  | "SATISFIED_BY_OTHER_MEAL"
-  | "NOT_REQUIRED";
+export type NutritionSlotState = "ACTIVE" | "OPTIONAL" | "SATISFIED_BY_OTHER_MEAL" | "NOT_REQUIRED";
 
 export type NutritionSlotRole =
   | "PRIMARY_MEAL"
@@ -109,6 +105,8 @@ export type NutritionDayContext = {
   training_time?: TrainingTimeBucket;
   session_time?: string;
   training_demand?: "LOW" | "MODERATE" | "HIGH";
+  training_meal_window?: import("./nutrition-template-contract").TrainingMealWindow;
+  force_six_meals?: boolean;
 };
 
 export type NutritionSlot = {

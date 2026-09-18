@@ -3,6 +3,7 @@ import {
   Activity,
   BarChart3,
   Bell,
+  Bot,
   ClipboardList,
   CreditCard,
   Crown,
@@ -12,8 +13,11 @@ import {
   LayoutGrid,
   MessageSquare,
   Palette,
+  Percent,
   ScrollText,
+  Settings2,
   Shield,
+  Siren,
   TrendingUp,
   Users,
   UtensilsCrossed,
@@ -36,6 +40,10 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   audit: ScrollText,
   notifications: Bell,
   analytics: BarChart3,
+  automation: Bot,
+  commercial: Percent,
+  alerts: Siren,
+  "product-settings": Settings2,
 };
 
 export function adminNavIcon(id: string): LucideIcon {

@@ -14,7 +14,8 @@ function inferRegions(muscleFocus: string | null, externalIds: string[]): string
   if (focus.includes("صدر")) regions.add("CHEST");
   if (focus.includes("ظهر")) regions.add("UPPER_BACK");
   if (focus.includes("كتف") || focus.includes("أكتاف")) regions.add("SHOULDERS");
-  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ")) regions.add("QUADRICEPS");
+  if (focus.includes("رجل") || focus.includes("أرجل") || focus.includes("فخذ"))
+    regions.add("QUADRICEPS");
   if (focus.includes("باي")) regions.add("BICEPS");
   if (focus.includes("تراي")) regions.add("TRICEPS");
   for (const id of externalIds) {
@@ -30,7 +31,10 @@ function inferRegions(muscleFocus: string | null, externalIds: string[]): string
   return [...regions];
 }
 
-function exercisePriority(index: number, total: number): ContinuityProgramDay["exercises"][number]["priority"] {
+function exercisePriority(
+  index: number,
+  total: number,
+): ContinuityProgramDay["exercises"][number]["priority"] {
   if (index === 0) return "PRIMARY";
   if (index === 1 && total > 2) return "IMPORTANT";
   if (index >= total - 1 && total >= 4) return "OPTIONAL";
@@ -38,9 +42,13 @@ function exercisePriority(index: number, total: number): ContinuityProgramDay["e
 }
 
 export function programDaysFromRuntime(runtime: ClientTrainingRuntime): ContinuityProgramDay[] {
-  const workoutDays = runtime.days.filter((day) => day.day_type === "workout" && day.exercises.length > 0);
+  const workoutDays = runtime.days.filter(
+    (day) => day.day_type === "workout" && day.exercises.length > 0,
+  );
   return runtime.days.map((day) => {
-    const workoutIndex = workoutDays.findIndex((item) => (item.day_id ?? String(item.day_number)) === (day.day_id ?? String(day.day_number)));
+    const workoutIndex = workoutDays.findIndex(
+      (item) => (item.day_id ?? String(item.day_number)) === (day.day_id ?? String(day.day_number)),
+    );
     const ids = day.exercises.map((exercise) => exercise.external_id);
     const sets = day.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
     return {
@@ -56,7 +64,8 @@ export function programDaysFromRuntime(runtime: ClientTrainingRuntime): Continui
         priority: exercisePriority(index, day.exercises.length),
       })),
       estimatedMinutes: day.estimated_minutes,
-      demand: sets >= 14 || (day.estimated_minutes ?? 0) >= 50 ? "HIGH" : sets <= 6 ? "LOW" : "MODERATE",
+      demand:
+        sets >= 14 || (day.estimated_minutes ?? 0) >= 50 ? "HIGH" : sets <= 6 ? "LOW" : "MODERATE",
     };
   });
 }
@@ -66,8 +75,11 @@ export function runtimeDayToPlan(
   programDayId: string,
   displayWeekday: WeekdayId,
 ): WeekdayWorkoutPlan {
-  const day = runtime.days.find((item) => (item.day_id ?? `day-${item.day_number}`) === programDayId);
-  if (!day || day.day_type !== "workout" || day.exercises.length === 0) return emptyRestPlan(displayWeekday);
+  const day = runtime.days.find(
+    (item) => (item.day_id ?? `day-${item.day_number}`) === programDayId,
+  );
+  if (!day || day.day_type !== "workout" || day.exercises.length === 0)
+    return emptyRestPlan(displayWeekday);
   const prescriptions: TodayWorkoutPrescription[] = day.exercises.map((exercise) => ({
     external_id: exercise.external_id,
     sets: exercise.sets,
@@ -100,7 +112,22 @@ export function overlayTodayPlan(input: {
   decision: ContinuityDecision;
 }): Record<WeekdayId, WeekdayWorkoutPlan> {
   if (!input.decision.next_program_day_id) return input.assignedPlans;
-  const nextPlan = runtimeDayToPlan(input.runtime, input.decision.next_program_day_id, input.todayId);
+  const todayPlan = input.assignedPlans[input.todayId];
+  if (todayPlan?.isRestDay) {
+    const displayedWorkoutCount = Object.values(input.assignedPlans).filter(
+      (plan) => !plan.isRestDay,
+    ).length;
+    const runtimeWorkoutCount = input.runtime.days.filter(
+      (day) => day.day_type === "workout" && day.exercises.length > 0,
+    ).length;
+    const targetWorkoutCount = input.runtime.assignment?.days_per_week ?? runtimeWorkoutCount;
+    if (displayedWorkoutCount >= targetWorkoutCount) return input.assignedPlans;
+  }
+  const nextPlan = runtimeDayToPlan(
+    input.runtime,
+    input.decision.next_program_day_id,
+    input.todayId,
+  );
   if (nextPlan.isRestDay) return input.assignedPlans;
   return {
     ...input.assignedPlans,
@@ -109,7 +136,7 @@ export function overlayTodayPlan(input: {
 }
 
 export function noVolumeDebt(decision: ContinuityDecision, nextPrescribedSets: number): boolean {
-  return (decision.adherence.working_sets_completed >= 0) && nextPrescribedSets > 0;
+  return decision.adherence.working_sets_completed >= 0 && nextPrescribedSets > 0;
 }
 
 export function factsFromSessionRecords(

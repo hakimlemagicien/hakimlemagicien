@@ -43,6 +43,8 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+const EMPTY_PREFERENCE_LIST: string[] = [];
+
 function plannedFromSlots(slots: MealSlot[]): MacroTotals {
   return slots.reduce(
     (sum, slot) => ({
@@ -63,6 +65,8 @@ export function useNutritionPlan(
     starterFallback?: boolean;
     breakfastGoalKey?: string | null;
     trainingMealWindow?: TrainingMealWindow | null;
+    allergens?: string[];
+    dislikedFoods?: string[];
   },
 ) {
   const queryClient = useQueryClient();
@@ -73,9 +77,11 @@ export function useNutritionPlan(
   const starterFallback = Boolean(opts?.starterFallback);
   const breakfastGoalKey = opts?.breakfastGoalKey ?? null;
   const trainingMealWindow = opts?.trainingMealWindow ?? null;
-  const [tick, setTick] = useState(0);
+  const allergens = opts?.allergens ?? EMPTY_PREFERENCE_LIST;
+  const dislikedFoods = opts?.dislikedFoods ?? EMPTY_PREFERENCE_LIST;
+  const [, setTick] = useState(0);
   const [catalogSlots, setCatalogSlots] = useState<MealSlot[]>(() =>
-    getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }),
+    getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow, allergens, dislikedFoods }),
   );
   const runtimeQuery = useAssignedNutritionRuntime(!catalogPreview);
   const refetchRuntime = runtimeQuery.refetch;
@@ -93,13 +99,17 @@ export function useNutritionPlan(
 
   useEffect(() => {
     void hydrateMealLibraryFromSupabase().then(() => {
-      setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }));
+      setCatalogSlots(
+        getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow, allergens, dislikedFoods }),
+      );
     });
-  }, [breakfastGoalKey, trainingMealWindow]);
+  }, [allergens, breakfastGoalKey, dislikedFoods, trainingMealWindow]);
 
   useEffect(() => {
-    setCatalogSlots(getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow }));
-  }, [breakfastGoalKey, trainingMealWindow]);
+    setCatalogSlots(
+      getNutritionMealSlots({ breakfastGoalKey, trainingMealWindow, allergens, dislikedFoods }),
+    );
+  }, [allergens, breakfastGoalKey, dislikedFoods, trainingMealWindow]);
 
   const useStarterCatalog =
     !catalogPreview &&
@@ -118,10 +128,7 @@ export function useNutritionPlan(
     return [];
   }, [catalogSlots, runtimeQuery.data, usesCatalogPlan]);
 
-  const localStatuses = useMemo(
-    () => getMealStatusMap(userId, dateKey, isSelectedToday),
-    [userId, dateKey, isSelectedToday, tick],
-  );
+  const localStatuses = getMealStatusMap(userId, dateKey, isSelectedToday);
 
   const statuses = useMemo(() => {
     const next = { ...localStatuses };
@@ -135,9 +142,9 @@ export function useNutritionPlan(
     return next;
   }, [isSelectedToday, localStatuses, runtimeQuery.data?.todayLogs, usesCatalogPlan]);
 
-  const choices = useMemo(() => getMealChoiceMap(userId, dateKey), [userId, dateKey, tick]);
+  const choices = getMealChoiceMap(userId, dateKey);
 
-  const shoppingChecked = useMemo(() => getShoppingChecked(userId), [userId, tick]);
+  const shoppingChecked = getShoppingChecked(userId);
 
   const macroLayers = useMemo(() => {
     if (usesCatalogPlan || runtimeQuery.data?.reason !== "ok") {
@@ -257,7 +264,9 @@ export function useNutritionPlan(
               target: nutritionTarget,
               slotKey: slotId as NutritionSlotKey,
               toExternalId: alternativeId,
-              allergy: { status: "CONFIRMED_NONE", confirmed_at: new Date().toISOString() },
+              allergy: runtime.assignment?.watch_allergens.length
+                ? { status: "KNOWN_ALLERGIES", allergens: runtime.assignment.watch_allergens }
+                : { status: "CONFIRMED_NONE", confirmed_at: new Date().toISOString() },
               dayContext: runtimeDayContext(runtime),
               sessionDate: dateKey,
             });

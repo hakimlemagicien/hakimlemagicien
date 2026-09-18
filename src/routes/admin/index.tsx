@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
+  AlertTriangle,
   ClipboardList,
+  Clock3,
   Dumbbell,
+  FileClock,
   MessageSquare,
-  Settings,
+  Megaphone,
+  Send,
   Users,
   Wallet,
   Zap,
@@ -20,8 +24,17 @@ import {
 import { AdminSkeletonRows } from "@/components/admin/AdminConfirmDialog";
 import { fetchSubmittedLeads, type AdminSubmittedLead } from "@/lib/admin-payments-api";
 import { buildAttentionQueue, sortCoachingInbox } from "@/lib/admin/admin-attention";
+import {
+  fetchAdminDashboardPulse,
+  type AdminDashboardPulse,
+} from "@/lib/admin/admin-command-center-api";
 import { listAdminAuditEvents, type AdminAuditEvent } from "@/lib/admin/admin-audit-api";
-import { fetchAdminPaymentExceptions, fetchAdminMemberSubscriptions, type AdminMemberSubscriptionRow, type AdminPaymentExceptionRow } from "@/lib/admin/admin-billing-ops-api";
+import {
+  fetchAdminPaymentExceptions,
+  fetchAdminMemberSubscriptions,
+  type AdminMemberSubscriptionRow,
+  type AdminPaymentExceptionRow,
+} from "@/lib/admin/admin-billing-ops-api";
 import { buildDashboardQuickStatus, isRecentClient } from "@/lib/admin/admin-dashboard";
 import {
   auditEventEntityLabel,
@@ -37,7 +50,14 @@ import {
   type AdminSupportTicketListItem,
 } from "@/lib/admin/admin-ops-api";
 import { searchAdminClients, type AdminClientListItem } from "@/lib/admin/admin-clients-api";
-import { dayGreeting, formatRelativeAge, personInitials, planLabel, planStatusKind, todayContextLabel } from "@/lib/admin/admin-status";
+import {
+  dayGreeting,
+  formatRelativeAge,
+  personInitials,
+  planLabel,
+  planStatusKind,
+  todayContextLabel,
+} from "@/lib/admin/admin-status";
 import { fetchCoachingInbox } from "@/lib/platform/coaching-messaging-api";
 import type { CoachingInboxRow } from "@/lib/platform/coaching-messaging";
 
@@ -61,18 +81,38 @@ const EMPTY_SNAPSHOT: AdminOperationsSnapshot = {
 
 const emptyInbox: LoadState<CoachingInboxRow[]> = { rows: [], error: null, loading: true };
 const emptyPayments: LoadState<AdminSubmittedLead[]> = { rows: [], error: null, loading: true };
-const emptySupport: LoadState<AdminSupportTicketListItem[]> = { rows: [], error: null, loading: true };
+const emptySupport: LoadState<AdminSupportTicketListItem[]> = {
+  rows: [],
+  error: null,
+  loading: true,
+};
 const emptyAudit: LoadState<AdminAuditEvent[]> = { rows: [], error: null, loading: true };
 const emptyClients: LoadState<AdminClientListItem[]> = { rows: [], error: null, loading: true };
-const emptyExceptions: LoadState<AdminPaymentExceptionRow[]> = { rows: [], error: null, loading: true };
+const emptyExceptions: LoadState<AdminPaymentExceptionRow[]> = {
+  rows: [],
+  error: null,
+  loading: true,
+};
+const EMPTY_COMMAND_PULSE: AdminDashboardPulse = {
+  new_clients_7d: 0,
+  missing_training: 0,
+  missing_nutrition: 0,
+  training_drafts: 0,
+  nutrition_drafts: 0,
+  memberships_expiring_14d: 0,
+  memberships_expired: 0,
+  active_promotions: 0,
+  operational_alerts: 0,
+};
 
 const QUICK_ACTIONS = [
   { id: "add-client", to: "/admin/clients", label: "إضافة عميل", icon: Users },
   { id: "assign-training", to: "/admin/programs", label: "تعيين برنامج", icon: Dumbbell },
   { id: "edit-nutrition", to: "/admin/nutrition", label: "تعديل تغذية", icon: ClipboardList },
   { id: "activate-membership", to: "/admin/memberships", label: "تفعيل عضوية", icon: Wallet },
+  { id: "create-promotion", to: "/admin/commercial", label: "إنشاء عرض", icon: Megaphone },
+  { id: "send-notification", to: "/admin/notifications", label: "إرسال إشعار", icon: Send },
   { id: "messages", to: "/admin/messages", label: "فتح الرسائل", icon: MessageSquare },
-  { id: "settings", to: "/admin/settings", label: "إعدادات النظام", icon: Settings },
 ] as const;
 
 function CommandCenterPage() {
@@ -87,6 +127,8 @@ function CommandCenterPage() {
   const [exceptions, setExceptions] = useState(emptyExceptions);
   const [membershipRows, setMembershipRows] = useState<AdminMemberSubscriptionRow[]>([]);
   const [membershipLoading, setMembershipLoading] = useState(true);
+  const [commandPulse, setCommandPulse] = useState<AdminDashboardPulse>(EMPTY_COMMAND_PULSE);
+  const [commandPulseLoading, setCommandPulseLoading] = useState(true);
 
   const nowRef = useRef(new Date());
 
@@ -187,6 +229,18 @@ function CommandCenterPage() {
     }
   }, []);
 
+  const loadCommandPulse = useCallback(async () => {
+    setCommandPulseLoading(true);
+    try {
+      setCommandPulse(await fetchAdminDashboardPulse());
+    } catch (err) {
+      console.error(err);
+      setCommandPulse(EMPTY_COMMAND_PULSE);
+    } finally {
+      setCommandPulseLoading(false);
+    }
+  }, []);
+
   const [booting, setBooting] = useState(true);
 
   useEffect(() => {
@@ -205,6 +259,7 @@ function CommandCenterPage() {
       loadClients(silent),
       loadExceptions(silent),
       loadMembershipSnapshot(silent),
+      loadCommandPulse(),
     ]).finally(() => {
       window.clearTimeout(bootCap);
       if (!cancelled) setBooting(false);
@@ -222,9 +277,11 @@ function CommandCenterPage() {
     loadClients,
     loadExceptions,
     loadMembershipSnapshot,
+    loadCommandPulse,
   ]);
 
-  const attentionLoading = !booting && (inbox.loading || payments.loading || support.loading || exceptions.loading);
+  const attentionLoading =
+    !booting && (inbox.loading || payments.loading || support.loading || exceptions.loading);
   const quickStatusLoading = !booting && (snapshotLoading || clients.loading);
   const now = nowRef.current;
   const attentionError = inbox.error || payments.error || support.error || exceptions.error;
@@ -280,7 +337,11 @@ function CommandCenterPage() {
     membershipSnapshot.tierCounts.essential +
     membershipSnapshot.tierCounts.premium;
   const pulseItems = [
-    { id: "messages", label: "رسائل بانتظار الرد", value: snapshot.unreadThreads + snapshot.waitingThreads },
+    {
+      id: "messages",
+      label: "رسائل بانتظار الرد",
+      value: snapshot.unreadThreads + snapshot.waitingThreads,
+    },
     { id: "subs", label: "اشتراكات تحتاج انتباه", value: snapshot.subscriptionAttention },
     { id: "pay", label: "استثناءات الدفع", value: paymentIssues },
     { id: "support", label: "تذاكر دعم مفتوحة", value: snapshot.openSupport },
@@ -315,8 +376,73 @@ function CommandCenterPage() {
 
       <DashboardQuickStatus metrics={quickStatus} loading={quickStatusLoading} />
 
+      <section
+        className="cc-command-pulse"
+        aria-labelledby="command-pulse-heading"
+        aria-busy={commandPulseLoading}
+      >
+        <div className="cc-section-head">
+          <div>
+            <h2 id="command-pulse-heading" className="cc-section__title">
+              نبض التشغيل
+            </h2>
+            <p className="cc-section-sub">
+              ما يحتاج قرارًا أو نشرًا الآن، محسوب من بيانات التطبيق الحقيقية.
+            </p>
+          </div>
+          <Link to="/admin/alerts" className="cc-section-head__link" preload={false}>
+            مركز المشاكل
+          </Link>
+        </div>
+        {commandPulseLoading ? (
+          <AdminSkeletonRows rows={2} />
+        ) : (
+          <div className="cc-command-pulse__grid">
+            <Link to="/admin/alerts" search={{ category: "program_missing" }} preload={false}>
+              <Dumbbell aria-hidden />
+              <span>بدون برنامج</span>
+              <strong>{commandPulse.missing_training.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/alerts" search={{ category: "nutrition_missing" }} preload={false}>
+              <ClipboardList aria-hidden />
+              <span>بدون تغذية</span>
+              <strong>{commandPulse.missing_nutrition.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/programs" preload={false}>
+              <FileClock aria-hidden />
+              <span>مسودات البرامج</span>
+              <strong>{commandPulse.training_drafts.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/nutrition" preload={false}>
+              <FileClock aria-hidden />
+              <span>مسودات التغذية</span>
+              <strong>{commandPulse.nutrition_drafts.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/memberships" preload={false}>
+              <Clock3 aria-hidden />
+              <span>تنتهي خلال 14 يومًا</span>
+              <strong>{commandPulse.memberships_expiring_14d.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/commercial" preload={false}>
+              <Megaphone aria-hidden />
+              <span>عروض فعّالة</span>
+              <strong>{commandPulse.active_promotions.toLocaleString("ar-AE")}</strong>
+            </Link>
+            <Link to="/admin/alerts" preload={false}>
+              <AlertTriangle aria-hidden />
+              <span>تنبيهات تشغيلية</span>
+              <strong>{commandPulse.operational_alerts.toLocaleString("ar-AE")}</strong>
+            </Link>
+          </div>
+        )}
+      </section>
+
       <div className="cc-ops-split">
-        <section className="cc-card cc-ops-card cc-ops-card--pulse" aria-labelledby="membership-pulse-heading" aria-busy={membershipLoading}>
+        <section
+          className="cc-card cc-ops-card cc-ops-card--pulse"
+          aria-labelledby="membership-pulse-heading"
+          aria-busy={membershipLoading}
+        >
           <div className="cc-section-head">
             <div>
               <h2 id="membership-pulse-heading" className="cc-section__title">
@@ -379,7 +505,11 @@ function CommandCenterPage() {
             {audit.error ? (
               <div className="cc-inline-alert" role="alert">
                 <span>{audit.error}</span>
-                <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadAudit()}>
+                <button
+                  type="button"
+                  className="cc-btn cc-btn--ghost cc-btn--compact"
+                  onClick={() => void loadAudit()}
+                >
                   إعادة المحاولة
                 </button>
               </div>
@@ -439,7 +569,11 @@ function CommandCenterPage() {
           {attentionError ? (
             <div className="cc-inline-alert" role="alert">
               <span>تعذر تحديث بعض البيانات.</span>
-              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={retryAttention}>
+              <button
+                type="button"
+                className="cc-btn cc-btn--ghost cc-btn--compact"
+                onClick={retryAttention}
+              >
                 إعادة المحاولة
               </button>
             </div>
@@ -451,19 +585,30 @@ function CommandCenterPage() {
           {clients.error ? (
             <div className="cc-inline-alert" role="alert">
               <span>{clients.error}</span>
-              <button type="button" className="cc-btn cc-btn--ghost cc-btn--compact" onClick={() => void loadClients()}>
+              <button
+                type="button"
+                className="cc-btn cc-btn--ghost cc-btn--compact"
+                onClick={() => void loadClients()}
+              >
                 إعادة المحاولة
               </button>
             </div>
           ) : null}
           {!clients.loading && !clients.error && newClients.length === 0 ? (
-            <AdminEmptyState title="لا عملاء جدد في آخر 7 أيام." body="يُعرض هنا من السجل الحالي فقط." />
+            <AdminEmptyState
+              title="لا عملاء جدد في آخر 7 أيام."
+              body="يُعرض هنا من السجل الحالي فقط."
+            />
           ) : null}
           {newClients.length > 0 ? (
             <ul className="cc-compact-list">
               {newClients.slice(0, 7).map((row) => (
                 <li key={row.id}>
-                  <Link to="/admin/clients/$clientId" params={{ clientId: row.id }} className="cc-compact-list__item">
+                  <Link
+                    to="/admin/clients/$clientId"
+                    params={{ clientId: row.id }}
+                    className="cc-compact-list__item"
+                  >
                     <span className="cc-compact-list__avatar" aria-hidden>
                       {personInitials(row.fullName || row.email)}
                     </span>
@@ -505,4 +650,3 @@ function CommandCenterPage() {
     </div>
   );
 }
-
