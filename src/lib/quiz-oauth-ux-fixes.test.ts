@@ -30,6 +30,10 @@ assert(!quiz.includes("training-env-anywhere"), "anywhere asset import removed")
 assert(quiz.includes("oauthSession ? null"), "OAuth hides email field");
 assert(quiz.includes("userHasOAuthIdentity"), "OAuth identity detection in quiz");
 assert(onboardingApi.includes("syncOnboardingDisplayName"), "quiz name sync helper");
+assert(
+  onboardingApi.includes("data: { [PASSWORD_SET_META_KEY]: false }"),
+  "email OTP accounts persist the password-required gate in Auth metadata",
+);
 
 // 4) OAuth password skip
 assert(onboarding.includes("oauthSkipping"), "CreatePassword OAuth skip");

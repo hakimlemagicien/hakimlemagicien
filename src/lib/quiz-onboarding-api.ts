@@ -195,6 +195,9 @@ export async function sendEmailVerificationOtp(email: string): Promise<void> {
     options: {
       shouldCreateUser: true,
       emailRedirectTo: getQuizVerifyEmailRedirectUrl(),
+      // Persist the gate in Auth so verification on a different phone/device
+      // cannot enter /app before the password-creation step.
+      data: { [PASSWORD_SET_META_KEY]: false },
     },
   });
   if (error) throw error;

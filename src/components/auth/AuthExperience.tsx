@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PASSWORD_SET_META_KEY, clearPasswordRequiredLocally } from "@/lib/auth-password-gate";
+import {
+  cleanPasswordFlowLocation,
+  getPasswordFlowIntent,
+  passwordRecoveryRedirectUrl,
+  type PasswordFlowIntent,
+} from "@/lib/auth-flow-intent";
 import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { translateAuthError } from "@/lib/auth-error-ar";
 import { clearOnboardingClientState } from "@/lib/quiz-onboarding-api";
@@ -32,14 +38,6 @@ const SHOW_APPLE_LOGIN = false;
 type AuthMode = "signin" | "set-password";
 type AuthStage = "welcome" | "login" | "quiz";
 
-function getAuthCallbackType(): "invite" | "recovery" | null {
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const searchParams = new URLSearchParams(window.location.search);
-  const type = hashParams.get("type") ?? searchParams.get("type");
-  if (type === "invite" || type === "recovery") return type;
-  return null;
-}
-
 type AuthExperienceProps = {
   startOnLogin?: boolean;
   /** Safe admin return path from /auth?redirect=/admin... */
@@ -52,6 +50,7 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
   const [stage, setStage] = useState<AuthStage>(startOnLogin ? "login" : "welcome");
   const stageRef = useRef(stage);
   stageRef.current = stage;
+  const passwordFlowRef = useRef(false);
 
   async function goAfterAuth(user: Parameters<typeof resolveAuthenticatedDestination>[0]) {
     const destination = await resolveAuthenticatedDestination(user, { redirect: postLoginRedirect });
@@ -70,12 +69,24 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [passwordIntent, setPasswordIntent] = useState<PasswordFlowIntent | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function bootstrap() {
       const searchParams = new URLSearchParams(window.location.search);
+      const passwordIntent = getPasswordFlowIntent(window.location.href);
+      if (passwordIntent) {
+        // Set the ref before exchanging a PKCE code: Supabase may emit SIGNED_IN
+        // synchronously, and that event must never redirect past this form.
+        passwordFlowRef.current = true;
+        if (!cancelled) {
+          setPasswordIntent(passwordIntent);
+          setMode("set-password");
+          setStage("login");
+        }
+      }
       const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
       if (oauthError) {
         if (!cancelled) {
@@ -99,8 +110,7 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
         if (exchangeError && !cancelled) setError(translateAuthError(exchangeError));
       }
 
-      const callbackType = getAuthCallbackType();
-      if (callbackType) {
+      if (passwordIntent) {
         const { error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
           if (!cancelled) setError(translateAuthError(sessionError));
@@ -113,7 +123,7 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
       }
 
       const { data } = await supabase.auth.getSession();
-      if (!cancelled && data.session && mode !== "set-password" && stageRef.current !== "quiz") {
+      if (!cancelled && data.session && !passwordFlowRef.current && stageRef.current !== "quiz") {
         if (!cancelled) await goAfterAuth(data.session.user);
       }
       if (!cancelled) setReady(true);
@@ -122,15 +132,17 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
     void bootstrap();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      const callbackType = getAuthCallbackType();
-      if (callbackType === "invite" || callbackType === "recovery" || event === "PASSWORD_RECOVERY") {
+      const passwordIntent = getPasswordFlowIntent(window.location.href);
+      if (passwordFlowRef.current || passwordIntent || event === "PASSWORD_RECOVERY") {
+        passwordFlowRef.current = true;
+        setPasswordIntent((current) => passwordIntent ?? current ?? "recovery");
         setMode("set-password");
         setStage("login");
         return;
       }
       // Quiz onboarding owns routing after email OTP. Do not dump the client into /app.
       if (stageRef.current === "quiz") return;
-      if (session && mode !== "set-password") {
+      if (session && !passwordFlowRef.current) {
         void goAfterAuth(session.user).then(() => {
           if (stageRef.current === "quiz") return;
         });
@@ -141,7 +153,7 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [navigate, mode, postLoginRedirect]);
+  }, [navigate, postLoginRedirect]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,7 +170,9 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
         });
         if (updateError) throw updateError;
         clearPasswordRequiredLocally();
-        window.history.replaceState(null, "", window.location.pathname);
+        passwordFlowRef.current = false;
+        setPasswordIntent(null);
+        window.history.replaceState(null, "", cleanPasswordFlowLocation(window.location.href));
         const { data } = await supabase.auth.getUser();
         if (data.user) {
           await goAfterAuth(data.user);
@@ -188,7 +202,7 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
     setLoading(true);
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: passwordRecoveryRedirectUrl(window.location.origin),
       });
       if (resetError) throw resetError;
       setNotice("أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك.");
@@ -347,10 +361,14 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
             <span className="auth-login__handle" aria-hidden />
             {mode === "set-password" ? (
               <>
-                <h2>إنشاء كلمة المرور</h2>
-                <p>
-                  تم تأكيد اشتراكك. اختر كلمة مرور للوصول إلى <b>برنامجك</b>.
-                </p>
+                <h2>{passwordIntent === "recovery" ? "تعيين كلمة مرور جديدة" : "إنشاء كلمة المرور"}</h2>
+                {passwordIntent === "recovery" ? (
+                  <p>اختر كلمة مرور جديدة، ثم احفظها للعودة إلى حسابك بأمان.</p>
+                ) : (
+                  <p>
+                    تم تأكيد اشتراكك. اختر كلمة مرور للوصول إلى <b>برنامجك</b>.
+                  </p>
+                )}
               </>
             ) : (
               <>

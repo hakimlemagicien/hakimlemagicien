@@ -36,6 +36,8 @@ const pendingVersions = new Set([
   "20260918104000",
   "20260918105000",
   "20260920120000",
+  "20260920150000",
+  "20260920151000",
 ]);
 
 const allMigrationFiles = readdirSync(migrationsDir)

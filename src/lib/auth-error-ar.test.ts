@@ -53,7 +53,7 @@ assert.equal(female.subtitle.includes("أدخلي"), true, "female أدخلي");
 assert.equal(female.subtitle.includes("تحصلي"), true, "female تحصلي");
 
 const authExperience = readFileSync(resolve(process.cwd(), "src/components/auth/AuthExperience.tsx"), "utf8");
-assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/auth`'), true, "oauth callback is /auth");
+assert.equal(authExperience.includes("passwordRecoveryRedirectUrl(window.location.origin)"), true, "recovery keeps explicit flow intent");
 assert.equal(authExperience.includes('redirectTo: `${window.location.origin}/app`'), false, "oauth does not callback /app");
 assert.equal(authExperience.includes('onOAuth("google")'), true, "google button wired");
 assert.equal(authExperience.includes("SHOW_APPLE_LOGIN = false"), true, "apple login deferred in UI");
