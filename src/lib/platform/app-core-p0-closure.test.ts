@@ -28,6 +28,8 @@ assert(layout.includes("useNutritionAutoAssign"), "journey-ready layout wires nu
 assert(layout.includes('journey.data?.phase === "ready"'), "auto assign waits for preparation completion");
 assert(layout.includes("journey.data.trainingMealWindow"), "auto assign requires training meal window");
 assert(hook.includes('queryKey: ["client-nutrition-runtime"]'), "runtime refreshes after assignment");
+assert(hook.includes('input.userId === "guest"'), "placeholder guest identity cannot consume the assignment attempt");
+assert(hook.includes("attemptedUserRef.current === input.userId"), "assignment attempt is scoped to the authenticated user");
 assert(autoAssign.includes("client_auto_assign_my_nutrition"), "client calls self-only assignment RPC");
 assert(!autoAssign.includes("admin_assign_nutrition_template"), "auto assign has no Admin dependency");
 assert(autoAssign.includes('source !== "supabase"'), "assignment fails closed without live catalog");

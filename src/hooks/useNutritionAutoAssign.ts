@@ -11,7 +11,7 @@ export function useNutritionAutoAssign(input: {
   trainingMealWindow: TrainingMealWindow | null | undefined;
 }) {
   const queryClient = useQueryClient();
-  const attemptedRef = useRef(false);
+  const attemptedUserRef = useRef<string | null>(null);
   const mutation = useMutation({
     mutationKey: NUTRITION_AUTO_ASSIGN_KEY,
     mutationFn: () =>
@@ -25,9 +25,19 @@ export function useNutritionAutoAssign(input: {
   });
 
   useEffect(() => {
-    if (!input.enabled || !input.userId || !input.trainingMealWindow) return;
-    if (attemptedRef.current || mutation.isPending || mutation.isSuccess) return;
-    attemptedRef.current = true;
+    // usePlatformActivity starts with the local-only "guest" identity while
+    // Supabase restores the real session. Never consume the one automatic
+    // attempt for that placeholder; wait for the authenticated UUID.
+    if (
+      !input.enabled ||
+      !input.userId ||
+      input.userId === "guest" ||
+      !input.trainingMealWindow
+    ) {
+      return;
+    }
+    if (attemptedUserRef.current === input.userId || mutation.isPending) return;
+    attemptedUserRef.current = input.userId;
     mutation.mutate();
   }, [input.enabled, input.trainingMealWindow, input.userId, mutation]);
 
