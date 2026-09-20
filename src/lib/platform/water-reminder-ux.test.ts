@@ -13,6 +13,7 @@ const settings = readFileSync(
   "utf8",
 );
 const styles = readFileSync(join(root, "src/styles.css"), "utf8");
+const audio = readFileSync(join(root, "src/lib/platform/water-audio.ts"), "utf8");
 
 assert(component.includes("water-reminder-banner"), "top reminder banner exists");
 assert(!component.includes('role="dialog"'), "recurring reminder is not a modal dialog");
@@ -26,5 +27,8 @@ assert(context.includes("waterReminderSound"), "sound preference is respected");
 assert(settings.includes("waterReminders: boolean"), "reminder on/off control remains available");
 assert(settings.includes("waterReminderSound: boolean"), "sound on/off control is available");
 assert(styles.includes("width: min(calc(100% - 24px), 430px)"), "banner is mobile width-safe");
+assert(audio.includes("WATER_POUR_DURATION_SECONDS = 1.1"), "pour duration is short and calm");
+assert(audio.includes("pourIntoGlass(ctx, ctx.currentTime)"), "reminder uses the glass-pour sound");
+assert(audio.includes("source.loop = false"), "pour sound never loops");
 
 console.log("water-reminder-ux.test.ts: PASS");

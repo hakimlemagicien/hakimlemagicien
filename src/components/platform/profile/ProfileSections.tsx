@@ -471,7 +471,7 @@ export function ProfileNotificationsSection({
         />
         <SettingSwitch
           label="صوت تذكير الماء"
-          description="صوت قطرة خفيف مرة واحدة"
+          description="صوت سكب ماء في كأس مرة واحدة"
           checked={prefs.waterReminderSound}
           onCheckedChange={(v) => onChange({ waterReminderSound: v })}
         />
