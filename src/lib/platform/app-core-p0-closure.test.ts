@@ -32,6 +32,7 @@ assert(hook.includes('input.userId === "guest"'), "placeholder guest identity ca
 assert(hook.includes("attemptedUserRef.current === input.userId"), "assignment attempt is scoped to the authenticated user");
 assert(autoAssign.includes("client_auto_assign_my_nutrition"), "client calls self-only assignment RPC");
 assert(!autoAssign.includes("admin_assign_nutrition_template"), "auto assign has no Admin dependency");
+assert(!autoAssign.includes("const rpc = supabase.rpc"), "Supabase RPC keeps its client receiver binding");
 assert(autoAssign.includes('source !== "supabase"'), "assignment fails closed without live catalog");
 
 assert(migration.includes("auth.uid()"), "RPC binds assignment to authenticated user");

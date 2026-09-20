@@ -79,11 +79,16 @@ export async function runNutritionAutoAssignment(input: {
   });
   if (isFailClosed(payload)) return { status: "blocked", reasonCode: payload.code };
 
-  const rpc = supabase.rpc as unknown as (
-    name: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message?: string } | null }>;
-  const { data, error } = await rpc("client_auto_assign_my_nutrition", {
+  // Keep the Supabase client as the method receiver. Detaching `rpc` from the
+  // client loses its internal REST binding in the browser production bundle.
+  const { data, error } = await (
+    supabase as unknown as {
+      rpc: (
+        name: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown; error: { message?: string } | null }>;
+    }
+  ).rpc("client_auto_assign_my_nutrition", {
     p_payload: payload as unknown as Record<string, unknown>,
   });
   if (error) throw new Error(error.message || "nutrition_auto_assign_failed");
