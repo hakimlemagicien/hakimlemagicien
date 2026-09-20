@@ -86,29 +86,63 @@ export function buildMealCandidatePool(input: {
     .sort((a, b) => a.external_id.localeCompare(b.external_id));
 }
 
-function scoreCandidate(
-  macros: MacroTotals,
-  target: NutritionTarget,
-  slotBudget: MacroTotals,
-  varietyPen: number,
-): number {
-  const relative = (actual: number, expected: number) =>
-    (Math.abs(actual - expected) / Math.max(expected, 1)) * 100;
-  const calDist = relative(macros.calories, slotBudget.calories);
-  const proDist = relative(macros.protein_g, slotBudget.protein_g);
-  const carbDist = relative(macros.carbs_g, slotBudget.carbs_g);
-  const fatDist = relative(macros.fat_g, slotBudget.fat_g);
-  return calDist + proDist * 1.5 + carbDist * 0.8 + fatDist * 0.8 + varietyPen;
+function addTotals(a: MacroTotals, b: MacroTotals): MacroTotals {
+  return {
+    calories: a.calories + b.calories,
+    protein_g: a.protein_g + b.protein_g,
+    carbs_g: a.carbs_g + b.carbs_g,
+    fat_g: a.fat_g + b.fat_g,
+  };
 }
 
-function slotBudget(target: NutritionTarget, activeSlots: number): MacroTotals {
-  const n = Math.max(activeSlots, 1);
-  return {
-    calories: Math.round(target.calories / n),
-    protein_g: Math.round((target.protein_g / n) * 10) / 10,
-    carbs_g: Math.round((target.carbs_g / n) * 10) / 10,
-    fat_g: Math.round((target.fat_g / n) * 10) / 10,
+const EMPTY_TOTALS: MacroTotals = { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+
+function relativeDistance(actual: number, expected: number): number {
+  return (Math.abs(actual - expected) / Math.max(expected, 1)) * 100;
+}
+
+function wholeDayScore(totals: MacroTotals, target: NutritionTarget, varietyPen: number): number {
+  const proteinPct = (totals.protein_g / Math.max(target.protein_g, 1)) * 100;
+  const proteinBandPenalty = proteinPct < 95 || proteinPct > 110 ? 1000 : 0;
+  return (
+    proteinBandPenalty +
+    relativeDistance(totals.protein_g, target.protein_g) * 3 +
+    relativeDistance(totals.calories, target.calories) * 8 +
+    relativeDistance(totals.carbs_g, target.carbs_g) * 5 +
+    relativeDistance(totals.fat_g, target.fat_g) * 8 +
+    varietyPen * 0.1
+  );
+}
+
+type CandidateOption = { meal: MealLibraryRecord; servings: number; macros: MacroTotals; variety: number };
+type MacroRange = { min: MacroTotals; max: MacroTotals };
+
+function rangeBoundScore(
+  totals: MacroTotals,
+  target: NutritionTarget,
+  remaining: MacroRange,
+  varietyPen: number,
+  completedSlots: number,
+  totalSlots: number,
+): number {
+  const keys = ["calories", "protein_g", "carbs_g", "fat_g"] as const;
+  const weights: Record<(typeof keys)[number], number> = {
+    calories: 8,
+    protein_g: 3,
+    carbs_g: 5,
+    fat_g: 8,
   };
+  let score = varietyPen * 0.1;
+  for (const key of keys) {
+    const min = totals[key] + remaining.min[key];
+    const max = totals[key] + remaining.max[key];
+    const desired = target[key];
+    const nearest = desired < min ? min : desired > max ? max : desired;
+    score += relativeDistance(nearest, desired) * weights[key];
+    const progressTarget = desired * (completedSlots / Math.max(totalSlots, 1));
+    score += relativeDistance(totals[key], progressTarget) * weights[key] * 0.15;
+  }
+  return score;
 }
 
 export function optimizeWholeDay(input: {
@@ -123,17 +157,10 @@ export function optimizeWholeDay(input: {
   const activeSlots = input.slots.filter(
     (s) => s.slot_state === "ACTIVE" || s.slot_state === "OPTIONAL",
   );
-  const budget = slotBudget(input.target, activeSlots.length);
   const catalog = input.catalog ?? getMealLibraryCatalog();
 
-  type PartialDay = { meals: AssignedMeal[]; score: number };
-  let beam: PartialDay[] = [{ meals: [], score: 0 }];
-
-  for (const slot of input.slots) {
-    if (slot.slot_state === "NOT_REQUIRED" || slot.slot_state === "SATISFIED_BY_OTHER_MEAL") {
-      continue;
-    }
-
+  const candidateCounts: Partial<Record<NutritionSlotKey, number>> = {};
+  const slotOptions = activeSlots.map((slot) => {
     const pool = buildMealCandidatePool({
       slot_key: slot.slot_key,
       goal_profile: input.goal_profile,
@@ -141,29 +168,93 @@ export function optimizeWholeDay(input: {
       restrictions: input.restrictions,
       catalog,
     });
+    candidateCounts[slot.slot_key] = pool.length;
+    return {
+      slot,
+      options: pool.flatMap((meal) =>
+        servingStepsForMealType(meal.meal_type).map((servings) => ({
+          meal,
+          servings,
+          macros: scaleMealMacros(meal, servings),
+          variety: varietyPenalty(meal.meal_type, meal.external_id, input.history),
+        })),
+      ),
+    };
+  });
+
+  if (slotOptions.some(({ options }) => options.length === 0)) return null;
+
+  const suffixRanges: MacroRange[] = Array.from({ length: slotOptions.length + 1 }, () => ({
+    min: { ...EMPTY_TOTALS },
+    max: { ...EMPTY_TOTALS },
+  }));
+  for (let index = slotOptions.length - 1; index >= 0; index -= 1) {
+    const options = slotOptions[index]!.options;
+    const next = suffixRanges[index + 1]!;
+    const optionRange = (key: keyof MacroTotals, mode: "min" | "max") => {
+      const values = options.map((option) => option.macros[key]);
+      return mode === "min" ? Math.min(...values) : Math.max(...values);
+    };
+    suffixRanges[index] = {
+      min: {
+        calories: optionRange("calories", "min") + next.min.calories,
+        protein_g: optionRange("protein_g", "min") + next.min.protein_g,
+        carbs_g: optionRange("carbs_g", "min") + next.min.carbs_g,
+        fat_g: optionRange("fat_g", "min") + next.min.fat_g,
+      },
+      max: {
+        calories: optionRange("calories", "max") + next.max.calories,
+        protein_g: optionRange("protein_g", "max") + next.max.protein_g,
+        carbs_g: optionRange("carbs_g", "max") + next.max.carbs_g,
+        fat_g: optionRange("fat_g", "max") + next.max.fat_g,
+      },
+    };
+  }
+
+  type PartialDay = {
+    meals: AssignedMeal[];
+    totals: MacroTotals;
+    variety: number;
+    score: number;
+  };
+  let beam: PartialDay[] = [{ meals: [], totals: EMPTY_TOTALS, variety: 0, score: 0 }];
+
+  for (let slotIndex = 0; slotIndex < slotOptions.length; slotIndex += 1) {
+    const { slot, options } = slotOptions[slotIndex]!;
+    const remaining = suffixRanges[slotIndex + 1]!;
 
     const nextBeam: PartialDay[] = [];
     for (const partial of beam) {
-      for (const meal of pool) {
-        for (const servings of servingStepsForMealType(meal.meal_type)) {
-          const macros = scaleMealMacros(meal, servings);
-          const pen = varietyPenalty(meal.meal_type, meal.external_id, input.history);
-          const score = partial.score + scoreCandidate(macros, input.target, budget, pen);
-          nextBeam.push({
-            score,
-            meals: [
-              ...partial.meals,
-              {
-                slot_key: slot.slot_key,
-                external_id: meal.external_id,
-                meal,
-                servings,
-                serving_policy: servingPolicyForMealType(meal.meal_type),
-                macros,
-              },
-            ],
-          });
-        }
+      for (const option of options) {
+        const totals = addTotals(partial.totals, option.macros);
+        const variety = partial.variety + option.variety;
+        const score =
+          slotIndex === slotOptions.length - 1
+            ? wholeDayScore(totals, input.target, variety)
+            : rangeBoundScore(
+                totals,
+                input.target,
+                remaining,
+                variety,
+                slotIndex + 1,
+                slotOptions.length,
+              );
+        nextBeam.push({
+          score,
+          totals,
+          variety,
+          meals: [
+            ...partial.meals,
+            {
+              slot_key: slot.slot_key,
+              external_id: option.meal.external_id,
+              meal: option.meal,
+              servings: option.servings,
+              serving_policy: servingPolicyForMealType(option.meal.meal_type),
+              macros: option.macros,
+            },
+          ],
+        });
       }
     }
 
@@ -179,16 +270,14 @@ export function optimizeWholeDay(input: {
 
   const best = beam[0];
   if (!best) return null;
-
-  const planned_totals = best.meals.reduce(
-    (sum, m) => ({
-      calories: sum.calories + m.macros.calories,
-      protein_g: sum.protein_g + m.macros.protein_g,
-      carbs_g: sum.carbs_g + m.macros.carbs_g,
-      fat_g: sum.fat_g + m.macros.fat_g,
-    }),
-    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
-  );
+  const planned_totals = best.totals;
+  const diagnostics = {
+    candidate_counts: candidateCounts,
+    serving_adjustment_used: best.meals.some((meal) => meal.servings !== 1),
+    constrained_slots: activeSlots
+      .filter((slot) => (candidateCounts[slot.slot_key] ?? 0) < 3)
+      .map((slot) => slot.slot_key),
+  };
 
   const validation = validateNutritionPlan({
     target: input.target,
@@ -211,7 +300,7 @@ export function optimizeWholeDay(input: {
         validateNutritionPlan({ target: input.target, planned_totals: totals }).status !== "INVALID"
       );
     });
-    if (!relaxed) return { assigned_meals: best.meals, planned_totals, score: best.score };
+    if (!relaxed) return { assigned_meals: best.meals, planned_totals, score: best.score, diagnostics };
     const totals = relaxed.meals.reduce(
       (sum, m) => ({
         calories: sum.calories + m.macros.calories,
@@ -221,10 +310,10 @@ export function optimizeWholeDay(input: {
       }),
       { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 },
     );
-    return { assigned_meals: relaxed.meals, planned_totals: totals, score: relaxed.score };
+    return { assigned_meals: relaxed.meals, planned_totals: totals, score: relaxed.score, diagnostics };
   }
 
-  return { assigned_meals: best.meals, planned_totals, score: best.score };
+  return { assigned_meals: best.meals, planned_totals, score: best.score, diagnostics };
 }
 
 export function topDeterministicAlternatives(

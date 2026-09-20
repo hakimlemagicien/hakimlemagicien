@@ -158,6 +158,11 @@ export type NutritionPlanCandidate = {
   assigned_meals: AssignedMeal[];
   planned_totals: MacroTotals;
   score: number;
+  diagnostics?: {
+    candidate_counts: Partial<Record<NutritionSlotKey, number>>;
+    serving_adjustment_used: boolean;
+    constrained_slots: NutritionSlotKey[];
+  };
 };
 
 export type NutritionAssignmentSchema = "LEGACY_4_SLOT" | "STRATEGY_V1_DYNAMIC";

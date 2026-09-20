@@ -264,6 +264,11 @@ export function resolveNutritionDay(input: {
         message: `Strategy ${input.strategy_version ?? NUTRITION_STRATEGY_VERSION}`,
         data: { goal: input.client_goal, day_type: input.day_context.day_type },
       },
+      {
+        code: "WHOLE_DAY_QUALITY",
+        message: "Daily macro fit selected globally across all active slots",
+        data: candidate.diagnostics,
+      },
     ],
   };
 }

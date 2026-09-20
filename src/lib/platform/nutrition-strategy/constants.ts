@@ -68,4 +68,6 @@ export const PRE_POST_TIMING_HOURS = {
 export const SWAP_MAX_CALORIE_DELTA_PCT = 10;
 export const SWAP_MAX_PROTEIN_DELTA_G = 8;
 
-export const BEAM_WIDTH_PER_SLOT = 8;
+// Keep enough globally distinct partial days so a locally attractive meal does
+// not eliminate a much better six-slot daily combination.
+export const BEAM_WIDTH_PER_SLOT = 256;

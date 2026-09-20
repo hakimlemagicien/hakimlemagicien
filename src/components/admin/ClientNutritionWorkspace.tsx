@@ -797,6 +797,22 @@ export function ClientNutritionWorkspace({
               <strong>سبب قرار التغذية</strong>
               <p>{decisionTrace.reason === "ASSIGNMENT_FAILED" ? "فشل الإسناد التلقائي" : "إسناد تلقائي موثّق"} · {decisionTrace.summary}</p>
               <p>الهدف: {String(decisionTrace.metadata.goal ?? "—")} · الاستراتيجية: {String(decisionTrace.metadata.strategy_bucket ?? "—")} · نافذة التدريب: {String(decisionTrace.metadata.training_meal_window ?? "—")}</p>
+              {decisionTrace.metadata.target_macros && decisionTrace.metadata.actual_macros ? (
+                <>
+                  <p>
+                    الهدف اليومي: {Math.round(Number((decisionTrace.metadata.target_macros as Record<string, unknown>).calories ?? 0))} سعرة · P {Number((decisionTrace.metadata.target_macros as Record<string, unknown>).protein_g ?? 0)} · C {Number((decisionTrace.metadata.target_macros as Record<string, unknown>).carbs_g ?? 0)} · F {Number((decisionTrace.metadata.target_macros as Record<string, unknown>).fat_g ?? 0)}
+                  </p>
+                  <p>
+                    النتيجة الفعلية: {Math.round(Number((decisionTrace.metadata.actual_macros as Record<string, unknown>).calories ?? 0))} سعرة · P {Math.round(Number((decisionTrace.metadata.actual_macros as Record<string, unknown>).protein_g ?? 0) * 10) / 10} · C {Math.round(Number((decisionTrace.metadata.actual_macros as Record<string, unknown>).carbs_g ?? 0) * 10) / 10} · F {Math.round(Number((decisionTrace.metadata.actual_macros as Record<string, unknown>).fat_g ?? 0) * 10) / 10}
+                  </p>
+                  <p>
+                    الانحراف: سعرات {Number((decisionTrace.metadata.percentage_delta as Record<string, unknown> | undefined)?.calories ?? 0)}% · بروتين {Number((decisionTrace.metadata.percentage_delta as Record<string, unknown> | undefined)?.protein_g ?? 0)}% · كارب {Number((decisionTrace.metadata.percentage_delta as Record<string, unknown> | undefined)?.carbs_g ?? 0)}% · دهون {Number((decisionTrace.metadata.percentage_delta as Record<string, unknown> | undefined)?.fat_g ?? 0)}%
+                  </p>
+                  <p>
+                    تعديل الحصص: {decisionTrace.metadata.serving_adjustment_used ? "مستخدم" : "غير مستخدم"} · خانات محدودة المرشحين: {Array.isArray(decisionTrace.metadata.constrained_slots) && decisionTrace.metadata.constrained_slots.length > 0 ? decisionTrace.metadata.constrained_slots.map(String).join("، ") : "لا يوجد"}
+                  </p>
+                </>
+              ) : null}
               {decisionTrace.metadata.error ? <p className="cc-error-text">السبب: {String(decisionTrace.metadata.error)} · الخانة: {String(decisionTrace.metadata.failed_slot ?? "—")} · الوجبة: {String(decisionTrace.metadata.failed_meal_id ?? "—")}</p> : null}
             </div>
           ) : null}

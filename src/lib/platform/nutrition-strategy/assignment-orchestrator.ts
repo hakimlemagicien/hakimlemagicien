@@ -25,6 +25,11 @@ const SLOT_LABELS: Record<string, { ar: string; time: string }> = {
   dinner: { ar: "العشاء", time: "8:00 م" },
 };
 
+function macroDeltaPct(actual: number, target: number): number {
+  if (target <= 0) return 0;
+  return Math.round((Math.abs(actual - target) / target) * 10_000) / 100;
+}
+
 export type StrategyAssignmentSlotPayload = {
   slot_key: string;
   slot_state: string;
@@ -224,6 +229,7 @@ export function buildStrategyAssignmentPayload(input: {
     }
   }
   const firstDay = week[0] ?? resolved;
+  const qualityTrace = firstDay.decision_trace.find((entry) => entry.code === "WHOLE_DAY_QUALITY");
   const snapshot = buildResolvedSnapshot({
     day: firstDay,
     target,
@@ -263,6 +269,22 @@ export function buildStrategyAssignmentPayload(input: {
       summary: `Strategy V1 assignment for ${input.client_goal}`,
       metadata: {
         validation_status: resolved.validation_result.status,
+        target_macros: {
+          calories: target.calories,
+          protein_g: target.protein_g,
+          carbs_g: target.carbs_g,
+          fat_g: target.fat_g,
+        },
+        actual_macros: firstDay.planned_totals,
+        percentage_delta: {
+          calories: macroDeltaPct(firstDay.planned_totals.calories, target.calories),
+          protein_g: macroDeltaPct(firstDay.planned_totals.protein_g, target.protein_g),
+          carbs_g: macroDeltaPct(firstDay.planned_totals.carbs_g, target.carbs_g),
+          fat_g: macroDeltaPct(firstDay.planned_totals.fat_g, target.fat_g),
+        },
+        serving_adjustment_used: qualityTrace?.data?.serving_adjustment_used ?? false,
+        constrained_slots: qualityTrace?.data?.constrained_slots ?? [],
+        candidate_counts: qualityTrace?.data?.candidate_counts ?? {},
         slot_count: firstDay.ordered_slots.length,
         cycle_days: 7,
         deterministic: true,
