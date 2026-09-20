@@ -25,6 +25,26 @@ const profile = {
 };
 const allergy = { status: "CONFIRMED_NONE" as const, confirmed_at: "2026-09-17T00:00:00Z" };
 
+const auditedPreWorkout = getMealByExternalId("MEAL-226");
+assert.ok(auditedPreWorkout, "audited pre-workout fixture exists");
+if (auditedPreWorkout) {
+  assert.ok(
+    isConservativePreWorkoutMeal({
+      ...auditedPreWorkout,
+      qa: { ...auditedPreWorkout.qa, derived_fiber_g: undefined },
+    }),
+    "missing optional fiber does not erase an otherwise conservative pre-workout candidate",
+  );
+  assert.equal(
+    isConservativePreWorkoutMeal({
+      ...auditedPreWorkout,
+      qa: { ...auditedPreWorkout.qa, derived_fiber_g: 12 },
+    }),
+    false,
+    "known high fiber still fails the conservative pre-workout screen",
+  );
+}
+
 assert.deepEqual(NUTRITION_TEMPLATE_BUCKETS, ["FAT_LOSS", "MUSCLE_GAIN", "MAINTENANCE"]);
 assert.equal(Object.keys(NUTRITION_TEMPLATE_GOAL_OPTIONS).length, 12);
 assert.deepEqual(slotOrderForTrainingMealWindow("after_lunch"), [
@@ -108,6 +128,10 @@ const adminTrainingWindowMigration = readFileSync(
   join(root, "supabase/migrations/20260918102000_admin_nutrition_training_window.sql"),
   "utf8",
 );
+const optionalFiberMigration = readFileSync(
+  join(root, "supabase/migrations/20260920160000_nutrition_optional_fiber_guard.sql"),
+  "utf8",
+);
 const safetySetup = readFileSync(
   join(root, "src/components/platform/customer-journey/NutritionSafetySetup.tsx"),
   "utf8",
@@ -117,6 +141,11 @@ assert.ok(
   "assignment stores immutable source version",
 );
 assert.ok(migration.includes("TRAINING_TIME_REQUIRED"), "missing training time fails closed");
+assert.ok(
+  optionalFiberMigration.includes("jsonb_typeof") &&
+    optionalFiberMigration.includes("derived_fiber_g"),
+  "database validator applies the fiber ceiling only when the optional value exists",
+);
 assert.ok(
   hardening.includes("_nutrition_template_validate_curated_plan"),
   "curated 7x6 is validated server-side",

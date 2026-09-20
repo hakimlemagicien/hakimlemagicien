@@ -34,12 +34,15 @@ export function templateBucketFromObjective(
 
 export function isConservativePreWorkoutMeal(meal: MealLibraryRecord): boolean {
   const fiber = meal.qa?.derived_fiber_g;
+  // Production's managed catalog does not yet store fiber for every meal.
+  // Apply the ceiling when the value exists; never invent a value or empty the
+  // entire pre-workout pool solely because this optional field is unavailable.
+  const fiberIsManageable = typeof fiber !== "number" || fiber <= 10;
   return (
     meal.meal_type === "pre_workout" &&
     meal.carbs_g >= 20 &&
     meal.fat_g <= 15 &&
-    typeof fiber === "number" &&
-    fiber <= 10 &&
+    fiberIsManageable &&
     meal.calories <= 500 &&
     meal.serving_size <= 600
   );
