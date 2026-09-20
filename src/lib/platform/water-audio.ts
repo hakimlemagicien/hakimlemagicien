@@ -70,6 +70,7 @@ export function playWaterReminderSound() {
   const ctx = getContext();
   if (!ctx || ctx.state === "suspended") return;
   const t = ctx.currentTime;
-  drip(ctx, t, 980, 0.055);
-  drip(ctx, t + 0.18, 720, 0.045);
+  drip(ctx, t, 760, 0.035);
+  drip(ctx, t + 0.24, 610, 0.03);
+  drip(ctx, t + 0.48, 470, 0.025);
 }

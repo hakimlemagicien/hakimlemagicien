@@ -470,6 +470,12 @@ export function ProfileNotificationsSection({
           onCheckedChange={(v) => onChange({ waterReminders: v })}
         />
         <SettingSwitch
+          label="صوت تذكير الماء"
+          description="صوت قطرة خفيف مرة واحدة"
+          checked={prefs.waterReminderSound}
+          onCheckedChange={(v) => onChange({ waterReminderSound: v })}
+        />
+        <SettingSwitch
           label="إشعارات التقدم"
           checked={prefs.progressUpdates}
           onCheckedChange={(v) => onChange({ progressUpdates: v })}

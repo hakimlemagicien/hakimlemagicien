@@ -15,6 +15,7 @@ export type ProfileNotificationPrefs = {
   workoutReminders: boolean;
   mealReminders: boolean;
   waterReminders: boolean;
+  waterReminderSound: boolean;
   progressUpdates: boolean;
   challenges: boolean;
   newContent: boolean;
@@ -38,6 +39,7 @@ const DEFAULT_NOTIFICATIONS: ProfileNotificationPrefs = {
   workoutReminders: true,
   mealReminders: true,
   waterReminders: true,
+  waterReminderSound: true,
   progressUpdates: true,
   challenges: true,
   newContent: false,

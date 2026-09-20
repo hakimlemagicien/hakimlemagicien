@@ -182,7 +182,9 @@ export function WaterProvider({ children }: { children: ReactNode }) {
       }
 
       writeWaterReminderAnchor(userId, Date.now(), dateKey);
-      playWaterReminderSound();
+      if (getProfileSettings().notifications.waterReminderSound) {
+        playWaterReminderSound();
+      }
       setReminderOpen(true);
       setReminderPulse(true);
       clearPulseLater();
