@@ -79,8 +79,8 @@ const weekly = readSrc("src/lib/platform/weekly-workout-schedule.ts");
 assertEqual(resolveTrainingRuntimeLane(true), "V2_ACTIVE", "paid is V2");
 assertEqual(resolveTrainingRuntimeLane(false), "LEGACY_FREE_PREVIEW", "free is isolated");
 assert(!usesLegacyTenPercentProgression("v2"), "V2 must not use +10%");
-assert(usesLegacyTenPercentProgression("legacy_free"), "legacy free keeps +10%");
-assert(player.includes("if (!isV2)"), "player gates +10% behind !isV2");
+assert(!usesLegacyTenPercentProgression("legacy_free"), "legacy free no longer applies +10%");
+assert(player.includes("if (!isV2)"), "player keeps the isolated free-preview runtime branch");
 assert(
   !/runtimeMode === "v2"[\s\S]{0,200}getSetProgression/.test(player),
   "v2 branch does not call getSetProgression first",

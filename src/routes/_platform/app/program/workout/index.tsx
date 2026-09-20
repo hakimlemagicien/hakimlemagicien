@@ -691,14 +691,8 @@ function SessionExercisePathRow({
     return (
       <ExerciseLockedCard
         index={index}
-        name={exercise.name}
-        sets={exercise.sets}
-        volume={volume}
-        restLabel={exercise.restLabel}
-        thumbnail={thumbnail}
         isLast={isLast}
         isActive={isActive}
-        isDone={isDone}
         onUnlock={onLockedClick}
       />
     );

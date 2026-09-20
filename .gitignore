@@ -36,6 +36,9 @@ dist-ssr
 # Supabase local CLI temp state
 supabase/.temp/
 
+# Sensitive local-only pre-launch Production recovery artifacts
+.launch-backups/
+
 # Raw training-library audit PNGs (app uses optimized copies in public/exercises)
 TRAINING_LIBRARY_INVENTORY_AUDIT/assets/
 TRAINING_LIBRARY_INVENTORY_AUDIT.zip

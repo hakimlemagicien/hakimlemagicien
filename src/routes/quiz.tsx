@@ -1164,7 +1164,7 @@ function AgeScreen({
               <Calendar className="h-5 w-5" style={{ color: "#FF6B00" }} strokeWidth={2.4} />
             </div>
 
-            {/* Wheel — band and scroller share the same box (no pt offset) so number + سنة stay aligned */}
+            {/* Wheel — the selected value is rendered as one centered RTL-safe label. */}
             <div className="relative h-full overflow-hidden rounded-[28px]">
               <div
                 className="pointer-events-none absolute inset-x-4 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center"
@@ -1172,8 +1172,13 @@ function AgeScreen({
               >
                 <div className="absolute inset-x-0 top-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
                 <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "rgba(255,107,0,0.35)" }} />
-                <div className="absolute inset-y-0 end-5 flex items-center text-base font-medium text-neutral-400">
-                  سنة
+                <div
+                  className="flex items-baseline justify-center gap-2 leading-none"
+                  aria-live="polite"
+                  aria-label={`${age} سنة`}
+                >
+                  <span dir="ltr" className="text-[32px] font-black text-neutral-950">{age}</span>
+                  <span className="text-base font-bold text-neutral-500">سنة</span>
                 </div>
               </div>
 
@@ -1207,7 +1212,7 @@ function AgeScreen({
                         opacity,
                         transform: `scale(${scale})`,
                         transition: "opacity .2s, transform .2s, color .2s",
-                        color: active ? "#0A0A0A" : "#9CA3AF",
+                        color: active ? "transparent" : "#9CA3AF",
                         fontWeight: active ? 900 : 600,
                         fontSize: active ? 32 : 24,
                       }}
@@ -5031,4 +5036,3 @@ function PaymentScreen({ name, tierId, total = 14, onBack }: { name: string; tie
     />
   );
 }
-

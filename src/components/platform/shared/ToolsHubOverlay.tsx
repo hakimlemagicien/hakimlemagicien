@@ -40,14 +40,16 @@ export const TOOLS_HUB_CARDS: ToolsCard[] = [
     icon: Timer,
     tone: "bg-primary-soft text-primary",
   },
-  {
-    id: "exercise-library",
-    title: "مكتبة التمارين",
-    kind: "route",
-    to: "/app/exercises",
-    icon: Library,
-    tone: "bg-primary-soft text-primary",
-  },
+  ...(canAccessExerciseLibrary()
+    ? [{
+        id: "exercise-library",
+        title: "مكتبة التمارين",
+        kind: "route" as const,
+        to: "/app/exercises" as const,
+        icon: Library,
+        tone: "bg-primary-soft text-primary",
+      }]
+    : []),
 ];
 
 type ToolsHubOverlayProps = {
@@ -64,9 +66,7 @@ export function ToolsHubOverlay({
   onOpenCalories,
 }: ToolsHubOverlayProps) {
   const navigate = useNavigate();
-  const cards = TOOLS_HUB_CARDS.filter(
-    (card) => card.id !== "exercise-library" || canAccessExerciseLibrary(),
-  );
+  const cards = TOOLS_HUB_CARDS;
 
   const handleCard = (card: ToolsCard) => {
     onClose();

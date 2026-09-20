@@ -13,10 +13,11 @@ const migration = readFileSync(
   "utf8",
 );
 
-// 1) Age wheel: no pt-4 offset that desyncs سنة
-assert(quiz.includes("Wheel — band and scroller share the same box"), "age wheel alignment comment");
+// 1) Age wheel: selected number + سنة share one centered RTL-safe label
+assert(quiz.includes("one centered RTL-safe label"), "age wheel alignment comment");
 assert(!/relative h-full overflow-hidden rounded-\[28px\] pt-4/.test(quiz), "age wheel no pt-4");
-assert(quiz.includes("سنة"), "age unit label present");
+assert(quiz.includes('aria-label={`${age} سنة`}'), "age unit is bound to selected value");
+assert(quiz.includes('color: active ? "transparent"'), "wheel does not duplicate active value");
 
 // 2) Training environment: home + gym only in picker
 assert(quiz.includes('id: "home"'), "home option");

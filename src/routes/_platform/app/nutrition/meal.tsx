@@ -12,6 +12,7 @@ import {
 import { PlatformDetailHeader } from "@/components/platform/shared/PlatformDetailHeader";
 import { useUpgradeFlow } from "@/components/platform/upgrade/UpgradeContext";
 import { useMembership } from "@/hooks/useMembership";
+import { useFreeNutritionPreviewOptions } from "@/hooks/useFreeNutritionPreviewOptions";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
   allergenLabel,
@@ -22,10 +23,8 @@ import {
   findMealSlot,
   getTodayDateKey,
   isFreeUnlockedMealSlot,
-  resolveFreeBreakfastGoalKey,
 } from "@/lib/platform/nutrition-experience";
 import { NUTRITION_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
-import { readQuizProgress } from "@/lib/quiz-progress-storage";
 import { cn } from "@/lib/utils";
 
 type MealSearch = {
@@ -48,12 +47,14 @@ function MealDetailsPage() {
   const freePreview = !features.nutrition_plan;
   const online = useOnlineStatus();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const breakfastGoalKey = freePreview
-    ? resolveFreeBreakfastGoalKey(readQuizProgress()?.goalId)
-    : null;
+  const freeOptions = useFreeNutritionPreviewOptions(freePreview);
+  const breakfastGoalKey = freePreview ? freeOptions.breakfastGoalKey : null;
   const plan = useNutritionPlan(date, {
     catalogPreview: freePreview,
     breakfastGoalKey,
+    trainingMealWindow: freePreview ? freeOptions.trainingMealWindow : null,
+    allergens: freePreview ? freeOptions.allergens : undefined,
+    dislikedFoods: freePreview ? freeOptions.dislikedFoods : undefined,
   });
   const entry = plan.meals.find((item) => item.slot.id === mealId);
   const slot =

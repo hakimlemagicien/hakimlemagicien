@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, MessageCircle, Plus } from "lucide-react";
 import coachPortrait from "@/assets/Coach_Hakim_Branded_Profile_PNG/03_Black_Guidance.png";
-import { UpgradeCta } from "@/components/platform/shared/PlaceholderState";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Accordion,
@@ -26,11 +25,13 @@ export function SupportHub() {
       <header className="platform-section">
         <h1 className="text-xl font-black text-foreground">الدعم</h1>
         <p className="text-sm text-muted-foreground">
-          أسئلة شائعة، ودردشة خاصة مع الكوتش. واتساب قناة احتياطية فقط.
+          {canChat
+            ? "أسئلة شائعة، ودردشة خاصة مع الكوتش. واتساب قناة احتياطية فقط."
+            : "أسئلة شائعة ودعم للحساب والفوترة والخصوصية والمشاكل التقنية."}
         </p>
       </header>
 
-      <section className="support-coach-card" aria-labelledby="support-coach-title">
+      {canChat ? <section className="support-coach-card" aria-labelledby="support-coach-title">
         <div className="support-coach-card__top">
           <div className="support-coach-card__person">
             <span className="support-coach-card__avatar">
@@ -56,24 +57,12 @@ export function SupportHub() {
             </p>
           </div>
         </div>
-        {canChat ? (
-          <Link to="/app/support/chat" className="support-coach-card__cta">
-            <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-            ابدأ الدردشة
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-        ) : (
-          <div className="support-coach-card__locked">
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              دردشة الكوتش متاحة في باقتي PRO وVIP فقط. PLUS والعضوية المجانية FREE تستخدمان دعم الحساب والفوترة من صفحة التواصل.
-            </p>
-            <UpgradeCta
-              className="mt-3 w-full"
-              reason="فعّل PRO أو VIP لمتابعة Coach Hakim داخل الدردشة."
-            />
-          </div>
-        )}
-      </section>
+        <Link to="/app/support/chat" className="support-coach-card__cta">
+          <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+          ابدأ الدردشة
+          <ChevronLeft className="h-4 w-4" />
+        </Link>
+      </section> : null}
 
       <section className="rounded-3xl border border-border bg-card p-4">
         <h2 className="text-sm font-black text-foreground">دعم الحساب والفوترة والخصوصية</h2>

@@ -207,7 +207,8 @@ const pspCheckout = preparePaidCheckout({
   returnContext: buildCheckoutReturnContext("BILLING"),
   legalAccepted: true,
 });
-assert(!pspCheckout.ok || pspCheckout.ok, "T38 checkout safe without provider");
+assert(!pspCheckout.ok, "T38 checkout stays closed before provider approval");
+assert(pspCheckout.code === "PAYMENT_PROVIDER_UNAVAILABLE", "T38 launch gate fails closed");
 assert(resolveBrowserCheckoutReturn(false).trustedActivation === false, "T39 browser cannot activate");
 
 // T40 full test file self-check

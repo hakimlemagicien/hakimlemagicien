@@ -2,5 +2,5 @@
 -- Without this grant, SELECT on user_roles fails for authenticated clients (permission denied
 -- while evaluating admin SELECT policies), which blocks Admin portal access checks.
 
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO anon;
+REVOKE EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated, service_role;

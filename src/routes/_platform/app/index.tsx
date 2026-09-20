@@ -19,6 +19,7 @@ import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
+import { useAssignedNutritionRuntime } from "@/hooks/useAssignedNutritionRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { PROFILE_DETAILS_KEY, PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
 import { fetchMyProfileDetails, fetchMyTrainingProfile } from "@/lib/platform/profile-api";
@@ -34,6 +35,7 @@ import {
 import { resolveClientPresentationIdentity } from "@/lib/platform/client-presentation-identity";
 import { useLockedHeroGoalImage } from "@/hooks/useLockedHeroGoalImage";
 import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
+import { isMealSlotUnlockedByEntitlements } from "@/lib/platform/entitlements";
 import { hydrateDiscoverFromSupabase } from "@/lib/platform/discover-content-api";
 import {
   listHomeDiscoverPreview,
@@ -66,13 +68,14 @@ function useOnlineStatus() {
 }
 
 function PlatformHomePage() {
-  const { displayName, tier, is_paid, features, avatarUrl, loading, error, refreshMembership } =
+  const { displayName, tier, is_paid, features, entitlements, avatarUrl, loading, error, refreshMembership } =
     useMembership();
   const { snapshot: activity, userId } = usePlatformActivity();
   const count = activity.activityStreak;
   const hakimPoints = activity.hakimPoints;
   const isOnline = useOnlineStatus();
   const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program) && !loading);
+  const nutritionRuntimeQuery = useAssignedNutritionRuntime(!loading);
   const continuity = useProgramContinuity(runtimeQuery.data, Boolean(features?.workout_program) && !loading);
   const assignedPlans = continuity.assignedPlans;
   const assignedPlan = assignedPlans?.[continuity.todayId ?? getWeekdayIdFromDate()] ?? null;
@@ -117,6 +120,23 @@ function PlatformHomePage() {
   const goal = slot?.goal ?? "fitness";
   const clientName = resolveClientFirstName(displayName);
   const viewerGender = gender === "male" || gender === "female" ? gender : null;
+  const nextNutritionMeal = useMemo(() => {
+    const runtime = nutritionRuntimeQuery.data;
+    if (!runtime || runtime.reason !== "ok" || runtime.slots.length === 0) return null;
+    const requestedIndex = entitlements.nutrition.fullDay
+      ? Math.min(activity.mealsDone, runtime.slots.length - 1)
+      : 0;
+    const slot = runtime.slots[requestedIndex];
+    if (!slot) return null;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    if (!isMealSlotUnlockedByEntitlements(entitlements, {
+      slotId: slot.id,
+      slotIndex: requestedIndex,
+      dateKey: todayKey,
+      todayKey,
+    })) return null;
+    return { name: slot.name_ar, calories: slot.calories * slot.servings, slotLabel: slot.slot_label };
+  }, [activity.mealsDone, entitlements, nutritionRuntimeQuery.data]);
 
   useEffect(() => {
     setDiscoverViewerGender(viewerGender);
@@ -153,6 +173,14 @@ function PlatformHomePage() {
         assignedPlan,
         assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
         workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
+        nutritionState: nutritionRuntimeQuery.isLoading
+          ? "loading"
+          : nutritionRuntimeQuery.isError
+            ? "error"
+            : nutritionRuntimeQuery.data?.reason === "ok"
+              ? "ready"
+              : "missing",
+        nextNutritionMeal,
       }),
       discover: resolveHomeDiscoverPreview(discoverQuery.data ?? [], buildDiscoverPreviewItems(goal)),
     };
@@ -171,6 +199,10 @@ function PlatformHomePage() {
     assignmentReason,
     runtimeQuery.isLoading,
     continuity.decision?.action,
+    nutritionRuntimeQuery.isLoading,
+    nutritionRuntimeQuery.isError,
+    nutritionRuntimeQuery.data?.reason,
+    nextNutritionMeal,
     discoverQuery.data,
   ]);
 

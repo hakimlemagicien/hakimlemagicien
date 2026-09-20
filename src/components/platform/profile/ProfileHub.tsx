@@ -211,11 +211,13 @@ export function ProfileSupportMenu({
           title="دعم الحساب والفوترة"
           to="/contact"
         />
-        <ProfileNavRow
-          icon={<Headphones className="h-5 w-5" />}
-          title="محادثة الكوتش"
-          to={canContactCoach ? "/app/support/chat" : "/app/support"}
-        />
+        {canContactCoach ? (
+          <ProfileNavRow
+            icon={<Headphones className="h-5 w-5" />}
+            title="محادثة الكوتش"
+            to="/app/support/chat"
+          />
+        ) : null}
         <ProfileNavRow
           icon={<Shield className="h-5 w-5" />}
           title="الإعدادات والخصوصية"

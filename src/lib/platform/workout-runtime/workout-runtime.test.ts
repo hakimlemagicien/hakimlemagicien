@@ -44,12 +44,14 @@ const reduce = nextLoadAfterCalibration({ action: "REDUCE", currentLoad: 40, inc
 assertEqual(reduce.load, 37.5, "reduce steps down");
 const safety = nextLoadAfterCalibration({ action: "SAFETY_REVIEW", currentLoad: 40, incrementKg: 2.5 });
 assertEqual(safety.load, 40, "safety no increase");
-assert(usesLegacyTenPercentProgression("legacy_free"), "legacy isolated");
+assert(!usesLegacyTenPercentProgression("legacy_free"), "legacy +10% disabled");
 assert(!usesLegacyTenPercentProgression("v2"), "v2 does not use +10% path");
 
 const legacyNext = getSetProgression({ setNumber: 2, baseWeightKg: 40, lastWeightKg: 40 });
-assertEqual(legacyNext.weightKg, 44, "legacy helper still 10% for free preview");
-assertEqual(SET_WEIGHT_INCREMENT, 0.1, "legacy constant remains isolated");
+assertEqual(legacyNext.weightKg, 40, "legacy preview keeps actual prior load");
+const firstLegacySet = getSetProgression({ setNumber: 1, baseWeightKg: 40 });
+assertEqual(firstLegacySet.weightKg, 0, "first legacy set never guesses a starting load");
+assertEqual(SET_WEIGHT_INCREMENT, 0, "automatic percentage increment disabled");
 
 assert(
   !shouldShowHydrationReminder({

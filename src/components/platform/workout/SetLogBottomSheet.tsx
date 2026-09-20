@@ -102,7 +102,7 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
           <p className="mt-1 text-[10px] font-bold text-muted-foreground">معايرة — أدخل ما استخدمته فعلياً</p>
         ) : null}
         {!isV2 && currentSetNumber > 1 ? (
-          <p className="mt-1 text-[10px] font-bold text-primary">الوزن +10% · التكرارات أقل</p>
+          <p className="mt-1 text-[10px] font-bold text-muted-foreground">سجّل الوزن والتكرارات التي استخدمتها فعلياً</p>
         ) : null}
         {isV2 && calibrationAction === "KEEP" ? (
           <p className="mt-1 text-[10px] font-bold text-muted-foreground">الإبقاء على نفس الحمل</p>
@@ -480,7 +480,7 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
                     />
                   </div>
                   {!isV2 && restUpcoming.to.weightKg > 0 ? (
-                    <p className="mt-0.5 text-[10px] font-bold text-primary">رفع الوزن +10%</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-muted-foreground">الحمل السابق — عدّله حسب أدائك الفعلي</p>
                   ) : null}
                 </div>
               </div>

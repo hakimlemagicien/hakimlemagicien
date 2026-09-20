@@ -186,6 +186,9 @@ function NutritionDashboardPage() {
     return (
       <PlatformStack className="gap-3.5 pb-2">
         <NutritionHeader />
+        {/* Required safety inputs must be collected before the preparation hold
+            can hide them. Allergy is asked first, then training meal time. */}
+        <NutritionSafetySetup />
         <ProgramPreparationHoldCard
           hold={hold}
           surface="nutrition"
@@ -562,15 +565,11 @@ function MealTimelineCard({
         )}
       >
         <div aria-hidden className="flex min-w-0 flex-1 items-stretch opacity-55 blur-[5px]">
-          <div className="h-[138px] w-[138px] shrink-0 overflow-hidden bg-muted">
-            <NutritionMealImage
-              src={image}
-              alt=""
-              width={276}
-              height={276}
-              sizes="138px"
-              className="h-full w-full scale-110 object-cover"
-            />
+          <div
+            aria-hidden
+            className="relative h-[138px] w-[138px] shrink-0 overflow-hidden bg-muted"
+          >
+            <span className="absolute inset-[-18px] bg-[radial-gradient(circle_at_32%_25%,rgba(249,115,22,0.85),transparent_34%),radial-gradient(circle_at_70%_68%,rgba(34,197,94,0.55),transparent_38%),linear-gradient(145deg,#fed7aa,#78350f)] blur-[12px]" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col justify-center gap-3 px-4">
             <div className="h-3 w-24 rounded-full bg-primary/50" />

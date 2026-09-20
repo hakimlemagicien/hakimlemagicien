@@ -23,8 +23,8 @@ function ContactPage() {
       title={isEn ? "Contact & Support" : "التواصل والدعم"}
       description={
         isEn
-          ? "Account, billing, refund, technical, and privacy support are available to every member — including FREE and PLUS. Coaching Chat is a PRO/VIP feature."
-          : "دعم الحساب والفوترة والاسترداد والمشاكل التقنية والخصوصية متاح لكل الأعضاء بما فيهم FREE وPLUS. دردشة الكوتش ميزة PRO/VIP."
+          ? "Account, billing, refund, technical, and privacy support are available to every member. Human Coaching Chat is reserved for internal VIP access in public V1."
+          : "دعم الحساب والفوترة والاسترداد والمشاكل التقنية والخصوصية متاح لكل الأعضاء. دردشة الكوتش البشرية مخصصة لوصول VIP الداخلي في الإصدار العام V1."
       }
       sections={[
         {

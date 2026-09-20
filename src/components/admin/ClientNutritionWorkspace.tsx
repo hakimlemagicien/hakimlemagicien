@@ -26,6 +26,7 @@ import {
   endAdminClientNutrition,
   getAdminClientNutritionAllergy,
   getAdminClientNutritionAssignment,
+  getLatestAdminNutritionDecisionTrace,
   listAdminClientNutritionAssignments,
   listAdminClientNutritionLogs,
   publishAdminClientNutritionDraft,
@@ -33,6 +34,7 @@ import {
   setAdminClientNutritionPreferences,
   type AdminNutritionAllergyStatus,
   type AdminNutritionAssignment,
+  type AdminNutritionDecisionTrace,
   type AdminNutritionLogRow,
   type AdminNutritionSlot,
   type AdminNutritionSummary,
@@ -136,6 +138,7 @@ export function ClientNutritionWorkspace({
   onConfirm: (request: AdminConfirmRequest) => void;
 }) {
   const [detail, setDetail] = useState<AdminNutritionAssignment | null>(null);
+  const [decisionTrace, setDecisionTrace] = useState<AdminNutritionDecisionTrace | null>(null);
   const [history, setHistory] = useState<AdminNutritionSummary[]>([]);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyOffset, setHistoryOffset] = useState(0);
@@ -205,14 +208,16 @@ export function ClientNutritionWorkspace({
         knownAllergens: [] as string[],
         dislikedFoods: [] as string[],
       })),
+      getLatestAdminNutritionDecisionTrace(clientId).catch(() => null),
     ])
-      .then(async ([row, list, allergy]) => {
+      .then(async ([row, list, allergy, trace]) => {
         setHistory(list.rows);
         setHistoryTotal(list.totalCount);
         setHistoryOffset(0);
         setAllergyStatus(allergy.status);
         setAllergyKnownRaw(allergy.knownAllergens.join(", "));
         setDislikedFoodsRaw(allergy.dislikedFoods.join(", "));
+        setDecisionTrace(trace);
         const draftRow = list.rows.find((item) => item.status === "draft");
         if (draftRow) {
           const full = await getAdminClientNutritionAssignment(draftRow.id);
@@ -771,6 +776,14 @@ export function ClientNutritionWorkspace({
                 <dt>لقطة مكتملة</dt>
                 <dd>{detail.snapshot_complete ? "نعم" : "لا — بيانات ناقصة"}</dd>
               </div>
+              <div>
+                <dt>القالب المصدر</dt>
+                <dd>{String(detail.nutrition_template_snapshot?.name_ar ?? detail.source_nutrition_template_id ?? "—")} {detail.source_nutrition_template_version ? `· V${detail.source_nutrition_template_version}` : ""}</dd>
+              </div>
+              <div>
+                <dt>الهدف المحسوب</dt>
+                <dd>{detail.target ? `${Math.round(Number(detail.target.calories ?? 0))} سعرة · P ${Math.round(Number(detail.target.protein_g ?? 0))} · C ${Math.round(Number(detail.target.carbs_g ?? 0))} · F ${Math.round(Number(detail.target.fat_g ?? 0))}` : "—"}</dd>
+              </div>
             </dl>
           ) : (
             <AdminEmptyState
@@ -778,6 +791,15 @@ export function ClientNutritionWorkspace({
               body="امنح العميل برنامجاً غذائياً جاهزاً (Strategy V1) أو عيّن وجبات يدويًا لإنشاء لقطة مستقلة."
             />
           )}
+
+          {decisionTrace ? (
+            <div className="cc-inline-note" style={{ marginTop: 12 }}>
+              <strong>سبب قرار التغذية</strong>
+              <p>{decisionTrace.reason === "ASSIGNMENT_FAILED" ? "فشل الإسناد التلقائي" : "إسناد تلقائي موثّق"} · {decisionTrace.summary}</p>
+              <p>الهدف: {String(decisionTrace.metadata.goal ?? "—")} · الاستراتيجية: {String(decisionTrace.metadata.strategy_bucket ?? "—")} · نافذة التدريب: {String(decisionTrace.metadata.training_meal_window ?? "—")}</p>
+              {decisionTrace.metadata.error ? <p className="cc-error-text">السبب: {String(decisionTrace.metadata.error)} · الخانة: {String(decisionTrace.metadata.failed_slot ?? "—")} · الوجبة: {String(decisionTrace.metadata.failed_meal_id ?? "—")}</p> : null}
+            </div>
+          ) : null}
 
           <div className="cc-form-grid" style={{ marginTop: 12 }}>
             <AdminField

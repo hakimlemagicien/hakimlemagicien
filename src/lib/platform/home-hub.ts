@@ -10,7 +10,7 @@ import type { HeroGoalImage } from "@/lib/platform/hero-goal-images";
 import type { HeroGoalCardTheme } from "@/lib/platform/hero-goal-framing";
 import type { PlatformActivitySnapshot } from "@/lib/platform/platform-activity";
 import { getEmptyActivitySnapshot } from "@/lib/platform/platform-activity";
-import { DAILY_GREETING_NAME_FALLBACK, MEALS_SEED, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
+import { DAILY_GREETING_NAME_FALLBACK, WORKOUT_DAY_SEED } from "@/lib/platform/seed-content";
 import { getWeekdayIdFromDate, resolveWeekdayPlan, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { readQuizProgress } from "@/lib/quiz-progress-storage";
@@ -988,6 +988,8 @@ export function buildNextSession(input: {
   assignedPlan?: WeekdayWorkoutPlan | null;
   assignmentReason?: "ok" | "no_program" | "scheduled" | "ended" | "legacy_incomplete" | "error";
   workoutCta?: string;
+  nutritionState?: "loading" | "ready" | "missing" | "error";
+  nextNutritionMeal?: { name: string; calories: number; slotLabel: string } | null;
 }): NextSessionState {
   const activity = input.activity ?? getEmptyActivitySnapshot();
   const date = input.date ?? new Date();
@@ -995,7 +997,6 @@ export function buildNextSession(input: {
     input.assignedPlan ??
     resolveWeekdayPlan(getWeekdayIdFromDate(date), input.features.workout_program);
   const workoutDone = activity.workoutDone >= activity.workoutTotal && activity.workoutTotal > 0;
-  const nextMeal = MEALS_SEED[activity.mealsDone];
 
   if (input.features.workout_program && input.assignmentReason && input.assignmentReason !== "ok") {
     if (input.assignmentReason === "scheduled") {
@@ -1052,15 +1053,26 @@ export function buildNextSession(input: {
     };
   }
 
-  if (nextMeal && activity.mealsDone < activity.mealsTotal) {
-    const hasDish = Boolean(nextMeal.meta) && nextMeal.meta !== "لم يُسجّل بعد";
+  if (input.nutritionState === "ready" && input.nextNutritionMeal) {
+    const nextMeal = input.nextNutritionMeal;
     return {
       kind: "meal",
       eyebrow: "وجبتك التالية",
-      title: hasDish ? `${nextMeal.name} — ${nextMeal.meta}` : nextMeal.name,
-      meta: nextMeal.kcal > 0 ? `${nextMeal.kcal} سعرة` : nextMeal.meta,
+      title: `${nextMeal.slotLabel} — ${nextMeal.name}`,
+      meta: `${Math.round(nextMeal.calories)} سعرة`,
       href: "/app/nutrition",
       cta: "ابدأ الآن",
+    };
+  }
+
+  if (input.nutritionState === "missing" || input.nutritionState === "error") {
+    return {
+      kind: "meal",
+      eyebrow: "خطة التغذية",
+      title: "خطتك الغذائية قيد التجهيز",
+      meta: "لن نعرض وجبة تجريبية بدلاً من خطتك الحقيقية",
+      href: "/app/nutrition",
+      cta: "عرض الحالة",
     };
   }
 

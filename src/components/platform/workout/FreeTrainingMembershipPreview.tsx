@@ -2,6 +2,7 @@ import { Lock } from "lucide-react";
 import coachPoster from "@/assets/coach-hero.jpeg";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { FREE_TRAINING_PROMO_VIDEO_SRC } from "@/lib/platform/free-membership-v1";
+import { ExerciseLockedCard } from "@/components/platform/workout/ExerciseLockedCard";
 
 export { FREE_TRAINING_PROMO_VIDEO_SRC };
 
@@ -73,6 +74,17 @@ export function FreeSessionStructureLock({
         <p className="mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-bold leading-snug text-muted-foreground">
           🔒 {TRAINING_PRODUCT_COPY.freeSessionLockedTitle}
         </p>
+        <div className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-card">
+          {Array.from({ length: Math.max(exerciseCount, 1) }, (_, exerciseIndex) => (
+            <ExerciseLockedCard
+              key={exerciseIndex}
+              index={exerciseIndex + 1}
+              isLast={exerciseIndex === Math.max(exerciseCount, 1) - 1}
+              isActive={exerciseIndex === 0}
+              onUnlock={onUpgrade}
+            />
+          ))}
+        </div>
         <button
           type="button"
           onClick={onUpgrade}

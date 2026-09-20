@@ -20,7 +20,7 @@ function bindInboxWatch(queryClient: ReturnType<typeof useQueryClient>) {
   }, 60_000);
 }
 
-export function useCoachingInbox({ loadItems = false } = {}) {
+export function useCoachingInbox({ loadItems = false, enabled = true } = {}) {
   const queryClient = useQueryClient();
 
   const countQuery = useQuery({
@@ -32,6 +32,7 @@ export function useCoachingInbox({ loadItems = false } = {}) {
         return 0;
       }
     },
+    enabled,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
@@ -46,14 +47,15 @@ export function useCoachingInbox({ loadItems = false } = {}) {
         return [];
       }
     },
-    enabled: loadItems,
+    enabled: enabled && loadItems,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
+    if (!enabled) return;
     bindInboxWatch(queryClient);
-  }, [queryClient]);
+  }, [enabled, queryClient]);
 
   return {
     count: countQuery.data ?? 0,

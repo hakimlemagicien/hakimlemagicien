@@ -18,6 +18,7 @@ import {
   PremiumAlternativeBadge,
 } from "@/components/platform/upgrade/upgrade-ui";
 import { useMembership } from "@/hooks/useMembership";
+import { useFreeNutritionPreviewOptions } from "@/hooks/useFreeNutritionPreviewOptions";
 import { useNutritionPlan, useOnlineStatus } from "@/hooks/useNutritionPlan";
 import {
   canRecordMealSwap,
@@ -50,7 +51,14 @@ function MealAlternativesPage() {
   const online = useOnlineStatus();
   const navigate = useNavigate();
   const { mealId = "breakfast", date } = Route.useSearch();
-  const plan = useNutritionPlan(date, { catalogPreview: freePreview });
+  const freeOptions = useFreeNutritionPreviewOptions(freePreview);
+  const plan = useNutritionPlan(date, {
+    catalogPreview: freePreview,
+    breakfastGoalKey: freePreview ? freeOptions.breakfastGoalKey : null,
+    trainingMealWindow: freePreview ? freeOptions.trainingMealWindow : null,
+    allergens: freePreview ? freeOptions.allergens : undefined,
+    dislikedFoods: freePreview ? freeOptions.dislikedFoods : undefined,
+  });
   const slot = plan.meals.find((item) => item.slot.id === mealId)?.slot;
   const mealIndex = plan.meals.findIndex((item) => item.slot.id === mealId);
   const todayKey = getTodayDateKey();

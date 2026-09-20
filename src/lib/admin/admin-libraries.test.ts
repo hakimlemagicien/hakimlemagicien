@@ -340,9 +340,9 @@ assert(
 );
 
 const mealApi = readFileSync(join(root, "src/lib/platform/meal-library-api.ts"), "utf8");
-assert(mealApi.includes("overlayMealCatalog"), "client meals overlay DB onto seed");
-assert(mealApi.includes("dbMealCatalogIsV2"), "stale V1 database meals cannot overlay V2 seed");
-assert(!mealApi.includes("meals.length >= seedCount"), "full-catalog replacement gate is removed");
+assert(mealApi.includes("setMealLibraryCatalog(authoritative)"), "live DB meal catalog is authoritative");
+assert(!mealApi.includes("overlayMealCatalog(getMealLibrarySeed()"), "DB ids never merge with stale bundled ids");
+assert(mealApi.includes("empty_database_meal_catalog"), "offline seed is fallback only when DB has no usable catalog");
 
 const discoverApi = readFileSync(join(root, "src/lib/platform/discover-content-api.ts"), "utf8");
 assert(discoverApi.includes("overlayDiscoverCatalog"), "client discover overlay DB onto seed");

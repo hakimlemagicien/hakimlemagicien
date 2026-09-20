@@ -31,5 +31,6 @@ export function nextLoadAfterCalibration(input: {
 }
 
 export function usesLegacyTenPercentProgression(runtimeMode: "v2" | "legacy_free"): boolean {
-  return runtimeMode === "legacy_free";
+  void runtimeMode;
+  return false;
 }

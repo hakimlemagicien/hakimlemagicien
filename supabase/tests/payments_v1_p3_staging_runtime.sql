@@ -40,7 +40,7 @@ BEGIN
   IF ent->>'tier' <> 'free' THEN RAISE EXCEPTION 'T1 FAIL: %', ent; END IF;
 
   -- T2 Free capabilities
-  IF COALESCE((ent->'training'->>'allowed_exercises_per_session')::int, 0) <> 1 THEN
+  IF COALESCE((ent->'training'->>'allowed_exercises_per_session')::int, 0) <> 0 THEN
     RAISE EXCEPTION 'T2 FAIL training: %', ent->'training';
   END IF;
   IF COALESCE((ent->'nutrition'->>'allowed_meals_per_day')::int, 0) <> 1 THEN

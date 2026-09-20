@@ -1,14 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   setMealLibraryCatalog,
-  getMealLibrarySeed,
-  dbMealCatalogIsV2,
   type MealLibraryIngredient,
   type MealLibraryRecord,
   type MealSubstitutionProfile,
   type MealType,
 } from "@/lib/platform/meal-library";
-import { overlayMealCatalog } from "@/lib/platform/library-overlays";
 
 export type MealLibrarySource = "supabase" | "json";
 
@@ -215,16 +212,24 @@ let lastHydratedSource: MealLibrarySource = "json";
 
 export async function hydrateMealLibraryFromSupabase(): Promise<MealLibrarySource> {
   try {
-    const [meals, hidden] = await Promise.all([
-      fetchMealLibraryFromSupabase(),
-      fetchHiddenMealExternalIds(),
-    ]);
-    const dbRows = dbMealCatalogIsV2(meals) ? meals : [];
-    const overlaid = overlayMealCatalog(getMealLibrarySeed(), dbRows, hidden);
-    setMealLibraryCatalog(overlaid);
-    lastHydratedSource = dbRows.length > 0 || hidden.length > 0 ? "supabase" : "json";
+    const meals = await fetchMealLibraryFromSupabase();
+    // The database is the operational source of truth. Never merge a populated
+    // database catalog with bundled JSON by external_id: historical catalogs
+    // reused ids for different meal types, which can produce unsafe slot plans.
+    let hidden: string[] = [];
+    try {
+      hidden = await fetchHiddenMealExternalIds();
+    } catch (error) {
+      console.warn("[meal-library] hidden-key overlay unavailable", error);
+    }
+    const hiddenSet = new Set(hidden);
+    const authoritative = meals.filter((meal) => !hiddenSet.has(meal.external_id));
+    if (authoritative.length === 0) throw new Error("empty_database_meal_catalog");
+    setMealLibraryCatalog(authoritative);
+    lastHydratedSource = "supabase";
     return lastHydratedSource;
-  } catch {
+  } catch (error) {
+    console.warn("[meal-library] using bundled offline catalog", error);
     setMealLibraryCatalog(null);
     lastHydratedSource = "json";
     return lastHydratedSource;

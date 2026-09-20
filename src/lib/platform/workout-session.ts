@@ -67,12 +67,10 @@ export function formatExerciseVolume(exercise: Pick<WorkoutSessionExercise, "rep
 }
 
 /**
- * Placeholder load rule — later replaced by per-goal progression.
- * KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_5_6 — intra-set +10% is not V2 Double Progression.
- * Isolated legacy intra-set +10% helper for free-preview only.
- * V2 Workout Player must not call this. Phase 6 replaces remaining usage.
+ * Kept as a compatibility export for older consumers. Automatic percentage
+ * loading is disabled: clients record the load they actually used.
  */
-export const SET_WEIGHT_INCREMENT = 0.1;
+export const SET_WEIGHT_INCREMENT = 0;
 
 export const SET_REP_RANGES = [
   { min: 15, max: 20 },
@@ -115,13 +113,12 @@ export function getSetProgression(input: {
   lastWeightKg?: number | null;
 }): SetProgression {
   const setNumber = Math.max(1, Math.floor(input.setNumber));
-  const step = setNumber - 1;
+  // Template/suggested loads are never a safe substitute for the client's
+  // actual first-session load. Reuse only a load the client really logged.
   const fromLast =
     input.lastWeightKg != null && input.lastWeightKg > 0
-      ? input.lastWeightKg * (1 + SET_WEIGHT_INCREMENT)
-      : input.baseWeightKg > 0
-        ? input.baseWeightKg * (1 + SET_WEIGHT_INCREMENT) ** step
-        : 0;
+      ? input.lastWeightKg
+      : 0;
   const range = getSetRepRange(setNumber);
 
   return {

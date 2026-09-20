@@ -53,6 +53,9 @@ export type AdminNutritionAssignment = {
   validation_status?: string | null;
   resolved_snapshot?: Record<string, unknown> | null;
   target?: Record<string, unknown> | null;
+  source_nutrition_template_id?: string | null;
+  source_nutrition_template_version?: number | null;
+  nutrition_template_snapshot?: Record<string, unknown> | null;
   snapshot_complete: boolean;
   allergen_conflict: boolean;
   library_allergen_review: boolean;
@@ -143,6 +146,9 @@ function mapDetail(row: Record<string, unknown>): AdminNutritionAssignment {
     validation_status: (row.validation_status as string | null) ?? null,
     resolved_snapshot: (row.resolved_snapshot as Record<string, unknown> | null) ?? null,
     target: (row.target as Record<string, unknown> | null) ?? null,
+    source_nutrition_template_id: (row.source_nutrition_template_id as string | null) ?? null,
+    source_nutrition_template_version: row.source_nutrition_template_version == null ? null : num(row.source_nutrition_template_version),
+    nutrition_template_snapshot: (row.nutrition_template_snapshot as Record<string, unknown> | null) ?? null,
     snapshot_complete: Boolean(row.snapshot_complete),
     allergen_conflict: Boolean(row.allergen_conflict),
     library_allergen_review: Boolean(row.library_allergen_review),
@@ -151,6 +157,33 @@ function mapDetail(row: Record<string, unknown>): AdminNutritionAssignment {
     planned_carbs_g: num(row.planned_carbs_g),
     planned_fat_g: num(row.planned_fat_g),
     slots: ((row.slots as Record<string, unknown>[]) ?? []).map(mapSlot),
+  };
+}
+
+export type AdminNutritionDecisionTrace = {
+  reason: string;
+  summary: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export async function getLatestAdminNutritionDecisionTrace(
+  clientId: string,
+): Promise<AdminNutritionDecisionTrace | null> {
+  const { data, error } = await supabase
+    .from("nutrition_decision_traces")
+    .select("reason, summary, metadata, created_at")
+    .eq("client_id", clientId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    reason: String(data.reason),
+    summary: String(data.summary),
+    metadata: (data.metadata ?? {}) as Record<string, unknown>,
+    created_at: String(data.created_at),
   };
 }
 

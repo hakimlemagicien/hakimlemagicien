@@ -1532,8 +1532,15 @@ body.is-upgrade-open .platform-menu-drawer {
 .cc-client-preview-day-list article.is-rest { background: #f3f4f6; }
 .cc-client-preview-day-list span, .cc-client-preview-day-list small, .cc-client-preview-meals span, .cc-client-preview-meals small { color: #78716c; font-size: 9.5px; }
 .cc-client-preview-day-list strong, .cc-client-preview-meals strong { font-size: 12px; }
+.cc-client-preview-day-list article:has(.cc-client-preview-exercise-locks) { grid-template-columns:auto minmax(0,1fr) auto; }
+.cc-client-preview-exercise-locks { grid-column:1/-1; display:grid; gap:6px; }
+.cc-client-preview-exercise-locks span { display:flex; min-height:44px; align-items:center; justify-content:center; gap:6px; border-radius:12px; background:linear-gradient(110deg,#e7e5e4,#fafaf9,#e7e5e4); color:#78716c; filter:blur(.15px); }
+.cc-client-preview-exercise-locks svg { width:14px; }
 .cc-client-preview-meals article > div { display: grid; gap: 2px; }
 .cc-client-preview-meals em { color: #9a3412; font-size: 10px; font-style: normal; }
+.cc-client-preview-meals article.is-locked { background:#f5f5f4; color:#78716c; }
+.cc-client-preview-meals article.is-locked strong { display:flex; align-items:center; gap:5px; }
+.cc-client-preview-meals article.is-locked svg { width:13px; }
 .cc-client-preview-locked { display: grid; justify-items: center; gap: 8px; padding: 35px 20px; border: 1px dashed #d6d3d1; border-radius: 20px; background: #fff; text-align: center; }
 .cc-client-preview-locked svg { width: 36px; height: 36px; color: #a8a29e; }
 .cc-client-preview-locked p, .cc-preview-note { margin: 0; color: #78716c; font-size: 11px; line-height: 1.6; }
@@ -22047,5 +22054,46 @@ button.cc-directory-summary__card {
 @media (min-width: 760px) {
   .cc-command-pulse__grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Release gate: every Admin interaction must remain a real 44px touch target.
+   Keep this block last because legacy builder/content rules redefine several
+   shared controls at 32–40px later in the stylesheet. */
+@media (max-width: 960px) {
+  .cc-shell :is(button, a, input, select, textarea, [role="button"]) {
+    min-width: 44px;
+    min-height: 44px !important;
+  }
+
+  .cc-directory-summary__value a {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .cc-btn,
+  .cc-icon-btn,
+  .cc-row-btn,
+  .cc-plus-btn,
+  .cc-account__trigger,
+  .cc-tabs a,
+  .cc-tabs button,
+  .cc-concept-tabs a,
+  .cc-concept-tabs button,
+  .cc-template-tabs button,
+  .cc-cms-tabs button,
+  .cc-template-card__actions .cc-btn {
+    min-height: 44px;
+  }
+
+  .cc-icon-btn,
+  .cc-plus-btn,
+  .cc-account__trigger {
+    min-width: 44px;
+  }
+
+  .cc-tabs a,
+  .cc-tabs button {
+    line-height: 44px;
   }
 }

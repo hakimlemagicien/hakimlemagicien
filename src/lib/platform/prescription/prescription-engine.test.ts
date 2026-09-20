@@ -518,7 +518,7 @@ assert(!engineSrc.includes("GLUTES FAST"), "no regional response");
 
 const player = readFileSync(join(root, "src/hooks/useWorkoutPlayer.ts"), "utf8");
 assert(player.includes("legacy_free"), "legacy free path isolated");
-assert(player.includes("getSetProgression"), "legacy_free still has isolated +10% helper");
+assert(player.includes("getSetProgression"), "legacy_free keeps compatible actual-load handling");
 assert(!player.includes("listV2ExerciseCandidates"), "player does not load full V2 catalog");
 const today = readFileSync(join(root, "src/lib/platform/today-workout.ts"), "utf8");
 assert(today.includes("suggested_weight_kg: 40"), "free preview boundary kept");

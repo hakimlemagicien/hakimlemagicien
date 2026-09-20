@@ -6,6 +6,7 @@ import {
 } from "./checkout-request";
 import { getActivePaymentProvider } from "./provider-registry";
 import { isProviderBindingPending } from "./provider-product-map";
+import { CHECKOUT_SELF_SERVE_ENABLED } from "@/lib/platform/launch-config";
 import type {
   CheckoutReturnOutcome,
   CheckoutState,
@@ -40,6 +41,19 @@ export function preparePaidCheckout(input: CheckoutRequestInput): PrepareCheckou
       state: machine.state,
       code: requestResult.code,
       message: requestResult.message,
+    };
+  }
+
+  // Public provider checkout stays fail-closed until the launch gate is
+  // explicitly approved in source control. Environment tokens alone must not
+  // be able to expose a live checkout accidentally.
+  if (!CHECKOUT_SELF_SERVE_ENABLED) {
+    machine.transition("FAILED");
+    return {
+      ok: false,
+      state: machine.state,
+      code: "PAYMENT_PROVIDER_UNAVAILABLE",
+      message: "Self-serve checkout is disabled by the public launch gate.",
     };
   }
 

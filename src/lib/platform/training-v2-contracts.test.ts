@@ -72,7 +72,7 @@ assert(
   "skipped excluded",
 );
 
-assertEqual(SET_WEIGHT_INCREMENT, 0.1, "Phase 2 does not change +10% rule");
+assertEqual(SET_WEIGHT_INCREMENT, 0, "unsafe universal +10% rule is disabled");
 assertEqual(
   KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_5_6,
   "KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_5_6",
@@ -151,7 +151,7 @@ assert(api.includes("client_list_exercise_set_history"), "API wraps history");
 assert(!api.includes("INCREASE_LOAD"), "API has no progression engine");
 
 const player = readFileSync(join(root, "src/hooks/useWorkoutPlayer.ts"), "utf8");
-assert(player.includes("getSetProgression"), "legacy_free path may still isolate +10% helper");
+assert(player.includes("getSetProgression"), "legacy_free path keeps a compatible actual-load helper");
 assert(player.includes("ensureWorkoutSession"), "Phase 5 player uses canonical session");
 assert(player.includes("legacy_free"), "legacy free path is isolated");
 
@@ -164,7 +164,7 @@ assert(today.includes("KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_4"), "fixed loads t
 assert(today.includes("suggested_weight_kg: 40"), "visible starting loads unchanged");
 
 const sessionLib = readFileSync(join(root, "src/lib/platform/workout-session.ts"), "utf8");
-assert(sessionLib.includes("KNOWN_CRITICAL_CONFLICT_PENDING_PHASE_5_6"), "+10% tagged not removed");
+assert(sessionLib.includes("SET_WEIGHT_INCREMENT = 0"), "universal +10% progression is disabled");
 
 const types = readFileSync(join(root, "src/integrations/supabase/types.ts"), "utf8");
 assert(types.includes("workout_sessions:"), "generated types include sessions");

@@ -1,11 +1,13 @@
 /**
- * Client exercise catalog is a local-dev test surface until the media pilot ships.
- * Production members keep using /app/program/workout only.
+ * Temporary product gate: the client exercise catalog is hidden for every tier
+ * and environment until the media/content review is explicitly completed.
+ *
+ * Keep this single source of truth so the tools hub, desktop navigation and
+ * direct-route guard cannot drift apart. Admin exercise operations are not
+ * affected by this client-facing gate.
  */
-export function isLocalDevEnvironment(): boolean {
-  return import.meta.env.DEV;
-}
+export const CLIENT_EXERCISE_LIBRARY_ENABLED = false;
 
 export function canAccessExerciseLibrary(): boolean {
-  return isLocalDevEnvironment();
+  return CLIENT_EXERCISE_LIBRARY_ENABLED;
 }

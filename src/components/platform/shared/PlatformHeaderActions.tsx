@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, MessageSquare } from "lucide-react";
 import { useCoachingInbox } from "@/hooks/useCoachingInbox";
-import { formatInboxTime } from "@/lib/platform/coaching-messaging";
+import { useMembership } from "@/hooks/useMembership";
+import { canUseCoachChat, formatInboxTime } from "@/lib/platform/coaching-messaging";
 import {
   listMyProductNotifications,
   markMyProductNotificationRead,
@@ -23,10 +24,15 @@ export function NotificationsBell({
   iconClassName = "h-6 w-6",
   bellStrokeWidth = 1.8,
 }: BellButtonProps) {
+  const { features, tier } = useMembership();
+  const coachChatEnabled = canUseCoachChat(features, tier);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
-  const { count, items, refresh } = useCoachingInbox({ loadItems: open });
+  const { count, items, refresh } = useCoachingInbox({
+    loadItems: open && coachChatEnabled,
+    enabled: coachChatEnabled,
+  });
   const [productItems, setProductItems] = useState<ClientProductNotification[]>([]);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -166,18 +172,22 @@ export function PlatformHeaderActions({
   iconClassName = "h-6 w-6",
   bellStrokeWidth = 1.8,
 }: BellButtonProps) {
-  const { count } = useCoachingInbox();
+  const { features, tier } = useMembership();
+  const coachChatEnabled = canUseCoachChat(features, tier);
+  const { count } = useCoachingInbox({ enabled: coachChatEnabled });
 
   return (
     <div className={cn("relative flex shrink-0 items-center gap-2", className)}>
-      <Link
-        to="/app/support/chat"
-        aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
-        className={cn(actionClassName, "relative")}
-      >
-        <MessageSquare className={iconClassName} strokeWidth={bellStrokeWidth} />
-        {count > 0 ? <span className="platform-bell-dot" /> : null}
-      </Link>
+      {coachChatEnabled ? (
+        <Link
+          to="/app/support/chat"
+          aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
+          className={cn(actionClassName, "relative")}
+        >
+          <MessageSquare className={iconClassName} strokeWidth={bellStrokeWidth} />
+          {count > 0 ? <span className="platform-bell-dot" /> : null}
+        </Link>
+      ) : null}
       <NotificationsBell
         actionClassName={actionClassName}
         iconClassName={iconClassName}

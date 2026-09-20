@@ -3,12 +3,57 @@
 
 BEGIN;
 
-ALTER TABLE public.promo_codes
-  ADD CONSTRAINT promo_codes_plans_nonempty CHECK (cardinality(plans) > 0),
-  ADD CONSTRAINT promo_codes_terms_nonempty CHECK (cardinality(terms) > 0),
-  ADD CONSTRAINT promo_codes_plans_supported CHECK (plans <@ ARRAY['essential','premium','vip']::TEXT[]),
-  ADD CONSTRAINT promo_codes_terms_supported CHECK (terms <@ ARRAY[3,6]::INTEGER[]),
-  ADD CONSTRAINT promo_codes_percent_valid CHECK (discount_type <> 'percent' OR discount_value <= 100);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.promo_codes'::regclass
+      AND conname = 'promo_codes_plans_nonempty'
+  ) THEN
+    ALTER TABLE public.promo_codes
+      ADD CONSTRAINT promo_codes_plans_nonempty CHECK (cardinality(plans) > 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.promo_codes'::regclass
+      AND conname = 'promo_codes_terms_nonempty'
+  ) THEN
+    ALTER TABLE public.promo_codes
+      ADD CONSTRAINT promo_codes_terms_nonempty CHECK (cardinality(terms) > 0);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.promo_codes'::regclass
+      AND conname = 'promo_codes_plans_supported'
+  ) THEN
+    ALTER TABLE public.promo_codes
+      ADD CONSTRAINT promo_codes_plans_supported
+      CHECK (plans <@ ARRAY['essential','premium','vip']::TEXT[]);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.promo_codes'::regclass
+      AND conname = 'promo_codes_terms_supported'
+  ) THEN
+    ALTER TABLE public.promo_codes
+      ADD CONSTRAINT promo_codes_terms_supported
+      CHECK (terms <@ ARRAY[3,6]::INTEGER[]);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.promo_codes'::regclass
+      AND conname = 'promo_codes_percent_valid'
+  ) THEN
+    ALTER TABLE public.promo_codes
+      ADD CONSTRAINT promo_codes_percent_valid
+      CHECK (discount_type <> 'percent' OR discount_value <= 100);
+  END IF;
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.resolve_public_offer(p_plan TEXT,p_term_months INTEGER,p_code TEXT DEFAULT NULL)
 RETURNS JSONB

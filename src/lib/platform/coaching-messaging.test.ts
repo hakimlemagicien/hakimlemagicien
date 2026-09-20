@@ -8,7 +8,7 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 assert(!canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "essential"), "essential should not have coach chat");
-assert(canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "premium"), "premium should have coach chat");
+assert(!canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, limited_coach_contact: true }, "premium"), "premium should not have coach chat in public V1");
 assert(canUseCoachChat({ ...FREE_MEMBERSHIP_STATE.features, personal_followup: true }, "vip"), "vip should have coach chat");
 assert(!canUseCoachChat(FREE_MEMBERSHIP_STATE.features, "free"), "free should not have coach chat");
 assert(SUPPORT_FAQS.length >= 6, "FAQ list should remain for support hub");

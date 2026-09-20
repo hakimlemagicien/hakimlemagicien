@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useRouter, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter, useSearch } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import coachPortrait from "@/assets/Coach_Hakim_Branded_Profile_PNG/03_Black_Guidance.png";
 import { CoachChatComposer, type ChatComposerPayload } from "@/components/platform/support/CoachChatComposer";
 import { CoachingMessageList } from "@/components/platform/support/CoachingMessageList";
-import { UpgradeCta } from "@/components/platform/shared/PlaceholderState";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { useMembership } from "@/hooks/useMembership";
 import {
@@ -168,8 +167,12 @@ export function CoachChatPage() {
           </div>
         </header>
         <div className="coach-chat__locked">
-          <p className="text-sm text-muted-foreground">الدردشة مع الكوتش متاحة حسب صلاحيات عضويتك.</p>
-          <UpgradeCta className="mt-4" reason="فعّل برنامجك الشخصي لفتح الدردشة المباشرة مع الكوتش حكيم." />
+          <p className="text-sm text-muted-foreground">
+            دردشة الكوتش البشرية مخصصة لوصول VIP الداخلي في الإصدار العام V1، ولا تشملها باقات FREE أو PLUS أو PRO.
+          </p>
+          <Link to="/contact" className="support-coach-card__cta mt-4">
+            فتح دعم الحساب والفوترة
+          </Link>
         </div>
       </div>
     );

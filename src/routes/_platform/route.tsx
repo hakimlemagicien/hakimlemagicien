@@ -5,6 +5,7 @@ import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { useMembership } from "@/hooks/useMembership";
 import { usePaidTrainingAutoAssign } from "@/hooks/usePaidTrainingAutoAssign";
+import { useNutritionAutoAssign } from "@/hooks/useNutritionAutoAssign";
 import { useProgramPreparationHold } from "@/hooks/useProgramPreparationHold";
 import { useCustomerJourney } from "@/hooks/useCustomerJourney";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
@@ -101,6 +102,16 @@ function PlatformLayout() {
     hasWorkoutProgram,
     runtimeReason: runtimeQuery.data?.reason,
     runtimeLoading: runtimeQuery.isLoading || holdLoading,
+  });
+  // Nutrition assignment is a customer-journey operation, not an Admin action.
+  // It runs only after preparation and the safety/time inputs are complete.
+  useNutritionAutoAssign({
+    enabled:
+      Boolean(userId) &&
+      journey.data?.phase === "ready" &&
+      Boolean(journey.data.trainingMealWindow),
+    userId,
+    trainingMealWindow: journey.data?.trainingMealWindow,
   });
 
   useEffect(() => {
