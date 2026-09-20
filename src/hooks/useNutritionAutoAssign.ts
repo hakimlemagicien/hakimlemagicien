@@ -19,8 +19,14 @@ export function useNutritionAutoAssign(input: {
         userId: input.userId,
         trainingMealWindow: input.trainingMealWindow,
       }),
-    onSuccess: async () => {
+    onSuccess: async (result) => {
+      if (result.status === "blocked") {
+        console.warn("[nutrition-auto-assign] blocked", result.reasonCode);
+      }
       await queryClient.invalidateQueries({ queryKey: ["client-nutrition-runtime"] });
+    },
+    onError: (error) => {
+      console.error("[nutrition-auto-assign] failed", error);
     },
   });
 
