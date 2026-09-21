@@ -91,6 +91,21 @@ export type ExerciseStageGuide = {
   };
 };
 
+/** Applies DB-published media paths without changing instructional copy or exercise identity. */
+export function applyExerciseStageMediaOverrides(
+  guide: ExerciseStageGuide | null,
+  urls: readonly string[],
+): ExerciseStageGuide | null {
+  if (!guide || urls.length === 0) return guide;
+  return {
+    ...guide,
+    stages: guide.stages.map((stage, index) => {
+      const src = urls[index];
+      return src ? { ...stage, src, thumbSrc: src } : stage;
+    }) as ExerciseStageGuide["stages"],
+  };
+}
+
 const STAGE_DETAIL_WIDTH = 960;
 const STAGE_DETAIL_HEIGHT = 720;
 const STAGE_THUMB_WIDTH = 256;

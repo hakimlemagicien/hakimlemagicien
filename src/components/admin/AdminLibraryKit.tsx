@@ -71,6 +71,7 @@ export function AdminTextInput({
   dir,
   type = "text",
   name,
+  readOnly = false,
 }: {
   id?: string;
   name?: string;
@@ -79,6 +80,7 @@ export function AdminTextInput({
   error?: string;
   dir?: "rtl" | "ltr";
   type?: string;
+  readOnly?: boolean;
 }) {
   return (
     <input
@@ -88,6 +90,7 @@ export function AdminTextInput({
       value={value}
       dir={dir}
       type={type}
+      readOnly={readOnly}
       onChange={(event) => onChange(event.target.value)}
     />
   );

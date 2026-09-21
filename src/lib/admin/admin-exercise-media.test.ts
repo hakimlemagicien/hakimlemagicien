@@ -9,6 +9,8 @@ import {
   thumbnailStatusFromPath,
   validateExerciseMediaFile,
   videoStatusLabel,
+  videoSizeGuidance,
+  mediaDraftPath,
 } from "./admin-exercise-media-contract";
 import { resolveAdminExerciseListThumbSrc } from "./admin-exercise-media";
 
@@ -28,7 +30,7 @@ assert(validateExerciseMediaFile(mp4, "exercise_video") === null, "T1 valid mp4"
 assert(validateExerciseMediaFile(mp4, "instructions_video") === null, "T8 instructions same video rules");
 assert(validateExerciseMediaFile(png, "thumbnail") === null, "T9 valid png");
 assert(validateExerciseMediaFile(empty, "exercise_video")?.code === "empty_file", "empty rejected");
-assert(validateExerciseMediaFile(hugeVideo, "exercise_video")?.code === "too_large", "T17 oversized video");
+assert(validateExerciseMediaFile(hugeVideo, "exercise_video") === null, "T17 video size is advisory, not a hard block");
 assert(validateExerciseMediaFile(hugeImg, "thumbnail")?.code === "too_large", "T17 oversized image");
 assert(validateExerciseMediaFile(webm, "exercise_video")?.code === "invalid_type", "T15 invalid video");
 assert(validateExerciseMediaFile(gif, "thumbnail")?.code === "invalid_type", "T16 invalid image");
@@ -46,6 +48,10 @@ assert(replaceConfirmCopy("CH-001", "exercise_video").body.includes("نفس ال
 assert(videoStatusLabel("ready") === "جاهز", "arabic ready");
 assert(thumbnailStatusFromPath(null) === "missing", "T12 missing thumb");
 assert(thumbnailStatusFromPath("exercises/CH-001/thumbnail.webp") === "ready", "thumb ready from path");
+assert(videoSizeGuidance(6.4 * 1024 * 1024).tone === "optimized", "T26 6.4MB optimized");
+assert(videoSizeGuidance(10 * 1024 * 1024).tone === "warning", "T26 10MB warning");
+assert(videoSizeGuidance(20 * 1024 * 1024).tone === "high", "T26 20MB high warning");
+assert(mediaDraftPath("SH-005", "revision-1", "exercise_video") === "exercises/SH-005/versions/revision-1/exercise_video.mp4", "versioned draft path");
 
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -105,9 +111,25 @@ assert(manager.includes("p_muscle") || manager.includes("muscle:"), "T19 filters
 assert(manager.includes("AdminPagination"), "T20 pagination preserved");
 
 const panel = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseMediaPanel.tsx"), "utf8");
-assert(panel.includes("تأكيد الرفع"), "confirm before upload");
-assert(panel.includes("إعادة المحاولة"), "retry");
+assert(panel.includes("نشر المسودة"), "explicit publish");
+assert(panel.includes("استعادة السابق"), "previous version restore");
+assert(panel.includes("معاينة داخل التطبيق"), "customer preview");
 assert(!panel.includes("autoPlay"), "T22 no autoplay");
+
+const managerApi = readFileSync(resolve(process.cwd(), "src/lib/admin/admin-exercise-media-manager.ts"), "utf8");
+assert(managerApi.includes("mediaDraftPath"), "uploads use immutable version path");
+assert(managerApi.includes("admin_stage_exercise_media"), "upload only stages draft");
+assert(managerApi.includes("admin_publish_exercise_media"), "publish is explicit");
+assert(managerApi.includes("projectedLaunchVideoUsage"), "500MB accounting projection");
+
+const managerSql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260921120000_admin_exercise_media_manager_v1.sql"), "utf8");
+assert(managerSql.includes("exercise_media_versions"), "version table exists");
+assert(managerSql.includes("state='previous'"), "previous version retained");
+assert(managerSql.includes("FOR UPDATE"), "publish is transaction locked");
+assert(managerSql.includes("storage.objects"), "publish validates uploaded assets");
+assert(managerSql.includes("EXERCISE_MEDIA_PUBLISHED"), "publish audit");
+assert(!managerSql.includes("UPDATE public.program_template_exercises"), "templates unchanged");
+assert(!managerSql.includes("UPDATE public.client_program_exercises"), "client snapshots unchanged");
 
 const sql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260901040000_admin_exercise_media_replace.sql"), "utf8");
 assert(sql.includes("external_id = v_existing.external_id"), "T5/T6 identity guard");

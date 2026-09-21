@@ -82,6 +82,8 @@ export function ExerciseLibraryManager() {
   const [difficulty, setDifficulty] = useState("");
   const [type, setType] = useState("");
   const [active, setActive] = useState("");
+  const [mediaStatus, setMediaStatus] = useState("");
+  const [launchOnly, setLaunchOnly] = useState(false);
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminExerciseListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -121,6 +123,8 @@ export function ExerciseLibraryManager() {
       difficulty: difficulty || null,
       type: type || null,
       active: active === "" ? null : active === "active",
+      mediaStatus: mediaStatus || null,
+      launchOnly,
       offset,
     })
       .then((result) => {
@@ -137,7 +141,7 @@ export function ExerciseLibraryManager() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, muscle, equipment, difficulty, type, active, offset]);
+  }, [debouncedQuery, muscle, equipment, difficulty, type, active, mediaStatus, launchOnly, offset]);
 
   useEffect(() => {
     let cancelled = false;
@@ -477,6 +481,17 @@ export function ExerciseLibraryManager() {
                   <option value="archived">مؤرشف</option>
                 </select>
               </label>
+              <label className="cc-filter">
+                حالة الوسائط
+                <select value={mediaStatus} onChange={(event) => { setMediaStatus(event.target.value); setOffset(0); }}>
+                  <option value="">الكل</option>
+                  {['READY','VIDEO_MISSING','IMAGE_MISSING','THUMBNAIL_MISSING','PLACEHOLDER','NEEDS_REVIEW'].map((status) => <option key={status} value={status}>{status}</option>)}
+                </select>
+              </label>
+              <label className="cc-filter cc-filter--toggle">
+                <input type="checkbox" checked={launchOnly} onChange={(event) => { setLaunchOnly(event.target.checked); setOffset(0); }} />
+                تمارين الإطلاق فقط
+              </label>
             </AdminFilterBar>
             {error ? <AdminErrorState message={error} onRetry={() => setOffset(0)} /> : null}
             {loading ? (
@@ -517,7 +532,7 @@ export function ExerciseLibraryManager() {
                           loading={
                             Boolean(row.thumbnail_path) &&
                             thumbsLoading &&
-                            !thumbUrls[row.thumbnail_path]
+                            !thumbUrls[row.thumbnail_path ?? ""]
                           }
                         />
                       </td>
@@ -531,7 +546,7 @@ export function ExerciseLibraryManager() {
                       <td>{row.muscle_group_name_ar || row.primary_muscle || "—"}</td>
                       <td>{row.equipment || "—"}</td>
                       <td>{row.difficulty || "—"}</td>
-                      <td>{videoStatusLabel(row.video_status)}</td>
+                      <td>{row.media_readiness ?? videoStatusLabel(row.video_status)}</td>
                       <td>
                         <AdminLibraryStatusBadge
                           status={row.is_active ? "active" : "archived"}
@@ -561,13 +576,13 @@ export function ExerciseLibraryManager() {
                       loading={
                         Boolean(row.thumbnail_path) &&
                         thumbsLoading &&
-                        !thumbUrls[row.thumbnail_path]
+                        !thumbUrls[row.thumbnail_path ?? ""]
                       }
                     />
                     <span className="cc-exercise-card__body">
                       <strong>{row.external_id}</strong>
                       <span>{row.name_ar}</span>
-                      <span className="cc-muted">{videoStatusLabel(row.video_status)}</span>
+                      <span className="cc-muted">{row.media_readiness ?? videoStatusLabel(row.video_status)}</span>
                     </span>
                   </button>
                 ))}
@@ -646,7 +661,7 @@ export function ExerciseLibraryManager() {
                   <AdminTextInput id="name_en" dir="ltr" value={draft.name_en} error={fieldErrors.name_en} onChange={(value) => setDraft({ ...draft, name_en: value })} />
                 </AdminField>
                 <AdminField
-                  label="المعرّف"
+                  label="External ID — 🔒 معرف ثابت"
                   htmlFor="external_id"
                   hint={draft.id ? "ثابت بعد الإنشاء. لا يُستخدم الاسم كهوية." : "مطلوب عند الإنشاء. مثال CH-001"}
                 >
@@ -654,12 +669,14 @@ export function ExerciseLibraryManager() {
                     id="external_id"
                     dir="ltr"
                     value={draft.external_id}
+                    readOnly={Boolean(draft.id)}
                     onChange={(value) => {
                       if (draft.id) return;
                       setDraft({ ...draft, external_id: value });
                     }}
                   />
                 </AdminField>
+                {draft.id ? <AdminField label="Exercise ID — 🔒 معرف ثابت" htmlFor="exercise_db_id"><AdminTextInput id="exercise_db_id" dir="ltr" value={draft.id} readOnly onChange={() => undefined} /></AdminField> : null}
                 <AdminField label="Slug" htmlFor="slug">
                   <AdminTextInput id="slug" dir="ltr" value={draft.slug} onChange={(value) => setDraft({ ...draft, slug: value })} />
                 </AdminField>

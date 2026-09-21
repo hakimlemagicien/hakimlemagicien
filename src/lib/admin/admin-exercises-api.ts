@@ -19,6 +19,8 @@ export type AdminExerciseListItem = {
   muscle_group_name_ar: string | null;
   updated_at: string;
   v2_metadata_status: string;
+  media_readiness?: string;
+  is_launch_exercise?: boolean;
 };
 
 export type AdminExerciseDetail = AdminExerciseListItem & {
@@ -60,6 +62,8 @@ export type AdminExerciseFilters = {
   active?: boolean | null;
   offset?: number;
   limit?: number;
+  mediaStatus?: string | null;
+  launchOnly?: boolean;
 };
 
 export type AdminExerciseFilterOptions = {
@@ -85,6 +89,8 @@ function mapList(row: Record<string, unknown>): AdminExerciseListItem {
     muscle_group_name_ar: (row.muscle_group_name_ar as string | null) ?? null,
     updated_at: String(row.updated_at),
     v2_metadata_status: String(row.v2_metadata_status ?? "UNREVIEWED"),
+    media_readiness: row.media_readiness ? String(row.media_readiness) : undefined,
+    is_launch_exercise: row.is_launch_exercise == null ? undefined : Boolean(row.is_launch_exercise),
   };
 }
 
@@ -99,6 +105,28 @@ export async function fetchExerciseFilterOptions(): Promise<AdminExerciseFilterO
 }
 
 export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
+  if (filters.mediaStatus || filters.launchOnly) {
+    type RpcResult = { data: unknown; error: { message: string } | null };
+    type RpcCaller = (name: string, args?: Record<string, unknown>) => PromiseLike<RpcResult>;
+    const { data, error } = await (supabase.rpc as unknown as RpcCaller)("admin_list_exercise_media_catalog", {
+      p_filters: {
+        query: filters.query?.trim() || null,
+        muscle: filters.muscle || null,
+        equipment: filters.equipment || null,
+        difficulty: filters.difficulty || null,
+        type: filters.type || null,
+        active: filters.active ?? null,
+        media_status: filters.mediaStatus || null,
+        launch_only: Boolean(filters.launchOnly),
+        limit: clampAdminLibraryLimit(filters.limit ?? ADMIN_LIBRARY_PAGE_SIZE, ADMIN_LIBRARY_MAX_PAGE_SIZE),
+        offset: Math.max(filters.offset ?? 0, 0),
+      },
+    });
+    if (error) throw error;
+    const payload = data as { rows?: Record<string, unknown>[]; total_count?: number };
+    const rows = (payload.rows ?? []).map(mapList);
+    return { rows, totalCount: Number(payload.total_count ?? rows.length) };
+  }
   const { data, error } = await supabase.rpc("admin_list_exercises", {
     p_query: filters.query?.trim() || null,
     p_muscle: filters.muscle || null,

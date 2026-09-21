@@ -19,11 +19,22 @@ function normalizeStorageObjectPath(path: string): string {
   return path.replace(/^\/+/, "").replace(/^exercise-media\//, "");
 }
 
-export const EXERCISE_MEDIA_ASSET_TYPES = ["exercise_video", "instructions_video", "thumbnail"] as const;
+export const EXERCISE_MEDIA_ASSET_TYPES = [
+  "exercise_video",
+  "instructions_video",
+  "thumbnail",
+  "stage_a",
+  "stage_b",
+  "stage_c",
+  "anatomy",
+] as const;
 export type ExerciseMediaAssetType = (typeof EXERCISE_MEDIA_ASSET_TYPES)[number];
 
 export const EXERCISE_VIDEO_MAX_BYTES = 80 * 1024 * 1024;
 export const EXERCISE_THUMBNAIL_MAX_BYTES = 2 * 1024 * 1024;
+export const EXERCISE_LAUNCH_VIDEO_BUDGET_BYTES = 500 * 1024 * 1024;
+export const EXERCISE_VIDEO_OPTIMIZED_BYTES = 8 * 1024 * 1024;
+export const EXERCISE_VIDEO_WARNING_BYTES = 15 * 1024 * 1024;
 
 export const EXERCISE_VIDEO_MIME = ["video/mp4"] as const;
 export const EXERCISE_THUMBNAIL_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -34,6 +45,42 @@ export type MediaValidationError = {
   code: "invalid_type" | "invalid_extension" | "empty_file" | "too_large" | "invalid_id" | "invalid_path";
   message: string;
 };
+
+export type VideoSizeGuidance = {
+  tone: "optimized" | "warning" | "high";
+  label: string;
+  message: string;
+};
+
+export function videoSizeGuidance(size: number): VideoSizeGuidance {
+  if (size <= EXERCISE_VIDEO_OPTIMIZED_BYTES) {
+    return { tone: "optimized", label: "محسّن", message: "✅ محسّن ومناسب للتطبيق" };
+  }
+  if (size <= EXERCISE_VIDEO_WARNING_BYTES) {
+    return {
+      tone: "warning",
+      label: "مقبول",
+      message: "⚠️ مقبول، لكن يُفضّل ضغط الفيديو لتقليل استهلاك التخزين والبيانات",
+    };
+  }
+  return {
+    tone: "high",
+    label: "مرتفع",
+    message: "🔴 حجم الفيديو مرتفع وقد يؤثر على سرعة التحميل. ننصح بتحسينه قبل النشر.",
+  };
+}
+
+export function mediaDraftPath(
+  externalId: string,
+  revisionId: string,
+  asset: ExerciseMediaAssetType,
+  extension: ThumbnailExtension | "mp4" = asset.includes("video") ? "mp4" : "webp",
+): string {
+  const id = assertSafeExternalId(externalId);
+  const revision = revisionId.replace(/[^a-zA-Z0-9-]/g, "");
+  if (!revision) throw new Error("معرّف المسودة غير صالح.");
+  return `exercises/${id}/versions/${revision}/${asset}.${extension}`;
+}
 
 export function videoStatusLabel(status: string): string {
   if (status === "ready") return "جاهز";
@@ -107,7 +154,7 @@ export function validateExerciseMediaFile(
   if (!file || file.size <= 0) {
     return { code: "empty_file", message: "الملف فارغ أو غير صالح." };
   }
-  if (asset === "thumbnail") {
+  if (!asset.includes("video")) {
     if (file.size > EXERCISE_THUMBNAIL_MAX_BYTES) {
       return { code: "too_large", message: "حجم الصورة أكبر من الحد المسموح (2MB)." };
     }
@@ -116,9 +163,6 @@ export function validateExerciseMediaFile(
       return { code: "invalid_type", message: "صيغة الصورة غير مدعومة. استخدم JPEG أو PNG أو WEBP." };
     }
     return null;
-  }
-  if (file.size > EXERCISE_VIDEO_MAX_BYTES) {
-    return { code: "too_large", message: "حجم الفيديو أكبر من الحد المسموح (80MB)." };
   }
   const ext = extensionOf(file.name);
   if (file.type !== "video/mp4" || ext !== "mp4") {

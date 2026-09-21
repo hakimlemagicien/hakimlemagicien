@@ -22,7 +22,8 @@ import {
   fetchExerciseDetails,
   formatExerciseDifficulty,
 } from "@/lib/platform/exercise-library";
-import { getExerciseStageGuide, getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { applyExerciseStageMediaOverrides, getExerciseStageGuide, getExerciseStageListThumb } from "@/lib/platform/exercise-stage-media";
+import { fetchExerciseMediaUrl, fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
 import { guardExerciseLibraryRoute } from "@/lib/platform/exercise-library-route-guard";
 
 export const Route = createFileRoute("/_platform/app/exercises/$exerciseId")({
@@ -38,6 +39,21 @@ function ExerciseDetailsPage() {
     queryFn: () => fetchExerciseDetails(exerciseId),
     staleTime: 5 * 60 * 1000,
     retry: 1,
+  });
+  const publishedStagePaths = Array.isArray(exerciseQuery.data?.metadata?.instructional_images)
+    ? (exerciseQuery.data?.metadata?.instructional_images as unknown[]).filter((path): path is string => typeof path === "string" && Boolean(path))
+    : [];
+  const stageMediaQuery = useQuery({
+    queryKey: ["exercise-stage-media", exerciseId, publishedStagePaths],
+    queryFn: () => Promise.all(publishedStagePaths.map(fetchExerciseMediaUrl)),
+    enabled: publishedStagePaths.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+  const thumbnailQuery = useQuery({
+    queryKey: ["exercise-published-thumbnail", exerciseQuery.data?.thumbnail_path],
+    queryFn: () => fetchResolvedExerciseMediaUrl({ status: exerciseQuery.data!.video_status, path: exerciseQuery.data!.thumbnail_path, kind: "exercise" }),
+    enabled: Boolean(exerciseQuery.data?.thumbnail_path),
+    staleTime: 5 * 60 * 1000,
   });
 
   if (exerciseQuery.isLoading) {
@@ -72,8 +88,11 @@ function ExerciseDetailsPage() {
   }
 
   const exercise = exerciseQuery.data;
-  const stageGuide = getExerciseStageGuide(exercise.external_id);
-  const coverThumb = getExerciseStageListThumb(exercise.external_id);
+  const stageGuide = applyExerciseStageMediaOverrides(
+    getExerciseStageGuide(exercise.external_id),
+    (stageMediaQuery.data ?? []).filter((url): url is string => typeof url === "string"),
+  );
+  const coverThumb = thumbnailQuery.data || getExerciseStageListThumb(exercise.external_id);
 
   return (
     <PlatformStack>
