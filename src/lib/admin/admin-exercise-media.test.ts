@@ -52,6 +52,7 @@ assert(videoSizeGuidance(6.4 * 1024 * 1024).tone === "optimized", "T26 6.4MB opt
 assert(videoSizeGuidance(10 * 1024 * 1024).tone === "warning", "T26 10MB warning");
 assert(videoSizeGuidance(20 * 1024 * 1024).tone === "high", "T26 20MB high warning");
 assert(mediaDraftPath("SH-005", "revision-1", "exercise_video") === "exercises/SH-005/versions/revision-1/exercise_video.mp4", "versioned draft path");
+assert(mediaDraftPath("SH-005", "revision-2", "exercise_video", "mp4", "FEMALE") === "exercises/SH-005/female/versions/revision-2/exercise_video.mp4", "female draft path is isolated");
 
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -112,6 +113,10 @@ assert(!manager.includes("htmlFor=\"video_path\""), "T22 no manual video path fi
 assert(manager.includes("debouncedQuery"), "T18 search preserved");
 assert(manager.includes("p_muscle") || manager.includes("muscle:"), "T19 filters preserved");
 assert(manager.includes("AdminPagination"), "T20 pagination preserved");
+assert(manager.includes("القالب المنشور"), "published program template filter");
+assert(manager.includes("بنات فقط"), "female exercise filter");
+assert(manager.includes("ذكور / قياسي فقط"), "standard exercise filter");
+assert(manager.includes("suggestAdminExerciseExternalId"), "new exercise id is server-suggested");
 
 const panel = readFileSync(resolve(process.cwd(), "src/components/admin/libraries/ExerciseMediaPanel.tsx"), "utf8");
 assert(panel.includes("نشر المسودة"), "explicit publish");
@@ -120,6 +125,10 @@ assert(panel.includes("معاينة داخل التطبيق"), "customer preview
 assert(panel.includes("AdminClientExercisePreview"), "preview reuses the client exercise screen");
 assert(panel.includes("إطار عرض العميل: 1:1 مربع"), "admin video editor documents the square client frame");
 assert(panel.includes("1080×1080"), "square upload guidance is explicit");
+assert(panel.includes('mediaVariant === "FEMALE"'), "media editor isolates female media");
+assert(panel.includes("الغلاف التلقائي من الفيديو"), "real video becomes the automatic thumbnail preview");
+assert(panel.includes("صور «تجنب هذه الأخطاء» الحالية"), "existing mistake images are visible in the editor");
+assert(panel.includes("الصورة الحالية من حزمة التطبيق"), "bundled A/B/C images are not reported as missing");
 assert(!panel.includes("autoPlay"), "T22 no autoplay");
 
 const clientPreview = readFileSync(resolve(process.cwd(), "src/components/admin/programs/AdminClientExercisePreview.tsx"), "utf8");
@@ -133,6 +142,17 @@ assert(managerApi.includes("mediaDraftPath"), "uploads use immutable version pat
 assert(managerApi.includes("admin_stage_exercise_media"), "upload only stages draft");
 assert(managerApi.includes("admin_publish_exercise_media"), "publish is explicit");
 assert(managerApi.includes("projectedLaunchVideoUsage"), "500MB accounting projection");
+assert(managerApi.includes("admin_stage_exercise_media_v2"), "variant-aware staging RPC");
+assert(managerApi.includes("admin_publish_exercise_media_v2"), "variant-aware publishing RPC");
+
+const catalogSql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260922130000_admin_exercise_catalog_gender_template_and_id.sql"), "utf8");
+assert(catalogSql.includes("template_id"), "published template filtering is server enforced");
+assert(catalogSql.includes("media_variant"), "gender media variant filtering is server enforced");
+assert(catalogSql.includes("admin_suggest_exercise_external_id"), "server suggests collision-aware external id");
+assert(catalogSql.includes("exercise_media_versions_one_draft_idx"), "draft uniqueness is per exercise and variant");
+assert(catalogSql.includes("exercise_id, media_variant"), "male/female version histories are isolated");
+assert(catalogSql.includes("_exercise_media_admin_allowed"), "new RPCs remain admin/staff permission guarded");
+assert(!catalogSql.includes("GRANT EXECUTE ON FUNCTION public.admin_suggest_exercise_external_id(UUID) TO anon"), "anonymous id suggestion denied");
 
 const managerSql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260921120000_admin_exercise_media_manager_v1.sql"), "utf8");
 assert(managerSql.includes("exercise_media_versions"), "version table exists");

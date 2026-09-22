@@ -75,11 +75,13 @@ export function mediaDraftPath(
   revisionId: string,
   asset: ExerciseMediaAssetType,
   extension: ThumbnailExtension | "mp4" = asset.includes("video") ? "mp4" : "webp",
+  variant: "STANDARD" | "FEMALE" = "STANDARD",
 ): string {
   const id = assertSafeExternalId(externalId);
   const revision = revisionId.replace(/[^a-zA-Z0-9-]/g, "");
   if (!revision) throw new Error("معرّف المسودة غير صالح.");
-  return `exercises/${id}/versions/${revision}/${asset}.${extension}`;
+  const variantDir = variant === "FEMALE" ? "female/" : "";
+  return `exercises/${id}/${variantDir}versions/${revision}/${asset}.${extension}`;
 }
 
 export function videoStatusLabel(status: string): string {

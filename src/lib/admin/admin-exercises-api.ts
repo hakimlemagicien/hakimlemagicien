@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CORE_100_EXTERNAL_IDS } from "@/lib/platform/strategy-matrix/config/core-100-external-ids";
 import { ADMIN_LIBRARY_MAX_PAGE_SIZE, ADMIN_LIBRARY_PAGE_SIZE, clampAdminLibraryLimit } from "./admin-libraries";
+import type { ExerciseMediaVariant } from "@/lib/platform/exercise-media-variants";
 
 export type AdminExerciseListItem = {
   id: string;
@@ -64,6 +65,8 @@ export type AdminExerciseFilters = {
   limit?: number;
   mediaStatus?: string | null;
   launchOnly?: boolean;
+  templateId?: string | null;
+  mediaVariant?: ExerciseMediaVariant | null;
 };
 
 export type AdminExerciseFilterOptions = {
@@ -105,7 +108,7 @@ export async function fetchExerciseFilterOptions(): Promise<AdminExerciseFilterO
 }
 
 export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
-  if (filters.mediaStatus || filters.launchOnly) {
+  if (filters.mediaStatus || filters.launchOnly || filters.templateId || filters.mediaVariant) {
     type RpcResult = { data: unknown; error: { message: string } | null };
     type RpcCaller = (name: string, args?: Record<string, unknown>) => PromiseLike<RpcResult>;
     const { data, error } = await (supabase.rpc as unknown as RpcCaller)("admin_list_exercise_media_catalog", {
@@ -118,6 +121,8 @@ export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
         active: filters.active ?? null,
         media_status: filters.mediaStatus || null,
         launch_only: Boolean(filters.launchOnly),
+        template_id: filters.templateId || null,
+        media_variant: filters.mediaVariant || null,
         limit: clampAdminLibraryLimit(filters.limit ?? ADMIN_LIBRARY_PAGE_SIZE, ADMIN_LIBRARY_MAX_PAGE_SIZE),
         offset: Math.max(filters.offset ?? 0, 0),
       },
@@ -143,6 +148,16 @@ export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
     rows,
     totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
   };
+}
+
+export async function suggestAdminExerciseExternalId(muscleGroupId: string): Promise<string> {
+  type RpcResult = { data: unknown; error: { message: string } | null };
+  type RpcCaller = (name: string, args?: Record<string, unknown>) => PromiseLike<RpcResult>;
+  const { data, error } = await (supabase.rpc as unknown as RpcCaller)("admin_suggest_exercise_external_id", {
+    p_muscle_group_id: muscleGroupId,
+  });
+  if (error) throw error;
+  return String((data as { external_id?: string } | null)?.external_id ?? "");
 }
 
 export async function getAdminExercise(id: string): Promise<AdminExerciseDetail> {

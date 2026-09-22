@@ -128,6 +128,7 @@ export function librarySaveStateLabel(state: LibrarySaveState): string {
 export type FieldErrors = Record<string, string>;
 
 export function validateExerciseDraft(input: {
+  external_id?: string;
   name_ar: string;
   name_en: string;
   muscle_group_id: string;
@@ -136,6 +137,8 @@ export function validateExerciseDraft(input: {
   duration_seconds: number;
 }): FieldErrors {
   const errors: FieldErrors = {};
+  if (input.external_id !== undefined && !input.external_id.trim()) errors.external_id = "معرّف التمرين مطلوب.";
+  else if (input.external_id && !/^[A-Z][A-Z0-9-]{1,31}$/i.test(input.external_id.trim())) errors.external_id = "استخدم أحرفًا وأرقامًا وشرطة فقط، مثل SH-020.";
   if (!input.name_ar.trim()) errors.name_ar = "الاسم العربي مطلوب.";
   if (!input.name_en.trim()) errors.name_en = "الاسم الإنجليزي مطلوب.";
   if (!input.muscle_group_id) errors.muscle_group_id = "المجموعة العضلية مطلوبة.";

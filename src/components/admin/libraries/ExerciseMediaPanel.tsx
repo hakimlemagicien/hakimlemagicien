@@ -19,12 +19,17 @@ import {
   stageExistingExerciseMediaPath,
   type ExerciseMediaManagerState,
 } from "@/lib/admin/admin-exercise-media-manager";
+import type { ExerciseMediaVariant } from "@/lib/platform/exercise-media-variants";
+import { getExerciseStageGuide } from "@/lib/platform/exercise-stage-media";
+import { isCore100ExerciseId, publicUrlForCore100Exercise } from "@/lib/platform/content/core-100-exercise-media";
+import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 
 type Props = {
   draft: AdminExerciseDetail;
   canUpload: boolean;
   onUpdated: (next: AdminExerciseDetail) => void;
   onConfirm: (request: AdminConfirmRequest) => void;
+  mediaVariant: ExerciseMediaVariant;
 };
 
 type Technical = { width?: number; height?: number; duration?: number; bytes: number; mime: string };
@@ -50,7 +55,7 @@ async function inspectVideo(file: File): Promise<Technical> {
   });
 }
 
-export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, onConfirm }: Props) {
+export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, onConfirm, mediaVariant }: Props) {
   const [manager, setManager] = useState<ExerciseMediaManagerState | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -60,12 +65,21 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
 
   const load = async () => {
     setError(null);
-    try { setManager(await getExerciseMediaManager(draft.id)); }
+    try { setManager(await getExerciseMediaManager(draft.id, mediaVariant)); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "تعذر تحميل مدير الوسائط."); }
   };
 
-  useEffect(() => { void load(); }, [draft.id]);
+  useEffect(() => { setManager(null); void load(); }, [draft.id, mediaVariant]);
   const snapshot = manager?.draft?.snapshot ?? manager?.current.snapshot ?? null;
+  const bundledGuide = mediaVariant === "STANDARD" ? getExerciseStageGuide(draft.external_id) : null;
+  const bundledVideoUrl = exerciseHasRealMotionVideo({ externalId: draft.external_id, videoStatus: draft.video_status })
+    ? `/exercises/${draft.external_id}/${mediaVariant === "FEMALE" ? "female/" : ""}video/exercise.mp4`
+    : null;
+  const resolvedVideoUrl = snapshot?.video_path ? urls[snapshot.video_path] ?? null : bundledVideoUrl;
+  const bundledStageUrl = (index: number) => bundledGuide?.stages[index]?.src ??
+    (mediaVariant === "STANDARD" && isCore100ExerciseId(draft.external_id)
+      ? publicUrlForCore100Exercise(draft.external_id, `stages/stage-${["a", "b", "c"][index]}.webp`)
+      : null);
   useEffect(() => {
     if (!snapshot) return;
     let active = true;
@@ -86,14 +100,14 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
     try {
       const technical = asset.includes("video") ? await inspectVideo(file) : { bytes: file.size, mime: file.type };
       if (asset === "exercise_video") setSelectedVideo(technical);
-      setManager(await stageExerciseMediaFile({ exerciseId: draft.id, externalId: draft.external_id, asset, file, technical }));
+      setManager(await stageExerciseMediaFile({ exerciseId: draft.id, externalId: draft.external_id, asset, file, technical, variant: mediaVariant }));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "فشل رفع المسودة."); }
     finally { setBusy(null); }
   };
 
   const removeDraft = async (asset: ExerciseMediaAssetType) => {
     setBusy(asset);
-    try { setManager(await removeDraftExerciseMediaAsset(draft.id, asset)); }
+    try { setManager(await removeDraftExerciseMediaAsset(draft.id, asset, mediaVariant)); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "تعذر إزالة عنصر المسودة."); }
     finally { setBusy(null); }
   };
@@ -104,8 +118,8 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
     [paths[from], paths[to]] = [paths[to], paths[from]];
     setBusy("reorder");
     try {
-      let next = await stageExistingExerciseMediaPath(draft.id, stageAssets[from].asset, paths[from] ?? null);
-      next = await stageExistingExerciseMediaPath(draft.id, stageAssets[to].asset, paths[to] ?? null);
+      let next = await stageExistingExerciseMediaPath(draft.id, stageAssets[from].asset, paths[from] ?? null, mediaVariant);
+      next = await stageExistingExerciseMediaPath(draft.id, stageAssets[to].asset, paths[to] ?? null, mediaVariant);
       setManager(next);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذر إعادة الترتيب."); }
     finally { setBusy(null); }
@@ -113,17 +127,17 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
 
   const publish = () => onConfirm({
     title: "نشر وسائط التمرين",
-    body: `سيصبح إصدار ${draft.external_id} المسودّة هو المصدر المنشور للعملاء فورًا. تبقى الهوية والمراجع كما هي.`,
+    body: `سيصبح إصدار ${draft.external_id} (${mediaVariant === "FEMALE" ? "بنات" : "ذكور / قياسي"}) هو المصدر المنشور لهذه الفئة فورًا. تبقى الهوية والمراجع كما هي.`,
     confirmLabel: "نشر الآن",
     impact: "تحديث محتوى فقط — لا تعديل للقوالب أو برامج العملاء أو السجل.",
-    onConfirm: async () => { setBusy("publish"); try { setManager(await publishExerciseMedia(draft.id)); setSelectedVideo(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "فشل النشر؛ النسخة الحالية ما زالت فعالة."); } finally { setBusy(null); } },
+    onConfirm: async () => { setBusy("publish"); try { setManager(await publishExerciseMedia(draft.id, mediaVariant)); setSelectedVideo(null); } catch (cause) { setError(cause instanceof Error ? cause.message : "فشل النشر؛ النسخة الحالية ما زالت فعالة."); } finally { setBusy(null); } },
   });
 
   const restore = () => onConfirm({
     title: "استعادة الإصدار السابق",
     body: "سيُنشر الإصدار السابق كإصدار جديد مع الاحتفاظ بمعرّف التمرين نفسه.",
     confirmLabel: "استعادة ونشر",
-    onConfirm: async () => { setBusy("restore"); try { setManager(await restorePreviousExerciseMedia(draft.id)); } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذرت الاستعادة."); } finally { setBusy(null); } },
+    onConfirm: async () => { setBusy("restore"); try { setManager(await restorePreviousExerciseMedia(draft.id, mediaVariant)); } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذرت الاستعادة."); } finally { setBusy(null); } },
   });
 
   if (!manager) return <section className="cc-media-panel"><h3>إدارة الوسائط</h3>{error ? <p className="cc-field__error">{error}</p> : <p className="cc-muted">جارٍ تحميل حالة الوسائط…</p>}<button type="button" className="cc-btn cc-btn--ghost" onClick={() => void load()}>إعادة المحاولة</button></section>;
@@ -131,7 +145,7 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
   return (
     <section className="cc-media-panel" aria-labelledby="exercise-media-heading">
       <header className="cc-media-manager__header">
-        <div><h3 id="exercise-media-heading">إدارة وسائط التمرين</h3><p className="cc-muted">مسودة مستقلة؛ لا تظهر للعملاء قبل النشر.</p></div>
+        <div><h3 id="exercise-media-heading">إدارة وسائط التمرين — {mediaVariant === "FEMALE" ? "بنات" : "ذكور / قياسي"}</h3><p className="cc-muted">مسودة مستقلة لهذه الفئة؛ لا تظهر للعملاء قبل النشر.</p></div>
         <span className={`cc-media-readiness cc-media-readiness--${manager.readiness.toLowerCase()}`}>{manager.readiness}</span>
       </header>
       <div className="cc-identity-lock">
@@ -149,17 +163,20 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
         <p className="cc-muted">{usagePercent <= 75 ? "✅ جيد" : usagePercent <= 90 ? "⚠️ اقتربت من الميزانية المخططة" : "🔴 قاربت أو تجاوزت الميزانية المخططة"} — إرشادي ولا يمنع النشر.</p>
       </div>
 
-      <MediaSlot title="الفيديو الأساسي" asset="exercise_video" path={snapshot?.video_path} url={snapshot?.video_path ? urls[snapshot.video_path] : null} busy={busy} canUpload={canUpload} accept="video/mp4" onUpload={upload} onRemove={removeDraft} />
+      <MediaSlot title="الفيديو الأساسي" asset="exercise_video" path={snapshot?.video_path} url={resolvedVideoUrl} fallbackLabel={!snapshot?.video_path && bundledVideoUrl ? "فيديو حقيقي موجود ضمن التطبيق" : undefined} busy={busy} canUpload={canUpload} accept="video/mp4" onUpload={upload} onRemove={removeDraft} />
       {selectedVideo ? <VideoTechnical technical={selectedVideo} /> : null}
-      <MediaSlot title="الصورة المصغرة" asset="thumbnail" path={snapshot?.thumbnail_path} url={snapshot?.thumbnail_path ? urls[snapshot.thumbnail_path] : null} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} />
-      <div className="cc-media-stage-grid">
+      <MediaSlot title={mediaVariant === "FEMALE" ? "الصورة المصغرة للبنات" : "الصورة المصغرة"} asset="thumbnail" path={snapshot?.thumbnail_path} url={snapshot?.thumbnail_path ? urls[snapshot.thumbnail_path] : resolvedVideoUrl} previewKind={!snapshot?.thumbnail_path && resolvedVideoUrl ? "video" : "image"} fallbackLabel={!snapshot?.thumbnail_path && resolvedVideoUrl ? "الغلاف التلقائي من الفيديو — يمكنك رفع صورة مخصصة" : undefined} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} />
+      {mediaVariant === "STANDARD" ? <><div className="cc-media-stage-grid">
         {stageAssets.map((item) => {
           const path = snapshot?.instructional_images?.[item.index] ?? null;
-          return <div key={item.asset}><MediaSlot title={item.label} asset={item.asset} path={path} url={path ? urls[path] : null} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} compact />
+          const fallback = path ? null : bundledStageUrl(item.index);
+          return <div key={item.asset}><MediaSlot title={item.label} asset={item.asset} path={path} url={path ? urls[path] : fallback} fallbackLabel={fallback ? "الصورة الحالية من حزمة التطبيق" : undefined} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} compact />
             <div className="cc-media-reorder"><button type="button" disabled={!manager.draft || item.index===0 || busy!==null} onClick={() => void reorder(item.index,item.index-1)}>السابق</button><button type="button" disabled={!manager.draft || item.index===2 || busy!==null} onClick={() => void reorder(item.index,item.index+1)}>التالي</button></div></div>;
         })}
       </div>
       <MediaSlot title="صورة العضلة المستهدفة" asset="anatomy" path={snapshot?.anatomy_image_path} url={snapshot?.anatomy_image_path ? urls[snapshot.anatomy_image_path] : null} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} />
+      {bundledGuide ? <section className="cc-media-existing-assets"><h4>صور «تجنب هذه الأخطاء» الحالية</h4><p className="cc-muted">للمعاينة والتعرّف على الصورة الحالية قبل استبدال حزمة المحتوى.</p><div className="cc-media-stage-grid">{bundledGuide.mistakes.map((mistake) => <article className="cc-media-card cc-media-card--compact" key={mistake.key}><header className="cc-media-card__head"><h4>الخطأ {mistake.key}</h4><span className="cc-media-card__status">موجود ضمن التطبيق</span></header><div className="cc-media-card__preview"><img className="cc-media-panel__img" src={mistake.src} alt={mistake.alt}/></div><p className="cc-muted">{mistake.descriptionAr}</p></article>)}</div></section> : null}
+      </> : <p className="cc-media-variant-note">هذه النسخة مخصصة لبرامج البنات فقط. الفيديو والصورة المنشوران هنا لا يستبدلان وسائط الرجال.</p>}
 
       <section className="cc-template-impact"><strong>مستخدم في البرامج: {manager.templates.length}</strong>{manager.templates.length ? <ul>{manager.templates.map((template) => <li key={template.id}>{template.name_ar}</li>)}</ul> : <p className="cc-muted">غير مستخدم في قالب حالي.</p>}</section>
       {error ? <p className="cc-field__error">{error}</p> : null}
@@ -207,7 +224,8 @@ function VideoTechnical({ technical }: { technical: Technical }) {
   return <div className={`cc-video-analysis cc-video-analysis--${guidance.tone}`}><strong>{guidance.message}</strong><div dir="ltr">{technical.width && technical.height ? `${technical.width}×${technical.height}` : "Resolution —"} · {technical.duration ? `${technical.duration.toFixed(1)} sec` : "Duration —"} · {mb(technical.bytes)} · MP4</div><small>{square ? "✅ المقاس مربع 1:1 ومتوافق مع عرض العميل." : "تنبيه: عرض العميل مربع 1:1؛ سيُقص الفيديو غير المربع داخل الإطار. يُفضّل 1080×1080 أو 720×720."} H.264، قرابة 30fps.</small></div>;
 }
 
-function MediaSlot({ title, asset, path, url, busy, canUpload, accept, onUpload, onRemove, compact=false }: { title:string; asset:ExerciseMediaAssetType; path:string|null|undefined; url:string|null; busy:string|null; canUpload:boolean; accept:string; onUpload:(asset:ExerciseMediaAssetType,file?:File)=>void; onRemove:(asset:ExerciseMediaAssetType)=>void; compact?:boolean }) {
+function MediaSlot({ title, asset, path, url, busy, canUpload, accept, onUpload, onRemove, compact=false, fallbackLabel, previewKind }: { title:string; asset:ExerciseMediaAssetType; path:string|null|undefined; url:string|null; busy:string|null; canUpload:boolean; accept:string; onUpload:(asset:ExerciseMediaAssetType,file?:File)=>void; onRemove:(asset:ExerciseMediaAssetType)=>void; compact?:boolean; fallbackLabel?:string; previewKind?:"video"|"image" }) {
   const video = asset.includes("video");
-  return <article className={`cc-media-card${compact ? " cc-media-card--compact" : ""}`}><header className="cc-media-card__head"><h4>{title}</h4><span className="cc-media-card__status">{path ? "مسودة/متاح" : "مفقود"}</span></header><div className="cc-media-card__preview">{url ? video ? <video className="cc-media-panel__video" src={url} controls preload="metadata" playsInline/> : <img className="cc-media-panel__img" src={url} alt={title}/> : <p className="cc-muted">لا توجد معاينة</p>}</div>{video ? <p className="cc-media-card__ratio-note">إطار عرض العميل: 1:1 مربع — المقاس المفضّل 1080×1080 أو 720×720.</p> : null}{path ? <p className="cc-media-card__path" dir="ltr">{path}</p> : null}<div className="cc-media-card__actions">{canUpload ? <label className="cc-btn cc-btn--primary">{video ? <Upload size={16}/> : <ImagePlus size={16}/>} {path ? "استبدال" : "رفع"}<input type="file" accept={accept} hidden disabled={busy!==null} onChange={(event) => { void onUpload(asset,event.target.files?.[0]); event.currentTarget.value=""; }}/></label> : null}{path && canUpload ? <button type="button" className="cc-btn cc-btn--ghost" disabled={busy!==null} onClick={() => void onRemove(asset)}><X size={16}/>إزالة من المسودة</button> : null}</div></article>;
+  const renderVideo = previewKind === "video" || (previewKind == null && video);
+  return <article className={`cc-media-card${compact ? " cc-media-card--compact" : ""}`}><header className="cc-media-card__head"><h4>{title}</h4><span className="cc-media-card__status">{path ? "مسودة/متاح" : fallbackLabel ? "موجود" : "مفقود"}</span></header><div className="cc-media-card__preview">{url ? renderVideo ? <video className="cc-media-panel__video" src={url} controls={video} muted preload="metadata" playsInline/> : <img className="cc-media-panel__img" src={url} alt={title}/> : <p className="cc-muted">لا توجد معاينة</p>}</div>{fallbackLabel ? <p className="cc-media-card__fallback">{fallbackLabel}</p> : null}{video ? <p className="cc-media-card__ratio-note">إطار عرض العميل: 1:1 مربع — المقاس المفضّل 1080×1080 أو 720×720.</p> : null}{path ? <p className="cc-media-card__path" dir="ltr">{path}</p> : null}<div className="cc-media-card__actions">{canUpload ? <label className="cc-btn cc-btn--primary">{video ? <Upload size={16}/> : <ImagePlus size={16}/>} {path || fallbackLabel ? "استبدال" : "رفع"}<input type="file" accept={accept} hidden disabled={busy!==null} onChange={(event) => { void onUpload(asset,event.target.files?.[0]); event.currentTarget.value=""; }}/></label> : null}{path && canUpload ? <button type="button" className="cc-btn cc-btn--ghost" disabled={busy!==null} onClick={() => void onRemove(asset)}><X size={16}/>إزالة من المسودة</button> : null}</div></article>;
 }

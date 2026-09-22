@@ -55,10 +55,14 @@ import {
   listAdminExercises,
   saveAdminExercise,
   setAdminExerciseActive,
+  suggestAdminExerciseExternalId,
   type AdminExerciseDetail,
   type AdminExerciseFilterOptions,
   type AdminExerciseListItem,
 } from "@/lib/admin/admin-exercises-api";
+import { listAdminProgramTemplates, type AdminProgramListItem } from "@/lib/admin/admin-programs-api";
+import { preferredMediaVariantFromTemplateMetadata } from "@/lib/platform/exercise-media-variants";
+import type { ExerciseMediaVariant } from "@/lib/platform/exercise-media-variants";
 import { formatAdminDate } from "@/lib/admin/admin-status";
 import { CORE_100_EXERCISE_COUNT } from "@/lib/platform/content/core-100-exercise-media";
 import { ExerciseListThumb } from "@/components/admin/libraries/ExerciseListThumb";
@@ -84,6 +88,9 @@ export function ExerciseLibraryManager() {
   const [active, setActive] = useState("");
   const [mediaStatus, setMediaStatus] = useState("");
   const [launchOnly, setLaunchOnly] = useState(false);
+  const [templateId, setTemplateId] = useState("");
+  const [mediaVariant, setMediaVariant] = useState<"" | ExerciseMediaVariant>("");
+  const [publishedTemplates, setPublishedTemplates] = useState<AdminProgramListItem[]>([]);
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminExerciseListItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -99,6 +106,8 @@ export function ExerciseLibraryManager() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState<AdminConfirmRequest | null>(null);
   const [pendingImpact, setPendingImpact] = useState<LibraryImpactWarning | null>(null);
+  const [idSuggestion, setIdSuggestion] = useState("");
+  const [idSuggesting, setIdSuggesting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({});
   const [thumbsLoading, setThumbsLoading] = useState(false);
@@ -110,6 +119,12 @@ export function ExerciseLibraryManager() {
     void fetchExerciseFilterOptions()
       .then(setOptions)
       .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    void listAdminProgramTemplates({ status: "published", limit: 50 })
+      .then((result) => setPublishedTemplates(result.rows))
+      .catch(() => setPublishedTemplates([]));
   }, []);
 
   useEffect(() => {
@@ -125,6 +140,8 @@ export function ExerciseLibraryManager() {
       active: active === "" ? null : active === "active",
       mediaStatus: mediaStatus || null,
       launchOnly,
+      templateId: templateId || null,
+      mediaVariant: mediaVariant || null,
       offset,
     })
       .then((result) => {
@@ -141,7 +158,7 @@ export function ExerciseLibraryManager() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, muscle, equipment, difficulty, type, active, mediaStatus, launchOnly, offset]);
+  }, [debouncedQuery, muscle, equipment, difficulty, type, active, mediaStatus, launchOnly, templateId, mediaVariant, offset]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,6 +230,31 @@ export function ExerciseLibraryManager() {
   }, [selectedId]);
 
   useEffect(() => {
+    if (!draft || draft.id || !draft.muscle_group_id) {
+      setIdSuggestion("");
+      return;
+    }
+    let cancelled = false;
+    setIdSuggesting(true);
+    void suggestAdminExerciseExternalId(draft.muscle_group_id)
+      .then((suggestion) => {
+        if (cancelled) return;
+        setIdSuggestion(suggestion);
+        setDraft((current) => current && !current.id ? { ...current, external_id: suggestion } : current);
+      })
+      .catch(() => { if (!cancelled) setIdSuggestion(""); })
+      .finally(() => { if (!cancelled) setIdSuggesting(false); });
+    return () => { cancelled = true; };
+  }, [draft?.id, draft?.muscle_group_id]);
+
+  const selectedTemplate = useMemo(
+    () => publishedTemplates.find((template) => template.id === templateId) ?? null,
+    [publishedTemplates, templateId],
+  );
+  const activeMediaVariant: ExerciseMediaVariant = mediaVariant ||
+    (selectedTemplate ? preferredMediaVariantFromTemplateMetadata(selectedTemplate.metadata) : "STANDARD");
+
+  useEffect(() => {
     if (!draft?.thumbnail_path && !draft?.video_path) {
       setPreviewUrl(null);
       return;
@@ -247,6 +289,7 @@ export function ExerciseLibraryManager() {
     if (!draft) return;
     const errors = {
       ...validateExerciseDraft({
+        external_id: draft.external_id,
         name_ar: draft.name_ar,
         name_en: draft.name_en,
         muscle_group_id: draft.muscle_group_id,
@@ -330,6 +373,10 @@ export function ExerciseLibraryManager() {
         difficulty: difficulty || null,
         type: type || null,
         active: active === "" ? null : active === "active",
+        mediaStatus: mediaStatus || null,
+        launchOnly,
+        templateId: templateId || null,
+        mediaVariant: mediaVariant || null,
         offset: 0,
       });
       setRows(result.rows);
@@ -426,7 +473,34 @@ export function ExerciseLibraryManager() {
         list={
           <>
             <AdminSearchInput value={query} onChange={setQuery} placeholder="اسم عربي / إنجليزي / المعرّف" label="بحث التمارين" />
+            <div className="cc-exercise-scope-note">
+              <strong>نطاق الوسائط الحالي: {activeMediaVariant === "FEMALE" ? "بنات" : "ذكور / قياسي"}</strong>
+              <span>{selectedTemplate ? `القالب: ${selectedTemplate.name_ar} · V${selectedTemplate.version}` : "اختر قالبًا منشورًا لرؤية تمارينه فقط، أو اختر الجنس لعرض تمارين تلك الفئة."}</span>
+            </div>
             <AdminFilterBar>
+              <label className="cc-filter">
+                القالب المنشور
+                <select value={templateId} onChange={(event) => {
+                  const nextId = event.target.value;
+                  setTemplateId(nextId);
+                  const template = publishedTemplates.find((item) => item.id === nextId);
+                  if (template) setMediaVariant(preferredMediaVariantFromTemplateMetadata(template.metadata));
+                  setOffset(0);
+                }}>
+                  <option value="">كل القوالب المنشورة</option>
+                  {publishedTemplates.map((template) => (
+                    <option key={template.id} value={template.id}>{template.name_ar} · V{template.version} · {template.days_per_week} أيام</option>
+                  ))}
+                </select>
+              </label>
+              <label className="cc-filter">
+                الجنس / نسخة الوسائط
+                <select value={mediaVariant} onChange={(event) => { setMediaVariant(event.target.value as "" | ExerciseMediaVariant); setOffset(0); }}>
+                  <option value="">الكل</option>
+                  <option value="FEMALE">بنات فقط</option>
+                  <option value="STANDARD">ذكور / قياسي فقط</option>
+                </select>
+              </label>
               <label className="cc-filter">
                 العضلة
                 <select value={muscle} onChange={(event) => { setMuscle(event.target.value); setOffset(0); }}>
@@ -642,6 +716,7 @@ export function ExerciseLibraryManager() {
                 <ExerciseMediaPanel
                   draft={draft as AdminExerciseDetail}
                   canUpload={canUploadMedia}
+                  mediaVariant={activeMediaVariant}
                   onConfirm={setConfirm}
                   onUpdated={(next) => {
                     setDraft(next);
@@ -676,12 +751,14 @@ export function ExerciseLibraryManager() {
                 <AdminField
                   label="External ID — 🔒 معرف ثابت"
                   htmlFor="external_id"
-                  hint={draft.id ? "ثابت بعد الإنشاء. لا يُستخدم الاسم كهوية." : "مطلوب عند الإنشاء. مثال CH-001"}
+                  error={fieldErrors.external_id}
+                  hint={draft.id ? "ثابت بعد الإنشاء. لا يُستخدم الاسم كهوية." : idSuggesting ? "جارٍ اقتراح معرّف مناسب…" : idSuggestion ? `المعرّف المقترح حسب العضلة: ${idSuggestion}` : "اختر المجموعة العضلية لاقتراح معرّف منظم."}
                 >
                   <AdminTextInput
                     id="external_id"
                     dir="ltr"
                     value={draft.external_id}
+                    error={fieldErrors.external_id}
                     readOnly={Boolean(draft.id)}
                     onChange={(value) => {
                       if (draft.id) return;
@@ -693,7 +770,7 @@ export function ExerciseLibraryManager() {
                 <AdminField label="Slug" htmlFor="slug">
                   <AdminTextInput id="slug" dir="ltr" value={draft.slug} onChange={(value) => setDraft({ ...draft, slug: value })} />
                 </AdminField>
-                <AdminField label="المجموعة العضلية" htmlFor="muscle_group_id" error={fieldErrors.muscle_group_id}>
+                <AdminField label="المجموعة العضلية" htmlFor="muscle_group_id" error={fieldErrors.muscle_group_id} hint={!draft.id ? "عند تغيير العضلة سيقترح النظام المعرّف التالي تلقائيًا." : undefined}>
                   <AdminSelect id="muscle_group_id" value={draft.muscle_group_id} onChange={(value) => setDraft({ ...draft, muscle_group_id: value })}>
                     <option value="">اختر</option>
                     {options.muscles.map((item) => (

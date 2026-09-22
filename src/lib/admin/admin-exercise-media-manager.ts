@@ -6,6 +6,7 @@ import {
   validateExerciseMediaFile,
   type ExerciseMediaAssetType,
 } from "./admin-exercise-media-contract";
+import type { ExerciseMediaVariant } from "@/lib/platform/exercise-media-variants";
 
 export type ExerciseMediaReadiness =
   | "READY"
@@ -37,6 +38,7 @@ export type ExerciseMediaManagerState = {
   exercise_id: string;
   external_id: string;
   db_id: string;
+  media_variant: ExerciseMediaVariant;
   readiness: ExerciseMediaReadiness;
   current: ExerciseMediaVersion;
   draft: ExerciseMediaVersion | null;
@@ -68,8 +70,8 @@ function friendlyError(message: string): Error {
   return new Error(message || "تعذر إكمال عملية الوسائط.");
 }
 
-export async function getExerciseMediaManager(exerciseId: string): Promise<ExerciseMediaManagerState> {
-  const { data, error } = await rpc("admin_get_exercise_media_manager", { p_exercise_id: exerciseId });
+export async function getExerciseMediaManager(exerciseId: string, variant: ExerciseMediaVariant): Promise<ExerciseMediaManagerState> {
+  const { data, error } = await rpc("admin_get_exercise_media_manager_v2", { p_exercise_id: exerciseId, p_variant: variant });
   if (error) throw friendlyError(error.message);
   return data as ExerciseMediaManagerState;
 }
@@ -80,13 +82,14 @@ export async function stageExerciseMediaFile(input: {
   asset: ExerciseMediaAssetType;
   file: File;
   technical?: Record<string, unknown>;
+  variant: ExerciseMediaVariant;
 }): Promise<ExerciseMediaManagerState> {
   const validation = validateExerciseMediaFile(input.file, input.asset);
   if (validation) throw new Error(validation.message);
 
   const revisionId = crypto.randomUUID();
   const ext = input.asset.includes("video") ? "mp4" : thumbnailExtFromFile(input.file) ?? "webp";
-  const path = mediaDraftPath(input.externalId, revisionId, input.asset, ext);
+  const path = mediaDraftPath(input.externalId, revisionId, input.asset, ext, input.variant);
   const { error: uploadError } = await supabase.storage.from(EXERCISE_MEDIA_BUCKET).upload(path, input.file, {
     upsert: false,
     contentType: input.file.type || undefined,
@@ -94,8 +97,9 @@ export async function stageExerciseMediaFile(input: {
   });
   if (uploadError) throw new Error("فشل رفع المسودة. بقيت النسخة المنشورة الحالية دون تغيير.");
 
-  const { data, error } = await rpc("admin_stage_exercise_media", {
+  const { data, error } = await rpc("admin_stage_exercise_media_v2", {
     p_exercise_id: input.exerciseId,
+    p_variant: input.variant,
     p_asset: input.asset,
     p_path: path,
     p_technical: { ...input.technical, bytes: input.file.size, mime: input.file.type },
@@ -107,9 +111,11 @@ export async function stageExerciseMediaFile(input: {
 export async function removeDraftExerciseMediaAsset(
   exerciseId: string,
   asset: ExerciseMediaAssetType,
+  variant: ExerciseMediaVariant,
 ): Promise<ExerciseMediaManagerState> {
-  const { data, error } = await rpc("admin_stage_exercise_media", {
+  const { data, error } = await rpc("admin_stage_exercise_media_v2", {
     p_exercise_id: exerciseId,
+    p_variant: variant,
     p_asset: asset,
     p_path: null,
     p_technical: {},
@@ -122,9 +128,11 @@ export async function stageExistingExerciseMediaPath(
   exerciseId: string,
   asset: ExerciseMediaAssetType,
   path: string | null,
+  variant: ExerciseMediaVariant,
 ): Promise<ExerciseMediaManagerState> {
-  const { data, error } = await rpc("admin_stage_exercise_media", {
+  const { data, error } = await rpc("admin_stage_exercise_media_v2", {
     p_exercise_id: exerciseId,
+    p_variant: variant,
     p_asset: asset,
     p_path: path,
     p_technical: {},
@@ -133,14 +141,14 @@ export async function stageExistingExerciseMediaPath(
   return data as ExerciseMediaManagerState;
 }
 
-export async function publishExerciseMedia(exerciseId: string): Promise<ExerciseMediaManagerState> {
-  const { data, error } = await rpc("admin_publish_exercise_media", { p_exercise_id: exerciseId });
+export async function publishExerciseMedia(exerciseId: string, variant: ExerciseMediaVariant): Promise<ExerciseMediaManagerState> {
+  const { data, error } = await rpc("admin_publish_exercise_media_v2", { p_exercise_id: exerciseId, p_variant: variant });
   if (error) throw friendlyError(error.message);
   return data as ExerciseMediaManagerState;
 }
 
-export async function restorePreviousExerciseMedia(exerciseId: string): Promise<ExerciseMediaManagerState> {
-  const { data, error } = await rpc("admin_restore_previous_exercise_media", { p_exercise_id: exerciseId });
+export async function restorePreviousExerciseMedia(exerciseId: string, variant: ExerciseMediaVariant): Promise<ExerciseMediaManagerState> {
+  const { data, error } = await rpc("admin_restore_previous_exercise_media_v2", { p_exercise_id: exerciseId, p_variant: variant });
   if (error) throw friendlyError(error.message);
   return data as ExerciseMediaManagerState;
 }

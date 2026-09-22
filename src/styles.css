@@ -18930,6 +18930,30 @@ button.cc-directory-summary__card {
 .cc-client-stage-row img { width: 100%; aspect-ratio: 4/3; border-radius: 10px; object-fit: cover; }
 .cc-filter--toggle { flex-direction: row !important; align-items: center; min-height: 44px; }
 .cc-filter--toggle input { width: 18px; height: 18px; accent-color: #ff6b00; }
+.cc-exercise-scope-note,
+.cc-media-variant-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 10px 0;
+  padding: 12px 14px;
+  border: 1px solid #f2c8aa;
+  border-radius: 14px;
+  background: #fff8f2;
+  color: #172033;
+}
+.cc-exercise-scope-note span,
+.cc-media-variant-note { font-size: 0.82rem; line-height: 1.55; }
+.cc-media-card__fallback {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #edf8f0;
+  color: #237443;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.cc-media-existing-assets { margin-top: 14px; }
 .cc-input[readonly] { background: #f4f1ec; color: #57534e; cursor: not-allowed; }
 
 @media (max-width: 700px) {
