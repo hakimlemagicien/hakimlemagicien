@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
+import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   clientFacingExerciseName,
@@ -27,7 +28,9 @@ import type { AdminProgramExercise } from "@/lib/admin/admin-programs-api";
 import { getAdminExercise } from "@/lib/admin/admin-exercises-api";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import {
+  applyExerciseStageMediaOverrides,
   getExerciseStageCover,
+  getExerciseStageGuide,
   getExerciseStageListThumb,
 } from "@/lib/platform/exercise-stage-media";
 import { resolvePreferredExerciseStillThumb } from "@/lib/platform/exercise-media-variants";
@@ -48,6 +51,10 @@ type Props = {
   startIndex: number;
   dayTitle: string;
   preferredMediaVariant?: "FEMALE" | "STANDARD";
+  mediaOverride?: {
+    videoUrl: string | null;
+    instructionalImageUrls: string[];
+  };
   onClose: () => void;
 };
 
@@ -100,6 +107,7 @@ export function AdminClientExercisePreview({
   startIndex,
   dayTitle,
   preferredMediaVariant = "STANDARD",
+  mediaOverride,
   onClose,
 }: Props) {
   const [index, setIndex] = useState(startIndex);
@@ -128,7 +136,7 @@ export function AdminClientExercisePreview({
   }, [open, startIndex, list.length]);
 
   useEffect(() => {
-    if (!open || !current?.exercise_id) return;
+    if (!open || !current?.exercise_id || mediaOverride) return;
     const id = current.exercise_id;
     if (loadedIds.current.has(id)) return;
     loadedIds.current.add(id);
@@ -166,7 +174,7 @@ export function AdminClientExercisePreview({
     return () => {
       cancelled = true;
     };
-  }, [open, current?.exercise_id, current?.exercise_external_id]);
+  }, [open, current?.exercise_id, current?.exercise_external_id, mediaOverride]);
 
   useEffect(() => {
     if (phase !== "rest") {
@@ -217,6 +225,10 @@ export function AdminClientExercisePreview({
       : media?.useBundled && externalId
         ? `/exercises/${externalId}/video/exercise.mp4`
         : null;
+  const stageGuide = applyExerciseStageMediaOverrides(
+    getExerciseStageGuide(externalId),
+    mediaOverride?.instructionalImageUrls ?? [],
+  );
   const sessionActive = phase === "active" || phase === "rest";
   const currentDoneSets = completedSets[safeIndex] ?? 0;
 
@@ -259,7 +271,7 @@ export function AdminClientExercisePreview({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-[#1c1917]/70 p-3 sm:p-6"
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-[#1c1917]/70 p-3 sm:p-6"
       role="presentation"
       onClick={onClose}
     >
@@ -331,7 +343,16 @@ export function AdminClientExercisePreview({
               <div className="pt-2">
                 <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-border/60 bg-muted shadow-[0_12px_30px_-16px_rgba(15,23,42,0.25)]">
                   {sessionActive ? (
-                    bundledSrc ? (
+                    mediaOverride?.videoUrl ? (
+                      <video
+                        src={mediaOverride.videoUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : bundledSrc ? (
                       <video
                         src={bundledSrc}
                         autoPlay
@@ -394,6 +415,12 @@ export function AdminClientExercisePreview({
                   restLabel={restLabel}
                 />
               </div>
+
+              {stageGuide ? (
+                <div className="mt-3">
+                  <ExerciseStageGuide guide={stageGuide} variant="session" />
+                </div>
+              ) : null}
 
               <section className="mt-4">
                 <h2 className="mb-2 text-[10px] font-black text-foreground">تمارين الحصة</h2>

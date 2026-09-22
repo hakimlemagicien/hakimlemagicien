@@ -117,7 +117,16 @@ const panel = readFileSync(resolve(process.cwd(), "src/components/admin/librarie
 assert(panel.includes("نشر المسودة"), "explicit publish");
 assert(panel.includes("استعادة السابق"), "previous version restore");
 assert(panel.includes("معاينة داخل التطبيق"), "customer preview");
+assert(panel.includes("AdminClientExercisePreview"), "preview reuses the client exercise screen");
+assert(panel.includes("إطار عرض العميل: 1:1 مربع"), "admin video editor documents the square client frame");
+assert(panel.includes("1080×1080"), "square upload guidance is explicit");
 assert(!panel.includes("autoPlay"), "T22 no autoplay");
+
+const clientPreview = readFileSync(resolve(process.cwd(), "src/components/admin/programs/AdminClientExercisePreview.tsx"), "utf8");
+assert(clientPreview.includes("aspect-square"), "client preview keeps the runtime 1:1 media frame");
+assert(clientPreview.includes("ExerciseStageGuide"), "client preview includes the real movement guide");
+assert(clientPreview.includes("mediaOverride?.videoUrl"), "draft video is rendered in the client preview");
+assert(clientPreview.includes("z-[220]"), "client preview stays above the mobile admin editor");
 
 const managerApi = readFileSync(resolve(process.cwd(), "src/lib/admin/admin-exercise-media-manager.ts"), "utf8");
 assert(managerApi.includes("mediaDraftPath"), "uploads use immutable version path");

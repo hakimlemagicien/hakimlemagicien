@@ -18841,10 +18841,26 @@ button.cc-directory-summary__card {
 .cc-media-panel__video {
   width: 100%;
   max-width: 320px;
-  max-height: 180px;
   border-radius: 12px;
   object-fit: cover;
   background: #111;
+}
+
+.cc-media-panel__img {
+  max-height: 180px;
+}
+
+.cc-media-panel__video {
+  width: min(100%, 390px);
+  max-width: 390px;
+  aspect-ratio: 1 / 1;
+}
+
+.cc-media-card__ratio-note {
+  margin: 0 0 8px;
+  color: #9a4a12;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .cc-media-card__path {

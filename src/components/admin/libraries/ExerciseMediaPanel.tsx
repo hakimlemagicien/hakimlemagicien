@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, ImagePlus, LockKeyhole, RotateCcw, Upload, X } from "lucide-react";
 import type { AdminConfirmRequest } from "@/components/admin/AdminConfirmDialog";
+import { AdminClientExercisePreview } from "@/components/admin/programs/AdminClientExercisePreview";
 import type { AdminExerciseDetail } from "@/lib/admin/admin-exercises-api";
 import {
   EXERCISE_LAUNCH_VIDEO_BUDGET_BYTES,
@@ -17,7 +18,6 @@ import {
   stageExerciseMediaFile,
   stageExistingExerciseMediaPath,
   type ExerciseMediaManagerState,
-  type ExerciseMediaSnapshot,
 } from "@/lib/admin/admin-exercise-media-manager";
 
 type Props = {
@@ -55,7 +55,6 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [previewTier, setPreviewTier] = useState<"FREE" | "PLUS" | "PRO">("PLUS");
   const [showPreview, setShowPreview] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<Technical | null>(null);
 
@@ -169,22 +168,46 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
         <button type="button" className="cc-btn cc-btn--ghost" disabled={!manager.previous || busy!==null} onClick={restore}><RotateCcw size={16}/>استعادة السابق</button>
         <button type="button" className="cc-btn cc-btn--primary" disabled={!manager.draft || busy!==null} onClick={publish}>{busy === "publish" ? "جارٍ النشر…" : "نشر المسودة"}</button>
       </div>
-      {showPreview && snapshot ? <CustomerPreview name={draft.name_ar} snapshot={snapshot} urls={urls} tier={previewTier} setTier={setPreviewTier} close={() => setShowPreview(false)} /> : null}
+      {showPreview && snapshot ? (
+        <AdminClientExercisePreview
+          open
+          exercises={[{
+            exercise_id: draft.id,
+            sort_order: 0,
+            sets: 3,
+            reps_min: 8,
+            reps_max: 10,
+            reps_label: null,
+            rest_seconds: 90,
+            suggested_weight_kg: null,
+            notes_ar: draft.coach_notes,
+            exercise_name_ar: draft.name_ar,
+            exercise_name_en: draft.name_en,
+            exercise_external_id: draft.external_id,
+            client_thumb_url: snapshot.thumbnail_path ? urls[snapshot.thumbnail_path] ?? null : null,
+          }]}
+          startIndex={0}
+          dayTitle="معاينة وسائط التمرين"
+          mediaOverride={{
+            videoUrl: snapshot.video_path ? urls[snapshot.video_path] ?? null : null,
+            instructionalImageUrls: snapshot.instructional_images
+              .map((path) => urls[path])
+              .filter((url): url is string => Boolean(url)),
+          }}
+          onClose={() => setShowPreview(false)}
+        />
+      ) : null}
     </section>
   );
 }
 
 function VideoTechnical({ technical }: { technical: Technical }) {
   const guidance = videoSizeGuidance(technical.bytes);
-  return <div className={`cc-video-analysis cc-video-analysis--${guidance.tone}`}><strong>{guidance.message}</strong><div dir="ltr">{technical.width && technical.height ? `${technical.width}×${technical.height}` : "Resolution —"} · {technical.duration ? `${technical.duration.toFixed(1)} sec` : "Duration —"} · {mb(technical.bytes)} · MP4</div><small>الموصى به: H.264، ‏720p أو 1080p، قرابة 30fps. لا يوجد تحويل تلقائي في V1.</small></div>;
+  const square = Boolean(technical.width && technical.height && Math.abs(technical.width - technical.height) / Math.max(technical.width, technical.height) <= 0.05);
+  return <div className={`cc-video-analysis cc-video-analysis--${guidance.tone}`}><strong>{guidance.message}</strong><div dir="ltr">{technical.width && technical.height ? `${technical.width}×${technical.height}` : "Resolution —"} · {technical.duration ? `${technical.duration.toFixed(1)} sec` : "Duration —"} · {mb(technical.bytes)} · MP4</div><small>{square ? "✅ المقاس مربع 1:1 ومتوافق مع عرض العميل." : "تنبيه: عرض العميل مربع 1:1؛ سيُقص الفيديو غير المربع داخل الإطار. يُفضّل 1080×1080 أو 720×720."} H.264، قرابة 30fps.</small></div>;
 }
 
 function MediaSlot({ title, asset, path, url, busy, canUpload, accept, onUpload, onRemove, compact=false }: { title:string; asset:ExerciseMediaAssetType; path:string|null|undefined; url:string|null; busy:string|null; canUpload:boolean; accept:string; onUpload:(asset:ExerciseMediaAssetType,file?:File)=>void; onRemove:(asset:ExerciseMediaAssetType)=>void; compact?:boolean }) {
   const video = asset.includes("video");
-  return <article className={`cc-media-card${compact ? " cc-media-card--compact" : ""}`}><header className="cc-media-card__head"><h4>{title}</h4><span className="cc-media-card__status">{path ? "مسودة/متاح" : "مفقود"}</span></header><div className="cc-media-card__preview">{url ? video ? <video className="cc-media-panel__video" src={url} controls preload="metadata"/> : <img className="cc-media-panel__img" src={url} alt={title}/> : <p className="cc-muted">لا توجد معاينة</p>}</div>{path ? <p className="cc-media-card__path" dir="ltr">{path}</p> : null}<div className="cc-media-card__actions">{canUpload ? <label className="cc-btn cc-btn--primary">{video ? <Upload size={16}/> : <ImagePlus size={16}/>} {path ? "استبدال" : "رفع"}<input type="file" accept={accept} hidden disabled={busy!==null} onChange={(event) => { void onUpload(asset,event.target.files?.[0]); event.currentTarget.value=""; }}/></label> : null}{path && canUpload ? <button type="button" className="cc-btn cc-btn--ghost" disabled={busy!==null} onClick={() => void onRemove(asset)}><X size={16}/>إزالة من المسودة</button> : null}</div></article>;
-}
-
-function CustomerPreview({ name, snapshot, urls, tier, setTier, close }: { name:string; snapshot:ExerciseMediaSnapshot; urls:Record<string,string>; tier:"FREE"|"PLUS"|"PRO"; setTier:(tier:"FREE"|"PLUS"|"PRO")=>void; close:()=>void }) {
-  const locked=tier==="FREE"; const hero=snapshot.thumbnail_path ? urls[snapshot.thumbnail_path] : null;
-  return <div className="cc-media-preview" role="dialog" aria-modal="true"><div className="cc-media-preview__sheet"><header><div><small>معاينة داخل التطبيق — للقراءة فقط</small><h3>{name}</h3></div><button type="button" className="cc-btn cc-btn--ghost" onClick={close}>إغلاق</button></header><div className="cc-segments">{(["FREE","PLUS","PRO"] as const).map((item)=><button key={item} type="button" className={tier===item?"is-active":""} onClick={()=>setTier(item)}>{item}</button>)}</div><div className={`cc-client-exercise-preview${locked?" is-locked":""}`}>{hero?<img src={hero} alt="صورة التمرين"/>:<div className="cc-client-exercise-preview__empty">لا توجد صورة مصغرة</div>}{locked?<div className="cc-client-exercise-preview__lock"><LockKeyhole/>المحتوى جاهز — رقِّ باقتك لفتحه</div>:<><strong>{name}</strong>{snapshot.video_path?<video src={urls[snapshot.video_path]} controls preload="metadata"/>:<p>الفيديو غير متاح</p>}<div className="cc-client-stage-row">{snapshot.instructional_images.filter(Boolean).map((path)=><img key={path} src={urls[path]} alt="خطوة تعليمية"/>)}</div></>}</div></div></div>;
+  return <article className={`cc-media-card${compact ? " cc-media-card--compact" : ""}`}><header className="cc-media-card__head"><h4>{title}</h4><span className="cc-media-card__status">{path ? "مسودة/متاح" : "مفقود"}</span></header><div className="cc-media-card__preview">{url ? video ? <video className="cc-media-panel__video" src={url} controls preload="metadata" playsInline/> : <img className="cc-media-panel__img" src={url} alt={title}/> : <p className="cc-muted">لا توجد معاينة</p>}</div>{video ? <p className="cc-media-card__ratio-note">إطار عرض العميل: 1:1 مربع — المقاس المفضّل 1080×1080 أو 720×720.</p> : null}{path ? <p className="cc-media-card__path" dir="ltr">{path}</p> : null}<div className="cc-media-card__actions">{canUpload ? <label className="cc-btn cc-btn--primary">{video ? <Upload size={16}/> : <ImagePlus size={16}/>} {path ? "استبدال" : "رفع"}<input type="file" accept={accept} hidden disabled={busy!==null} onChange={(event) => { void onUpload(asset,event.target.files?.[0]); event.currentTarget.value=""; }}/></label> : null}{path && canUpload ? <button type="button" className="cc-btn cc-btn--ghost" disabled={busy!==null} onClick={() => void onRemove(asset)}><X size={16}/>إزالة من المسودة</button> : null}</div></article>;
 }
