@@ -105,6 +105,9 @@ assert(manager.includes("fetchResolvedExerciseMediaUrl"), "detail preview import
 assert(manager.includes("ExerciseListThumb"), "T11 list thumbnail component");
 assert(manager.includes("ExerciseMediaPanel"), "media panel");
 assert(manager.includes("cc-exercise-card"), "T21 mobile card");
+assert(manager.includes("cc-exercise-editor"), "mobile exercise editor opens as a dedicated sheet");
+assert(manager.includes("cc-exercise-editor__mobile-head"), "mobile exercise editor has a visible close header");
+assert(manager.includes("guard(() => setSelectedId(null))"), "mobile editor close keeps the unsaved-change guard");
 assert(!manager.includes("htmlFor=\"video_path\""), "T22 no manual video path field");
 assert(manager.includes("debouncedQuery"), "T18 search preserved");
 assert(manager.includes("p_muscle") || manager.includes("muscle:"), "T19 filters preserved");

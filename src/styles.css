@@ -16002,6 +16002,10 @@ button.cc-directory-summary__card {
   background: #fff;
 }
 
+.cc-exercise-editor__mobile-head {
+  display: none;
+}
+
 .cc-editor-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -17491,6 +17495,55 @@ button.cc-directory-summary__card {
 @media (max-width: 700px) {
   .cc-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .cc-lib__editor:has(.cc-exercise-editor) {
+    position: fixed;
+    inset: 0;
+    z-index: 165;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: max(16px, env(safe-area-inset-top)) 14px max(22px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+  }
+
+  .cc-exercise-editor__mobile-head {
+    position: sticky;
+    top: calc(-1 * max(16px, env(safe-area-inset-top)));
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: calc(-1 * max(16px, env(safe-area-inset-top))) -14px 12px;
+    padding: max(14px, env(safe-area-inset-top)) 14px 10px;
+    border-bottom: 1px solid #eee8e1;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(14px);
+  }
+
+  .cc-exercise-editor__mobile-head > div {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  .cc-exercise-editor__mobile-head strong,
+  .cc-exercise-editor__mobile-head span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cc-exercise-editor__mobile-head strong {
+    font-size: 15px;
+  }
+
+  .cc-exercise-editor__mobile-head span {
+    color: #8a8178;
+    font-size: 11px;
+    font-weight: 800;
   }
 
   .cc-lib__editor:has(.cc-meal-editor) {

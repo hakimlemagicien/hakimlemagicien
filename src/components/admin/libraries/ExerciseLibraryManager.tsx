@@ -597,12 +597,25 @@ export function ExerciseLibraryManager() {
             <AdminEmptyState title="اختر تمريناً" body="افتح عنصراً من القائمة أو أنشئ تمريناً جديداً." />
           ) : (
             <form
-              className="cc-editor"
+              className="cc-editor cc-exercise-editor"
               onSubmit={(event) => {
                 event.preventDefault();
                 void save();
               }}
             >
+              <div className="cc-exercise-editor__mobile-head">
+                <button
+                  type="button"
+                  className="cc-btn cc-btn--ghost cc-btn--compact"
+                  onClick={() => guard(() => setSelectedId(null))}
+                >
+                  إغلاق
+                </button>
+                <div>
+                  <strong>{draft.name_ar || "تمرين جديد"}</strong>
+                  <span>{draft.external_id || "غير محفوظ"}</span>
+                </div>
+              </div>
               <AdminEditorToolbar>
                 <AdminSaveState state={saveState} />
                 <button type="submit" className="cc-btn cc-btn--primary" disabled={saveState === "saving"}>
