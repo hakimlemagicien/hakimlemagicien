@@ -126,6 +126,8 @@ assert(panel.includes("AdminClientExercisePreview"), "preview reuses the client 
 assert(panel.includes("إطار عرض العميل: 1:1 مربع"), "admin video editor documents the square client frame");
 assert(panel.includes("1080×1080"), "square upload guidance is explicit");
 assert(panel.includes('mediaVariant === "FEMALE"'), "media editor isolates female media");
+assert(panel.includes('mediaVariant === "STANDARD" && exerciseHasRealMotionVideo'), "female media never inherits the standard bundled-video fallback");
+assert(!panel.includes('${mediaVariant === "FEMALE" ? "female/" : ""}video/exercise.mp4'), "female video availability is driven only by female variant metadata");
 assert(panel.includes("الغلاف التلقائي من الفيديو"), "real video becomes the automatic thumbnail preview");
 assert(panel.includes("صور «تجنب هذه الأخطاء» الحالية"), "existing mistake images are visible in the editor");
 assert(panel.includes("الصورة الحالية من حزمة التطبيق"), "bundled A/B/C images are not reported as missing");

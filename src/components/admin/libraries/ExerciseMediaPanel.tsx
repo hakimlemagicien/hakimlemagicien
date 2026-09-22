@@ -72,8 +72,8 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
   useEffect(() => { setManager(null); void load(); }, [draft.id, mediaVariant]);
   const snapshot = manager?.draft?.snapshot ?? manager?.current.snapshot ?? null;
   const bundledGuide = mediaVariant === "STANDARD" ? getExerciseStageGuide(draft.external_id) : null;
-  const bundledVideoUrl = exerciseHasRealMotionVideo({ externalId: draft.external_id, videoStatus: draft.video_status })
-    ? `/exercises/${draft.external_id}/${mediaVariant === "FEMALE" ? "female/" : ""}video/exercise.mp4`
+  const bundledVideoUrl = mediaVariant === "STANDARD" && exerciseHasRealMotionVideo({ externalId: draft.external_id, videoStatus: draft.video_status })
+    ? `/exercises/${draft.external_id}/video/exercise.mp4`
     : null;
   const resolvedVideoUrl = snapshot?.video_path ? urls[snapshot.video_path] ?? null : bundledVideoUrl;
   const bundledStageUrl = (index: number) => bundledGuide?.stages[index]?.src ??
