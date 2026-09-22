@@ -53,6 +53,7 @@ assert(videoSizeGuidance(10 * 1024 * 1024).tone === "warning", "T26 10MB warning
 assert(videoSizeGuidance(20 * 1024 * 1024).tone === "high", "T26 20MB high warning");
 assert(mediaDraftPath("SH-005", "revision-1", "exercise_video") === "exercises/SH-005/versions/revision-1/exercise_video.mp4", "versioned draft path");
 assert(mediaDraftPath("SH-005", "revision-2", "exercise_video", "mp4", "FEMALE") === "exercises/SH-005/female/versions/revision-2/exercise_video.mp4", "female draft path is isolated");
+assert(mediaDraftPath("SH-005", "revision-3", "mistake_01", "webp", "FEMALE").includes("/female/versions/"), "female mistake media is isolated");
 
 assert(
   resolveAdminExerciseListThumbSrc({
@@ -129,7 +130,9 @@ assert(panel.includes('mediaVariant === "FEMALE"'), "media editor isolates femal
 assert(panel.includes('mediaVariant === "STANDARD" && exerciseHasRealMotionVideo'), "female media never inherits the standard bundled-video fallback");
 assert(!panel.includes('${mediaVariant === "FEMALE" ? "female/" : ""}video/exercise.mp4'), "female video availability is driven only by female variant metadata");
 assert(panel.includes("الغلاف التلقائي من الفيديو"), "real video becomes the automatic thumbnail preview");
-assert(panel.includes("صور «تجنب هذه الأخطاء» الحالية"), "existing mistake images are visible in the editor");
+assert(panel.includes("صور «تجنب هذه الأخطاء»"), "mistake images are editable in the editor");
+assert(panel.includes('asset: "mistake_01"'), "mistake 01 upload is wired");
+assert(panel.includes('asset: "mistake_02"'), "mistake 02 upload is wired");
 assert(panel.includes("الصورة الحالية من حزمة التطبيق"), "bundled A/B/C images are not reported as missing");
 assert(!panel.includes("autoPlay"), "T22 no autoplay");
 
@@ -137,6 +140,9 @@ const clientPreview = readFileSync(resolve(process.cwd(), "src/components/admin/
 assert(clientPreview.includes("aspect-square"), "client preview keeps the runtime 1:1 media frame");
 assert(clientPreview.includes("ExerciseStageGuide"), "client preview includes the real movement guide");
 assert(clientPreview.includes("mediaOverride?.videoUrl"), "draft video is rendered in the client preview");
+assert(clientPreview.includes("mediaOverride?.thumbnailUrl"), "draft thumbnail is rendered in the client preview");
+assert(clientPreview.includes("mediaOverride?.thumbnailVideoUrl"), "real video supplies a safe automatic preview frame");
+assert(clientPreview.includes("mediaOverride.mistakeImageUrls"), "draft mistake images are rendered in the client preview");
 assert(clientPreview.includes("z-[220]"), "client preview stays above the mobile admin editor");
 
 const managerApi = readFileSync(resolve(process.cwd(), "src/lib/admin/admin-exercise-media-manager.ts"), "utf8");
@@ -155,6 +161,16 @@ assert(catalogSql.includes("exercise_media_versions_one_draft_idx"), "draft uniq
 assert(catalogSql.includes("exercise_id, media_variant"), "male/female version histories are isolated");
 assert(catalogSql.includes("_exercise_media_admin_allowed"), "new RPCs remain admin/staff permission guarded");
 assert(!catalogSql.includes("GRANT EXECUTE ON FUNCTION public.admin_suggest_exercise_external_id(UUID) TO anon"), "anonymous id suggestion denied");
+
+const completeMediaSql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260922173000_exercise_media_complete_square_v1.sql"), "utf8");
+assert(completeMediaSql.includes("mistake_01"), "mistake media is accepted by the secure staging RPC");
+assert(completeMediaSql.includes("MISTAKE_IMAGES"), "female mistake media is persisted independently");
+assert(completeMediaSql.includes("'video_path',p.display_video_path"), "catalog returns the real video for automatic thumbnails");
+assert(!completeMediaSql.includes("TO anon"), "new media mutations are not granted to anonymous users");
+
+const styles = readFileSync(resolve(process.cwd(), "src/styles.css"), "utf8");
+assert(styles.includes(".cc-dialog-scrim") && styles.includes("z-index: 240"), "publish confirmation is above the mobile editor");
+assert(styles.includes(".cc-media-card__preview") && styles.includes("aspect-ratio: 1 / 1"), "admin media previews are square");
 
 const managerSql = readFileSync(resolve(process.cwd(), "supabase/migrations/20260921120000_admin_exercise_media_manager_v1.sql"), "utf8");
 assert(managerSql.includes("exercise_media_versions"), "version table exists");

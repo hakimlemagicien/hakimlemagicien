@@ -80,7 +80,7 @@ export type ExerciseMistakeAsset = {
 };
 
 export type ExerciseStageGuide = {
-  externalId: ExerciseStagePilotExternalId;
+  externalId: string;
   nameAr: string;
   status: ExerciseStagePilotStatus;
   stages: readonly [ExerciseStageAsset, ExerciseStageAsset, ExerciseStageAsset];
@@ -95,21 +95,75 @@ export type ExerciseStageGuide = {
 export function applyExerciseStageMediaOverrides(
   guide: ExerciseStageGuide | null,
   urls: readonly string[],
+  mistakeUrls: readonly string[] = [],
 ): ExerciseStageGuide | null {
-  if (!guide || urls.length === 0) return guide;
+  if (!guide || (urls.length === 0 && mistakeUrls.length === 0)) return guide;
   return {
     ...guide,
     stages: guide.stages.map((stage, index) => {
       const src = urls[index];
       return src ? { ...stage, src, thumbSrc: src } : stage;
     }) as ExerciseStageGuide["stages"],
+    mistakes: guide.mistakes.map((mistake, index) => {
+      const src = mistakeUrls[index];
+      return src ? { ...mistake, src, thumbSrc: src } : mistake;
+    }) as ExerciseStageGuide["mistakes"],
+  };
+}
+
+/** Builds the same client guide shell for exercises whose media was created in Admin. */
+export function buildExerciseStageGuidePreview(input: {
+  externalId: string;
+  nameAr: string;
+  stageUrls: readonly string[];
+  mistakeUrls?: readonly string[];
+}): ExerciseStageGuide | null {
+  // Never manufacture a "mistake" card from a correct stage image. The full
+  // guide becomes client-visible only after all five instructional assets exist.
+  if (
+    input.stageUrls.filter(Boolean).length < 3 ||
+    (input.mistakeUrls ?? []).filter(Boolean).length < 2
+  ) return null;
+  const stageCopy = [
+    { key: "a", titleAr: "وضعية البداية", shortTitleAr: "الاستعداد" },
+    { key: "b", titleAr: "الحركة الأساسية", shortTitleAr: "التنفيذ" },
+    { key: "c", titleAr: "وضعية النهاية", shortTitleAr: "العودة" },
+  ] as const;
+  const stages = stageCopy.map((item, index) => ({
+    ...item,
+    instructionAr: `راجع وضعية ${item.shortTitleAr} في الصورة المعتمدة.`,
+    breathAr: "حافظ على تنفس منتظم وتحكم كامل بالحركة.",
+    cues: [
+      { kind: "breath" as const, textAr: "تنفّس بهدوء أثناء الحركة" },
+      { kind: "aim" as const, textAr: "اتبع الوضعية المعروضة بدقة" },
+      { kind: "joint" as const, textAr: "حافظ على ثبات المفاصل وتحكم بالمسار" },
+    ],
+    src: input.stageUrls[index],
+    thumbSrc: input.stageUrls[index],
+    alt: `${input.nameAr} — ${item.titleAr}`,
+  })) as unknown as ExerciseStageGuide["stages"];
+  const mistakes = (["01", "02"] as const).map((key, index) => ({
+    key,
+    titleAr: "خطأ شائع",
+    descriptionAr: `تجنب الخطأ الشائع ${index + 1} الموضح في الصورة.`,
+    src: input.mistakeUrls![index],
+    thumbSrc: input.mistakeUrls![index],
+    alt: `${input.nameAr} — خطأ شائع ${index + 1}`,
+  })) as ExerciseStageGuide["mistakes"];
+  return {
+    externalId: input.externalId,
+    nameAr: input.nameAr,
+    status: "PILOT_APP_TEST",
+    stages,
+    mistakes,
+    compare: { correctLabelAr: "صحيح — الوضعية المعتمدة", incorrectLabelAr: "خطأ — تجنب هذه الوضعية" },
   };
 }
 
 const STAGE_DETAIL_WIDTH = 960;
-const STAGE_DETAIL_HEIGHT = 720;
+const STAGE_DETAIL_HEIGHT = 960;
 const STAGE_THUMB_WIDTH = 256;
-const STAGE_THUMB_HEIGHT = 192;
+const STAGE_THUMB_HEIGHT = 256;
 
 function stagePaths(externalId: string, name: `stage-${ExerciseStageKey}`) {
   return {

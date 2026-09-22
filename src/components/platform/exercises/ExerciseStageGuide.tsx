@@ -62,7 +62,7 @@ export function ExerciseStageGuide({
                 selected ? "border-primary shadow-[0_0_0_1px_var(--primary)]" : "border-border",
               )}
             >
-              <span className="relative block aspect-[4/3] w-full bg-muted">
+              <span className="relative block aspect-square w-full bg-muted">
                 <OptimizedImage
                   src={item.thumbSrc}
                   alt=""
@@ -214,7 +214,7 @@ function CompareCard({
 }) {
   return (
     <article className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="relative aspect-[4/3] bg-muted">
+      <div className="relative aspect-square bg-muted">
         <OptimizedImage
           src={src}
           alt={alt}

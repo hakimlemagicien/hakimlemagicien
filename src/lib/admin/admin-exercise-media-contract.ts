@@ -26,6 +26,8 @@ export const EXERCISE_MEDIA_ASSET_TYPES = [
   "stage_a",
   "stage_b",
   "stage_c",
+  "mistake_01",
+  "mistake_02",
   "anatomy",
 ] as const;
 export type ExerciseMediaAssetType = (typeof EXERCISE_MEDIA_ASSET_TYPES)[number];

@@ -21,6 +21,7 @@ export type ExerciseMediaSnapshot = {
   instructions_video_path: string | null;
   thumbnail_path: string | null;
   instructional_images: string[];
+  mistake_images: string[];
   anatomy_image_path: string | null;
   technical: Record<string, unknown>;
 };
@@ -159,6 +160,7 @@ export async function resolveExerciseMediaSnapshotUrls(snapshot: ExerciseMediaSn
     snapshot.instructions_video_path,
     snapshot.thumbnail_path,
     ...snapshot.instructional_images,
+    ...(snapshot.mistake_images ?? []),
     snapshot.anatomy_image_path,
   ].filter((path): path is string => Boolean(path));
   const entries = await Promise.all(paths.map(async (path) => [path, await fetchExerciseMediaUrl(path)] as const));

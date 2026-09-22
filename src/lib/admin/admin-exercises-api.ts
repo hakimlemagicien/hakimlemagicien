@@ -15,6 +15,7 @@ export type AdminExerciseListItem = {
   primary_muscle: string | null;
   is_active: boolean;
   video_status: string;
+  video_path: string | null;
   instructions_status: string;
   thumbnail_path: string | null;
   muscle_group_name_ar: string | null;
@@ -30,7 +31,6 @@ export type AdminExerciseDetail = AdminExerciseListItem & {
   coach_notes: string | null;
   duration_seconds: number;
   youtube_url: string | null;
-  video_path: string | null;
   instructions_video_path: string | null;
   sort_order: number;
   muscle_group?: { id: string; code: string; name_ar: string; name_en: string };
@@ -87,6 +87,7 @@ function mapList(row: Record<string, unknown>): AdminExerciseListItem {
     primary_muscle: (row.primary_muscle as string | null) ?? null,
     is_active: Boolean(row.is_active),
     video_status: String(row.video_status ?? "placeholder"),
+    video_path: (row.video_path as string | null) ?? null,
     instructions_status: String(row.instructions_status ?? "placeholder"),
     thumbnail_path: (row.thumbnail_path as string | null) ?? null,
     muscle_group_name_ar: (row.muscle_group_name_ar as string | null) ?? null,
@@ -108,7 +109,7 @@ export async function fetchExerciseFilterOptions(): Promise<AdminExerciseFilterO
 }
 
 export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
-  if (filters.mediaStatus || filters.launchOnly || filters.templateId || filters.mediaVariant) {
+  {
     type RpcResult = { data: unknown; error: { message: string } | null };
     type RpcCaller = (name: string, args?: Record<string, unknown>) => PromiseLike<RpcResult>;
     const { data, error } = await (supabase.rpc as unknown as RpcCaller)("admin_list_exercise_media_catalog", {
@@ -132,22 +133,6 @@ export async function listAdminExercises(filters: AdminExerciseFilters = {}) {
     const rows = (payload.rows ?? []).map(mapList);
     return { rows, totalCount: Number(payload.total_count ?? rows.length) };
   }
-  const { data, error } = await supabase.rpc("admin_list_exercises", {
-    p_query: filters.query?.trim() || null,
-    p_muscle: filters.muscle || null,
-    p_equipment: filters.equipment || null,
-    p_difficulty: filters.difficulty || null,
-    p_type: filters.type || null,
-    p_active: filters.active ?? null,
-    p_limit: clampAdminLibraryLimit(filters.limit ?? ADMIN_LIBRARY_PAGE_SIZE, ADMIN_LIBRARY_MAX_PAGE_SIZE),
-    p_offset: Math.max(filters.offset ?? 0, 0),
-  });
-  if (error) throw error;
-  const rows = ((data ?? []) as Record<string, unknown>[]).map(mapList);
-  return {
-    rows,
-    totalCount: Number((data as Array<{ total_count?: number }> | null)?.[0]?.total_count ?? rows.length),
-  };
 }
 
 export async function suggestAdminExerciseExternalId(muscleGroupId: string): Promise<string> {

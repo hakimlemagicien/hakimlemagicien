@@ -70,9 +70,11 @@ import { ExerciseMediaPanel } from "@/components/admin/libraries/ExerciseMediaPa
 import {
   fetchExerciseThumbnailUrls,
   resolveAdminExerciseListThumbSrc,
+  resolveAdminExerciseListVideoSrc,
   videoStatusLabel,
 } from "@/lib/admin/admin-exercise-media";
 import { fetchResolvedExerciseMediaUrl } from "@/lib/platform/exercise-media";
+import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import { useCanAdmin } from "@/components/admin/StaffPermissionsContext";
 import { detectExerciseSensitiveChanges } from "@/lib/admin/admin-library-safety";
 import { LibraryImpactWarningCard } from "@/components/admin/LibraryImpactWarningCard";
@@ -176,7 +178,7 @@ export function ExerciseLibraryManager() {
 
   useEffect(() => {
     let cancelled = false;
-    const paths = rows.map((row) => row.thumbnail_path);
+    const paths = rows.flatMap((row) => [row.thumbnail_path, row.video_path]);
     if (!paths.some(Boolean)) {
       setThumbUrls({});
       setThumbsLoading(false);
@@ -597,16 +599,19 @@ export function ExerciseLibraryManager() {
                       <td>
                         <ExerciseListThumb
                           name={row.name_ar || row.name_en}
+                          videoSrc={resolveAdminExerciseListVideoSrc({ externalId: row.external_id, videoPath: row.video_path, videoStatus: row.video_status, signedUrls: thumbUrls, mediaVariant: activeMediaVariant, bundledVideoAvailable: activeMediaVariant === "STANDARD" && exerciseHasRealMotionVideo({ externalId: row.external_id, videoStatus: row.video_status }) })}
                           src={resolveAdminExerciseListThumbSrc({
                             externalId: row.external_id,
                             thumbnailPath: row.thumbnail_path,
                             signedUrls: thumbUrls,
                             storageFetchDone: !thumbsLoading,
+                            videoAvailable: Boolean(resolveAdminExerciseListVideoSrc({ externalId: row.external_id, videoPath: row.video_path, videoStatus: row.video_status, signedUrls: thumbUrls, mediaVariant: activeMediaVariant, bundledVideoAvailable: activeMediaVariant === "STANDARD" && exerciseHasRealMotionVideo({ externalId: row.external_id, videoStatus: row.video_status }) })),
                           })}
                           loading={
-                            Boolean(row.thumbnail_path) &&
+                            Boolean(row.thumbnail_path || row.video_path) &&
                             thumbsLoading &&
-                            !thumbUrls[row.thumbnail_path ?? ""]
+                            !thumbUrls[row.thumbnail_path ?? ""] &&
+                            !thumbUrls[row.video_path ?? ""]
                           }
                         />
                       </td>
@@ -641,16 +646,19 @@ export function ExerciseLibraryManager() {
                   <button key={row.id} type="button" className="cc-exercise-card" onClick={() => openItem(row.id)}>
                     <ExerciseListThumb
                       name={row.name_ar || row.name_en}
+                      videoSrc={resolveAdminExerciseListVideoSrc({ externalId: row.external_id, videoPath: row.video_path, videoStatus: row.video_status, signedUrls: thumbUrls, mediaVariant: activeMediaVariant, bundledVideoAvailable: activeMediaVariant === "STANDARD" && exerciseHasRealMotionVideo({ externalId: row.external_id, videoStatus: row.video_status }) })}
                       src={resolveAdminExerciseListThumbSrc({
                         externalId: row.external_id,
                         thumbnailPath: row.thumbnail_path,
                         signedUrls: thumbUrls,
                         storageFetchDone: !thumbsLoading,
+                        videoAvailable: Boolean(resolveAdminExerciseListVideoSrc({ externalId: row.external_id, videoPath: row.video_path, videoStatus: row.video_status, signedUrls: thumbUrls, mediaVariant: activeMediaVariant, bundledVideoAvailable: activeMediaVariant === "STANDARD" && exerciseHasRealMotionVideo({ externalId: row.external_id, videoStatus: row.video_status }) })),
                       })}
                       loading={
-                        Boolean(row.thumbnail_path) &&
+                        Boolean(row.thumbnail_path || row.video_path) &&
                         thumbsLoading &&
-                        !thumbUrls[row.thumbnail_path ?? ""]
+                        !thumbUrls[row.thumbnail_path ?? ""] &&
+                        !thumbUrls[row.video_path ?? ""]
                       }
                     />
                     <span className="cc-exercise-card__body">

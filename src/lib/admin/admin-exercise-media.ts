@@ -39,6 +39,7 @@ export function resolveAdminExerciseListThumbSrc(input: {
   thumbnailPath: string | null | undefined;
   signedUrls: Record<string, string>;
   storageFetchDone: boolean;
+  videoAvailable?: boolean;
 }): string | null {
   const path = input.thumbnailPath?.trim();
   if (path) {
@@ -46,7 +47,24 @@ export function resolveAdminExerciseListThumbSrc(input: {
     if (signed) return signed;
     if (!input.storageFetchDone) return null;
   }
+  if (input.videoAvailable) return null;
   return getExerciseStageListThumb(input.externalId);
+}
+
+export function resolveAdminExerciseListVideoSrc(input: {
+  externalId: string;
+  videoPath: string | null | undefined;
+  videoStatus: string | null | undefined;
+  signedUrls: Record<string, string>;
+  mediaVariant?: "STANDARD" | "FEMALE" | null;
+  bundledVideoAvailable?: boolean;
+}): string | null {
+  const path = input.videoPath?.trim();
+  if (path && input.signedUrls[path]) return input.signedUrls[path];
+  if (input.mediaVariant === "FEMALE") return null;
+  return input.bundledVideoAvailable
+    ? `/exercises/${input.externalId}/video/exercise.mp4`
+    : null;
 }
 
 export async function fetchExerciseThumbnailUrls(

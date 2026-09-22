@@ -29,6 +29,7 @@ import { getAdminExercise } from "@/lib/admin/admin-exercises-api";
 import { exerciseHasRealMotionVideo } from "@/lib/platform/exercise-real-motion-video";
 import {
   applyExerciseStageMediaOverrides,
+  buildExerciseStageGuidePreview,
   getExerciseStageCover,
   getExerciseStageGuide,
   getExerciseStageListThumb,
@@ -53,7 +54,10 @@ type Props = {
   preferredMediaVariant?: "FEMALE" | "STANDARD";
   mediaOverride?: {
     videoUrl: string | null;
+    thumbnailUrl: string | null;
+    thumbnailVideoUrl: string | null;
     instructionalImageUrls: string[];
+    mistakeImageUrls: string[];
   };
   onClose: () => void;
 };
@@ -206,6 +210,7 @@ export function AdminClientExercisePreview({
   const media = current.exercise_id ? mediaById[current.exercise_id] : undefined;
   const stageCover = getExerciseStageCover(externalId);
   const listThumb =
+    mediaOverride?.thumbnailUrl ||
     overrideThumb ||
     resolvePreferredExerciseStillThumb({
       externalId,
@@ -225,9 +230,18 @@ export function AdminClientExercisePreview({
       : media?.useBundled && externalId
         ? `/exercises/${externalId}/video/exercise.mp4`
         : null;
+  const previewGuide = getExerciseStageGuide(externalId) || (mediaOverride
+    ? buildExerciseStageGuidePreview({
+        externalId,
+        nameAr: displayName,
+        stageUrls: mediaOverride.instructionalImageUrls,
+        mistakeUrls: mediaOverride.mistakeImageUrls,
+      })
+    : null);
   const stageGuide = applyExerciseStageMediaOverrides(
-    getExerciseStageGuide(externalId),
+    previewGuide,
     mediaOverride?.instructionalImageUrls ?? [],
+    mediaOverride?.mistakeImageUrls ?? [],
   );
   const sessionActive = phase === "active" || phase === "rest";
   const currentDoneSets = completedSets[safeIndex] ?? 0;
@@ -390,6 +404,18 @@ export function AdminClientExercisePreview({
                           sizes="390px"
                           objectFit="cover"
                           className="absolute inset-0 h-full w-full"
+                        />
+                      ) : mediaOverride?.thumbnailVideoUrl ? (
+                        <video
+                          src={mediaOverride.thumbnailVideoUrl}
+                          aria-label={`صورة فيديو ${displayName}`}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onLoadedMetadata={(event) => {
+                            try { event.currentTarget.currentTime = Math.min(0.1, event.currentTarget.duration || 0.1); } catch { /* first frame remains */ }
+                          }}
                         />
                       ) : (
                         <span className="absolute inset-0 grid place-items-center bg-muted text-4xl font-black text-muted-foreground">

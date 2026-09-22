@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   EXERCISE_STAGE_PILOT_EXTERNAL_IDS,
+  buildExerciseStageGuidePreview,
   getExerciseStageCover,
   getExerciseStageGuide,
   getExerciseStageListThumb,
@@ -29,6 +30,14 @@ assert(
 );
 assert(getExerciseStageListThumb("MO-001") === null, "non-Core-100 without stage pack returns null");
 assert(getExerciseStageGuide("BI-001") === null, "BI-001 guide not wired yet; thumb still available");
+const adminGuide = buildExerciseStageGuidePreview({
+  externalId: "TEST-001",
+  nameAr: "تمرين تجريبي",
+  stageUrls: ["a.webp", "b.webp", "c.webp"],
+  mistakeUrls: ["m1.webp", "m2.webp"],
+});
+assert(adminGuide?.stages.length === 3, "admin-published exercise gets a complete client guide");
+assert(adminGuide?.mistakes[1].src === "m2.webp", "admin-published mistake media reaches the client guide");
 
 const bench = getExerciseStageGuide("CH-001");
 assert(bench, "CH-001 guide exists");

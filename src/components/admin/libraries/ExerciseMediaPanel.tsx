@@ -38,6 +38,10 @@ const stageAssets: Array<{ asset: ExerciseMediaAssetType; label: string; index: 
   { asset: "stage_b", label: "الوضعية B", index: 1 },
   { asset: "stage_c", label: "الوضعية C", index: 2 },
 ];
+const mistakeAssets: Array<{ asset: ExerciseMediaAssetType; label: string; index: number }> = [
+  { asset: "mistake_01", label: "تجنب هذا الخطأ 1", index: 0 },
+  { asset: "mistake_02", label: "تجنب هذا الخطأ 2", index: 1 },
+];
 
 function mb(bytes: number) { return `${(bytes / 1024 / 1024).toFixed(1)} MB`; }
 
@@ -80,6 +84,7 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
     (mediaVariant === "STANDARD" && isCore100ExerciseId(draft.external_id)
       ? publicUrlForCore100Exercise(draft.external_id, `stages/stage-${["a", "b", "c"][index]}.webp`)
       : null);
+  const bundledMistakeUrl = (index: number) => bundledGuide?.mistakes[index]?.src ?? null;
   useEffect(() => {
     if (!snapshot) return;
     let active = true;
@@ -166,17 +171,31 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
       <MediaSlot title="الفيديو الأساسي" asset="exercise_video" path={snapshot?.video_path} url={resolvedVideoUrl} fallbackLabel={!snapshot?.video_path && bundledVideoUrl ? "فيديو حقيقي موجود ضمن التطبيق" : undefined} busy={busy} canUpload={canUpload} accept="video/mp4" onUpload={upload} onRemove={removeDraft} />
       {selectedVideo ? <VideoTechnical technical={selectedVideo} /> : null}
       <MediaSlot title={mediaVariant === "FEMALE" ? "الصورة المصغرة للبنات" : "الصورة المصغرة"} asset="thumbnail" path={snapshot?.thumbnail_path} url={snapshot?.thumbnail_path ? urls[snapshot.thumbnail_path] : resolvedVideoUrl} previewKind={!snapshot?.thumbnail_path && resolvedVideoUrl ? "video" : "image"} fallbackLabel={!snapshot?.thumbnail_path && resolvedVideoUrl ? "الغلاف التلقائي من الفيديو — يمكنك رفع صورة مخصصة" : undefined} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} />
-      {mediaVariant === "STANDARD" ? <><div className="cc-media-stage-grid">
+      <section className="cc-media-existing-assets">
+        <h4>صور شرح الحركة A / B / C</h4>
+        <p className="cc-muted">تظهر بمقاس مربع في الأدمن ومعاينة العميل والتطبيق.</p>
+        <div className="cc-media-stage-grid">
         {stageAssets.map((item) => {
           const path = snapshot?.instructional_images?.[item.index] ?? null;
           const fallback = path ? null : bundledStageUrl(item.index);
           return <div key={item.asset}><MediaSlot title={item.label} asset={item.asset} path={path} url={path ? urls[path] : fallback} fallbackLabel={fallback ? "الصورة الحالية من حزمة التطبيق" : undefined} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} compact />
             <div className="cc-media-reorder"><button type="button" disabled={!manager.draft || item.index===0 || busy!==null} onClick={() => void reorder(item.index,item.index-1)}>السابق</button><button type="button" disabled={!manager.draft || item.index===2 || busy!==null} onClick={() => void reorder(item.index,item.index+1)}>التالي</button></div></div>;
         })}
-      </div>
+        </div>
+      </section>
+      <section className="cc-media-existing-assets">
+        <h4>صور «تجنب هذه الأخطاء»</h4>
+        <p className="cc-muted">يمكن رفع أو استبدال صورتين لكل تمرين، وتظهران داخل شرح الحركة.</p>
+        <div className="cc-media-mistake-grid">
+          {mistakeAssets.map((item) => {
+            const path = snapshot?.mistake_images?.[item.index] ?? null;
+            const fallback = path ? null : bundledMistakeUrl(item.index);
+            return <MediaSlot key={item.asset} title={item.label} asset={item.asset} path={path} url={path ? urls[path] : fallback} fallbackLabel={fallback ? "الصورة الحالية من حزمة التطبيق" : undefined} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} compact />;
+          })}
+        </div>
+      </section>
       <MediaSlot title="صورة العضلة المستهدفة" asset="anatomy" path={snapshot?.anatomy_image_path} url={snapshot?.anatomy_image_path ? urls[snapshot.anatomy_image_path] : null} busy={busy} canUpload={canUpload} accept="image/jpeg,image/png,image/webp" onUpload={upload} onRemove={removeDraft} />
-      {bundledGuide ? <section className="cc-media-existing-assets"><h4>صور «تجنب هذه الأخطاء» الحالية</h4><p className="cc-muted">للمعاينة والتعرّف على الصورة الحالية قبل استبدال حزمة المحتوى.</p><div className="cc-media-stage-grid">{bundledGuide.mistakes.map((mistake) => <article className="cc-media-card cc-media-card--compact" key={mistake.key}><header className="cc-media-card__head"><h4>الخطأ {mistake.key}</h4><span className="cc-media-card__status">موجود ضمن التطبيق</span></header><div className="cc-media-card__preview"><img className="cc-media-panel__img" src={mistake.src} alt={mistake.alt}/></div><p className="cc-muted">{mistake.descriptionAr}</p></article>)}</div></section> : null}
-      </> : <p className="cc-media-variant-note">هذه النسخة مخصصة لبرامج البنات فقط. الفيديو والصورة المنشوران هنا لا يستبدلان وسائط الرجال.</p>}
+      {mediaVariant === "FEMALE" ? <p className="cc-media-variant-note">هذه النسخة مخصصة لبرامج البنات فقط. كل الفيديوهات والصور المنشورة هنا مستقلة ولا تستبدل وسائط الرجال.</p> : null}
 
       <section className="cc-template-impact"><strong>مستخدم في البرامج: {manager.templates.length}</strong>{manager.templates.length ? <ul>{manager.templates.map((template) => <li key={template.id}>{template.name_ar}</li>)}</ul> : <p className="cc-muted">غير مستخدم في قالب حالي.</p>}</section>
       {error ? <p className="cc-field__error">{error}</p> : null}
@@ -205,11 +224,15 @@ export function ExerciseMediaPanel({ draft, canUpload, onUpdated: _onUpdated, on
           }]}
           startIndex={0}
           dayTitle="معاينة وسائط التمرين"
+          preferredMediaVariant={mediaVariant}
           mediaOverride={{
             videoUrl: snapshot.video_path ? urls[snapshot.video_path] ?? null : null,
+            thumbnailUrl: snapshot.thumbnail_path ? urls[snapshot.thumbnail_path] ?? null : null,
+            thumbnailVideoUrl: !snapshot.thumbnail_path ? resolvedVideoUrl : null,
             instructionalImageUrls: snapshot.instructional_images
-              .map((path) => urls[path])
-              .filter((url): url is string => Boolean(url)),
+              .map((path) => urls[path] ?? ""),
+            mistakeImageUrls: (snapshot.mistake_images ?? [])
+              .map((path) => urls[path] ?? ""),
           }}
           onClose={() => setShowPreview(false)}
         />
