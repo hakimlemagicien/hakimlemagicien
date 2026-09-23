@@ -71,7 +71,7 @@ const PRIMARY_STORY_SLIDES: StorySlide[] = [
     durationValue: "12",
     durationLabel: "أسبوع",
     quote:
-      "كنت أجرب أنظمة كثيرة بدون نتيجة، مع خطة حكيم المخصصة قدرت أخسر 16 كغ وأبني جسم قوي وصحي.",
+      "جمعت التدريب والتغذية في تطبيق MAAKFIT، وأصبح الالتزام بالخطة ومتابعة تقدمي أوضح كل يوم.",
   },
   {
     name: "سمير",
@@ -95,7 +95,7 @@ const PRIMARY_STORY_SLIDES: StorySlide[] = [
     muscleLabel: "كتلة عضلية",
     durationValue: "16",
     durationLabel: "أسبوع",
-    quote: "المتابعة الأسبوعية ساعدتني أضبط الخطة. النتائج جاءت تدريجياً وبثبات دون إرهاق.",
+    quote: "تقارير التقدم داخل التطبيق ساعدتني أراجع أدائي وأحافظ على الاستمرارية دون إرهاق.",
   },
   {
     name: "بيدرو",
@@ -119,7 +119,7 @@ const PRIMARY_STORY_SLIDES: StorySlide[] = [
     muscleLabel: "كتلة عضلية",
     durationValue: "8",
     durationLabel: "أسابيع",
-    quote: "مع حكيم تغير كل شيء. خطة مخصصة ودعم مستمر، والنتائج فاقت توقعاتي.",
+    quote: "تجربة MAAKFIT الرقمية رتبت لي التدريب والتغذية والقياسات في مكان واحد واضح.",
   },
   {
     name: "ناصر",
@@ -147,8 +147,7 @@ const CLONE_STORY_SLIDES: StorySlide[] = [
     muscleLabel: "كتلة عضلية",
     durationValue: "12",
     durationLabel: "أسبوع",
-    quote:
-      "كنت أتعب من تجربة أنظمة بدون نتيجة، مع خطة حكيم المخصصة خسرت وزناً حقيقياً واستعدت نشاطي.",
+    quote: "بدلاً من الخطط المبعثرة، تابعت وجباتي وتماريني داخل MAAKFIT واستعدت نشاطي تدريجياً.",
   },
   {
     name: "ياسمين",
@@ -172,7 +171,7 @@ const CLONE_STORY_SLIDES: StorySlide[] = [
     muscleLabel: "كتلة عضلية",
     durationValue: "14",
     durationLabel: "أسبوع",
-    quote: "المتابعة الأسبوعية ساعدتني أضبط الخطة. النتائج جاءت تدريجياً وبثبات دون إرهاق.",
+    quote: "سجل التقدم داخل التطبيق ساعدني أراجع أدائي، والنتائج جاءت تدريجياً وبثبات.",
   },
   {
     name: "سلمى",
@@ -196,7 +195,7 @@ const CLONE_STORY_SLIDES: StorySlide[] = [
     muscleLabel: "جسم متناسق",
     durationValue: "8",
     durationLabel: "أسابيع",
-    quote: "مع حكيم تغير كل شيء. خطة مخصصة ودعم مستمر، والنتائج فاقت توقعاتي.",
+    quote: "وجود الخطة والتقدم اليومي داخل التطبيق جعل التجربة أبسط وأسهل في الالتزام.",
   },
   {
     name: "كوثر",
@@ -274,9 +273,7 @@ function StatColumn({
       >
         {renderSignedStatValue(value)}
       </motion.div>
-      {!hideLabel && (
-        <p className="mt-0.5 font-[Tajawal] text-[13px] text-[#666]">{label}</p>
-      )}
+      {!hideLabel && <p className="mt-0.5 font-[Tajawal] text-[13px] text-[#666]">{label}</p>}
     </div>
   );
 }
@@ -309,9 +306,7 @@ function StorySlideCard({
             loading="lazy"
             className="h-full w-full object-cover object-top"
           />
-          <span
-            className="absolute left-3 top-3 grid h-[38px] w-[48px] place-items-center rounded-[10px] bg-[#111] text-[13px] font-bold text-white"
-          >
+          <span className="absolute left-3 top-3 grid h-[38px] w-[48px] place-items-center rounded-[10px] bg-[#111] text-[13px] font-bold text-white">
             قبل
           </span>
         </div>
@@ -322,9 +317,7 @@ function StorySlideCard({
             loading="lazy"
             className="h-full w-full object-cover object-top"
           />
-          <span
-            className="absolute right-3 top-3 grid h-[38px] w-[48px] place-items-center rounded-[10px] bg-[#FF6B00] text-[13px] font-bold text-white"
-          >
+          <span className="absolute right-3 top-3 grid h-[38px] w-[48px] place-items-center rounded-[10px] bg-[#FF6B00] text-[13px] font-bold text-white">
             بعد
           </span>
         </div>
@@ -359,7 +352,10 @@ function StorySlideCard({
 
       <div className="px-4 pb-4 pt-2">
         <div className="rounded-[24px] bg-white/85 px-4 py-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.03]">
-          <p className="text-center font-[Cairo] text-[32px] leading-none text-[#FF6B00]/35" aria-hidden>
+          <p
+            className="text-center font-[Cairo] text-[32px] leading-none text-[#FF6B00]/35"
+            aria-hidden
+          >
             “
           </p>
           <p className="mt-1 text-center font-[Tajawal] text-[15px] leading-[1.65] text-[#111]">
@@ -367,7 +363,7 @@ function StorySlideCard({
               <>
                 كنت أجرب أنظمة كثيرة بدون نتيجة،
                 <br />
-                مع خطة حكيم المخصصة قدرت أخسر 16 كغ
+                مع تطبيق MAAKFIT نظمت تدريبي وتغذيتي
                 <br />
                 وأبني جسم قوي وصحي.
               </>
@@ -431,9 +427,7 @@ function StoriesPrimarySlider() {
         speed={680}
         spaceBetween={0}
         slidesPerView={1}
-        autoplay={
-          autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false
-        }
+        autoplay={autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false}
         className="success-stories-primary-swiper overflow-hidden rounded-[26px]"
       >
         {PRIMARY_STORY_SLIDES.map((story) => (
@@ -459,9 +453,7 @@ function StoriesPrimarySlider() {
             }}
             className={[
               "success-stories-primary-pagination-dot rounded-full transition-all duration-300",
-              i === activeIndex
-                ? "h-1.5 w-4 bg-[#FF6B00]"
-                : "h-1.5 w-1.5 bg-white/55",
+              i === activeIndex ? "h-1.5 w-4 bg-[#FF6B00]" : "h-1.5 w-1.5 bg-white/55",
             ].join(" ")}
           />
         ))}
@@ -496,9 +488,7 @@ function StoriesCloneSlider() {
         speed={680}
         spaceBetween={0}
         slidesPerView={1}
-        autoplay={
-          autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false
-        }
+        autoplay={autoplayEnabled ? { delay: 2000, disableOnInteraction: true } : false}
         className="success-stories-clone-swiper overflow-hidden rounded-[26px]"
       >
         {CLONE_STORY_SLIDES.map((story) => (
@@ -524,9 +514,7 @@ function StoriesCloneSlider() {
             }}
             className={[
               "success-stories-clone-pagination-dot rounded-full transition-all duration-300",
-              i === activeIndex
-                ? "h-1.5 w-4 bg-[#FF6B00]"
-                : "h-1.5 w-1.5 bg-white/55",
+              i === activeIndex ? "h-1.5 w-4 bg-[#FF6B00]" : "h-1.5 w-1.5 bg-white/55",
             ].join(" ")}
           />
         ))}
@@ -548,18 +536,17 @@ function StoriesCloneCTA() {
         to="/"
         className="relative flex h-[72px] w-full items-center overflow-hidden rounded-[36px] cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse [animation-duration:4s]"
       >
-        <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]" aria-hidden>
-          <span
-            className="absolute inset-y-[-20%] left-0 h-[140%] w-[45%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"
-          />
+        <span
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]"
+          aria-hidden
+        >
+          <span className="absolute inset-y-[-20%] left-0 h-[140%] w-[45%] animate-cta-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
         </span>
         <span className="relative z-10 ml-2 grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white">
           <ArrowLeft className="h-5 w-5 text-primary" strokeWidth={2.5} />
         </span>
         <span className="relative z-10 flex-1 text-center font-[Tajawal] text-white">
-          <span className="block text-[15px] font-extrabold leading-tight">
-            ابدأ رحلتك الآن
-          </span>
+          <span className="block text-[15px] font-extrabold leading-tight">ابدأ رحلتك الآن</span>
           <span className="mt-0.5 block text-[11px] font-medium text-white/90">
             خطوتك الأولى نحو أفضل نسخة منك
           </span>
@@ -632,9 +619,7 @@ function StoriesPrimaryScreen() {
             transitionDelay: "120ms",
           }}
         >
-          <h2
-            className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(19px,6vw,25px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700"
-          >
+          <h2 className="success-stories-primary-title origin-top mt-[22px] font-[Tajawal] text-[clamp(19px,6vw,25px)] font-black leading-[1.25] tracking-tight scale-[0.853] transition-all duration-700">
             <span className="success-stories-primary-title-line text-[#111]">نتائج حقيقية</span>
             <br />
             <span className="success-stories-primary-title-highlight text-[#FF6B00]">
@@ -645,13 +630,9 @@ function StoriesPrimaryScreen() {
             aria-hidden
             className="success-stories-primary-title-line-wrap relative mx-auto mt-[5px] h-[2px] w-full max-w-xs overflow-hidden"
           >
-            <div
-              className="success-stories-primary-title-line-base h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent"
-            />
+            <div className="success-stories-primary-title-line-base h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" />
             {inView && (
-              <span
-                className="success-stories-primary-title-line-shimmer pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
-              />
+              <span className="success-stories-primary-title-line-shimmer pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent" />
             )}
           </div>
         </div>
@@ -664,9 +645,9 @@ function StoriesPrimaryScreen() {
             transitionDelay: "240ms",
           }}
         >
-          أكثر من 10,000 عميل حول العالم
+          تجارب استخدام حقيقية داخل التطبيق
           <br />
-          غيروا حياتهم داخل المنصة مع كوتش حكيم .
+          جمعت التدريب والتغذية والتقدم داخل MAAKFIT.
         </p>
       </div>
 
@@ -713,8 +694,8 @@ const PLATFORM_FEATURES: {
     iconColor: "text-[#3B82F6]",
   },
   {
-    title: "دعم ومتابعة",
-    description: "متابعة مستمرة ودعم عند الحاجة",
+    title: "إرشادات داخل التطبيق",
+    description: "تنبيهات وحالة واضحة لخطتك اليومية",
     icon: Search,
     iconWrap: "bg-[#F3E8FF]",
     iconColor: "text-[#A855F7]",
@@ -751,7 +732,7 @@ function PlatformInsideScreen() {
             transform: inView ? "translateY(0)" : "translateY(14px)",
           }}
         >
-          ماذا ستحصل داخل المنصة؟
+          ماذا ستحصل داخل التطبيق؟
         </h2>
         <p
           className="mt-2 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B] transition-all duration-700"

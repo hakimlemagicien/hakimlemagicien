@@ -31,7 +31,9 @@ function BaseTermPrice({
         className={cn(
           "font-[Tajawal] font-black leading-none tracking-tight",
           compact ? "text-[26px]" : "text-[34px]",
-          vip ? "bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text text-transparent" : "text-[#0F172A]",
+          vip
+            ? "bg-gradient-to-l from-[#F0D9A8] via-[#FFF3D6] to-[#D4AF78] bg-clip-text text-transparent"
+            : "text-[#0F172A]",
         )}
       >
         {formatOfficialTotal(offer.totalPrice)}
@@ -72,9 +74,7 @@ function SixMonthUpsell({
   vip?: boolean;
 }) {
   const daily = formatIllustrativeDaily(offer.totalPrice, offer.duration.days);
-  const savings = offer.savingsUsd
-    ? formatSavings(offer.savingsUsd, offer.savingsNote)
-    : null;
+  const savings = offer.savingsUsd ? formatSavings(offer.savingsUsd, offer.savingsNote) : null;
 
   return (
     <motion.button
@@ -179,6 +179,7 @@ type PlanActivateBlockProps = {
   popularStyle?: boolean;
   compact?: boolean;
   onActivated?: () => void;
+  showAllTermsImmediately?: boolean;
 };
 
 /**
@@ -192,21 +193,18 @@ export function PlanActivateBlock({
   popularStyle = Boolean(plan.popular),
   compact = false,
   onActivated,
+  showAllTermsImmediately = false,
 }: PlanActivateBlockProps) {
   const term3 = useMemo(
     () => plan.terms.find((t) => t.months === 3) ?? plan.terms[0],
     [plan.terms],
   );
-  const term6 = useMemo(
-    () => plan.terms.find((t) => t.months === 6),
-    [plan.terms],
-  );
+  const term6 = useMemo(() => plan.terms.find((t) => t.months === 6), [plan.terms]);
 
-  const [upsellOpen, setUpsellOpen] = useState(false);
+  const [upsellOpen, setUpsellOpen] = useState(showAllTermsImmediately);
   const [selectedMonths, setSelectedMonths] = useState<SubscriptionTermMonths>(3);
 
-  const selectedOffer =
-    selectedMonths === 6 && term6 ? term6 : term3;
+  const selectedOffer = selectedMonths === 6 && term6 ? term6 : term3;
 
   const isVip = plan.id === "vip";
   const isPremium = plan.id === "premium";
@@ -236,9 +234,7 @@ export function PlanActivateBlock({
             selected={selectedMonths === 6}
             compact={compact}
             vip={isVip}
-            onToggle={() =>
-              setSelectedMonths((prev) => (prev === 6 ? 3 : 6))
-            }
+            onToggle={() => setSelectedMonths((prev) => (prev === 6 ? 3 : 6))}
           />
         ) : null}
       </AnimatePresence>

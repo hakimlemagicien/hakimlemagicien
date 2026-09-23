@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { SITE_WHATSAPP_URL } from "@/lib/site-legal";
 
-const WHATSAPP_URL = "https://wa.me/971505129019";
 const HERO_INLINE_CTA_ID = "hero-inline-quiz-cta";
 const STICKY_QUIZ_BAR_ID = "hero-sticky-quiz-bar";
 const WHATSAPP_SIZE = 52;
@@ -21,10 +21,9 @@ export function FloatingWhatsApp() {
       setStickyQuizActive(mobileMq.matches && !intersecting);
     };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => sync(entry.isIntersecting),
-      { threshold: 0 },
-    );
+    const observer = new IntersectionObserver(([entry]) => sync(entry.isIntersecting), {
+      threshold: 0,
+    });
     observer.observe(cta);
 
     const onMqChange = () => {
@@ -68,11 +67,12 @@ export function FloatingWhatsApp() {
 
   return (
     <a
-      href={WHATSAPP_URL}
+      href={SITE_WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="تواصل عبر واتساب"
-      className="fixed z-[60] grid place-items-center rounded-full bg-[#25D366] shadow-[0_8px_22px_-6px_rgba(37,211,102,0.5)] transition-[transform,bottom] duration-500 ease-out hover:scale-105 active:scale-95 animate-whatsapp-pulse animate-whatsapp-enter max-lg:right-4 lg:right-5"
+      aria-label="دعم الحساب والفوترة والمشاكل التقنية عبر واتساب"
+      title="دعم الحساب والفوترة والمشاكل التقنية"
+      className="group fixed z-[60] grid place-items-center rounded-full bg-[#25D366] shadow-[0_8px_22px_-6px_rgba(37,211,102,0.5)] transition-[transform,bottom] duration-500 ease-out hover:scale-105 active:scale-95 animate-whatsapp-enter max-lg:right-4 lg:right-5"
       style={{
         width: WHATSAPP_SIZE,
         height: WHATSAPP_SIZE,
@@ -80,6 +80,9 @@ export function FloatingWhatsApp() {
       }}
     >
       <WhatsAppIcon className="h-7 w-7 text-white" />
+      <span className="pointer-events-none absolute right-[calc(100%+10px)] hidden whitespace-nowrap rounded-full border border-[#DCEFE3] bg-white px-3 py-1.5 font-[Tajawal] text-[11px] font-extrabold text-[#166534] opacity-0 shadow-sm transition-opacity group-hover:opacity-100 lg:block">
+        دعم الحساب والفوترة
+      </span>
     </a>
   );
 }

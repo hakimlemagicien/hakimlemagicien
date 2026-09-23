@@ -3,11 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { HeroProblemTransition } from "@/components/HeroProblemTransition";
-import { TrustStatistics } from "@/components/TrustStatistics";
 import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import { SiteFooter } from "@/components/SiteFooter";
-import coachImg from "@/assets/coach-photo.png";
-import { LEGACY_PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
+import { PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
 
 const ProblemSection = lazy(() =>
   import("@/components/ProblemSection").then((m) => ({ default: m.ProblemSection })),
@@ -21,22 +19,20 @@ const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 export const Route = createFileRoute("/coaching")({
   head: () => ({
     meta: [
-      { title: "MAAKFIT — برنامج تدريبي وغذائي مخصص لهدفك" },
+      { title: "MAAKFIT — تطبيق Fitness رقمي للتدريب والتغذية والتقدم" },
       {
         name: "description",
         content:
-          "احصل على برنامج تدريبي وغذائي مخصص 100% لهدفك. تحليل شخصي مجاني خلال دقائق مع متابعة دورية ونتائج قابلة للقياس.",
+          "MAAKFIT تطبيق Fitness رقمي كامل يجمع التدريب والتغذية وتتبع التقدم والترطيب داخل حساب واحد، مع باقات FREE وPLUS وPRO.",
       },
-      { property: "og:title", content: "MAAKFIT — برنامج تدريبي وغذائي مخصص" },
+      { property: "og:title", content: "MAAKFIT — تطبيق Fitness رقمي كامل" },
       {
         property: "og:description",
-        content: "اكتشف الخطة المناسبة لجسمك وأهدافك بناءً على تحليل شخصي مجاني.",
+        content:
+          "تدريب وتغذية وتقدم وترطيب داخل تطبيق MAAKFIT. ابدأ مجاناً واختر PLUS أو PRO عندما تكون جاهزاً.",
       },
     ],
-    links: [
-      { rel: "preload", href: coachImg, as: "image", fetchPriority: "high" },
-      { rel: "canonical", href: `${LEGACY_PRODUCTION_APP_ORIGIN}/coaching` },
-    ],
+    links: [{ rel: "canonical", href: `${PRODUCTION_APP_ORIGIN}/coaching` }],
   }),
   component: CoachingPage,
 });
@@ -47,7 +43,6 @@ function CoachingPage() {
       <Header />
       <main>
         <Hero />
-        <TrustStatistics className="hidden lg:block" />
         <HeroProblemTransition />
         <div className="bg-[linear-gradient(180deg,#F3EFE8_0%,#F7F5F2_30%,#FAF8F5_55%,#FFFFFF_92%)]">
           <Suspense fallback={<SectionSkeleton variant="cards" />}>

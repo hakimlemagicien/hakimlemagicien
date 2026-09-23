@@ -2,11 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
 import { FeatureCheck, featureCheckToneForPlan } from "@/components/platform/upgrade/FeatureCheck";
-import {
-  ACTIVATE_PROGRAM_CTA,
-  FREE_TIER,
-  type PaidTierCatalog,
-} from "@/lib/pricing-presentation";
+import { ACTIVATE_PROGRAM_CTA, FREE_TIER, type PaidTierCatalog } from "@/lib/pricing-presentation";
 import { getPublicPaidTiers } from "@/lib/payments/catalog";
 
 function useInView<T extends HTMLElement>(threshold = 0.12) {
@@ -67,7 +63,7 @@ function PaidPlanCard({
         ))}
       </ul>
 
-      <PlanActivateBlock plan={plan} />
+      <PlanActivateBlock plan={plan} showAllTermsImmediately />
     </article>
   );
 }
@@ -94,7 +90,7 @@ export default function PricingTransparency() {
             اختر الباقة المناسبة لك
           </h2>
           <p className="mt-2 font-[Tajawal] text-[13px] font-medium leading-relaxed text-[#64748B] sm:text-[14px]">
-            نبني الثقة أولاً — ثم نفعّل برنامجك الشخصي داخل المنصة
+            اشتراك رقمي لمدة 3 أو 6 أشهر — تُتاح المزايا المشمولة داخل تطبيق MAAKFIT
           </p>
         </div>
 
@@ -104,9 +100,15 @@ export default function PricingTransparency() {
             free.inView ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h3 className="font-[Tajawal] text-[22px] font-extrabold text-[#0F172A]">{FREE_TIER.name}</h3>
-          <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-[#64748B]">{FREE_TIER.tagline}</p>
-          <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">{FREE_TIER.role}</p>
+          <h3 className="font-[Tajawal] text-[22px] font-extrabold text-[#0F172A]">
+            {FREE_TIER.name}
+          </h3>
+          <p className="mt-1 font-[Tajawal] text-[13px] font-medium text-[#64748B]">
+            {FREE_TIER.tagline}
+          </p>
+          <p className="mt-1 font-[Tajawal] text-[11px] font-bold text-[#94A3B8]">
+            {FREE_TIER.role}
+          </p>
 
           <ul className="mt-5 space-y-3 text-right">
             {FREE_TIER.features.map((item) => (
@@ -130,6 +132,18 @@ export default function PricingTransparency() {
             <PaidPlanCard key={plan.id} plan={plan} index={index} inView={cards.inView} />
           ))}
         </div>
+
+        <p className="mx-auto mt-6 max-w-2xl text-center font-[Tajawal] text-[11px] leading-relaxed text-[#64748B] sm:text-[12px]">
+          PLUS وPRO اشتراكان رقميان، وتُتاح المزايا المشمولة داخل تطبيق MAAKFIT. راجع{" "}
+          <Link to="/terms" className="font-bold text-primary hover:underline">
+            الشروط
+          </Link>
+          {" و"}
+          <Link to="/refund" className="font-bold text-primary hover:underline">
+            سياسة الاسترداد والإلغاء
+          </Link>
+          {" قبل الشراء."}
+        </p>
       </div>
     </section>
   );

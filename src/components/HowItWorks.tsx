@@ -39,23 +39,22 @@ const steps = [
   {
     n: "02",
     Icon: BarChart3,
-    title: "نحلل بياناتك",
-    text: "نقوم بتحليل إجاباتك وبياناتك لفهم احتياجاتك وتحديد نقاط التحسين.",
+    title: "يطابق التطبيق بياناتك",
+    text: "يطابق التطبيق إجاباتك مع الهدف والجنس وأيام التدريب واحتياجات التغذية.",
   },
   {
     n: "03",
     Icon: ClipboardList,
-    title: "نبني خطتك",
-    text: "نبني لك برنامج تدريب وخطة تغذية مخصصة بناءً على تحليل بياناتك.",
+    title: "تظهر خطتك في حسابك",
+    text: "تُنشأ نتيجة تدريب وتغذية خاصة بحسابك وتظهر مباشرة داخل التطبيق.",
   },
   {
     n: "04",
     Icon: CheckCircle2,
-    title: "تحصل على توصيتك",
-    text: "تحصل على برنامجك المخصص جاهز للتطبيق ومتابعة مستمرة لتحقيق أفضل النتائج.",
+    title: "تابع وسجّل تقدمك",
+    text: "نفّذ التمارين والوجبات وسجّل الأداء والقياسات والترطيب من مكان واحد.",
   },
 ];
-
 
 const ASSESSMENT_CHECKLIST = [
   { label: "المعلومات الأساسية", progress: 25 },
@@ -68,13 +67,7 @@ const STEP_INTERVAL_MS = 2500;
 const PROGRESS_R = 54;
 const PROGRESS_C = 2 * Math.PI * PROGRESS_R;
 
-function PhoneMockup({
-  activeStep,
-  compact = false,
-}: {
-  activeStep: number;
-  compact?: boolean;
-}) {
+function PhoneMockup({ activeStep, compact = false }: { activeStep: number; compact?: boolean }) {
   const progress = ASSESSMENT_CHECKLIST[activeStep].progress;
   const dash = (progress / 100) * PROGRESS_C;
   const prevProgressRef = useRef(progress);
@@ -93,7 +86,9 @@ function PhoneMockup({
   const pctText = compact ? "text-xl" : "text-2xl";
 
   return (
-    <div className={`relative mx-auto ${shellW} animate-float-phone font-[Tajawal,Cairo,sans-serif]`}>
+    <div
+      className={`relative mx-auto ${shellW} animate-float-phone font-[Tajawal,Cairo,sans-serif]`}
+    >
       <div className="absolute inset-0 -z-10 flex items-center justify-center">
         <div className={`${beigeSize} rounded-full bg-beige`} />
       </div>
@@ -111,11 +106,20 @@ function PhoneMockup({
           </div>
 
           <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4">
-            <p className="text-center text-[12px] font-bold text-foreground sm:text-[13px]">تقدم التقييم</p>
+            <p className="text-center text-[12px] font-bold text-foreground sm:text-[13px]">
+              تقدم التقييم
+            </p>
 
             <div className={`relative mx-auto mt-3 ${ringBox} sm:mt-4`}>
               <svg viewBox="0 0 140 140" className="-rotate-90 w-full h-full">
-                <circle cx="70" cy="70" r={PROGRESS_R} stroke="#FFF1E5" strokeWidth="10" fill="none" />
+                <circle
+                  cx="70"
+                  cy="70"
+                  r={PROGRESS_R}
+                  stroke="#FFF1E5"
+                  strokeWidth="10"
+                  fill="none"
+                />
                 <circle
                   cx="70"
                   cy="70"
@@ -158,7 +162,11 @@ function PhoneMockup({
                   >
                     <span
                       className={`text-[10px] font-semibold leading-snug sm:text-[11px] ${
-                        isActive ? "text-primary font-bold" : isDone ? "text-foreground" : "text-muted-foreground"
+                        isActive
+                          ? "text-primary font-bold"
+                          : isDone
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                       }`}
                     >
                       {it.label}
@@ -194,13 +202,7 @@ function PhoneMockup({
   );
 }
 
-function StepDots({
-  activeStep,
-  onSelect,
-}: {
-  activeStep: number;
-  onSelect: (i: number) => void;
-}) {
+function StepDots({ activeStep, onSelect }: { activeStep: number; onSelect: (i: number) => void }) {
   return (
     <div className="flex items-center justify-center gap-2 mt-4" dir="rtl">
       {ASSESSMENT_CHECKLIST.map((it, i) => (
@@ -211,7 +213,9 @@ function StepDots({
           aria-current={i === activeStep ? "step" : undefined}
           onClick={() => onSelect(i)}
           className={`rounded-full transition-all duration-500 ease-out ${
-            i === activeStep ? "h-2.5 w-7 bg-primary shadow-[0_0_12px_rgba(249,115,22,0.45)]" : "h-2.5 w-2.5 bg-primary/25 hover:bg-primary/40"
+            i === activeStep
+              ? "h-2.5 w-7 bg-primary shadow-[0_0_12px_rgba(249,115,22,0.45)]"
+              : "h-2.5 w-2.5 bg-primary/25 hover:bg-primary/40"
           }`}
         />
       ))}
@@ -303,7 +307,7 @@ export function HowItWorks() {
       <div className="container mx-auto px-4 -mt-[30px]">
         <div className="text-center max-w-2xl mx-auto -mt-[30px]">
           <h2 className="origin-top text-[37px] font-[Tajawal] font-extrabold leading-[1.08] tracking-tight text-foreground scale-[0.853] sm:scale-[0.896] sm:text-[52px] lg:scale-[0.926] lg:text-[71px]">
-            كيف <span className="inline-block translate-y-[2px] text-primary">تعمل</span> المنصة
+            كيف <span className="inline-block translate-y-[2px] text-primary">يعمل</span> التطبيق
           </h2>
           <div
             aria-hidden
@@ -311,20 +315,16 @@ export function HowItWorks() {
           >
             <div className="h-full w-full bg-gradient-to-l from-[#FF6B00]/30 via-[#FF6B00]/12 to-transparent" />
             {secIn && (
-              <span
-                className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent"
-              />
+              <span className="pointer-events-none absolute inset-y-0 right-0 w-1/4 animate-title-line-shimmer-pingpong bg-gradient-to-l from-transparent via-[#FF6B00]/55 to-transparent" />
             )}
           </div>
           <p className="mt-2 text-sm text-muted-foreground sm:mt-4 sm:text-base">
-            عملية بسيطة وسريعة للحصول على برنامجك المخصص بخطوات مدروسة.
+            رحلة رقمية واضحة تبدأ بالتقييم وتستمر داخل حسابك في MAAKFIT.
           </p>
         </div>
 
         {/* Mobile: compact animated viewport */}
-        <div
-          className="lg:hidden mt-5 flex flex-col items-center justify-center max-h-[85vh] min-h-0 px-1"
-        >
+        <div className="lg:hidden mt-5 flex flex-col items-center justify-center max-h-[85vh] min-h-0 px-1">
           <PhoneMockup activeStep={activeStep} compact />
           <StepDots activeStep={activeStep} onSelect={handleStepSelect} />
           <p className="mt-3 text-center text-[11px] text-muted-foreground max-w-[240px] leading-relaxed">
@@ -362,7 +362,6 @@ export function HowItWorks() {
             <StepCard step={steps[3]} index={3} />
           </div>
         </div>
-
       </div>
     </section>
   );

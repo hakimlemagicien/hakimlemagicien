@@ -31,16 +31,24 @@ function useInView<T extends HTMLElement>(threshold = 0.12) {
 
 const FAQS: { q: string; a: string }[] = [
   {
+    q: "ما الذي أشتريه وأين أحصل عليه؟",
+    a: "تشتري اشتراكاً رقمياً في مزايا MAAKFIT. بعد تأكيد الدفع وتفعيل العضوية، تظهر المزايا المشمولة داخل حسابك في التطبيق؛ لا توجد شحنة أو منتج مادي.",
+  },
+  {
     q: "هل يمكنني البدء مجاناً؟",
-    a: "نعم، يمكنك إنشاء حساب مجاني وتجربة المنصة واكتشاف برنامجك قبل الترقية.",
+    a: "نعم، يمكنك إنشاء حساب مجاني وتجربة التطبيق واكتشاف شكل برنامجك قبل الترقية.",
   },
   {
     q: "هل أستطيع الترقية لاحقاً؟",
     a: "نعم، يمكنك الترقية في أي وقت بعد بدء رحلتك واختيار الباقة الأنسب لك.",
   },
   {
+    q: "هل الخدمة رقمية بالكامل؟",
+    a: "نعم. مزايا FREE وPLUS وPRO تُقدَّم داخل تطبيق MAAKFIT. يتوفر دعم الحساب والفوترة والمشاكل التقنية عبر صفحة التواصل وواتساب الدعم.",
+  },
+  {
     q: "هل البرنامج مناسب للمبتدئين؟",
-    a: "نعم، نصمم البرنامج بناءً على مستواك الحالي ونتدرج معك خطوة بخطوة لضمان الأمان والاستمرارية.",
+    a: "نعم، يطابق التطبيق بياناتك مع المحتوى المناسب ويتدرج مع تسجيل أدائك لضمان الوضوح والاستمرارية.",
   },
   {
     q: "هل أحتاج إلى معدات رياضية؟",
@@ -48,7 +56,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "كيف يتم تخصيص البرنامج لي؟",
-    a: "تبدأ بتقييم سريع لأهدافك ومستواك ونمط حياتك، ثم نبني لك برنامج تدريب وغذاء مخصص بناءً على إجاباتك.",
+    a: "تبدأ بتقييم سريع لأهدافك ونمط حياتك، ثم يطابق التطبيق إجاباتك مع برنامج التدريب ونتيجة التغذية المناسبة لحسابك.",
   },
 ];
 
@@ -75,7 +83,9 @@ function FaqItem({
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-orange-50 text-orange-500">
         <Plus className="h-5 w-5" strokeWidth={2.4} />
       </span>
-      <span className="flex-1 text-right text-sm font-bold text-neutral-900 md:text-base">{item.q}</span>
+      <span className="flex-1 text-right text-sm font-bold text-neutral-900 md:text-base">
+        {item.q}
+      </span>
     </button>
   );
 }
@@ -112,8 +122,7 @@ export default function FAQ() {
           }`}
         >
           <h2 className="text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
-            الأسئلة{" "}
-            <span className="inline-block translate-y-[2px] text-primary">الشائعة</span>
+            الأسئلة <span className="inline-block translate-y-[2px] text-primary">الشائعة</span>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-base md:text-lg text-neutral-500 leading-loose">
             كل ما تحتاج معرفته قبل البدء في برنامجك التدريبي والغذائي.
@@ -122,12 +131,7 @@ export default function FAQ() {
 
         <div className="mx-auto mt-14 md:mt-16 max-w-3xl space-y-3">
           {FAQS.map((item, i) => (
-            <FaqItem
-              key={item.q}
-              item={item}
-              index={i}
-              onOpen={() => setActiveFaqIdx(i)}
-            />
+            <FaqItem key={item.q} item={item} index={i} onOpen={() => setActiveFaqIdx(i)} />
           ))}
         </div>
 

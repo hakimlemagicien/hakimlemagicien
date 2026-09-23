@@ -14,7 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
-import { LEGAL_ROUTES } from "@/lib/site-legal";
+import { LEGAL_ROUTES, SITE_WHATSAPP_URL } from "@/lib/site-legal";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, type ReactNode } from "react";
 import appLogo from "@/assets/app-logo.png";
@@ -36,7 +36,7 @@ const navItems: {
   },
   {
     label: "كيف تعمل",
-    desktopLabel: "كيف تعمل المنصة",
+    desktopLabel: "كيف يعمل التطبيق",
     hash: "how",
     icon: Route,
     tone: "bg-[#EAF2FF] text-[#3B82F6]",
@@ -175,7 +175,7 @@ function FloatingOrb({
 export function Header() {
   const [open, setOpen] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
-  const whatsapp = "https://wa.me/971505129019";
+  const whatsapp = SITE_WHATSAPP_URL;
   const pathname = useLocation({ select: (l) => l.pathname });
   const currentHash = useLocation({ select: (l) => l.hash.replace(/^#/, "") });
   const closeMenu = () => setOpen(false);
@@ -238,7 +238,7 @@ export function Header() {
             className="inline-flex items-center gap-2 rounded-full border-2 border-primary px-5 py-2.5 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground"
           >
             <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
-            تواصل عبر واتساب
+            دعم الحساب والفوترة
           </a>
         </div>
 
@@ -261,7 +261,11 @@ export function Header() {
               transition={{ duration: 0.18 }}
               className="grid place-items-center"
             >
-              {open ? <X className="h-5 w-5" strokeWidth={2.2} /> : <Menu className="h-5 w-5" strokeWidth={2} />}
+              {open ? (
+                <X className="h-5 w-5" strokeWidth={2.2} />
+              ) : (
+                <Menu className="h-5 w-5" strokeWidth={2} />
+              )}
             </motion.span>
           </AnimatePresence>
         </button>
@@ -317,7 +321,11 @@ export function Header() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-3 gap-x-3 gap-y-5 border-t border-black/[0.06] pt-5">
-                  <Link to={loggedIn ? "/app" : "/auth"} onClick={closeMenu} className="outline-none">
+                  <Link
+                    to={loggedIn ? "/app" : "/auth"}
+                    onClick={closeMenu}
+                    className="outline-none"
+                  >
                     <FloatingOrb
                       label={loggedIn ? "حسابي" : "دخول"}
                       tone="bg-[#F1F5F9] text-[#0F172A]"
@@ -334,17 +342,13 @@ export function Header() {
                     onClick={closeMenu}
                     className="outline-none"
                   >
-                    <FloatingOrb label="واتساب" tone="bg-[#E8F8EF] text-[#25D366]" delay={0.38}>
+                    <FloatingOrb label="دعم واتساب" tone="bg-[#E8F8EF] text-[#25D366]" delay={0.38}>
                       <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />
                     </FloatingOrb>
                   </a>
 
                   <Link to={LEGAL_ROUTES.privacy} onClick={closeMenu} className="outline-none">
-                    <FloatingOrb
-                      label="الخصوصية"
-                      tone="bg-[#F8FAFC] text-[#64748B]"
-                      delay={0.42}
-                    >
+                    <FloatingOrb label="الخصوصية" tone="bg-[#F8FAFC] text-[#64748B]" delay={0.42}>
                       <Shield className="h-5 w-5" strokeWidth={2.2} />
                     </FloatingOrb>
                   </Link>

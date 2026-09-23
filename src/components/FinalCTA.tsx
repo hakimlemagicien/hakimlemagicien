@@ -1,29 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  BadgeCheck,
-  Check,
-  Star,
-  Zap,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import readyCoachImg from "@/assets/هل انت جاهز.png";
-import avatar1 from "@/assets/avatar1.jpg";
-import avatar2 from "@/assets/avatar2.jpg";
-import avatar3 from "@/assets/avatar3.jpg";
-import avatar4 from "@/assets/avatar4.jpg";
-import khaledAfter from "@/assets/خالد بعد.jpg";
-import samirAfter from "@/assets/سمير بعد.jpg";
-import nasserAfter from "@/assets/ناصر بعد.jpg";
-import juliaAfter from "@/assets/جوليا بعد.jpg";
-import yasminAfter from "@/assets/ياسمين بعد.jpg";
-import fatimaAfter from "@/assets/فاطمة بعد.jpg";
-import salmaAfter from "@/assets/سلمى بعد.jpg";
-import anwarAfter from "@/assets/انوار بعد.jpg";
-import kawtharAfter from "@/assets/كوثر بعد.jpg";
-import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
+import { ArrowLeft, Check, ShieldCheck, Zap, TrendingDown, TrendingUp } from "lucide-react";
+import { MarketingAppShowcase } from "@/components/MarketingAppShowcase";
 
 function useInView<T extends HTMLElement>(threshold = 0.15) {
   const ref = useRef<T | null>(null);
@@ -66,7 +44,11 @@ function useCount(target: number, active: boolean, duration = 1600) {
 
 const CARD_SHADOW = "0 10px 40px rgba(0,0,0,0.08)";
 
-function ProgressCard({ progress, dash, circumference }: {
+function ProgressCard({
+  progress,
+  dash,
+  circumference,
+}: {
   progress: number;
   dash: number;
   circumference: number;
@@ -105,7 +87,7 @@ const GOAL_CYCLE_MS = 2500;
 
 const GOAL_SLIDES = [
   {
-    label: "خسارة الدهون",
+    label: "تنشيف الجسم",
     value: "-12 كغ",
     color: "#22C55E",
     Icon: TrendingDown,
@@ -173,9 +155,7 @@ function GoalCard() {
               }}
               aria-hidden={!active}
             >
-              <div
-                className="flex h-[34px] items-end justify-end text-right text-xs font-bold leading-tight text-[#111827] line-clamp-2"
-              >
+              <div className="flex h-[34px] items-end justify-end text-right text-xs font-bold leading-tight text-[#111827] line-clamp-2">
                 {slide.label}
               </div>
               <div className="mt-2 flex h-[28px] items-center justify-end gap-2">
@@ -204,96 +184,11 @@ function GoalCard() {
   );
 }
 
-const SOCIAL_PROOF_AVATARS = [
-  avatar1,
-  avatar2,
-  avatar3,
-  avatar4,
-  khaledAfter,
-  samirAfter,
-  nasserAfter,
-  juliaAfter,
-  yasminAfter,
-  fatimaAfter,
-  salmaAfter,
-  anwarAfter,
-  kawtharAfter,
-];
-
-const VISIBLE_AVATAR_COUNT = 4;
-const AVATAR_CYCLE_MS = 2400;
-
-function useCyclingAvatarStack(pool: string[], visibleCount = VISIBLE_AVATAR_COUNT, intervalMs = AVATAR_CYCLE_MS) {
-  const [stack, setStack] = useState(() => pool.slice(0, visibleCount));
-  const poolCursor = useRef(visibleCount);
-  const slotCursor = useRef(0);
-
-  useEffect(() => {
-    if (pool.length <= visibleCount) return;
-
-    const id = window.setInterval(() => {
-      setStack((prev) => {
-        const next = [...prev];
-        const slot = slotCursor.current % visibleCount;
-        slotCursor.current += 1;
-
-        let tries = 0;
-        let candidate = pool[poolCursor.current % pool.length];
-        while (next.includes(candidate) && tries < pool.length) {
-          poolCursor.current += 1;
-          candidate = pool[poolCursor.current % pool.length];
-          tries += 1;
-        }
-        poolCursor.current += 1;
-        next[slot] = candidate;
-        return next;
-      });
-    }, intervalMs);
-
-    return () => window.clearInterval(id);
-  }, [pool, visibleCount, intervalMs]);
-
-  return stack;
-}
-
-function FinalCtaSocialProof({ active, count }: { active: boolean; count: number }) {
-  const avatars = useCyclingAvatarStack(SOCIAL_PROOF_AVATARS);
-
+function FinalCtaAssurance() {
   return (
-    <div className="mt-6 flex items-center justify-center gap-3 [direction:ltr]">
-      <div className="flex shrink-0 -space-x-2">
-        {avatars.map((src, i) => (
-          <img
-            key={`${i}-${src}`}
-            src={src}
-            alt=""
-            width={36}
-            height={36}
-            loading="lazy"
-            className="cta-avatar-cycle h-9 w-9 rounded-full border-2 border-white object-cover"
-          />
-        ))}
-      </div>
-      <div className="flex flex-col items-start gap-0.5 text-right [direction:rtl]">
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="h-3.5 w-3.5 fill-success text-success" />
-          ))}
-          <span
-            className="inline-block min-w-[4.5rem] text-left font-[Tajawal] text-[13px] font-extrabold tabular-nums text-success"
-            aria-hidden={!active}
-          >
-            +{count.toLocaleString("en-US")}
-          </span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="font-[Tajawal] text-[11px] font-medium text-foreground">
-            عميل حققوا نتائج مذهلة
-          </span>
-          <BadgeCheck className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />
-        </div>
-        <span className="font-[Tajawal] text-[11px] font-bold text-[#F97316]">كن أنت التالي!</span>
-      </div>
+    <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#E8E4DE] bg-white px-4 py-2 text-[11px] font-bold text-[#64748B] shadow-sm">
+      <ShieldCheck className="h-4 w-4 text-[#22A95D]" />
+      كل المزايا المشمولة تظهر داخل حسابك في التطبيق
     </div>
   );
 }
@@ -321,7 +216,6 @@ function TodayCard() {
 
 export default function FinalCTA() {
   const { ref, inView } = useInView<HTMLElement>(0.1);
-  const count = useCount(SOCIAL_PROOF_CLIENT_COUNT, inView);
   const progress = useCount(76, inView, 1800);
 
   const circumference = 2 * Math.PI * 38;
@@ -358,19 +252,18 @@ export default function FinalCTA() {
           }}
         >
           <h2 className="-mt-[30px] text-center font-[Tajawal] text-[26px] font-extrabold leading-[1.12] tracking-tight text-foreground lg:origin-top lg:-mt-[20px] lg:text-[78px] lg:font-black lg:leading-[1.08] lg:scale-[0.926]">
-            رحلتك{" "}
-            <span className="inline-block translate-y-[2px] text-primary">تبدأ اليوم</span>
+            رحلتك <span className="inline-block translate-y-[2px] text-primary">تبدأ اليوم</span>
           </h2>
 
           <p
             className="mx-auto mt-5 max-w-2xl text-base leading-relaxed sm:text-lg"
             style={{ color: "#6B7280" }}
           >
-            انضم إلى آلاف العملاء الذين حققوا نتائج حقيقية داخل المنصة مع كوتش حكيم.
+            ابدأ مجاناً، ثم تابع تدريبك وتغذيتك وتقدمك وترطيبك داخل تطبيق MAAKFIT.
           </p>
         </div>
 
-        {/* Visual — coach left, cards stacked right (RTL: cards first, coach second) */}
+        {/* A real product-shaped preview keeps the closing message digital and concrete. */}
         <div
           className="relative mx-auto mt-10 max-w-5xl sm:mt-12 lg:mt-14"
           style={{
@@ -389,31 +282,15 @@ export default function FinalCTA() {
             }}
           />
 
-          <div className="flex items-end justify-center gap-4 sm:gap-6 lg:gap-10">
-            {/* Cards — right side in RTL */}
-            <div className="z-20 flex shrink-0 -translate-x-[30px] flex-col gap-3 sm:gap-4">
+          <div className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+            <div className="z-20 flex flex-col gap-3 sm:gap-4">
               <ProgressCard progress={progress} dash={dash} circumference={circumference} />
               <GoalCard />
               <TodayCard />
             </div>
 
-            {/* Coach — left side in RTL; circle fixed, image scales independently */}
-            <div className="relative flex shrink-0 items-end justify-center">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[300px] w-[300px] -translate-x-1/2 rounded-full sm:h-[380px] sm:w-[380px] lg:h-[460px] lg:w-[460px]"
-                style={{ background: "rgba(249,115,22,0.08)" }}
-              />
-              <img
-                src={readyCoachImg}
-                alt="هل أنت جاهز؟"
-                className="relative z-10 w-auto max-h-[420px] sm:max-h-[520px] lg:max-h-[620px] object-contain object-bottom"
-                style={{
-                  opacity: inView ? 1 : 0,
-                  transform: inView ? "scale(1)" : "scale(0.96)",
-                  transition: "all 900ms ease-out 200ms",
-                }}
-              />
+            <div className="relative px-4 sm:px-10 lg:px-0">
+              <MarketingAppShowcase compact />
             </div>
           </div>
         </div>
@@ -437,7 +314,10 @@ export default function FinalCTA() {
           >
             <ArrowLeft className="h-5 w-5 shrink-0 transition-transform group-hover:-translate-x-1" />
             <span className="flex-1 text-center">أنا جاهز للتغيير</span>
-            <span className="relative flex h-7 w-7 shrink-0 items-center justify-center" aria-hidden>
+            <span
+              className="relative flex h-7 w-7 shrink-0 items-center justify-center"
+              aria-hidden
+            >
               <span className="absolute inset-0 rounded-full bg-white/30 cta-motivation-pulse" />
               <Zap
                 className="relative h-5 w-5 cta-motivation-bounce"
@@ -447,7 +327,7 @@ export default function FinalCTA() {
             </span>
           </Link>
 
-          <FinalCtaSocialProof active={inView} count={count} />
+          <FinalCtaAssurance />
         </div>
       </div>
     </section>
