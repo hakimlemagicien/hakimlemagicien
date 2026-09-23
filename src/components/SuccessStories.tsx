@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -544,8 +543,8 @@ function StoriesCloneCTA() {
           أنت يمكن أن تكون العميل القادم!
         </p>
       </div>
-      <Link
-        to="/"
+      <a
+        href="https://maakfit.com/"
         className="relative flex h-[72px] w-full items-center overflow-hidden rounded-[36px] cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse [animation-duration:4s]"
       >
         <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]" aria-hidden>
@@ -565,7 +564,7 @@ function StoriesCloneCTA() {
           </span>
         </span>
         <span className="relative z-10 w-12 shrink-0" aria-hidden />
-      </Link>
+      </a>
     </div>
   );
 }

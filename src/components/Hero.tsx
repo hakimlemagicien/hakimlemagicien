@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -387,8 +386,8 @@ function MobileCoachVisual() {
 
 function HeroQuizCTA({ className = "" }: { className?: string }) {
   return (
-    <Link
-      to="/"
+    <a
+      href="https://maakfit.com/"
       className={[
         "relative flex h-[52px] w-full items-center overflow-hidden rounded-full cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse",
         className,
@@ -406,7 +405,7 @@ function HeroQuizCTA({ className = "" }: { className?: string }) {
         ابدأ تقييمك المجاني
       </span>
       <span className="relative z-10 w-9 shrink-0" aria-hidden />
-    </Link>
+    </a>
   );
 }
 
@@ -562,8 +561,8 @@ function DesktopHero() {
           </div>
 
           <div className="mt-8">
-            <Link
-              to="/"
+            <a
+              href="https://maakfit.com/"
               className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 cta-gradient text-white font-bold text-lg rounded-full px-6 py-4 shadow-cta transition-all hover:scale-[1.02] hover:brightness-110"
             >
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-primary shrink-0 transition-transform group-hover:-translate-x-1">
@@ -571,7 +570,7 @@ function DesktopHero() {
               </span>
               <span className="flex-1 text-center sm:flex-none">ابدأ تقييمك المجاني</span>
               <span className="hidden sm:block w-9" aria-hidden />
-            </Link>
+            </a>
           </div>
 
           <div className="mt-6 flex items-center justify-center lg:justify-start gap-3 flex-wrap">

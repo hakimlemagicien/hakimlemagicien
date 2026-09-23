@@ -2,5 +2,32 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
-  "framework": null
+  "framework": null,
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/coaching",
+      "permanent": false
+    },
+    {
+      "source": "/quiz",
+      "destination": "https://maakfit.com/",
+      "permanent": false
+    },
+    {
+      "source": "/auth",
+      "destination": "https://maakfit.com/auth",
+      "permanent": false
+    },
+    {
+      "source": "/app/:path*",
+      "destination": "https://maakfit.com/app/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "https://maakfit.com/admin/:path*",
+      "permanent": false
+    }
+  ]
 }

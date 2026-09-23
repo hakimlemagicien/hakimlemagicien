@@ -111,16 +111,16 @@ function AuthNavLink({ className }: { className: string }) {
 
   if (loggedIn) {
     return (
-      <Link to="/app" className={className}>
+      <a href="https://maakfit.com/app" className={className}>
         حسابي
-      </Link>
+      </a>
     );
   }
 
   return (
-    <Link to="/auth" className={className}>
+    <a href="https://maakfit.com/auth" className={className}>
       تسجيل الدخول
-    </Link>
+    </a>
   );
 }
 

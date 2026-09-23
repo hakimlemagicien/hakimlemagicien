@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -427,8 +426,8 @@ export default function FinalCTA() {
             transition: "all 800ms ease-out 250ms",
           }}
         >
-          <Link
-            to="/"
+          <a
+            href="https://maakfit.com/"
             className="cta-glow group inline-flex w-full items-center justify-between gap-6 rounded-full px-8 py-5 text-lg font-bold text-white transition-transform hover:-translate-y-0.5 sm:w-auto"
             style={{
               background: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",
@@ -445,7 +444,7 @@ export default function FinalCTA() {
                 fill="currentColor"
               />
             </span>
-          </Link>
+          </a>
 
           <FinalCtaSocialProof active={inView} count={count} />
         </div>
