@@ -544,7 +544,7 @@ function StoriesCloneCTA() {
         </p>
       </div>
       <a
-        href="https://maakfit.com/"
+        href="https://maakfit.com/quiz?step=gender"
         className="relative flex h-[72px] w-full items-center overflow-hidden rounded-[36px] cta-gradient px-2 shadow-cta [direction:ltr] animate-cta-premium-pulse [animation-duration:4s]"
       >
         <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]" aria-hidden>

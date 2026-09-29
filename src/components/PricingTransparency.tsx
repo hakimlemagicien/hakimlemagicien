@@ -114,7 +114,7 @@ export default function PricingTransparency() {
           </ul>
 
           <a
-            href="https://maakfit.com/"
+            href="https://maakfit.com/quiz?step=gender"
             className="mt-5 flex w-full items-center justify-center rounded-xl border border-[#D6D3CD] bg-white px-4 py-3 font-[Tajawal] text-[14px] font-extrabold text-[#0F172A] transition hover:bg-[#FAF8F5]"
           >
             {ACTIVATE_PROGRAM_CTA}

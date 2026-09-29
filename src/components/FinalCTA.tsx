@@ -427,7 +427,7 @@ export default function FinalCTA() {
           }}
         >
           <a
-            href="https://maakfit.com/"
+            href="https://maakfit.com/quiz?step=gender"
             className="cta-glow group inline-flex w-full items-center justify-between gap-6 rounded-full px-8 py-5 text-lg font-bold text-white transition-transform hover:-translate-y-0.5 sm:w-auto"
             style={{
               background: "linear-gradient(135deg, #F97316 0%, #FB923C 100%)",

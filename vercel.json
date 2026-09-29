@@ -11,7 +11,7 @@
     },
     {
       "source": "/quiz",
-      "destination": "https://maakfit.com/",
+      "destination": "https://maakfit.com/quiz?step=gender",
       "permanent": false
     },
     {
