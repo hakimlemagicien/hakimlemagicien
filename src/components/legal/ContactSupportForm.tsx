@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import { CURRENT_SUPPORT_EMAIL, CURRENT_WHATSAPP_URL, LEGAL_ROUTES } from "@/lib/legal/policy-catalog";
+import {
+  CURRENT_SUPPORT_EMAIL,
+  CURRENT_WHATSAPP_URL,
+  LEGAL_ROUTES,
+} from "@/lib/legal/policy-catalog";
 import {
   createSupportTicket,
   isForbiddenSupportContent,
@@ -13,7 +17,7 @@ const CATEGORIES: { id: SupportTicketCategory; ar: string; en: string }[] = [
   { id: "refund", ar: "الاسترداد", en: "Refund" },
   { id: "technical", ar: "مشكلة تقنية", en: "Technical Issue" },
   { id: "privacy", ar: "الخصوصية", en: "Privacy" },
-  { id: "other", ar: "أخرى / شكوى", en: "Other / Complaint" },
+  { id: "other", ar: "دعم عام / شكوى", en: "General Support / Complaint" },
 ];
 
 export function ContactSupportForm({ locale = "ar" }: { locale?: LegalLocale }) {
@@ -41,7 +45,7 @@ export function ContactSupportForm({ locale = "ar" }: { locale?: LegalLocale }) 
             sensitive:
               "Do not include passwords, full card numbers, or CVV. We will never ask for those in this form.",
             emergency:
-              "MAAKFIT Support and coaching are not medical emergency channels. If you need urgent medical care, contact local emergency services.",
+              "MAAKFIT Support is not a medical emergency channel. If you need urgent medical care, contact local emergency services.",
             retry: "Try again",
             fallback: `If sending fails, email ${CURRENT_SUPPORT_EMAIL}`,
             confirm: "Request received",
@@ -57,7 +61,7 @@ export function ContactSupportForm({ locale = "ar" }: { locale?: LegalLocale }) 
             sensitive:
               "لا تضع كلمة المرور أو رقم البطاقة الكامل أو رمز CVV. لن نطلب هذه البيانات في هذا النموذج.",
             emergency:
-              "دعم MAAKFIT ودردشة الكوتش ليستا قناة طوارئ طبية. إذا احتجت رعاية طبية عاجلة فاتصل بخدمات الطوارئ المحلية.",
+              "دعم MAAKFIT ليس قناة طوارئ طبية. إذا احتجت رعاية طبية عاجلة فاتصل بخدمات الطوارئ المحلية.",
             retry: "إعادة المحاولة",
             fallback: `إذا فشل الإرسال راسل ${CURRENT_SUPPORT_EMAIL}`,
             confirm: "تم استلام طلبك",
@@ -85,9 +89,13 @@ export function ContactSupportForm({ locale = "ar" }: { locale?: LegalLocale }) 
       });
       setResult({ ticketId: created.ticketId, createdAt: created.createdAt });
     } catch (err) {
-      setError(err instanceof Error && err.message === "missing_fields"
-        ? (isEn ? "Please fill subject and message." : "أكمل الموضوع والرسالة.")
-        : copy.fallback);
+      setError(
+        err instanceof Error && err.message === "missing_fields"
+          ? isEn
+            ? "Please fill subject and message."
+            : "أكمل الموضوع والرسالة."
+          : copy.fallback,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -204,8 +212,13 @@ export function ContactSupportForm({ locale = "ar" }: { locale?: LegalLocale }) 
       <p className="text-center text-[11px] text-neutral-500">
         {copy.fallback}
         {" · "}
-        <a className="font-bold text-[#FF6B00]" href={CURRENT_WHATSAPP_URL} target="_blank" rel="noreferrer">
-          WhatsApp
+        <a
+          className="font-bold text-[#FF6B00]"
+          href={CURRENT_WHATSAPP_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {isEn ? "WhatsApp for account, technical & billing support" : "واتساب لدعم الحساب والتقنية والفوترة"}
         </a>
         {" · "}
         <a className="font-bold text-[#FF6B00]" href={LEGAL_ROUTES.refund}>

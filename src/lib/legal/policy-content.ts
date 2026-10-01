@@ -2,10 +2,11 @@ import type { LegalLocale, PolicyKind } from "./policy-catalog";
 import {
   CURRENT_SUPPORT_EMAIL,
   CURRENT_WHATSAPP,
-  GOVERNING_LAW_STATUS,
-  LEGAL_ENTITY_STATUS,
+  LEGAL_OPERATOR,
+  POLICY_EFFECTIVE_DATE_AR,
+  POLICY_EFFECTIVE_DATE_EN,
   POLICY_VERSION,
-  REGISTERED_ADDRESS_STATUS,
+  PUBLIC_LOCATION,
 } from "./policy-catalog";
 
 export type LegalSection = { title: string; body: string[] };
@@ -29,14 +30,14 @@ const AR: Record<PolicyKind, LegalDocument> = {
   terms: {
     title: "شروط وأحكام MAAKFIT",
     description:
-      "توضّح هذه الشروط كيف تعمل منصة MAAKFIT، وما يقدّمه كل اشتراك، ومسؤولياتك كعميل. ليست خدمة طبية.",
+      "توضّح هذه الشروط كيف يعمل تطبيق MAAKFIT الرقمي، وما يقدّمه كل اشتراك، ومسؤولياتك كعميل. ليست خدمة طبية.",
     sections: [
       {
         title: "1. من نحن وما نقدّمه",
         body: [
-          "MAAKFIT منصة رقمية للياقة والتغذية والصحة العامة، مع متابعة بشرية من Coach Hakim (الكوتش حكيم) حسب الباقة.",
+          "MAAKFIT تطبيق Fitness رقمي بالكامل للتدريب والتغذية وتتبع التقدم والترطيب. تُقدَّم الخدمة والخطط المخصصة داخل التطبيق.",
           "MAAKFIT ليست مقدّم رعاية طبية، ولا تشخّص ولا تعالج الأمراض.",
-          `الكيان القانوني المسجّل: ${LEGAL_ENTITY_STATUS}. العنوان المسجّل: ${REGISTERED_ADDRESS_STATUS}.`,
+          `MAAKFIT منتج لياقة رقمية يتم تشغيله بواسطة ${LEGAL_OPERATOR}، بصفته مشغّلاً فردياً وليس شركة مسجلة. الموقع العام: ${PUBLIC_LOCATION}.`,
         ],
       },
       {
@@ -50,20 +51,21 @@ const AR: Record<PolicyKind, LegalDocument> = {
       {
         title: "3. السلامة والتدريب والتغذية",
         body: [
-          "نفّذ التمارين بأمان وضمن قدراتك، وفي مكان ومعدات مناسبة تتحمل مسؤوليتها.",
-          "إذا ظهرت إصابة جديدة أو حالة صحية، أبلغ المنصة فوراً. لا ينبغي الاستمرار في تمارين متأثرة وكأن شيئاً لم يتغير.",
-          "معلومات التغذية عامة وليست علاجاً لحساسية أو حالة طبية. راجع مختصاً عند الحاجة.",
+          "تتضمن ممارسة الرياضة مخاطر بدنية. نفّذ التمارين بأمان وضمن قدراتك وبمعدات ومكان مناسبين، وتوقف فوراً عند ألم غير معتاد أو دوار أو ضيق تنفس أو أي أعراض مقلقة.",
+          "استشر طبيباً أو مختصاً مؤهلاً قبل البدء إذا كان لديك مرض أو إصابة أو حمل أو وصفة غذائية علاجية أو أي قلق صحي، وأبلغ التطبيق عن أي تغيير ذي صلة.",
+          "تعتمد التوصيات الغذائية على المعلومات التي تُدخلها. أنت مسؤول عن إدخال الحساسية وعدم التحمّل والأطعمة غير المرغوبة بدقة، وعن التحقق مستقلاً من المكونات والملصقات وملاءمة الطعام لك.",
+          "تحاول MAAKFIT مراعاة القيود التي تقدمها، لكنها لا تضمن خلو كل منتج أو مطبخ من مسببات الحساسية أو التلوث التبادلي، ولا تستبدل استشارة غذائية طبية.",
           "تقديرات النظام (مثل السعرات أو النسب) ليست قياسات طبية مؤكدة.",
         ],
       },
       {
         title: "4. الباقات والاشتراك",
         body: [
-          "الباقات المدفوعة: PLUS وPRO وVIP لمدد 3 أشهر أو 6 أشهر فقط. لا يوجد اشتراك شهري أو سنوي في V1.",
-          "PLUS: خطتك الكاملة — التدريب والتغذية الشخصية والمزايا الأساسية المدفوعة. لا يشمل دردشة الكوتش البشرية.",
-          "PRO: خطتك التي تتطور معك — التطور الذكي والتحليلات والمرونة الأعلى ومراجعة تقدم دورية كل أسبوعين. لا يشمل دردشة الكوتش البشرية في الإصدار العام V1.",
-          "VIP: يشمل دردشة الكوتش ودعماً يومياً بأولوية أعلى ومتابعة أقرب وتعديلات أسرع عند الملاءمة. الدعم اليومي ليس 24/7، والأولوية ليست رداً فورياً مضموناً.",
-          "البرنامج رقمي ويمكن أن يتطور حسب تقدمك وأهدافك والإصابات المبلّغ عنها ومنطق البرنامج ومراجعة الكوتش.",
+          "FREE تمنح وصولاً محدوداً: يظهر البرنامج التدريبي المخصص في حالة مقفلة، وتتاح وجبة فطور حقيقية واحدة بينما تبقى بقية الوجبات مقفلة وفق المنتج الحالي.",
+          "الباقات المدفوعة الحالية هي PLUS وPRO لفترات 3 أشهر أو 6 أشهر وفق ما يظهر عند الشراء.",
+          "PLUS يفتح برنامج التدريب والتغذية الرقمي والمزايا المدفوعة الموضحة في صفحة الشراء.",
+          "PRO يشمل مزايا PLUS إضافةً إلى المزايا الرقمية الإضافية المعروضة صراحةً في صفحة الشراء.",
+          "البرنامج رقمي ويمكن أن يتطور وفق تقدمك وأهدافك والإصابات المبلّغ عنها وسجلاتك ومنطق التطبيق.",
         ],
       },
       {
@@ -72,6 +74,8 @@ const AR: Record<PolicyKind, LegalDocument> = {
           "الاشتراكات المدفوعة قابلة للتجديد التلقائي وفق ما يظهر وتوافق عليه عند الدفع.",
           "يمكنك إلغاء التجديد. إلغاء التجديد لا يلغي الفترة المدفوعة الحالية ويستمر الوصول حتى نهاية الفترة المدفوعة.",
           "إلغاء التجديد ≠ حذف الحساب ≠ طلب استرداد.",
+          "قد يؤدي فشل الدفع أو انتهاء وسيلة الدفع إلى تعليق التجديد أو المزايا المدفوعة بعد إشعار مناسب. لن نطلب منك كلمة المرور أو رقم البطاقة الكامل لمعالجة مشكلة فوترة.",
+          "إذا اعترضت على عملية دفع، تواصل معنا أولاً لنحقق في الرسوم؛ لا يحد ذلك من حقك في التواصل مع البنك أو ممارسة حقوقك القانونية. قد نعلّق الوصول المرتبط بعملية متنازع عليها أثناء مراجعة عادلة.",
         ],
       },
       {
@@ -81,14 +85,16 @@ const AR: Record<PolicyKind, LegalDocument> = {
           "رسوم تحويل العملة التي يفرضها بنكك ليست تحت سيطرة MAAKFIT.",
           "يمكن تعديل الأسعار مستقبلاً دون أثر رجعي على فترة مدفوعة. إذا تغيّر سعر التجديد فسيظهر قبل التحصيل.",
           "أي عرض يجب أن يوضح السعر الحالي ومدة الفوترة وسعر التجديد وشروط العرض.",
+          "قد تخضع العروض وأكواد الخصم لفترة صلاحية وباقات أو مدد مؤهلة وحدود استخدام وشروط عميل جديد. لا يمكن الجمع بينها إلا إذا ذُكر ذلك صراحةً، ويمكن رفض الاستخدام الاحتيالي أو غير المؤهل.",
+          "قد تُعالَج المدفوعات، عند تفعيلها، عبر مزودي دفع خارجيين وفق شروطهم وإشعارات الخصوصية الخاصة بهم.",
         ],
       },
       {
-        title: "7. دردشة الكوتش والذكاء الاصطناعي",
+        title: "7. التخصيص الآلي وحدود الخدمة",
         body: [
-          "دردشة الكوتش البشرية ميزة VIP داخلية في الإصدار العام V1. المرفقات خاصة وللمخوّلين فقط.",
-          "MAAKFIT أو Coach Hakim قد يرفض تعديلاً غير آمن أو غير مناسب.",
-          "قد يساعد الذكاء الاصطناعي في التخصيص والاقتراح والتحليل. لا ينتحل شخصية Coach Hakim. أي رد يُقدَّم لك على أنه من الكوتش بشرياً يخضع لآلية الاعتماد البشري المطلوبة.",
+          "يستخدم التطبيق قواعد وحسابات آلية لتخصيص التدريب والتغذية وعرض التقدم استناداً إلى البيانات التي تقدمها.",
+          "قد يمنع التطبيق اقتراحاً أو تعديلاً غير آمن أو غير مناسب، وقد يطلب معلومات إضافية قبل إنشاء الخطة.",
+          "هذه الوظائف الرقمية لا تمثل تشخيصاً طبياً أو علاجاً أو استشارة مهنية فردية.",
         ],
       },
       {
@@ -119,41 +125,40 @@ const AR: Record<PolicyKind, LegalDocument> = {
       {
         title: "11. التحديثات والقانون والتواصل",
         body: [
-          `القانون الحاكم والاختصاص: ${GOVERNING_LAW_STATUS} حتى تحديد الكيان القانوني والأسواق.`,
+          "تخضع هذه الشروط لقوانين دولة الإمارات العربية المتحدة كما تُطبق في إمارة دبي، وتختص محاكم دبي، دولة الإمارات العربية المتحدة، بالمنازعات، مع مراعاة أي حقوق إلزامية للمستهلك لا يمكن التنازل عنها بموجب القانون المعمول به.",
           "يمكن تحديث الشروط مع إشعار مناسب للتغييرات الجوهرية.",
-          "النسخة العربية والإنجليزية تحملان نفس رقم الإصدار. اللغة المرجعية القانونية: TBD.",
+          "تتوفر هذه الشروط باللغتين العربية والإنجليزية. وفي حال وجود تعارض أو اختلاف في التفسير، تكون النسخة العربية هي المرجع، مع مراعاة أي حقوق إلزامية بموجب القانون المعمول به.",
           "الاتصالات الضرورية للحساب والفوترة والأمان ليست تسويقاً.",
-          `القناة الرسمية: ${CURRENT_SUPPORT_EMAIL} أو صفحة التواصل. واتساب: ${CURRENT_WHATSAPP}. دعم MAAKFIT/الكوتش ليس قناة طوارئ طبية.`,
-          `الإصدار ${POLICY_VERSION}. تاريخ السريان يُحدَّد عند الإطلاق العام.`,
+          `القناة الرسمية: ${CURRENT_SUPPORT_EMAIL} أو صفحة التواصل. واتساب: ${CURRENT_WHATSAPP} لدعم الحساب والمشاكل التقنية والفوترة فقط. دعم MAAKFIT ليس قناة طوارئ طبية.`,
+          `الإصدار ${POLICY_VERSION}. تاريخ السريان: ${POLICY_EFFECTIVE_DATE_AR}.`,
         ],
       },
     ],
   },
   privacy: {
     title: "سياسة خصوصية MAAKFIT",
-    description:
-      "كيف تجمع MAAKFIT بياناتك وتستخدمها وتحميها. لا نبيع بياناتك الشخصية.",
+    description: "كيف تجمع MAAKFIT بياناتك وتستخدمها وتحميها. لا نبيع بياناتك الشخصية.",
     sections: [
       {
         title: "1. من نحن",
         body: [
-          `MAAKFIT منصة لياقة وتغذية رقمية. الكيان القانوني: ${LEGAL_ENTITY_STATUS}. العنوان: ${REGISTERED_ADDRESS_STATUS}.`,
+          `MAAKFIT تطبيق لياقة وتغذية رقمي يتم تشغيله بواسطة ${LEGAL_OPERATOR}، بصفته مشغّلاً فردياً وليس شركة مسجلة. الموقع العام: ${PUBLIC_LOCATION}.`,
           `للتواصل بشأن الخصوصية: ${CURRENT_SUPPORT_EMAIL} عبر فئة Privacy في صفحة التواصل.`,
         ],
       },
       {
         title: "2. البيانات التي نجمعها — بالحد الأدنى",
         body: [
-          "نجمع فقط ما يلزم لتقديم الخدمة: الحساب (اسم، بريد، هاتف اختياري)، إجابات التقييم (هدف، قياسات، نشاط، تفضيلات)، بيانات تقدم تختار إدخالها، وصور تقدم إن رفعتها.",
-          "قد نجمع بيانات إصابة أو حساسية عندما تقدّمها بنفسك لسلامة البرنامج — وليست للتشخيص الطبي.",
-          "بيانات تقنية لازمة للتشغيل: نوع الجهاز/المتصفح، سجلات أمنية محدودة، وتخزين محلي للجلسة والتفضيلات.",
+          "نجمع ما يلزم لتقديم الخدمة: الاسم وبيانات الحساب والبريد والهاتف إن أدخلته، العمر أو تاريخ الميلاد، الجنس، الهدف، أيام التدريب، وقت التدريب، القياسات والتفضيلات.",
+          "تشمل بيانات الاستخدام التي تختار إدخالها سجلات التمرين والأوزان والتكرارات والجهد، نشاط الترطيب، التقدم والصور عند رفعها، وتفضيلات التغذية والحساسية وعدم التحمل والأطعمة غير المرغوبة.",
+          "نجمع حالة العضوية والفوترة ومعرّفات المعاملة اللازمة، وبيانات الجهاز والجلسة والأمان والسجلات التقنية المحدودة والتخزين المحلي/ملفات الارتباط الضرورية.",
           "لا نجمع موقعك الدقيق إلا إذا لزم مستقبلاً بوضوح وموافقة. إذن الميكروفون/الكاميرا يُطلب فقط لميزة تستخدمه (مثل رسالة صوتية أو صورة).",
         ],
       },
       {
         title: "3. أغراض الاستخدام",
         body: [
-          "تقديم الحساب والبرنامج والتغذية وتتبع التقدم ودعم الحساب/الفوترة ودردشة الكوتش حسب الباقة.",
+          "تشغيل الحساب وتخصيص التجربة وتعيين التدريب والتغذية وتتبع التقدم ودعم الحساب والفوترة.",
           "تشغيل الفوترة والتجديد والإشعارات الضرورية والأمان ومنع الاحتيال.",
           "تحسين المنتج اعتماداً على بيانات مجمّعة أو ملاحظات، دون بيع بياناتك.",
         ],
@@ -166,20 +171,20 @@ const AR: Record<PolicyKind, LegalDocument> = {
         ],
       },
       {
-        title: "5. صور التقدم ودردشة الكوتش",
+        title: "5. صور التقدم والملفات المرفوعة",
         body: [
           "صور التقدم خاصة افتراضياً. رفع الصورة لا يعني موافقة تسويقية.",
           "لا نستخدم صورك تلقائياً في إعلانات أو وسائل تواصل أو حملات قبل/بعد أو شهادات عامة.",
-          "موافقة قبل/بعد للتسويق — إن وُجدت — اختيارية وصريحة ومنفصلة وغير محددة مسبقاً، ولا يؤثر رفضها على الحساب أو البرنامج أو الاشتراك أو الكوتش.",
-          "دردشة الكوتش ومرفقاتها خاصة، بتخزين خاص، دون روابط عامة، ولوصول المخوّلين فقط (أنت والفريق المخوّل بالمتابعة).",
+          "موافقة قبل/بعد للتسويق — إن وُجدت — اختيارية وصريحة ومنفصلة وغير محددة مسبقاً، ولا يؤثر رفضها على الحساب أو البرنامج أو الاشتراك.",
+          "صور التقدم والملفات المرفوعة تُخزّن بوصول خاص وتقتصر على صاحب الحساب والموظفين المخولين عند الحاجة للدعم أو تشغيل الخدمة.",
         ],
       },
       {
-        title: "6. الذكاء الاصطناعي والتحليلات",
+        title: "6. التخصيص الآلي والتحليلات",
         body: [
-          "قد يحلّل الذكاء الاصطناعي ويقترح ويساعد داخل المنصة. لا ينتحل شخصية Coach Hakim.",
-          "لا نستخدم بياناتك الحساسة أو صور التقدم أو دردشة الكوتش لتدريب نموذج ذكاء اصطناعي عام لطرف خارجي دون أساس قانوني وموافقة مناسبة عند الحاجة.",
-          "التحليلات التشغيلية مسموحة لتحسين الخدمة. لا نتوسع في تتبّع إعلاني دون أساس واضح.",
+          "قد تستخدم الخدمة قواعد وحسابات آلية لتخصيص الخطط وعرض التحليلات والتقدم.",
+          "لا نستخدم صور التقدم أو البيانات الحساسة لأغراض تسويقية دون موافقة منفصلة وصريحة.",
+          "تُستخدم التحليلات التشغيلية لتحسين الخدمة والأمان. لا نتوسع في تتبّع إعلاني دون أساس واضح.",
         ],
       },
       {
@@ -191,10 +196,11 @@ const AR: Record<PolicyKind, LegalDocument> = {
         ],
       },
       {
-        title: "8. المشاركة والأمان",
+        title: "8. مزودو الخدمة والمشاركة والأمان",
         body: [
           "لا نبيع بياناتك الشخصية.",
-          "قد نشارك ما يلزم مع مزودي الاستضافة والبريد والتخزين والدفع المستقبلي بموجب millات مناسبة، ومع فريق الكوتش المخوّل لتقديم المتابعة.",
+          "نستخدم Supabase للمصادقة وقاعدة البيانات والتخزين، وVercel لاستضافة التطبيق، وResend لإرسال رسائل الخدمة. قد تتغير مهامهم أو بدائلهم مع تحديث هذه السياسة.",
+          "عند تفعيل الدفع، قد نشارك الحد اللازم مع مزودي دفع خارجيين وفق شروطهم وإشعارات الخصوصية الخاصة بهم. كما يصل الموظفون المخولون فقط إلى ما يلزم لتشغيل الخدمة أو تقديم الدعم.",
           "نطبّق ضمانات تقنية وتنظيمية معقولة (تشفير النقل، صلاحيات أقل، تخزين خاص). لا ندّعي أمناً مطلقاً 100%.",
           "كلمات المرور تُعالج عبر نظام المصادقة ولا تُحفظ كنص واضح لدينا.",
         ],
@@ -204,7 +210,7 @@ const AR: Record<PolicyKind, LegalDocument> = {
         body: [
           "يمكنك طلب الوصول أو التصحيح أو الحذف أو تقييد المعالجة أو الاعتراض أو سحب موافقة اختيارية، حسب القانون المعمول به. قد نتحقق من هويتك للطلبات الحساسة.",
           "حذف الحساب ≠ إلغاء التجديد ≠ طلب استرداد. بعد التأكيد نطبّق الحذف أو إخفاء الهوية وفق فئات الاحتفاظ.",
-          "لا نحتفظ بكل شيء إلى الأبد، ولا نحذف كل شيء فور انتهاء الاشتراك. المدد القانونية لبعض الفئات: TBD_LEGAL_RETENTION حتى تحديد الكيان والاختصاص.",
+          "نحتفظ بالبيانات فقط للمدة المعقولة اللازمة للأغراض الموضحة، والالتزامات القانونية، وتسوية المنازعات، ومنع الاحتيال، والأمان. سيُراجع جدول المدد التفصيلي بعد تحديد الجهة والاختصاص.",
           "النسخ الاحتياطية تُدار وفق دورة حياة محدودة ثم تُزال.",
         ],
       },
@@ -214,7 +220,7 @@ const AR: Record<PolicyKind, LegalDocument> = {
           "الخدمة لـ18+ في V1. إذا علمنا بحساب لقاصر سنغلقه وفق سياسة معقولة.",
           "قد تُعالَج بيانات عبر مزودين دوليين. لا ندّعي إقامة بيانات في بلد محدد ما لم نُعلن ذلك بوضوح.",
           "قد نكشف بيانات إذا طُلب قانونياً أو لمنع احتيال/ضرر جسيم، وبالحد اللازم.",
-          `القانون الحاكم: ${GOVERNING_LAW_STATUS}. الإصدار ${POLICY_VERSION}. العربية والإنجليزية نفس الإصدار.`,
+          `تخضع هذه السياسة لقوانين دولة الإمارات العربية المتحدة كما تُطبق في إمارة دبي، وتختص محاكم دبي، دولة الإمارات العربية المتحدة، مع مراعاة الحقوق الإلزامية التي لا يمكن التنازل عنها. تتوفر السياسة بالعربية والإنجليزية وتكون العربية المرجع عند اختلاف التفسير. الإصدار ${POLICY_VERSION}، تاريخ السريان: ${POLICY_EFFECTIVE_DATE_AR}.`,
         ],
       },
     ],
@@ -228,7 +234,7 @@ const AR: Record<PolicyKind, LegalDocument> = {
         title: "1. المبدأ",
         body: [
           "MAAKFIT لا تقدّم ضمان استرجاع تسويقي عام لـ7 أو 14 أو 30 يوماً.",
-          "التجربة المجانية وسيلة للتعرّف على المنصة قبل شراء باقة مدفوعة.",
+          "التجربة المجانية وسيلة للتعرّف على التطبيق قبل شراء باقة مدفوعة.",
           "نجاح الدفع لا يعني تلقائياً «لا استرداد على الإطلاق». نميّز بين الدفع، التفعيل، فتح المزايا، بدء إنشاء البرنامج، وإتاحة البرنامج.",
         ],
       },
@@ -245,6 +251,9 @@ const AR: Record<PolicyKind, LegalDocument> = {
         body: [
           "تغيير الرأي بعد بدء تقديم الخدمة لا ينشئ تلقائياً حق استرداد، خصوصاً بعد تفعيل المزايا المدفوعة أو بدء/إتاحة البرنامج الشخصي أو استخدام المزايا المدفوعة.",
           "نراعي الحقوق القانونية الإلزامية، والرسوم المكررة أو الخاطئة، وأخطاء الدفع، وفشل MAAKFIT في تقديم خدمة مدفوعة جوهرية، وحالات يكون الاسترداد فيها مطلوباً قانونياً أو عادلاً.",
+          "تخضع المشتريات الترويجية وأكواد الخصم لنفس المراجعة مع احتساب المبلغ المدفوع فعلياً، ولا تلغي الحقوق الإلزامية للمستهلك.",
+          "المعاملة الفاشلة أو المعلقة التي لم تُحصّل لا تُعد مبلغاً مسترداً؛ نتحقق من حالتها مع مزود الدفع. تُراجع الرسوم المكررة أو أخطاء الفوترة وتصَحَّح عند التحقق.",
+          "الاعتراض البنكي (chargeback) لا يُستخدم كبديل لمراجعة الدعم، لكنه لا يلغي حقوقك. قد نقيّد الوصول المتصل بالمبلغ المتنازع عليه أثناء التحقيق دون اتخاذ إجراء انتقامي.",
         ],
       },
       {
@@ -268,7 +277,7 @@ const AR: Record<PolicyKind, LegalDocument> = {
         body: [
           `أرسل طلباً من صفحة التواصل (فئة Refund) أو ${CURRENT_SUPPORT_EMAIL} مع اسمك والبريد وتاريخ الدفع والباقة وسبب موجز.`,
           "لا تُرسل كلمة مرور أو رقم بطاقة كامل أو CVV.",
-          `الإصدار ${POLICY_VERSION}. الكيان القانوني والقانون الحاكم: TBD حتى الاعتماد النهائي.`,
+          `تشغّل ${LEGAL_OPERATOR} منتج MAAKFIT بصفته مشغّلاً فردياً من ${PUBLIC_LOCATION}. تخضع هذه السياسة لقوانين دولة الإمارات العربية المتحدة كما تُطبق في إمارة دبي، وتختص محاكم دبي، مع مراعاة الحقوق الإلزامية للمستهلك. العربية هي النسخة المرجعية عند اختلاف التفسير. الإصدار ${POLICY_VERSION}، تاريخ السريان: ${POLICY_EFFECTIVE_DATE_AR}.`,
         ],
       },
     ],
@@ -284,9 +293,9 @@ const EN: Record<PolicyKind, LegalDocument> = {
       {
         title: "1. Who we are",
         body: [
-          "MAAKFIT is a digital fitness, nutrition, and general-wellness platform, with human follow-up from Coach Hakim depending on your plan.",
+          "MAAKFIT is a fully digital fitness app for training, nutrition, progress tracking, and hydration. The service and personalized plans are delivered inside the app.",
           "MAAKFIT is not a medical provider and does not diagnose or treat disease.",
-          `Legal entity: ${LEGAL_ENTITY_STATUS}. Registered address: ${REGISTERED_ADDRESS_STATUS}.`,
+          `MAAKFIT is a digital fitness product operated by ${LEGAL_OPERATOR}, acting as an individual operator and not as a registered company. Public location: ${PUBLIC_LOCATION}.`,
         ],
       },
       {
@@ -300,20 +309,21 @@ const EN: Record<PolicyKind, LegalDocument> = {
       {
         title: "3. Safety, training, nutrition",
         body: [
-          "Train safely, within your ability, with equipment and locations you are responsible for.",
-          "If a new injury or health issue appears, report it. Affected exercises should not continue as if nothing changed.",
-          "Nutrition guidance is general wellness, not medical treatment for allergies or conditions.",
+          "Exercise involves physical risk. Train safely within your ability, using suitable equipment and surroundings, and stop immediately for unusual pain, dizziness, breathing difficulty, or other concerning symptoms.",
+          "Consult a qualified medical professional before starting if you have a medical condition, injury, pregnancy, prescribed diet, or health concern, and report relevant changes to the service.",
+          "Nutrition suggestions depend on the information you provide. You are responsible for entering allergies, intolerances, and disliked foods accurately and independently checking ingredients, labels, and suitability.",
+          "MAAKFIT attempts to respect supplied restrictions but cannot guarantee that every product or kitchen is free from allergens or cross-contamination. It does not replace medical dietary advice.",
           "System estimates are not confirmed medical measurements.",
         ],
       },
       {
         title: "4. Plans and subscription",
         body: [
-          "Paid plans: PLUS, PRO, and VIP for 3-month or 6-month periods only. No monthly or annual core plan in V1.",
-          "PLUS is your complete plan — personal training and nutrition. It does not include human Coaching Chat.",
-          "PRO is the plan that evolves with you — smarter progression, deeper analytics, higher flexibility, and a progress review about every two weeks. It does not include human Coaching Chat in public V1.",
-          "VIP includes Coaching Chat, higher-priority daily support, closer follow-up, and faster adjustments when appropriate. Daily support is not 24/7. Priority is not a guaranteed instant reply.",
-          "Your program can evolve with progress, goals, reported injuries, program logic, and coaching review.",
+          "FREE provides limited access: the personalized training structure is shown locked, and one real breakfast is available while the remaining meals stay locked under the current product.",
+          "The current paid plans are PLUS and PRO for the periods shown at purchase, currently 3 or 6 months.",
+          "PLUS unlocks the digital training and nutrition program and the paid features shown on the purchase page.",
+          "PRO includes PLUS features together with the additional digital features expressly shown on the purchase page.",
+          "Your digital program can evolve with your progress, goals, reported injuries, logs, and the app's rules.",
         ],
       },
       {
@@ -321,6 +331,8 @@ const EN: Record<PolicyKind, LegalDocument> = {
         body: [
           "Paid subscriptions may auto-renew according to what you see and accept at checkout.",
           "You may cancel renewal. Access continues until the paid period ends. Cancel renewal ≠ delete account ≠ refund request.",
+          "A failed or expired payment method may suspend renewal or paid entitlements after appropriate notice. We will never request your password or full card number to resolve billing.",
+          "If you dispute a charge, contact us first so we can investigate; this does not limit legal or bank rights. Access connected to a disputed payment may be restricted during a fair review.",
         ],
       },
       {
@@ -330,14 +342,16 @@ const EN: Record<PolicyKind, LegalDocument> = {
           "Bank FX fees are outside MAAKFIT’s control.",
           "Future price changes are not retroactive. A new renewal price will be shown before it is charged.",
           "Promotions must show current price, billing period, renewal price, and conditions.",
+          "Promotions and promo codes may have expiry dates, eligible plans or terms, usage limits, or new-customer rules. They cannot be combined unless stated, and fraudulent or ineligible use may be rejected.",
+          "When enabled, payments may be processed by third-party payment providers under their own terms and privacy notices.",
         ],
       },
       {
-        title: "7. Coaching Chat and AI",
+        title: "7. Automated personalization and service limits",
         body: [
-          "Human Coaching Chat is an internal VIP feature in public V1. Attachments are private.",
-          "MAAKFIT or Coach Hakim may refuse an unsafe or unsuitable adjustment.",
-          "AI may analyze, suggest, and assist. It must not impersonate Coach Hakim. Anything presented as a human Coach Hakim reply requires the required human-approval path.",
+          "The app uses automated rules and calculations to personalize training, nutrition, and progress displays based on the data you provide.",
+          "The app may reject an unsafe or unsuitable suggestion or adjustment and may request more information before generating a plan.",
+          "These digital functions are not a medical diagnosis, treatment, or professional medical consultation.",
         ],
       },
       {
@@ -366,39 +380,40 @@ const EN: Record<PolicyKind, LegalDocument> = {
       {
         title: "11. Updates, law, contact",
         body: [
-          `Governing law / jurisdiction: ${GOVERNING_LAW_STATUS} until the legal entity and markets are set.`,
+          "These Terms are governed by the laws of the United Arab Emirates as applicable in the Emirate of Dubai. The courts of Dubai, United Arab Emirates have jurisdiction, subject to any mandatory consumer rights that cannot be waived under applicable law.",
           "We may update these terms with appropriate notice for material changes.",
-          "Arabic and English share the same policy version. Legal reference language: TBD.",
-          `Official contact: ${CURRENT_SUPPORT_EMAIL} or the Contact page. WhatsApp: ${CURRENT_WHATSAPP}. Support/coaching is not an emergency medical channel.`,
-          `Version ${POLICY_VERSION}. Effective date to be set at public release.`,
+          "These Terms are available in Arabic and English. In the event of any inconsistency or difference in interpretation, the Arabic version shall prevail, subject to any mandatory rights under applicable law.",
+          `Official contact: ${CURRENT_SUPPORT_EMAIL} or the Contact page. WhatsApp: ${CURRENT_WHATSAPP} for account, technical, and billing support only. MAAKFIT Support is not a medical emergency channel.`,
+          `Version ${POLICY_VERSION}. Effective date: ${POLICY_EFFECTIVE_DATE_EN}.`,
         ],
       },
     ],
   },
   privacy: {
     title: "MAAKFIT Privacy Policy",
-    description: "How MAAKFIT collects, uses, and protects your data. We do not sell personal data.",
+    description:
+      "How MAAKFIT collects, uses, and protects your data. We do not sell personal data.",
     sections: [
       {
         title: "1. Who we are",
         body: [
-          `MAAKFIT is a digital fitness and nutrition platform. Legal entity: ${LEGAL_ENTITY_STATUS}. Address: ${REGISTERED_ADDRESS_STATUS}.`,
+          `MAAKFIT is a digital fitness and nutrition app operated by ${LEGAL_OPERATOR}, acting as an individual operator and not as a registered company. Public location: ${PUBLIC_LOCATION}.`,
           `Privacy contact: ${CURRENT_SUPPORT_EMAIL} using the Privacy category on the Contact page.`,
         ],
       },
       {
         title: "2. Data we collect — minimization",
         body: [
-          "We collect only what is needed: account details, quiz answers you provide, progress data you enter, and progress photos if you upload them.",
-          "Injury or allergy data is collected only if you provide it for program safety — not for medical diagnosis.",
-          "Technical data needed to run the service may include device/browser information, limited security logs, and local storage for session/preferences.",
+          "We collect what is needed to provide the service: name and account data, email, phone if supplied, age or date-related profile input, gender, goals, training days, training time, measurements, and preferences.",
+          "Data you choose to enter may include workout logs, weights, reps, effort, hydration activity, progress and uploaded photos, nutrition preferences, allergies, intolerances, and disliked foods.",
+          "We collect membership and billing status, necessary transaction identifiers, device/browser and session data, limited security logs, and necessary cookies or local storage.",
           "Microphone/camera permission is requested only for a feature that uses it.",
         ],
       },
       {
         title: "3. Purposes",
         body: [
-          "To provide the account, program, nutrition, progress tracking, billing/account support, and Coaching Chat when included.",
+          "To operate the account, personalize the experience, assign training and nutrition, track progress, and support billing and account needs.",
           "To operate billing, renewal reminders, security, and fraud prevention.",
           "To improve the product. We do not sell personal data.",
         ],
@@ -411,20 +426,20 @@ const EN: Record<PolicyKind, LegalDocument> = {
         ],
       },
       {
-        title: "5. Progress photos and coaching",
+        title: "5. Progress photos and uploaded files",
         body: [
           "Progress photos are private by default. Upload is not marketing consent.",
           "We do not automatically use photos in ads, social media, before/after campaigns, or public testimonials.",
-          "Any before/after marketing consent is separate, explicit, optional, and not pre-checked. Refusal does not affect account, program, subscription, or coaching.",
-          "Coaching Chat and attachments are private, privately stored, without public URLs, and limited to you and authorized follow-up staff.",
+          "Any before/after marketing consent is separate, explicit, optional, and not pre-checked. Refusal does not affect the account, program, or subscription.",
+          "Progress photos and uploaded files are privately stored and limited to the account holder and authorized staff when needed for support or service operation.",
         ],
       },
       {
-        title: "6. AI and analytics",
+        title: "6. Automated personalization and analytics",
         body: [
-          "AI may analyze, suggest, and assist. It must not impersonate Coach Hakim.",
-          "We do not use sensitive personal data, progress photos, or coaching chat to train a general third-party AI model without a legal basis and appropriate consent when required.",
-          "Operational analytics may improve the service. We do not expand advertising tracking without a clear basis.",
+          "The service may use automated rules and calculations to personalize plans and present analytics and progress.",
+          "We do not use progress photos or sensitive data for marketing without separate, explicit consent.",
+          "Operational analytics may improve the service and security. We do not expand advertising tracking without a clear basis.",
         ],
       },
       {
@@ -436,10 +451,11 @@ const EN: Record<PolicyKind, LegalDocument> = {
         ],
       },
       {
-        title: "8. Sharing and security",
+        title: "8. Service providers, sharing, and security",
         body: [
           "We do not sell personal data.",
-          "We may share what is needed with hosting, email, storage, and a future payment provider under appropriate agreements, and with authorized coaching staff.",
+          "We use Supabase for authentication, database, and storage; Vercel to host the application; and Resend for service email. Their roles or replacements may change with an updated policy.",
+          "When payments are enabled, limited data may be shared with third-party payment providers under their own terms and privacy notices. Authorized operations and support staff receive only the access needed to provide the service.",
           "We apply reasonable technical and organizational safeguards. We do not claim 100% security.",
           "Passwords are handled by the auth system and are not stored in plaintext.",
         ],
@@ -449,7 +465,7 @@ const EN: Record<PolicyKind, LegalDocument> = {
         body: [
           "You may request access, correction, deletion, restriction, objection, or withdrawal of optional consent, subject to applicable law. Sensitive requests may require identity verification.",
           "Delete account ≠ cancel renewal ≠ refund request.",
-          "We do not keep everything forever, and we do not delete everything the moment a subscription ends. Some legal retention periods are TBD_LEGAL_RETENTION until entity/jurisdiction is set.",
+          "We retain data only as long as reasonably necessary for the purposes described, legal obligations, dispute resolution, fraud prevention, and security. A detailed retention schedule will be reviewed after entity and jurisdiction are finalized.",
         ],
       },
       {
@@ -457,7 +473,7 @@ const EN: Record<PolicyKind, LegalDocument> = {
         body: [
           "V1 is 18+. If we learn of a minor account, we will close it under a reasonable process.",
           "Data may be processed by international providers. We do not make false data-residency claims.",
-          `Governing law: ${GOVERNING_LAW_STATUS}. Version ${POLICY_VERSION}. Arabic and English share the same version.`,
+          `This Policy is governed by the laws of the United Arab Emirates as applicable in the Emirate of Dubai. The courts of Dubai, United Arab Emirates have jurisdiction, subject to mandatory rights that cannot be waived. It is available in Arabic and English; Arabic prevails if interpretation differs. Version ${POLICY_VERSION}. Effective date: ${POLICY_EFFECTIVE_DATE_EN}.`,
         ],
       },
     ],
@@ -488,6 +504,9 @@ const EN: Record<PolicyKind, LegalDocument> = {
         body: [
           "A change of mind after service delivery has started does not automatically create a refund, especially after paid features are activated, a personal program is started or delivered, or paid features are used.",
           "We still consider mandatory legal rights, duplicate/incorrect charges, payment errors, material failure to provide a paid service, and other cases where a refund is legally required or fair under this policy.",
+          "Promotional purchases and promo-code orders follow the same review using the amount actually paid and do not remove mandatory consumer rights.",
+          "A failed or pending transaction that was not captured is not a refund. We verify its status with the payment provider. Verified duplicate charges and billing errors are corrected.",
+          "A chargeback is not a substitute for contacting Support, but it does not remove your rights. Access connected to the disputed amount may be limited during investigation without retaliation.",
         ],
       },
       {
@@ -511,7 +530,7 @@ const EN: Record<PolicyKind, LegalDocument> = {
         body: [
           `Submit a Contact request (Refund category) or email ${CURRENT_SUPPORT_EMAIL} with your name, email, payment date, plan, and a short reason.`,
           "Do not send passwords, full card numbers, or CVV.",
-          `Version ${POLICY_VERSION}. Legal entity and governing law remain TBD until finally approved.`,
+          `MAAKFIT is operated by ${LEGAL_OPERATOR} as an individual from ${PUBLIC_LOCATION}. This Policy is governed by the laws of the United Arab Emirates as applicable in the Emirate of Dubai, with jurisdiction in the courts of Dubai, subject to mandatory consumer rights. Arabic is the reference version if interpretation differs. Version ${POLICY_VERSION}. Effective date: ${POLICY_EFFECTIVE_DATE_EN}.`,
         ],
       },
     ],
