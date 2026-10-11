@@ -52,6 +52,14 @@ function readPreviewStepFromUrl(): QuizStep | null {
   return step && isQuizStep(step) ? step : null;
 }
 
+function consumePreviewStepFromUrl() {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("step")) return;
+  url.searchParams.delete("step");
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
 function applySnapshot(
   saved: QuizProgressSnapshot,
   setters: {
@@ -145,11 +153,17 @@ export function useQuizProgress() {
           ACCOUNT_RESUME_STEPS.has(previewStep) || previewStep === "verifyEmail";
         const allowPreview = !previewNeedsAccount || hasUser || verifiedViaLink;
         if (allowPreview) {
+          if (previewStep === "femaleGoals" || previewStep === "femaleChallenge" || previewStep === "femaleBodyType") {
+            setGender("female");
+          } else if (previewStep === "goals" || previewStep === "challenge" || previewStep === "bodyType") {
+            setGender("male");
+          }
           const nextStep =
             verifiedViaLink && previewStep === "verifyEmail"
               ? "createPassword"
               : resolveActiveQuizStep(previewStep);
           replaceStep(nextStep as QuizStep);
+          consumePreviewStepFromUrl();
           hydratedRef.current = true;
           return;
         }

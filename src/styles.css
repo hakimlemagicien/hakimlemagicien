@@ -11958,6 +11958,93 @@ body.is-membership-pass-open {
   transform: translateY(10px) scale(1.04);
 }
 
+/* The six female assets share one frame and baseline. Their portrait subjects
+   stay slightly smaller and the label overlaps less, so the complete goal area
+   remains visible without uneven crops or hard lower edges. */
+.female-goal-card .male-goal-pop__figure {
+  width: 94%;
+  height: min(40vw, 156px);
+  margin-bottom: -24px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 90%, rgb(0 0 0 / 0.68) 96%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 90%, rgb(0 0 0 / 0.68) 96%, transparent 100%);
+}
+
+.female-goal-card .male-goal-pop__figure::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 34px;
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.18) 36%,
+    rgb(255 255 255 / 0.76) 78%,
+    #fff 100%
+  );
+  pointer-events: none;
+}
+
+.female-goal-card .male-goal-pop__figure img,
+.female-goal-card .male-goal-pop__scanner {
+  transform: translateY(-10px) scale(0.88);
+}
+
+.female-goal-card.is-active .male-goal-pop__figure img,
+.female-goal-card.is-active .male-goal-pop__scanner {
+  transform: translateY(-12px) scale(0.92);
+}
+
+.female-goal-card .male-goal-pop__label {
+  min-height: 60px;
+  padding: 22px 8px 10px;
+}
+
+/* Female challenge portraits use the same pop/scanner treatment as the male
+   cards, with a tighter independent frame so every full subject and label
+   keeps one baseline across the three mobile rows. */
+.female-challenge-grid {
+  row-gap: 8px;
+}
+
+.female-challenge-card .male-goal-pop__figure {
+  width: 86%;
+  height: min(31vw, 121px);
+  margin-bottom: -6px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 88%, rgb(0 0 0 / 0.7) 95%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 88%, rgb(0 0 0 / 0.7) 95%, transparent 100%);
+}
+
+.female-challenge-card .male-goal-pop__figure::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent, rgb(255 255 255 / 0.66) 72%, #fff 100%);
+  pointer-events: none;
+}
+
+.female-challenge-card .male-goal-pop__figure img,
+.female-challenge-card .male-goal-pop__scanner {
+  transform: translateY(0) scale(0.9);
+}
+
+.female-challenge-card.is-active .male-goal-pop__figure img,
+.female-challenge-card.is-active .male-goal-pop__scanner {
+  transform: translateY(-2px) scale(0.94);
+}
+
+.female-challenge-card .male-goal-pop__label {
+  min-height: 48px;
+  padding: 16px 8px 9px;
+}
+
 .male-goal-pop__scanner::after {
   content: "";
   position: absolute;

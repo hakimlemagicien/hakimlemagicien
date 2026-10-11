@@ -76,25 +76,26 @@ import challengeGoalImg from "@/assets/quiz/ما هي اكبر مشكلة توا
 import challengeEnergyImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/04-low-energy-vitality.webp";
 import challengeConfidenceImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/05-low-self-confidence-appearance.webp";
 import challengeCommitmentImg from "@/assets/quiz/ما هي اكبر مشكلة تواجهك حاليا/06-commitment-consistency.webp";
-import femaleChallengeBellyImg from "@/assets/الكرش و الدهون البطن.jpg";
-import femaleChallengeGlutesImg from "@/assets/quiz-challenge-glutes.jpg";
-import femaleChallengeSaggingImg from "@/assets/ترهلات الجسم للبنات.jpg";
-import femaleChallengeConfidenceImg from "@/assets/عدم الثقة بالنفس للبنات.png";
-import femaleChallengeBodyShapeImg from "@/assets/عدم تناسق الجسم.jpg";
-import femaleBodyGlutesImg from "@/assets/عدم تناسق الارداف.jpg";
-import femaleBodyNeedsToningImg from "@/assets/جسم يحتاج شد.png";
-import femaleBodyLightBellyImg from "@/assets/كرش خفيفة.png";
-import fbodySlim from "@/assets/fbody-slim.jpg";
-import fbodyAthletic from "@/assets/fbody-athletic.jpg";
-import fbodyOverweight from "@/assets/fbody-overweight.jpg";
-import femaleGoalFatImg from "@/assets/خسارة دهون للبنات.JPG";
-import gluteGrowth from "@/assets/glute-growth.png";
+import femaleChallengeBellyImg from "@/assets/content/quiz-female-challenges/abdominal-fat.png";
+import femaleChallengeGlutesImg from "@/assets/content/quiz-female-challenges/lower-body-shape.png";
+import femaleChallengeSaggingImg from "@/assets/content/quiz-female-challenges/body-softness.png";
+import femaleChallengeWeightImg from "@/assets/content/quiz-female-challenges/weight-plateau.png";
+import femaleChallengeConfidenceImg from "@/assets/content/quiz-female-challenges/self-confidence.png";
+import femaleChallengeBodyShapeImg from "@/assets/content/quiz-female-challenges/body-balance.png";
+import femaleBodyGlutesImg from "@/assets/content/quiz-female-body-types-v2/lower-body-balance.png";
+import femaleBodyNeedsToningImg from "@/assets/content/quiz-female-body-types-v2/needs-toning.png";
+import femaleBodyLightBellyImg from "@/assets/content/quiz-female-body-types-v2/light-belly.png";
+import fbodySlim from "@/assets/content/quiz-female-body-types-v2/slim.png";
+import fbodyAthletic from "@/assets/content/quiz-female-body-types-v2/athletic.png";
+import fbodyOverweight from "@/assets/content/quiz-female-body-types-v2/full-body-fat.png";
+import femaleGoalFatImg from "@/assets/content/home-goal-hero/بنات/خسارة-الدهون/heroloss.png";
+import gluteGrowth from "@/assets/content/home-goal-hero/بنات/تكبير-المؤخرة/01-glute-enlargement.png";
 import trainingEnvHomeImg from "@/assets/training-env-home.png";
 import trainingEnvGymImg from "@/assets/training-env-gym.png";
-import femaleGoalWaistImg from "@/assets/خصر انحف ومشدود.png";
-import feminineTonedBody from "@/assets/feminine-toned-body.png";
-import femaleGoalFitImg from "@/assets/جسم صحي ورياضي للبنات.png";
-import femaleGoalChestImg from "@/assets/تحسين شكل الصدر.jpg";
+import femaleGoalWaistImg from "@/assets/content/home-goal-hero/بنات/خصر-أنحف-ومشدود/lkhaser.png";
+import feminineTonedBody from "@/assets/content/home-goal-hero/بنات/جسم-متناسق-وأنثوي/jismmotanasq.png";
+import femaleGoalFitImg from "@/assets/content/home-goal-hero/بنات/جسم-صحي-ورياضي/jismriyadi.png";
+import femaleGoalChestImg from "@/assets/content/home-goal-hero/بنات/تحسين-شكل-الصدر/saderwadaher.png";
 import revealGlutesBefore0 from "@/assets/quiz-reveal-glutes-before.jpg";
 import revealGlutesBefore1 from "@/assets/quiz-reveal-glutes-before-1.jpg";
 import revealGlutesBefore2 from "@/assets/quiz-reveal-glutes-before-2.jpg";
@@ -235,10 +236,24 @@ export function QuizPage() {
         />
       )}
       {step === "goals" && (
-        <GoalsScreen onBack={() => goBack("gender")} onNext={() => replaceStep("age")} onSelect={setGoalId} />
+        <GoalsScreen
+          onBack={() => goBack("gender")}
+          onNext={() => replaceStep("age")}
+          onSelect={(nextGoalId) => {
+            setGender("male");
+            setGoalId(nextGoalId);
+          }}
+        />
       )}
       {step === "femaleGoals" && (
-        <FemaleGoalsScreen onBack={() => goBack("gender")} onNext={() => transitionTo("age")} onSelect={setGoalId} />
+        <FemaleGoalsScreen
+          onBack={() => goBack("gender")}
+          onNext={() => transitionTo("age")}
+          onSelect={(nextGoalId) => {
+            setGender("female");
+            setGoalId(nextGoalId);
+          }}
+        />
       )}
       {step === "age" && (
         <AgeScreen
@@ -513,7 +528,7 @@ function GenderScreen({ onSelect }: { onSelect: (gender: "male" | "female") => v
         <ProgressHeader step="gender" />
         <div className="mt-5 text-center">
           <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 leading-tight">
-            لنبدأ رحلتك مع كوتش <span style={{ color: "#FF6B00" }}>حكيم</span>
+            لنبدأ رحلتك مع <span style={{ color: "#FF6B00" }}>MAAKFIT</span>
           </h1>
           <h2 className="mt-3 text-xl sm:text-2xl font-bold text-neutral-900 leading-snug">
             ما هو جنسك؟
@@ -795,11 +810,6 @@ function QuizImageOptionCard({
   );
 }
 
-type StyledImageOption = ImageOption & {
-  imageWrapClassName: string;
-  imageClassName: string;
-};
-
 const GOALS: ImageOption[] = [
   { id: "fat", label: "خسارة الدهون", image: goalFatImg },
   { id: "muscle", label: "بناء العضلات", image: goalMuscleImg },
@@ -815,6 +825,7 @@ function MaleGoalPopCard({
   image,
   active,
   index,
+  presentationClassName,
   onClick,
 }: {
   label: string;
@@ -822,13 +833,14 @@ function MaleGoalPopCard({
   image: string;
   active: boolean;
   index: number;
+  presentationClassName?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`male-goal-pop${active ? " is-active" : ""}`}
+      className={`male-goal-pop${presentationClassName ? ` ${presentationClassName}` : ""}${active ? " is-active" : ""}`}
       style={{ animation: `fadeUp .5s ease-out ${index * 70}ms both` }}
     >
       <span
@@ -977,72 +989,65 @@ function TorsoIcon({ className }: { className?: string }) {
   );
 }
 
-const FEMALE_GOALS: StyledImageOption[] = [
+const FEMALE_GOALS: Array<ImageOption & { presentationClassName?: string }> = [
   {
     id: "fat",
     label: "خسارة الدهون",
     image: femaleGoalFatImg,
-    imageWrapClassName: "female-goal-fat-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "female-goal-fat-img h-full w-full object-cover",
+    presentationClassName: "female-goal-card",
   },
   {
     id: "glutes",
     label: "تكبير المؤخرة",
     image: gluteGrowth,
-    imageWrapClassName: "female-goal-glutes-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName:
-      "female-goal-glutes-img absolute left-1/2 top-1/2 h-[calc(100%+180px)] w-[calc(100%+180px)] -translate-x-1/2 -translate-y-1/2 object-cover",
+    presentationClassName: "female-goal-card",
   },
   {
     id: "waist",
     label: "خصر أنحف ومشدود",
     image: femaleGoalWaistImg,
-    imageWrapClassName: "female-goal-waist-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "female-goal-waist-img h-full w-full object-cover",
+    presentationClassName: "female-goal-card",
   },
   {
     id: "body",
-    label: "جسم متناسق وأنثوي",
+    label: "شد وتناسق الجزء السفلي",
     image: feminineTonedBody,
-    imageWrapClassName: "female-goal-body-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName:
-      "female-goal-body-img h-[calc(100%+40px)] w-full object-cover -translate-y-[40px]",
+    presentationClassName: "female-goal-card",
   },
   {
     id: "fit",
-    label: "جسم صحي ورياضي",
+    label: "تحسين القوام وشكل الجسم",
     image: femaleGoalFitImg,
-    imageWrapClassName: "female-goal-fit-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "female-goal-fit-img h-full w-full object-cover",
+    presentationClassName: "female-goal-card",
   },
   {
     id: "tone",
-    label: "تحسين شكل الصدر",
+    label: "تحسين شكل الصدر والظهر",
     image: femaleGoalChestImg,
-    imageWrapClassName: "female-goal-chest-wrap relative h-[min(38vw,148px)] w-full overflow-hidden",
-    imageClassName: "female-goal-chest-img h-full w-full object-cover",
+    presentationClassName: "female-goal-card",
   },
 ];
 
 function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; onNext: () => void; onSelect?: (id: string) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
   useEffect(() => {
-    if (!selected) return;
+    if (!leaving || !selected) return;
     onSelect?.(selected);
-    const t = setTimeout(onNext, HAPTIC_NAV_DELAY_MS);
+    const t = setTimeout(onNext, MALE_GOAL_LEAVE_MS);
     return () => clearTimeout(t);
-  }, [selected, onNext, onSelect]);
+  }, [leaving, selected, onNext, onSelect]);
 
 
 
   return (
-    <div className="relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]">
+    <div className={`male-goal-pop-screen relative w-full h-full flex flex-col animate-[fadeIn_.5s_ease-out]${leaving ? " is-leaving" : ""}`}>
       <FeminineBackdrop />
       <div className="relative flex flex-col h-full px-5 pt-3 pb-3">
         <ProgressHeader step="femaleGoals" onBack={onBack} />
 
         {/* Hero */}
-        <div className="mt-3 text-center">
+        <div className="male-goal-pop-hero mt-3 text-center">
           <p className="text-lg font-black" style={{ color: "#FF6B00" }}>
             ممتاز <span className="inline-block align-middle">✨</span>
           </p>
@@ -1055,26 +1060,27 @@ function FemaleGoalsScreen({ onBack, onNext, onSelect }: { onBack: () => void; o
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-3 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+        <div className="male-goal-pop-grid mt-1 grid grid-cols-2 gap-x-2 gap-y-2 flex-1 min-h-0 content-start overflow-y-auto overflow-x-hidden pt-2 pb-3">
           {FEMALE_GOALS.map((g, i) => (
-            <QuizImageOptionCard
+            <MaleGoalPopCard
               key={g.id}
               label={g.label}
               image={g.image}
               active={selected === g.id}
               index={i}
-              imageWrapClassName={g.imageWrapClassName}
-              imageClassName={g.imageClassName}
+              presentationClassName={g.presentationClassName}
               onClick={() => {
+                if (leaving) return;
                 triggerSelectionHaptic();
                 setSelected(g.id);
+                setLeaving(true);
               }}
             />
           ))}
         </div>
 
         {/* Bottom badge */}
-        <div className="mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
+        <div className="male-goal-pop-badge mt-3 mx-auto rounded-full bg-white/80 backdrop-blur ring-1 ring-black/5 px-5 py-3 flex items-center justify-center gap-2 shadow-[0_8px_20px_-12px_rgba(0,0,0,0.1)]">
           <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "#FF6B00" }}>
             <Lock className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
           </span>
@@ -2081,7 +2087,7 @@ const FEMALE_CHALLENGES: ImageOption[] = [
   { id: "belly", label: "الكرش والدهون البطن", image: femaleChallengeBellyImg },
   { id: "glutes", label: "شكل المؤخرة", image: femaleChallengeGlutesImg },
   { id: "sagging", label: "ترهلات الجسم", image: femaleChallengeSaggingImg },
-  { id: "weight", label: "عدم نزول الوزن", image: fbodyOverweight },
+  { id: "weight", label: "عدم نزول الوزن", image: femaleChallengeWeightImg },
   { id: "confidence", label: "الثقة بالنفس", image: femaleChallengeConfidenceImg },
   { id: "cravings", label: "عدم تناسق الجسم", image: femaleChallengeBodyShapeImg },
 ];
@@ -2110,14 +2116,15 @@ function FemaleChallengeScreen({ onBack, onNext, onSelect }: { onBack: () => voi
         </div>
 
         {/* Grid */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5 flex-1 min-h-0 content-stretch overflow-y-auto pb-1">
+        <div className="male-goal-pop-grid female-challenge-grid mt-1 grid grid-cols-2 gap-x-2 gap-y-2 flex-1 min-h-0 content-start overflow-y-auto overflow-x-hidden pt-2 pb-3">
           {FEMALE_CHALLENGES.map((c, i) => (
-            <QuizImageOptionCard
+            <MaleGoalPopCard
               key={c.id}
               label={c.label}
               image={c.image}
               active={selected === c.id}
               index={i}
+              presentationClassName="female-challenge-card"
               onClick={() => {
                 triggerSelectionHaptic();
                 setSelected(c.id);
@@ -2621,12 +2628,12 @@ function FemaleBodyTypeScreen({ onBack, onNext }: { onBack: () => void; onNext: 
                   animation: `fadeUp .5s ease-out ${i * 50}ms both`,
                 }}
               >
-                <div className="w-full rounded-[12px] overflow-hidden bg-[#F2EDE6] aspect-[3/4]">
+                <div className="w-full rounded-[12px] overflow-hidden bg-[linear-gradient(180deg,#FFF8F4_0%,#FDE9E2_100%)] aspect-[3/4]">
                   <img
                     src={b.img}
                     alt={b.title}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain object-bottom p-0.5"
                   />
                 </div>
                 <div className="mt-1 text-[11px] font-extrabold text-[#1F1F1F] text-center leading-tight px-0.5 line-clamp-2">
