@@ -347,6 +347,20 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
               <Lock />
               آمن وموثوق • بياناتك محمية معنا
             </p>
+            <footer className="auth-login__legal-footer">
+              <strong>MAAKFIT</strong>
+              <nav aria-label="روابط التطبيق والسياسات">
+                <a href="/coaching">عن التطبيق</a>
+                <span aria-hidden="true">·</span>
+                <a href="/terms">الشروط</a>
+                <span aria-hidden="true">·</span>
+                <a href="/privacy">الخصوصية</a>
+                <span aria-hidden="true">·</span>
+                <a href="/refund">الاسترداد</a>
+                <span aria-hidden="true">·</span>
+                <a href="/contact">الدعم</a>
+              </nav>
+            </footer>
           </motion.div>
         ) : stage === "login" ? (
           <motion.section
