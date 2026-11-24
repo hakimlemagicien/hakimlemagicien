@@ -10,6 +10,8 @@ import {
 } from "@/lib/payments";
 import { getTermOffer, formatOfficialTotal, type SubscriptionTermMonths } from "@/lib/pricing-presentation";
 import { supabase } from "@/integrations/supabase/client";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { SITE_WHATSAPP_URL } from "@/lib/site-legal";
 import type { CheckoutReturnSurface } from "@/lib/payments/types";
 
 type AppCheckoutPanelProps = {
@@ -29,10 +31,12 @@ export function AppCheckoutPanel({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
       setUserId(data.session?.user?.id ?? null);
+      setUserEmail(data.session?.user?.email ?? null);
     });
   }, []);
 
@@ -48,6 +52,22 @@ export function AppCheckoutPanel({
       legalAccepted: true,
     });
   }, [userId, plan, termMonths, returnSurface]);
+
+  // Until an online payment provider is connected, memberships are activated
+  // manually by the team (MANUAL_MEMBERSHIP_ONLY). Send the customer to WhatsApp
+  // with the chosen plan prefilled instead of a dead-end payment button.
+  const manualActivation =
+    !providerPreview.ok &&
+    (providerPreview.code === "PAYMENT_PROVIDER_UNAVAILABLE" ||
+      providerPreview.code === "PROVIDER_BINDING_PENDING");
+  const planLabel = plan === "essential" ? "PLUS" : "PRO";
+  const whatsappHref = useMemo(() => {
+    const lines = [
+      `مرحباً، أريد تفعيل باقة ${planLabel} لمدة ${termMonths} أشهر (${formatOfficialTotal(offer.totalPrice)}) في MAAKFIT.`,
+      userEmail ? `بريد حسابي: ${userEmail}` : null,
+    ].filter(Boolean);
+    return `${SITE_WHATSAPP_URL}?text=${encodeURIComponent(lines.join("\n"))}`;
+  }, [planLabel, termMonths, offer.totalPrice, userEmail]);
 
   const handleContinue = async () => {
     if (!legalAccepted) {
@@ -67,9 +87,9 @@ export function AppCheckoutPanel({
       });
       if (!result.ok) {
         if (result.code === "PAYMENT_PROVIDER_UNAVAILABLE") {
-          setMessage("الدفع الآلي غير متاح حالياً — في انتظار ربط Paddle (P4B).");
+          setMessage("الدفع الإلكتروني غير متاح حالياً. تواصل معنا على واتساب لتفعيل باقتك.");
         } else if (result.code === "PROVIDER_BINDING_PENDING") {
-          setMessage("ربط أسعار Paddle قيد الإعداد — PROVIDER_BINDING_PENDING.");
+          setMessage("الدفع الإلكتروني غير متاح حالياً. تواصل معنا على واتساب لتفعيل باقتك.");
         } else {
           setMessage(result.message);
         }
@@ -107,32 +127,42 @@ export function AppCheckoutPanel({
         ))}
       </div>
 
-      <p className="mt-3 rounded-xl border border-[#FFE0CC] bg-[#FFF8F3] px-3 py-2.5 font-[Tajawal] text-[11px] leading-relaxed text-[#64748B]">
-        {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)}
-      </p>
+      {manualActivation ? (
+        <>
+          <p className="mt-3 rounded-xl border border-[#FFE0CC] bg-[#FFF8F3] px-3 py-2.5 font-[Tajawal] text-[12px] leading-relaxed text-[#475569]">
+            الدفع الإلكتروني سيتوفر قريباً. حالياً يتم تفعيل باقتك مباشرة عبر فريقنا: أرسل لنا رسالة
+            على واتساب وسنرسل لك طريقة الدفع ونفعّل برنامجك على حسابك.
+          </p>
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] font-[Tajawal] text-[14px] font-extrabold text-white"
+          >
+            <WhatsAppIcon className="h-5 w-5" />
+            تفعيل الباقة عبر واتساب
+          </a>
+        </>
+      ) : (
+        <>
+          <p className="mt-3 rounded-xl border border-[#FFE0CC] bg-[#FFF8F3] px-3 py-2.5 font-[Tajawal] text-[11px] leading-relaxed text-[#64748B]">
+            {CHECKOUT_DISCLOSURE_COPY.ar(disclosure)}
+          </p>
 
-      <div className="mt-3">
-        <AgreementCheckbox checked={legalAccepted} onChange={setLegalAccepted} />
-      </div>
+          <div className="mt-3">
+            <AgreementCheckbox checked={legalAccepted} onChange={setLegalAccepted} />
+          </div>
 
-      {!providerPreview.ok && providerPreview.code !== "CHECKOUT_UNAUTHENTICATED" ? (
-        <p className="mt-2 font-[Tajawal] text-[11px] font-semibold text-[#B45309]">
-          {providerPreview.code === "PAYMENT_PROVIDER_UNAVAILABLE"
-            ? "PAYMENT_PROVIDER_UNAVAILABLE — متوقع قبل P4B"
-            : providerPreview.code === "PROVIDER_BINDING_PENDING"
-              ? "PROVIDER_BINDING_PENDING"
-              : null}
-        </p>
-      ) : null}
-
-      <button
-        type="button"
-        disabled={busy || !legalAccepted}
-        onClick={() => void handleContinue()}
-        className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-primary font-[Tajawal] text-[14px] font-extrabold text-white disabled:opacity-60"
-      >
-        {busy ? "جاري التجهيز…" : "متابعة الدفع"}
-      </button>
+          <button
+            type="button"
+            disabled={busy || !legalAccepted}
+            onClick={() => void handleContinue()}
+            className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-primary font-[Tajawal] text-[14px] font-extrabold text-white disabled:opacity-60"
+          >
+            {busy ? "جاري التجهيز…" : "متابعة الدفع"}
+          </button>
+        </>
+      )}
 
       {message ? (
         <p className="mt-2 font-[Tajawal] text-[11px] font-bold text-[#991B1B]">{message}</p>

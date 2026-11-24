@@ -15,8 +15,10 @@ function readAuthFields(error: unknown): { message: string; code: string } {
   return { message: String(error ?? "").trim(), code: "" };
 }
 
-function looksEnglish(text: string): boolean {
-  return /[A-Za-z]/.test(text) && !/[\u0600-\u06FF]/.test(text);
+// Only surface server text that is already Arabic. Anything else (English, or
+// a raw empty body like "{}" from a failed email send) falls back to safe copy.
+function isArabicMessage(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
 }
 
 export function translateAuthError(error: unknown, fallback = "تعذّر إكمال العملية. حاول مرة أخرى."): string {
@@ -71,7 +73,7 @@ export function translateAuthError(error: unknown, fallback = "تعذّر إكم
     return "الدخول عبر Google غير متاح حالياً. استخدم البريد وكلمة المرور أو أعد المحاولة لاحقاً.";
   }
 
-  if (message && !looksEnglish(message)) return message;
+  if (message && isArabicMessage(message)) return message;
   return fallback;
 }
 

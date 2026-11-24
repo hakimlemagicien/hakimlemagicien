@@ -247,7 +247,7 @@ export function PlanActivateBlock({
               compact ? "mt-4" : "mt-5",
             )}
           >
-            VIP متاحة بدعوة — ليست للبيع العام في Commercial V1
+            باقة VIP متاحة بدعوة خاصة فقط
           </p>
         ) : (
           <button

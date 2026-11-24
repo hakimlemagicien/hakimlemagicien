@@ -188,10 +188,10 @@ export function CheckoutScreen({ tier, total = 17, onBack }: CheckoutScreenProps
         return { disabled: true, note: "سجّل الدخول أولاً لإتمام الدفع الآلي." };
       }
       if (prepared.code === "PAYMENT_PROVIDER_UNAVAILABLE") {
-        return { disabled: true, note: "PAYMENT_PROVIDER_UNAVAILABLE — متوقع قبل P4B." };
+        return { disabled: true, note: "الدفع بالبطاقة غير متاح حالياً." };
       }
       if (prepared.code === "PROVIDER_BINDING_PENDING") {
-        return { disabled: true, note: "PROVIDER_BINDING_PENDING — ربط Paddle في P4B." };
+        return { disabled: true, note: "الدفع بالبطاقة غير متاح حالياً." };
       }
       return { disabled: true, note: prepared.message };
     }

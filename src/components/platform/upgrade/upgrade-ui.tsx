@@ -24,7 +24,7 @@ const SURFACE_COPY: Record<
   },
   DIRECT_UPGRADE: {
     title: "اختر الباقة المناسبة لك",
-    subtitle: "PLUS أو PRO — بدون VIP للبيع العام.",
+    subtitle: "اختر بين PLUS و PRO حسب مستوى المتابعة الذي تحتاجه.",
     cta: "عرض الباقات",
     upgradeHeadline: "اختر الباقة المناسبة لك",
   },
@@ -330,8 +330,8 @@ export function FeatureComparison() {
                   <div className="grid grid-cols-4 gap-0 border-b border-[#E8E4DE] px-2 py-1.5 text-center font-[Tajawal] text-[9px] font-extrabold text-[#94A3B8]">
                     <span className="text-right">الميزة</span>
                     <span>FREE</span>
-                    <span>Ess.</span>
-                    <span>Prem.</span>
+                    <span>PLUS</span>
+                    <span>PRO</span>
                   </div>
                   <ComparisonTable rows={group.rows} />
                 </div>
