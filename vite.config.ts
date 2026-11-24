@@ -52,6 +52,10 @@ export default defineConfig(({ command, mode }) => {
     define: envDefine,
     build: {
       chunkSizeWarningLimit: 600,
+      // Content library images (asset-index glob) must stay real files: inlining
+      // hundreds of small thumbnails as base64 produced a ~1.1 MB gzip JS chunk.
+      assetsInlineLimit: (filePath: string) =>
+        filePath.includes("/assets/content/") ? false : undefined,
       rollupOptions: {
         output: {
           // Keep hero-goal filenames stable so admin framing keys match /app lookups.
@@ -64,15 +68,10 @@ export default defineConfig(({ command, mode }) => {
             }
             return "assets/[name]-[hash][extname]";
           },
+          // Do NOT force app source (e.g. admin) into a named chunk: member/auth code
+          // imports small admin helpers, which made every visitor download the whole
+          // admin bundle (~1.7 MB gzip). Route-level code splitting keeps admin lazy.
           manualChunks(id) {
-            if (
-              id.includes("/src/routes/admin/") ||
-              id.includes("/src/components/admin/") ||
-              id.includes("/src/lib/admin/") ||
-              id.includes("/src/lib/admin-payments-api")
-            ) {
-              return "admin-command-center";
-            }
             if (!id.includes("node_modules")) return;
             if (id.includes("framer-motion")) return "vendor-motion";
             if (id.includes("swiper")) return "vendor-swiper";

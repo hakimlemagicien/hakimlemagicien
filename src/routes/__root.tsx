@@ -79,6 +79,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+// Shown in WhatsApp / Instagram / Facebook link previews — customer-facing copy only.
+const SHARE_DESCRIPTION =
+  "برنامج تدريب وتغذية مخصص لهدفك مع متابعة من مدربك. ابدأ تقييمك المجاني الآن.";
+// Self-hosted (JPEG for widest preview support) so previews never depend on third-party storage.
+const SHARE_IMAGE_URL = `${PRODUCTION_APP_ORIGIN}/og-image.jpg`;
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -96,31 +102,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
       { property: "og:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
       { name: "twitter:title", content: "MAAKFIT — منصة تدريب وتغذية مخصصة" },
-      {
-        name: "description",
-        content:
-          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
-      },
-      {
-        property: "og:description",
-        content:
-          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
-      },
-      {
-        name: "twitter:description",
-        content:
-          "منصة MAAKFIT — App-First entry على /، Landing تسويقية على /coaching، ومنصة أعضاء على /app.",
-      },
-      {
-        property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/QicwtF0hdOh8u9TxR6SXxZWUZQJ2/social-images/social-1781802129820-a84bdb8c92175869f403771a73d7ef78787a53779ebf7913c0cdfc83c019eea7.webp",
-      },
+      { name: "description", content: SHARE_DESCRIPTION },
+      { property: "og:description", content: SHARE_DESCRIPTION },
+      { name: "twitter:description", content: SHARE_DESCRIPTION },
+      { property: "og:locale", content: "ar_AR" },
+      { property: "og:site_name", content: "MAAKFIT" },
+      { property: "og:image", content: SHARE_IMAGE_URL },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:type", content: "image/jpeg" },
+      { name: "twitter:image", content: SHARE_IMAGE_URL },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

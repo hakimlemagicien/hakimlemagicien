@@ -1,6 +1,10 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { CREATE_PASSWORD_LOCATION, userHasOAuthIdentity, userNeedsPasswordSetup } from "@/lib/auth-password-gate";
+import {
+  CREATE_PASSWORD_LOCATION,
+  userHasOAuthIdentity,
+  userNeedsPasswordSetup,
+} from "@/lib/auth-password-gate";
 import { checkAdminAccess, sanitizeAdminReturnPath } from "@/lib/admin/admin-access";
 
 export type PostAuthLocation =
@@ -20,24 +24,49 @@ export function isOnboardingCompleteFromState(state: unknown): boolean {
 }
 
 /** OAuth-only destination once onboarding completeness is known. */
-export function oauthPostAuthLocation(onboardingComplete: boolean): { to: "/app" } | { to: "/quiz" } {
+export function oauthPostAuthLocation(
+  onboardingComplete: boolean,
+): { to: "/app" } | { to: "/quiz" } {
   return onboardingComplete ? { to: "/app" } : { to: "/quiz" };
 }
+
+const completedOnboardingUsers = new Set<string>();
+const onboardingRequests = new Map<string, Promise<boolean>>();
 
 /**
  * Official contract: public.get_my_onboarding_state().
  * On RPC failure treat as incomplete so new OAuth users are not dumped into /app.
  */
-export async function fetchMyOnboardingComplete(): Promise<boolean> {
-  const { data, error } = await supabase.rpc("get_my_onboarding_state");
-  if (error) {
-    console.error("[auth] get_my_onboarding_state failed:", error);
-    return false;
-  }
-  return isOnboardingCompleteFromState(data);
+export async function fetchMyOnboardingComplete(userId?: string): Promise<boolean> {
+  if (userId && completedOnboardingUsers.has(userId)) return true;
+
+  const requestKey = userId ?? "current-user";
+  const existingRequest = onboardingRequests.get(requestKey);
+  if (existingRequest) return existingRequest;
+
+  const request = Promise.resolve(supabase.rpc("get_my_onboarding_state"))
+    .then(({ data, error }) => {
+      if (error) {
+        console.error("[auth] get_my_onboarding_state failed:", error);
+        return false;
+      }
+      const complete = isOnboardingCompleteFromState(data);
+      // Completion is monotonic. Cache only the completed state so an
+      // unfinished OAuth user can finish the quiz without a stale redirect.
+      if (complete && userId) completedOnboardingUsers.add(userId);
+      return complete;
+    })
+    .finally(() => {
+      onboardingRequests.delete(requestKey);
+    });
+
+  onboardingRequests.set(requestKey, request);
+  return request;
 }
 
-async function staffPostAuthLocation(preferredRedirect?: string | null): Promise<PostAuthLocation | null> {
+async function staffPostAuthLocation(
+  preferredRedirect?: string | null,
+): Promise<PostAuthLocation | null> {
   try {
     await checkAdminAccess();
   } catch {
@@ -59,9 +88,16 @@ export async function resolveAuthenticatedDestination(
 ): Promise<PostAuthLocation> {
   if (userNeedsPasswordSetup(user)) return CREATE_PASSWORD_LOCATION;
 
+  // An explicit member-app intent must win over the staff default so the same
+  // account can review the customer experience without losing admin access.
+  if (options?.redirect === "/app") {
+    if (!userHasOAuthIdentity(user)) return { to: "/app" };
+    return oauthPostAuthLocation(await fetchMyOnboardingComplete(user.id));
+  }
+
   const staffDestination = await staffPostAuthLocation(options?.redirect);
   if (staffDestination) return staffDestination;
 
   if (!userHasOAuthIdentity(user)) return { to: "/app" };
-  return oauthPostAuthLocation(await fetchMyOnboardingComplete());
+  return oauthPostAuthLocation(await fetchMyOnboardingComplete(user.id));
 }
