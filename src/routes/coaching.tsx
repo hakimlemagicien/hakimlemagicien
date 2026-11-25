@@ -6,6 +6,7 @@ import { HeroProblemTransition } from "@/components/HeroProblemTransition";
 import { SectionSkeleton } from "@/components/ui/section-skeleton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PRODUCTION_APP_ORIGIN } from "@/lib/env/assert-environment";
+import { SHOW_PLACEHOLDER_SOCIAL_PROOF } from "@/lib/social-proof";
 
 const ProblemSection = lazy(() =>
   import("@/components/ProblemSection").then((m) => ({ default: m.ProblemSection })),
@@ -52,9 +53,11 @@ function CoachingPage() {
         <Suspense fallback={<SectionSkeleton variant="text" />}>
           <HowItWorks />
         </Suspense>
-        <Suspense fallback={<SectionSkeleton variant="cards" />}>
-          <SuccessStories />
-        </Suspense>
+        {SHOW_PLACEHOLDER_SOCIAL_PROOF ? (
+          <Suspense fallback={<SectionSkeleton variant="cards" />}>
+            <SuccessStories />
+          </Suspense>
+        ) : null}
         <Suspense fallback={<SectionSkeleton variant="text" />}>
           <PricingTransparency />
         </Suspense>

@@ -1,3 +1,4 @@
+import { SHOW_PLACEHOLDER_SOCIAL_PROOF } from "@/lib/social-proof";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -230,7 +231,7 @@ function PlatformHomePage() {
           <HomeNextSession session={dashboard.session} />
           <HomeCoachTip message={dashboard.coach} />
           {dashboard.discover.length > 0 ? <HomeDiscover items={dashboard.discover} /> : null}
-          {shouldShowActivateCta(tier, is_paid) ? <HomeSocialProof /> : null}
+          {SHOW_PLACEHOLDER_SOCIAL_PROOF && shouldShowActivateCta(tier, is_paid) ? <HomeSocialProof /> : null}
           {shouldShowActivateCta(tier, is_paid) ? <HomePersonalProgramCard /> : null}
         </>
       ) : null}

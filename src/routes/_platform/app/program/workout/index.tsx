@@ -96,11 +96,12 @@ import {
 } from "@/lib/platform/missing-goal-fallback";
 
 function WorkoutRouteError({ error, reset }: { error: Error; reset: () => void }) {
+  console.error(error);
   return (
     <div className="px-2 py-16 text-center">
       <h1 className="text-xl font-black text-foreground">تعذر فتح الصفحة</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {error.message || "حدث خطأ أثناء تحميل التمارين. حاول مرة أخرى."}
+        حدث خطأ أثناء تحميل التمارين. حاول مرة أخرى.
       </p>
       <button
         type="button"

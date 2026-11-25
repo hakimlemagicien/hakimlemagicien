@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { SHOW_PLACEHOLDER_SOCIAL_PROOF } from "@/lib/social-proof";
 import {
   CircleDollarSign,
   Home,
@@ -70,6 +71,11 @@ const navItems: {
     tone: "bg-[#EEF2FF] text-[#6366F1]",
   },
 ];
+
+// The «stories» section is hidden until real client results replace the placeholders.
+const visibleNavItems = navItems.filter(
+  (item) => item.hash !== "stories" || SHOW_PLACEHOLDER_SOCIAL_PROOF,
+);
 
 function Logo() {
   return (
@@ -208,7 +214,7 @@ export function Header() {
         <Logo />
 
         <nav className="hidden lg:flex items-center gap-8">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isNavItemActive(pathname, currentHash, item.hash);
             return (
               <div key={item.label} className="relative">
@@ -296,7 +302,7 @@ export function Header() {
                 className="pointer-events-auto w-full max-w-[360px] rounded-[28px] border border-white/60 bg-white/55 p-5 shadow-[0_28px_70px_-28px_rgba(15,23,42,0.5)] backdrop-blur-xl"
               >
                 <div className="grid grid-cols-3 gap-x-3 gap-y-5">
-                  {navItems.map((item, index) => {
+                  {visibleNavItems.map((item, index) => {
                     const Icon = item.icon;
                     const active = isNavItemActive(pathname, currentHash, item.hash);
                     return (
