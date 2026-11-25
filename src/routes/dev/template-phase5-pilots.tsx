@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ProgramTemplateCard } from "@/components/admin/programs/ProgramTemplateCard";
 import {
@@ -17,6 +17,10 @@ import {
 } from "@/lib/platform/training-templates/pilot-4";
 
 export const Route = createFileRoute("/dev/template-phase5-pilots")({
+  // Local visual-evidence route only — never served on a production build.
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) throw notFound();
+  },
   component: TemplatePhase5PilotsPage,
 });
 

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { ProgramTemplateCard } from "@/components/admin/programs/ProgramTemplateCard";
 import {
   ProgramTemplateDetailPanel,
@@ -10,6 +10,10 @@ import { createEmptyTemplateContract } from "@/lib/platform/training-templates";
 import type { AdminProgramDetail } from "@/lib/admin/admin-programs-api";
 
 export const Route = createFileRoute("/dev/template-phase4-ui")({
+  // Local visual-evidence route only — never served on a production build.
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) throw notFound();
+  },
   component: TemplatePhase4UiDemoPage,
 });
 
