@@ -5,7 +5,7 @@
  * when available under .tmp (server-side only would be better; this route
  * fetches live Admin list when authenticated).
  */
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ProgramTemplateCard } from "@/components/admin/programs/ProgramTemplateCard";
 import {
@@ -25,6 +25,10 @@ import {
 } from "@/lib/admin/admin-template-ui";
 
 export const Route = createFileRoute("/dev/template-phase6-local-db")({
+  // Local visual-evidence route only — never served on a production build.
+  beforeLoad: () => {
+    if (!import.meta.env.DEV) throw notFound();
+  },
   component: TemplatePhase6LocalDbPage,
 });
 

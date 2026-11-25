@@ -227,6 +227,10 @@ export function startVisualPropertiesEngine(path: string) {
   if (typeof window === "undefined") return () => {};
   if (!isVisualPropertiesEnginePath(path)) return () => {};
 
+  // Design rules live only in the owner's localStorage. Customers have none, so
+  // stay idle instead of rescanning the whole DOM on every mutation. The engine
+  // wakes up as soon as rules for this path appear (storage / rules-changed).
+  let observer: MutationObserver | null = null;
   let applying = false;
   let scheduled = false;
   const applyNow = () => {
@@ -247,19 +251,28 @@ export function startVisualPropertiesEngine(path: string) {
     });
   };
 
-  applyNow();
-  const observer = new MutationObserver(() => scheduleApply());
-  if (document.body) {
-    observer.observe(document.body, { subtree: true, childList: true });
-  }
-  const onStorage = () => applyNow();
-  const onRulesChanged = () => applyNow();
-  window.addEventListener("storage", onStorage);
-  window.addEventListener(DESIGN_LAB_RULES_CHANGED_EVENT, onRulesChanged);
+  const sync = () => {
+    const hasRules = getRulesForPath(path).length > 0;
+    if (!hasRules) {
+      observer?.disconnect();
+      observer = null;
+      return;
+    }
+    applyNow();
+    if (!observer && document.body) {
+      observer = new MutationObserver(() => scheduleApply());
+      observer.observe(document.body, { subtree: true, childList: true });
+    }
+  };
+
+  sync();
+  window.addEventListener("storage", sync);
+  window.addEventListener(DESIGN_LAB_RULES_CHANGED_EVENT, sync);
   return () => {
-    observer.disconnect();
-    window.removeEventListener("storage", onStorage);
-    window.removeEventListener(DESIGN_LAB_RULES_CHANGED_EVENT, onRulesChanged);
+    observer?.disconnect();
+    observer = null;
+    window.removeEventListener("storage", sync);
+    window.removeEventListener(DESIGN_LAB_RULES_CHANGED_EVENT, sync);
   };
 }
 
