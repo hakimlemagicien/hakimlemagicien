@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppCheckoutPanel } from "@/components/platform/upgrade/AppCheckoutPanel";
 import { PlanActivateBlock } from "@/components/platform/upgrade/PlanActivateBlock";
@@ -49,6 +49,24 @@ export function AppUpgradePage({
   const publicTiers = getPublicPaidTiers();
   const [selectedPlan, setSelectedPlan] = useState<PublicPaidTierId | null>(initialPlan ?? null);
   const [selectedTerm, setSelectedTerm] = useState<SubscriptionTermMonths>(initialTerm);
+  const checkoutRef = useRef<HTMLDivElement>(null);
+
+  // «فعّل برنامجك الآن» links back to this same route with ?plan=&term=; the
+  // route stays mounted, so sync the new search into state or the click is a no-op.
+  useEffect(() => {
+    if (!initialPlan) return;
+    setSelectedPlan(initialPlan);
+    setSelectedTerm(initialTerm);
+  }, [initialPlan, initialTerm]);
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const frame = window.requestAnimationFrame(() => {
+      checkoutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedPlan, selectedTerm]);
+
   const returnState = checkoutReturn ? resolveBrowserCheckoutReturn(false) : null;
   const surfaceCopy = getUpgradeSurfaceCopy(surface);
 
@@ -162,17 +180,19 @@ export function AppUpgradePage({
       </section>
 
       {selectedPlan && purchasablePlans.some((p) => p.id === selectedPlan) ? (
-        <AppCheckoutPanel
-          plan={selectedPlan}
-          termMonths={selectedTerm}
-          returnSurface={surface}
-          onTermChange={setSelectedTerm}
-        />
+        <div ref={checkoutRef} className="scroll-mt-4">
+          <AppCheckoutPanel
+            plan={selectedPlan}
+            termMonths={selectedTerm}
+            returnSurface={surface}
+            onTermChange={setSelectedTerm}
+          />
+        </div>
       ) : null}
 
       {!entitlements.coachChat && currentTier === "premium" ? (
         <p className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-right font-[Tajawal] text-[11px] text-[#64748B]">
-          PRO العام V1 لا يشمل دردشة الكوتش — هذه ميزة VIP الداخلية فقط.
+          باقة PRO لا تشمل المحادثة المباشرة مع المدرب.
         </p>
       ) : null}
 

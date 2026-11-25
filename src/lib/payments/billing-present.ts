@@ -170,7 +170,8 @@ export function providerBindingStateLabel():
   if (!availability.available) {
     return {
       code: availability.code,
-      label: "مزود الدفع غير مربوط بعد — لا تُعرض عناصر تحكم مزود وهمية",
+      label:
+        "الدفع الإلكتروني غير متاح حالياً — يتم تفعيل الاشتراك وتجديده عبر فريق الدعم على واتساب.",
     };
   }
   return { code: "BOUND", label: "مزود الدفع جاهز للربط التشغيلي" };

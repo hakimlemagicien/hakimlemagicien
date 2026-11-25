@@ -60,4 +60,15 @@ assert.equal(authExperience.includes("SHOW_APPLE_LOGIN = false"), true, "apple l
 assert.equal(authExperience.includes('provider: "google" | "apple"'), true, "apple oauth handler kept");
 assert.equal(authExperience.includes("function AppleMark"), true, "apple mark kept for re-enable");
 
+assert.equal(
+  translateAuthError({ message: "{}", status: 500 }, "تعذّر إرسال رمز التحقق."),
+  "تعذّر إرسال رمز التحقق.",
+  "raw empty error body never reaches the customer",
+);
+assert.equal(
+  translateAuthError({ message: "رسالة عربية" }),
+  "رسالة عربية",
+  "arabic server text passes through",
+);
+
 console.log("auth-error-ar tests passed");

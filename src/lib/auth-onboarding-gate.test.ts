@@ -7,7 +7,11 @@ import {
   oauthPostAuthLocation,
   resolveAuthenticatedDestination,
 } from "./auth-onboarding-gate.ts";
-import { CREATE_PASSWORD_LOCATION, PASSWORD_SET_META_KEY, userHasOAuthIdentity } from "./auth-password-gate.ts";
+import {
+  CREATE_PASSWORD_LOCATION,
+  PASSWORD_SET_META_KEY,
+  userHasOAuthIdentity,
+} from "./auth-password-gate.ts";
 
 assert.equal(isOnboardingCompleteFromState(null), false, "null incomplete");
 assert.equal(isOnboardingCompleteFromState({}), false, "empty incomplete");
@@ -45,7 +49,9 @@ assert.deepEqual(
   "existing user via official state",
 );
 
-function baseUser(partial: Partial<User> & Pick<User, "id" | "identities" | "user_metadata">): User {
+function baseUser(
+  partial: Partial<User> & Pick<User, "id" | "identities" | "user_metadata">,
+): User {
   return {
     app_metadata: {},
     aud: "authenticated",
@@ -73,19 +79,42 @@ const emailNeedsPassword = baseUser({
 assert.equal(userHasOAuthIdentity(oauthUser), true, "google identity detected");
 assert.equal(userHasOAuthIdentity(emailUser), false, "email-only is not OAuth");
 
-assert.deepEqual(await resolveAuthenticatedDestination(emailUser), { to: "/app" }, "email/password unchanged");
+assert.deepEqual(
+  await resolveAuthenticatedDestination(emailUser),
+  { to: "/app" },
+  "email/password unchanged",
+);
+assert.deepEqual(
+  await resolveAuthenticatedDestination(emailUser, { redirect: "/app" }),
+  { to: "/app" },
+  "explicit member-app intent wins for a dual-role account",
+);
 assert.deepEqual(
   await resolveAuthenticatedDestination(emailNeedsPassword),
   CREATE_PASSWORD_LOCATION,
   "password gate still first",
 );
 
-const authExperience = readFileSync(resolve(process.cwd(), "src/components/auth/AuthExperience.tsx"), "utf8");
-const platformRoute = readFileSync(resolve(process.cwd(), "src/routes/_platform/route.tsx"), "utf8");
+const authExperience = readFileSync(
+  resolve(process.cwd(), "src/components/auth/AuthExperience.tsx"),
+  "utf8",
+);
+const platformRoute = readFileSync(
+  resolve(process.cwd(), "src/routes/_platform/route.tsx"),
+  "utf8",
+);
 const indexRoute = readFileSync(resolve(process.cwd(), "src/routes/index.tsx"), "utf8");
 const gateSource = readFileSync(resolve(process.cwd(), "src/lib/auth-onboarding-gate.ts"), "utf8");
 
 assert(gateSource.includes('rpc("get_my_onboarding_state")'), "uses official onboarding RPC");
+assert(
+  gateSource.includes("completedOnboardingUsers"),
+  "completed OAuth onboarding is cached per user",
+);
+assert(
+  gateSource.includes("onboardingRequests"),
+  "duplicate OAuth onboarding requests are deduplicated",
+);
 assert(authExperience.includes("resolveAuthenticatedDestination"), "AuthExperience wired");
 assert(platformRoute.includes("resolveAuthenticatedDestination"), "platform gate wired");
 assert(indexRoute.includes("resolveAuthenticatedDestination"), "index gate wired");

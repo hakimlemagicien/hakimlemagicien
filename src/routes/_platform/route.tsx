@@ -62,11 +62,16 @@ export const Route = createFileRoute("/_platform")({
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) throw redirect({ to: "/auth" });
+      if (!session?.user) {
+        throw redirect({
+          to: "/auth",
+          search: { view: "login", redirect: "/app" },
+        });
+      }
       if (approvedPlatformUsers.has(session.user.id)) {
         return { user: session.user };
       }
-      const destination = await resolveAuthenticatedDestination(session.user);
+      const destination = await resolveAuthenticatedDestination(session.user, { redirect: "/app" });
       if (destination.to !== "/app") {
         throw redirect(destination);
       }
