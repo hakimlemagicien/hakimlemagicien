@@ -23397,29 +23397,243 @@ button.cc-directory-summary__card {
   box-shadow: 0 0 0 4px var(--qc-brand-soft);
 }
 
-.qchat-phone {
+.qchat-steps {
   display: flex;
+  justify-content: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.qchat-phone select {
+.qchat-steps span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 999px;
+  background: var(--qc-canvas);
+  color: var(--qc-ink-3);
+  font-size: 13px;
+  font-weight: 800;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+
+.qchat-steps i {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e7e0d8;
+  color: #fff;
+  font-size: 12px;
+  font-style: normal;
+  transition: background-color 0.3s;
+}
+
+.qchat-steps span.is-active {
+  background: var(--qc-brand-soft);
+  color: var(--qc-brand-press);
+}
+
+.qchat-steps span.is-active i {
+  background: var(--qc-brand);
+  animation: qchat-step-bounce 1.4s ease-in-out infinite;
+}
+
+.qchat-steps span.is-done {
+  color: #15803d;
+}
+
+.qchat-steps span.is-done i {
+  background: #22c55e;
+}
+
+@keyframes qchat-step-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+.qchat-phone {
+  display: flex;
+  min-height: 60px;
+  align-items: stretch;
+  overflow: hidden;
+  border: 2px solid var(--qc-line);
+  border-radius: 18px;
+  background: #fff;
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
+}
+
+.qchat-phone.is-number,
+.qchat-phone:focus-within {
+  border-color: var(--qc-brand);
+  box-shadow: 0 0 0 4px var(--qc-brand-soft);
+}
+
+.qchat-phone.is-done {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 4px #e9f9ef;
+}
+
+.qchat-phone__country {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-inline-end: 2px solid var(--qc-line);
+  background: var(--qc-canvas);
+  color: var(--qc-ink);
+  cursor: pointer;
+}
+
+.qchat-phone__country select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.qchat-phone__country.is-attention {
+  background: var(--qc-brand-soft);
+  animation: qchat-attention 1.6s ease-in-out infinite;
+}
+
+@keyframes qchat-attention {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 0 rgb(249 115 22 / 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 3px rgb(249 115 22 / 0.55);
+  }
+}
+
+.qchat-phone__flag {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.qchat-phone__dial {
+  font-size: 16px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.qchat-phone__custom {
+  width: 64px;
+  border: 0;
+  border-inline-end: 2px solid var(--qc-line);
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+}
+
+.qchat-phone__number {
+  position: relative;
+  display: flex;
   flex: 1;
   min-width: 0;
-  min-height: 50px;
-  padding: 0 12px;
-  border: 2px solid var(--qc-line);
-  border-radius: 16px;
-  background: #fff;
+  align-items: center;
+}
+
+.qchat-phone__number input {
+  width: 100%;
+  height: 100%;
+  padding: 0 40px 0 14px;
+  border: 0;
+  background: transparent;
   color: var(--qc-ink);
   font: inherit;
-  font-size: 15px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  outline: none;
+}
+
+.qchat-phone__number input::placeholder {
+  color: #cfc6bc;
   font-weight: 700;
 }
 
-.qchat-input.is-dial {
-  width: 96px;
-  min-height: 50px;
+.qchat-phone__number.is-attention::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto 8px 12px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--qc-brand);
+  animation: qchat-caret 1s steps(1) infinite;
+}
+
+.qchat-phone__number.is-attention:focus-within::before {
+  display: none;
+}
+
+@keyframes qchat-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+.qchat-phone__ok {
+  position: absolute;
+  right: 10px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  animation: qchat-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.qchat-phone__help {
+  margin: 8px 0 0;
+  color: var(--qc-ink-3);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.qchat-send.is-ready {
+  position: relative;
+  overflow: hidden;
+}
+
+.qchat-send.is-ready::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transform: skewX(-20deg);
+  animation: qchat-shine 1.8s ease-in-out infinite;
+}
+
+@keyframes qchat-shine {
+  to {
+    left: 130%;
+  }
 }
 
 .qchat-privacy {

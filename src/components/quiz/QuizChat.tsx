@@ -1497,8 +1497,16 @@ function PhoneAnswer({
   onSubmit: (phone: string) => void;
 }) {
   const isOther = contact.countryCode === "other";
-  const ok =
-    contact.phone.trim().length >= 7 && (!isOther || contact.customDial.trim().length >= 1);
+  const digits = contact.phone.replace(/\D/g, "");
+  const ok = digits.length >= 7 && (!isOther || contact.customDial.trim().length >= 1);
+  // Guide the eye: country first, then the number, then the send button.
+  const [stage, setStage] = useState<"country" | "number">("country");
+  const active = ok ? "done" : stage;
+  const country = isOther
+    ? otherCountry
+    : (countries.find((c) => c.code === contact.countryCode) ?? countries[0]);
+  const numberRef = useRef<HTMLInputElement>(null);
+
   return (
     <form
       onSubmit={(e) => {
@@ -1506,48 +1514,96 @@ function PhoneAnswer({
         if (ok) onSubmit(contact.phone);
       }}
     >
-      <div className="qchat-phone">
-        <select
-          value={contact.countryCode}
-          onChange={(e) => onChange({ ...contact, countryCode: e.target.value })}
-          aria-label="الدولة"
+      <div className="qchat-steps" aria-hidden>
+        <span className={active === "country" ? "is-active" : "is-done"}>
+          <i>{active === "country" ? "1" : "✓"}</i> اختر دولتك
+        </span>
+        <span
+          className={active === "number" ? "is-active" : active === "done" ? "is-done" : undefined}
         >
-          {countries.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.flag} {c.name} ({c.dial})
+          <i>{active === "done" ? "✓" : "2"}</i> اكتب رقمك
+        </span>
+      </div>
+
+      <div className={`qchat-phone is-${active}`} dir="ltr">
+        <label className={`qchat-phone__country${active === "country" ? " is-attention" : ""}`}>
+          <span className="qchat-phone__flag" aria-hidden>
+            {country.flag}
+          </span>
+          {isOther ? (
+            <span className="qchat-phone__dial">+</span>
+          ) : (
+            <span className="qchat-phone__dial">{country.dial}</span>
+          )}
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden>
+            <path
+              d="m6 9 6 6 6-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <select
+            value={contact.countryCode}
+            onChange={(e) => {
+              onChange({ ...contact, countryCode: e.target.value });
+              setStage("number");
+              if (e.target.value !== "other")
+                window.setTimeout(() => numberRef.current?.focus(), 120);
+            }}
+            onFocus={() => setStage("country")}
+            aria-label="الدولة"
+          >
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag} {c.name} ({c.dial})
+              </option>
+            ))}
+            <option value="other">
+              {otherCountry.flag} {otherCountry.name}
             </option>
-          ))}
-          <option value="other">
-            {otherCountry.flag} {otherCountry.name}
-          </option>
-        </select>
+          </select>
+        </label>
         {isOther ? (
           <input
-            className="qchat-input is-dial"
+            className="qchat-phone__custom"
             inputMode="numeric"
-            placeholder="+رمز"
-            dir="ltr"
+            placeholder="رمز"
             value={contact.customDial}
             onChange={(e) =>
               onChange({ ...contact, customDial: e.target.value.replace(/\D/g, "").slice(0, 4) })
             }
+            onFocus={() => setStage("number")}
             aria-label="رمز الدولة"
           />
         ) : null}
+        <span className={`qchat-phone__number${active === "number" ? " is-attention" : ""}`}>
+          <input
+            ref={numberRef}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="50 123 4567"
+            value={contact.phone}
+            onFocus={() => setStage("number")}
+            onChange={(e) =>
+              onChange({ ...contact, phone: e.target.value.replace(/[^\d\s]/g, "") })
+            }
+            aria-label="رقم الهاتف"
+          />
+          {ok ? (
+            <span className="qchat-phone__ok" aria-hidden>
+              ✓
+            </span>
+          ) : null}
+        </span>
       </div>
-      <input
-        className="qchat-input"
-        type="tel"
-        inputMode="tel"
-        autoComplete="tel-national"
-        placeholder="رقم الهاتف"
-        dir="ltr"
-        style={{ textAlign: "right" }}
-        value={contact.phone}
-        onChange={(e) => onChange({ ...contact, phone: e.target.value.replace(/[^\d\s]/g, "") })}
-        autoFocus
-      />
-      <button type="submit" className="qchat-send" disabled={!ok}>
+      <p className="qchat-phone__help">
+        {active === "country" ? "المس العلم لتغيير الدولة 👆" : "بدون الصفر في أول الرقم"}
+      </p>
+
+      <button type="submit" className={`qchat-send${ok ? " is-ready" : ""}`} disabled={!ok}>
         إرسال وتجهيز خطتي ✓
       </button>
       <PrivacyNote />
