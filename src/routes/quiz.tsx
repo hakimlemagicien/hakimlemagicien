@@ -109,6 +109,14 @@ import revealGlutesAfter4 from "@/assets/quiz-reveal-glutes-after-4.jpg";
 import pricingCompareBefore from "@/assets/سمير قبل.jpg";
 import pricingCompareAfter from "@/assets/سمير بعد.jpg";
 import pricingSnackCompare from "@/assets/سندويش المقارنة.png";
+import {
+  QUIZ_CHAT_STEPS,
+  QuizChat,
+  type QuizChatAppStep,
+  type QuizChatContact,
+  type QuizChatProps,
+} from "@/components/quiz/QuizChat";
+import { INJURY_OPTIONS } from "@/components/quiz/InjuriesScreen";
 
 const REVEAL_GLUTES_BEFORE = [
   revealGlutesBefore0,
@@ -208,6 +216,8 @@ export function QuizPage() {
   };
 
   const totalSteps = QUIZ_PROGRESS_TOTAL;
+  // Question steps run as one continuous chat with coach Hakim (no per-step page fades).
+  const isChatStep = QUIZ_CHAT_STEPS.has(step);
 
   return (
     <div
@@ -223,9 +233,52 @@ export function QuizPage() {
         style={{ fontFamily: FONT, backgroundColor: "#FAF8F5" }}
         className="relative h-full w-full overflow-hidden md:max-w-lg lg:max-w-xl md:shadow-2xl md:ring-1 md:ring-black/5"
       >
-      {step !== "createPassword" && step !== "profilePhoto" && step !== "platformWelcome" ? (
+      {step !== "createPassword" && step !== "profilePhoto" && step !== "platformWelcome" && !isChatStep ? (
         <QuizLoginEntry />
       ) : null}
+      {isChatStep ? (
+        <QuizChat
+          step={step as QuizChatAppStep}
+          goToStep={(next) => replaceStep(next)}
+          onFinish={() => selectAndGo("verifyEmail")}
+          submitContact={async (contact) => {
+            const saved = await saveQuizContact(quizAnswers, contact);
+            setUserName(saved.fullName);
+            setUserEmail(saved.email);
+            setUserPhone(saved.phone);
+            setUserCity("");
+            setUserLocation("remote");
+          }}
+          answers={{
+            gender,
+            goalId,
+            age,
+            heightCm,
+            weightKg,
+            activityLevel,
+            challengeId,
+            injuryIds,
+            investment,
+            bodyType,
+            trainingEnvironment,
+            userName,
+          }}
+          setters={{
+            setGender,
+            setGoalId,
+            setAge,
+            setHeightCm,
+            setWeightKg,
+            setActivityLevel,
+            setChallengeId,
+            setInjuryIds,
+            setInvestment,
+            setBodyType,
+            setTrainingEnvironment,
+          }}
+          options={getQuizChatOptions()}
+        />
+      ) : (
       <MotionStepView phase={phase}>
       {step === "loading" && <LoadingScreen onDone={() => transitionTo("gender")} />}
       {step === "gender" && (
@@ -411,6 +464,7 @@ export function QuizPage() {
         />
       )}
       </MotionStepView>
+      )}
       </div>
     </div>
   );
@@ -3078,6 +3132,91 @@ function ensureQuizFieldVisible(target: EventTarget | null) {
   });
 }
 
+/** Lead + onboarding draft save shared by the chat quiz and the classic contact screen. */
+async function saveQuizContact(
+  quizAnswers: QuizAnswersInput,
+  contact: QuizChatContact,
+  oauthSessionKnown?: boolean,
+) {
+  const isOther = contact.countryCode === "other";
+  const selectedCountry = isOther ? OTHER_COUNTRY : COUNTRIES.find((c) => c.code === contact.countryCode);
+  const dial = isOther ? `+${contact.customDial.trim()}` : (selectedCountry?.dial ?? "");
+  const fullPhone = `${dial} ${contact.phone.trim()}`.trim();
+  const contactPayload = {
+    fullName: contact.name.trim(),
+    email: contact.email.trim(),
+    phone: fullPhone,
+    city: "",
+    country: selectedCountry?.name ?? contact.countryCode,
+    locationPreference: "remote" as const,
+  };
+
+  await createLead(buildLeadInsertFromQuiz(quizAnswers, contactPayload));
+
+  await createOnboardingDraft({
+    email: contactPayload.email,
+    full_name: contactPayload.fullName,
+    phone: contactPayload.phone,
+    country: contactPayload.country,
+    city: contactPayload.city,
+    goal: quizAnswers.goalId ?? undefined,
+    // Persist quiz training place for Strategy Matrix — not dubai/remote contact preference.
+    training_type: quizAnswers.trainingEnvironment ?? undefined,
+    location_preference: quizAnswers.trainingEnvironment ?? contactPayload.locationPreference,
+    answers: buildQuizAnswersPayload({
+      ...quizAnswers,
+      userLocation: contactPayload.locationPreference,
+      lastStep: "contact",
+    }),
+  });
+
+  let oauthSession = oauthSessionKnown;
+  if (oauthSession === undefined) {
+    const { data } = await supabase.auth.getUser();
+    oauthSession = Boolean(data.user && userHasOAuthIdentity(data.user));
+  }
+  if (oauthSession) {
+    try {
+      await syncOnboardingDisplayName(contactPayload.fullName);
+    } catch (syncError) {
+      console.error("[quiz] oauth display name sync failed:", syncError);
+    }
+  }
+
+  return contactPayload;
+}
+
+const INVESTMENT_SHORT_DESC: Record<string, string> = {
+  premium: "وجبات متنوعة ومكونات أفضل",
+  standard: "تنويع عملي تقدر تلتزم به",
+  budget: "وجبات اقتصادية بنفس النتيجة",
+};
+
+let quizChatOptionsCache: QuizChatProps["options"] | null = null;
+/** Same option data and images as the classic quiz screens (single source). */
+function getQuizChatOptions(): QuizChatProps["options"] {
+  if (quizChatOptionsCache) return quizChatOptionsCache;
+  const asOption = (o: { id: string; label?: string; title?: string; image?: string; img?: string; imageSrc?: string; desc?: string }) => ({
+    id: o.id,
+    label: o.label ?? o.title ?? o.id,
+    image: o.image ?? o.img ?? o.imageSrc,
+    desc: o.desc,
+  });
+  quizChatOptionsCache = {
+    genderImages: { male: maleImg, female: femaleImg },
+    goals: { male: GOALS.map(asOption), female: FEMALE_GOALS.map(asOption) },
+    challenges: { male: CHALLENGES.map(asOption), female: FEMALE_CHALLENGES.map(asOption) },
+    bodyTypes: { male: BODY_TYPES.map(asOption), female: FEMALE_BODY_TYPES.map(asOption) },
+    activities: ACTIVITIES.map((a) => ({ id: a.id, label: a.label, desc: a.desc })),
+    investment: INVESTMENT_OPTIONS.map((o) => ({ id: o.id, label: o.title, desc: INVESTMENT_SHORT_DESC[o.id] })),
+    injuries: INJURY_OPTIONS.map((o) => ({ id: o.id, label: o.title, image: o.imageSrc })),
+    environments: TRAINING_ENVIRONMENTS.map((o) => ({ id: o.id, label: o.title, image: o.image })),
+    countries: COUNTRIES.map(({ code, name, dial, flag }) => ({ code, name, dial, flag })),
+    otherCountry: { ...OTHER_COUNTRY, flag: "🌍" },
+  };
+  return quizChatOptionsCache;
+}
+
 function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswersInput; onBack: () => void; onDone: (name: string, email: string, isDubai: boolean, phone: string, city: string) => void }) {
   const ORANGE = "#FF6B00";
   const [phase, setPhase] = useState<"identity" | "phone">("identity");
@@ -3187,46 +3326,13 @@ function ContactScreen({ quizAnswers, onBack, onDone }: { quizAnswers: QuizAnswe
     if (!canSubmitPhone || submitting) return;
     setSubmitting(true);
 
-    const selectedCountry = isOtherCountry ? OTHER_COUNTRY : COUNTRIES.find((c) => c.code === form.country);
-    const dial = isOtherCountry ? `+${form.customDial.trim()}` : (selectedCountry?.dial ?? "");
-    const fullPhone = `${dial} ${form.phone.trim()}`.trim();
-
     try {
-      const contactPayload = {
-        fullName: form.name.trim(),
-        email: form.email.trim(),
-        phone: fullPhone,
-        city: "",
-        country: selectedCountry?.name ?? form.country,
-        locationPreference: "remote" as const,
-      };
-
-      await createLead(buildLeadInsertFromQuiz(quizAnswers, contactPayload));
-
-      await createOnboardingDraft({
-        email: contactPayload.email,
-        full_name: contactPayload.fullName,
-        phone: contactPayload.phone,
-        country: contactPayload.country,
-        city: contactPayload.city,
-        goal: quizAnswers.goalId ?? undefined,
-        // Persist quiz training place for Strategy Matrix — not dubai/remote contact preference.
-        training_type: quizAnswers.trainingEnvironment ?? undefined,
-        location_preference: quizAnswers.trainingEnvironment ?? contactPayload.locationPreference,
-        answers: buildQuizAnswersPayload({
-          ...quizAnswers,
-          userLocation: contactPayload.locationPreference,
-          lastStep: "contact",
-        }),
-      });
-
-      if (oauthSession) {
-        try {
-          await syncOnboardingDisplayName(contactPayload.fullName);
-        } catch (syncError) {
-          console.error("[quiz] oauth display name sync failed:", syncError);
-        }
-      }
+      const contactPayload = await saveQuizContact(
+        quizAnswers,
+        { name: form.name, email: form.email, countryCode: form.country, customDial: form.customDial, phone: form.phone },
+        oauthSession,
+      );
+      const fullPhone = contactPayload.phone;
 
       onDone(
         contactPayload.fullName,
