@@ -1,20 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import {
-  ArrowRight,
-  ChevronLeft,
-  Dumbbell,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  Shield,
-  Target,
-  TrendingUp,
-  UserRound,
-  UtensilsCrossed,
-} from "lucide-react";
+import { ChevronLeft, Dumbbell, Eye, EyeOff, Lock, Mail, Shield, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PASSWORD_SET_META_KEY, clearPasswordRequiredLocally } from "@/lib/auth-password-gate";
 import {
@@ -28,9 +15,12 @@ import { translateAuthError } from "@/lib/auth-error-ar";
 import { clearOnboardingClientState } from "@/lib/quiz-onboarding-api";
 import appLogo from "@/assets/app-logo.png";
 import loginWelcome from "@/assets/app/login welcom.webp";
+import coachAvatar from "@/assets/coach-avatar.webp";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 
-const QuizPage = lazy(() => import("@/routes/quiz").then((module) => ({ default: module.QuizPage })));
+const QuizPage = lazy(() =>
+  import("@/routes/quiz").then((module) => ({ default: module.QuizPage })),
+);
 
 /** Deferred until Apple Developer Program — keep OAuth handler + mark for re-enable. */
 const SHOW_APPLE_LOGIN = false;
@@ -53,7 +43,9 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
   const passwordFlowRef = useRef(false);
 
   async function goAfterAuth(user: Parameters<typeof resolveAuthenticatedDestination>[0]) {
-    const destination = await resolveAuthenticatedDestination(user, { redirect: postLoginRedirect });
+    const destination = await resolveAuthenticatedDestination(user, {
+      redirect: postLoginRedirect,
+    });
     if ("href" in destination) {
       window.location.assign(destination.href);
       return;
@@ -90,7 +82,9 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
       const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
       if (oauthError) {
         if (!cancelled) {
-          setError(translateAuthError({ message: oauthError, code: searchParams.get("error") ?? "" }));
+          setError(
+            translateAuthError({ message: oauthError, code: searchParams.get("error") ?? "" }),
+          );
           setStage("login");
         }
         const clean = new URL(window.location.href);
@@ -280,41 +274,18 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
           />
         ) : null}
         <div className="auth-login__brand">
-          <OptimizedImage src={appLogo} alt="" width={48} height={48} className="auth-login__logo" />
+          <OptimizedImage
+            src={appLogo}
+            alt=""
+            width={48}
+            height={48}
+            className="auth-login__logo"
+          />
           <strong>MAAKFIT</strong>
           <p>معاك فيت… معاك لكل خطوة</p>
         </div>
         <div className="auth-login__copy">
-          <h1>
-            <span>ابدأ رحلتك نحو</span>
-            <em>أفضل نسخة منك</em>
-          </h1>
-          <ul>
-            <li>
-              <Dumbbell strokeWidth={2.2} />
-              <span>
-                برامج تدريب
-                <br />
-                مخصصة
-              </span>
-            </li>
-            <li>
-              <UtensilsCrossed strokeWidth={2.2} />
-              <span>
-                تغذية ذكية
-                <br />
-                متوازنة
-              </span>
-            </li>
-            <li>
-              <TrendingUp strokeWidth={2.2} />
-              <span>
-                نتائج حقيقية
-                <br />
-                تستمر
-              </span>
-            </li>
-          </ul>
+          <RotatingPhrase reduceMotion={Boolean(reduceMotion)} />
         </div>
       </header>
 
@@ -328,25 +299,25 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
             exit={reduceMotion ? { opacity: 0 } : { y: "120%", opacity: 0 }}
             transition={{ duration: exitDuration, ease: [0.4, 0.05, 0.2, 1] }}
           >
-            <button type="button" className="auth-login__welcome-login" onClick={() => setStage("login")}>
-              تسجيل الدخول
+            <CoachWelcomeChat reduceMotion={Boolean(reduceMotion)} />
+            <button
+              type="button"
+              className="auth-login__welcome-login"
+              onPointerDown={preloadQuiz}
+              onClick={openQuiz}
+            >
+              ابدأ تقييمك مع حكيم
               <span>
-                <ArrowRight />
+                <ChevronLeft />
               </span>
             </button>
             <button
               type="button"
-              className="auth-login__welcome-quiz"
-              onPointerDown={preloadQuiz}
-              onClick={openQuiz}
+              className="auth-login__welcome-signin"
+              onClick={() => setStage("login")}
             >
-              <UserRound />
-              <span>جديد؟ ابدأ تقييمك وأنشئ حسابك</span>
+              لديك حساب؟ <b>تسجيل الدخول</b>
             </button>
-            <p className="auth-login__welcome-trust">
-              <Lock />
-              آمن وموثوق • بياناتك محمية معنا
-            </p>
             <footer className="auth-login__legal-footer">
               <strong>MAAKFIT</strong>
               <nav aria-label="روابط التطبيق والسياسات">
@@ -375,7 +346,9 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
             <span className="auth-login__handle" aria-hidden />
             {mode === "set-password" ? (
               <>
-                <h2>{passwordIntent === "recovery" ? "تعيين كلمة مرور جديدة" : "إنشاء كلمة المرور"}</h2>
+                <h2>
+                  {passwordIntent === "recovery" ? "تعيين كلمة مرور جديدة" : "إنشاء كلمة المرور"}
+                </h2>
                 {passwordIntent === "recovery" ? (
                   <p>اختر كلمة مرور جديدة، ثم احفظها للعودة إلى حسابك بأمان.</p>
                 ) : (
@@ -413,7 +386,9 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
               ) : null}
 
               <label className="auth-login__field">
-                <span className="sr-only">{mode === "set-password" ? "كلمة المرور الجديدة" : "كلمة المرور"}</span>
+                <span className="sr-only">
+                  {mode === "set-password" ? "كلمة المرور الجديدة" : "كلمة المرور"}
+                </span>
                 <Lock className="auth-login__lead" />
                 <input
                   type={showPassword ? "text" : "password"}
@@ -424,7 +399,12 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === "set-password" ? "كلمة المرور الجديدة" : "كلمة المرور"}
                 />
-                <button type="button" className="auth-login__eye" onClick={() => setShowPassword((v) => !v)} aria-label="إظهار كلمة المرور">
+                <button
+                  type="button"
+                  className="auth-login__eye"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label="إظهار كلمة المرور"
+                >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </label>
@@ -444,7 +424,11 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
                   />
                 </label>
               ) : (
-                <button type="button" className="auth-login__forgot" onClick={() => void onForgot()}>
+                <button
+                  type="button"
+                  className="auth-login__forgot"
+                  onClick={() => void onForgot()}
+                >
                   نسيت كلمة المرور؟
                 </button>
               )}
@@ -519,13 +503,139 @@ export function AuthExperience({ startOnLogin = false, postLoginRedirect }: Auth
   );
 }
 
+const PHRASE_WORDS = ["وجبة", "تمرين", "أسبوع", "خطوة"] as const;
+const PHRASE_INTERVAL_MS = 1900;
+
+/** «معاك في كل وجبة / تمرين / أسبوع / خطوة» — the orange word cycles. */
+function RotatingPhrase({ reduceMotion }: { reduceMotion: boolean }) {
+  const [index, setIndex] = useState(reduceMotion ? PHRASE_WORDS.length - 1 : 0);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % PHRASE_WORDS.length);
+    }, PHRASE_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [reduceMotion]);
+
+  return (
+    <>
+      <h1 className="auth-login__phrase" aria-label="معاك في كل وجبة، كل تمرين، كل أسبوع، وكل خطوة">
+        <span aria-hidden>معاك في كل </span>
+        <em aria-hidden>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={PHRASE_WORDS[index]}
+              initial={{ opacity: 0, y: "55%", filter: "blur(4px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: "-40%", filter: "blur(4px)" }}
+              transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+            >
+              {PHRASE_WORDS[index]}
+            </motion.span>
+          </AnimatePresence>
+        </em>
+      </h1>
+      <div className="auth-login__phrase-dots" aria-hidden>
+        {PHRASE_WORDS.map((word, i) => (
+          <i key={word} className={i === index ? "is-on" : undefined} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+const COACH_WELCOME_MESSAGES = [
+  "أهلاً 👋 أنا حكيم، مدربك.",
+  "أجهّز لك خطة تدريب وتغذية على مقاس هدفك. التقييم سريع ومجاني.",
+  "وبعدها أكون معك خطوة بخطوة 💪",
+] as const;
+
+/** Coach greeting typed in front of the visitor (welcome stage only). */
+function CoachWelcomeChat({ reduceMotion }: { reduceMotion: boolean }) {
+  const [shown, setShown] = useState(reduceMotion ? COACH_WELCOME_MESSAGES.length : 0);
+  const [typing, setTyping] = useState(false);
+
+  useEffect(() => {
+    if (reduceMotion || shown >= COACH_WELCOME_MESSAGES.length) {
+      setTyping(false);
+      return;
+    }
+    const startTyping = window.setTimeout(() => setTyping(true), shown === 0 ? 650 : 380);
+    const reveal = window.setTimeout(
+      () => {
+        setTyping(false);
+        setShown((count) => count + 1);
+      },
+      (shown === 0 ? 650 : 380) + 820,
+    );
+    return () => {
+      window.clearTimeout(startTyping);
+      window.clearTimeout(reveal);
+    };
+  }, [shown, reduceMotion]);
+
+  return (
+    <section className="auth-login__coach" aria-label="رسالة من الكوتش حكيم">
+      <div className="auth-login__coach-who">
+        <span className="auth-login__coach-avatar">
+          <img src={coachAvatar} alt="" width={48} height={48} decoding="async" />
+        </span>
+        <div>
+          <strong>
+            الكوتش حكيم
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-label="موثّق">
+              <circle cx="12" cy="12" r="11" fill="#f97316" />
+              <path
+                d="m7 12.5 3 3 7-7"
+                stroke="#fff"
+                strokeWidth="2.6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </strong>
+          <span>مدربك الشخصي</span>
+        </div>
+      </div>
+      <div className="auth-login__coach-msgs" aria-live="polite">
+        {COACH_WELCOME_MESSAGES.map((message, i) => (
+          <p key={message} className={i < shown ? "is-in" : undefined}>
+            {message}
+          </p>
+        ))}
+        {typing ? (
+          <span className="auth-login__coach-typing" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function GoogleMark() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
     </svg>
   );
 }
