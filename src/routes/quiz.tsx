@@ -442,6 +442,7 @@ export function QuizPage() {
         <PlatformWelcomeScreen
           name={userName}
           step="platformWelcome"
+          programTitle={goalId ? programTitleFromGoal(goalId) : undefined}
         />
       )}
       {(step === "pricing" ||
