@@ -142,7 +142,8 @@ assert(
 const home = readFileSync(join(root, "src/routes/_platform/app/index.tsx"), "utf8");
 assert(!home.includes("ProgramPreparationHoldCard"), "home does not show hold room");
 assert(!home.includes("useProgramPreparationHold"), "home does not run hold room");
-assert(home.includes("HomeNextSession"), "home keeps normal next session");
+// The next session now lives inside the home "today" card (built from buildNextSession).
+assert(home.includes("buildNextSession"), "home keeps normal next session");
 
 const homeHub = readFileSync(join(root, "src/lib/platform/home-hub.ts"), "utf8");
 assert(!homeHub.includes("buildProgramHoldNextSession"), "home hub hold session removed");

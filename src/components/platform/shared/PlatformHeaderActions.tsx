@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bell, MessageSquare } from "lucide-react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Bell } from "lucide-react";
+import { GuideChatButton } from "@/components/platform/shared/GuideChat";
 import { useCoachingInbox } from "@/hooks/useCoachingInbox";
 import { useMembership } from "@/hooks/useMembership";
 import { canUseCoachChat, formatInboxTime } from "@/lib/platform/coaching-messaging";
@@ -178,16 +179,13 @@ export function PlatformHeaderActions({
 
   return (
     <div className={cn("relative flex shrink-0 items-center gap-2", className)}>
-      {coachChatEnabled ? (
-        <Link
-          to="/app/support/chat"
-          aria-label={count > 0 ? `دردشة الكوتش، ${count} غير مقروء` : "دردشة الكوتش"}
-          className={cn(actionClassName, "relative")}
-        >
-          <MessageSquare className={iconClassName} strokeWidth={bellStrokeWidth} />
-          {count > 0 ? <span className="platform-bell-dot" /> : null}
-        </Link>
-      ) : null}
+      <GuideChatButton
+        actionClassName={actionClassName}
+        iconClassName={iconClassName}
+        strokeWidth={bellStrokeWidth}
+        coachChatEnabled={coachChatEnabled}
+        coachUnread={coachChatEnabled ? count : 0}
+      />
       <NotificationsBell
         actionClassName={actionClassName}
         iconClassName={iconClassName}

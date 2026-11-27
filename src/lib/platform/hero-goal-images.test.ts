@@ -39,13 +39,12 @@ assert.equal(
   "quiz gender must never override a signed-in profile",
 );
 assert.equal(source.includes("allowDeviceQuizFallback"), true);
-assert.equal(
-  readFileSync(resolve(process.cwd(), "src/routes/_platform/app/index.tsx"), "utf8").includes(
-    "useLockedHeroGoalImage",
-  ),
-  true,
-  "home waits for locked hero image",
-);
+// Home no longer shows a goal photo (coach "today" card). If it ever renders the
+// hero card again, it must wait for the locked image so the wrong photo never flashes.
+const homeSource = readFileSync(resolve(process.cwd(), "src/routes/_platform/app/index.tsx"), "utf8");
+if (homeSource.includes("HomeHeroCard")) {
+  assert.equal(homeSource.includes("useLockedHeroGoalImage"), true, "home waits for locked hero image");
+}
 assert.equal(
   readFileSync(resolve(process.cwd(), "src/hooks/useLockedHeroGoalImage.ts"), "utf8").includes(
     "preloadHeroGoalImage",

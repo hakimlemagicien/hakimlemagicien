@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
-import { NotificationsBell } from "@/components/platform/shared/PlatformHeaderActions";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 
 type PlatformDetailHeaderProps = {
   title: string;
@@ -46,7 +46,7 @@ export function PlatformDetailHeader({
         ) : null}
       </div>
       {action}
-      <NotificationsBell
+      <PlatformHeaderActions
         actionClassName="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card text-foreground"
         iconClassName="h-5 w-5"
       />
