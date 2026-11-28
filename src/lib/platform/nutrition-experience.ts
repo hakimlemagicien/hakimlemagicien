@@ -308,19 +308,27 @@ export function getNutritionMealSlots(opts?: {
   dislikedFoods?: string[];
 }): MealSlot[] {
   const order = composeSixMealOrder(opts?.trainingMealWindow ?? "after_lunch");
-  return order.map((id, index) => {
+  return order.flatMap((id, index) => {
     const contract = SLOT_CONTRACT[id];
     const hour = [8, 11, 14, 16, 18, 20][index] ?? 20;
-    const externalId =
-      id === "breakfast"
-        ? pickGoalBreakfastExternalId(opts?.breakfastGoalKey, opts?.allergens, opts?.dislikedFoods)
-        : pickMealExternalId(
-            contract.type,
-            opts?.breakfastGoalKey,
-            contract.fallback,
-            opts?.allergens,
-            opts?.dislikedFoods,
-          );
+    let externalId: string;
+    try {
+      externalId =
+        id === "breakfast"
+          ? pickGoalBreakfastExternalId(opts?.breakfastGoalKey, opts?.allergens, opts?.dislikedFoods)
+          : pickMealExternalId(
+              contract.type,
+              opts?.breakfastGoalKey,
+              contract.fallback,
+              opts?.allergens,
+              opts?.dislikedFoods,
+            );
+    } catch (error) {
+      // Safety first: never fall back to a meal that breaks the client's
+      // allergies/dislikes. Skip this one slot instead of crashing the page.
+      console.warn("[nutrition] slot skipped:", id, error);
+      return [];
+    }
     return buildPilotSlot({
       id,
       slotLabel: contract.label,

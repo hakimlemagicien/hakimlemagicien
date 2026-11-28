@@ -25,26 +25,16 @@ const DevReviewClientSwitcher = import.meta.env.DEV
 
 const approvedPlatformUsers = new Set<string>();
 
-function errorDetail(error: unknown) {
-  if (error instanceof Error && error.message.trim()) return error.message.trim();
-  if (typeof error === "string" && error.trim()) return error.trim();
-  if (error && typeof error === "object" && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) return message.trim();
-  }
-  return "";
-}
-
 function PlatformErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+  // Technical details stay in the console; customers only see friendly copy.
   console.error(error);
-  const detail = errorDetail(error);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4" dir="rtl">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-black text-foreground">تعذر فتح الصفحة</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {detail || "حدث خطأ أثناء الانتقال. حاول مرة أخرى."}
+          حدث خطأ أثناء فتح هذه الصفحة. حاول مرة أخرى، وإذا تكرر الخطأ تواصل مع الدعم.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button

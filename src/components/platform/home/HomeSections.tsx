@@ -39,7 +39,7 @@ import { formatWaterLiters } from "@/lib/platform/water-storage";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
 import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
 import { ACTIVATE_PROGRAM_CTA } from "@/lib/pricing-presentation";
-import { SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
+import { SHOW_PLACEHOLDER_SOCIAL_PROOF, SOCIAL_PROOF_CLIENT_COUNT } from "@/lib/social-proof";
 import { MEMBER_RESULT_STORIES } from "@/lib/platform/member-results-stories";
 import type { MembershipTier } from "@/lib/platform/membership";
 import { getMembershipTierLabel } from "@/lib/platform/membership";
@@ -1078,7 +1078,7 @@ export function HomePersonalProgramCard() {
             })}
           </div>
 
-          {story ? (
+          {SHOW_PLACEHOLDER_SOCIAL_PROOF && story ? (
             <div className="platform-home-program__proof">
               <div className="platform-home-program__before-after">
                 <span className="platform-home-program__ba">

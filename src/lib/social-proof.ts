@@ -1,3 +1,9 @@
+/**
+ * Placeholder social proof (sample before/after stories, member count, rating)
+ * stays hidden until real, consented client results replace it.
+ */
+export const SHOW_PLACEHOLDER_SOCIAL_PROOF = false;
+
 /** Unified client social-proof count shown across the landing page. */
 export const SOCIAL_PROOF_CLIENT_COUNT = 10000;
 
