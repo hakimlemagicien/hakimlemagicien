@@ -151,7 +151,7 @@ function PlatformHomePage() {
         activity,
         assignedPlan,
         assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
-        workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
+        workoutCta: continuity.resumeHasProgress ? "استكمل التمرين" : undefined,
         nutritionState: nutritionRuntimeQuery.isLoading
           ? "loading"
           : nutritionRuntimeQuery.isError

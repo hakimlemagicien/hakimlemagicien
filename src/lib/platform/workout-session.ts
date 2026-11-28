@@ -60,8 +60,25 @@ export function formatRestLabel(totalSeconds: number) {
   return `${totalSeconds} ثانية`;
 }
 
+/** Template volume strings sometimes carry English units ("40 sec", "2 min") — show Arabic units. */
+export function localizeVolumeUnits(value: string): string {
+  return value
+    .replace(/\b(?:seconds?|secs?|s)\b\.?/gi, "ث")
+    .replace(/\b(?:minutes?|mins?)\b\.?/gi, "د")
+    .replace(/\breps?\b/gi, "تكرار")
+    .trim();
+}
+
+/** "مجموعة واحدة" / "مجموعتان" / "3 مجموعات" … */
+export function formatSetsCountAr(sets: number): string {
+  if (sets === 1) return "مجموعة واحدة";
+  if (sets === 2) return "مجموعتان";
+  if (sets >= 3 && sets <= 10) return `${sets} مجموعات`;
+  return `${sets} مجموعة`;
+}
+
 export function formatExerciseVolume(exercise: Pick<WorkoutSessionExercise, "reps" | "durationSeconds">) {
-  if (exercise.reps) return exercise.reps;
+  if (exercise.reps) return localizeVolumeUnits(exercise.reps);
   if (exercise.durationSeconds) return `${exercise.durationSeconds} ث`;
   return "—";
 }

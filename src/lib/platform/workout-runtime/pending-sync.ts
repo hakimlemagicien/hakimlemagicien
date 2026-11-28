@@ -1,3 +1,5 @@
+import { userScopedStorageKey } from "@/lib/platform/storage-owner";
+
 export type PendingSetWrite = {
   identity: string;
   payload: Record<string, unknown>;
@@ -5,6 +7,7 @@ export type PendingSetWrite = {
   attempts: number;
 };
 
+/** Base key; the real key is per signed-in user (sets must sync under the account that logged them). */
 export const PENDING_SETS_KEY = "hakim:workout-pending-sets:v1";
 
 export function setIdentity(input: {
@@ -26,7 +29,7 @@ export function dequeuePending(queue: PendingSetWrite[], identity: string): Pend
 export function readPendingQueue(): PendingSetWrite[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(PENDING_SETS_KEY);
+    const raw = window.localStorage.getItem(userScopedStorageKey(PENDING_SETS_KEY));
     if (!raw) return [];
     const parsed = JSON.parse(raw) as PendingSetWrite[];
     return Array.isArray(parsed) ? parsed : [];
@@ -38,7 +41,7 @@ export function readPendingQueue(): PendingSetWrite[] {
 export function writePendingQueue(queue: PendingSetWrite[]) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(PENDING_SETS_KEY, JSON.stringify(queue));
+    window.localStorage.setItem(userScopedStorageKey(PENDING_SETS_KEY), JSON.stringify(queue));
   } catch {
     // quota / private mode
   }

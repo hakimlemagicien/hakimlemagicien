@@ -3,6 +3,7 @@ import type { EffortLevel } from "@/lib/platform/workout-session";
 import type { TrainingV2Effort } from "@/lib/platform/training-v2-contracts";
 import type { WorkoutSetType } from "@/lib/platform/training-v2-contracts";
 import type { WallClockRest } from "@/lib/platform/workout-runtime/wall-clock-rest";
+import { userScopedStorageKey } from "@/lib/platform/storage-owner";
 
 export type StoredExerciseProgress = {
   completedSets: number;
@@ -55,6 +56,28 @@ export const WORKOUT_STORAGE_KEYS = {
   PENDING_SETS: "hakim:workout-pending-sets:v1",
 } as const;
 
+/**
+ * Keys are per signed-in user: two accounts on one phone must never see each other's
+ * in-progress session ("جلسة سابقة غير مكتملة") or set logs. Old unscoped keys have no
+ * owner, so they are dropped once instead of being shown to whoever signs in next.
+ */
+function sessionStorageKey() {
+  return userScopedStorageKey(STORAGE_KEY);
+}
+
+function legacyProgressKey() {
+  return userScopedStorageKey(LEGACY_STORAGE_KEY);
+}
+
+function dropUnscopedWorkoutKeys() {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function getTodayWorkoutSessionKey(externalIds?: string[]): string {
   const date = new Date().toISOString().slice(0, 10);
   const ids = (externalIds ?? TODAY_WORKOUT_PRESCRIPTIONS.map((item) => item.external_id)).join(",");
@@ -64,7 +87,7 @@ export function getTodayWorkoutSessionKey(externalIds?: string[]): string {
 function readLegacyProgress(length: number): StoredExerciseProgress[] | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(LEGACY_STORAGE_KEY);
+    const raw = window.sessionStorage.getItem(legacyProgressKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredExerciseProgress[];
     if (!Array.isArray(parsed) || parsed.length !== length) return null;
@@ -80,8 +103,9 @@ export function loadWorkoutSession(
 ): StoredWorkoutSession | null {
   if (typeof window === "undefined" || length === 0) return null;
 
+  dropUnscopedWorkoutKeys();
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(sessionStorageKey());
     if (raw) {
       const parsed = JSON.parse(raw) as StoredWorkoutSession;
       if (
@@ -124,8 +148,9 @@ export function loadWorkoutProgress(length: number, externalIds?: string[]): Sto
 
 export function peekStoredWorkoutSession(): StoredWorkoutSession | null {
   if (typeof window === "undefined") return null;
+  dropUnscopedWorkoutKeys();
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(sessionStorageKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredWorkoutSession;
     if (parsed?.version !== 2 && parsed?.version !== 3) return null;
@@ -151,7 +176,7 @@ export function saveWorkoutSession(state: StoredWorkoutSession) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(
-      STORAGE_KEY,
+      sessionStorageKey(),
       JSON.stringify({
         ...state,
         version: 3,
@@ -184,9 +209,10 @@ export function saveWorkoutProgress(
 export function clearWorkoutSession() {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
-    window.sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+    window.localStorage.removeItem(sessionStorageKey());
+    window.sessionStorage.removeItem(legacyProgressKey());
   } catch {
     // ignore
   }
+  dropUnscopedWorkoutKeys();
 }

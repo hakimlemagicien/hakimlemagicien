@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
 import { TrainingFreeConversionPanel } from "@/components/platform/upgrade/upgrade-ui";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
+import { useWorkoutCoachMessage } from "@/hooks/useWorkoutCoachMessage";
+import coachAvatar from "@/assets/coach-avatar-320.webp";
 
 type WorkoutCompleteScreenProps = {
   player: WorkoutPlayerState;
@@ -14,6 +16,7 @@ type WorkoutCompleteScreenProps = {
 export function WorkoutCompleteScreen({ player, showFreeConversion = false }: WorkoutCompleteScreenProps) {
   const { phase, meta, resetSession, completedWorkingSets, sessionPartial, runtimeMode, progress } = player;
   const water = useWaterOptional();
+  const coach = useWorkoutCoachMessage(player);
   const open = phase === "complete";
   const exercisesDone = progress.filter((item) => item.status === "done").length;
   const [dismissConversion, setDismissConversion] = useState(false);
@@ -36,9 +39,27 @@ export function WorkoutCompleteScreen({ player, showFreeConversion = false }: Wo
           >
             <p className="text-4xl">🎉</p>
             <h2 className="mt-3 text-2xl font-black text-foreground">أحسنت</h2>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {sessionPartial ? "تم حفظ ما أنجزته من الحصة" : "لقد أكملت التمرين المتاح"}
-            </p>
+            {coach?.moment === "complete" ? (
+              <div className="mt-3 flex items-start gap-2.5 rounded-2xl border border-border/60 bg-card p-3 text-right shadow-[0_10px_26px_-18px_rgba(15,23,42,0.4)]">
+                <img
+                  src={coachAvatar}
+                  alt="الكوتش حكيم"
+                  width={40}
+                  height={40}
+                  className="size-10 shrink-0 rounded-full object-cover"
+                />
+                <p className="min-w-0 flex-1 text-[13px] font-bold leading-relaxed text-foreground">
+                  {coach.text}
+                  {coach.hint ? (
+                    <span className="mt-0.5 block text-[12px] font-medium text-muted-foreground">{coach.hint}</span>
+                  ) : null}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-1 text-sm font-medium text-muted-foreground">
+                {sessionPartial ? "تم حفظ ما أنجزته من الحصة" : "لقد أكملت التمرين المتاح"}
+              </p>
+            )}
 
             <div className="mt-5 grid grid-cols-3 gap-2">
               <div className="rounded-2xl border border-border/60 bg-card p-3">

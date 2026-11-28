@@ -244,6 +244,58 @@ export function buildSessionDisplayName(
   return labels.slice(0, 2).join(" و") || "تمرين";
 }
 
+/** One consistent anatomy illustration per session type (same body, only target muscles change). */
+export type SessionAnatomyArtKey =
+  | "chest"
+  | "chest-triceps"
+  | "back"
+  | "back-biceps"
+  | "shoulders"
+  | "arms"
+  | "legs"
+  | "glutes"
+  | "upper"
+  | "full-body"
+  | "core"
+  | "rest";
+
+export function resolveSessionAnatomyArtKey(summary: SessionMuscleSummary): SessionAnatomyArtKey {
+  if (summary.visualKey === "REST") return "rest";
+  const weights = summary.regionWeights;
+  const w = (region: SessionMuscleRegion) => weights[region] ?? 0;
+  const lowerScore = LOWER_BODY.reduce((sum, region) => sum + w(region), 0);
+  const upperScore = UPPER_BODY.reduce((sum, region) => sum + w(region), 0);
+  const chest = w("CHEST");
+  const back = w("UPPER_BACK") + w("LATS");
+  const shoulders = w("SHOULDERS");
+  const biceps = w("BICEPS");
+  const triceps = w("TRICEPS");
+
+  switch (summary.visualKey) {
+    case "FULL_BODY":
+      return "full-body";
+    case "CORE":
+      return "core";
+    case "LEGS":
+      // Glute-only art only when glutes clearly dominate; mixed leg days show the full lower body.
+      return w("GLUTES") > 0 && w("GLUTES") >= 2 * (w("QUADRICEPS") + w("HAMSTRINGS"))
+        ? "glutes"
+        : "legs";
+    case "SHOULDERS":
+      return "shoulders";
+    case "ARMS":
+      return "arms";
+    default:
+      break;
+  }
+  if (lowerScore > 0 && upperScore > 0) return "full-body";
+  if (chest > 0 && back === 0) return triceps > 0 && biceps === 0 ? "chest-triceps" : "chest";
+  if (back > 0 && chest === 0) return biceps > 0 && triceps === 0 ? "back-biceps" : "back";
+  if (shoulders > 0 && chest === 0 && back === 0) return "shoulders";
+  if ((biceps > 0 || triceps > 0) && chest === 0 && back === 0) return "arms";
+  return "upper";
+}
+
 export function resolveSessionAnatomyImageSrc(summary: SessionMuscleSummary): string | null {
   if (summary.visualKey === "REST") return null;
   if (summary.dominantExternalId) {

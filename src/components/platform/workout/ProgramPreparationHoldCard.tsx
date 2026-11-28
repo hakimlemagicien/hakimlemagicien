@@ -21,18 +21,19 @@ const BLIPS = [
   { id: 4 as const, left: "22%", top: "28%" },
 ];
 
+// Only features the paid plans actually deliver (see pricing-presentation).
 const PREMIUM_PERKS = [
-  "أولوية في إعداد برنامجك",
-  "مراجعة إضافية من المدرب",
-  "تحديثات أسرع حسب طلبك",
-  "دعم مباشر على مدار الساعة",
+  "كل حصص برنامجك مع فيديو وشرح لكل تمرين",
+  "أوزان وتكرارات تتطور تلقائياً حسب أدائك",
+  "خطة تغذية كاملة حسب هدفك",
+  "إمكانية تغيير تمرين أو وجبة",
 ] as const;
 
 const NUTRITION_PREMIUM_PERKS = [
   "خطة غذائية كاملة حسب هدفك",
   "توزيع وجبات قبل وبعد التمرين",
   "كميات وماكروز واضحة لكل وجبة",
-  "دعم مباشر على مدار الساعة",
+  "إمكانية تغيير أي وجبة",
 ] as const;
 
 type HoldSurface = "training" | "nutrition";
@@ -303,7 +304,7 @@ function HoldTip({ surface }: { surface: HoldSurface }) {
       <p className="text-[12px] leading-relaxed text-muted-foreground">
         <span className="font-black text-foreground">
           {surface === "nutrition"
-            ? "سنقوم بإشعارك فور جاهزية خطتك الغذائية."
+            ? "تظهر خطتك الغذائية هنا تلقائياً فور جاهزيتها."
             : TRAINING_PRODUCT_COPY.holdNotify}
         </span>
         <span className="mt-0.5 block">{TRAINING_PRODUCT_COPY.holdExplore}</span>

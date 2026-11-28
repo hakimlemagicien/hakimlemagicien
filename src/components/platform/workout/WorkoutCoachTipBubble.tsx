@@ -12,6 +12,9 @@ type WorkoutCoachTipBubbleProps = {
   message: string;
   collapsedLabel?: string;
   className?: string;
+  /** Show the message itself, not the «tap to read» chip (used for Hakim's reaction during rest). */
+  defaultOpen?: boolean;
+  delayMs?: number;
 };
 
 /**
@@ -23,6 +26,8 @@ export function WorkoutCoachTipBubble({
   message,
   collapsedLabel = "رسالة من الكوتش",
   className,
+  defaultOpen = false,
+  delayMs = APPEAR_DELAY_MS,
 }: WorkoutCoachTipBubbleProps) {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
@@ -30,11 +35,11 @@ export function WorkoutCoachTipBubble({
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    setOpen(false);
+    setOpen(defaultOpen);
     setVisible(false);
-    const id = window.setTimeout(() => setVisible(true), APPEAR_DELAY_MS);
+    const id = window.setTimeout(() => setVisible(true), delayMs);
     return () => window.clearTimeout(id);
-  }, [tipKey]);
+  }, [tipKey, defaultOpen, delayMs]);
 
   return (
     <div

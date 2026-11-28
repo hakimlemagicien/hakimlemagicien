@@ -1,3 +1,4 @@
+import { isWarmUpActivityRole } from "@/lib/platform/training-templates/activity-roles";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   EFFORT_LABELS,
@@ -211,6 +212,27 @@ export function useWorkoutPlayer(
   const setStartedAtRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string | null>(initialState.sessionId);
 
+  // Pages usually create the player before the session's exercises have loaded, so the
+  // state above starts from an empty list. Once the exercises arrive, hydrate from the
+  // stored session; otherwise per-exercise progress stays empty and the round counter
+  // never advances (seen in legacy_free mode, which has no DB sync to repair it).
+  useEffect(() => {
+    if (exercises.length === 0 || progress.length === exercises.length) return;
+    const allDone = initialState.progress.every((item) => item.status === "done");
+    setExerciseIndex(initialState.exerciseIndex);
+    setProgress(initialState.progress);
+    setSetLogs(initialState.setLogs);
+    setRestClock(initialState.rest);
+    if (initialState.rest) {
+      setRestTotalSeconds(initialState.rest.prescribed_rest_seconds);
+      setRestSecondsLeft(remainingRestSeconds(initialState.rest));
+    }
+    setPhase(allDone ? "complete" : initialState.rest ? "rest" : "exercise");
+    sessionIdRef.current = sessionIdRef.current ?? initialState.sessionId;
+    setSessionStartedAt((value) => value ?? initialState.startedAt);
+    setHydrationLastShownAt((value) => value ?? initialState.hydrationLastShownAt);
+  }, [exercises.length, initialState, progress.length]);
+
   const currentExercise = exercises[exerciseIndex];
   const currentProgress = progress[exerciseIndex] ?? {
     completedSets: 0,
@@ -337,7 +359,9 @@ export function useWorkoutPlayer(
       durationMin: prescription?.duration_min ?? currentExercise?.durationSeconds ?? null,
       durationMax: prescription?.duration_max ?? currentExercise?.durationSeconds ?? null,
       restSeconds: prescription?.recommended_rest_seconds ?? currentExercise?.restSeconds ?? 90,
-      setType: "WORKING" as const,
+      setType: isWarmUpActivityRole(currentExercise?.activityRole)
+        ? ("WARMUP" as const)
+        : ("WORKING" as const),
     };
   }, [
     calibrationAction,
@@ -748,7 +772,7 @@ export function useWorkoutPlayer(
             actualDurationSeconds: isTimed ? setDraft.durationSeconds : null,
             effortV2: setDraft.effortV2,
             skipped,
-            setType: "WORKING",
+            setType: isWarmUpActivityRole(exercise.activityRole) ? "WARMUP" : "WORKING",
             prescriptionMode: currentMeta?.prescription_mode ?? (isTimed ? "DURATION" : "REPS"),
             isBodyweight,
             requireEffort: effortRequired,
@@ -773,7 +797,7 @@ export function useWorkoutPlayer(
         notes: setDraft.notes.trim(),
         skipped,
         setCompleted: !skipped,
-        setType: "WORKING",
+        setType: isWarmUpActivityRole(exercise.activityRole) ? "WARMUP" : "WORKING",
         prescribedLoad: prescription?.prescribed_load ?? null,
         prescribedRepsMin: v2Targets.repsMin,
         prescribedRepsMax: v2Targets.repsMax,
@@ -832,7 +856,7 @@ export function useWorkoutPlayer(
           assignmentId: exercise.assignmentId ?? null,
           assignmentExerciseId: exercise.assignmentExerciseId ?? null,
           workoutSessionId: sessionId,
-          setType: "WORKING",
+          setType: logEntry.setType ?? "WORKING",
           prescribedLoad: logEntry.prescribedLoad ?? null,
           actualLoad: logEntry.weightKg,
           prescribedRepsMin: logEntry.prescribedRepsMin ?? null,
@@ -1007,7 +1031,8 @@ export function useWorkoutPlayer(
     if (!exercise) return "ابدأ الجولة";
     if (!setInProgress) return "ابدأ الجولة";
     const isLastSetOfExercise = currentSetNumber >= exercise.sets;
-    return isLastSetOfExercise ? "أنهِ المجموعة" : "مر إلى الجولة التالية";
+    // The button ends the set in progress and opens its log — say exactly that.
+    return isLastSetOfExercise ? "أنهيت آخر جولة" : `أنهيت الجولة ${currentSetNumber}`;
   }, [currentSetNumber, exerciseIndex, exercises, setInProgress]);
 
   const handlePrimaryAction = useCallback(() => {

@@ -1,5 +1,5 @@
 import { createFileRoute, isRedirect, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { PlatformShell } from "@/components/platform/layout/PlatformShell";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useHeroGoalSettings } from "@/hooks/useHeroGoalSettings";
@@ -13,6 +13,15 @@ import { CREATE_PASSWORD_LOCATION, userNeedsPasswordSetup } from "@/lib/auth-pas
 import { resolveAuthenticatedDestination } from "@/lib/auth-onboarding-gate";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyAccountLifecycle } from "@/lib/platform/account-lifecycle";
+
+/** Dev-only review-client switcher; tree-shaken from production builds. */
+const DevReviewClientSwitcher = import.meta.env.DEV
+  ? lazy(() =>
+      import("@/components/platform/dev/DevReviewClientSwitcher").then((module) => ({
+        default: module.DevReviewClientSwitcher,
+      })),
+    )
+  : null;
 
 const approvedPlatformUsers = new Set<string>();
 
@@ -185,6 +194,11 @@ function PlatformLayout() {
   return (
     <PlatformShell>
       <Outlet />
+      {DevReviewClientSwitcher ? (
+        <Suspense fallback={null}>
+          <DevReviewClientSwitcher />
+        </Suspense>
+      ) : null}
     </PlatformShell>
   );
 }

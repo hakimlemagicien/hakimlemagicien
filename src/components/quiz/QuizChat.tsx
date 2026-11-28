@@ -275,6 +275,7 @@ const FEMININE: Array<[string, string]> = [
   ["احتياجك", "احتياجكِ"],
   ["أرسل لك", "أرسل لكِ"],
   ["بريدك", "بريدكِ"],
+  ["أدخله", "أدخليه"],
   ["رقمك", "رقمكِ"],
   ["ما اسمك", "ما اسمكِ"],
   ["معك", "معكِ"],
@@ -661,7 +662,7 @@ export function QuizChat(props: QuizChatProps) {
           </div>
         ),
       },
-      coach(`أرسلت رمز التأكيد إلى ${say("بريدك")} 📩 أدخله وأبدأ ${say("معك")} من اليوم.`),
+      coach(say("آخر خطوة: سأرسل لك الآن رمز تأكيد على بريدك 📩 أدخله وأبدأ معك من اليوم.")),
     ];
   };
 
@@ -1206,7 +1207,7 @@ export function QuizChat(props: QuizChatProps) {
 
         {dock === "done" ? (
           <button type="button" className="qchat-send" onClick={props.onFinish}>
-            أدخل الرمز وافتح {say("خطتك")}
+            أرسل لي رمز التأكيد 📩
           </button>
         ) : null}
       </div>

@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 import { useMembership } from "@/hooks/useMembership";
+import { useWorkoutCoachMessage } from "@/hooks/useWorkoutCoachMessage";
+import coachAvatar from "@/assets/coach-avatar-320.webp";
 import { isTrainingPreviewMode } from "@/lib/platform/entitlements";
 import { ExerciseMedia } from "@/components/platform/exercises/ExerciseMedia";
 import { ExerciseStageGuide } from "@/components/platform/exercises/ExerciseStageGuide";
@@ -101,7 +103,7 @@ function ExerciseRxStrip({
     },
     {
       icon: RefreshCcw,
-      label: "التكرارات",
+      label: isTimed ? "المدة" : "التكرارات",
       node: revealing ? (
         repRange ? (
           <AnimatedRepRange
@@ -446,7 +448,10 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
     syncStatus,
   } = player;
 
+  const coach = useWorkoutCoachMessage(player);
   const sessionActive = videoOpen || player.setInProgress;
+  // Hakim's brief: only before the very first round of the session.
+  const showBrief = !sessionActive && phase === "exercise" && coach?.moment === "brief";
   const videoPaused = phase === "rest" || phase === "set-sheet";
   const isBlocked = phase === "rest" || phase === "complete" || phase === "set-sheet";
   const dockRef = useRef<HTMLDivElement>(null);
@@ -514,7 +519,7 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
 
   return (
     <>
-      <div className="relative pb-36" dir="rtl">
+      <div className={cn("relative", showBrief ? "pb-56" : "pb-36")} dir="rtl">
         {sessionActive ? (
           <>
             <div
@@ -758,6 +763,32 @@ export function ExercisePlayerView({ player }: ExercisePlayerViewProps) {
       {phase === "rest" || phase === "set-sheet" || phase === "complete" ? null : (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--platform-nav-h,64px)+env(safe-area-inset-bottom)+30px)] z-40 mx-auto max-w-[var(--platform-frame-w)] px-[var(--platform-gutter)] pb-2">
           <div className="space-y-2">
+            <AnimatePresence>
+              {showBrief && coach ? (
+                <motion.div
+                  key="coach-brief"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ duration: 0.3, delay: 0.4 }}
+                  className="pointer-events-auto flex items-start gap-2.5 rounded-2xl border border-border/60 bg-card/95 p-2.5 shadow-[0_10px_26px_-16px_rgba(15,23,42,0.45)] backdrop-blur-md"
+                >
+                  <img
+                    src={coachAvatar}
+                    alt="الكوتش حكيم"
+                    width={36}
+                    height={36}
+                    className="size-9 shrink-0 rounded-full object-cover"
+                  />
+                  <p className="min-w-0 flex-1 text-[12px] font-bold leading-relaxed text-foreground">
+                    {coach.text}
+                    {coach.hint ? (
+                      <span className="block text-[11px] font-medium text-muted-foreground">{coach.hint}</span>
+                    ) : null}
+                  </p>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
             {syncStatus === "PENDING_SYNC" ? (
               <p className="pointer-events-auto text-center text-[10px] font-bold text-muted-foreground">
                 سيتم حفظ النتيجة عند عودة الاتصال
