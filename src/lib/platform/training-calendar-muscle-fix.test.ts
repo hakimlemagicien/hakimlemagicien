@@ -7,6 +7,7 @@ import {
 } from "@/lib/platform/strategy-matrix/calendar-runtime";
 import { resolveWeeklyTrainingSchedule } from "@/lib/platform/strategy-matrix/calendar-resolver";
 import {
+  resolveSessionAnatomyArtKey,
   resolveSessionAnatomyImageSrc,
   resolveSessionPresentation,
   summarizeSessionMuscles,
@@ -240,5 +241,26 @@ const legsPlan = calendarPlans.fri;
 assert(!legsPlan.isRestDay, "legs session lands on scheduled workout day");
 const legsPresentation = resolveSessionPresentation({ plan: legsPlan });
 assert(legsPresentation.visualKey === "LEGS", "runtime legs plan presentation matches muscles");
+
+const artKeyCases: Array<[string[], string]> = [
+  [["CH-001", "CH-004", "TR-001"], "chest-triceps"],
+  [["CH-001", "CH-004"], "chest"],
+  [["BA-010", "BA-001", "BI-002"], "back-biceps"],
+  [["BA-010", "BA-001"], "back"],
+  [["SH-001", "SH-002"], "shoulders"],
+  [["BI-001", "TR-001"], "arms"],
+  [["LE-001", "LE-002", "CA-001"], "legs"],
+  [["GL-001", "GL-002", "GL-003"], "glutes"],
+  [["AB-001", "AB-002"], "core"],
+];
+for (const [ids, expected] of artKeyCases) {
+  const art = resolveSessionAnatomyArtKey(summarizeSessionMuscles({ externalIds: ids }));
+  assert(art === expected, `anatomy art for ${ids.join(",")} → ${expected} (got ${art})`);
+}
+assert(
+  resolveSessionAnatomyArtKey(resolveSessionPresentation({ plan: resolveWeekdayPlan("fri", false) })) ===
+    "rest" || resolveWeekdayPlan("fri", false).isRestDay === false,
+  "rest day uses neutral anatomy art",
+);
 
 console.log("training-calendar-muscle-fix.test.ts: all tests passed");

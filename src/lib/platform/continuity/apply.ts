@@ -90,6 +90,8 @@ export function runtimeDayToPlan(
     assignmentExerciseId: exercise.id,
     assignmentDayId: day.day_id,
     notes_ar: exercise.notes_ar ?? undefined,
+    // Keep the template role so the player can log warm-ups as WARMUP (not working volume).
+    activity_role: exercise.activity_role ?? null,
   }));
   return applySessionPresentationToPlan({
     id: displayWeekday,

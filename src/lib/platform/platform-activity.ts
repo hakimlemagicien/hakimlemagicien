@@ -27,6 +27,8 @@ export type PlatformActivitySnapshot = {
   startWeight: number | null;
   goalWeight: number | null;
   weightChange: number | null;
+  /** Last day (YYYY-MM-DD) a weight was logged, for the weekly weigh-in reminder. */
+  lastWeighInDate: string | null;
   overallProgressPct: number;
   daysIn: number;
   hasAnyActivity: boolean;
@@ -274,6 +276,13 @@ export function buildPlatformActivitySnapshot(
   const hasAnyActivity =
     hasQualifyingActivity(log, waterMl) || store.points > 0 || store.streak.count > 0;
 
+  let lastWeighInDate: string | null = null;
+  for (const [key, day] of Object.entries(store.daily)) {
+    if (day?.weightKg != null && key <= dateKey && (!lastWeighInDate || key > lastWeighInDate)) {
+      lastWeighInDate = key;
+    }
+  }
+
   return {
     activityStreak: store.streak.count,
     bestStreak: store.bestStreak,
@@ -291,6 +300,7 @@ export function buildPlatformActivitySnapshot(
     startWeight: progress.startWeight,
     goalWeight: progress.goalWeight,
     weightChange,
+    lastWeighInDate,
     overallProgressPct,
     daysIn,
     hasAnyActivity,

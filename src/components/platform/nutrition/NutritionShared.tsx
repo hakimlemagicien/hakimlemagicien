@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, Check, Lock, RefreshCw, UtensilsCrossed, WifiOff, X } from "lucide-react";
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { NotificationsBell } from "@/components/platform/shared/PlatformHeaderActions";
+import { PlatformHeaderActions } from "@/components/platform/shared/PlatformHeaderActions";
 import { useMembership } from "@/hooks/useMembership";
 import type { MealStatus } from "@/lib/platform/nutrition-experience";
 import { cn } from "@/lib/utils";
@@ -256,7 +256,7 @@ export function NutritionHeader({ title = "التغذية" }: { title?: string }
         </span>
       </Link>
       <h1 className="text-base font-black tracking-tight text-foreground">{title}</h1>
-      <NotificationsBell />
+      <PlatformHeaderActions className="gap-0" />
     </header>
   );
 }

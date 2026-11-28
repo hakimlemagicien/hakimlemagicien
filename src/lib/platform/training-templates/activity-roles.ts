@@ -65,6 +65,17 @@ export const ACTIVITY_ROLE_LABELS_AR: Record<TemplateActivityRole, string> = {
   DAILY_ACTIVITY: "نشاط يومي",
 };
 
+const WARM_UP_ACTIVITY_ROLES = new Set<string>([
+  "GENERAL_WARM_UP",
+  "TARGETED_DYNAMIC_WARM_UP",
+  "EXERCISE_SPECIFIC_RAMP_UP",
+]);
+
+/** Warm-up / ramp-up slots: logged as WARMUP sets, never counted as working volume. */
+export function isWarmUpActivityRole(role: string | null | undefined): boolean {
+  return Boolean(role && WARM_UP_ACTIVITY_ROLES.has(role));
+}
+
 export function activityRoleLabelAr(role: string | null | undefined): string {
   if (!role) return "تمرين";
   if (isTemplateActivityRole(role)) return ACTIVITY_ROLE_LABELS_AR[role];

@@ -239,7 +239,7 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   assert.ok(r.review_signals.includes("TRAINING_FREQUENCY_REVIEW_RECOMMENDED"));
 }
 
-// CASE 14: environment mismatch → NO_EXACT_MATCH + contextual same-strategy (HOME↔GYM allowed as best-available)
+// CASE 14: HOME client never gets a GYM template (hard rule)
 {
   const gymOnlyGlute = [bySlug("GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D")];
   const r = resolveProgramTemplate(
@@ -253,9 +253,8 @@ function bySlug(slug: string): ResolvableTemplateRecord {
   );
   assert.equal(r.status, "NO_EXACT_MATCH");
   assert.equal(r.resolved_environment, "HOME");
-  assert.equal(r.fallback_class, "CONTEXTUAL_MATCH");
-  assert.equal(r.recommended_template_slug, "GLUTE_FOCUS_FOUNDATION_BEGINNER_GYM_3D");
-  assert.ok(r.dimensions_changed.includes("environment"));
+  assert.equal(r.recommended_template_id, null, "no gym template for a home client");
+  assert.ok(r.review_signals.includes("COACH_REVIEW_REQUIRED"));
 }
 
 // CASE 15: draft excluded

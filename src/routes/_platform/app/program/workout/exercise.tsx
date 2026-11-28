@@ -7,13 +7,14 @@ import { isTrainingPreviewMode } from "@/lib/platform/entitlements";
 import { useAssignedTrainingRuntime } from "@/hooks/useAssignedTrainingRuntime";
 import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
-import { runtimeToWeekdayPlans } from "@/lib/platform/assigned-program-api";
 import { toProgressionRecoveryHold } from "@/lib/platform/continuity";
 import {
   getWeekdayIdFromDate,
   resolveWeekdayPlan,
   type WeekdayId,
+  type WeekdayWorkoutPlan,
 } from "@/lib/platform/weekly-workout-schedule";
+import { TODAY_WORKOUT_PRESCRIPTIONS } from "@/lib/platform/today-workout";
 import { canAccessExerciseLibrary } from "@/lib/platform/exercise-library-access";
 import { TRAINING_PRODUCT_COPY } from "@/lib/platform/training-product-copy";
 import { ProgramPreparationHoldCard } from "@/components/platform/workout/ProgramPreparationHoldCard";
@@ -25,7 +26,23 @@ type ExercisePlayerSearch = {
   exerciseId?: string;
   index?: number;
   day?: WeekdayId;
+  /** Dev only: open the real player on a sample session (no program needed, nothing saved to the DB). */
+  coachPreview?: boolean;
 };
+
+/** Dev-only sample session from the real exercise catalog, played in legacy (local-only) mode. */
+function coachPreviewPlan(day: WeekdayId): WeekdayWorkoutPlan {
+  return {
+    id: day,
+    muscleTitle: "الصدر والذراعين",
+    targetMuscle: "chest",
+    isRestDay: false,
+    prescriptions: TODAY_WORKOUT_PRESCRIPTIONS.slice(0, 4),
+    durationMin: 40,
+    calories: 280,
+    points: 0,
+  };
+}
 
 const WEEKDAY_IDS: WeekdayId[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
@@ -47,6 +64,11 @@ export const Route = createFileRoute("/_platform/app/program/workout/exercise")(
           ? Number.parseInt(search.index, 10) || 0
           : 0,
     day: parseDayId(search.day),
+    coachPreview:
+      import.meta.env.DEV &&
+      (search.coachPreview === true || search.coachPreview === "1" || search.coachPreview === 1)
+        ? true
+        : undefined,
   }),
   component: ExercisePlayerPage,
 });
@@ -57,8 +79,14 @@ function ExercisePlayerPage() {
   usePlatformActivity();
   const hasWorkoutProgram = features.workout_program;
   const freePreview = isTrainingPreviewMode(entitlements);
-  const { exerciseId, index = 0, day = getWeekdayIdFromDate() } = Route.useSearch();
-  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram);
+  const {
+    exerciseId,
+    index = 0,
+    day = getWeekdayIdFromDate(),
+    coachPreview: coachPreviewParam,
+  } = Route.useSearch();
+  const coachPreview = import.meta.env.DEV && Boolean(coachPreviewParam);
+  const runtimeQuery = useAssignedTrainingRuntime(hasWorkoutProgram && !coachPreview);
   const assignedOk = hasWorkoutProgram && runtimeQuery.data?.reason === "ok";
   const { hold, loading: holdLoading } = useProgramPreparationHold({
     coachAssigned: assignedOk,
@@ -69,21 +97,23 @@ function ExercisePlayerPage() {
     !runtimeQuery.isLoading &&
     (runtimeQuery.isError || (runtimeQuery.isFetched && runtimeQuery.data?.reason !== "ok"));
   const sessionPilot = canAccessExerciseLibrary() && runtimeFailed;
-  const assignedPlans =
-    assignedOk
-      ? day === continuity.todayId
-        ? continuity.assignedPlans
-        : runtimeToWeekdayPlans(runtimeQuery.data)
-      : null;
+  // Same weekly calendar as the workout list (strategy calendar + today's continuity overlay),
+  // so the day the client taps on the list is exactly the session the player opens.
+  const assignedPlans = assignedOk ? continuity.assignedPlans : null;
   const previewPlans = hasWorkoutProgram ? assignedPlans : null;
-  const plan = previewPlans
-    ? previewPlans[day] ?? resolveWeekdayPlan(day, true, previewPlans)
-    : resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot);
+  const plan = coachPreview
+    ? coachPreviewPlan(day)
+    : previewPlans
+      ? (previewPlans[day] ?? resolveWeekdayPlan(day, true, previewPlans))
+      : resolveWeekdayPlan(day, hasWorkoutProgram && !sessionPilot);
   const sessionQuery = useWorkoutDaySession(
-    !hold.active && !freePreview && (previewPlans || sessionPilot) && !plan.isRestDay ? plan : null,
+    coachPreview ||
+      (!hold.active && !freePreview && (previewPlans || sessionPilot) && !plan.isRestDay)
+      ? plan
+      : null,
   );
 
-  const exercises = freePreview ? [] : (sessionQuery.data?.exercises ?? []);
+  const exercises = freePreview && !coachPreview ? [] : (sessionQuery.data?.exercises ?? []);
   const meta = sessionQuery.data?.meta ?? {
     points: 0,
     durationMin: 0,
@@ -98,12 +128,23 @@ function ExercisePlayerPage() {
   const initialIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
 
   const player = useWorkoutPlayer(exercises, meta, initialIndex, {
-    runtimeMode: assignedOk ? "v2" : "legacy_free",
-    assignmentId: assignedOk ? exercises[0]?.assignmentId ?? null : null,
+    runtimeMode: assignedOk && !coachPreview ? "v2" : "legacy_free",
+    assignmentId: assignedOk && !coachPreview ? (exercises[0]?.assignmentId ?? null) : null,
     recoveryHold: continuity.decision ? toProgressionRecoveryHold(continuity.decision) : "NORMAL",
     prescriptionState: continuity.decision?.prescription_state ?? null,
     progressionStrategy: runtimeQuery.data?.assignment?.progression_strategy ?? null,
   });
+
+  if (coachPreview) {
+    if (sessionQuery.isLoading) {
+      return (
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+    return exercises.length ? <ExercisePlayerView player={player} /> : null;
+  }
 
   if (freePreview) {
     return (
@@ -112,7 +153,9 @@ function ExercisePlayerPage() {
           <Lock className="h-6 w-6" strokeWidth={2.2} />
         </span>
         <div>
-          <p className="text-sm font-black text-foreground">{TRAINING_PRODUCT_COPY.freePreviewBadge}</p>
+          <p className="text-sm font-black text-foreground">
+            {TRAINING_PRODUCT_COPY.freePreviewBadge}
+          </p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {TRAINING_PRODUCT_COPY.upgradeCtaBody}
           </p>
@@ -142,7 +185,9 @@ function ExercisePlayerPage() {
         {holdLoading && !hold.active ? (
           <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
             <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm font-bold text-muted-foreground">{TRAINING_PRODUCT_COPY.holdTitle}</p>
+            <p className="text-sm font-bold text-muted-foreground">
+              {TRAINING_PRODUCT_COPY.holdTitle}
+            </p>
           </div>
         ) : (
           <ProgramPreparationHoldCard

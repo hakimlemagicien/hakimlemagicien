@@ -210,6 +210,41 @@ function nearMismatches(
   return mismatches;
 }
 
+/** Closest safe strategy when the client's own strategy has no template for their context. */
+const RELATED_STRATEGY_FALLBACK: Partial<Record<PrimaryTrainingStrategy, PrimaryTrainingStrategy[]>> = {
+  GLUTE_FOCUS: ["BODY_RECOMPOSITION", "GENERAL_FITNESS"],
+  BODY_RECOMPOSITION: ["FAT_LOSS", "GENERAL_FITNESS"],
+  FAT_LOSS: ["BODY_RECOMPOSITION", "GENERAL_FITNESS"],
+  MUSCLE_GAIN: ["BODY_RECOMPOSITION", "STRENGTH"],
+  STRENGTH: ["MUSCLE_GAIN", "GENERAL_FITNESS"],
+  ATHLETIC_PERFORMANCE: ["GENERAL_FITNESS"],
+  ENDURANCE: ["GENERAL_FITNESS"],
+  MOBILITY_FUNCTIONAL: ["HEALTHY_AGING_ACTIVE_LIFE", "GENERAL_FITNESS"],
+  HEALTHY_AGING_ACTIVE_LIFE: ["MOBILITY_FUNCTIONAL", "GENERAL_FITNESS"],
+  GENERAL_FITNESS: ["BODY_RECOMPOSITION"],
+};
+
+function levelRank(level: TemplateLevel | null | undefined): number {
+  if (level === "ADVANCED") return 3;
+  if (level === "INTERMEDIATE") return 2;
+  return 1;
+}
+
+function nearCost(
+  template: ResolvableTemplateRecord,
+  strategyIndex: number,
+  level: TemplateLevel,
+  environment: TemplateEnvironment,
+  days: number,
+): number {
+  const variant = template.contract.variant;
+  let cost = Math.max(strategyIndex, 0) * 100;
+  if (variant.environment !== environment) cost += 30; // only GYM client → HOME template reaches here
+  if (variant.level !== level) cost += 20; // only a lower level reaches here
+  if (variant.days_per_week !== days) cost += 5 + Math.abs(variant.days_per_week - days);
+  return cost;
+}
+
 export function resolveProgramTemplate(
   input: TemplateResolverInput,
   catalog: ResolvableTemplateRecord[] = listAssignableFixtureTemplates(),
@@ -434,25 +469,38 @@ export function resolveProgramTemplate(
     })),
   ];
 
-  // Near candidates (same strategy, mismatched dims) — ranked for best-available assign
-  const nearRanked = catalog
-    .filter((t) => t.status === "PUBLISHED" && t.is_published && !t.archived)
-    .filter((t) => t.contract.primary_strategy === strategy)
-    .filter((t) => !exactDimCandidates.some((exact) => exact.id === t.id))
-    .filter((t) => !isLibraryBlocking(t.contract.library_readiness.state))
-    .map((t) => ({
-      template: t,
-      mismatched_dimensions: nearMismatches(t, strategy, level, environment, days),
-      equipment: assessEquipmentCompatibility({
+  // Near candidates — ranked for best-available assign.
+  // Hard rules: a HOME client never gets a GYM template; a client never gets a template above
+  // their level. Soft cost: days (closest first) < lower level < home template for a gym client.
+  // Same strategy first; only if none is safe, a related strategy (flagged for coach review).
+  const rankNear = (strategies: PrimaryTrainingStrategy[]) =>
+    catalog
+      .filter((t) => t.status === "PUBLISHED" && t.is_published && !t.archived)
+      .filter((t) => strategies.includes(t.contract.primary_strategy))
+      .filter((t) => !exactDimCandidates.some((exact) => exact.id === t.id))
+      .filter((t) => !isLibraryBlocking(t.contract.library_readiness.state))
+      .filter((t) => !(environment === "HOME" && t.contract.variant.environment !== "HOME"))
+      .filter((t) => levelRank(t.contract.variant.level) <= levelRank(level))
+      .map((t) => ({
         template: t,
-        availableEquipment: input.available_equipment,
-      }),
-    }))
-    .sort((a, b) => {
-      const dim = a.mismatched_dimensions.length - b.mismatched_dimensions.length;
-      if (dim !== 0) return dim;
-      return a.template.slug.localeCompare(b.template.slug);
-    });
+        mismatched_dimensions: nearMismatches(t, strategy, level, environment, days),
+        cost: nearCost(t, strategies.indexOf(t.contract.primary_strategy), level, environment, days),
+        equipment: assessEquipmentCompatibility({
+          template: t,
+          availableEquipment: input.available_equipment,
+        }),
+      }))
+      .filter((row) => row.equipment !== "INCOMPATIBLE")
+      .sort((a, b) => {
+        if (a.cost !== b.cost) return a.cost - b.cost;
+        return a.template.slug.localeCompare(b.template.slug);
+      });
+
+  let nearRanked = rankNear([strategy]);
+  if (nearRanked.length === 0) {
+    const related = RELATED_STRATEGY_FALLBACK[strategy] ?? [];
+    if (related.length) nearRanked = rankNear(related);
+  }
 
   const nearPool = nearRanked.slice(0, 8).map((row) => ({
     id: row.template.id,

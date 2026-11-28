@@ -36,6 +36,7 @@ export function TrainingReminderOverlay() {
     const prefs = getProfileSettings().notifications;
     return getTrainingNotificationContext({
       continuity: continuity.decision,
+      resumeHasProgress: continuity.resumeHasProgress,
       workoutReminders: prefs.workoutReminders,
       progressUpdates: prefs.progressUpdates,
       permissionDenied: typeof Notification !== "undefined" && Notification.permission === "denied",
@@ -43,7 +44,7 @@ export function TrainingReminderOverlay() {
       sentKeys: readSentKeys(),
       nowLocalDate: getLocalDateKey(),
     });
-  }, [continuity.decision, inWorkout]);
+  }, [continuity.decision, continuity.resumeHasProgress, inWorkout]);
 
   useEffect(() => {
     if (!candidate || dismissed) return;

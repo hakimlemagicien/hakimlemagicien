@@ -23,7 +23,7 @@ type InjuryOption = {
   imageSrc: string;
 };
 
-const INJURY_OPTIONS: InjuryOption[] = [
+export const INJURY_OPTIONS: InjuryOption[] = [
   { id: "none", title: "لا أعاني من أي إصابة", description: "ممتاز! سنتمكن من بناء برنامج تدريبي كامل دون قيود متعلقة بالإصابات.", imageSrc: injuryNoneImg },
   { id: "knee", title: "إصابة في الركبة", description: "مثل تمزق الأربطة، التهاب الوتر الرضفي، أو خشونة.", imageSrc: injuryKneeImg },
   { id: "shoulder", title: "إصابة في الكتف", description: "مثل التمزق، التهاب الأوتار، أو عدم الاستقرار.", imageSrc: injuryShoulderImg },

@@ -216,6 +216,34 @@ export async function listOwnRecentWorkoutSessions(limit = 24): Promise<WorkoutS
   }));
 }
 
+/**
+ * Did the client log at least one real (non-skipped) set for this session?
+ * Matched by date (+ assignment) because set logs are not always linked to workout_session_id,
+ * and the session counters are derived later. Used to avoid a "resume" prompt for a session
+ * that was only opened, never trained.
+ */
+export async function hasOwnLoggedSetsForSession(input: {
+  sessionDate: string;
+  assignmentId: string | null;
+}): Promise<boolean> {
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId || !input.sessionDate) return false;
+  let query = supabase
+    .from("workout_set_logs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("session_date", input.sessionDate)
+    .eq("skipped", false);
+  if (input.assignmentId) query = query.eq("assignment_id", input.assignmentId);
+  const { count, error } = await query;
+  if (error) {
+    console.warn("[training-v2] hasOwnLoggedSetsForSession failed", error.message);
+    return true; // fail open: keep the resume prompt rather than hide real progress
+  }
+  return (count ?? 0) > 0;
+}
+
 export async function listOwnRecentWorkingSetSummaries(limit = 80) {
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth.user?.id;

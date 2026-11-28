@@ -13,7 +13,11 @@ import { fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import { getLocalDateKey, getUserTimeZone } from "@/lib/platform/readiness";
 import { resolveTrainingStrategy, trainingStrategyInputFromProfileRow } from "@/lib/platform/strategy-matrix";
 import { buildWeekdayPlansForAssignedRuntime } from "@/lib/platform/strategy-matrix/calendar-runtime";
-import { listOwnRecentWorkoutSessions, updateWorkoutSessionStatus } from "@/lib/platform/training-v2-api";
+import {
+  hasOwnLoggedSetsForSession,
+  listOwnRecentWorkoutSessions,
+  updateWorkoutSessionStatus,
+} from "@/lib/platform/training-v2-api";
 import { readPendingQueue } from "@/lib/platform/workout-runtime/pending-sync";
 import { getWeekdayIdFromDate, type WeekdayId, type WeekdayWorkoutPlan } from "@/lib/platform/weekly-workout-schedule";
 
@@ -69,6 +73,35 @@ export function useProgramContinuity(runtime: ClientTrainingRuntime | undefined,
     if (staleRow) void updateWorkoutSessionStatus(staleRow.id, nextStatus);
   }, [decision?.recommended_session_status, sessionsQuery.data]);
 
+  const resumeCandidate =
+    decision?.action === "RESUME_SESSION" && decision.resume_session_id
+      ? ((sessionsQuery.data ?? []).find((item) => item.id === decision.resume_session_id) ?? null)
+      : null;
+  // A stale open row is not "unfinished" when that day's session was already completed.
+  const completedSameDay = resumeCandidate
+    ? (sessionsQuery.data ?? []).some(
+        (item) =>
+          item.id !== resumeCandidate.id &&
+          item.status === "COMPLETED" &&
+          item.sessionDate === resumeCandidate.sessionDate &&
+          item.assignmentId === resumeCandidate.assignmentId,
+      )
+    : false;
+  const resumeSession = completedSameDay ? null : resumeCandidate;
+  const resumeProgressQuery = useQuery({
+    queryKey: ["workout-session-has-sets", resumeSession?.id ?? "none"],
+    queryFn: () =>
+      hasOwnLoggedSetsForSession({
+        sessionDate: resumeSession!.sessionDate,
+        assignmentId: resumeSession!.assignmentId,
+      }),
+    enabled: Boolean(resumeSession),
+    staleTime: 60 * 1000,
+    retry: 1,
+  });
+  /** Show "resume" UI only when the client actually logged sets — opening the player is not progress. */
+  const resumeHasProgress = Boolean(resumeSession) && resumeProgressQuery.data === true;
+
   const todayId = getWeekdayIdFromDate();
   const assignedPlans = useMemo(() => {
     if (!runtime || runtime.reason !== "ok") return null;
@@ -79,6 +112,7 @@ export function useProgramContinuity(runtime: ClientTrainingRuntime | undefined,
 
   return {
     decision,
+    resumeHasProgress,
     assignedPlans,
     todayId,
     todayKey: getLocalDateKey(),

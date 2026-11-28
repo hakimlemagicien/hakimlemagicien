@@ -5,10 +5,11 @@ import type { ReactNode } from "react";
 import type { WorkoutPlayerState } from "@/hooks/useWorkoutPlayer";
 import { ExerciseThumbnail } from "@/components/platform/exercises/ExerciseThumbnail";
 import { useWaterOptional } from "@/components/platform/water/WaterContext";
-import { formatExerciseVolume, formatRestTime } from "@/lib/platform/workout-session";
+import { formatExerciseVolume, formatSetsCountAr, formatRestTime } from "@/lib/platform/workout-session";
 import { cn } from "@/lib/utils";
 import { AnimatedMetricValue, AnimatedRepRange } from "./AnimatedMetricValue";
 import { WorkoutCoachTipBubble } from "./WorkoutCoachTipBubble";
+import { useWorkoutCoachMessage } from "@/hooks/useWorkoutCoachMessage";
 import {
   remainingRestSeconds,
   pendingRestCues,
@@ -97,7 +98,9 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
         <p className="mt-0.5 text-lg font-black text-foreground">
           {currentSetNumber} من {currentExercise.sets}
         </p>
-        <p className="mt-1 text-[10px] font-bold text-primary">مجموعة عمل</p>
+        <p className="mt-1 text-[10px] font-bold text-primary">
+          {v2Targets.setType === "WARMUP" ? "إحماء" : "مجموعة عمل"}
+        </p>
         {isV2 && calibration ? (
           <p className="mt-1 text-[10px] font-bold text-muted-foreground">معايرة — أدخل ما استخدمته فعلياً</p>
         ) : null}
@@ -174,8 +177,12 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
         <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
           <p className="text-center text-xs font-bold text-muted-foreground">المدة (ثانية)</p>
           <p className="mt-1 text-center text-[11px] text-muted-foreground">
-            الهدف: {v2Targets.durationMin ?? currentExercise.durationSeconds}–
-            {v2Targets.durationMax ?? currentExercise.durationSeconds}
+            الهدف:{" "}
+            {formatTargetRange(
+              v2Targets.durationMin ?? currentExercise.durationSeconds,
+              v2Targets.durationMax ?? currentExercise.durationSeconds,
+            )}{" "}
+            ث
           </p>
           <div className="mt-2 flex items-center justify-center gap-3">
             <StepperButton
@@ -204,7 +211,7 @@ function ReportForm({ player }: { player: WorkoutPlayerState }) {
         <div className="rounded-2xl border border-border/50 bg-background/35 p-3">
           <p className="text-center text-xs font-bold text-muted-foreground">التكرارات المنفَّذة</p>
           <p className="mt-1 text-center text-[11px] text-muted-foreground">
-            الهدف: {currentSetTargets.repsMin}–{currentSetTargets.repsMax}
+            الهدف: {formatTargetRange(currentSetTargets.repsMin, currentSetTargets.repsMax)}
           </p>
           <div className="mt-2 flex items-center justify-center gap-3">
             <StepperButton
@@ -501,7 +508,8 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-black text-foreground">{restUpcoming.exercise.name}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    {restUpcoming.exercise.sets} مجموعات × {formatExerciseVolume(restUpcoming.exercise)}
+                    {formatSetsCountAr(restUpcoming.exercise.sets)} ×{" "}
+                    {formatExerciseVolume(restUpcoming.exercise)}
                   </p>
                 </div>
               </div>
@@ -531,15 +539,28 @@ function RestTimer({ player }: { player: WorkoutPlayerState }) {
   );
 }
 
+
+/** "30" when min === max, otherwise "10–12". */
+function formatTargetRange(min: number | null | undefined, max: number | null | undefined) {
+  if (min == null && max == null) return "—";
+  if (min == null || max == null || min === max) return String(min ?? max);
+  return `${min}–${max}`;
+}
+
 export function SetLogBottomSheet({ player }: SetLogBottomSheetProps) {
   const { phase, closeSetSheet } = player;
   const open = phase === "set-sheet" || phase === "rest";
-  const tipKey =
-    phase === "rest"
+  const coach = useWorkoutCoachMessage(player);
+  // During rest Hakim reacts to the set just logged (reps vs target, effort).
+  const restReaction = phase === "rest" && coach && coach.moment.startsWith("rest") ? coach : null;
+  const tipKey = restReaction
+    ? restReaction.key
+    : phase === "rest"
       ? `rest-${player.currentExercise?.id ?? "x"}-${player.currentSetNumber}`
       : `set-report-${player.currentExercise?.id ?? "x"}-${player.currentSetNumber}`;
-  const tipMessage =
-    phase === "rest"
+  const tipMessage = restReaction
+    ? restReaction.text
+    : phase === "rest"
       ? "وقت الراحة جزء من التمرين — التزم به لتؤدي المجموعة القادمة بقوة وتقترب أكثر من هدفك."
       : "سجّل أداءك الحقيقي — كل جولة تساعدنا على تطوير تمرينك القادم بدقة.";
 
@@ -568,7 +589,13 @@ export function SetLogBottomSheet({ player }: SetLogBottomSheetProps) {
 
           {/* Sheet keeps original centered position; tip floats absolutely above it */}
           <div className="relative z-10 w-full max-w-[min(24rem,calc(var(--platform-frame-w)-2rem))]">
-            <WorkoutCoachTipBubble tipKey={tipKey} message={tipMessage} collapsedLabel="رسالة من الكوتش" />
+            <WorkoutCoachTipBubble
+              tipKey={tipKey}
+              message={tipMessage}
+              collapsedLabel="رسالة من الكوتش"
+              defaultOpen={Boolean(restReaction)}
+              delayMs={restReaction ? 900 : undefined}
+            />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 16 }}

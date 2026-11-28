@@ -4,6 +4,8 @@ import type { TrainingNotificationCandidate, TrainingNotificationKind } from "./
 import { mapContinuityAction } from "./copy";
 
 export type NotificationContextInput = {
+  /** False when the resumable session has no logged sets (only opened) — no resume prompt then. */
+  resumeHasProgress?: boolean;
   continuity: Pick<
     ContinuityDecision,
     | "action"
@@ -72,7 +74,10 @@ export function getTrainingNotificationContext(input: NotificationContextInput):
     return null;
   }
 
-  if (input.continuity.resume_session_id || input.continuity.action === "RESUME_SESSION") {
+  if (
+    input.resumeHasProgress !== false &&
+    (input.continuity.resume_session_id || input.continuity.action === "RESUME_SESSION")
+  ) {
     const copy = mapContinuityAction("RESUME_SESSION");
     const candidate = base("RESUME_SESSION", copy.title, copy.short_reason, "/app/program/workout");
     if (sent.has(candidate.dedupe_key)) return null;

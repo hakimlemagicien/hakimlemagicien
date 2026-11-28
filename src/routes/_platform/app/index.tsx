@@ -4,17 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { HomeDashboardSkeleton } from "@/components/platform/home/HomeDashboardSkeleton";
 import { HomeStickyUpgradeFooter } from "@/components/platform/home/HomeStickyUpgradeFooter";
 import {
-  HomeCoachTip,
-  HomeDailySnapshot,
   HomeDiscover,
   HomeHeader,
-  HomeHeroCard,
-  HomeNextSession,
   HomeOfflineBanner,
   HomePersonalProgramCard,
   HomeSectionError,
   HomeSocialProof,
 } from "@/components/platform/home/HomeSections";
+import { HomeTodayCard } from "@/components/platform/home/HomeTodayCard";
+import { useWaterOptional } from "@/components/platform/water/WaterContext";
+import { buildTodayPlan } from "@/lib/platform/home-today";
 import { PlatformStack } from "@/components/platform/layout/PlatformLayout";
 import { useMembership } from "@/hooks/useMembership";
 import { usePlatformActivity } from "@/hooks/usePlatformActivity";
@@ -24,16 +23,12 @@ import { useProgramContinuity } from "@/hooks/useProgramContinuity";
 import { PROFILE_DETAILS_KEY, PROFILE_TRAINING_KEY } from "@/hooks/useProfileExperience";
 import { fetchMyProfileDetails, fetchMyTrainingProfile } from "@/lib/platform/profile-api";
 import {
-  buildDailySnapshot,
   buildDiscoverPreviewItems,
-  buildHeroState,
-  buildMessageOfDay,
   buildNextSession,
   resolveClientFirstName,
   shouldShowActivateCta,
 } from "@/lib/platform/home-hub";
 import { resolveClientPresentationIdentity } from "@/lib/platform/client-presentation-identity";
-import { useLockedHeroGoalImage } from "@/hooks/useLockedHeroGoalImage";
 import { getWeekdayIdFromDate } from "@/lib/platform/weekly-workout-schedule";
 import { isMealSlotUnlockedByEntitlements } from "@/lib/platform/entitlements";
 import { hydrateDiscoverFromSupabase } from "@/lib/platform/discover-content-api";
@@ -70,9 +65,7 @@ function useOnlineStatus() {
 function PlatformHomePage() {
   const { displayName, tier, is_paid, features, entitlements, avatarUrl, loading, error, refreshMembership } =
     useMembership();
-  const { snapshot: activity, userId } = usePlatformActivity();
-  const count = activity.activityStreak;
-  const hakimPoints = activity.hakimPoints;
+  const { snapshot: activity } = usePlatformActivity();
   const isOnline = useOnlineStatus();
   const runtimeQuery = useAssignedTrainingRuntime(Boolean(features?.workout_program) && !loading);
   const nutritionRuntimeQuery = useAssignedNutritionRuntime(!loading);
@@ -96,7 +89,7 @@ function PlatformHomePage() {
     staleTime: 30_000,
   });
   const identityPending = trainingQuery.isPending || profileQuery.isPending;
-  const slot = useMemo(
+  const identity = useMemo(
     () =>
       identityPending
         ? null
@@ -105,7 +98,7 @@ function PlatformHomePage() {
             goalId: trainingQuery.data?.answers.goalId ?? null,
             goalText: trainingQuery.data?.goal ?? profileQuery.data?.goal ?? null,
             goalSources: [trainingQuery.data?.goal, profileQuery.data?.goal],
-          }).slot,
+          }),
     [
       identityPending,
       trainingQuery.data?.answers.gender,
@@ -114,9 +107,8 @@ function PlatformHomePage() {
       profileQuery.data?.goal,
     ],
   );
-  const lockedHero = useLockedHeroGoalImage({ userId, identityPending, slot });
+  const slot = identity?.slot ?? null;
   const gender = slot?.gender;
-  const goalId = slot?.goalId;
   const goal = slot?.goal ?? "fitness";
   const clientName = resolveClientFirstName(displayName);
   const viewerGender = gender === "male" || gender === "female" ? gender : null;
@@ -152,27 +144,14 @@ function PlatformHomePage() {
   });
 
   const dashboard = useMemo(() => {
-    if (loading || !lockedHero.ready) return null;
-    const heroImage = lockedHero.image;
-    if (!heroImage) return null;
+    if (loading) return null;
     return {
-      hero: buildHeroState({
-        displayName,
-        goal,
-        streak: count,
-        hakimPoints,
-        heroImage,
-        features,
-        activity,
-      }),
-      snapshot: buildDailySnapshot({ features, activity }),
-      coach: buildMessageOfDay({ displayName, streak: count, goal, activity }),
       session: buildNextSession({
         features,
         activity,
         assignedPlan,
         assignmentReason: runtimeQuery.isLoading ? undefined : assignmentReason,
-        workoutCta: continuity.decision?.action === "RESUME_SESSION" ? "استكمل التمرين" : undefined,
+        workoutCta: continuity.resumeHasProgress ? "استكمل التمرين" : undefined,
         nutritionState: nutritionRuntimeQuery.isLoading
           ? "loading"
           : nutritionRuntimeQuery.isError
@@ -185,15 +164,9 @@ function PlatformHomePage() {
       discover: resolveHomeDiscoverPreview(discoverQuery.data ?? [], buildDiscoverPreviewItems(goal)),
     };
   }, [
-    lockedHero.ready,
-    lockedHero.image,
-    displayName,
+    loading,
     goal,
-    goalId,
-    gender,
     features,
-    count,
-    hakimPoints,
     activity,
     assignedPlan,
     assignmentReason,
@@ -206,7 +179,33 @@ function PlatformHomePage() {
     discoverQuery.data,
   ]);
 
-  if (loading || identityPending || !lockedHero.ready) {
+  const water = useWaterOptional();
+  const waterTotalMl = water?.state.totalMl ?? activity.waterMl;
+  const waterGoalMl = water?.state.goalMl ?? activity.waterGoalMl;
+  const todayPlan = useMemo(() => {
+    if (!dashboard) return null;
+    return buildTodayPlan({
+      firstName: clientName,
+      gender: identity?.gender ?? trainingQuery.data?.answers.gender ?? null,
+      goalLabel: identity?.goalLabel,
+      activity,
+      session: dashboard.session,
+      water: { totalMl: waterTotalMl, goalMl: waterGoalMl },
+      nextMealName: nextNutritionMeal?.name ?? null,
+    });
+  }, [
+    dashboard,
+    clientName,
+    identity?.gender,
+    identity?.goalLabel,
+    trainingQuery.data?.answers.gender,
+    activity,
+    waterTotalMl,
+    waterGoalMl,
+    nextNutritionMeal?.name,
+  ]);
+
+  if (loading || identityPending) {
     return (
       <PlatformStack>
         <HomeDashboardSkeleton />
@@ -225,10 +224,7 @@ function PlatformHomePage() {
       {dashboard ? (
         <>
           <HomeHeader name={clientName} avatarUrl={avatarUrl} tier={tier} />
-          <HomeHeroCard hero={dashboard.hero} />
-          <HomeDailySnapshot items={dashboard.snapshot} />
-          <HomeNextSession session={dashboard.session} />
-          <HomeCoachTip message={dashboard.coach} />
+          {todayPlan ? <HomeTodayCard plan={todayPlan} glassMl={activity.waterGlassMl} /> : null}
           {dashboard.discover.length > 0 ? <HomeDiscover items={dashboard.discover} /> : null}
           {shouldShowActivateCta(tier, is_paid) ? <HomeSocialProof /> : null}
           {shouldShowActivateCta(tier, is_paid) ? <HomePersonalProgramCard /> : null}
