@@ -285,15 +285,30 @@ export async function resolveDecisionForClient(input: {
     envCandidates.map((trainingType) => recommendWithDefaults(context, catalog, trainingType)),
   );
 
-  // Last resort: if catalog has published templates but strategy match failed, still assign one.
+  // Last resort: if strategy match failed, assign a safe general template — never a gym
+  // template to a home client and never above beginner — flagged for coach review.
+  const homeOnly = context.environment === "HOME";
+  const safeLastResort =
+    catalog.find(
+      (row) =>
+        row.contract.primary_strategy === "GENERAL_FITNESS" &&
+        row.contract.variant.level === "BEGINNER" &&
+        (homeOnly ? row.contract.variant.environment === "HOME" : true),
+    ) ??
+    catalog.find(
+      (row) =>
+        row.contract.variant.level === "BEGINNER" &&
+        (homeOnly ? row.contract.variant.environment === "HOME" : true),
+    ) ??
+    null;
   const withLastResort =
-    resolver.recommended_template_id || catalog.length === 0
+    resolver.recommended_template_id || !safeLastResort
       ? resolver
       : {
           ...resolver,
           status: "MATCHED_WITH_REVIEW" as const,
-          recommended_template_id: catalog[0]!.id,
-          recommended_template_slug: catalog[0]!.slug,
+          recommended_template_id: safeLastResort.id,
+          recommended_template_slug: safeLastResort.slug,
           fallback_used: true,
           fallback_class: "CONTEXTUAL_MATCH" as const,
           recommendation_reason: "LAST_RESORT_PUBLISHED_TEMPLATE",
